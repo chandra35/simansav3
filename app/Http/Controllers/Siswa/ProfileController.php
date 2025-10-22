@@ -8,6 +8,7 @@ use App\Models\Siswa;
 use App\Models\Ortu;
 use App\Models\ActivityLog;
 use App\Services\KemendikbudApiService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -117,10 +118,95 @@ class ProfileController extends Controller
         return view('siswa.profile.diri', compact('siswa', 'provinces'));
     }
 
+    /**
+     * Upload foto profile only (AJAX)
+     */
+    public function uploadFoto(Request $request)
+    {
+        // Enhanced validation with strict rules
+        $request->validate([
+            'foto_profile' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png',
+                'max:2048', // 2MB max
+                'dimensions:min_width=100,min_height=100,max_width=5000,max_height=5000',
+            ]
+        ], [
+            'foto_profile.required' => 'Foto profil wajib dipilih',
+            'foto_profile.image' => 'File harus berupa gambar',
+            'foto_profile.mimes' => 'Format gambar hanya: JPG, JPEG, atau PNG',
+            'foto_profile.max' => 'Ukuran file maksimal 2MB',
+            'foto_profile.dimensions' => 'Dimensi gambar minimal 100x100 pixel',
+        ]);
+
+        $user = Auth::user();
+        $siswa = $user->siswa;
+
+        try {
+            // Additional security check: Verify it's actually an image
+            $file = $request->file('foto_profile');
+            $imageInfo = @getimagesize($file->getRealPath());
+            
+            if ($imageInfo === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File bukan gambar yang valid!'
+                ], 400);
+            }
+
+            // Check MIME type from actual file content (not just extension)
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!in_array($imageInfo['mime'], $allowedMimes)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format gambar tidak didukung. Hanya JPG, JPEG, dan PNG.'
+                ], 400);
+            }
+
+            // Upload and process image
+            $path = $this->handleFotoUpload($file, $siswa);
+            
+            // Get old path before update
+            $oldFoto = $siswa->foto_profile;
+            
+            // Update siswa record
+            $siswa->update(['foto_profile' => $path]);
+
+            // Enhanced activity log
+            ActivityLogService::log([
+                'activity_type' => 'upload_foto',
+                'model_type' => Siswa::class,
+                'model_id' => $siswa->id,
+                'description' => 'Mengupload foto profil',
+                'old_values' => ['foto_profile' => $oldFoto],
+                'new_values' => ['foto_profile' => $path],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto profil berhasil diupload!',
+                'foto_url' => $siswa->foto_profile_url,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error uploading foto profile', [
+                'siswa_id' => $siswa->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupload foto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function updateDiri(Request $request)
     {
+        // Foto profile is handled separately via uploadFoto() method
         $request->validate([
-            'foto_profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'npsn_asal_sekolah' => 'required|digits:8|exists:sekolah,npsn',
             'nik' => 'required|string|max:20',
             'tempat_lahir' => 'required|string|max:255',
@@ -133,14 +219,15 @@ class ProfileController extends Controller
             'cita_cita' => 'nullable|string|max:255',
             'nomor_hp' => 'nullable|string|max:20',
             'alamat_sama_ortu' => 'required|boolean',
-            'alamat_siswa' => 'required_if:alamat_sama_ortu,0|string',
-            'rt_siswa' => 'required_if:alamat_sama_ortu,0|string|max:5',
-            'rw_siswa' => 'required_if:alamat_sama_ortu,0|string|max:5',
-            'provinsi_id_siswa' => 'required_if:alamat_sama_ortu,0|exists:indonesia_provinces,code',
-            'kabupaten_id_siswa' => 'required_if:alamat_sama_ortu,0|exists:indonesia_cities,code',
-            'kecamatan_id_siswa' => 'required_if:alamat_sama_ortu,0|exists:indonesia_districts,code',
-            'kelurahan_id_siswa' => 'required_if:alamat_sama_ortu,0|exists:indonesia_villages,code',
-            'kodepos_siswa' => 'required_if:alamat_sama_ortu,0|string|max:10',
+            'jenis_tempat_tinggal' => 'required_if:alamat_sama_ortu,0|in:Asrama,Kost/Kontrakan,Saudara',
+            'alamat_siswa' => 'nullable|string',
+            'rt_siswa' => 'nullable|string|max:5',
+            'rw_siswa' => 'nullable|string|max:5',
+            'provinsi_id_siswa' => 'nullable|exists:indonesia_provinces,code',
+            'kabupaten_id_siswa' => 'nullable|exists:indonesia_cities,code',
+            'kecamatan_id_siswa' => 'nullable|exists:indonesia_districts,code',
+            'kelurahan_id_siswa' => 'nullable|exists:indonesia_villages,code',
+            'kodepos_siswa' => 'nullable|string|max:10',
         ], [
             'npsn_asal_sekolah.required' => 'NPSN Asal Sekolah wajib diisi',
             'npsn_asal_sekolah.digits' => 'NPSN harus 8 digit angka',
@@ -155,12 +242,37 @@ class ProfileController extends Controller
             'jumlah_saudara.required' => 'Jumlah saudara wajib diisi',
             'anak_ke.required' => 'Anak ke berapa wajib diisi',
             'alamat_sama_ortu.required' => 'Pilihan alamat wajib dipilih',
+            'jenis_tempat_tinggal.required_if' => 'Jenis tempat tinggal wajib dipilih untuk alamat berbeda',
         ]);
 
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        $validated = $request->except(['foto_profile']);
+        // Custom validation for Kost/Saudara - must have complete address
+        if (!$request->alamat_sama_ortu && in_array($request->jenis_tempat_tinggal, ['Kost/Kontrakan', 'Saudara'])) {
+            $request->validate([
+                'alamat_siswa' => 'required|string',
+                'rt_siswa' => 'required|string|max:5',
+                'rw_siswa' => 'required|string|max:5',
+                'provinsi_id_siswa' => 'required|exists:indonesia_provinces,code',
+                'kabupaten_id_siswa' => 'required|exists:indonesia_cities,code',
+                'kecamatan_id_siswa' => 'required|exists:indonesia_districts,code',
+                'kelurahan_id_siswa' => 'required|exists:indonesia_villages,code',
+                'kodepos_siswa' => 'required|string|max:10',
+            ], [
+                'alamat_siswa.required' => 'Alamat lengkap wajib diisi untuk ' . $request->jenis_tempat_tinggal,
+                'rt_siswa.required' => 'RT wajib diisi',
+                'rw_siswa.required' => 'RW wajib diisi',
+                'provinsi_id_siswa.required' => 'Provinsi wajib dipilih',
+                'kabupaten_id_siswa.required' => 'Kabupaten/Kota wajib dipilih',
+                'kecamatan_id_siswa.required' => 'Kecamatan wajib dipilih',
+                'kelurahan_id_siswa.required' => 'Kelurahan/Desa wajib dipilih',
+                'kodepos_siswa.required' => 'Kode pos wajib diisi',
+            ]);
+        }
+
+        // Foto profile is handled separately, exclude from this update
+        $validated = $request->except(['foto_profile', '_token', '_method']);
 
         // Convert tanggal_lahir to proper format if needed
         if (!empty($validated['tanggal_lahir'])) {
@@ -171,13 +283,12 @@ class ProfileController extends Controller
             }
         }
 
-        // Handle foto upload
-        if ($request->hasFile('foto_profile')) {
-            $validated['foto_profile'] = $this->handleFotoUpload($request->file('foto_profile'), $siswa);
-        }
+        // Foto profile is now handled separately via AJAX upload
+        // No need to process it here
 
-        // If alamat sama dengan ortu, clear siswa address fields
+        // If alamat sama dengan ortu, clear siswa address fields and set jenis_tempat_tinggal
         if ($request->alamat_sama_ortu) {
+            $validated['jenis_tempat_tinggal'] = 'Bersama Orang Tua';
             $validated['alamat_siswa'] = null;
             $validated['rt_siswa'] = null;
             $validated['rw_siswa'] = null;
@@ -186,9 +297,30 @@ class ProfileController extends Controller
             $validated['kecamatan_id_siswa'] = null;
             $validated['kelurahan_id_siswa'] = null;
             $validated['kodepos_siswa'] = null;
+        } 
+        // If Asrama selected, use school address
+        elseif ($request->jenis_tempat_tinggal === 'Asrama') {
+            $sekolah = $siswa->sekolahAsal;
+            
+            if ($sekolah) {
+                $validated['alamat_siswa'] = 'Asrama ' . $sekolah->nama . ', ' . $sekolah->alamat_jalan;
+                $validated['rt_siswa'] = null;
+                $validated['rw_siswa'] = null;
+                $validated['kodepos_siswa'] = null;
+                // You can add province/city mapping if available in sekolah table
+                $validated['provinsi_id_siswa'] = null;
+                $validated['kabupaten_id_siswa'] = null;
+                $validated['kecamatan_id_siswa'] = null;
+                $validated['kelurahan_id_siswa'] = null;
+            } else {
+                $validated['alamat_siswa'] = 'Asrama Sekolah';
+            }
         }
 
         try {
+            // Get old data before update
+            $oldData = $siswa->toArray();
+            
             // Update siswa data
             $validated['data_diri_completed'] = true;
             $siswa->update($validated);
@@ -199,14 +331,14 @@ class ProfileController extends Controller
                 $user->save();
             }
 
-            // Activity log
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'activity_type' => 'update',
-                'model_type' => Siswa::class,
-                'model_id' => $siswa->id,
-                'description' => 'Memperbarui data diri siswa',
-            ]);
+            // Enhanced activity log with change tracking
+            ActivityLogService::logChanges(
+                'update_data_diri',
+                $siswa,
+                $oldData,
+                $validated,
+                'Memperbarui data diri siswa'
+            );
 
             return redirect()->route('siswa.dashboard')->with('success', '✅ Data diri berhasil disimpan! Profil Anda sudah lengkap.');
         } catch (\Exception $e) {
@@ -273,23 +405,29 @@ class ProfileController extends Controller
                     throw new \Exception('Unsupported image type');
             }
 
-            // Calculate crop dimensions for square (center crop)
-            $size = min($width, $height);
-            $x = ($width - $size) / 2;
-            $y = ($height - $size) / 2;
-
-            // Create square canvas 400x400
+            // Create square canvas 400x400 with white background
             $canvas = \imagecreatetruecolor(400, 400);
+            $white = \imagecolorallocate($canvas, 255, 255, 255);
+            \imagefill($canvas, 0, 0, $white);
 
-            // Crop and resize
+            // Calculate resize dimensions to fit in 400x400 without cropping
+            $ratio = min(400 / $width, 400 / $height);
+            $newWidth = (int)($width * $ratio);
+            $newHeight = (int)($height * $ratio);
+
+            // Calculate position to center image
+            $x = (int)((400 - $newWidth) / 2);
+            $y = (int)((400 - $newHeight) / 2);
+
+            // Resize and place image in center
             \imagecopyresampled(
                 $canvas, $source,
-                0, 0, $x, $y,
-                400, 400, $size, $size
+                $x, $y, 0, 0,
+                $newWidth, $newHeight, $width, $height
             );
 
-            // Save as JPEG with 85% quality
-            \imagejpeg($canvas, $fullPath, 85);
+            // Save as JPEG with 90% quality
+            \imagejpeg($canvas, $fullPath, 90);
 
             // Free memory
             \imagedestroy($source);

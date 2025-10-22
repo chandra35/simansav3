@@ -7,6 +7,46 @@
 @stop
 
 @section('content')
+{{-- Card Informasi Users --}}
+<div class="row mb-3">
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-info">
+            <span class="info-box-icon"><i class="fas fa-users"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total User</span>
+                <span class="info-box-number">{{ $stats['total_users'] }} User</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-danger">
+            <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Admin</span>
+                <span class="info-box-number">{{ $stats['admin'] }} User</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-success">
+            <span class="info-box-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">GTK</span>
+                <span class="info-box-number">{{ $stats['gtk'] }} User</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-primary">
+            <span class="info-box-icon"><i class="fas fa-user-graduate"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Siswa</span>
+                <span class="info-box-number">{{ $stats['siswa'] }} User</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card card-primary card-outline">
@@ -29,23 +69,36 @@
                 </div>
             </div>
             <div class="card-body">
-                @if(auth()->user()->hasRole('Super Admin'))
-                <div class="mb-3">
-                    <button type="button" id="bulkDeleteBtn" class="btn btn-danger btn-sm" disabled>
-                        <i class="fas fa-trash"></i> Hapus Terpilih (<span id="selectedCount">0</span>)
-                    </button>
+                {{-- Filter Section --}}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body p-3">
+                                <form id="filterForm" class="form-inline">
+                                    <div class="form-group mr-2 mb-2">
+                                        <label for="filterRole" class="mr-2">
+                                            <i class="fas fa-user-tag"></i> Role:
+                                        </label>
+                                        <select id="filterRole" class="form-control form-control-sm" style="width: 200px;">
+                                            <option value="">Semua Role</option>
+                                            @foreach($roles as $role)
+                                                <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="button" id="btnResetFilter" class="btn btn-sm btn-secondary mb-2">
+                                        <i class="fas fa-redo"></i> Reset
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                @endif
                 
                 <div class="table-responsive">
                     <table id="usersTable" class="table table-bordered table-striped table-hover" style="width: 100%">
                         <thead class="bg-light">
                             <tr>
-                                @if(auth()->user()->hasRole('Super Admin'))
-                                <th style="width: 30px; text-align: center;">
-                                    <input type="checkbox" id="checkAll">
-                                </th>
-                                @endif
                                 <th style="width: 40px; text-align: center;">No</th>
                                 <th style="width: 150px;">Nama</th>
                                 <th style="width: 120px;">Username</th>
@@ -142,6 +195,20 @@
         vertical-align: middle;
     }
     
+    /* DataTables length selector styling */
+    .dataTables_length select {
+        min-width: 80px !important;
+        width: auto !important;
+        padding: 0.375rem 1.75rem 0.375rem 0.75rem !important;
+    }
+    .dataTables_length {
+        margin-bottom: 1rem;
+    }
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 0.75rem;
+    }
+
     /* Kolom aksi */
     #usersTable .btn-group {
         display: flex;
@@ -171,23 +238,6 @@
         gap: 3px;
     }
     
-    /* Checkbox styling */
-    #checkAll, .user-checkbox {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-    }
-    
-    /* Bulk delete button */
-    #bulkDeleteBtn {
-        transition: all 0.3s ease;
-    }
-    
-    #bulkDeleteBtn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
     /* Fix DataTables length selector layout */
     .dataTables_length {
         margin-bottom: 15px;
@@ -203,26 +253,6 @@
         width: auto !important;
         margin: 0 5px;
     }
-    
-    /* Remove sorting indicator from checkbox column */
-    @if(auth()->user()->hasRole('Super Admin'))
-    #usersTable thead th:first-child {
-        cursor: default !important;
-        background-image: none !important;
-    }
-    
-    #usersTable thead th:first-child::after,
-    #usersTable thead th:first-child::before {
-        display: none !important;
-    }
-    
-    #usersTable thead th:first-child.sorting,
-    #usersTable thead th:first-child.sorting_asc,
-    #usersTable thead th:first-child.sorting_desc {
-        cursor: default !important;
-        background-image: none !important;
-    }
-    @endif
     
     /* Improve DataTables wrapper spacing */
     .dataTables_wrapper .row {
@@ -255,6 +285,8 @@ $(document).ready(function() {
         responsive: false,
         scrollX: true,
         autoWidth: false,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        pageLength: 10,
         ajax: {
             url: '{{ route("admin.users.data") }}',
             type: 'GET',
@@ -266,16 +298,6 @@ $(document).ready(function() {
             }
         },
         columns: [
-            @if(auth()->user()->hasRole('Super Admin'))
-            { 
-                data: 'checkbox', 
-                name: 'checkbox', 
-                orderable: false, 
-                searchable: false, 
-                width: '30px',
-                className: 'text-center'
-            },
-            @endif
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '40px' },
             { data: 'name', name: 'name', width: '150px' },
             { data: 'username', name: 'username', width: '120px' },
@@ -286,29 +308,6 @@ $(document).ready(function() {
             { data: 'action', name: 'action', orderable: false, searchable: false, width: '120px' }
         ],
         columnDefs: [
-            @if(auth()->user()->hasRole('Super Admin'))
-            {
-                targets: 0,
-                orderable: false,
-                className: 'text-center'
-            },
-            { 
-                targets: [1, 7, 8],
-                className: 'text-center'
-            },
-            {
-                targets: 6,
-                render: function(data) {
-                    return '<div style="white-space: normal; word-wrap: break-word;">' + data + '</div>';
-                }
-            },
-            {
-                targets: 8,
-                render: function(data) {
-                    return '<div style="white-space: nowrap;">' + data + '</div>';
-                }
-            }
-            @else
             { 
                 targets: [0, 6, 7],
                 className: 'text-center'
@@ -325,13 +324,8 @@ $(document).ready(function() {
                     return '<div style="white-space: nowrap;">' + data + '</div>';
                 }
             }
-            @endif
         ],
-        @if(auth()->user()->hasRole('Super Admin'))
-        order: [[2, 'asc']],  // Default sorting by name (index 2 karena ada checkbox di index 0)
-        @else
-        order: [[1, 'asc']],  // Default sorting by name (index 1)
-        @endif
+        order: [[1, 'asc']],  // Default sorting by name
         language: {
             processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
             search: "Cari:",
@@ -347,110 +341,6 @@ $(document).ready(function() {
             }
         }
     });
-
-    @if(auth()->user()->hasRole('Super Admin'))
-    // Prevent sorting on checkbox column header
-    $('#usersTable thead th:first-child').on('click', function(e) {
-        e.stopPropagation();
-    });
-    
-    // Remove sorting class from checkbox column
-    $('#usersTable thead th:first-child').removeClass('sorting sorting_asc sorting_desc');
-    
-    // Check All functionality
-    $('#checkAll').on('click', function() {
-        const isChecked = $(this).prop('checked');
-        $('.user-checkbox').prop('checked', isChecked);
-        updateBulkDeleteButton();
-    });
-
-    // Individual checkbox
-    $('#usersTable').on('change', '.user-checkbox', function() {
-        updateBulkDeleteButton();
-        
-        // Update check all status
-        const total = $('.user-checkbox').length;
-        const checked = $('.user-checkbox:checked').length;
-        $('#checkAll').prop('checked', total === checked);
-    });
-
-    // Update bulk delete button state
-    function updateBulkDeleteButton() {
-        const checkedCount = $('.user-checkbox:checked').length;
-        $('#selectedCount').text(checkedCount);
-        $('#bulkDeleteBtn').prop('disabled', checkedCount === 0);
-    }
-
-    // Bulk Delete
-    $('#bulkDeleteBtn').on('click', function() {
-        const selectedIds = [];
-        $('.user-checkbox:checked').each(function() {
-            selectedIds.push($(this).val());
-        });
-
-        if (selectedIds.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: 'Silakan pilih user yang ingin dihapus'
-            });
-            return;
-        }
-
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} user yang dipilih?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '{{ route("admin.users.bulk-delete") }}',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        ids: selectedIds
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                            table.ajax.reload();
-                            $('#checkAll').prop('checked', false);
-                            updateBulkDeleteButton();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal!',
-                                text: response.message
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMsg = 'Terjadi kesalahan saat menghapus user';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMsg = xhr.responseJSON.message;
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMsg
-                        });
-                    }
-                });
-            }
-        });
-    });
-    @endif
 
     // Toggle Status
     $('#usersTable').on('change', '.toggle-status', function() {
@@ -655,6 +545,30 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Filter Functions
+    $('#filterRole').on('change', function() {
+        applyFilters();
+    });
+    
+    $('#btnResetFilter').on('click', function() {
+        $('#filterRole').val('');
+        applyFilters();
+    });
+    
+    function applyFilters() {
+        let role = $('#filterRole').val();
+        
+        // Build filter parameters
+        let filterParams = {};
+        if (role) filterParams.role = role;
+        
+        // Reload DataTable with filters
+        table.settings()[0].ajax.data = function(d) {
+            return $.extend({}, d, filterParams);
+        };
+        table.ajax.reload();
+    }
 });
 </script>
 @stop

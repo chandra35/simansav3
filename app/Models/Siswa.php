@@ -34,6 +34,7 @@ class Siswa extends Model
         'cita_cita',
         'nomor_hp',
         'alamat_sama_ortu',
+        'jenis_tempat_tinggal',
         'alamat_siswa',
         'rt_siswa',
         'rw_siswa',
@@ -118,17 +119,32 @@ class Siswa extends Model
         return $this->belongsTo(Jurusan::class, 'jurusan_pilihan_id');
     }
 
+    // Alias for kelasHistory (untuk kompatibilitas)
+    public function kelas()
+    {
+        return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
+                    ->withTimestamps();
+    }
+
     public function kelasHistory()
     {
-        return $this->belongsToMany(Kelas::class, 'siswa_kelas')
-                    ->withPivot(['tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+        return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps()
                     ->orderByDesc('siswa_kelas.created_at');
     }
 
     public function kelasAktif()
     {
-        return $this->kelasHistory()->wherePivot('status', 'aktif');
+        return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
+                    ->where('siswa_kelas.status', 'aktif')
+                    ->withTimestamps()
+                    ->orderByDesc('siswa_kelas.created_at');
     }
 
     public function mutasiHistory()

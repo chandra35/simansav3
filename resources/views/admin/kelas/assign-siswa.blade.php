@@ -95,16 +95,35 @@
             {{-- Available Siswa List --}}
             <div class="card card-success card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-users"></i> Siswa yang Tersedia</h3>
-                    <div class="card-tools">
-                        <div class="input-group input-group-sm" style="width: 250px;">
-                            <input type="text" id="search-siswa" class="form-control" placeholder="Cari NISN/Nama...">
-                            <div class="input-group-append">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            </div>
-                        </div>
-                    </div>
+                    <h3 class="card-title"><i class="fas fa-users"></i> Tambah Siswa</h3>
                 </div>
+                <div class="card-body">
+                    {{-- Nav Tabs --}}
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="pilih-tab" data-toggle="tab" href="#pilih-siswa" role="tab">
+                                <i class="fas fa-check-square"></i> Pilih Siswa
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="nisn-tab" data-toggle="tab" href="#nisn-bulk" role="tab">
+                                <i class="fas fa-list-ol"></i> Input NISN (Bulk)
+                            </a>
+                        </li>
+                    </ul>
+
+                    {{-- Tab Content --}}
+                    <div class="tab-content mt-3" id="myTabContent">
+                        {{-- Tab 1: Pilih Siswa (Checkbox) --}}
+                        <div class="tab-pane fade show active" id="pilih-siswa" role="tabpanel">
+                            <div class="mb-2">
+                                <div class="input-group input-group-sm" style="width: 300px;">
+                                    <input type="text" id="search-siswa" class="form-control" placeholder="Cari NISN/Nama...">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                </div>
+                            </div>
                 <div class="card-body p-0">
                     @if($availableSiswa->count() > 0)
                         <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
@@ -159,6 +178,38 @@
                             <small>Semua siswa aktif sudah terdaftar di kelas untuk tahun pelajaran ini.</small>
                         </div>
                     @endif
+                        </div>
+
+                        {{-- Tab 2: Input NISN Bulk --}}
+                        <div class="tab-pane fade" id="nisn-bulk" role="tabpanel">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Petunjuk:</h5>
+                                <ul class="mb-0">
+                                    <li>Copy-paste <strong>NISN</strong> dari Excel atau file lain</li>
+                                    <li>Tulis <strong>satu NISN per baris</strong> (tekan Enter)</li>
+                                    <li>NISN harus <strong>10 digit angka</strong></li>
+                                    <li>Karakter non-angka akan otomatis dihapus</li>
+                                    <li>Maksimal <strong>{{ $kelas->sisa_tempat }} siswa</strong> sekaligus</li>
+                                </ul>
+                            </div>
+
+                            <form id="formBulkNISN">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="nisn_list">Daftar NISN <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="nisn_list" name="nisn_list" rows="12" 
+                                        placeholder="Contoh:&#10;0123456789&#10;0987654321&#10;0112233445&#10;..."></textarea>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-lightbulb"></i> Tip: Copy kolom NISN dari Excel dan paste di sini
+                                    </small>
+                                </div>
+
+                                <button type="button" class="btn btn-primary btn-lg btn-block" id="btn-proses-nisn">
+                                    <i class="fas fa-upload"></i> Proses Bulk Import
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -317,6 +368,115 @@
                                     icon: 'error',
                                     title: 'Gagal!',
                                     text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            // === NISN Bulk Import Handler ===
+            $('#btn-proses-nisn').on('click', function() {
+                let nisnList = $('#nisn_list').val().trim();
+                
+                if (!nisnList) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Input Kosong',
+                        text: 'Silakan masukkan daftar NISN terlebih dahulu.'
+                    });
+                    return;
+                }
+
+                // Parse NISN list
+                let nisnArray = nisnList.split('\n')
+                    .map(line => line.trim().replace(/[^0-9]/g, '')) // Clean non-digit
+                    .filter(nisn => nisn.length === 10); // Only 10 digits
+
+                let uniqueNISN = [...new Set(nisnArray)]; // Remove duplicates
+
+                if (uniqueNISN.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'NISN Tidak Valid',
+                        html: 'Tidak ada NISN yang valid (10 digit).<br><small>Pastikan setiap NISN terdiri dari 10 digit angka.</small>'
+                    });
+                    return;
+                }
+
+                if (uniqueNISN.length > maxSiswa) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Melebihi Kapasitas!',
+                        html: `Maksimal <strong>${maxSiswa} siswa</strong>.<br>Anda memasukkan <strong>${uniqueNISN.length} NISN</strong>.`
+                    });
+                    return;
+                }
+
+                // Confirmation
+                Swal.fire({
+                    title: 'Konfirmasi Bulk Import',
+                    html: `
+                        <p>Akan memproses <strong>${uniqueNISN.length} NISN</strong></p>
+                        <small class="text-muted">NISN yang tidak ditemukan atau sudah terdaftar akan dilewati</small>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Ya, Proses!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#btn-proses-nisn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+
+                        $.ajax({
+                            url: "{{ route('admin.kelas.siswa.store-nisn', $kelas->id) }}",
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                nisn_list: uniqueNISN.join('\n'),
+                                tanggal_masuk: $('#tanggal_masuk').val()
+                            },
+                            success: function(response) {
+                                let icon = 'success';
+                                let title = 'Proses Selesai!';
+                                let html = `
+                                    <div class="text-left">
+                                        <p><strong>✅ Berhasil:</strong> ${response.success_count} siswa</p>
+                                        <p><strong>❌ Gagal:</strong> ${response.failed_count} NISN</p>
+                                `;
+
+                                if (response.errors && response.errors.length > 0) {
+                                    html += `<hr><p><strong>Detail Error:</strong></p><ul class="text-left" style="max-height: 200px; overflow-y: auto;">`;
+                                    response.errors.forEach(err => {
+                                        html += `<li><code>${err.nisn}</code>: ${err.error}</li>`;
+                                    });
+                                    html += `</ul>`;
+                                    
+                                    if (response.failed_count > response.success_count) {
+                                        icon = 'warning';
+                                        title = 'Sebagian Berhasil';
+                                    }
+                                }
+
+                                html += `</div>`;
+
+                                Swal.fire({
+                                    icon: icon,
+                                    title: title,
+                                    html: html,
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    window.location.href = "{{ route('admin.kelas.show', $kelas->id) }}";
+                                });
+                            },
+                            error: function(xhr) {
+                                $('#btn-proses-nisn').prop('disabled', false).html('<i class="fas fa-upload"></i> Proses Bulk Import');
+                                
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses NISN'
                                 });
                             }
                         });

@@ -324,6 +324,80 @@
     </div>
 </div>
 
+<!-- File Lainnya Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-outline card-secondary">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-paperclip"></i> File Lainnya
+                    <span class="badge badge-secondary ml-2">Opsional</span>
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-sm btn-success" onclick="showUploadLainnyaModal()">
+                        <i class="fas fa-plus"></i> Tambah File Lainnya
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                @php
+                    $fileLainnya = $dokumen->where('jenis_dokumen', 'lainnya');
+                @endphp
+                
+                @if($fileLainnya->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="40%">Nama File</th>
+                                    <th width="20%">Ukuran</th>
+                                    <th width="20%">Tanggal Upload</th>
+                                    <th width="15%" class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($fileLainnya as $index => $file)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>
+                                        <i class="fas fa-file-pdf text-danger mr-2"></i>
+                                        {{ $file->nama_file }}
+                                        @if($file->keterangan)
+                                        <br><small class="text-muted">{{ $file->keterangan }}</small>
+                                        @endif
+                                    </td>
+                                    <td>{{ $file->getFileSizeFormatted() }}</td>
+                                    <td>{{ $file->created_at->format('d/m/Y H:i') }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ $file->getFileUrl() }}" target="_blank" class="btn btn-info" title="Lihat">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger" onclick="deleteDokumen('{{ $file->id }}', 'File Lainnya')" title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-4">
+                        <i class="fas fa-paperclip fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-3">Belum ada file lainnya yang diupload</p>
+                        <button type="button" class="btn btn-secondary" onclick="showUploadLainnyaModal()">
+                            <i class="fas fa-plus"></i> Tambah File Lainnya
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Upload -->
 <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -367,6 +441,63 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Upload File Lainnya -->
+<div class="modal fade" id="uploadLainnyaModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="uploadLainnyaForm" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-plus"></i> Tambah File Lainnya
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="jenis_dokumen" value="lainnya">
+                    
+                    <div class="form-group">
+                        <label>Nama Dokumen <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nama_dokumen" id="nama_dokumen" 
+                               placeholder="Misal: Akta Kelahiran, Sertifikat, dll" required>
+                        <small class="form-text text-muted">
+                            Masukkan nama/jenis dokumen yang akan diupload
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>File Dokumen <span class="text-danger">*</span></label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="file_lainnya" name="file" 
+                                   accept=".pdf,.jpg,.jpeg,.png" required>
+                            <label class="custom-file-label" for="file_lainnya">Pilih file...</label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Format: PDF, JPG, JPEG, PNG (Max: 2MB)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Keterangan (Opsional)</label>
+                        <textarea class="form-control" name="keterangan" rows="3" 
+                                  placeholder="Tambahkan keterangan jika diperlukan"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('css')
@@ -398,8 +529,18 @@ function showUploadModal(jenisDokumen, label) {
     $('#uploadModal').modal('show');
 }
 
+// Show upload lainnya modal
+function showUploadLainnyaModal() {
+    $('#uploadLainnyaModal').modal('show');
+}
+
 // Handle file input change
 $('#file').on('change', function() {
+    var fileName = $(this).val().split('\\').pop();
+    $(this).siblings('.custom-file-label').addClass('selected').html(fileName);
+});
+
+$('#file_lainnya').on('change', function() {
     var fileName = $(this).val().split('\\').pop();
     $(this).siblings('.custom-file-label').addClass('selected').html(fileName);
 });
@@ -492,9 +633,64 @@ function deleteDokumen(id, jenis) {
     });
 }
 
+// Handle upload lainnya form submit
+$('#uploadLainnyaForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    // Show loading
+    Swal.fire({
+        title: 'Mengupload...',
+        html: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    $.ajax({
+        url: '{{ route('siswa.dokumen.upload') }}',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Swal.close();
+            if (response.success) {
+                $('#uploadLainnyaModal').modal('hide');
+                toastr.success(response.message);
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            } else {
+                Swal.fire('Gagal!', response.message, 'error');
+            }
+        },
+        error: function(xhr) {
+            Swal.close();
+            if (xhr.status === 422) {
+                var errors = xhr.responseJSON.errors;
+                var errorMessage = '';
+                $.each(errors, function(key, value) {
+                    errorMessage += value[0] + '<br>';
+                });
+                Swal.fire('Validasi Gagal!', errorMessage, 'error');
+            } else {
+                Swal.fire('Error!', 'Terjadi kesalahan saat mengupload dokumen', 'error');
+            }
+        }
+    });
+});
+
 // Reset form when modal is closed
 $('#uploadModal').on('hidden.bs.modal', function() {
     $('#uploadForm')[0].reset();
+    $('.custom-file-label').removeClass('selected').html('Pilih file...');
+});
+
+$('#uploadLainnyaModal').on('hidden.bs.modal', function() {
+    $('#uploadLainnyaForm')[0].reset();
     $('.custom-file-label').removeClass('selected').html('Pilih file...');
 });
 </script>

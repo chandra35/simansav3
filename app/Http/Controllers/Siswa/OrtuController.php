@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ortu;
+use App\Services\ActivityLogService;
 use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
@@ -112,26 +113,36 @@ class OrtuController extends Controller
 
                 // Update atau create data ortu
                 $ortu = $siswa->ortu;
+                $oldData = $ortu ? $ortu->toArray() : [];
+                
                 if ($ortu) {
                     $ortu->update($ortuData);
                 } else {
                     $ortuData['siswa_id'] = $siswa->id;
-                    Ortu::create($ortuData);
+                    $ortu = Ortu::create($ortuData);
                 }
 
                 // Update status kelengkapan data ortu
                 $siswa->update(['data_ortu_completed' => true]);
 
-                // Log activity
-                \App\Models\ActivityLog::create([
-                    'user_id' => $user->id,
-                    'activity_type' => 'update',
-                    'model_type' => 'App\\Models\\Ortu',
-                    'model_id' => $siswa->ortu->id,
-                    'description' => 'Berhasil memperbarui data orangtua',
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                ]);
+                // Enhanced activity log with change tracking
+                if (!empty($oldData)) {
+                    ActivityLogService::logChanges(
+                        'update_data_ortu',
+                        $ortu,
+                        $oldData,
+                        $ortuData,
+                        'Memperbarui data orangtua'
+                    );
+                } else {
+                    ActivityLogService::log([
+                        'activity_type' => 'create_data_ortu',
+                        'model_type' => Ortu::class,
+                        'model_id' => $ortu->id,
+                        'description' => 'Menambahkan data orangtua',
+                        'new_values' => $ortuData,
+                    ]);
+                }
             });
 
             return redirect()->route('siswa.profile.diri')->with('success', 'Data orangtua berhasil disimpan! Silakan lengkapi data diri Anda.');

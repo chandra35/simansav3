@@ -136,8 +136,8 @@ class SiswaImportController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Headers
-        $headers = ['NISN', 'NIK', 'Nama Lengkap', 'Jenis Kelamin'];
+        // Headers - urutan sesuai template EMIS
+        $headers = ['Nama Lengkap', 'NISN', 'NIK', 'Jenis Kelamin'];
         $sheet->fromArray($headers, null, 'A1');
 
         // Style header
@@ -150,8 +150,8 @@ class SiswaImportController extends Controller
 
         // Sample data
         $sampleData = [
-            ['0123456789', '1234567890123456', 'Ahmad Fauzi', 'L'],
-            ['0123456790', '1234567890123457', 'Siti Nurhaliza', 'P'],
+            ['Ahmad Fauzi', '0123456789', '1234567890123456', 'L'],
+            ['Siti Nurhaliza', '0123456790', '1234567890123457', 'P'],
         ];
         $sheet->fromArray($sampleData, null, 'A2');
 

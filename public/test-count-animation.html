@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Count Animation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .count-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .count-number {
+            font-size: 4rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .test-controls {
+            margin-top: 20px;
+        }
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .animate-count {
+            animation: countUp 0.8s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center text-white mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-vial"></i> Test Count Animation
+            </h1>
+            <p class="lead">Testing perbaikan bug count mundur</p>
+        </div>
+
+        <!-- Test Case 1: Normal Count -->
+        <div class="test-card">
+            <h3><i class="fas fa-arrow-up text-success"></i> Test #1: Normal Count Up (0 → 50)</h3>
+            <div class="count-box">
+                <div class="count-number" id="test1">0</div>
+                <small>Seharusnya: 0 → 1 → 2 → ... → 50</small>
+            </div>
+            <button class="btn btn-primary" onclick="runTest1()">
+                <i class="fas fa-play"></i> Run Test
+            </button>
+        </div>
+
+        <!-- Test Case 2: Zero to Zero -->
+        <div class="test-card">
+            <h3><i class="fas fa-equals text-warning"></i> Test #2: Zero to Zero (0 → 0)</h3>
+            <p class="text-muted">Bug sebelumnya: Ini yang menyebabkan -5816 (count mundur tanpa henti)</p>
+            <div class="count-box">
+                <div class="count-number" id="test2">0</div>
+                <small>Seharusnya: Tetap 0 (tidak berubah)</small>
+            </div>
+            <button class="btn btn-warning" onclick="runTest2()">
+                <i class="fas fa-play"></i> Run Test
+            </button>
+        </div>
+
+        <!-- Test Case 3: Small Count -->
+        <div class="test-card">
+            <h3><i class="fas fa-arrow-up text-info"></i> Test #3: Small Count (0 → 5)</h3>
+            <div class="count-box">
+                <div class="count-number" id="test3">0</div>
+                <small>Seharusnya: 0 → 1 → 2 → 3 → 4 → 5</small>
+            </div>
+            <button class="btn btn-info" onclick="runTest3()">
+                <i class="fas fa-play"></i> Run Test
+            </button>
+        </div>
+
+        <!-- Test Case 4: Large Count -->
+        <div class="test-card">
+            <h3><i class="fas fa-rocket text-danger"></i> Test #4: Large Count (0 → 1000)</h3>
+            <div class="count-box">
+                <div class="count-number" id="test4">0</div>
+                <small>Seharusnya: Count up cepat hingga 1000</small>
+            </div>
+            <button class="btn btn-danger" onclick="runTest4()">
+                <i class="fas fa-play"></i> Run Test
+            </button>
+        </div>
+
+        <!-- Test Case 5: Same Non-Zero Values -->
+        <div class="test-card">
+            <h3><i class="fas fa-equals text-secondary"></i> Test #5: Same Value (10 → 10)</h3>
+            <div class="count-box">
+                <div class="count-number" id="test5">10</div>
+                <small>Seharusnya: Tetap 10 (tidak berubah)</small>
+            </div>
+            <button class="btn btn-secondary" onclick="runTest5()">
+                <i class="fas fa-play"></i> Run Test
+            </button>
+        </div>
+
+        <!-- Test Case 6: Import Simulation -->
+        <div class="test-card">
+            <h3><i class="fas fa-file-import text-success"></i> Test #6: Simulasi Import Real</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="count-box bg-success">
+                        <small>Berhasil</small>
+                        <div class="count-number" id="testSuccess">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="count-box bg-danger">
+                        <small>Gagal</small>
+                        <div class="count-number" id="testFailed">0</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="count-box bg-info">
+                        <small>Total</small>
+                        <div class="count-number" id="testTotal">0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success btn-lg btn-block" onclick="runImportTest()">
+                <i class="fas fa-upload"></i> Simulasi Import (50 sukses, 0 gagal, 50 total)
+            </button>
+        </div>
+
+        <!-- Log -->
+        <div class="test-card">
+            <h3><i class="fas fa-terminal"></i> Console Log</h3>
+            <div id="log" style="background: #1e1e1e; color: #00ff00; padding: 20px; border-radius: 8px; font-family: monospace; height: 200px; overflow-y: auto;">
+                <div>✅ Ready to test...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // FIXED VERSION - Animate counter function
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            if (!obj) return;
+            
+            addLog(`🎬 Animation started: ${id} from ${start} to ${end}`);
+            
+            // Jika start = end, langsung set nilai
+            if (start === end) {
+                obj.textContent = end;
+                addLog(`✅ Same value, no animation needed: ${end}`);
+                return;
+            }
+            
+            let range = Math.abs(end - start);
+            let current = start;
+            let increment = end > start ? 1 : -1;
+            
+            // Pastikan stepTime tidak 0 atau negatif
+            let stepTime = Math.max(Math.floor(duration / range), 1);
+            
+            addLog(`⚙️ Config: range=${range}, increment=${increment}, stepTime=${stepTime}ms`);
+            
+            let timer = setInterval(function() {
+                current += increment;
+                obj.textContent = current;
+                
+                // Stop condition
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    obj.textContent = end; // Pastikan nilai akhir tepat
+                    clearInterval(timer);
+                    addLog(`✅ Animation completed: ${id} = ${end}`);
+                }
+            }, stepTime);
+        }
+
+        function addLog(message) {
+            let log = $('#log');
+            let timestamp = new Date().toLocaleTimeString();
+            log.append(`<div>[${timestamp}] ${message}</div>`);
+            log.scrollTop(log[0].scrollHeight);
+        }
+
+        function resetTest(id) {
+            $('#' + id).text('0');
+            addLog(`🔄 Reset: ${id}`);
+        }
+
+        function runTest1() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #1: Normal Count Up (0 → 50)');
+            addLog('═══════════════════════════════════════');
+            resetTest('test1');
+            setTimeout(() => animateValue('test1', 0, 50, 1000), 100);
+        }
+
+        function runTest2() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #2: Zero to Zero (0 → 0)');
+            addLog('⚠️  BUG SEBELUMNYA: Ini yang crash!');
+            addLog('═══════════════════════════════════════');
+            resetTest('test2');
+            setTimeout(() => animateValue('test2', 0, 0, 800), 100);
+        }
+
+        function runTest3() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #3: Small Count (0 → 5)');
+            addLog('═══════════════════════════════════════');
+            resetTest('test3');
+            setTimeout(() => animateValue('test3', 0, 5, 1000), 100);
+        }
+
+        function runTest4() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #4: Large Count (0 → 1000)');
+            addLog('═══════════════════════════════════════');
+            resetTest('test4');
+            setTimeout(() => animateValue('test4', 0, 1000, 2000), 100);
+        }
+
+        function runTest5() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #5: Same Value (10 → 10)');
+            addLog('═══════════════════════════════════════');
+            $('#test5').text('10');
+            setTimeout(() => animateValue('test5', 10, 10, 800), 100);
+        }
+
+        function runImportTest() {
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🧪 TEST #6: Simulasi Import Real');
+            addLog('📊 Import 50 siswa, semua sukses');
+            addLog('═══════════════════════════════════════');
+            
+            // Reset
+            $('#testSuccess').text('0');
+            $('#testFailed').text('0');
+            $('#testTotal').text('0');
+            
+            setTimeout(() => {
+                addLog('🚀 Starting animation...');
+                animateValue('testSuccess', 0, 50, 800);
+                animateValue('testFailed', 0, 0, 800);  // ⚠️ BUG LAMA: Ini yang crash!
+                animateValue('testTotal', 0, 50, 800);
+            }, 100);
+        }
+
+        // Auto run test 2 (yang bug) setelah load
+        $(document).ready(function() {
+            setTimeout(function() {
+                addLog('🎯 Auto-running critical test...');
+                runTest2();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

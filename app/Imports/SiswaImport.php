@@ -33,6 +33,10 @@ class SiswaImport implements ToCollection, WithHeadingRow, WithValidation, Skips
             try {
                 DB::beginTransaction();
                 
+                // Clean NISN & NIK: hapus karakter non-angka (termasuk petik tunggal)
+                $row['nisn'] = $this->cleanNumericField($row['nisn'] ?? '');
+                $row['nik'] = $this->cleanNumericField($row['nik'] ?? '');
+                
                 // Debug: Log row data untuk melihat key yang digunakan
                 Log::info('Row data', ['row' => $row->toArray(), 'data_row' => $dataRowNumber]);
 
@@ -146,6 +150,25 @@ class SiswaImport implements ToCollection, WithHeadingRow, WithValidation, Skips
     protected function generateEmail($nisn)
     {
         return strtolower($nisn) . '@siswa.simansa.sch.id';
+    }
+
+    /**
+     * Clean numeric field - hapus semua karakter non-angka
+     * Termasuk petik tunggal (') yang sering muncul di Excel
+     */
+    protected function cleanNumericField($value)
+    {
+        if (empty($value)) {
+            return '';
+        }
+        
+        // Convert to string jika belum
+        $value = (string) $value;
+        
+        // Hapus semua karakter kecuali angka (0-9)
+        $cleaned = preg_replace('/[^0-9]/', '', $value);
+        
+        return $cleaned;
     }
 
     public function rules(): array

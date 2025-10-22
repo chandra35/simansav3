@@ -372,11 +372,9 @@ return [
         ],
         [
             'text' => 'Activity Log',
-            'route' => 'admin.under-development',
-            'icon' => 'fas fa-fw fa-hammer text-warning',
+            'route' => 'admin.activity-logs.index',
+            'icon' => 'fas fa-fw fa-history',
             'can' => 'admin-access',
-            'label' => 'Soon',
-            'label_color' => 'warning',
         ],
         [
             'header' => 'PENGATURAN',

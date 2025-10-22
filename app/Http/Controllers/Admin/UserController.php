@@ -22,7 +22,20 @@ class UserController extends Controller
     {
         // $this->authorize('view-user'); // Uncomment after testing
 
-        return view('admin.users.index');
+        // Get statistics
+        $stats = [
+            'total_users' => User::count(),
+            'admin' => User::role(['Super Admin', 'Admin'])->count(),
+            'gtk' => User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['Guru', 'Wali Kelas', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+            })->count(),
+            'siswa' => User::role('Siswa')->count(),
+        ];
+
+        // Get all roles for filter
+        $roles = Role::orderBy('name')->get();
+
+        return view('admin.users.index', compact('stats', 'roles'));
     }
 
     /**
@@ -31,6 +44,13 @@ class UserController extends Controller
     public function data(Request $request)
     {
         $users = User::with('roles')->select('users.*');
+
+        // Filter by Role
+        if ($request->filled('role')) {
+            $users->whereHas('roles', function($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
 
         // Search functionality
         if ($request->has('search') && $request->search['value']) {
@@ -45,9 +65,12 @@ class UserController extends Controller
         $totalRecords = User::count();
         $filteredRecords = $users->count();
         
-        // Pagination
+        // Pagination - Handle "All" option
         if ($request->has('start') && $request->has('length')) {
-            $users->skip($request->start)->take($request->length);
+            $length = $request->length;
+            if ($length != -1) {
+                $users->skip($request->start)->take($length);
+            }
         }
 
         // Ordering
@@ -61,15 +84,6 @@ class UserController extends Controller
         }
 
         $data = $users->get()->map(function($user, $index) use ($request) {
-            // Generate checkbox for Super Admin only
-            $checkbox = '';
-            if (auth()->user()->hasRole('Super Admin')) {
-                // Don't allow Super Admin to delete themselves
-                if ($user->id !== auth()->id()) {
-                    $checkbox = "<input type='checkbox' class='user-checkbox' value='{$user->id}'>";
-                }
-            }
-
             // Generate roles badges
             $rolesBadges = $user->roles->map(function ($role) {
                 $colors = [
@@ -106,7 +120,7 @@ class UserController extends Controller
             }
             $actions .= "</div>";
 
-            $result = [
+            return [
                 'DT_RowIndex' => $request->start + $index + 1,
                 'name' => $user->name,
                 'username' => $user->username,
@@ -116,13 +130,6 @@ class UserController extends Controller
                 'status' => $statusHtml,
                 'action' => $actions
             ];
-
-            // Add checkbox column if Super Admin
-            if (auth()->user()->hasRole('Super Admin')) {
-                $result = array_merge(['checkbox' => $checkbox], $result);
-            }
-
-            return $result;
         });
 
         return response()->json([
@@ -449,57 +456,5 @@ class UserController extends Controller
             'permissionsByModule',
             'totalUsers'
         ));
-    }
-
-    /**
-     * Bulk delete users (Super Admin only)
-     */
-    public function bulkDelete(Request $request)
-    {
-        // Only Super Admin can bulk delete
-        if (!auth()->user()->hasRole('Super Admin')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki izin untuk melakukan bulk delete'
-            ], 403);
-        }
-
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:users,id'
-        ]);
-
-        try {
-            $ids = $request->ids;
-            $currentUserId = auth()->id();
-
-            // Remove current user from deletion list
-            $ids = array_filter($ids, function($id) use ($currentUserId) {
-                return $id != $currentUserId;
-            });
-
-            if (empty($ids)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak ada user yang dapat dihapus'
-                ], 400);
-            }
-
-            // Delete users
-            $deletedCount = User::whereIn('id', $ids)->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => "Berhasil menghapus {$deletedCount} user"
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error bulk deleting users: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus user: ' . $e->getMessage()
-            ], 500);
-        }
     }
 }

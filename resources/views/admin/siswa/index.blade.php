@@ -7,6 +7,46 @@
 @stop
 
 @section('content')
+{{-- Card Informasi Siswa --}}
+<div class="row mb-3">
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-info">
+            <span class="info-box-icon"><i class="fas fa-users"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Siswa</span>
+                <span class="info-box-number">{{ $stats['total_siswa'] }} Siswa</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-primary">
+            <span class="info-box-icon"><i class="fas fa-male"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Laki-Laki</span>
+                <span class="info-box-number">{{ $stats['laki_laki'] }} Siswa</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-danger">
+            <span class="info-box-icon"><i class="fas fa-female"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Perempuan</span>
+                <span class="info-box-number">{{ $stats['perempuan'] }} Siswa</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="info-box bg-success">
+            <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Data Lengkap</span>
+                <span class="info-box-number">{{ $stats['data_lengkap'] }} Siswa</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -25,6 +65,59 @@
                 </div>
             </div>
             <div class="card-body">
+                {{-- Filter Section --}}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body p-3">
+                                <form id="filterForm" class="form-inline">
+                                    <div class="form-group mr-2 mb-2">
+                                        <label for="filterJenisKelamin" class="mr-2">
+                                            <i class="fas fa-venus-mars"></i> Jenis Kelamin:
+                                        </label>
+                                        <select id="filterJenisKelamin" class="form-control form-control-sm" style="width: 150px;">
+                                            <option value="">Semua</option>
+                                            <option value="L">Laki-Laki</option>
+                                            <option value="P">Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group mr-2 mb-2">
+                                        <label for="filterTingkat" class="mr-2">
+                                            <i class="fas fa-layer-group"></i> Tingkat:
+                                        </label>
+                                        <select id="filterTingkat" class="form-control form-control-sm" style="width: 150px;">
+                                            <option value="">Semua</option>
+                                            @foreach($tingkatOptions as $value => $label)
+                                                <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group mr-2 mb-2">
+                                        <label for="filterKelas" class="mr-2">
+                                            <i class="fas fa-door-open"></i> Kelas:
+                                        </label>
+                                        <select id="filterKelas" class="form-control form-control-sm" style="width: 200px;" disabled>
+                                            <option value="">Pilih Tingkat Dulu</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group mr-2 mb-2">
+                                        <label for="filterStatus" class="mr-2">
+                                            <i class="fas fa-check-circle"></i> Status Data:
+                                        </label>
+                                        <select id="filterStatus" class="form-control form-control-sm" style="width: 150px;">
+                                            <option value="">Semua</option>
+                                            <option value="lengkap">Data Lengkap</option>
+                                            <option value="belum">Belum Lengkap</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" id="btnResetFilter" class="btn btn-sm btn-secondary mb-2">
+                                        <i class="fas fa-redo"></i> Reset
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table id="siswa-table" class="table table-bordered table-striped">
                         <thead>
@@ -187,6 +280,19 @@
         .nav-tabs .nav-link {
             color: #495057;
         }
+        /* DataTables length selector styling */
+        .dataTables_length select {
+            min-width: 80px !important;
+            width: auto !important;
+            padding: 0.375rem 1.75rem 0.375rem 0.75rem !important;
+        }
+        .dataTables_length {
+            margin-bottom: 1rem;
+        }
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 0.75rem;
+        }
         .nav-tabs .nav-link.active {
             color: #007bff;
             font-weight: 600;
@@ -226,7 +332,13 @@ $(document).ready(function() {
         serverSide: true,
         ajax: {
             url: '{{ route('admin.siswa.data') }}',
-            type: 'GET'
+            type: 'GET',
+            error: function(xhr, error, code) {
+                console.log('Ajax error:', xhr, error, code);
+                if (xhr.status === 500) {
+                    alert('Terjadi kesalahan server. Silakan coba lagi atau pilih jumlah data yang lebih sedikit.');
+                }
+            }
         },
         columns: [
             { data: 'nisn', name: 'nisn' },
@@ -238,6 +350,8 @@ $(document).ready(function() {
             { data: 'created_at', name: 'created_at' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
         ],
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        pageLength: 10,
         order: [[6, 'desc']],
         language: {
             processing: "Memproses...",
@@ -644,6 +758,74 @@ function clearForm() {
     $('.invalid-feedback').text('');
     editingId = null;
 }
+
+// Filter Functions
+$(document).ready(function() {
+    // Filter Tingkat - Load Kelas
+    $('#filterTingkat').on('change', function() {
+        let tingkat = $(this).val();
+        let $kelasSelect = $('#filterKelas');
+        
+        $kelasSelect.prop('disabled', true).html('<option value="">Memuat...</option>');
+        
+        if (!tingkat) {
+            $kelasSelect.html('<option value="">Pilih Tingkat Dulu</option>');
+            applyFilters();
+            return;
+        }
+        
+        $.ajax({
+            url: '{{ route('admin.siswa.kelas-by-tingkat') }}',
+            data: { tingkat: tingkat },
+            success: function(data) {
+                let options = '<option value="">Semua Kelas</option>';
+                data.forEach(function(kelas) {
+                    options += `<option value="${kelas.id}">${kelas.text}</option>`;
+                });
+                $kelasSelect.html(options).prop('disabled', false);
+                applyFilters();
+            },
+            error: function() {
+                $kelasSelect.html('<option value="">Error loading</option>');
+                toastr.error('Gagal memuat data kelas');
+            }
+        });
+    });
+    
+    // Apply filter on change
+    $('#filterJenisKelamin, #filterKelas, #filterStatus').on('change', function() {
+        applyFilters();
+    });
+    
+    // Reset Filter
+    $('#btnResetFilter').on('click', function() {
+        $('#filterJenisKelamin').val('');
+        $('#filterTingkat').val('');
+        $('#filterKelas').val('').prop('disabled', true).html('<option value="">Pilih Tingkat Dulu</option>');
+        $('#filterStatus').val('');
+        applyFilters();
+    });
+    
+    function applyFilters() {
+        let jk = $('#filterJenisKelamin').val();
+        let tingkat = $('#filterTingkat').val();
+        let kelas = $('#filterKelas').val();
+        let status = $('#filterStatus').val();
+        
+        // Build filter parameters
+        let filterParams = {};
+        if (jk) filterParams.jenis_kelamin = jk;
+        if (tingkat) filterParams.tingkat = tingkat;
+        if (kelas) filterParams.kelas_id = kelas;
+        if (status) filterParams.status = status;
+        
+        // Reload DataTable with filters
+        siswaTable.settings()[0].ajax.data = function(d) {
+            return $.extend({}, d, filterParams);
+        };
+        siswaTable.ajax.reload();
+    }
+});
 
 </script>
 @stop

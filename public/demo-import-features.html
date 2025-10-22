@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Siswa - Feature Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .demo-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .progress-demo {
+            height: 35px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .checklist-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .demo-screenshot {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 5px;
+            background: white;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Header -->
+        <div class="text-center text-white mb-5">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-file-excel"></i>
+                Import Siswa - Enhanced Features
+            </h1>
+            <p class="lead">SIMANSA v3 - Sistem Informasi Manajemen Siswa</p>
+            <span class="demo-badge">
+                <i class="fas fa-star"></i> NEW FEATURES
+            </span>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">7</div>
+                    <div>Fitur Utama</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">15+</div>
+                    <div>Animasi</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">100%</div>
+                    <div>Responsive</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number">A+</div>
+                    <div>UX Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 1: Progress Bar -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-primary">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2>🎯 Real-time Progress Bar</h2>
+                <p class="text-muted">Progress bar dengan 3 tahap yang jelas dan informatif</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h5>Stage 1: Upload (0-30%)</h5>
+                    <div class="progress progress-demo">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                             style="width: 25%;">25%</div>
+                    </div>
+                    
+                    <h5>Stage 2: Validasi (30-60%)</h5>
+                    <div class="progress progress-demo">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                             style="width: 50%;">50%</div>
+                    </div>
+                    
+                    <h5>Stage 3: Proses (60-100%)</h5>
+                    <div class="progress progress-demo">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                             style="width: 75%;">75%</div>
+                    </div>
+                    
+                    <h5>Complete!</h5>
+                    <div class="progress progress-demo">
+                        <div class="progress-bar bg-success" 
+                             style="width: 100%;">100%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i>
+                <strong>Fitur:</strong> Warna berubah otomatis, animasi smooth, pesan real-time
+            </div>
+        </div>
+
+        <!-- Feature 2: Confirmation -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-warning">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h2>💬 Konfirmasi Import</h2>
+                <p class="text-muted">Modal konfirmasi yang menarik dengan detail lengkap</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Info yang ditampilkan:</h5>
+                    <ul class="list-unstyled">
+                        <li class="checklist-item">
+                            <i class="fas fa-file-excel text-success"></i>
+                            <strong>Nama File</strong>
+                        </li>
+                        <li class="checklist-item">
+                            <i class="fas fa-hdd text-info"></i>
+                            <strong>Ukuran File</strong>
+                        </li>
+                        <li class="checklist-item">
+                            <i class="fas fa-info-circle text-primary"></i>
+                            <strong>Catatan Penting</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Tombol Action:</h5>
+                    <button class="btn btn-success btn-lg btn-block mb-2">
+                        <i class="fas fa-check-circle"></i> Ya, Import Sekarang!
+                    </button>
+                    <button class="btn btn-secondary btn-lg btn-block">
+                        <i class="fas fa-times-circle"></i> Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 3: Results -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>📊 Hasil Import Detail</h2>
+                <p class="text-muted">3 jenis hasil dengan visualisasi yang berbeda</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-check-circle"></i> 100% Berhasil
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-success">✅ 50/50</h3>
+                            <p>Card hijau + pulse animation</p>
+                            <small>Toast notification, statistik lengkap</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-white">
+                            <i class="fas fa-exclamation-triangle"></i> Sebagian
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-warning">⚠️ 30/50</h3>
+                            <p>Card kuning + warning</p>
+                            <small>Tabel error, export CSV</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <i class="fas fa-times-circle"></i> Gagal
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-danger">❌ 0/50</h3>
+                            <p>Card merah + shake</p>
+                            <small>Detail error, perbaikan</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 4: Animations -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-info">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <h2>✨ Animasi & Transisi</h2>
+                <p class="text-muted">15+ animasi yang smooth dan modern</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Animasi Utama:</h5>
+                    <ul>
+                        <li>🌊 <strong>Fade In/Out</strong> - Transisi smooth</li>
+                        <li>📊 <strong>Slide In</strong> - Result card</li>
+                        <li>💫 <strong>Count Up</strong> - Angka statistik</li>
+                        <li>🎯 <strong>Pulse</strong> - Success indicator</li>
+                        <li>📳 <strong>Shake</strong> - Error alert</li>
+                        <li>🔄 <strong>Spin</strong> - Loading icon</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Hover Effects:</h5>
+                    <ul>
+                        <li>🎨 <strong>Card Shadow</strong> - Depth effect</li>
+                        <li>🔼 <strong>Translate Y</strong> - Lift up</li>
+                        <li>🌈 <strong>Border Color</strong> - Highlight</li>
+                        <li>💡 <strong>Background</strong> - Table row</li>
+                        <li>🎭 <strong>Scale</strong> - Icon zoom</li>
+                        <li>⚡ <strong>Transform</strong> - Button press</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 5: Export Error -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-danger">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <h2>💾 Export Error ke Excel</h2>
+                <p class="text-muted">Download laporan error untuk perbaikan data</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="alert alert-danger">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5><i class="fas fa-exclamation-triangle"></i> Detail Data yang Gagal</h5>
+                                <p class="mb-0">Silakan perbaiki data berikut dan upload ulang</p>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <button class="btn btn-outline-danger">
+                                    <i class="fas fa-file-excel"></i> Export Error ke Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table table-bordered table-sm">
+                        <thead class="bg-danger text-white">
+                            <tr>
+                                <th>Baris</th>
+                                <th>NISN</th>
+                                <th>Nama</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-danger">2</span></td>
+                                <td>123456</td>
+                                <td>Ahmad</td>
+                                <td class="text-danger"><small>NISN harus 10 digit</small></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-danger">5</span></td>
+                                <td>0123456789</td>
+                                <td>-</td>
+                                <td class="text-danger"><small>Nama Lengkap wajib diisi</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 6: Keyboard Shortcuts -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-secondary">
+                    <i class="fas fa-keyboard"></i>
+                </div>
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <p class="text-muted">Akses cepat dengan keyboard</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6 offset-md-3">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Shortcut</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>U</kbd></td>
+                                <td>Quick Upload</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Esc</kbd></td>
+                                <td>Kembali (saat result)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 7: Security & UX -->
+        <div class="feature-card">
+            <div class="text-center">
+                <div class="feature-icon text-primary">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2>🛡️ Keamanan & UX</h2>
+                <p class="text-muted">Fitur keamanan dan pengalaman pengguna</p>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>🔒 Keamanan:</h5>
+                    <ul>
+                        <li>Validasi format file (.xlsx, .xls)</li>
+                        <li>Validasi ukuran (max 2MB)</li>
+                        <li>Extension check</li>
+                        <li>CSRF protection</li>
+                        <li>SQL injection prevention</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>💡 UX Features:</h5>
+                    <ul>
+                        <li>Prevent accidental leave</li>
+                        <li>Disable button saat proses</li>
+                        <li>Real-time file info</li>
+                        <li>Tooltip informatif</li>
+                        <li>Toast notification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-5">
+            <h3>🚀 Siap Digunakan!</h3>
+            <p>Akses halaman import di:</p>
+            <a href="http://127.0.0.1:8000/admin/siswa/import/form" 
+               class="btn btn-light btn-lg" 
+               target="_blank">
+                <i class="fas fa-external-link-alt"></i> Buka Halaman Import
+            </a>
+            <p class="mt-3">
+                <small>
+                    SIMANSA v3 © 2025 | 
+                    <a href="IMPORT_FEATURES.md" class="text-white">
+                        <i class="fas fa-file-alt"></i> Dokumentasi Lengkap
+                    </a>
+                </small>
+            </p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add some interactive animations
+        $(document).ready(function() {
+            // Animate progress bars
+            $('.progress-bar').each(function() {
+                let $this = $(this);
+                let width = $this.css('width');
+                $this.css('width', '0%');
+                setTimeout(function() {
+                    $this.css('width', width);
+                }, 500);
+            });
+
+            // Card hover effect
+            $('.feature-card').hover(
+                function() {
+                    $(this).find('.feature-icon').addClass('animated pulse');
+                },
+                function() {
+                    $(this).find('.feature-icon').removeClass('animated pulse');
+                }
+            );
+        });
+    </script>
+</body>
+</html>

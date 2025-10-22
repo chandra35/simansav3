@@ -104,6 +104,7 @@ class KelasController extends Controller
                             $siswaAktifCount = $row->siswaKelas()
                                 ->where('tahun_pelajaran_id', $tahunPelajaranAktif->id)
                                 ->where('status', 'aktif')
+                                ->whereNull('deleted_at')
                                 ->count();
                             $canDelete = ($siswaAktifCount == 0);
                         }
@@ -237,16 +238,16 @@ class KelasController extends Controller
             'kurikulum.jurusans',
             'jurusan',
             'waliKelas',
-            'siswaAktif.user'
+            'siswaAktif'
         ]);
 
         // Statistics
         $stats = [
-            'total_siswa' => $kelas->siswaAktif()->count(),
+            'total_siswa' => $kelas->siswaAktif->count(),
             'sisa_tempat' => $kelas->sisa_tempat,
             'percentage_filled' => $kelas->percentage_filled,
-            'laki_laki' => $kelas->siswaAktif()->where('jenis_kelamin', 'L')->count(),
-            'perempuan' => $kelas->siswaAktif()->where('jenis_kelamin', 'P')->count(),
+            'laki_laki' => $kelas->siswaAktif->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => $kelas->siswaAktif->where('jenis_kelamin', 'P')->count(),
         ];
 
         return view('admin.kelas.show', compact('kelas', 'stats'));
@@ -336,8 +337,8 @@ class KelasController extends Controller
         // Check if kelas has active students in current tahun pelajaran
         if ($tahunPelajaranAktif) {
             $siswaAktifCount = $kelas->siswaKelas()
-                ->where('tahun_pelajaran_id', $tahunPelajaranAktif->id)
-                ->where('status', 'aktif')
+                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranAktif->id)
+                ->wherePivot('status', 'aktif')
                 ->count();
             
             if ($siswaAktifCount > 0) {
@@ -365,6 +366,60 @@ class KelasController extends Controller
     }
 
     /**
+     * Get available siswa for Select2 (AJAX)
+     */
+    public function getAvailableSiswa(Request $request, Kelas $kelas)
+    {
+        $search = $request->get('q', '');
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 10); // Support custom per_page
+
+        $query = Siswa::whereDoesntHave('kelas', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif');
+            })
+            // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
+            // ->where('data_diri_completed', true)
+            ->orderBy('nama_lengkap');
+
+        // Search by name or NISN
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_lengkap', 'LIKE', "%{$search}%")
+                  ->orWhere('nisn', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        
+        // If per_page > 1000, get all
+        if ($perPage > 1000) {
+            $siswa = $query->get();
+        } else {
+            $siswa = $query->skip(($page - 1) * $perPage)
+                           ->take($perPage)
+                           ->get();
+        }
+
+        $items = $siswa->map(function($s) {
+            return [
+                'id' => $s->id, // Primary key (UUID)
+                'text' => $s->nama_lengkap,
+                'nisn' => $s->nisn,
+                'jenis_kelamin' => $s->jenis_kelamin,
+                'nama_lengkap' => $s->nama_lengkap
+            ];
+        });
+
+        return response()->json([
+            'items' => $items,
+            'pagination' => [
+                'more' => ($page * $perPage) < $total
+            ]
+        ]);
+    }
+
+    /**
      * Show form to assign siswa to kelas
      */
     public function assignSiswa(Kelas $kelas)
@@ -372,10 +427,11 @@ class KelasController extends Controller
         // Get siswa yang belum ada di kelas manapun untuk tahun pelajaran ini
         // atau siswa yang sudah lulus dari tingkat sebelumnya
         $availableSiswa = Siswa::whereDoesntHave('kelas', function ($query) use ($kelas) {
-                $query->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                      ->where('status', 'aktif');
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif');
             })
-            ->where('status', 'aktif')
+            // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
+            // ->where('data_diri_completed', true)
             ->orderBy('nama_lengkap')
             ->get();
 
@@ -389,8 +445,7 @@ class KelasController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'siswa_ids' => 'required|array',
-            'siswa_ids.*' => 'exists:siswa,uuid',
-            'tanggal_masuk' => 'required|date',
+            'siswa_ids.*' => 'exists:siswa,id', // Primary key is 'id' (UUID)
         ]);
 
         if ($validator->fails()) {
@@ -410,33 +465,176 @@ class KelasController extends Controller
             ], 422);
         }
 
+        // Default tanggal masuk = hari ini (untuk siswa reguler, bukan mutasi)
+        $tanggalMasuk = now()->format('Y-m-d');
+
         DB::beginTransaction();
         try {
+            $successCount = 0;
             foreach ($request->siswa_ids as $siswaId) {
+                // Check if already in kelas
+                $exists = $kelas->siswas()
+                    ->where('siswa.id', $siswaId)
+                    ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                    ->wherePivot('status', 'aktif')
+                    ->exists();
+
+                if ($exists) {
+                    continue;
+                }
+
                 // Get next nomor absen
                 $lastAbsen = $kelas->siswas()
                     ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                    ->max('nomor_urut_absen') ?? 0;
+                    ->max('siswa_kelas.nomor_urut_absen') ?? 0;
 
                 $kelas->siswas()->attach($siswaId, [
+                    'id' => \Illuminate\Support\Str::uuid()->toString(),
                     'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
-                    'tanggal_masuk' => $request->tanggal_masuk,
+                    'tanggal_masuk' => $tanggalMasuk,
                     'status' => 'aktif',
                     'nomor_urut_absen' => $lastAbsen + 1,
                 ]);
+
+                $successCount++;
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => count($request->siswa_ids) . ' siswa berhasil ditambahkan ke kelas.'
+                'message' => $successCount . ' siswa berhasil ditambahkan ke kelas.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menambahkan siswa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Store siswa to kelas via NISN (bulk)
+     */
+    public function storeSiswaNISN(Request $request, Kelas $kelas)
+    {
+        $validator = Validator::make($request->all(), [
+            'nisn_list' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Default tanggal masuk = hari ini (untuk siswa reguler, bukan mutasi)
+        $tanggalMasuk = now()->format('Y-m-d');
+
+        // Parse NISN list
+        $nisnArray = collect(explode("\n", $request->nisn_list))
+            ->map(function($nisn) {
+                return preg_replace('/[^0-9]/', '', trim($nisn));
+            })
+            ->filter(function($nisn) {
+                return !empty($nisn) && strlen($nisn) == 10;
+            })
+            ->unique()
+            ->values();
+
+        if ($nisnArray->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada NISN yang valid. NISN harus 10 digit angka.'
+            ], 422);
+        }
+
+        // Check capacity
+        $currentCount = $kelas->siswaAktif()->count();
+        if (($currentCount + $nisnArray->count()) > $kelas->kapasitas) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kapasitas kelas tidak mencukupi. Sisa tempat: ' . $kelas->sisa_tempat . ', NISN yang diinput: ' . $nisnArray->count()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($nisnArray as $nisn) {
+                try {
+                    // Find siswa by NISN
+                    $siswa = Siswa::where('nisn', $nisn)
+                        // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
+                        // ->where('data_diri_completed', true)
+                        ->first();
+
+                    if (!$siswa) {
+                        $errors[] = [
+                            'nisn' => $nisn,
+                            'error' => 'NISN tidak ditemukan'
+                        ];
+                        continue;
+                    }
+
+                    // Check if already in any kelas for this tahun pelajaran
+                    $existsInKelas = $siswa->kelas()
+                        ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                        ->wherePivot('status', 'aktif')
+                        ->exists();
+
+                    if ($existsInKelas) {
+                        $errors[] = [
+                            'nisn' => $nisn,
+                            'error' => 'Siswa sudah terdaftar di kelas lain'
+                        ];
+                        continue;
+                    }
+
+                    // Get next nomor absen
+                    $lastAbsen = $kelas->siswas()
+                        ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                        ->max('nomor_urut_absen') ?? 0;
+
+                    // Add to kelas
+                    $kelas->siswas()->attach($siswa->id, [
+                        'id' => \Illuminate\Support\Str::uuid()->toString(),
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'tanggal_masuk' => $tanggalMasuk,
+                        'status' => 'aktif',
+                        'nomor_urut_absen' => $lastAbsen + 1,
+                    ]);
+
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'nisn' => $nisn,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Proses bulk import selesai',
+                'success_count' => $successCount,
+                'failed_count' => count($errors),
+                'total' => $nisnArray->count(),
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses bulk import: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -511,6 +709,83 @@ class KelasController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menugaskan wali kelas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Kosongkan kelas - keluarkan semua siswa
+     */
+    public function kosongkanKelas(Request $request, Kelas $kelas)
+    {
+        $validator = Validator::make($request->all(), [
+            'alasan' => 'required|string|min:10|max:500',
+        ], [
+            'alasan.required' => 'Alasan pengosongan kelas harus diisi',
+            'alasan.min' => 'Alasan minimal 10 karakter',
+            'alasan.max' => 'Alasan maksimal 500 karakter',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $tanggalKeluar = now()->format('Y-m-d');
+            $alasan = $request->alasan;
+            
+            // Get all active students
+            $siswaAktif = $kelas->siswas()
+                ->where('siswa_kelas.status', 'aktif')
+                ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->get();
+
+            $jumlahSiswa = $siswaAktif->count();
+
+            if ($jumlahSiswa == 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada siswa aktif di kelas ini'
+                ], 422);
+            }
+
+            // Update all siswa_kelas records to keluar
+            foreach ($siswaAktif as $siswa) {
+                $kelas->siswas()->updateExistingPivot($siswa->id, [
+                    'status' => 'keluar',
+                    'tanggal_keluar' => $tanggalKeluar,
+                    'catatan_perpindahan' => 'Pengosongan Kelas: ' . $alasan,
+                ]);
+            }
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'jumlah_siswa' => $jumlahSiswa,
+                    'alasan' => $alasan,
+                    'tanggal_keluar' => $tanggalKeluar,
+                ])
+                ->log('Mengosongkan kelas: ' . $kelas->nama_lengkap . ' (' . $jumlahSiswa . ' siswa dikeluarkan)');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kelas berhasil dikosongkan',
+                'jumlah_siswa' => $jumlahSiswa
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengosongkan kelas: ' . $e->getMessage()
             ], 500);
         }
     }

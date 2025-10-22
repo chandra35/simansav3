@@ -79,8 +79,9 @@ class Kelas extends Model
      */
     public function siswas(): BelongsToMany
     {
-        return $this->belongsToMany(Siswa::class, 'siswa_kelas')
-                    ->withPivot(['tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+        return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps();
     }
 
@@ -89,7 +90,11 @@ class Kelas extends Model
      */
     public function siswaAktif(): BelongsToMany
     {
-        return $this->siswas()->wherePivot('status', 'aktif');
+        return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
+                    ->where('siswa_kelas.status', 'aktif')
+                    ->withTimestamps();
     }
 
     /**

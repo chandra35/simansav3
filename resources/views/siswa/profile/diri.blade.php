@@ -8,6 +8,10 @@
 <!-- Flatpickr CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<!-- Toastr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     /* Flatpickr Custom Styling */
     .flatpickr-calendar {
@@ -199,6 +203,9 @@
         padding: 0 20px;
         animation: zoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     @keyframes zoomIn {
@@ -221,14 +228,17 @@
         box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
         margin: 0 auto;
         max-width: 90%;
+        width: auto;
+        display: inline-block;
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     /* Main Image */
     .lightbox-image {
-        width: 100%;
+        width: auto;
         height: auto;
         max-height: 80vh;
+        max-width: 90vw;
         object-fit: contain;
         display: block;
         background: #f8f9fa;
@@ -326,11 +336,13 @@
         
         .lightbox-card {
             max-width: 95%;
+            width: auto;
             border-radius: 15px;
         }
 
         .lightbox-image {
             max-height: 70vh;
+            max-width: 95vw;
         }
         
         .lightbox-info {
@@ -458,11 +470,14 @@
                             @endif
                         </div>
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="foto_profile" name="foto_profile" accept="image/jpeg,image/jpg,image/png">
+                            <input type="file" class="custom-file-input" id="foto_profile" accept="image/jpeg,image/jpg,image/png">
                             <label class="custom-file-label" for="foto_profile">Pilih Foto</label>
                         </div>
                         <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> JPG/PNG, Max 2MB, Square (1:1)
+                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB, Min 100x100px
+                        </small>
+                        <small class="form-text text-success">
+                            <i class="fas fa-magic"></i> <strong>Auto-Save:</strong> Foto langsung tersimpan (400x400px, tidak terpotong)
                         </small>
                         @if(!$siswa->foto_profile)
                             <small class="text-info d-block mt-1">
@@ -853,6 +868,40 @@
                         </small>
                     </div>
 
+                    <!-- Jenis Tempat Tinggal - Only show when "Alamat Lainnya" selected -->
+                    <div id="form-jenis-tempat-tinggal" style="display: none;">
+                        <div class="form-group">
+                            <label for="jenis_tempat_tinggal">
+                                Jenis Tempat Tinggal <span class="text-danger">*</span>
+                            </label>
+                            <select name="jenis_tempat_tinggal" id="jenis_tempat_tinggal" 
+                                    class="form-control @error('jenis_tempat_tinggal') is-invalid @enderror">
+                                <option value="">-- Pilih Jenis Tempat Tinggal --</option>
+                                <option value="Asrama" {{ old('jenis_tempat_tinggal', $siswa->jenis_tempat_tinggal ?? '') == 'Asrama' ? 'selected' : '' }}>
+                                    <i class="fas fa-building"></i> Asrama
+                                </option>
+                                <option value="Kost/Kontrakan" {{ old('jenis_tempat_tinggal', $siswa->jenis_tempat_tinggal ?? '') == 'Kost/Kontrakan' ? 'selected' : '' }}>
+                                    <i class="fas fa-home"></i> Kost/Kontrakan
+                                </option>
+                                <option value="Saudara" {{ old('jenis_tempat_tinggal', $siswa->jenis_tempat_tinggal ?? '') == 'Saudara' ? 'selected' : '' }}>
+                                    <i class="fas fa-users"></i> Saudara
+                                </option>
+                            </select>
+                            @error('jenis_tempat_tinggal')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Pilih jenis tempat tinggal untuk alamat berbeda
+                            </small>
+                            <div id="alert-asrama" class="alert alert-info mt-2" style="display: none;">
+                                <i class="fas fa-building"></i> <strong>Asrama Sekolah</strong><br>
+                                <small>Alamat otomatis terisi dengan alamat sekolah, tidak perlu mengisi manual.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="form-alamat-siswa" style="display: none;">
                         <hr class="my-3">
                         
@@ -1121,6 +1170,27 @@
             animation: pulse 2s infinite;
         }
         
+        /* Readonly State Styling */
+        .form-control:read-only,
+        .select2-container--disabled .select2-selection {
+            background-color: #f8f9fa !important;
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+        
+        select:disabled {
+            background-color: #f8f9fa !important;
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+        
+        /* Readonly form background */
+        .bg-light select.form-control {
+            background-color: #f8f9fa !important;
+            cursor: not-allowed;
+            pointer-events: none; /* Prevent clicking but allow form submission */
+        }
+        
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
@@ -1145,8 +1215,20 @@
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+// Configure toastr
+toastr.options = {
+    "closeButton": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "timeOut": "3000"
+};
+
 $(document).ready(function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
@@ -1239,29 +1321,73 @@ $(document).ready(function() {
     // Toggle alamat siswa form
     function toggleAlamatSiswa() {
         if ($('#alamat_lainnya').is(':checked')) {
-            $('#form-alamat-siswa').slideDown();
+            // Alamat Lainnya (Berbeda)
+            $('#form-jenis-tempat-tinggal').slideDown();
+            $('#form-alamat-siswa').slideUp(); // Hide initially, will show based on jenis_tempat_tinggal
+            $('#alert-asrama').slideUp();
+            
+            // Enable jenis tempat tinggal dropdown
+            $('#jenis_tempat_tinggal').prop('disabled', false);
+            
+            // Reset jenis tempat tinggal if not already set
+            if (!$('#jenis_tempat_tinggal').val()) {
+                $('#jenis_tempat_tinggal').val('');
+            }
+            
+            // Reset form fields only if no jenis selected
+            if (!$('#jenis_tempat_tinggal').val()) {
+                $('#alamat_siswa').val('');
+                $('#rt_siswa').val('');
+                $('#rw_siswa').val('');
+                $('#kodepos_siswa').val('');
+                $('#provinsi_id_siswa').val('').trigger('change');
+                $('#kabupaten_id_siswa').html('<option value="">Pilih Kabupaten/Kota</option>');
+                $('#kecamatan_id_siswa').html('<option value="">Pilih Kecamatan</option>');
+                $('#kelurahan_id_siswa').html('<option value="">Pilih Kelurahan/Desa</option>');
+            }
+            
+            toastr.info('Pilih jenis tempat tinggal terlebih dahulu', '', {timeOut: 2000});
         } else {
-            $('#form-alamat-siswa').slideUp();
-            // If alamat sama dengan ortu, ambil data ortu
+            // Sama dengan Alamat Orangtua
+            $('#form-jenis-tempat-tinggal').slideUp();
+            $('#alert-asrama').slideUp();
+            $('#form-alamat-siswa').slideDown();
+            
             if ($('#alamat_sama').is(':checked')) {
                 loadAlamatOrtu();
+                
+                // Make ALL fields completely disabled (readonly + disabled)
+                setTimeout(function() {
+                    $('#jenis_tempat_tinggal').prop('disabled', true);
+                    $('#form-alamat-siswa input, #form-alamat-siswa textarea').prop('readonly', true).prop('disabled', true);
+                    $('#form-alamat-siswa select').prop('disabled', true);
+                    $('#form-alamat-siswa').addClass('bg-light');
+                    
+                    toastr.success('Alamat orangtua berhasil dimuat', '', {timeOut: 2000});
+                }, 100);
             }
         }
     }
 
     // Load alamat ortu dengan AJAX
     function loadAlamatOrtu() {
+        // Show loading indicator
+        $('#form-alamat-siswa').prepend('<div class="alert alert-info" id="loadingAlamat"><i class="fas fa-spinner fa-spin"></i> Memuat alamat orangtua...</div>');
+        
         $.get('{{ route("siswa.profile.alamat-ortu") }}', function(data) {
+            $('#loadingAlamat').remove();
+            
             if (data.error) {
                 console.error('Error loading alamat ortu:', data.error);
+                toastr.error('Gagal memuat alamat orangtua: ' + data.error);
                 return;
             }
             
             // Populate siswa address fields with ortu address data
-            $('#alamat_siswa').val(data.alamat_ortu);
-            $('#rt_siswa').val(data.rt_ortu);
-            $('#rw_siswa').val(data.rw_ortu);
-            $('#kodepos_siswa').val(data.kodepos);
+            $('#alamat_siswa').val(data.alamat_ortu || '');
+            $('#rt_siswa').val(data.rt_ortu || '');
+            $('#rw_siswa').val(data.rw_ortu || '');
+            $('#kodepos_siswa').val(data.kodepos || '');
             
             // Load province first
             if (data.provinsi_id) {
@@ -1269,21 +1395,36 @@ $(document).ready(function() {
                 
                 // Wait for cities to load, then set kabupaten
                 setTimeout(function() {
-                    $('#kabupaten_id_siswa').val(data.kabupaten_id).trigger('change');
-                    
-                    // Wait for districts to load, then set kecamatan
-                    setTimeout(function() {
-                        $('#kecamatan_id_siswa').val(data.kecamatan_id).trigger('change');
+                    if (data.kabupaten_id) {
+                        $('#kabupaten_id_siswa').val(data.kabupaten_id).trigger('change');
                         
-                        // Wait for villages to load, then set kelurahan
+                        // Wait for districts to load, then set kecamatan
                         setTimeout(function() {
-                            $('#kelurahan_id_siswa').val(data.kelurahan_id);
-                        }, 500);
-                    }, 500);
-                }, 500);
+                            if (data.kecamatan_id) {
+                                $('#kecamatan_id_siswa').val(data.kecamatan_id).trigger('change');
+                                
+                                // Wait for villages to load, then set kelurahan
+                                setTimeout(function() {
+                                    if (data.kelurahan_id) {
+                                        $('#kelurahan_id_siswa').val(data.kelurahan_id);
+                                    }
+                                    
+                                    // Show success message
+                                    toastr.success('Alamat orangtua berhasil dimuat', '', {
+                                        timeOut: 2000
+                                    });
+                                }, 600);
+                            }
+                        }, 600);
+                    }
+                }, 600);
+            } else {
+                toastr.warning('Data alamat orangtua belum lengkap. Silakan lengkapi di halaman Data Orangtua.');
             }
         }).fail(function(xhr, status, error) {
+            $('#loadingAlamat').remove();
             console.error('Failed to load alamat ortu:', error);
+            toastr.error('Gagal memuat alamat orangtua. Coba lagi atau hubungi admin.');
         });
     }
 
@@ -1291,6 +1432,69 @@ $(document).ready(function() {
 
     // Initialize on page load
     toggleAlamatSiswa();
+    
+    // Handle jenis tempat tinggal change
+    $('#jenis_tempat_tinggal').on('change', function() {
+        var jenisTempat = $(this).val();
+        
+        if (jenisTempat === 'Asrama') {
+            // If Asrama selected, hide address form and show info
+            $('#form-alamat-siswa').slideUp();
+            $('#alert-asrama').slideDown();
+            
+            // Clear and disable address fields (will be filled by backend with school address)
+            $('#alamat_siswa').val('Asrama Sekolah').prop('readonly', true).prop('disabled', true);
+            $('#rt_siswa').val('').prop('readonly', true).prop('disabled', true);
+            $('#rw_siswa').val('').prop('readonly', true).prop('disabled', true);
+            $('#kodepos_siswa').val('').prop('readonly', true).prop('disabled', true);
+            $('#provinsi_id_siswa').val('').prop('disabled', true);
+            $('#kabupaten_id_siswa').html('<option value="">Pilih Kabupaten/Kota</option>').prop('disabled', true);
+            $('#kecamatan_id_siswa').html('<option value="">Pilih Kecamatan</option>').prop('disabled', true);
+            $('#kelurahan_id_siswa').html('<option value="">Pilih Kelurahan/Desa</option>').prop('disabled', true);
+            
+            toastr.success('Alamat asrama akan otomatis terisi', '', {timeOut: 2000});
+        } else if (jenisTempat === 'Kost/Kontrakan' || jenisTempat === 'Saudara') {
+            // Show address form for Kost or Saudara
+            $('#alert-asrama').slideUp();
+            $('#form-alamat-siswa').slideDown();
+            
+            // Enable and reset all fields
+            $('#form-alamat-siswa').removeClass('bg-light');
+            $('#alamat_siswa').val('').prop('readonly', false).prop('disabled', false);
+            $('#rt_siswa').val('').prop('readonly', false).prop('disabled', false);
+            $('#rw_siswa').val('').prop('readonly', false).prop('disabled', false);
+            $('#kodepos_siswa').val('').prop('readonly', false).prop('disabled', false);
+            $('#provinsi_id_siswa').val('').prop('disabled', false);
+            $('#kabupaten_id_siswa').html('<option value="">Pilih Kabupaten/Kota</option>').prop('disabled', false);
+            $('#kecamatan_id_siswa').html('<option value="">Pilih Kecamatan</option>').prop('disabled', false);
+            $('#kelurahan_id_siswa').html('<option value="">Pilih Kelurahan/Desa</option>').prop('disabled', false);
+            
+            toastr.info('Silakan isi alamat ' + jenisTempat.toLowerCase() + ' Anda', '', {timeOut: 2000});
+        } else {
+            // No selection, hide both
+            $('#alert-asrama').slideUp();
+            $('#form-alamat-siswa').slideUp();
+        }
+    });
+    
+    // Trigger on page load if already selected
+    if ($('#jenis_tempat_tinggal').val()) {
+        $('#jenis_tempat_tinggal').trigger('change');
+    }
+    
+    // Enable all form fields before submit to ensure data is sent
+    $('#formDataDiri').on('submit', function(e) {
+        // If alamat sama dengan ortu is selected, temporarily enable all fields for submission
+        if ($('#alamat_sama').is(':checked')) {
+            $('#form-alamat-siswa input, #form-alamat-siswa select, #form-alamat-siswa textarea').prop('disabled', false);
+        }
+        
+        // If Asrama selected, enable fields for submission
+        if ($('#jenis_tempat_tinggal').val() === 'Asrama') {
+            $('#form-alamat-siswa input, #form-alamat-siswa select, #form-alamat-siswa textarea').prop('disabled', false).prop('readonly', false);
+        }
+        // Form will submit normally, no need to prevent default
+    });
 
     // Cascade dropdown untuk alamat siswa
     $('#provinsi_id_siswa').on('change', function() {
@@ -1347,42 +1551,167 @@ $(document).ready(function() {
         }
     });
 
-    // Preview foto before upload dengan animasi
+    // Auto-upload foto when file selected
     $('#foto_profile').on('change', function(e) {
         var file = e.target.files[0];
-        if (file) {
-            // Validasi ukuran file (max 2MB)
-            if (file.size > 2048000) {
-                toastr.error('Ukuran file maksimal 2MB');
-                $(this).val('');
-                return;
+        if (!file) return;
+        
+        // Client-side validation
+        // 1. Check file size (max 2MB)
+        if (file.size > 2048000) {
+            toastr.error('Ukuran file maksimal 2MB', '', {timeOut: 3000});
+            $(this).val('');
+            $(this).next('.custom-file-label').html('Pilih Foto');
+            return;
+        }
+        
+        // 2. Strict file type validation
+        var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            toastr.error('Format file harus JPG, JPEG, atau PNG saja!', '', {timeOut: 3000});
+            $(this).val('');
+            $(this).next('.custom-file-label').html('Pilih Foto');
+            return;
+        }
+        
+        // 3. Validate file extension
+        var fileName = file.name.toLowerCase();
+        var validExtensions = ['.jpg', '.jpeg', '.png'];
+        var hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+        if (!hasValidExtension) {
+            toastr.error('Ekstensi file tidak valid!', '', {timeOut: 3000});
+            $(this).val('');
+            $(this).next('.custom-file-label').html('Pilih Foto');
+            return;
+        }
+        
+        // 4. Check image dimensions using Image object
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = new Image();
+            img.onload = function() {
+                // Check minimum dimensions
+                if (this.width < 100 || this.height < 100) {
+                    toastr.error('Ukuran gambar minimal 100x100 pixel', '', {timeOut: 3000});
+                    $('#foto_profile').val('');
+                    $('.custom-file-label').html('Pilih Foto');
+                    return;
+                }
+                
+                // Check maximum dimensions
+                if (this.width > 5000 || this.height > 5000) {
+                    toastr.error('Ukuran gambar maksimal 5000x5000 pixel', '', {timeOut: 3000});
+                    $('#foto_profile').val('');
+                    $('.custom-file-label').html('Pilih Foto');
+                    return;
+                }
+                
+                // All validations passed, proceed with upload
+                uploadFotoProfile(file, e.target.result);
+            };
+            img.onerror = function() {
+                toastr.error('File bukan gambar yang valid!', '', {timeOut: 3000});
+                $('#foto_profile').val('');
+                $('.custom-file-label').html('Pilih Foto');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Function to upload foto profile via AJAX
+    function uploadFotoProfile(file, previewUrl) {
+        var formData = new FormData();
+        formData.append('foto_profile', file);
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        // Update UI - show loading
+        $('.custom-file-label').html('<i class="fas fa-spinner fa-spin"></i> Mengupload...');
+        $('#previewFoto').css('opacity', '0.5');
+        
+        // Show loading overlay
+        Swal.fire({
+            title: 'Mengupload Foto',
+            html: '<div class="text-center"><i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br>Mohon tunggu, foto sedang diproses dan disimpan...</div>',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-            
-            // Validasi tipe file
-            if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png')) {
-                toastr.error('Format file harus JPG, JPEG, atau PNG');
-                $(this).val('');
-                return;
-            }
-            
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                // Fade out, change src, fade in
-                $('#previewFoto').fadeOut(200, function() {
-                    $(this).attr('src', e.target.result).fadeIn(200);
+        });
+        
+        $.ajax({
+            url: '{{ route("siswa.profile.foto.upload") }}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                Swal.close();
+                
+                if (response.success) {
+                    // Update preview with fade effect
+                    $('#previewFoto').fadeOut(300, function() {
+                        $(this).attr('src', response.foto_url + '?t=' + Date.now())
+                               .css('opacity', '1')
+                               .fadeIn(300);
+                    });
+                    
+                    // Update label
+                    $('.custom-file-label').html('<i class="fas fa-check-circle text-success"></i> ' + file.name);
+                    
+                    // Remove "Avatar Otomatis" badge if exists
+                    $('.badge-info:contains("Avatar Otomatis")').fadeOut();
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        html: '<p>' + response.message + '</p><small class="text-muted">Foto profil akan langsung ditampilkan</small>',
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                    
+                    toastr.success(response.message, '', {
+                        timeOut: 3000,
+                        progressBar: true
+                    });
+                } else {
+                    toastr.error(response.message || 'Gagal mengupload foto', '', {timeOut: 3000});
+                    resetFileInput();
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                
+                var errorMsg = 'Gagal mengupload foto';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    // Validation errors
+                    var errors = xhr.responseJSON.errors;
+                    errorMsg = Object.values(errors).flat().join('<br>');
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Upload',
+                    html: errorMsg,
+                    confirmButtonText: 'OK'
                 });
                 
-                // Hapus badge "Avatar Otomatis"
-                $('.badge-info').fadeOut();
-            };
-            reader.readAsDataURL(file);
-            
-            // Update label dengan animasi
-            $(this).next('.custom-file-label').html('<i class="fas fa-check-circle text-success"></i> ' + file.name);
-            
-            toastr.success('Foto siap diupload. Klik Simpan untuk menyimpan perubahan.');
-        }
-    });
+                resetFileInput();
+            }
+        });
+    }
+    
+    // Helper function to reset file input
+    function resetFileInput() {
+        $('#foto_profile').val('');
+        $('.custom-file-label').html('Pilih Foto');
+        $('#previewFoto').css('opacity', '1');
+    }
     
     // Search Sekolah by NPSN
     $('#btnCariSekolah').on('click', function() {
@@ -1396,6 +1725,7 @@ $(document).ready(function() {
         
         // Disable button & show loading
         var $btn = $(this);
+        var originalBtnHtml = '<i class="fas fa-search"></i> Cari';
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mencari...');
         
         // Hide previous alerts
@@ -1422,9 +1752,22 @@ $(document).ready(function() {
                     $('#alertSekolahFound').fadeIn();
                     
                     toastr.success('Data sekolah berhasil ditemukan!');
+                    
+                    // Change button to success state briefly, then back to normal
+                    $btn.removeClass('btn-info').addClass('btn-success')
+                        .html('<i class="fas fa-check-circle"></i> Ditemukan');
+                    
+                    setTimeout(function() {
+                        $btn.removeClass('btn-success').addClass('btn-info')
+                            .prop('disabled', false)
+                            .html(originalBtnHtml);
+                    }, 2000);
                 } else {
                     $('#alertSekolahNotFound').fadeIn();
                     toastr.error(response.message || 'Data tidak ditemukan');
+                    
+                    // Reset button immediately on failure
+                    $btn.prop('disabled', false).html(originalBtnHtml);
                 }
             },
             error: function(xhr) {
@@ -1436,10 +1779,9 @@ $(document).ready(function() {
                 }
                 
                 toastr.error(message);
-            },
-            complete: function() {
-                // Re-enable button
-                $btn.prop('disabled', false).html('<i class="fas fa-search"></i> Cari');
+                
+                // Reset button immediately on error
+                $btn.prop('disabled', false).html(originalBtnHtml);
             }
         });
     });

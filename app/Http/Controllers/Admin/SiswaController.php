@@ -20,7 +20,22 @@ class SiswaController extends Controller
      */
     public function index()
     {
-        return view('admin.siswa.index');
+        // Statistics
+        $stats = [
+            'total_siswa' => Siswa::count(),
+            'laki_laki' => Siswa::where('jenis_kelamin', 'L')->count(),
+            'perempuan' => Siswa::where('jenis_kelamin', 'P')->count(),
+            'data_lengkap' => Siswa::where('data_diri_completed', true)->where('data_ortu_completed', true)->count(),
+        ];
+
+        // Filter options
+        $tingkatOptions = [
+            10 => 'Kelas X',
+            11 => 'Kelas XI',
+            12 => 'Kelas XII',
+        ];
+
+        return view('admin.siswa.index', compact('stats', 'tingkatOptions'));
     }
 
     /**
@@ -30,6 +45,38 @@ class SiswaController extends Controller
     {
         $siswa = Siswa::with(['user', 'ortu'])
             ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
+
+        // Filter by Jenis Kelamin
+        if ($request->filled('jenis_kelamin')) {
+            $siswa->where('jenis_kelamin', $request->jenis_kelamin);
+        }
+
+        // Filter by Tingkat (through kelas aktif)
+        if ($request->filled('tingkat')) {
+            $siswa->whereHas('kelasAktif', function($q) use ($request) {
+                $q->where('kelas.tingkat', $request->tingkat);
+            });
+        }
+
+        // Filter by Kelas
+        if ($request->filled('kelas_id')) {
+            $siswa->whereHas('kelasAktif', function($q) use ($request) {
+                $q->where('kelas.id', $request->kelas_id);
+            });
+        }
+
+        // Filter by Status Data
+        if ($request->filled('status')) {
+            if ($request->status == 'lengkap') {
+                $siswa->where('data_diri_completed', true)
+                      ->where('data_ortu_completed', true);
+            } elseif ($request->status == 'belum') {
+                $siswa->where(function($q) {
+                    $q->where('data_diri_completed', false)
+                      ->orWhere('data_ortu_completed', false);
+                });
+            }
+        }
 
         // Search functionality
         if ($request->has('search') && $request->search['value']) {
@@ -45,7 +92,12 @@ class SiswaController extends Controller
         
         // Pagination
         if ($request->has('start') && $request->has('length')) {
-            $siswa->skip($request->start)->take($request->length);
+            $length = $request->length;
+            // Handle "All" option (-1)
+            if ($length != -1) {
+                $siswa->skip($request->start)->take($length);
+            }
+            // If length is -1, don't apply skip/take (load all data)
         }
 
         // Ordering
@@ -380,5 +432,30 @@ class SiswaController extends Controller
                 'message' => 'Gagal memuat dokumen: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get kelas by tingkat (for filter)
+     */
+    public function getKelasByTingkat(Request $request)
+    {
+        $tingkat = $request->get('tingkat');
+        
+        if (!$tingkat) {
+            return response()->json([]);
+        }
+
+        $kelas = \App\Models\Kelas::where('tingkat', $tingkat)
+            ->where('is_active', true)
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'kode_kelas'])
+            ->map(function($k) {
+                return [
+                    'id' => $k->id,
+                    'text' => $k->nama_lengkap
+                ];
+            });
+
+        return response()->json($kelas);
     }
 }
