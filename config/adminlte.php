@@ -324,11 +324,9 @@ return [
         ],
         [
             'text' => 'Data GTK',
-            'route' => 'admin.under-development',
+            'route' => 'admin.gtk.index',
             'icon' => 'fas fa-fw fa-chalkboard-teacher',
             'can' => 'view-gtk',
-            'label' => 'Soon',
-            'label_color' => 'warning',
         ],
         [
             'text' => 'Data User',

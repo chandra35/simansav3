@@ -74,6 +74,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
     
+    // GTK Management
+    Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');
+    Route::post('/gtk/{gtk}/reset-password', [App\Http\Controllers\Admin\GtkController::class, 'resetPassword'])->name('gtk.reset-password');
+    Route::resource('gtk', App\Http\Controllers\Admin\GtkController::class);
+    
+    // GTK Import
+    Route::get('/gtk/import/form', [App\Http\Controllers\Admin\GtkImportController::class, 'index'])->name('gtk.import');
+    Route::get('/gtk/import/template', [App\Http\Controllers\Admin\GtkImportController::class, 'downloadTemplate'])->name('gtk.import.template');
+    Route::post('/gtk/import/process', [App\Http\Controllers\Admin\GtkImportController::class, 'import'])->name('gtk.import.process');
+    
     // User Management
     Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
