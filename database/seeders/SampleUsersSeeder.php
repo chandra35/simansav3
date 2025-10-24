@@ -44,7 +44,7 @@ class SampleUsersSeeder extends Seeder
         );
         $operator->assignRole('Operator');
 
-        // Guru - Candra (View Only)
+        // GTK - Candra (View Only)
         $candra = User::firstOrCreate(
             ['username' => 'candra'],
             [
@@ -57,9 +57,9 @@ class SampleUsersSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $candra->assignRole('Guru');
+        $candra->assignRole('GTK');
 
-        // Guru - Nanang (Full CRUD)
+        // GTK - Nanang (Full CRUD)
         $nanang = User::firstOrCreate(
             ['username' => 'nanang'],
             [
@@ -72,7 +72,7 @@ class SampleUsersSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $nanang->syncRoles(['Guru', 'Operator']); // Multi-role
+        $nanang->syncRoles(['GTK', 'Operator']); // Multi-role
 
         // Waka Kurikulum - Suhardi
         $suhardi = User::firstOrCreate(
@@ -111,8 +111,8 @@ class SampleUsersSeeder extends Seeder
                 ['superadmin', 'Super Administrator', 'Super Admin', 'password'],
                 ['admin', 'Admin Sekolah', 'Admin', 'password'],
                 ['operator', 'Operator TU', 'Operator', 'password'],
-                ['candra', 'Candra - Guru Matematika', 'Guru', 'password'],
-                ['nanang', 'Nanang - Guru B. Indonesia', 'Guru + Operator', 'password'],
+                ['candra', 'Candra - Guru Matematika', 'GTK', 'password'],
+                ['nanang', 'Nanang - Guru B. Indonesia', 'GTK + Operator', 'password'],
                 ['suhardi', 'Suhardi - Waka Kurikulum', 'Admin', 'password'],
                 ['siswa001', 'Ahmad Rizki', 'Siswa', 'password'],
             ]

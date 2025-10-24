@@ -4,7 +4,14 @@
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-history"></i> Activity Logs</h1>
+        <div>
+            <h1><i class="fas fa-history"></i> Activity Logs</h1>
+            @if(!auth()->user()->hasRole('Super Admin'))
+                <small class="text-muted"><i class="fas fa-info-circle"></i> Menampilkan aktivitas Anda saja</small>
+            @else
+                <small class="text-muted"><i class="fas fa-info-circle"></i> Menampilkan semua aktivitas pengguna</small>
+            @endif
+        </div>
         <button class="btn btn-success" onclick="exportLogs()">
             <i class="fas fa-download"></i> Export CSV
         </button>
@@ -25,6 +32,7 @@
             </div>
         </div>
     </div>
+    @if(auth()->user()->hasRole('Super Admin'))
     <div class="col-lg-3 col-6">
         <div class="small-box bg-success">
             <div class="inner">
@@ -36,6 +44,19 @@
             </div>
         </div>
     </div>
+    @else
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3 id="stat-users">1</h3>
+                <p>User (Anda)</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </div>
+    @endif
     <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
             <div class="inner">

@@ -48,8 +48,14 @@ class LoginController extends Controller
             
             // Redirect based on user role
             if ($user->isSiswa()) {
+                // Siswa → Siswa Dashboard
                 return redirect()->intended('siswa/dashboard');
+            } elseif ($user->hasRole('GTK')) {
+                // GTK (Guru & Tenaga Kependidikan) → GTK Personal Dashboard
+                // Note: This includes all GTK staff regardless of kategori_ptk/jenis_ptk
+                return redirect()->intended('admin/gtk/dashboard');
             } else {
+                // Super Admin, Admin, Kepala, WAKA, Operator, BK → Admin Management Dashboard
                 return redirect()->intended('admin/dashboard');
             }
         }

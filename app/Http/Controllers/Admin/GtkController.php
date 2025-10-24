@@ -47,7 +47,17 @@ class GtkController extends Controller
     public function data(Request $request)
     {
         $gtk = Gtk::with('user')
-            ->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+            ->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+
+        // Filter by Kategori PTK
+        if ($request->filled('kategori_ptk')) {
+            $gtk->where('kategori_ptk', $request->kategori_ptk);
+        }
+
+        // Filter by Jenis PTK
+        if ($request->filled('jenis_ptk')) {
+            $gtk->where('jenis_ptk', $request->jenis_ptk);
+        }
 
         // Filter by Jenis Kelamin
         if ($request->filled('jenis_kelamin')) {
@@ -96,7 +106,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = ['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'status_kepegawaian', 'created_at'];
+            $columns = ['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'created_at'];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -105,6 +115,9 @@ class GtkController extends Controller
         }
 
         $data = $gtk->get()->map(function($item, $index) use ($request) {
+            // Badge color for kategori PTK
+            $kategoriColor = $item->kategori_ptk == 'Pendidik' ? 'primary' : 'info';
+            
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
                 'nama_lengkap' => $item->nama_lengkap,
@@ -112,6 +125,10 @@ class GtkController extends Controller
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+                'kategori_ptk' => $item->kategori_ptk ? 
+                    '<span class="badge badge-'.$kategoriColor.'">'.$item->kategori_ptk.'</span>' : 
+                    '<span class="badge badge-secondary">-</span>',
+                'jenis_ptk' => $item->jenis_ptk ?? '-',
                 'status_kepegawaian' => $item->status_kepegawaian ?? '-',
                 'jabatan' => $item->jabatan ?? '-',
                 'username' => $item->user->username ?? '-',
@@ -135,22 +152,44 @@ class GtkController extends Controller
 
     private function getActionButtons($item)
     {
-        return '
-            <div class="btn-group" role="group">
+        $user = auth()->user();
+        $buttons = '<div class="btn-group" role="group">';
+        
+        // View button - always shown if can view gtk
+        if ($user->can('view-gtk')) {
+            $buttons .= '
                 <button type="button" class="btn btn-info btn-sm" onclick="showGtk(\''.$item->id.'\')">
                     <i class="fas fa-eye"></i>
-                </button>
+                </button>';
+        }
+        
+        // Edit button
+        if ($user->can('edit-gtk')) {
+            $buttons .= '
                 <button type="button" class="btn btn-warning btn-sm" onclick="editGtk(\''.$item->id.'\')">
                     <i class="fas fa-edit"></i>
-                </button>
+                </button>';
+        }
+        
+        // Reset Password button
+        if ($user->can('reset-password-gtk')) {
+            $buttons .= '
                 <button type="button" class="btn btn-secondary btn-sm" onclick="resetPassword(\''.$item->id.'\')">
                     <i class="fas fa-key"></i>
-                </button>
+                </button>';
+        }
+        
+        // Delete button
+        if ($user->can('delete-gtk')) {
+            $buttons .= '
                 <button type="button" class="btn btn-danger btn-sm" onclick="deleteGtk(\''.$item->id.'\')">
                     <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        ';
+                </button>';
+        }
+        
+        $buttons .= '</div>';
+        
+        return $buttons;
     }
 
     /**
@@ -163,12 +202,16 @@ class GtkController extends Controller
                 'nama_lengkap' => 'required|string|max:255',
                 'nik' => 'required|string|size:16|unique:gtks,nik',
                 'jenis_kelamin' => 'required|in:L,P',
+                'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
+                'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
             ], [
                 'nama_lengkap.required' => 'Nama lengkap wajib diisi',
                 'nik.required' => 'NIK wajib diisi',
                 'nik.size' => 'NIK harus 16 digit',
                 'nik.unique' => 'NIK sudah terdaftar',
                 'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
+                'kategori_ptk.required' => 'Kategori PTK wajib dipilih',
+                'jenis_ptk.required' => 'Jenis PTK wajib dipilih',
             ]);
 
             DB::beginTransaction();
@@ -185,8 +228,8 @@ class GtkController extends Controller
                 'is_active' => true,
             ]);
 
-            // Assign role Guru (default)
-            $user->assignRole('Guru');
+            // Assign role GTK (default)
+            $user->assignRole('GTK');
 
             // Create GTK record
             $gtk = Gtk::create([
@@ -250,6 +293,8 @@ class GtkController extends Controller
                 'nuptk' => ['nullable', 'string', 'size:16', Rule::unique('gtks', 'nuptk')->ignore($gtk->id)],
                 'nip' => ['nullable', 'string', 'max:18', Rule::unique('gtks', 'nip')->ignore($gtk->id)],
                 'jenis_kelamin' => 'required|in:L,P',
+                'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
+                'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
                 'tempat_lahir' => 'nullable|string|max:255',
                 'tanggal_lahir' => 'nullable|date',
                 'email' => 'nullable|email|max:255',

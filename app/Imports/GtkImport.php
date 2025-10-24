@@ -70,8 +70,8 @@ class GtkImport implements ToCollection, WithHeadingRow, WithValidation, SkipsEm
                     'is_first_login' => true,
                 ]);
 
-                // Assign role Guru (default)
-                $user->assignRole('Guru');
+                // Assign role GTK (default)
+                $user->assignRole('GTK');
 
                 // Normalize jenis kelamin
                 $jenisKelamin = $this->normalizeJenisKelamin($row['jenis_kelamin']);

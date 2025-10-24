@@ -54,12 +54,14 @@
             Daftar GTK
         </h3>
         <div class="card-tools">
-            <a href="{{ route('admin.gtk.import') }}" class="btn btn-success btn-sm mr-1">
-                <i class="fas fa-file-excel"></i> Import GTK
-            </a>
-            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addGtkModal">
-                <i class="fas fa-plus"></i> Tambah GTK
-            </button>
+            @can('create-gtk')
+                <a href="{{ route('admin.gtk.import') }}" class="btn btn-success btn-sm mr-1">
+                    <i class="fas fa-file-excel"></i> Import GTK
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addGtkModal">
+                    <i class="fas fa-plus"></i> Tambah GTK
+                </button>
+            @endcan
         </div>
     </div>
     <div class="card-body">
@@ -69,6 +71,34 @@
                 <div class="card bg-light">
                     <div class="card-body p-3">
                         <form id="filterForm" class="form-inline">
+                            <div class="form-group mr-2 mb-2">
+                                <label for="filterKategoriPtk" class="mr-2">
+                                    <i class="fas fa-users"></i> Kategori PTK:
+                                </label>
+                                <select id="filterKategoriPtk" class="form-control form-control-sm" style="width: 180px;">
+                                    <option value="">Semua</option>
+                                    <option value="Pendidik">Pendidik (Guru)</option>
+                                    <option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
+                                </select>
+                            </div>
+                            <div class="form-group mr-2 mb-2">
+                                <label for="filterJenisPtk" class="mr-2">
+                                    <i class="fas fa-user-tag"></i> Jenis PTK:
+                                </label>
+                                <select id="filterJenisPtk" class="form-control form-control-sm" style="width: 180px;">
+                                    <option value="">Semua</option>
+                                    <option value="Guru Mapel">Guru Mapel</option>
+                                    <option value="Guru BK">Guru BK</option>
+                                    <option value="Kepala TU">Kepala TU</option>
+                                    <option value="Staff TU">Staff TU</option>
+                                    <option value="Bendahara">Bendahara</option>
+                                    <option value="Laboran">Laboran</option>
+                                    <option value="Pustakawan">Pustakawan</option>
+                                    <option value="Cleaning Service">Cleaning Service</option>
+                                    <option value="Satpam">Satpam</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
                             <div class="form-group mr-2 mb-2">
                                 <label for="filterJenisKelamin" class="mr-2">
                                     <i class="fas fa-venus-mars"></i> Jenis Kelamin:
@@ -81,9 +111,9 @@
                             </div>
                             <div class="form-group mr-2 mb-2">
                                 <label for="filterStatusKepegawaian" class="mr-2">
-                                    <i class="fas fa-briefcase"></i> Status Kepegawaian:
+                                    <i class="fas fa-briefcase"></i> Status Kepeg:
                                 </label>
-                                <select id="filterStatusKepegawaian" class="form-control form-control-sm" style="width: 200px;">
+                                <select id="filterStatusKepegawaian" class="form-control form-control-sm" style="width: 150px;">
                                     <option value="">Semua</option>
                                     @foreach($statusKepegawaianOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
@@ -116,6 +146,8 @@
                         <th style="width: 40px;">No</th>
                         <th>Nama Lengkap</th>
                         <th>NIK</th>
+                        <th>Kategori PTK</th>
+                        <th>Jenis PTK</th>
                         <th>Status Kepeg</th>
                         <th>Jabatan</th>
                         <th>Username</th>
@@ -170,6 +202,26 @@
                             <option value="P">Perempuan</option>
                         </select>
                         <span class="invalid-feedback d-block" id="error-jenis_kelamin"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kategori_ptk">Kategori PTK <span class="text-danger">*</span></label>
+                        <select class="form-control" id="kategori_ptk" name="kategori_ptk" required>
+                            <option value="">Pilih Kategori PTK</option>
+                            <option value="Pendidik">Pendidik (Guru)</option>
+                            <option value="Tenaga Kependidikan">Tenaga Kependidikan (Staff TU, dll)</option>
+                        </select>
+                        <small class="form-text text-muted">Kategori PTK: Pendidik untuk Guru, Tenaga Kependidikan untuk Staff non-Guru</small>
+                        <span class="invalid-feedback d-block" id="error-kategori_ptk"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jenis_ptk">Jenis PTK <span class="text-danger">*</span></label>
+                        <select class="form-control" id="jenis_ptk" name="jenis_ptk" required disabled>
+                            <option value="">Pilih Kategori PTK terlebih dahulu</option>
+                        </select>
+                        <small class="form-text text-muted">Jenis PTK akan muncul setelah memilih Kategori PTK</small>
+                        <span class="invalid-feedback d-block" id="error-jenis_ptk"></span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -291,6 +343,8 @@ $(document).ready(function() {
         ajax: {
             url: '{{ route('admin.gtk.data') }}',
             data: function(d) {
+                d.kategori_ptk = $('#filterKategoriPtk').val();
+                d.jenis_ptk = $('#filterJenisPtk').val();
                 d.jenis_kelamin = $('#filterJenisKelamin').val();
                 d.status_kepegawaian = $('#filterStatusKepegawaian').val();
                 d.status = $('#filterStatus').val();
@@ -302,6 +356,8 @@ $(document).ready(function() {
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nama_lengkap', name: 'nama_lengkap' },
             { data: 'nik', name: 'nik' },
+            { data: 'kategori_ptk', name: 'kategori_ptk' },
+            { data: 'jenis_ptk', name: 'jenis_ptk' },
             { data: 'status_kepegawaian', name: 'status_kepegawaian' },
             { data: 'jabatan', name: 'jabatan' },
             { data: 'username', name: 'username' },
@@ -325,12 +381,59 @@ $(document).ready(function() {
         }
     });
 
-    // Filter functionality
-    $('#filterJenisKelamin, #filterStatusKepegawaian, #filterStatus').on('change', function() {
+    // Filter functionality - Cascading Kategori PTK -> Jenis PTK
+    const filterJenisPtkOptions = {
+        'Pendidik': [
+            { value: 'Guru Mapel', text: 'Guru Mapel' },
+            { value: 'Guru BK', text: 'Guru BK' }
+        ],
+        'Tenaga Kependidikan': [
+            { value: 'Kepala TU', text: 'Kepala TU' },
+            { value: 'Staff TU', text: 'Staff TU' },
+            { value: 'Bendahara', text: 'Bendahara' },
+            { value: 'Laboran', text: 'Laboran' },
+            { value: 'Pustakawan', text: 'Pustakawan' },
+            { value: 'Cleaning Service', text: 'Cleaning Service' },
+            { value: 'Satpam', text: 'Satpam' },
+            { value: 'Lainnya', text: 'Lainnya' }
+        ]
+    };
+
+    $('#filterKategoriPtk').on('change', function() {
+        const kategori = $(this).val();
+        const filterJenisPtk = $('#filterJenisPtk');
+        const currentValue = filterJenisPtk.val();
+        
+        // Reset jenis_ptk filter
+        filterJenisPtk.empty();
+        filterJenisPtk.append('<option value="">Semua</option>');
+        
+        if (kategori && filterJenisPtkOptions[kategori]) {
+            filterJenisPtkOptions[kategori].forEach(function(option) {
+                filterJenisPtk.append(`<option value="${option.value}">${option.text}</option>`);
+            });
+        } else {
+            // If no kategori selected, show all jenis options
+            Object.values(filterJenisPtkOptions).flat().forEach(function(option) {
+                filterJenisPtk.append(`<option value="${option.value}">${option.text}</option>`);
+            });
+        }
+        
+        // Reload table
+        gtkTable.ajax.reload();
+    });
+
+    $('#filterJenisPtk, #filterJenisKelamin, #filterStatusKepegawaian, #filterStatus').on('change', function() {
         gtkTable.ajax.reload();
     });
 
     $('#btnResetFilter').on('click', function() {
+        $('#filterKategoriPtk').val('');
+        $('#filterJenisPtk').empty().append('<option value="">Semua</option>');
+        // Repopulate all jenis options
+        Object.values(filterJenisPtkOptions).flat().forEach(function(option) {
+            $('#filterJenisPtk').append(`<option value="${option.value}">${option.text}</option>`);
+        });
         $('#filterJenisKelamin').val('');
         $('#filterStatusKepegawaian').val('');
         $('#filterStatus').val('');
@@ -382,6 +485,43 @@ $(document).ready(function() {
     $('#nik').on('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '').substring(0, 16);
     });
+
+    // Cascading Dropdown: Kategori PTK → Jenis PTK
+    const jenisPtkOptions = {
+        'Pendidik': [
+            { value: 'Guru Mapel', text: 'Guru Mata Pelajaran' },
+            { value: 'Guru BK', text: 'Guru BK (Bimbingan Konseling)' }
+        ],
+        'Tenaga Kependidikan': [
+            { value: 'Kepala TU', text: 'Kepala Tata Usaha' },
+            { value: 'Staff TU', text: 'Staff Tata Usaha' },
+            { value: 'Bendahara', text: 'Bendahara' },
+            { value: 'Laboran', text: 'Laboran' },
+            { value: 'Pustakawan', text: 'Pustakawan' },
+            { value: 'Cleaning Service', text: 'Cleaning Service' },
+            { value: 'Satpam', text: 'Satpam' },
+            { value: 'Lainnya', text: 'Lainnya' }
+        ]
+    };
+
+    $('#kategori_ptk').on('change', function() {
+        const kategori = $(this).val();
+        const jenisPtkSelect = $('#jenis_ptk');
+        
+        jenisPtkSelect.empty();
+        jenisPtkSelect.prop('disabled', true);
+        
+        if (kategori && jenisPtkOptions[kategori]) {
+            jenisPtkSelect.prop('disabled', false);
+            jenisPtkSelect.append('<option value="">Pilih Jenis PTK</option>');
+            
+            jenisPtkOptions[kategori].forEach(function(option) {
+                jenisPtkSelect.append(`<option value="${option.value}">${option.text}</option>`);
+            });
+        } else {
+            jenisPtkSelect.append('<option value="">Pilih Kategori PTK terlebih dahulu</option>');
+        }
+    });
 });
 
 // Show GTK Detail
@@ -412,7 +552,9 @@ function showGtk(id) {
                     <div class="col-md-6">
                         <h5 class="border-bottom pb-2">Data Kepegawaian</h5>
                         <table class="table table-sm">
-                            <tr><th width="150">Status Kepegawaian</th><td>${gtk.status_kepegawaian || '-'}</td></tr>
+                            <tr><th width="150">Kategori PTK</th><td>${gtk.kategori_ptk ? '<span class="badge badge-' + (gtk.kategori_ptk === 'Pendidik' ? 'primary' : 'info') + '">' + gtk.kategori_ptk + '</span>' : '-'}</td></tr>
+                            <tr><th>Jenis PTK</th><td>${gtk.jenis_ptk || '-'}</td></tr>
+                            <tr><th>Status Kepegawaian</th><td>${gtk.status_kepegawaian || '-'}</td></tr>
                             <tr><th>Jabatan</th><td>${gtk.jabatan || '-'}</td></tr>
                             <tr><th>TMT Kerja</th><td>${gtk.tmt_kerja || '-'}</td></tr>
                         </table>
@@ -507,6 +649,22 @@ function editGtk(id) {
                             </select>
                         </div>
                         <div class="form-group">
+                            <label>Kategori PTK <span class="text-danger">*</span></label>
+                            <select class="form-control" id="edit_kategori_ptk" name="kategori_ptk" required>
+                                <option value="">Pilih Kategori PTK</option>
+                                <option value="Pendidik" ${gtk.kategori_ptk === 'Pendidik' ? 'selected' : ''}>Pendidik (Guru)</option>
+                                <option value="Tenaga Kependidikan" ${gtk.kategori_ptk === 'Tenaga Kependidikan' ? 'selected' : ''}>Tenaga Kependidikan (Staff TU, dll)</option>
+                            </select>
+                            <small class="form-text text-muted">Kategori PTK: Pendidik untuk Guru, Tenaga Kependidikan untuk Staff non-Guru</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis PTK <span class="text-danger">*</span></label>
+                            <select class="form-control" id="edit_jenis_ptk" name="jenis_ptk" required>
+                                <option value="">Pilih Kategori PTK terlebih dahulu</option>
+                            </select>
+                            <small class="form-text text-muted">Jenis PTK akan muncul setelah memilih Kategori PTK</small>
+                        </div>
+                        <div class="form-group">
                             <label>Jabatan</label>
                             <input type="text" class="form-control" name="jabatan" value="${gtk.jabatan || ''}">
                         </div>
@@ -542,6 +700,55 @@ function editGtk(id) {
                 </div>
             `;
             $('#editGtkContent').html(html);
+            
+            // Populate jenis_ptk dropdown based on current kategori_ptk
+            const editJenisPtkOptions = {
+                'Pendidik': [
+                    { value: 'Guru Mapel', text: 'Guru Mata Pelajaran' },
+                    { value: 'Guru BK', text: 'Guru BK (Bimbingan Konseling)' }
+                ],
+                'Tenaga Kependidikan': [
+                    { value: 'Kepala TU', text: 'Kepala Tata Usaha' },
+                    { value: 'Staff TU', text: 'Staff Tata Usaha' },
+                    { value: 'Bendahara', text: 'Bendahara' },
+                    { value: 'Laboran', text: 'Laboran' },
+                    { value: 'Pustakawan', text: 'Pustakawan' },
+                    { value: 'Cleaning Service', text: 'Cleaning Service' },
+                    { value: 'Satpam', text: 'Satpam' },
+                    { value: 'Lainnya', text: 'Lainnya' }
+                ]
+            };
+            
+            // Populate jenis_ptk based on current kategori_ptk value
+            const currentKategori = gtk.kategori_ptk;
+            const currentJenis = gtk.jenis_ptk;
+            const editJenisPtkSelect = $('#edit_jenis_ptk');
+            
+            if (currentKategori && editJenisPtkOptions[currentKategori]) {
+                editJenisPtkSelect.empty();
+                editJenisPtkSelect.append('<option value="">Pilih Jenis PTK</option>');
+                editJenisPtkOptions[currentKategori].forEach(function(option) {
+                    const selected = option.value === currentJenis ? 'selected' : '';
+                    editJenisPtkSelect.append(`<option value="${option.value}" ${selected}>${option.text}</option>`);
+                });
+            }
+            
+            // Cascading dropdown for edit form
+            $('#edit_kategori_ptk').on('change', function() {
+                const kategori = $(this).val();
+                const jenisPtkSelect = $('#edit_jenis_ptk');
+                jenisPtkSelect.empty().prop('disabled', true);
+                
+                if (kategori && editJenisPtkOptions[kategori]) {
+                    jenisPtkSelect.prop('disabled', false);
+                    jenisPtkSelect.append('<option value="">Pilih Jenis PTK</option>');
+                    editJenisPtkOptions[kategori].forEach(function(option) {
+                        jenisPtkSelect.append(`<option value="${option.value}">${option.text}</option>`);
+                    });
+                } else {
+                    jenisPtkSelect.append('<option value="">Pilih Kategori PTK terlebih dahulu</option>');
+                }
+            });
         },
         error: function() {
             $('#editGtkContent').html('<div class="alert alert-danger">Gagal memuat data</div>');

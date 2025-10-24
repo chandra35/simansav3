@@ -76,11 +76,17 @@ class RolePermissionSeeder extends Seeder
             'assign-roles',
             'assign-permissions',
             
-            // GTK Management (Future)
+            // GTK Management
             'view-gtk',
             'create-gtk',
             'edit-gtk',
             'delete-gtk',
+            'reset-password-gtk',
+            
+            // GTK Personal (Dashboard & Profile)
+            'view-gtk-dashboard',
+            'edit-gtk-profile',
+            'change-password-gtk',
             
             // Nilai & Rapor (Future)
             'view-nilai',
@@ -144,8 +150,11 @@ class RolePermissionSeeder extends Seeder
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'delete-mutasi', 
             'approve-mutasi', 'reject-mutasi', 'upload-dokumen-mutasi',
             
-            // GTK Access
-            'view-gtk', 'create-gtk', 'edit-gtk', 'delete-gtk',
+            // GTK Management Access
+            'view-gtk', 'create-gtk', 'edit-gtk', 'delete-gtk', 'reset-password-gtk',
+            
+            // GTK Personal Access
+            'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
             
             // Nilai & Rapor
             'view-nilai', 'input-nilai', 'edit-nilai', 'delete-nilai', 'cetak-rapor',
@@ -174,6 +183,8 @@ class RolePermissionSeeder extends Seeder
             'view-absensi', 'input-absensi', 'edit-absensi', 'rekap-absensi',
             'view-laporan', 'export-laporan',
             'view-profile', 'edit-profile',
+            // GTK Personal Access
+            'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
         ]);
         $this->command->info('✅ WAKA role created');
 
@@ -186,7 +197,7 @@ class RolePermissionSeeder extends Seeder
             'view-kurikulum',
             'view-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'upload-dokumen-mutasi',
-            'view-gtk', 'create-gtk', 'edit-gtk',
+            'view-gtk', 'create-gtk', 'edit-gtk', 'reset-password-gtk',
             'view-laporan', 'export-laporan',
             'view-profile', 'edit-profile',
         ]);
@@ -221,39 +232,51 @@ class RolePermissionSeeder extends Seeder
         // 7. WALI KELAS - Class & student management
         $waliKelas = Role::firstOrCreate(['name' => 'Wali Kelas']);
         $waliKelas->givePermissionTo([
-            'view-dashboard',
+            // NO view-dashboard - Wali Kelas uses GTK dashboard instead
             'view-siswa', 'view-dokumen-siswa',
             'view-kelas', 'view-detail-kelas',
             'view-nilai', 'input-nilai',
             'view-absensi', 'input-absensi', 'rekap-absensi',
             'cetak-rapor',
             'view-profile', 'edit-profile',
+            // GTK Personal Access
+            'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
         ]);
         $this->command->info('✅ Wali Kelas role created');
 
-        // 8. GURU - Teaching focus
-        $guru = Role::firstOrCreate(['name' => 'Guru']);
-        $guru->givePermissionTo([
+        // 7a. BENDAHARA - Financial management (Tugas Tambahan)
+        $bendahara = Role::firstOrCreate(['name' => 'Bendahara']);
+        $bendahara->givePermissionTo([
             'view-dashboard',
-            'view-siswa', 'view-kelas', 'view-detail-kelas',
-            'view-nilai', 'input-nilai',
-            'view-absensi', 'input-absensi',
-            'view-profile', 'edit-profile',
-        ]);
-        $this->command->info('✅ Guru role created');
-
-        // 9. STAFF TU (Tata Usaha) - Administrative support
-        $staffTU = Role::firstOrCreate(['name' => 'Staff TU']);
-        $staffTU->givePermissionTo([
-            'view-dashboard',
-            'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa',
-            'view-kelas', 'view-detail-kelas',
-            'view-mutasi', 'create-mutasi', 'upload-dokumen-mutasi',
-            'view-gtk',
+            // 'view-keuangan', 'manage-keuangan', // Future: when keuangan module is implemented
+            'view-siswa', 'view-kelas',
             'view-laporan',
             'view-profile', 'edit-profile',
+            // GTK Personal Access (if Bendahara is also GTK)
+            'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
         ]);
-        $this->command->info('✅ Staff TU role created');
+        $this->command->info('✅ Bendahara role created');
+
+        // 8. GTK (Guru dan Tenaga Kependidikan) - MINIMAL BASE ROLE
+        // This is the base role for all GTK staff with minimal permissions
+        // Super Admin can add additional permissions as needed per user
+        $gtk = Role::firstOrCreate(['name' => 'GTK']);
+        $gtk->syncPermissions([
+            // GTK Personal Dashboard & Profile (MANDATORY for all GTK)
+            'view-gtk-dashboard', 
+            'edit-gtk-profile', 
+            'change-password-gtk',
+            // Basic Profile Access
+            'view-profile', 
+            'edit-profile',
+        ]);
+        $this->command->info('✅ GTK role created (Minimal base role - additional permissions can be assigned per user)');
+
+        // 8a. GURU role has been REMOVED - Migrated to GTK + Tugas Tambahan system
+        // Run "php artisan cleanup:guru-role" if old Guru role still exists
+        
+        // 9. STAFF TU role has been REMOVED - Migrated to GTK + Tugas Tambahan system
+        // Staff TU users should be migrated to GTK role with appropriate permissions
 
         // 10. SISWA - Student access
         $siswa = Role::firstOrCreate(['name' => 'Siswa']);
@@ -294,8 +317,12 @@ class RolePermissionSeeder extends Seeder
         $this->command->info('   5. Operator (Data Entry)');
         $this->command->info('   6. BK (Student Counseling)');
         $this->command->info('   7. Wali Kelas (Class Management)');
-        $this->command->info('   8. Guru (Teaching)');
-        $this->command->info('   9. Staff TU (Administrative Support)');
+        $this->command->info('   8. Bendahara (Financial Management)');
+        $this->command->info('   9. GTK (Guru & Tenaga Kependidikan - BASE ROLE) ⭐');
         $this->command->info('  10. Siswa (Student Access)');
+        $this->command->line('');
+        $this->command->info('ℹ️  GTK role replaces old "Guru" and "Staff TU" roles');
+        $this->command->info('ℹ️  Use Tugas Tambahan feature to assign additional roles to GTK');
     }
 }
+

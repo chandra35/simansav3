@@ -11,6 +11,8 @@ use App\Models\Jurusan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -21,6 +23,8 @@ class KelasController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('view-kelas');
+
         if ($request->ajax()) {
             $query = Kelas::with([
                 'tahunPelajaran',
@@ -147,7 +151,7 @@ class KelasController extends Controller
             ->get();
         $kurikulums = Kurikulum::where('is_active', true)->get();
         $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
-        $waliKelas = User::role(['Wali Kelas', 'Guru'])->orderBy('name')->get();
+        $waliKelas = User::role(['Wali Kelas', 'GTK'])->orderBy('name')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
 
         return view('admin.kelas.create', compact('tahunPelajarans', 'kurikulums', 'jurusans', 'waliKelas', 'tingkatOptions'));
@@ -213,6 +217,30 @@ class KelasController extends Controller
                 'is_active' => $request->is_active ?? true,
             ]);
 
+            // Auto-assign Wali Kelas role if wali kelas selected
+            if ($request->wali_kelas_id) {
+                $waliKelas = User::find($request->wali_kelas_id);
+                
+                if ($waliKelas && !$waliKelas->hasRole('Wali Kelas')) {
+                    $waliKelasRole = \Spatie\Permission\Models\Role::where('name', 'Wali Kelas')->first();
+                    
+                    if ($waliKelasRole) {
+                        $waliKelas->assignRole($waliKelasRole);
+                        
+                        \App\Models\TugasTambahan::create([
+                            'user_id' => $waliKelas->id,
+                            'role_id' => $waliKelasRole->id,
+                            'mulai_tugas' => now()->format('Y-m-d'),
+                            'is_active' => true,
+                            'keterangan' => 'Otomatis dibuat saat buat kelas baru: ' . $request->nama_kelas,
+                            'created_by' => Auth::id(),
+                        ]);
+                        
+                        Log::info("Auto-assigned Wali Kelas role to {$waliKelas->name} via kelas create");
+                    }
+                }
+            }
+
             // Load relationships to prevent "Attempt to read property on null" errors
             $kelas->load(['tahunPelajaran', 'kurikulum', 'jurusan', 'waliKelas']);
 
@@ -233,6 +261,8 @@ class KelasController extends Controller
      */
     public function show(Kelas $kelas)
     {
+        $this->authorize('view-detail-kelas');
+
         $kelas->load([
             'tahunPelajaran',
             'kurikulum.jurusans',
@@ -261,7 +291,7 @@ class KelasController extends Controller
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $kurikulums = Kurikulum::all();
         $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
-        $waliKelas = User::role(['Wali Kelas', 'Guru'])->orderBy('name')->get();
+        $waliKelas = User::role(['Wali Kelas', 'GTK'])->orderBy('name')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
 
         return view('admin.kelas.edit', compact('kelas', 'tahunPelajarans', 'kurikulums', 'jurusans', 'waliKelas', 'tingkatOptions'));
@@ -301,18 +331,46 @@ class KelasController extends Controller
 
         DB::beginTransaction();
         try {
+            // Store old wali_kelas_id before update
+            $oldWaliKelasId = $kelas->wali_kelas_id;
+            $newWaliKelasId = $request->wali_kelas_id;
+            
             $kelas->update([
                 'tahun_pelajaran_id' => $request->tahun_pelajaran_id,
                 'kurikulum_id' => $request->kurikulum_id,
                 'jurusan_id' => $request->jurusan_id,
                 'nama_kelas' => $request->nama_kelas,
                 'tingkat' => $request->tingkat,
-                'wali_kelas_id' => $request->wali_kelas_id,
+                'wali_kelas_id' => $newWaliKelasId,
                 'kapasitas' => $request->kapasitas,
                 'ruang_kelas' => $request->ruang_kelas,
                 'deskripsi' => $request->deskripsi,
                 'is_active' => $request->is_active ?? true,
             ]);
+
+            // Auto-assign Wali Kelas role if wali kelas changed and new wali assigned
+            if ($oldWaliKelasId != $newWaliKelasId && $newWaliKelasId) {
+                $waliKelas = User::find($newWaliKelasId);
+                
+                if ($waliKelas && !$waliKelas->hasRole('Wali Kelas')) {
+                    $waliKelasRole = \Spatie\Permission\Models\Role::where('name', 'Wali Kelas')->first();
+                    
+                    if ($waliKelasRole) {
+                        $waliKelas->assignRole($waliKelasRole);
+                        
+                        \App\Models\TugasTambahan::create([
+                            'user_id' => $waliKelas->id,
+                            'role_id' => $waliKelasRole->id,
+                            'mulai_tugas' => now()->format('Y-m-d'),
+                            'is_active' => true,
+                            'keterangan' => 'Otomatis dibuat saat edit kelas: ' . $kelas->nama_lengkap,
+                            'created_by' => Auth::id(),
+                        ]);
+                        
+                        Log::info("Auto-assigned Wali Kelas role to {$waliKelas->name} via kelas edit");
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -659,7 +717,7 @@ class KelasController extends Controller
 
         try {
             // Update pivot table
-            $kelas->siswas()->updateExistingPivot($siswa->uuid, [
+            $kelas->siswas()->updateExistingPivot($siswa->id, [
                 'tanggal_keluar' => $request->tanggal_keluar,
                 'status' => $request->status,
                 'catatan_perpindahan' => $request->catatan,
@@ -683,22 +741,62 @@ class KelasController extends Controller
     public function assignWaliKelas(Request $request, Kelas $kelas)
     {
         $validator = Validator::make($request->all(), [
-            'wali_kelas_id' => 'required|exists:users,uuid',
+            'wali_kelas_id' => 'required|exists:users,id',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Validation failed for assign wali kelas', [
+                'errors' => $validator->errors()->toArray(),
+                'input' => $request->all()
+            ]);
+            
             return response()->json([
                 'success' => false,
+                'message' => 'Validasi gagal: ' . $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }
 
+        DB::beginTransaction();
         try {
+            $waliKelas = User::where('id', $request->wali_kelas_id)->first();
+            
+            if (!$waliKelas) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User dengan ID tersebut tidak ditemukan'
+                ], 404);
+            }
+            
+            // Update kelas dengan wali kelas baru
             $kelas->update([
                 'wali_kelas_id' => $request->wali_kelas_id
             ]);
 
-            $waliKelas = User::where('uuid', $request->wali_kelas_id)->first();
+            // Otomatis assign role "Wali Kelas" jika belum punya
+            if (!$waliKelas->hasRole('Wali Kelas')) {
+                // Get Wali Kelas role
+                $waliKelasRole = \Spatie\Permission\Models\Role::where('name', 'Wali Kelas')->first();
+                
+                if ($waliKelasRole) {
+                    // Assign role
+                    $waliKelas->assignRole($waliKelasRole);
+                    
+                    // Create tugas tambahan record
+                    \App\Models\TugasTambahan::create([
+                        'user_id' => $waliKelas->id,
+                        'role_id' => $waliKelasRole->id,
+                        'mulai_tugas' => now()->format('Y-m-d'),
+                        'is_active' => true,
+                        'keterangan' => 'Otomatis dibuat saat assign wali kelas ke ' . $kelas->nama_lengkap,
+                        'created_by' => Auth::id(),
+                    ]);
+                    
+                    Log::info("Auto-assigned Wali Kelas role to user: {$waliKelas->name} for class: {$kelas->nama_lengkap}");
+                }
+            }
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -706,6 +804,9 @@ class KelasController extends Controller
                 'wali_kelas_name' => $waliKelas->name
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error assigning wali kelas: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menugaskan wali kelas: ' . $e->getMessage()

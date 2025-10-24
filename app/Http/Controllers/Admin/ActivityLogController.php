@@ -27,6 +27,12 @@ class ActivityLogController extends Controller
     {
         $query = ActivityLog::with('user')->select('activity_logs.*');
 
+        // Filter by current user (except Super Admin can see all logs)
+        $currentUser = auth()->user();
+        if (!$currentUser->hasRole('Super Admin')) {
+            $query->where('user_id', $currentUser->id);
+        }
+
         // Filter by date range
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
@@ -40,8 +46,8 @@ class ActivityLogController extends Controller
             $query->where('activity_type', $request->activity_type);
         }
 
-        // Filter by user
-        if ($request->filled('user_id')) {
+        // Filter by user (only for Super Admin)
+        if ($request->filled('user_id') && $currentUser->hasRole('Super Admin')) {
             $query->where('user_id', $request->user_id);
         }
 
@@ -149,7 +155,18 @@ class ActivityLogController extends Controller
      */
     public function show($id)
     {
-        $log = ActivityLog::with('user')->findOrFail($id);
+        $currentUser = auth()->user();
+        
+        // Super Admin can see all logs
+        if ($currentUser->hasRole('Super Admin')) {
+            $log = ActivityLog::with('user')->findOrFail($id);
+        } else {
+            // Other users can only see their own logs
+            $log = ActivityLog::with('user')
+                ->where('id', $id)
+                ->where('user_id', $currentUser->id)
+                ->firstOrFail();
+        }
         
         return response()->json([
             'success' => true,
@@ -166,20 +183,28 @@ class ActivityLogController extends Controller
         $dateFrom = $request->input('date_from', Carbon::now()->subDays(30));
         $dateTo = $request->input('date_to', Carbon::now());
 
+        $query = ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo]);
+
+        // Filter by current user (except Super Admin can see all stats)
+        $currentUser = auth()->user();
+        if (!$currentUser->hasRole('Super Admin')) {
+            $query->where('user_id', $currentUser->id);
+        }
+
         $stats = [
-            'total_activities' => ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'unique_users' => ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo])->distinct('user_id')->count('user_id'),
-            'by_device' => ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo])
+            'total_activities' => (clone $query)->count(),
+            'unique_users' => (clone $query)->distinct('user_id')->count('user_id'),
+            'by_device' => (clone $query)
                 ->select('device_type', \DB::raw('count(*) as total'))
                 ->groupBy('device_type')
                 ->get(),
-            'by_activity_type' => ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo])
+            'by_activity_type' => (clone $query)
                 ->select('activity_type', \DB::raw('count(*) as total'))
                 ->groupBy('activity_type')
                 ->orderBy('total', 'desc')
                 ->limit(10)
                 ->get(),
-            'by_country' => ActivityLog::whereBetween('created_at', [$dateFrom, $dateTo])
+            'by_country' => (clone $query)
                 ->whereNotNull('country')
                 ->select('country', 'country_code', \DB::raw('count(*) as total'))
                 ->groupBy('country', 'country_code')
@@ -197,6 +222,12 @@ class ActivityLogController extends Controller
     public function export(Request $request)
     {
         $query = ActivityLog::with('user')->orderBy('created_at', 'desc');
+
+        // Filter by current user (except Super Admin can export all logs)
+        $currentUser = auth()->user();
+        if (!$currentUser->hasRole('Super Admin')) {
+            $query->where('user_id', $currentUser->id);
+        }
 
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);

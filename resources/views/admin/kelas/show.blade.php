@@ -489,13 +489,28 @@
                         <div class="form-group">
                             <label for="wali_kelas_id">Pilih Wali Kelas</label>
                             <select class="form-control" id="wali_kelas_id" name="wali_kelas_id" required>
-                                <option value="">Pilih Guru/Wali Kelas</option>
-                                @foreach(\App\Models\User::role(['Wali Kelas', 'Guru'])->orderBy('name')->get() as $guru)
-                                    <option value="{{ $guru->uuid }}" {{ $kelas->wali_kelas_id == $guru->uuid ? 'selected' : '' }}>
-                                        {{ $guru->name }}
-                                    </option>
-                                @endforeach
+                                <option value="">-- Pilih GTK untuk Wali Kelas --</option>
+                                @php
+                                    $availableGtk = \App\Models\User::role(['Wali Kelas', 'GTK'])
+                                        ->orderBy('name')
+                                        ->get();
+                                @endphp
+                                @if($availableGtk->isEmpty())
+                                    <option value="" disabled>Tidak ada GTK tersedia</option>
+                                @else
+                                    @foreach($availableGtk as $gtk)
+                                        <option value="{{ $gtk->id }}" {{ $kelas->wali_kelas_id == $gtk->id ? 'selected' : '' }}>
+                                            {{ $gtk->name }}
+                                            @if($gtk->gtk)
+                                                - {{ $gtk->gtk->kategori_ptk ?? '' }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Total GTK tersedia: {{ $availableGtk->count() }}
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -1033,15 +1048,45 @@
                 $('.select2-siswa').val(null).trigger('change');
             });
 
+            // Debug modal Wali Kelas saat dibuka
+            $('#modalWaliKelas').on('shown.bs.modal', function() {
+                const selectElement = $('#wali_kelas_id');
+                console.log('Modal opened');
+                console.log('Select element exists:', selectElement.length > 0);
+                console.log('Options count:', selectElement.find('option').length);
+                console.log('Current value:', selectElement.val());
+                console.log('All options:', selectElement.find('option').map(function() {
+                    return $(this).val() + ': ' + $(this).text();
+                }).get());
+            });
+
             // Assign Wali Kelas
             $('#formWaliKelas').on('submit', function(e) {
                 e.preventDefault();
                 
+                const waliKelasId = $('#wali_kelas_id').val();
+                
+                console.log('Form Data:', $(this).serialize());
+                console.log('Wali Kelas ID:', waliKelasId);
+                
+                // Validasi client-side
+                if (!waliKelasId || waliKelasId === '') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian!',
+                        text: 'Silakan pilih GTK untuk ditugaskan sebagai Wali Kelas'
+                    });
+                    return false;
+                }
+                
+                const formData = $(this).serialize();
+                
                 $.ajax({
                     url: "{{ route('admin.kelas.wali-kelas', $kelas->id) }}",
                     type: 'POST',
-                    data: $(this).serialize(),
+                    data: formData,
                     success: function(response) {
+                        console.log('Success:', response);
                         $('#modalWaliKelas').modal('hide');
                         Swal.fire({
                             icon: 'success',
@@ -1050,10 +1095,12 @@
                         }).then(() => location.reload());
                     },
                     error: function(xhr) {
+                        console.error('Error:', xhr);
+                        console.error('Response:', xhr.responseJSON);
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal!',
-                            text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat assign wali kelas'
                         });
                     }
                 });

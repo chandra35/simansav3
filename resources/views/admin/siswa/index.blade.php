@@ -56,12 +56,14 @@
                     Manajemen Data Siswa
                 </h3>
                 <div class="card-tools">
-                    <a href="{{ route('admin.siswa.import') }}" class="btn btn-success mr-2">
-                        <i class="fas fa-file-excel"></i> Import dari Excel
-                    </a>
-                    <button type="button" class="btn btn-primary" onclick="addSiswa()">
-                        <i class="fas fa-plus"></i> Tambah Siswa
-                    </button>
+                    @can('create-siswa')
+                        <a href="{{ route('admin.siswa.import') }}" class="btn btn-success mr-2">
+                            <i class="fas fa-file-excel"></i> Import dari Excel
+                        </a>
+                        <button type="button" class="btn btn-primary" onclick="addSiswa()">
+                            <i class="fas fa-plus"></i> Tambah Siswa
+                        </button>
+                    @endcan
                 </div>
             </div>
             <div class="card-body">

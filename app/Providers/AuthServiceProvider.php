@@ -32,5 +32,19 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('siswa-access', function ($user) {
             return $user->role === 'siswa';
         });
+
+        // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
+        // Only show to users with GTK role, excluding Super Admin and Admin
+        Gate::define('gtk-menu-only', function ($user) {
+            return $user->hasRole('GTK') && 
+                   !$user->hasRole('Super Admin') && 
+                   !$user->hasRole('Admin');
+        });
+
+        // Gate for Admin Dashboard
+        // Show to Super Admin, Admin, but NOT to pure GTK users
+        Gate::define('admin-dashboard-access', function ($user) {
+            return $user->hasRole(['Super Admin', 'Admin', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+        });
     }
 }

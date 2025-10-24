@@ -125,7 +125,7 @@
                                 id="wali_kelas_id" name="wali_kelas_id">
                                 <option value="">Belum ditugaskan</option>
                                 @foreach($waliKelas as $wk)
-                                    <option value="{{ $wk->uuid }}" {{ old('wali_kelas_id') == $wk->uuid ? 'selected' : '' }}>
+                                    <option value="{{ $wk->id }}" {{ old('wali_kelas_id') == $wk->id ? 'selected' : '' }}>
                                         {{ $wk->name }}
                                     </option>
                                 @endforeach

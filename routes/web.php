@@ -74,15 +74,57 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
     
-    // GTK Management
-    Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');
-    Route::post('/gtk/{gtk}/reset-password', [App\Http\Controllers\Admin\GtkController::class, 'resetPassword'])->name('gtk.reset-password');
-    Route::resource('gtk', App\Http\Controllers\Admin\GtkController::class);
+    // GTK Personal (Dashboard & Profile for GTK users)
+    Route::middleware(['permission:view-gtk-dashboard'])->group(function () {
+        Route::get('/gtk/dashboard', [App\Http\Controllers\Admin\GtkDashboardController::class, 'index'])->name('gtk.dashboard');
+    });
+    
+    Route::middleware(['permission:change-password-gtk'])->group(function () {
+        Route::get('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'password'])->name('gtk.profile.password');
+        Route::put('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'updatePassword'])->name('gtk.profile.password.update');
+    });
+    
+    Route::middleware(['permission:edit-gtk-profile'])->group(function () {
+        Route::get('/gtk/profile', [App\Http\Controllers\Admin\GtkProfileController::class, 'index'])->name('gtk.profile');
+        Route::put('/gtk/profile/diri', [App\Http\Controllers\Admin\GtkProfileController::class, 'updateDiri'])->name('gtk.profile.diri.update');
+        Route::put('/gtk/profile/kepeg', [App\Http\Controllers\Admin\GtkProfileController::class, 'updateKepeg'])->name('gtk.profile.kepeg.update');
+        
+        // AJAX routes for address dropdowns
+        Route::get('/gtk/api/cities/{provinsi}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getCities'])->name('gtk.api.cities');
+        Route::get('/gtk/api/districts/{kabupaten}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getDistricts'])->name('gtk.api.districts');
+        Route::get('/gtk/api/villages/{kecamatan}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getVillages'])->name('gtk.api.villages');
+    });
+    
+    // GTK Management (for Admin/Super Admin)
+    Route::middleware(['permission:view-gtk'])->group(function () {
+        Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');
+        Route::get('/gtk', [App\Http\Controllers\Admin\GtkController::class, 'index'])->name('gtk.index');
+        Route::get('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'show'])->name('gtk.show');
+    });
+    
+    Route::middleware(['permission:create-gtk'])->group(function () {
+        Route::post('/gtk', [App\Http\Controllers\Admin\GtkController::class, 'store'])->name('gtk.store');
+    });
+    
+    Route::middleware(['permission:edit-gtk'])->group(function () {
+        Route::get('/gtk/{gtk}/edit', [App\Http\Controllers\Admin\GtkController::class, 'edit'])->name('gtk.edit');
+        Route::put('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'update'])->name('gtk.update');
+    });
+    
+    Route::middleware(['permission:delete-gtk'])->group(function () {
+        Route::delete('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'destroy'])->name('gtk.destroy');
+    });
+    
+    Route::middleware(['permission:reset-password-gtk'])->group(function () {
+        Route::put('/gtk/{gtk}/reset-password', [App\Http\Controllers\Admin\GtkController::class, 'resetPassword'])->name('gtk.reset-password');
+    });
     
     // GTK Import
-    Route::get('/gtk/import/form', [App\Http\Controllers\Admin\GtkImportController::class, 'index'])->name('gtk.import');
-    Route::get('/gtk/import/template', [App\Http\Controllers\Admin\GtkImportController::class, 'downloadTemplate'])->name('gtk.import.template');
-    Route::post('/gtk/import/process', [App\Http\Controllers\Admin\GtkImportController::class, 'import'])->name('gtk.import.process');
+    Route::middleware(['permission:create-gtk'])->group(function () {
+        Route::get('/gtk/import/form', [App\Http\Controllers\Admin\GtkImportController::class, 'index'])->name('gtk.import');
+        Route::get('/gtk/import/template', [App\Http\Controllers\Admin\GtkImportController::class, 'downloadTemplate'])->name('gtk.import.template');
+        Route::post('/gtk/import/process', [App\Http\Controllers\Admin\GtkImportController::class, 'import'])->name('gtk.import.process');
+    });
     
     // User Management
     Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
@@ -91,6 +133,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');
     Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::get('/permission-matrix', [App\Http\Controllers\Admin\UserController::class, 'permissionMatrix'])->name('users.permission-matrix');
+    
+    // Tugas Tambahan Management
+    Route::post('/users/{user}/tugas-tambahan', [App\Http\Controllers\Admin\UserController::class, 'assignTugasTambahan'])->name('users.tugas-tambahan.assign');
+    Route::post('/tugas-tambahan/{tugasTambahan}/deactivate', [App\Http\Controllers\Admin\UserController::class, 'deactivateTugasTambahan'])->name('tugas-tambahan.deactivate');
+    Route::post('/tugas-tambahan/{tugasTambahan}/activate', [App\Http\Controllers\Admin\UserController::class, 'activateTugasTambahan'])->name('tugas-tambahan.activate');
+    Route::delete('/tugas-tambahan/{tugasTambahan}', [App\Http\Controllers\Admin\UserController::class, 'deleteTugasTambahan'])->name('tugas-tambahan.delete');
     
     // Activity Logs
     Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');

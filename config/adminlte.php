@@ -305,13 +305,31 @@ return [
             'topnav_right' => true,
         ],
 
-        // Sidebar items for Admin
+        // Sidebar items for Admin/Management
         [
+            'key' => 'admin-dashboard',
             'text' => 'Dashboard',
             'url' => 'admin/dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
-            'can' => 'admin-access',
+            'can' => 'admin-dashboard-access', // Only for Super Admin, Admin, Kepala, WAKA (NOT pure GTK)
         ],
+        
+        // GTK Personal Menu (ONLY for pure GTK role, not Super Admin/Admin)
+        [
+            'key' => 'gtk-dashboard',
+            'text' => 'Dashboard Saya',
+            'route' => 'admin.gtk.dashboard',
+            'icon' => 'fas fa-fw fa-home',
+            'can' => 'gtk-menu-only', // Only GTK, exclude Super Admin/Admin
+        ],
+        [
+            'key' => 'gtk-profile',
+            'text' => 'Profil Saya',
+            'route' => 'admin.gtk.profile',
+            'icon' => 'fas fa-fw fa-user-circle',
+            'can' => 'gtk-menu-only', // Only GTK, exclude Super Admin/Admin
+        ],
+        
         [
             'header' => 'MANAJEMEN DATA',
             'can' => 'admin-access',

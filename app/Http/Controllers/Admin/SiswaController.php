@@ -20,6 +20,8 @@ class SiswaController extends Controller
      */
     public function index()
     {
+        $this->authorize('view-siswa');
+
         // Statistics
         $stats = [
             'total_siswa' => Siswa::count(),
@@ -43,6 +45,7 @@ class SiswaController extends Controller
      */
     public function data(Request $request)
     {
+        $this->authorize('view-siswa');
         $siswa = Siswa::with(['user', 'ortu'])
             ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
 
@@ -138,22 +141,44 @@ class SiswaController extends Controller
 
     private function getActionButtons($item)
     {
-        return '
-            <div class="btn-group" role="group">
+        $user = auth()->user();
+        $buttons = '<div class="btn-group" role="group">';
+        
+        // View button - always shown if can view siswa
+        if ($user->can('view-siswa')) {
+            $buttons .= '
                 <button type="button" class="btn btn-info btn-sm" onclick="showSiswa(\''.$item->id.'\')">
                     <i class="fas fa-eye"></i>
-                </button>
+                </button>';
+        }
+        
+        // Edit button
+        if ($user->can('edit-siswa')) {
+            $buttons .= '
                 <button type="button" class="btn btn-warning btn-sm" onclick="editSiswa(\''.$item->id.'\')">
                     <i class="fas fa-edit"></i>
-                </button>
+                </button>';
+        }
+        
+        // Reset Password button
+        if ($user->can('reset-password-siswa')) {
+            $buttons .= '
                 <button type="button" class="btn btn-secondary btn-sm" onclick="resetPassword(\''.$item->id.'\')">
                     <i class="fas fa-key"></i>
-                </button>
+                </button>';
+        }
+        
+        // Delete button
+        if ($user->can('delete-siswa')) {
+            $buttons .= '
                 <button type="button" class="btn btn-danger btn-sm" onclick="deleteSiswa(\''.$item->id.'\')">
                     <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        ';
+                </button>';
+        }
+        
+        $buttons .= '</div>';
+        
+        return $buttons;
     }
 
     /**
@@ -169,6 +194,8 @@ class SiswaController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create-siswa');
+
         try {
             // Log incoming request for debugging
             Log::info('Attempting to create siswa', [
@@ -259,6 +286,8 @@ class SiswaController extends Controller
      */
     public function show(Siswa $siswa)
     {
+        $this->authorize('view-siswa');
+
         $siswa->load(['user', 'ortu', 'creator', 'updater']);
         
         // Format data for display
@@ -277,6 +306,8 @@ class SiswaController extends Controller
      */
     public function update(Request $request, Siswa $siswa)
     {
+        $this->authorize('edit-siswa');
+
         $request->validate([
             'nisn' => ['required', 'string', Rule::unique('siswa', 'nisn')->ignore($siswa->id)],
             'nama_lengkap' => 'required|string|max:255',
@@ -331,6 +362,8 @@ class SiswaController extends Controller
      */
     public function destroy(Siswa $siswa)
     {
+        $this->authorize('delete-siswa');
+
         DB::beginTransaction();
         try {
             $nama = $siswa->nama_lengkap;
@@ -371,6 +404,8 @@ class SiswaController extends Controller
      */
     public function resetPassword(Siswa $siswa)
     {
+        $this->authorize('edit-siswa');
+
         try {
             $siswa->user->update([
                 'password' => Hash::make($siswa->nisn),
@@ -406,6 +441,8 @@ class SiswaController extends Controller
      */
     public function getDokumen(Siswa $siswa)
     {
+        $this->authorize('view-siswa');
+
         try {
             $dokumen = $siswa->dokumen()->latest()->get()->map(function($dok) {
                 return [

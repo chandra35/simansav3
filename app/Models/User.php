@@ -63,20 +63,75 @@ class User extends Authenticatable
         return $this->hasOne(Siswa::class);
     }
 
+    public function gtk()
+    {
+        return $this->hasOne(Gtk::class);
+    }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
     }
 
+    /**
+     * Relationship: User has many tugas tambahan
+     */
+    public function tugasTambahan()
+    {
+        return $this->hasMany(TugasTambahan::class);
+    }
+
+    /**
+     * Relationship: User has many active tugas tambahan
+     */
+    public function activeTugasTambahan()
+    {
+        return $this->hasMany(TugasTambahan::class)->where('is_active', true);
+    }
+
     // Helper methods
     public function isSiswa()
     {
-        return $this->role === 'siswa';
+        // Check Spatie role first, fallback to old role column
+        return $this->hasRole('Siswa') || $this->role === 'siswa';
     }
 
     public function isAdmin()
     {
         return in_array($this->role, ['super_admin', 'admin', 'gtk', 'operator']);
+    }
+
+    /**
+     * Check if user has specific active tugas tambahan (additional role)
+     */
+    public function hasActiveTugasTambahan(string $roleName): bool
+    {
+        return $this->activeTugasTambahan()
+            ->whereHas('role', function ($query) use ($roleName) {
+                $query->where('name', $roleName);
+            })
+            ->exists();
+    }
+
+    /**
+     * Get all active tugas tambahan role names
+     */
+    public function getActiveTugasTambahanRoles(): array
+    {
+        return $this->activeTugasTambahan()
+            ->with('role')
+            ->get()
+            ->pluck('role.name')
+            ->toArray();
+    }
+
+    /**
+     * Get formatted tugas tambahan string (for display)
+     */
+    public function getTugasTambahanStringAttribute(): string
+    {
+        $roles = $this->getActiveTugasTambahanRoles();
+        return empty($roles) ? '-' : implode(', ', $roles);
     }
 
     public function getAvatarUrlAttribute()

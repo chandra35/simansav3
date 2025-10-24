@@ -149,10 +149,10 @@
                                             <td>
                                                 <div class="custom-control custom-checkbox">
                                                     <input type="checkbox" class="custom-control-input siswa-checkbox" 
-                                                        id="siswa-{{ $siswa->uuid }}" 
-                                                        value="{{ $siswa->uuid }}"
+                                                        id="siswa-{{ $siswa->id }}" 
+                                                        value="{{ $siswa->id }}"
                                                         data-nama="{{ $siswa->nama_lengkap }}">
-                                                    <label class="custom-control-label" for="siswa-{{ $siswa->uuid }}"></label>
+                                                    <label class="custom-control-label" for="siswa-{{ $siswa->id }}"></label>
                                                 </div>
                                             </td>
                                             <td>{{ $siswa->nisn }}</td>

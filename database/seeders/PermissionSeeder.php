@@ -71,7 +71,7 @@ class PermissionSeeder extends Seeder
             $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
             $admin = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
             $operator = Role::firstOrCreate(['name' => 'Operator', 'guard_name' => 'web']);
-            $guru = Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
+            $gtk = Role::firstOrCreate(['name' => 'GTK', 'guard_name' => 'web']);
             $siswa = Role::firstOrCreate(['name' => 'Siswa', 'guard_name' => 'web']);
 
             // Assign ALL permissions to Super Admin
@@ -101,17 +101,17 @@ class PermissionSeeder extends Seeder
             ])->pluck('name')->toArray();
             $operator->syncPermissions($operatorPermissions);
 
-            // Guru - view & edit nilai, absensi, view siswa/kelas
-            $guruPermissions = Permission::whereIn('name', [
+            // GTK - base role with minimal permissions (replaced old Guru role)
+            // Additional permissions can be assigned via Tugas Tambahan feature
+            $gtkPermissions = Permission::whereIn('name', [
                 'view-siswa',
                 'view-kelas',
                 'view-mata-pelajaran',
-                'view-nilai', 'create-nilai', 'edit-nilai', 'delete-nilai',
-                'view-absensi', 'create-absensi', 'edit-absensi', 'delete-absensi',
-                'view-dashboard',
-                'view-laporan',
+                'view-gtk-dashboard',
+                'edit-gtk-profile',
+                'change-password-gtk',
             ])->pluck('name')->toArray();
-            $guru->syncPermissions($guruPermissions);
+            $gtk->syncPermissions($gtkPermissions);
 
             // Siswa - view only (data sendiri)
             $siswaPermissions = Permission::whereIn('name', [
@@ -134,7 +134,7 @@ class PermissionSeeder extends Seeder
                     ['Super Admin', $superAdmin->permissions->count()],
                     ['Admin', $admin->permissions->count()],
                     ['Operator', $operator->permissions->count()],
-                    ['Guru', $guru->permissions->count()],
+                    ['GTK', $gtk->permissions->count()],
                     ['Siswa', $siswa->permissions->count()],
                 ]
             );

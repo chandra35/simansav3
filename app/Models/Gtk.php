@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Laravolt\Indonesia\Models\Province;
+use Laravolt\Indonesia\Models\City;
+use Laravolt\Indonesia\Models\District;
+use Laravolt\Indonesia\Models\Village;
 
 class Gtk extends Model
 {
@@ -35,6 +39,8 @@ class Gtk extends Model
         'kecamatan_id',
         'kelurahan_id',
         'kodepos',
+        'kategori_ptk',
+        'jenis_ptk',
         'status_kepegawaian',
         'jabatan',
         'tmt_kerja',
@@ -91,6 +97,14 @@ class Gtk extends Model
     public function kelurahan()
     {
         return $this->belongsTo(Village::class, 'kelurahan_id', 'code');
+    }
+
+    /**
+     * Accessor untuk data_kepeg_completed (alias)
+     */
+    public function getDataKepegCompletedAttribute()
+    {
+        return $this->attributes['data_kepegawaian_completed'] ?? false;
     }
 
     /**

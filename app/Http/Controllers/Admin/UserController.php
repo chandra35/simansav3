@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\TugasTambahan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class UserController extends Controller
             'total_users' => User::count(),
             'admin' => User::role(['Super Admin', 'Admin'])->count(),
             'gtk' => User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['Guru', 'Wali Kelas', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+                $q->whereIn('name', ['GTK', 'Wali Kelas', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
             })->count(),
             'siswa' => User::role('Siswa')->count(),
         ];
@@ -90,7 +91,7 @@ class UserController extends Controller
                     'Super Admin' => 'danger',
                     'Admin' => 'primary',
                     'Operator' => 'info',
-                    'Guru' => 'success',
+                    'GTK' => 'success',
                     'Siswa' => 'secondary',
                 ];
                 $color = $colors[$role->name] ?? 'secondary';
@@ -352,13 +353,39 @@ class UserController extends Controller
         });
 
         $userRoles = $user->roles->pluck('id')->toArray();
-        $userPermissions = $user->permissions->pluck('id')->toArray();
+        
+        // Get DIRECT permissions only (not from roles)
+        $userDirectPermissions = $user->permissions->pluck('id')->toArray();
+        
+        // Get ALL permissions (from roles + direct) - for display purposes
+        $userAllPermissions = $user->getAllPermissions()->pluck('id')->toArray();
+
+        // Get tugas tambahan for this user
+        $tugasTambahan = TugasTambahan::with('role')
+            ->where('user_id', $user->id)
+            ->orderBy('is_active', 'desc')
+            ->orderBy('mulai_tugas', 'desc')
+            ->get();
+
+        // Get roles that can be assigned as tugas tambahan
+        // Exclude base roles: Super Admin, GTK, Siswa
+        $tugasTambahanRoles = Role::whereNotIn('name', ['Super Admin', 'GTK', 'Siswa', 'Guru', 'Staff TU'])
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'roles' => $roles,
             'permissions' => $permissions,
             'userRoles' => $userRoles,
-            'userPermissions' => $userPermissions
+            'userPermissions' => $userDirectPermissions, // Direct permissions (editable)
+            'userAllPermissions' => $userAllPermissions, // All permissions (for display/readonly)
+            'tugasTambahan' => $tugasTambahan,
+            'tugasTambahanRoles' => $tugasTambahanRoles->map(function($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ];
+            })->values()->all(), // Explicitly convert to simple array
         ]);
     }
 
@@ -378,32 +405,37 @@ class UserController extends Controller
 
         DB::beginTransaction();
         try {
-            // Sync roles
-            if (isset($validated['roles'])) {
-                $user->syncRoles($validated['roles']);
+            // Sync roles - convert IDs to Role objects
+            if (isset($validated['roles']) && !empty($validated['roles'])) {
+                $roles = Role::whereIn('id', $validated['roles'])->get();
+                $user->syncRoles($roles);
             } else {
                 $user->syncRoles([]);
             }
 
-            // Sync direct permissions (custom permissions)
-            if (isset($validated['permissions'])) {
-                $user->syncPermissions($validated['permissions']);
+            // Sync direct permissions - convert IDs to Permission objects
+            if (isset($validated['permissions']) && !empty($validated['permissions'])) {
+                $permissions = Permission::whereIn('id', $validated['permissions'])->get();
+                $user->syncPermissions($permissions);
             } else {
                 $user->syncPermissions([]);
             }
 
             DB::commit();
 
-            return redirect()
-                ->route('admin.users.index')
-                ->with('success', 'Role dan permission berhasil diassign ke ' . $user->name);
+            // Return JSON response for AJAX
+            return response()->json([
+                'success' => true,
+                'message' => 'Role dan permission berhasil diassign ke ' . $user->name
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error assigning role: ' . $e->getMessage());
 
-            return redirect()
-                ->back()
-                ->with('error', 'Gagal assign role: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal assign role: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -456,5 +488,217 @@ class UserController extends Controller
             'permissionsByModule',
             'totalUsers'
         ));
+    }
+
+    /**
+     * Assign tugas tambahan to user
+     */
+    public function assignTugasTambahan(Request $request, User $user)
+    {
+        $this->authorize('assign-role');
+
+        $validated = $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'mulai_tugas' => 'required|date',
+            'selesai_tugas' => 'nullable|date|after:mulai_tugas',
+            'sk_number' => 'nullable|string|max:100',
+            'sk_date' => 'nullable|date',
+            'keterangan' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Get role name
+            $role = Role::findOrFail($validated['role_id']);
+
+            // Check if user has GTK role (only GTK can have tugas tambahan)
+            if (!$user->hasRole('GTK')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tambahan hanya dapat diberikan kepada user dengan role GTK'
+                ], 422);
+            }
+
+            // Check if Kepala Madrasah - only 1 active allowed
+            if ($role->name === 'Kepala Madrasah') {
+                $existingKepala = TugasTambahan::where('role_id', $role->id)
+                    ->where('is_active', true)
+                    ->where('user_id', '!=', $user->id)
+                    ->exists();
+
+                if ($existingKepala) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sudah ada Kepala Madrasah aktif. Nonaktifkan yang lama terlebih dahulu.'
+                    ], 422);
+                }
+            }
+
+            // Create tugas tambahan record
+            $tugasTambahan = TugasTambahan::create([
+                'user_id' => $user->id,
+                'role_id' => $validated['role_id'],
+                'mulai_tugas' => $validated['mulai_tugas'],
+                'selesai_tugas' => $validated['selesai_tugas'] ?? null,
+                'sk_number' => $validated['sk_number'] ?? null,
+                'sk_date' => $validated['sk_date'] ?? null,
+                'keterangan' => $validated['keterangan'] ?? null,
+                'is_active' => true,
+                'created_by' => auth()->id(),
+            ]);
+
+            // Assign role to user (via Spatie)
+            $user->assignRole($role);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tugas tambahan berhasil ditambahkan',
+                'data' => $tugasTambahan->load('role')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error assigning tugas tambahan: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan tugas tambahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Deactivate tugas tambahan
+     */
+    public function deactivateTugasTambahan(TugasTambahan $tugasTambahan)
+    {
+        $this->authorize('assign-role');
+
+        DB::beginTransaction();
+        try {
+            $tugasTambahan->update([
+                'is_active' => false,
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Remove role from user if no other active tugas tambahan with same role
+            $hasOtherActiveRole = TugasTambahan::where('user_id', $tugasTambahan->user_id)
+                ->where('role_id', $tugasTambahan->role_id)
+                ->where('id', '!=', $tugasTambahan->id)
+                ->where('is_active', true)
+                ->exists();
+
+            if (!$hasOtherActiveRole) {
+                $tugasTambahan->user->removeRole($tugasTambahan->role);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tugas tambahan berhasil dinonaktifkan'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deactivating tugas tambahan: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menonaktifkan tugas tambahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Activate tugas tambahan
+     */
+    public function activateTugasTambahan(TugasTambahan $tugasTambahan)
+    {
+        $this->authorize('assign-role');
+
+        DB::beginTransaction();
+        try {
+            // Check if Kepala Madrasah - only 1 active allowed
+            $role = $tugasTambahan->role;
+            if ($role->name === 'Kepala Madrasah') {
+                $existingKepala = TugasTambahan::where('role_id', $role->id)
+                    ->where('is_active', true)
+                    ->where('id', '!=', $tugasTambahan->id)
+                    ->exists();
+
+                if ($existingKepala) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sudah ada Kepala Madrasah aktif. Nonaktifkan yang lama terlebih dahulu.'
+                    ], 422);
+                }
+            }
+
+            $tugasTambahan->update([
+                'is_active' => true,
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Assign role to user
+            $tugasTambahan->user->assignRole($role);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tugas tambahan berhasil diaktifkan'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error activating tugas tambahan: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengaktifkan tugas tambahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete tugas tambahan
+     */
+    public function deleteTugasTambahan(TugasTambahan $tugasTambahan)
+    {
+        $this->authorize('assign-role');
+
+        DB::beginTransaction();
+        try {
+            // Remove role from user if no other tugas tambahan with same role
+            $hasOtherRole = TugasTambahan::where('user_id', $tugasTambahan->user_id)
+                ->where('role_id', $tugasTambahan->role_id)
+                ->where('id', '!=', $tugasTambahan->id)
+                ->exists();
+
+            if (!$hasOtherRole) {
+                $tugasTambahan->user->removeRole($tugasTambahan->role);
+            }
+
+            $tugasTambahan->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tugas tambahan berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting tugas tambahan: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus tugas tambahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
