@@ -66,6 +66,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
+    Route::post('/kelas/{id}/restore', [KelasController::class, 'restore'])->name('kelas.restore')->middleware('permission:create-kelas');
     Route::get('/kelas/{kelas}/assign-siswa', [KelasController::class, 'assignSiswa'])->name('kelas.assign-siswa')->middleware('permission:assign-siswa-kelas');
     Route::get('/kelas/{kelas}/siswa/available', [KelasController::class, 'getAvailableSiswa'])->name('kelas.siswa.available')->middleware('permission:assign-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa', [KelasController::class, 'storeSiswa'])->name('kelas.siswa.store')->middleware('permission:assign-siswa-kelas');
@@ -147,6 +148,38 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
     Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
     
+    // App Settings
+    Route::middleware(['permission:manage-settings'])->group(function () {
+        Route::get('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('settings.update');
+        Route::post('/settings/upload-logo-kemenag', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoKemenag'])->name('settings.upload-logo-kemenag');
+        Route::post('/settings/upload-logo-sekolah', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoSekolah'])->name('settings.upload-logo-sekolah');
+        Route::post('/settings/upload-kop-surat', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadKopSurat'])->name('settings.upload-kop-surat');
+    });
+});
+
+// Laravolt Indonesia API (untuk semua yang authenticated)
+Route::middleware(['auth'])->prefix('laravolt/indonesia')->group(function () {
+    Route::get('/cities', function(\Illuminate\Http\Request $request) {
+        $provinceCode = $request->get('province_code');
+        $cities = \Laravolt\Indonesia\Models\City::where('province_code', $provinceCode)->orderBy('name')->get();
+        return response()->json($cities);
+    });
+    
+    Route::get('/districts', function(\Illuminate\Http\Request $request) {
+        $cityCode = $request->get('city_code');
+        $districts = \Laravolt\Indonesia\Models\District::where('city_code', $cityCode)->orderBy('name')->get();
+        return response()->json($districts);
+    });
+    
+    Route::get('/villages', function(\Illuminate\Http\Request $request) {
+        $districtCode = $request->get('district_code');
+        $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $districtCode)->orderBy('name')->get();
+        return response()->json($villages);
+    });
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Debug route (temporary)
     Route::get('/debug-users', function() {
         $user = auth()->user();

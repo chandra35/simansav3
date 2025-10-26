@@ -162,6 +162,8 @@ class KelasController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create-kelas');
+        
         $validator = Validator::make($request->all(), [
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
             'kurikulum_id' => 'required|exists:kurikulum,id',
@@ -185,23 +187,90 @@ class KelasController extends Controller
         try {
             // Generate kode_kelas
             $tahunPelajaran = TahunPelajaran::find($request->tahun_pelajaran_id);
-            $jurusanKode = $request->jurusan_id 
-                ? Jurusan::find($request->jurusan_id)->kode_jurusan 
-                : 'UMUM';
             
-            // Get nomor urut kelas untuk tingkat dan jurusan yang sama
-            $lastKelas = Kelas::where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
-                ->where('tingkat', $request->tingkat)
-                ->where('jurusan_id', $request->jurusan_id)
-                ->count();
+            // Get jurusan code
+            if ($request->jurusan_id) {
+                $jurusan = Jurusan::find($request->jurusan_id);
+                // Use singkatan if kode_jurusan is empty
+                $jurusanKode = $jurusan 
+                    ? ($jurusan->kode_jurusan ?: $jurusan->singkatan ?: 'UMUM')
+                    : 'UMUM';
+            } else {
+                $jurusanKode = 'UMUM';
+            }
             
-            $nomor = $lastKelas + 1;
+            // Find the highest nomor for this kode pattern
+            $pattern = $request->tingkat . '-' . $jurusanKode . '-%' . $tahunPelajaran->tahun_mulai;
+            
+            // IMPORTANT: Only check non-deleted kelas (exclude soft deleted)
+            // This allows nomor reuse after kelas deletion
+            $existingKelas = Kelas::where('kode_kelas', 'LIKE', $pattern)
+                ->whereNull('deleted_at') // Explicitly exclude soft deleted
+                ->get();
+            
+            // Extract nomor from kode_kelas and find max
+            $maxNomor = 0;
+            foreach ($existingKelas as $k) {
+                // Kode kelas format: 10-UMUM-1-2025 or 10-IPA-2-2025
+                $parts = explode('-', $k->kode_kelas);
+                if (count($parts) >= 4) {
+                    // Get the third part (nomor urut)
+                    $nomor = (int) $parts[2];
+                    if ($nomor > $maxNomor) {
+                        $maxNomor = $nomor;
+                    }
+                }
+            }
+            
+            $nomor = $maxNomor + 1;
+            
+            // Generate kode kelas
             $kodeKelas = Kelas::generateKodeKelas(
                 $request->tingkat,
                 $jurusanKode,
                 $nomor,
                 $tahunPelajaran->tahun_mulai
             );
+            
+            // Check if there's a soft deleted kelas with same kode
+            $softDeletedKelas = Kelas::where('kode_kelas', $kodeKelas)
+                ->whereNotNull('deleted_at')
+                ->withTrashed()
+                ->first();
+            
+            if ($softDeletedKelas && !$request->has('force_create')) {
+                // Ada kelas yang sudah dihapus dengan kode yang sama
+                // Return info dan minta konfirmasi user
+                DB::rollBack();
+                return redirect()->back()
+                    ->withInput()
+                    ->with('warning', 'Ditemukan kelas yang sudah dihapus dengan kode yang sama.')
+                    ->with('soft_deleted_kelas', [
+                        'id' => $softDeletedKelas->id,
+                        'kode_kelas' => $softDeletedKelas->kode_kelas,
+                        'nama_kelas' => $softDeletedKelas->nama_kelas,
+                        'deleted_at' => $softDeletedKelas->deleted_at->format('d/m/Y H:i'),
+                        'jumlah_siswa' => $softDeletedKelas->siswaKelas()->count(),
+                    ]);
+            }
+            
+            // Double check for duplicate (safety check)
+            // Only check non-deleted kelas
+            $attempts = 0;
+            while (Kelas::where('kode_kelas', $kodeKelas)->whereNull('deleted_at')->exists() && $attempts < 10) {
+                $nomor++;
+                $kodeKelas = Kelas::generateKodeKelas(
+                    $request->tingkat,
+                    $jurusanKode,
+                    $nomor,
+                    $tahunPelajaran->tahun_mulai
+                );
+                $attempts++;
+            }
+            
+            if ($attempts >= 10) {
+                throw new \Exception('Gagal generate kode kelas unik setelah 10 percobaan. Pattern: ' . $pattern);
+            }
 
             $kelas = Kelas::create([
                 'tahun_pelajaran_id' => $request->tahun_pelajaran_id,
@@ -243,6 +312,19 @@ class KelasController extends Controller
 
             // Load relationships to prevent "Attempt to read property on null" errors
             $kelas->load(['tahunPelajaran', 'kurikulum', 'jurusan', 'waliKelas']);
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_kelas,
+                    'tingkat' => $kelas->tingkat,
+                    'tahun_pelajaran' => $kelas->tahunPelajaran->nama ?? null,
+                    'wali_kelas' => $kelas->waliKelas->name ?? null,
+                ])
+                ->log('Membuat kelas baru: ' . $kelas->nama_lengkap . ' (' . $kelas->kode_kelas . ')');
 
             DB::commit();
 
@@ -372,6 +454,24 @@ class KelasController extends Controller
                 }
             }
 
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'old_values' => [
+                        'wali_kelas_id' => $oldWaliKelasId,
+                    ],
+                    'new_values' => [
+                        'nama_kelas' => $kelas->nama_kelas,
+                        'tingkat' => $kelas->tingkat,
+                        'kapasitas' => $kelas->kapasitas,
+                        'wali_kelas_id' => $newWaliKelasId,
+                        'is_active' => $kelas->is_active,
+                    ],
+                ])
+                ->log('Mengupdate kelas: ' . $kelas->nama_lengkap);
+
             DB::commit();
 
             return redirect()->route('admin.kelas.show', $kelas->id)
@@ -389,14 +489,17 @@ class KelasController extends Controller
      */
     public function destroy(Kelas $kelas)
     {
+        $this->authorize('delete-kelas');
+        
         // Get tahun pelajaran aktif
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
         
         // Check if kelas has active students in current tahun pelajaran
         if ($tahunPelajaranAktif) {
             $siswaAktifCount = $kelas->siswaKelas()
-                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranAktif->id)
-                ->wherePivot('status', 'aktif')
+                ->where('tahun_pelajaran_id', $tahunPelajaranAktif->id)
+                ->where('status', 'aktif')
+                ->whereNull('deleted_at')
                 ->count();
             
             if ($siswaAktifCount > 0) {
@@ -409,10 +512,89 @@ class KelasController extends Controller
 
         try {
             $namaKelas = $kelas->nama_lengkap;
+            $kodeKelas = $kelas->kode_kelas;
+            
             $kelas->delete();
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kodeKelas,
+                    'nama_kelas' => $namaKelas,
+                ])
+                ->log('Menghapus kelas: ' . $namaKelas . ' (' . $kodeKelas . ')');
 
             return response()->json([
                 'success' => true,
+                'message' => "Kelas {$namaKelas} berhasil dihapus."
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus kelas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Restore soft deleted kelas
+     */
+    public function restore($id)
+    {
+        $this->authorize('create-kelas'); // Use same permission as create
+        
+        try {
+            $kelas = Kelas::withTrashed()->findOrFail($id);
+            
+            if (!$kelas->trashed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kelas tidak dalam status terhapus.'
+                ], 422);
+            }
+            
+            // Check if kode_kelas already exists in active kelas
+            $existingKelas = Kelas::where('kode_kelas', $kelas->kode_kelas)
+                ->whereNull('deleted_at')
+                ->first();
+            
+            if ($existingKelas) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kode kelas sudah digunakan oleh kelas lain. Tidak dapat restore.'
+                ], 422);
+            }
+            
+            $kelas->restore();
+            $kelas->load(['tahunPelajaran', 'kurikulum', 'jurusan', 'waliKelas']);
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_lengkap,
+                ])
+                ->log('Restore kelas: ' . $kelas->nama_lengkap . ' (' . $kelas->kode_kelas . ')');
+
+            return response()->json([
+                'success' => true,
+                'message' => "Kelas {$kelas->nama_lengkap} berhasil di-restore.",
+                'redirect' => route('admin.kelas.show', $kelas->id)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal restore kelas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available siswa for Select2 (AJAX)
                 'message' => "Kelas {$namaKelas} berhasil dihapus."
             ]);
         } catch (\Exception $e) {
@@ -559,6 +741,18 @@ class KelasController extends Controller
 
             DB::commit();
 
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_lengkap,
+                    'jumlah_siswa' => $successCount,
+                    'siswa_ids' => $request->siswa_ids,
+                ])
+                ->log('Menambahkan ' . $successCount . ' siswa ke kelas: ' . $kelas->nama_lengkap);
+
             return response()->json([
                 'success' => true,
                 'message' => $successCount . ' siswa berhasil ditambahkan ke kelas.'
@@ -679,6 +873,19 @@ class KelasController extends Controller
 
             DB::commit();
 
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_lengkap,
+                    'jumlah_siswa' => $successCount,
+                    'total_nisn' => $nisnArray->count(),
+                    'gagal' => count($errors),
+                ])
+                ->log('Bulk import siswa ke kelas: ' . $kelas->nama_lengkap . ' - Berhasil: ' . $successCount . ', Gagal: ' . count($errors));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Proses bulk import selesai',
@@ -716,12 +923,29 @@ class KelasController extends Controller
         }
 
         try {
+            $siswaName = $siswa->user->name ?? $siswa->nisn;
+            
             // Update pivot table
             $kelas->siswas()->updateExistingPivot($siswa->id, [
                 'tanggal_keluar' => $request->tanggal_keluar,
                 'status' => $request->status,
                 'catatan_perpindahan' => $request->catatan,
             ]);
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_lengkap,
+                    'siswa_name' => $siswaName,
+                    'siswa_nisn' => $siswa->nisn,
+                    'tanggal_keluar' => $request->tanggal_keluar,
+                    'status' => $request->status,
+                    'catatan' => $request->catatan,
+                ])
+                ->log('Mengeluarkan siswa ' . $siswaName . ' dari kelas: ' . $kelas->nama_lengkap . ' - Status: ' . $request->status);
 
             return response()->json([
                 'success' => true,
@@ -759,6 +983,9 @@ class KelasController extends Controller
 
         DB::beginTransaction();
         try {
+            $oldWaliKelasId = $kelas->wali_kelas_id;
+            $oldWaliKelasName = $kelas->waliKelas->name ?? 'Tidak ada';
+            
             $waliKelas = User::where('id', $request->wali_kelas_id)->first();
             
             if (!$waliKelas) {
@@ -795,6 +1022,24 @@ class KelasController extends Controller
                     Log::info("Auto-assigned Wali Kelas role to user: {$waliKelas->name} for class: {$kelas->nama_lengkap}");
                 }
             }
+
+            // Log activity
+            activity()
+                ->performedOn($kelas)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'nama_kelas' => $kelas->nama_lengkap,
+                    'old_wali_kelas' => [
+                        'id' => $oldWaliKelasId,
+                        'name' => $oldWaliKelasName,
+                    ],
+                    'new_wali_kelas' => [
+                        'id' => $waliKelas->id,
+                        'name' => $waliKelas->name,
+                    ],
+                ])
+                ->log('Assign wali kelas: ' . $waliKelas->name . ' ke kelas ' . $kelas->nama_lengkap . ' (sebelumnya: ' . $oldWaliKelasName . ')');
 
             DB::commit();
 

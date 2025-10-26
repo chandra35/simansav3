@@ -50,7 +50,8 @@ class RolePermissionSeeder extends Seeder
             'activate-kurikulum',
             
             // Kelas Management
-            'view-kelas',
+            'view-kelas',           // View kelas data (for reports, dashboards)
+            'manage-kelas',         // Access to kelas management menu (CRUD kelas)
             'create-kelas',
             'edit-kelas',
             'delete-kelas',
@@ -143,7 +144,7 @@ class RolePermissionSeeder extends Seeder
             'view-kurikulum', 'create-kurikulum', 'edit-kurikulum', 'delete-kurikulum', 'manage-jurusan', 'activate-kurikulum',
             
             // Full Kelas Access
-            'view-kelas', 'create-kelas', 'edit-kelas', 'delete-kelas', 
+            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'delete-kelas', 
             'assign-siswa-kelas', 'remove-siswa-kelas', 'assign-wali-kelas', 'view-detail-kelas',
             
             // Full Mutasi Access
@@ -165,8 +166,8 @@ class RolePermissionSeeder extends Seeder
             // Laporan
             'view-laporan', 'export-laporan', 'view-activity-log',
             
-            // Profile
-            'view-profile', 'edit-profile',
+            // Settings & Profile
+            'manage-settings', 'view-profile', 'edit-profile',
         ]);
         $this->command->info('✅ Kepala Madrasah role created');
 
@@ -176,7 +177,7 @@ class RolePermissionSeeder extends Seeder
             'view-dashboard',
             'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa',
             'view-tahun-pelajaran', 'view-kurikulum',
-            'view-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
+            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'approve-mutasi', 'reject-mutasi',
             'view-gtk',
             'view-nilai', 'input-nilai', 'edit-nilai', 'cetak-rapor',
@@ -195,11 +196,11 @@ class RolePermissionSeeder extends Seeder
             'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa',
             'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran',
             'view-kurikulum',
-            'view-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
+            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'upload-dokumen-mutasi',
             'view-gtk', 'create-gtk', 'edit-gtk', 'reset-password-gtk',
             'view-laporan', 'export-laporan',
-            'view-profile', 'edit-profile',
+            'manage-settings', 'view-profile', 'edit-profile',
         ]);
         $this->command->info('✅ Admin role created');
 

@@ -83,6 +83,9 @@
                                             <option value="P">Perempuan</option>
                                         </select>
                                     </div>
+                                    
+                                    {{-- Hide Tingkat & Kelas filters for Wali Kelas (they only see their own class) --}}
+                                    @if(!auth()->user()->hasRole('Wali Kelas') || auth()->user()->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah']))
                                     <div class="form-group mr-2 mb-2">
                                         <label for="filterTingkat" class="mr-2">
                                             <i class="fas fa-layer-group"></i> Tingkat:
@@ -102,6 +105,8 @@
                                             <option value="">Pilih Tingkat Dulu</option>
                                         </select>
                                     </div>
+                                    @endif
+                                    
                                     <div class="form-group mr-2 mb-2">
                                         <label for="filterStatus" class="mr-2">
                                             <i class="fas fa-check-circle"></i> Status Data:
@@ -127,6 +132,7 @@
                                 <th>NISN</th>
                                 <th>Nama Lengkap</th>
                                 <th>Jenis Kelamin</th>
+                                <th>Kelas</th>
                                 <th>Username</th>
                                 <th>Status Ortu</th>
                                 <th>Status Diri</th>
@@ -346,6 +352,7 @@ $(document).ready(function() {
             { data: 'nisn', name: 'nisn' },
             { data: 'nama_lengkap', name: 'nama_lengkap' },
             { data: 'jenis_kelamin', name: 'jenis_kelamin' },
+            { data: 'kelas', name: 'kelas' },
             { data: 'username', name: 'username' },
             { data: 'status_ortu', name: 'status_ortu', orderable: false, searchable: false },
             { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
@@ -354,7 +361,7 @@ $(document).ready(function() {
         ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
-        order: [[6, 'desc']],
+        order: [[7, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",

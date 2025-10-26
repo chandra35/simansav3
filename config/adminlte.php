@@ -372,7 +372,7 @@ return [
             'text' => 'Manajemen Kelas',
             'route' => 'admin.kelas.index',
             'icon' => 'fas fa-fw fa-chalkboard-teacher',
-            'can' => 'view-kelas',
+            'can' => 'manage-kelas', // Changed from 'view-kelas' - only for Admin/Super Admin
         ],
         [
             'text' => 'Mutasi Siswa',
@@ -395,6 +395,12 @@ return [
         [
             'header' => 'PENGATURAN',
             'can' => 'admin-access',
+        ],
+        [
+            'text' => 'Pengaturan Aplikasi',
+            'route' => 'admin.settings.edit',
+            'icon' => 'fas fa-fw fa-cog',
+            'can' => 'manage-settings',
         ],
         [
             'text' => 'Profile',

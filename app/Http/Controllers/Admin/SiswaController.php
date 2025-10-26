@@ -22,12 +22,31 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
 
-        // Statistics
+        $user = Auth::user();
+        
+        // Base query
+        $siswaQuery = Siswa::query();
+        
+        // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
+        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
+            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
+            
+            if ($kelasIds->isNotEmpty()) {
+                $siswaQuery->whereHas('kelasAktif', function($q) use ($kelasIds) {
+                    $q->whereIn('kelas.id', $kelasIds);
+                });
+            } else {
+                // Jika tidak punya kelas, set count ke 0
+                $siswaQuery->whereRaw('1 = 0');
+            }
+        }
+
+        // Statistics (dengan filter role)
         $stats = [
-            'total_siswa' => Siswa::count(),
-            'laki_laki' => Siswa::where('jenis_kelamin', 'L')->count(),
-            'perempuan' => Siswa::where('jenis_kelamin', 'P')->count(),
-            'data_lengkap' => Siswa::where('data_diri_completed', true)->where('data_ortu_completed', true)->count(),
+            'total_siswa' => (clone $siswaQuery)->count(),
+            'laki_laki' => (clone $siswaQuery)->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => (clone $siswaQuery)->where('jenis_kelamin', 'P')->count(),
+            'data_lengkap' => (clone $siswaQuery)->where('data_diri_completed', true)->where('data_ortu_completed', true)->count(),
         ];
 
         // Filter options
@@ -46,8 +65,26 @@ class SiswaController extends Controller
     public function data(Request $request)
     {
         $this->authorize('view-siswa');
-        $siswa = Siswa::with(['user', 'ortu'])
+        
+        $user = Auth::user();
+        $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
             ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
+
+        // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
+        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
+            // Get kelas yang di-wali oleh user ini
+            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
+            
+            if ($kelasIds->isEmpty()) {
+                // Jika tidak punya kelas, return empty
+                $siswa->whereRaw('1 = 0'); // Force empty result
+            } else {
+                // Filter hanya siswa di kelas yang di-wali
+                $siswa->whereHas('kelasAktif', function($q) use ($kelasIds) {
+                    $q->whereIn('kelas.id', $kelasIds);
+                });
+            }
+        }
 
         // Filter by Jenis Kelamin
         if ($request->filled('jenis_kelamin')) {
@@ -105,20 +142,60 @@ class SiswaController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = ['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'created_at'];
-            $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
+            $orderColumnIndex = $request->order[0]['column'];
             $orderDirection = $request->order[0]['dir'];
-            $siswa->orderBy($orderColumn, $orderDirection);
+            
+            // Map column index to actual column names
+            $columns = [
+                0 => 'nisn',
+                1 => 'nama_lengkap', 
+                2 => 'jenis_kelamin',
+                3 => 'kelas_nama', // Kelas column (from join)
+                4 => 'username', // Will handle separately
+                7 => 'siswa.created_at'
+            ];
+            
+            // Handle Kelas ordering (needs join)
+            if ($orderColumnIndex == 3) {
+                // Join with kelas table for ordering
+                $siswa->leftJoin('siswa_kelas', function($join) {
+                    $join->on('siswa.id', '=', 'siswa_kelas.siswa_id')
+                         ->where('siswa_kelas.status', '=', 'aktif')
+                         ->whereNull('siswa_kelas.deleted_at');
+                })
+                ->leftJoin('kelas', 'siswa_kelas.kelas_id', '=', 'kelas.id')
+                ->orderBy('kelas.nama_kelas', $orderDirection)
+                ->select('siswa.*')
+                ->distinct(); // Avoid duplicates from join
+            } 
+            // Handle Username ordering (needs user join)
+            elseif ($orderColumnIndex == 4) {
+                $siswa->leftJoin('users', 'siswa.user_id', '=', 'users.id')
+                      ->orderBy('users.username', $orderDirection)
+                      ->select('siswa.*')
+                      ->distinct();
+            }
+            // Standard columns
+            elseif (isset($columns[$orderColumnIndex])) {
+                $siswa->orderBy($columns[$orderColumnIndex], $orderDirection);
+            } else {
+                $siswa->latest();
+            }
         } else {
             $siswa->latest();
         }
 
         $data = $siswa->get()->map(function($item) {
+            // Get kelas aktif
+            $kelasAktif = $item->kelasAktif()->first();
+            $kelasNama = $kelasAktif ? $kelasAktif->nama_kelas : 'Tanpa Rombel';
+            
             return [
                 'id' => $item->id,
                 'nisn' => $item->nisn,
                 'nama_lengkap' => $item->nama_lengkap,
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+                'kelas' => $kelasNama,
                 'username' => $item->user->username ?? '-',
                 'status_ortu' => $item->data_ortu_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
