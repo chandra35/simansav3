@@ -1150,6 +1150,9 @@ class KelasController extends Controller
     {
         $this->authorize('view-kelas');
         
+        // Increase memory limit for PDF generation
+        ini_set('memory_limit', '256M');
+        
         // Load relasi yang dibutuhkan
         $kelas->load([
             'tahunPelajaran',
@@ -1166,19 +1169,74 @@ class KelasController extends Controller
         // Load app settings untuk kop surat
         $setting = \App\Models\AppSetting::first();
         
-        // Hitung jumlah hari dalam sebulan (default 31)
-        $jumlahHari = 31;
+        // Convert logo to base64 to avoid memory issues
+        $logoKemenagBase64 = null;
+        $logoSekolahBase64 = null;
+        
+        if ($setting && $setting->logo_kemenag_path) {
+            $logoPath = storage_path('app/public/' . $setting->logo_kemenag_path);
+            if (file_exists($logoPath)) {
+                // Resize image to reduce memory
+                $image = imagecreatefromstring(file_get_contents($logoPath));
+                if ($image !== false) {
+                    $width = imagesx($image);
+                    $height = imagesy($image);
+                    $newHeight = 100; // Target height in pixels
+                    $newWidth = ($width / $height) * $newHeight;
+                    
+                    $resized = imagecreatetruecolor($newWidth, $newHeight);
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                    imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    
+                    ob_start();
+                    imagepng($resized, null, 6);
+                    $imageData = ob_get_clean();
+                    $logoKemenagBase64 = 'data:image/png;base64,' . base64_encode($imageData);
+                    
+                    imagedestroy($image);
+                    imagedestroy($resized);
+                }
+            }
+        }
+        
+        if ($setting && $setting->logo_sekolah_path) {
+            $logoPath = storage_path('app/public/' . $setting->logo_sekolah_path);
+            if (file_exists($logoPath)) {
+                // Resize image to reduce memory
+                $image = imagecreatefromstring(file_get_contents($logoPath));
+                if ($image !== false) {
+                    $width = imagesx($image);
+                    $height = imagesy($image);
+                    $newHeight = 100; // Target height in pixels
+                    $newWidth = ($width / $height) * $newHeight;
+                    
+                    $resized = imagecreatetruecolor($newWidth, $newHeight);
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                    imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    
+                    ob_start();
+                    imagepng($resized, null, 6);
+                    $imageData = ob_get_clean();
+                    $logoSekolahBase64 = 'data:image/png;base64,' . base64_encode($imageData);
+                    
+                    imagedestroy($image);
+                    imagedestroy($resized);
+                }
+            }
+        }
         
         $data = [
             'kelas' => $kelas,
             'setting' => $setting,
-            'jumlahHari' => $jumlahHari,
-            'bulan' => date('F Y'), // Current month
+            'logoKemenagBase64' => $logoKemenagBase64,
+            'logoSekolahBase64' => $logoSekolahBase64,
         ];
         
         // Generate PDF
         $pdf = \PDF::loadView('admin.kelas.cetak-absensi', $data);
-        $pdf->setPaper('legal', 'landscape');
+        $pdf->setPaper('legal', 'portrait'); // Legal Portrait: 8.5" x 14" (216mm x 356mm)
         
         return $pdf->stream('Absensi_' . $kelas->nama_lengkap . '.pdf');
     }
