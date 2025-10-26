@@ -99,6 +99,13 @@ class KelasController extends Controller
                                     </a>';
                     }
                     
+                    // Cetak Absensi button
+                    if (auth()->user()->can('view-kelas')) {
+                        $actions .= '<a href="' . route('admin.kelas.cetak-absensi', $row->id) . '" class="btn btn-sm btn-success" title="Cetak Absensi" target="_blank">
+                                        <i class="fas fa-print"></i>
+                                    </a>';
+                    }
+                    
                     // Delete button (check siswa aktif in current tahun pelajaran)
                     if (auth()->user()->can('delete-kelas')) {
                         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
@@ -1134,5 +1141,45 @@ class KelasController extends Controller
                 'message' => 'Gagal mengosongkan kelas: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Cetak Absensi Kelas
+     */
+    public function cetakAbsensi(Kelas $kelas)
+    {
+        $this->authorize('view-kelas');
+        
+        // Load relasi yang dibutuhkan
+        $kelas->load([
+            'tahunPelajaran',
+            'kurikulum',
+            'jurusan',
+            'waliKelas',
+            'siswas' => function($query) use ($kelas) {
+                $query->wherePivot('status', 'aktif')
+                      ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->orderBy('nama_lengkap');
+            }
+        ]);
+        
+        // Load app settings untuk kop surat
+        $setting = \App\Models\AppSetting::first();
+        
+        // Hitung jumlah hari dalam sebulan (default 31)
+        $jumlahHari = 31;
+        
+        $data = [
+            'kelas' => $kelas,
+            'setting' => $setting,
+            'jumlahHari' => $jumlahHari,
+            'bulan' => date('F Y'), // Current month
+        ];
+        
+        // Generate PDF
+        $pdf = \PDF::loadView('admin.kelas.cetak-absensi', $data);
+        $pdf->setPaper('legal', 'landscape');
+        
+        return $pdf->stream('Absensi_' . $kelas->nama_lengkap . '.pdf');
     }
 }
