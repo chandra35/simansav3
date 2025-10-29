@@ -1181,7 +1181,7 @@ class KelasController extends Controller
                 if ($image !== false) {
                     $width = imagesx($image);
                     $height = imagesy($image);
-                    $newHeight = 100; // Target height in pixels
+                    $newHeight = $setting->logo_kemenag_height ?? 100; // Dari setting atau default 100
                     $newWidth = ($width / $height) * $newHeight;
                     
                     $resized = imagecreatetruecolor($newWidth, $newHeight);
@@ -1208,7 +1208,7 @@ class KelasController extends Controller
                 if ($image !== false) {
                     $width = imagesx($image);
                     $height = imagesy($image);
-                    $newHeight = 100; // Target height in pixels
+                    $newHeight = $setting->logo_sekolah_height ?? 100; // Dari setting atau default 100
                     $newWidth = ($width / $height) * $newHeight;
                     
                     $resized = imagecreatetruecolor($newWidth, $newHeight);

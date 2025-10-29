@@ -95,6 +95,7 @@
                                             @foreach($tingkatOptions as $value => $label)
                                                 <option value="{{ $value }}">{{ $label }}</option>
                                             @endforeach
+                                            <option value="tanpa_rombel">Tanpa Rombel</option>
                                         </select>
                                     </div>
                                     <div class="form-group mr-2 mb-2">
@@ -774,6 +775,13 @@ $(document).ready(function() {
     $('#filterTingkat').on('change', function() {
         let tingkat = $(this).val();
         let $kelasSelect = $('#filterKelas');
+        
+        // Jika pilih "Tanpa Rombel", disable kelas select
+        if (tingkat === 'tanpa_rombel') {
+            $kelasSelect.prop('disabled', true).html('<option value="">N/A (Tanpa Rombel)</option>');
+            applyFilters();
+            return;
+        }
         
         $kelasSelect.prop('disabled', true).html('<option value="">Memuat...</option>');
         

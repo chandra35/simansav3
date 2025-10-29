@@ -93,9 +93,15 @@ class SiswaController extends Controller
 
         // Filter by Tingkat (through kelas aktif)
         if ($request->filled('tingkat')) {
-            $siswa->whereHas('kelasAktif', function($q) use ($request) {
-                $q->where('kelas.tingkat', $request->tingkat);
-            });
+            if ($request->tingkat === 'tanpa_rombel') {
+                // Filter siswa yang tidak punya kelas aktif
+                $siswa->whereDoesntHave('kelasAktif');
+            } else {
+                // Filter by tingkat normal
+                $siswa->whereHas('kelasAktif', function($q) use ($request) {
+                    $q->where('kelas.tingkat', $request->tingkat);
+                });
+            }
         }
 
         // Filter by Kelas

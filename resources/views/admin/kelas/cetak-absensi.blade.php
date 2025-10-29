@@ -36,17 +36,17 @@
         }
         
         .kop-logo {
-            width: 12%;
+            width: {{ $setting->logo_column_width ?? 12 }}%;
             text-align: center;
         }
         
         .kop-logo img {
-            height: 50px;
+            height: {{ $setting->logo_display_height ?? 50 }}px;
             width: auto;
         }
         
         .kop-content {
-            width: 76%;
+            width: {{ 100 - (($setting->logo_column_width ?? 12) * 2) }}%;
             text-align: center;
         }
         

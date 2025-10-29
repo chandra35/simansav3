@@ -463,6 +463,94 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Pengaturan Ukuran Logo untuk PDF --}}
+                <div class="row mt-3">
+                    <div class="col-lg-12">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-cog"></i> Pengaturan Ukuran Logo untuk Cetak PDF</h6>
+                            <small>Atur ukuran logo yang akan ditampilkan di dokumen cetak (absensi, rapor, dll)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row form-row">
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="logo_kemenag_height">
+                                <i class="fas fa-arrows-alt-v"></i> Tinggi Logo Kemenag (Resize)
+                                <i class="fas fa-question-circle text-info" data-toggle="tooltip" title="Ukuran resize logo sebelum di-encode. Lebih kecil = file lebih ringan. Default: 100px"></i>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" name="logo_kemenag_height" id="logo_kemenag_height" 
+                                       class="form-control @error('logo_kemenag_height') is-invalid @enderror" 
+                                       value="{{ old('logo_kemenag_height', $setting->logo_kemenag_height ?? 100) }}"
+                                       min="50" max="300" step="10">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">px</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">50-300px (Default: 100px)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="logo_sekolah_height">
+                                <i class="fas fa-arrows-alt-v"></i> Tinggi Logo Sekolah (Resize)
+                                <i class="fas fa-question-circle text-info" data-toggle="tooltip" title="Ukuran resize logo sebelum di-encode. Lebih kecil = file lebih ringan. Default: 100px"></i>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" name="logo_sekolah_height" id="logo_sekolah_height" 
+                                       class="form-control @error('logo_sekolah_height') is-invalid @enderror" 
+                                       value="{{ old('logo_sekolah_height', $setting->logo_sekolah_height ?? 100) }}"
+                                       min="50" max="300" step="10">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">px</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">50-300px (Default: 100px)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="logo_display_height">
+                                <i class="fas fa-expand-arrows-alt"></i> Tinggi Tampilan di PDF
+                                <i class="fas fa-question-circle text-info" data-toggle="tooltip" title="Ukuran logo yang ditampilkan di PDF. Default: 50px"></i>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" name="logo_display_height" id="logo_display_height" 
+                                       class="form-control @error('logo_display_height') is-invalid @enderror" 
+                                       value="{{ old('logo_display_height', $setting->logo_display_height ?? 50) }}"
+                                       min="30" max="100" step="5">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">px</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">30-100px (Default: 50px)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label for="logo_column_width">
+                                <i class="fas fa-arrows-alt-h"></i> Lebar Kolom Logo
+                                <i class="fas fa-question-circle text-info" data-toggle="tooltip" title="Lebar kolom logo di PDF (dalam persen). Default: 12%"></i>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" name="logo_column_width" id="logo_column_width" 
+                                       class="form-control @error('logo_column_width') is-invalid @enderror" 
+                                       value="{{ old('logo_column_width', $setting->logo_column_width ?? 12) }}"
+                                       min="8" max="20" step="1">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">8-20% (Default: 12%)</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

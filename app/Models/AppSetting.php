@@ -16,7 +16,11 @@ class AppSetting extends Model
         'nama_sekolah',
         'npsn',
         'logo_kemenag_path',
+        'logo_kemenag_height',
         'logo_sekolah_path',
+        'logo_sekolah_height',
+        'logo_display_height',
+        'logo_column_width',
         'alamat',
         'rt',
         'rw',
@@ -43,6 +47,10 @@ class AppSetting extends Model
         'kop_surat_config' => 'array',
         'kop_margin_top' => 'integer',
         'kop_height' => 'integer',
+        'logo_kemenag_height' => 'integer',
+        'logo_sekolah_height' => 'integer',
+        'logo_display_height' => 'integer',
+        'logo_column_width' => 'integer',
     ];
 
     /**

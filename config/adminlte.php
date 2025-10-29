@@ -375,6 +375,12 @@ return [
             'can' => 'manage-kelas', // Changed from 'view-kelas' - only for Admin/Super Admin
         ],
         [
+            'text' => 'Cetak Dokumen',
+            'route' => 'admin.cetak.index',
+            'icon' => 'fas fa-fw fa-print',
+            'can' => 'view-kelas',
+        ],
+        [
             'text' => 'Mutasi Siswa',
             'route' => 'admin.under-development',
             'icon' => 'fas fa-fw fa-hammer text-warning',

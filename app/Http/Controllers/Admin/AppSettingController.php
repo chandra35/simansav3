@@ -68,6 +68,10 @@ class AppSettingController extends Controller
             'kop_surat_config' => 'nullable|json',
             'kop_margin_top' => 'nullable|integer|min:0',
             'kop_height' => 'nullable|integer|min:10',
+            'logo_kemenag_height' => 'nullable|integer|min:50|max:300',
+            'logo_sekolah_height' => 'nullable|integer|min:50|max:300',
+            'logo_display_height' => 'nullable|integer|min:30|max:100',
+            'logo_column_width' => 'nullable|integer|min:8|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -99,6 +103,10 @@ class AppSettingController extends Controller
                 'kop_mode',
                 'kop_margin_top',
                 'kop_height',
+                'logo_kemenag_height',
+                'logo_sekolah_height',
+                'logo_display_height',
+                'logo_column_width',
             ]));
             
             // Update kop_surat_config if provided
