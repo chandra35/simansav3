@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DokumenSiswa;
 use App\Models\Siswa;
+use App\Models\TahunPelajaran;
 use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -66,43 +67,61 @@ class DokumenController extends Controller
                     ->first();
 
                 if ($existing) {
-                    // Delete old file
-                    if (Storage::disk('public')->exists($existing->file_path)) {
-                        Storage::disk('public')->delete($existing->file_path);
+                    // Delete old file (check both storage disks for backward compatibility)
+                    if ($existing->file_uuid) {
+                        // New secure storage
+                        if (Storage::disk('private')->exists($existing->file_path)) {
+                            Storage::disk('private')->delete($existing->file_path);
+                        }
+                    } else {
+                        // Old public storage
+                        if (Storage::disk('public')->exists($existing->file_path)) {
+                            Storage::disk('public')->delete($existing->file_path);
+                        }
                     }
                     // Delete old record
                     $existing->delete();
                 }
             }
 
-            // Generate filename with format: nama-lengkap_jenis-dokumen_nisn.ext
+            // Generate UUID for secure filename
             $file = $request->file('file');
-            $namaLengkap = Str::slug($siswa->nama_lengkap, '-');
-            $nisn = $siswa->nisn;
-            $jenisDokumen = $request->jenis_dokumen;
-            
-            // For 'lainnya', use custom nama_dokumen
-            if ($jenisDokumen === 'lainnya' && $request->nama_dokumen) {
-                $jenisDokumen = Str::slug($request->nama_dokumen, '-');
-            }
-            
+            $uuid = Str::uuid()->toString();
             $extension = $file->getClientOriginalExtension();
-            $fileName = "{$namaLengkap}_{$jenisDokumen}_{$nisn}.{$extension}";
+            $originalName = $file->getClientOriginalName();
             
-            // Store file in public/storage/dokumen-siswa
-            $filePath = $file->storeAs('dokumen-siswa', $fileName, 'public');
+            // Secure filename: {UUID}.ext
+            $fileName = "{$uuid}.{$extension}";
+            
+            // Store in private storage: dokumen-siswa/{NISN}/{UUID}.ext
+            $nisn = $siswa->nisn;
+            $filePath = "dokumen-siswa/{$nisn}/{$fileName}";
+            
+            Storage::disk('private')->put($filePath, file_get_contents($file));
             
             $fileSize = round($file->getSize() / 1024, 2); // Convert to KB
 
-            // Create dokumen record
+            // Get active tahun pelajaran
+            $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
+            
+            // Get current kelas from siswa_kelas
+            $currentKelas = $siswa->kelasAktif->first();
+
+            // Create dokumen record with security fields
             $dokumen = DokumenSiswa::create([
                 'siswa_id' => $siswa->id,
+                'file_uuid' => $uuid,
                 'jenis_dokumen' => $request->jenis_dokumen,
                 'nama_file' => $fileName,
                 'file_path' => $filePath,
+                'original_name' => $originalName,
                 'file_size' => $fileSize,
                 'mime_type' => $file->getMimeType(),
                 'keterangan' => $request->keterangan,
+                'tahun_pelajaran' => $tahunPelajaran ? $tahunPelajaran->nama : null,
+                'kelas_id' => $currentKelas ? $currentKelas->id : null,
+                'uploaded_by_role' => 'siswa',
+                'status' => 'pending',
             ]);
 
             // Enhanced activity log
@@ -113,8 +132,10 @@ class DokumenController extends Controller
                 'description' => "Upload dokumen: " . ($request->jenis_dokumen === 'lainnya' ? $request->nama_dokumen : $request->jenis_dokumen),
                 'new_values' => [
                     'jenis_dokumen' => $request->jenis_dokumen,
-                    'nama_file' => $fileName,
+                    'original_name' => $originalName,
+                    'file_uuid' => $uuid,
                     'file_size' => $fileSize . ' KB',
+                    'status' => 'pending',
                 ],
             ]);
 
@@ -124,8 +145,9 @@ class DokumenController extends Controller
                 'dokumen' => [
                     'id' => $dokumen->id,
                     'jenis_dokumen' => $dokumen->jenis_dokumen,
-                    'nama_file' => $dokumen->nama_file,
+                    'nama_file' => $dokumen->original_name ?? $dokumen->nama_file,
                     'file_size' => $dokumen->file_size,
+                    'status' => $dokumen->status,
                     'uploaded_at' => $dokumen->created_at->format('d M Y H:i'),
                 ]
             ]);
@@ -166,9 +188,17 @@ class DokumenController extends Controller
                 ], 403);
             }
 
-            // Delete file from storage
-            if (Storage::exists($dokumen->file_path)) {
-                Storage::delete($dokumen->file_path);
+            // Delete file from storage (check both disks for backward compatibility)
+            if ($dokumen->file_uuid) {
+                // New secure storage
+                if (Storage::disk('private')->exists($dokumen->file_path)) {
+                    Storage::disk('private')->delete($dokumen->file_path);
+                }
+            } else {
+                // Old public storage
+                if (Storage::disk('public')->exists($dokumen->file_path)) {
+                    Storage::disk('public')->delete($dokumen->file_path);
+                }
             }
 
             $jenisDokumen = $dokumen->jenis_dokumen;
@@ -199,6 +229,96 @@ class DokumenController extends Controller
                 'success' => false,
                 'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Preview dokumen with authentication
+     */
+    public function preview($id)
+    {
+        try {
+            $dokumen = DokumenSiswa::findOrFail($id);
+            
+            // Check ownership
+            $user = Auth::user();
+            if ($dokumen->siswa->user_id != $user->id) {
+                abort(403, 'Anda tidak memiliki akses untuk melihat dokumen ini');
+            }
+
+            // Update audit trail
+            $dokumen->increment('access_count');
+            $dokumen->update(['accessed_at' => now()]);
+
+            // Get file path (support both old and new format)
+            $filePath = $dokumen->getSecureFilePath();
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'File dokumen tidak ditemukan');
+            }
+
+            // Stream file with original name
+            $fileName = $dokumen->original_name ?? $dokumen->nama_file;
+            
+            return response()->file($filePath, [
+                'Content-Type' => $dokumen->mime_type,
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error previewing dokumen', [
+                'dokumen_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            abort(500, 'Gagal menampilkan dokumen: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download dokumen with authentication
+     */
+    public function download($id)
+    {
+        try {
+            $dokumen = DokumenSiswa::findOrFail($id);
+            
+            // Check ownership
+            $user = Auth::user();
+            if ($dokumen->siswa->user_id != $user->id) {
+                abort(403, 'Anda tidak memiliki akses untuk mengunduh dokumen ini');
+            }
+
+            // Update audit trail
+            $dokumen->increment('access_count');
+            $dokumen->update(['accessed_at' => now()]);
+
+            // Get file path (support both old and new format)
+            $filePath = $dokumen->getSecureFilePath();
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'File dokumen tidak ditemukan');
+            }
+
+            // Download file with original name
+            $fileName = $dokumen->original_name ?? $dokumen->nama_file;
+            
+            return response()->download($filePath, $fileName, [
+                'Content-Type' => $dokumen->mime_type,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading dokumen', [
+                'dokumen_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
         }
     }
 }

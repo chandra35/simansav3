@@ -31,7 +31,7 @@
 
 <!-- Statistics Cards at Top -->
 <div class="row">
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-3 col-md-6 col-sm-6">
         <div class="small-box bg-info">
             <div class="inner">
                 <h3>{{ $siswa->data_diri_completed ? '100' : '0' }}%</h3>
@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-3 col-md-6 col-sm-6">
         <div class="small-box bg-success">
             <div class="inner">
                 <h3>{{ $siswa->data_ortu_completed ? '100' : '0' }}%</h3>
@@ -63,36 +63,45 @@
         </div>
     </div>
 
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-3 col-md-6 col-sm-6">
+        @php
+            // Hitung dokumen wajib yang sudah diupload (KK dan Ijazah SMP)
+            $dokumenKK = $siswa->dokumen()->where('jenis_dokumen', 'kk')->exists();
+            $dokumenIjazah = $siswa->dokumen()->where('jenis_dokumen', 'ijazah_smp')->exists();
+            $jumlahDokumenWajib = 0;
+            if($dokumenKK) $jumlahDokumenWajib++;
+            if($dokumenIjazah) $jumlahDokumenWajib++;
+            $dokumenProgress = ($jumlahDokumenWajib / 2) * 100; // 2 dokumen wajib
+        @endphp
         <div class="small-box bg-warning">
             <div class="inner">
-                <h3 class="text-white">
-                    {{ $siswa->foto_profile ? 'Ada' : 'Kosong' }}
-                </h3>
-                <p class="text-white">Foto Profil</p>
+                <h3 class="text-white">{{ $jumlahDokumenWajib }}/2</h3>
+                <p class="text-white">Dokumen Wajib</p>
             </div>
             <div class="icon">
-                <i class="fas fa-camera"></i>
+                <i class="fas fa-file-alt"></i>
             </div>
-            <a href="{{ route('siswa.profile.diri') }}" class="small-box-footer" style="color: white;">
-                {{ $siswa->foto_profile ? 'Ubah Foto' : 'Upload Foto' }} 
+            <a href="{{ route('siswa.dokumen') }}" class="small-box-footer" style="color: white;">
+                {{ $jumlahDokumenWajib == 2 ? 'Lihat Dokumen' : 'Upload Dokumen' }} 
                 <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
     </div>
 
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-3 col-md-6 col-sm-6">
         @php
             $totalProgress = 0;
             $completedItems = 0;
-            $totalItems = 2;
+            $totalItems = 3;
             
             if($siswa->data_ortu_completed) $completedItems++;
             if($siswa->data_diri_completed) $completedItems++;
+            if($jumlahDokumenWajib == 2) $completedItems++; // Kedua dokumen wajib sudah diupload
             
             $totalProgress = ($completedItems / $totalItems) * 100;
+            $allComplete = $completedItems == $totalItems;
         @endphp
-        <div class="small-box {{ $siswa->isDataComplete() ? 'bg-success' : 'bg-danger' }}">
+        <div class="small-box {{ $allComplete ? 'bg-success' : 'bg-danger' }}">
             <div class="inner">
                 <h3>{{ number_format($totalProgress, 0) }}%</h3>
                 <p>Total Kelengkapan</p>
@@ -101,7 +110,7 @@
                 <i class="fas fa-chart-pie"></i>
             </div>
             <a href="#kelengkapan-data" class="small-box-footer">
-                Status: {{ $siswa->isDataComplete() ? 'Lengkap' : 'Belum Lengkap' }} 
+                Status: {{ $allComplete ? 'Lengkap' : 'Belum Lengkap' }} 
                 <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
@@ -288,10 +297,41 @@
                                      style="width: {{ $siswa->data_ortu_completed ? 100 : 50 }}%"></div>
                             </div>
                         </div>
+
+                        <div class="progress-group">
+                            <span class="progress-text">
+                                <i class="fas fa-file-alt"></i> <strong>Upload Dokumen Wajib</strong>
+                            </span>
+                            <span class="float-right">
+                                @if($jumlahDokumenWajib == 2)
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap (2/2)</span>
+                                @elseif($jumlahDokumenWajib == 1)
+                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> 1/2 Dokumen</span>
+                                @else
+                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Belum Upload</span>
+                                @endif
+                            </span>
+                            <div class="progress progress-sm mt-2 mb-3">
+                                <div class="progress-bar {{ $jumlahDokumenWajib == 2 ? 'bg-success' : ($jumlahDokumenWajib == 1 ? 'bg-warning' : 'bg-danger') }}" 
+                                     style="width: {{ $dokumenProgress }}%"></div>
+                            </div>
+                            @if($jumlahDokumenWajib < 2)
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Dokumen wajib: 
+                                @if(!$dokumenKK)
+                                    <span class="text-danger">Kartu Keluarga</span>{{ !$dokumenIjazah ? ', ' : '' }}
+                                @endif
+                                @if(!$dokumenIjazah)
+                                    <span class="text-danger">Ijazah SMP</span>
+                                @endif
+                            </small>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
-                @if(!$siswa->isDataComplete())
+                @if(!$allComplete)
                     <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -301,16 +341,23 @@
                         <hr>
                         <div class="row">
                             @if(!$siswa->data_diri_completed)
-                            <div class="col-md-6 mb-2">
-                                <a href="{{ route('siswa.profile.diri') }}" class="btn btn-warning btn-block">
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('siswa.profile.diri') }}" class="btn btn-warning btn-block btn-sm">
                                     <i class="fas fa-id-card"></i> Lengkapi Data Diri
                                 </a>
                             </div>
                             @endif
                             @if(!$siswa->data_ortu_completed)
-                            <div class="col-md-6 mb-2">
-                                <a href="{{ route('siswa.profile.ortu') }}" class="btn btn-warning btn-block">
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('siswa.profile.ortu') }}" class="btn btn-warning btn-block btn-sm">
                                     <i class="fas fa-users"></i> Lengkapi Data Orangtua
+                                </a>
+                            </div>
+                            @endif
+                            @if($jumlahDokumenWajib < 2)
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('siswa.dokumen') }}" class="btn btn-warning btn-block btn-sm">
+                                    <i class="fas fa-file-alt"></i> Upload Dokumen Wajib
                                 </a>
                             </div>
                             @endif
@@ -496,7 +543,7 @@
         border-radius: 10px;
     }
 
-    /* Small Box Hover Effects */
+    /* Small Box Hover Effects - Smaller Size for Mobile */
     .small-box {
         transition: all 0.3s ease;
         border-radius: 5px;
@@ -507,17 +554,30 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
+    .small-box .inner {
+        padding: 12px;
+    }
+
     .small-box h3 {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: bold;
+        margin-bottom: 5px;
     }
 
     .small-box p {
-        font-size: 1rem;
+        font-size: 0.9rem;
+        margin-bottom: 0;
     }
 
     .small-box .icon {
-        font-size: 70px;
+        font-size: 55px;
+        top: 10px;
+        right: 10px;
+    }
+
+    .small-box .small-box-footer {
+        padding: 4px 0;
+        font-size: 0.85rem;
     }
 
     /* Card Styling */
@@ -613,15 +673,44 @@
     /* Responsive Adjustments */
     @media (max-width: 768px) {
         .small-box h3 {
-            font-size: 2rem;
+            font-size: 1.6rem;
         }
         
         .small-box .icon {
-            font-size: 50px;
+            font-size: 40px;
+        }
+
+        .small-box p {
+            font-size: 0.8rem;
         }
 
         .info-box-number {
             font-size: 13px;
+        }
+
+        .profile-user-img {
+            width: 120px !important;
+            height: 120px !important;
+        }
+
+        .card-body {
+            padding: 12px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .small-box .inner {
+            padding: 10px;
+        }
+
+        .small-box h3 {
+            font-size: 1.4rem;
+        }
+
+        .small-box .icon {
+            font-size: 35px;
+            top: 8px;
+            right: 8px;
         }
     }
 </style>
