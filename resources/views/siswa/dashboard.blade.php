@@ -163,11 +163,30 @@
                     </li>
                     @if($siswa->tempat_lahir && $siswa->tanggal_lahir)
                     <li class="list-group-item">
-                        <b><i class="fas fa-birthday-cake mr-1"></i> Lahir</b>
+                        <b><i class="fas fa-birthday-cake mr-1"></i> Umur</b>
                         <span class="float-right text-muted">
                             {{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->age }} tahun
                         </span>
                     </li>
+                    @endif
+                    @php
+                        $kelasAktif = $siswa->kelasAktif->first();
+                    @endphp
+                    @if($kelasAktif)
+                    <li class="list-group-item">
+                        <b><i class="fas fa-school mr-1"></i> Kelas</b>
+                        <span class="float-right">
+                            <span class="badge badge-success">{{ $kelasAktif->nama_lengkap }}</span>
+                        </span>
+                    </li>
+                    @if($kelasAktif->waliKelas)
+                    <li class="list-group-item">
+                        <b><i class="fas fa-chalkboard-teacher mr-1"></i> Wali Kelas</b>
+                        <span class="float-right text-muted">
+                            {{ $kelasAktif->waliKelas->nama }}
+                        </span>
+                    </li>
+                    @endif
                     @endif
                     @if($siswa->agama)
                     <li class="list-group-item">
@@ -374,67 +393,98 @@
             </div>
         </div>
 
-        <!-- Information Detail -->
-        <div class="card card-info">
+        <!-- Teman Sekelas Card -->
+        @php
+            $kelasAktif = $siswa->kelasAktif->first();
+            $temanSekelas = $kelasAktif ? $kelasAktif->siswaAktif()->where('siswa_id', '!=', $siswa->id)->orderBy('nama_lengkap', 'asc')->get() : collect();
+        @endphp
+        
+        @if($kelasAktif)
+        <div class="card card-success">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    Informasi Detail Pribadi
+                    <i class="fas fa-users mr-1"></i>
+                    Teman Sekelas - {{ $kelasAktif->nama_lengkap }}
                 </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 col-sm-6">
-                        <div class="info-box bg-light">
-                            <span class="info-box-icon bg-info elevation-1">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Tempat Lahir</span>
-                                <span class="info-box-number">{{ $siswa->tempat_lahir ?? 'Belum diisi' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-sm-6">
-                        <div class="info-box bg-light">
-                            <span class="info-box-icon bg-success elevation-1">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Tanggal Lahir</span>
-                                <span class="info-box-number" style="font-size: 15px;">
-                                    {{ $siswa->tanggal_lahir ? $siswa->tanggal_lahir->format('d M Y') : 'Belum diisi' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-sm-6">
-                        <div class="info-box bg-light">
-                            <span class="info-box-icon bg-warning elevation-1">
-                                <i class="fas fa-phone"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">No. HP</span>
-                                <span class="info-box-number">{{ $siswa->no_hp ?? 'Belum diisi' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-sm-6">
-                        <div class="info-box bg-light">
-                            <span class="info-box-icon bg-danger elevation-1">
-                                <i class="fas fa-envelope"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Email</span>
-                                <span class="info-box-number" style="font-size: 13px;">
-                                    {{ $siswa->email ?? 'Belum diisi' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="card-tools">
+                    <span class="badge badge-light">{{ $temanSekelas->count() }} Siswa</span>
                 </div>
             </div>
+            <div class="card-body p-0">
+                @if($temanSekelas->count() > 0)
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="bg-light" style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th width="5%" class="text-center">#</th>
+                                    <th width="50%">Nama Lengkap</th>
+                                    <th width="20%">NISN</th>
+                                    <th width="15%">JK</th>
+                                    <th width="10%" class="text-center">Profil</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($temanSekelas as $index => $teman)
+                                <tr>
+                                    <td class="text-center">{{ $index + 1 }}</td>
+                                    <td>
+                                        <i class="fas fa-user-circle text-primary mr-1"></i>
+                                        <strong>{{ $teman->nama_lengkap }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ $teman->nisn }}</span>
+                                    </td>
+                                    <td>
+                                        @if($teman->jenis_kelamin == 'L')
+                                            <i class="fas fa-mars text-primary"></i> Laki-laki
+                                        @else
+                                            <i class="fas fa-venus text-danger"></i> Perempuan
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($teman->foto_profile)
+                                            <img src="{{ Storage::url($teman->foto_profile) }}" 
+                                                 class="img-circle elevation-2" 
+                                                 width="30" height="30"
+                                                 alt="{{ $teman->nama_lengkap }}"
+                                                 style="object-fit: cover;">
+                                        @else
+                                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card-footer bg-light">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="description-block">
+                                    <i class="fas fa-mars text-primary fa-2x mb-2"></i>
+                                    <h5 class="description-header">{{ $temanSekelas->where('jenis_kelamin', 'L')->count() }}</h5>
+                                    <span class="description-text">Laki-laki</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="description-block">
+                                    <i class="fas fa-venus text-danger fa-2x mb-2"></i>
+                                    <h5 class="description-header">{{ $temanSekelas->where('jenis_kelamin', 'P')->count() }}</h5>
+                                    <span class="description-text">Perempuan</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Belum ada teman sekelas</p>
+                    </div>
+                @endif
+            </div>
         </div>
+        @endif
 
         <!-- Announcement Card -->
         <div class="card card-primary">
@@ -668,6 +718,52 @@
     .btn-lg {
         padding: 12px 20px;
         font-size: 1.1rem;
+    }
+
+    /* Teman Sekelas Table */
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .table-hover tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: translateX(2px);
+    }
+
+    .description-block {
+        margin: 10px 0;
+    }
+
+    .description-header {
+        margin: 10px 0;
+        padding: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .description-text {
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        color: #6c757d;
     }
 
     /* Responsive Adjustments */
