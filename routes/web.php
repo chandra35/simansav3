@@ -49,6 +49,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/import/template', [SiswaImportController::class, 'downloadTemplate'])->name('siswa.import.template');
     Route::post('/siswa/import/process', [SiswaImportController::class, 'import'])->name('siswa.import.process');
     
+    // Custom Menu Management
+    Route::resource('custom-menu', App\Http\Controllers\Admin\CustomMenuController::class);
+    Route::post('/custom-menu/{customMenu}/toggle-status', [App\Http\Controllers\Admin\CustomMenuController::class, 'toggleStatus'])->name('custom-menu.toggle-status');
+    Route::get('/custom-menu/{customMenu}/assign', [App\Http\Controllers\Admin\CustomMenuController::class, 'assign'])->name('custom-menu.assign');
+    Route::post('/custom-menu/{customMenu}/assign-siswa', [App\Http\Controllers\Admin\CustomMenuController::class, 'assignSiswa'])->name('custom-menu.assign-siswa');
+    Route::post('/custom-menu/{customMenu}/remove-siswa', [App\Http\Controllers\Admin\CustomMenuController::class, 'removeSiswa'])->name('custom-menu.remove-siswa');
+    Route::post('/custom-menu/{customMenu}/upload-excel', [App\Http\Controllers\Admin\CustomMenuController::class, 'uploadExcel'])->name('custom-menu.upload-excel');
+    Route::get('/custom-menu/{customMenu}/template', [App\Http\Controllers\Admin\CustomMenuController::class, 'downloadTemplate'])->name('custom-menu.template');
+    
     // Tahun Pelajaran Management
     Route::resource('tahun-pelajaran', TahunPelajaranController::class);
     Route::post('/tahun-pelajaran/{tahunPelajaran}/set-active', [TahunPelajaranController::class, 'setActive'])->name('tahun-pelajaran.set-active');
@@ -236,6 +245,10 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/profile/password', [SiswaProfileController::class, 'password'])->name('profile.password');
     Route::put('/profile/password', [SiswaProfileController::class, 'updatePassword'])->name('profile.password.update');
     
+    // Change Password (for non-first login)
+    Route::get('/profile/change-password', [SiswaProfileController::class, 'changePassword'])->name('profile.change-password');
+    Route::put('/profile/change-password', [SiswaProfileController::class, 'updateChangePassword'])->name('profile.change-password.update');
+    
     Route::get('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'show'])->name('profile.ortu');
     Route::put('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'update'])->name('profile.ortu.update');
     
@@ -253,6 +266,11 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/dokumen/{id}/preview', [App\Http\Controllers\Siswa\DokumenController::class, 'preview'])->name('dokumen.preview');
     Route::get('/dokumen/{id}/download', [App\Http\Controllers\Siswa\DokumenController::class, 'download'])->name('dokumen.download');
     Route::delete('/dokumen/{id}', [App\Http\Controllers\Siswa\DokumenController::class, 'destroy'])->name('dokumen.destroy');
+    
+    // Custom Menu for Siswa
+    Route::get('/menu', [App\Http\Controllers\Siswa\CustomMenuController::class, 'index'])->name('menu.index');
+    Route::get('/menu/{slug}', [App\Http\Controllers\Siswa\CustomMenuController::class, 'show'])->name('menu.show');
+    Route::post('/menu/{id}/read', [App\Http\Controllers\Siswa\CustomMenuController::class, 'markAsRead'])->name('menu.read');
     
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

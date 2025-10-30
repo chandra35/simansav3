@@ -240,9 +240,12 @@ class DokumenController extends Controller
         try {
             $dokumen = DokumenSiswa::findOrFail($id);
             
-            // Check ownership
+            // Check ownership or admin permission
             $user = Auth::user();
-            if ($dokumen->siswa->user_id != $user->id) {
+            $isOwner = $dokumen->siswa->user_id == $user->id;
+            $isAdmin = $user->can('view-siswa');
+            
+            if (!$isOwner && !$isAdmin) {
                 abort(403, 'Anda tidak memiliki akses untuk melihat dokumen ini');
             }
 
@@ -287,9 +290,12 @@ class DokumenController extends Controller
         try {
             $dokumen = DokumenSiswa::findOrFail($id);
             
-            // Check ownership
+            // Check ownership or admin permission
             $user = Auth::user();
-            if ($dokumen->siswa->user_id != $user->id) {
+            $isOwner = $dokumen->siswa->user_id == $user->id;
+            $isAdmin = $user->can('view-siswa');
+            
+            if (!$isOwner && !$isAdmin) {
                 abort(403, 'Anda tidak memiliki akses untuk mengunduh dokumen ini');
             }
 

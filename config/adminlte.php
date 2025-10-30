@@ -414,6 +414,12 @@ return [
             'icon' => 'fas fa-fw fa-user',
             'can' => 'admin-access',
         ],
+        [
+            'text' => 'Custom Menu Siswa',
+            'route' => 'admin.custom-menu.index',
+            'icon' => 'fas fa-fw fa-th-list',
+            'can' => 'view-siswa',
+        ],
 
         // Sidebar items for Siswa
         [
@@ -448,6 +454,7 @@ return [
             'route' => 'siswa.dokumen',
             'icon' => 'fas fa-fw fa-folder-open',
             'can' => 'siswa-access',
+            'key' => 'siswa-dokumen',
         ],
         [
             'header' => 'AKUN',

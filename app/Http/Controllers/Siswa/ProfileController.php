@@ -26,10 +26,45 @@ class ProfileController extends Controller
         $user = Auth::user();
         
         if (!$user->is_first_login) {
-            return redirect()->route('siswa.dashboard');
+            // Redirect to change password page instead
+            return redirect()->route('siswa.profile.change-password');
         }
 
         return view('siswa.profile.password');
+    }
+
+    /**
+     * Show change password form (for non-first login)
+     */
+    public function changePassword()
+    {
+        return view('siswa.profile.change-password');
+    }
+
+    /**
+     * Update password (for non-first login)
+     */
+    public function updateChangePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Password lama tidak sesuai']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        User::logCustomActivity('password_change', 'Password berhasil diubah');
+
+        return back()->with('success', 'Password berhasil diubah');
     }
 
     public function updatePassword(Request $request)

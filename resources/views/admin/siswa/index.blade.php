@@ -319,6 +319,14 @@
         .dokumen-item:hover {
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        .btn-group-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .btn-group-vertical .btn {
+            border-radius: 0.25rem !important;
+        }
     </style>
 @stop
 
@@ -597,13 +605,16 @@ function loadDokumenTab(siswaId) {
                     html = '<div class="row">';
                     dokumen.forEach(dok => {
                         const uploadDate = new Date(dok.created_at).toLocaleDateString('id-ID');
+                        const isPdf = dok.file_url.toLowerCase().endsWith('.pdf');
+                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(dok.file_url);
+                        
                         html += `
                             <div class="col-md-6 mb-3">
                                 <div class="dokumen-item">
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div>
+                                        <div class="flex-grow-1">
                                             <h6 class="mb-1">
-                                                <i class="fas fa-file-pdf text-danger"></i> 
+                                                <i class="fas ${isPdf ? 'fa-file-pdf text-danger' : isImage ? 'fa-file-image text-primary' : 'fa-file text-secondary'}"></i> 
                                                 ${dok.jenis_dokumen_label}
                                             </h6>
                                             <small class="text-muted">
@@ -612,9 +623,20 @@ function loadDokumenTab(siswaId) {
                                             </small>
                                             ${dok.keterangan ? `<p class="mb-1 mt-2"><small>${dok.keterangan}</small></p>` : ''}
                                         </div>
-                                        <div>
-                                            <a href="${dok.file_url}" target="_blank" class="btn btn-sm btn-info" title="Lihat">
-                                                <i class="fas fa-eye"></i>
+                                        <div class="btn-group-vertical">
+                                            <a href="${dok.file_url}" 
+                                               class="btn btn-sm ${isImage ? 'btn-info' : 'btn-primary'} mb-1 btn-preview-doc" 
+                                               data-url="${dok.file_url}"
+                                               data-type="${isImage ? 'image' : isPdf ? 'pdf' : 'other'}"
+                                               data-title="${dok.jenis_dokumen_label}"
+                                               title="${isImage ? 'Preview & Zoom' : 'Lihat File'}">
+                                                <i class="fas ${isImage ? 'fa-search-plus' : 'fa-eye'}"></i>
+                                            </a>
+                                            <a href="${dok.file_url}" 
+                                               download 
+                                               class="btn btn-sm btn-success" 
+                                               title="Download">
+                                                <i class="fas fa-download"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -626,6 +648,71 @@ function loadDokumenTab(siswaId) {
                 }
                 
                 $('#dokumen').html(html);
+                
+                // Initialize preview click handler
+                $(document).off('click', '.btn-preview-doc');
+                $(document).on('click', '.btn-preview-doc', function(e) {
+                    e.preventDefault();
+                    const url = $(this).data('url');
+                    const type = $(this).data('type');
+                    const title = $(this).data('title');
+                    
+                    if (type === 'image') {
+                        // Open image in new window with zoom functionality
+                        const win = window.open('', 'ImagePreview', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+                        win.document.write('<!DOCTYPE html><html><head><title>' + title + '</title>');
+                        win.document.write('<style>');
+                        win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+                        win.document.write('body { background: #1a1a1a; font-family: Arial, sans-serif; overflow: hidden; }');
+                        win.document.write('.header { background: #2d2d2d; padding: 15px 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }');
+                        win.document.write('.header h3 { margin: 0; font-size: 18px; font-weight: 500; }');
+                        win.document.write('.controls { display: flex; gap: 10px; }');
+                        win.document.write('.btn { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.3s; }');
+                        win.document.write('.btn:hover { background: #0056b3; }');
+                        win.document.write('.btn-success { background: #28a745; }');
+                        win.document.write('.btn-success:hover { background: #1e7e34; }');
+                        win.document.write('.btn-danger { background: #dc3545; }');
+                        win.document.write('.btn-danger:hover { background: #c82333; }');
+                        win.document.write('.image-container { width: 100%; height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; overflow: auto; cursor: grab; position: relative; }');
+                        win.document.write('.image-container.dragging { cursor: grabbing; }');
+                        win.document.write('.image-container img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.3s; user-select: none; }');
+                        win.document.write('.zoom-info { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; }');
+                        win.document.write('</style></head><body>');
+                        win.document.write('<div class="header"><h3>' + title + '</h3>');
+                        win.document.write('<div class="controls">');
+                        win.document.write('<button class="btn" onclick="zoomOut()">🔍 Zoom Out</button>');
+                        win.document.write('<button class="btn" onclick="resetZoom()">↺ Reset</button>');
+                        win.document.write('<button class="btn" onclick="zoomIn()">🔍 Zoom In</button>');
+                        win.document.write('<a href="' + url + '" download class="btn btn-success" style="text-decoration:none;">⬇ Download</a>');
+                        win.document.write('<button class="btn btn-danger" onclick="window.close()">✕ Close</button>');
+                        win.document.write('</div></div>');
+                        win.document.write('<div class="image-container" id="imageContainer">');
+                        win.document.write('<img src="' + url + '" id="previewImage" alt="' + title + '">');
+                        win.document.write('<div class="zoom-info" id="zoomInfo">100%</div></div>');
+                        win.document.write('<scr' + 'ipt>');
+                        win.document.write('let scale = 1;');
+                        win.document.write('const img = document.getElementById("previewImage");');
+                        win.document.write('const container = document.getElementById("imageContainer");');
+                        win.document.write('const zoomInfo = document.getElementById("zoomInfo");');
+                        win.document.write('let isDragging = false;');
+                        win.document.write('let startX, startY, scrollLeft, scrollTop;');
+                        win.document.write('function updateZoom() { img.style.transform = "scale(" + scale + ")"; zoomInfo.textContent = Math.round(scale * 100) + "%"; }');
+                        win.document.write('function zoomIn() { scale = Math.min(scale + 0.2, 5); updateZoom(); }');
+                        win.document.write('function zoomOut() { scale = Math.max(scale - 0.2, 0.2); updateZoom(); }');
+                        win.document.write('function resetZoom() { scale = 1; updateZoom(); container.scrollTop = 0; container.scrollLeft = 0; }');
+                        win.document.write('container.addEventListener("wheel", function(e) { e.preventDefault(); if (e.deltaY < 0) { zoomIn(); } else { zoomOut(); } });');
+                        win.document.write('container.addEventListener("mousedown", function(e) { isDragging = true; container.classList.add("dragging"); startX = e.pageX - container.offsetLeft; startY = e.pageY - container.offsetTop; scrollLeft = container.scrollLeft; scrollTop = container.scrollTop; });');
+                        win.document.write('container.addEventListener("mouseleave", function() { isDragging = false; container.classList.remove("dragging"); });');
+                        win.document.write('container.addEventListener("mouseup", function() { isDragging = false; container.classList.remove("dragging"); });');
+                        win.document.write('container.addEventListener("mousemove", function(e) { if (!isDragging) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const y = e.pageY - container.offsetTop; const walkX = (x - startX) * 2; const walkY = (y - startY) * 2; container.scrollLeft = scrollLeft - walkX; container.scrollTop = scrollTop - walkY; });');
+                        win.document.write('document.addEventListener("keydown", function(e) { if (e.key === "+" || e.key === "=") zoomIn(); if (e.key === "-") zoomOut(); if (e.key === "0") resetZoom(); if (e.key === "Escape") window.close(); });');
+                        win.document.write('</scr' + 'ipt></body></html>');
+                        win.document.close();
+                    } else {
+                        // For PDF and other files, open in new tab
+                        window.open(url, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+                    }
+                });
             }
         })
         .fail(function() {
