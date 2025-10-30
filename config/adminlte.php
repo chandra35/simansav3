@@ -420,6 +420,12 @@ return [
             'icon' => 'fas fa-fw fa-th-list',
             'can' => 'view-siswa',
         ],
+        [
+            'text' => 'Monitoring Users',
+            'route' => 'admin.monitoring.users',
+            'icon' => 'fas fa-fw fa-users-cog',
+            'can' => 'admin-access',
+        ],
 
         // Sidebar items for Siswa
         [
