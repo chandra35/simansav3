@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Jenssegers\Agent\Agent;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class UserSession extends Model
 {
@@ -63,10 +64,13 @@ class UserSession extends Model
         $agent = new Agent();
         $agent->setUserAgent($userAgent);
 
+        $browser = $agent->browser();
+        $platform = $agent->platform();
+
         return [
             'device_type' => $agent->isDesktop() ? 'desktop' : ($agent->isMobile() ? 'mobile' : 'tablet'),
-            'browser' => $agent->browser(),
-            'platform' => $agent->platform()
+            'browser' => $browser ?: 'Unknown',
+            'platform' => $platform ?: 'Unknown'
         ];
     }
 
@@ -75,25 +79,38 @@ class UserSession extends Model
      */
     public static function updateOrCreateSession($user, $request)
     {
-        $sessionId = session()->getId();
-        $userAgent = $request->userAgent();
-        $deviceInfo = self::parseUserAgent($userAgent);
+        try {
+            $sessionId = session()->getId();
+            
+            // Jika session ID kosong, generate baru
+            if (empty($sessionId)) {
+                session()->regenerate();
+                $sessionId = session()->getId();
+            }
+            
+            $userAgent = $request->userAgent();
+            $deviceInfo = self::parseUserAgent($userAgent);
 
-        return self::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'session_id' => $sessionId
-            ],
-            [
-                'ip_address' => $request->ip(),
-                'user_agent' => $userAgent,
-                'device_type' => $deviceInfo['device_type'],
-                'browser' => $deviceInfo['browser'],
-                'platform' => $deviceInfo['platform'],
-                'last_activity' => Carbon::now(),
-                'is_online' => true
-            ]
-        );
+            return self::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'session_id' => $sessionId
+                ],
+                [
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $userAgent,
+                    'device_type' => $deviceInfo['device_type'],
+                    'browser' => $deviceInfo['browser'],
+                    'platform' => $deviceInfo['platform'],
+                    'last_activity' => Carbon::now(),
+                    'is_online' => true
+                ]
+            );
+        } catch (\Exception $e) {
+            // Log error tapi jangan break aplikasi
+            Log::error('Failed to track user session: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**

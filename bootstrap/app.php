@@ -18,8 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
         
-        // Track user activity
-        $middleware->append(\App\Http\Middleware\TrackUserActivity::class);
+        // Track user activity untuk authenticated users
+        $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

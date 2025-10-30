@@ -305,31 +305,36 @@ return [
             'topnav_right' => true,
         ],
 
-        // Sidebar items for Admin/Management
+        // ============================================
+        // ADMIN MENU
+        // ============================================
+        
+        // Dashboard
         [
             'key' => 'admin-dashboard',
             'text' => 'Dashboard',
             'url' => 'admin/dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
-            'can' => 'admin-dashboard-access', // Only for Super Admin, Admin, Kepala, WAKA (NOT pure GTK)
+            'can' => 'admin-dashboard-access',
         ],
         
-        // GTK Personal Menu (ONLY for pure GTK role, not Super Admin/Admin)
+        // GTK Personal Menu (ONLY for pure GTK role)
         [
             'key' => 'gtk-dashboard',
             'text' => 'Dashboard Saya',
             'route' => 'admin.gtk.dashboard',
             'icon' => 'fas fa-fw fa-home',
-            'can' => 'gtk-menu-only', // Only GTK, exclude Super Admin/Admin
+            'can' => 'gtk-menu-only',
         ],
         [
             'key' => 'gtk-profile',
             'text' => 'Profil Saya',
             'route' => 'admin.gtk.profile',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'gtk-menu-only', // Only GTK, exclude Super Admin/Admin
+            'can' => 'gtk-menu-only',
         ],
         
+        // Manajemen Data
         [
             'header' => 'MANAJEMEN DATA',
             'can' => 'admin-access',
@@ -337,7 +342,7 @@ return [
         [
             'text' => 'Data Siswa',
             'route' => 'admin.siswa.index',
-            'icon' => 'fas fa-fw fa-users',
+            'icon' => 'fas fa-fw fa-user-graduate',
             'can' => 'view-siswa',
         ],
         [
@@ -352,6 +357,8 @@ return [
             'icon' => 'fas fa-fw fa-user-shield',
             'can' => 'view-user',
         ],
+        
+        // Akademik
         [
             'header' => 'AKADEMIK',
             'can' => 'view-tahun-pelajaran|view-kurikulum|view-kelas|view-mutasi',
@@ -371,8 +378,8 @@ return [
         [
             'text' => 'Manajemen Kelas',
             'route' => 'admin.kelas.index',
-            'icon' => 'fas fa-fw fa-chalkboard-teacher',
-            'can' => 'manage-kelas', // Changed from 'view-kelas' - only for Admin/Super Admin
+            'icon' => 'fas fa-fw fa-school',
+            'can' => 'manage-kelas',
         ],
         [
             'text' => 'Cetak Dokumen',
@@ -383,13 +390,15 @@ return [
         [
             'text' => 'Mutasi Siswa',
             'route' => 'admin.under-development',
-            'icon' => 'fas fa-fw fa-hammer text-warning',
+            'icon' => 'fas fa-fw fa-exchange-alt',
             'can' => 'view-mutasi',
             'label' => 'Soon',
             'label_color' => 'warning',
         ],
+        
+        // Laporan & Monitoring
         [
-            'header' => 'LAPORAN',
+            'header' => 'LAPORAN & MONITORING',
             'can' => 'admin-access',
         ],
         [
@@ -398,6 +407,14 @@ return [
             'icon' => 'fas fa-fw fa-history',
             'can' => 'admin-access',
         ],
+        [
+            'text' => 'Monitoring Users',
+            'route' => 'admin.monitoring.users',
+            'icon' => 'fas fa-fw fa-users-cog',
+            'can' => 'admin-access',
+        ],
+        
+        // Pengaturan
         [
             'header' => 'PENGATURAN',
             'can' => 'admin-access',
@@ -409,25 +426,21 @@ return [
             'can' => 'manage-settings',
         ],
         [
-            'text' => 'Profile',
-            'route' => 'admin.profile',
-            'icon' => 'fas fa-fw fa-user',
-            'can' => 'admin-access',
-        ],
-        [
             'text' => 'Custom Menu Siswa',
             'route' => 'admin.custom-menu.index',
             'icon' => 'fas fa-fw fa-th-list',
             'can' => 'view-siswa',
         ],
         [
-            'text' => 'Monitoring Users',
-            'route' => 'admin.monitoring.users',
-            'icon' => 'fas fa-fw fa-users-cog',
+            'text' => 'Profile',
+            'route' => 'admin.profile',
+            'icon' => 'fas fa-fw fa-user',
             'can' => 'admin-access',
         ],
 
-        // Sidebar items for Siswa
+        // ============================================
+        // SISWA MENU
+        // ============================================
         [
             'text' => 'Dashboard',
             'route' => 'siswa.dashboard',
