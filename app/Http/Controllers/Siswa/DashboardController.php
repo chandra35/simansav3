@@ -16,7 +16,21 @@ class DashboardController extends Controller
         $siswa = $user->siswa;
 
         if (!$siswa) {
-            // If siswa record doesn't exist, create one
+            // SECURITY: Don't auto-create siswa if user is not actually a siswa
+            // This prevents GTK or other users from accidentally creating duplicate siswa records
+            
+            // Check if user is actually marked as siswa (not GTK, admin, etc.)
+            if (!$user->isSiswa()) {
+                abort(403, 'Unauthorized: You are not a siswa. Please contact administrator.');
+            }
+            
+            // Additional validation: Check if username/NISN already exists in GTK
+            $existingGtk = \App\Models\Gtk::where('nik', $user->username)->first();
+            if ($existingGtk) {
+                abort(403, 'Unauthorized: This NIK is registered as GTK. Please contact administrator.');
+            }
+            
+            // Safe to create siswa record
             $siswa = Siswa::create([
                 'user_id' => $user->id,
                 'nisn' => $user->username,

@@ -334,108 +334,143 @@ return [
             'can' => 'gtk-menu-only',
         ],
         
-        // Manajemen Data
+        // MANAJEMEN DATA - Collapsible
         [
-            'header' => 'MANAJEMEN DATA',
-            'can' => 'admin-access',
-        ],
-        [
-            'text' => 'Data Siswa',
-            'route' => 'admin.siswa.index',
-            'icon' => 'fas fa-fw fa-user-graduate',
-            'can' => 'view-siswa',
-        ],
-        [
-            'text' => 'Data GTK',
-            'route' => 'admin.gtk.index',
-            'icon' => 'fas fa-fw fa-chalkboard-teacher',
-            'can' => 'view-gtk',
-        ],
-        [
-            'text' => 'Data User',
-            'route' => 'admin.users.index',
-            'icon' => 'fas fa-fw fa-user-shield',
-            'can' => 'view-user',
-        ],
-        
-        // Akademik
-        [
-            'header' => 'AKADEMIK',
-            'can' => 'view-tahun-pelajaran|view-kurikulum|view-kelas|view-mutasi',
-        ],
-        [
-            'text' => 'Tahun Pelajaran',
-            'route' => 'admin.tahun-pelajaran.index',
-            'icon' => 'fas fa-fw fa-calendar-alt',
-            'can' => 'view-tahun-pelajaran',
-        ],
-        [
-            'text' => 'Kurikulum',
-            'route' => 'admin.kurikulum.index',
-            'icon' => 'fas fa-fw fa-book-open',
-            'can' => 'view-kurikulum',
-        ],
-        [
-            'text' => 'Manajemen Kelas',
-            'route' => 'admin.kelas.index',
-            'icon' => 'fas fa-fw fa-school',
-            'can' => 'manage-kelas',
-        ],
-        [
-            'text' => 'Cetak Dokumen',
-            'route' => 'admin.cetak.index',
-            'icon' => 'fas fa-fw fa-print',
-            'can' => 'view-kelas',
-        ],
-        [
-            'text' => 'Mutasi Siswa',
-            'route' => 'admin.under-development',
-            'icon' => 'fas fa-fw fa-exchange-alt',
-            'can' => 'view-mutasi',
-            'label' => 'Soon',
-            'label_color' => 'warning',
+            'text' => 'Manajemen Data',
+            'icon' => 'fas fa-fw fa-database',
+            'submenu' => [
+                [
+                    'text' => 'Data Siswa',
+                    'route' => 'admin.siswa.index',
+                    'icon' => 'fas fa-fw fa-user-graduate',
+                    'can' => 'view-siswa',
+                    'active' => ['admin/siswa*'],
+                ],
+                [
+                    'text' => 'Sekolah Asal',
+                    'route' => 'admin.sekolah-asal.index',
+                    'icon' => 'fas fa-fw fa-school',
+                    'can' => 'view-siswa',
+                    'active' => ['admin/sekolah-asal*'],
+                ],
+                [
+                    'text' => 'Data GTK',
+                    'route' => 'admin.gtk.index',
+                    'icon' => 'fas fa-fw fa-chalkboard-teacher',
+                    'can' => 'view-gtk',
+                    'active' => ['admin/gtk*'],
+                ],
+                [
+                    'text' => 'Data User',
+                    'route' => 'admin.users.index',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'view-user',
+                    'active' => ['admin/users*'],
+                ],
+            ],
         ],
         
-        // Laporan & Monitoring
+        // AKADEMIK - Collapsible
         [
-            'header' => 'LAPORAN & MONITORING',
-            'can' => 'admin-access',
-        ],
-        [
-            'text' => 'Activity Log',
-            'route' => 'admin.activity-logs.index',
-            'icon' => 'fas fa-fw fa-history',
-            'can' => 'admin-access',
-        ],
-        [
-            'text' => 'Monitoring Users',
-            'route' => 'admin.monitoring.users',
-            'icon' => 'fas fa-fw fa-users-cog',
-            'can' => 'admin-access',
+            'text' => 'Akademik',
+            'icon' => 'fas fa-fw fa-graduation-cap',
+            'submenu' => [
+                [
+                    'text' => 'Tahun Pelajaran',
+                    'route' => 'admin.tahun-pelajaran.index',
+                    'icon' => 'fas fa-fw fa-calendar-alt',
+                    'can' => 'view-tahun-pelajaran',
+                    'active' => ['admin/tahun-pelajaran*'],
+                ],
+                [
+                    'text' => 'Kurikulum',
+                    'route' => 'admin.kurikulum.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/kurikulum*'],
+                ],
+                [
+                    'text' => 'Manajemen Kelas',
+                    'route' => 'admin.kelas.index',
+                    'icon' => 'fas fa-fw fa-school',
+                    'can' => 'manage-kelas',
+                    'active' => ['admin/kelas*'],
+                ],
+                [
+                    'text' => 'Cetak Dokumen',
+                    'route' => 'admin.cetak.index',
+                    'icon' => 'fas fa-fw fa-print',
+                    'can' => 'view-kelas',
+                    'active' => ['admin/cetak*'],
+                ],
+                [
+                    'text' => 'Mutasi Siswa',
+                    'route' => 'admin.under-development',
+                    'icon' => 'fas fa-fw fa-exchange-alt',
+                    'can' => 'view-mutasi',
+                    'label' => 'Soon',
+                    'label_color' => 'warning',
+                    'active' => ['admin/mutasi*'],
+                ],
+            ],
         ],
         
-        // Pengaturan
+        // LAPORAN & MONITORING - Collapsible
         [
-            'header' => 'PENGATURAN',
-            'can' => 'admin-access',
+            'text' => 'Laporan & Monitoring',
+            'icon' => 'fas fa-fw fa-chart-line',
+            'submenu' => [
+                [
+                    'text' => 'Activity Log',
+                    'route' => 'admin.activity-logs.index',
+                    'icon' => 'fas fa-fw fa-history',
+                    'can' => 'admin-access',
+                    'active' => ['admin/activity-logs*'],
+                ],
+                [
+                    'text' => 'Monitoring Users',
+                    'route' => 'admin.monitoring.users',
+                    'icon' => 'fas fa-fw fa-users-cog',
+                    'can' => 'admin-access',
+                    'active' => ['admin/monitoring*'],
+                ],
+            ],
         ],
+        
+        // PENGATURAN - Collapsible
         [
-            'text' => 'Pengaturan Aplikasi',
-            'route' => 'admin.settings.edit',
-            'icon' => 'fas fa-fw fa-cog',
-            'can' => 'manage-settings',
-        ],
-        [
-            'text' => 'Custom Menu Siswa',
-            'route' => 'admin.custom-menu.index',
-            'icon' => 'fas fa-fw fa-th-list',
-            'can' => 'view-siswa',
-        ],
-        [
-            'text' => 'Profile',
-            'route' => 'admin.profile',
-            'icon' => 'fas fa-fw fa-user',
-            'can' => 'admin-access',
+            'text' => 'Pengaturan',
+            'icon' => 'fas fa-fw fa-cogs',
+            'submenu' => [
+                [
+                    'text' => 'Pengaturan Aplikasi',
+                    'route' => 'admin.settings.edit',
+                    'icon' => 'fas fa-fw fa-sliders-h',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/settings*'],
+                ],
+                [
+                    'text' => 'Cek NIP',
+                    'route' => 'admin.pengaturan.cek-nip',
+                    'icon' => 'fas fa-fw fa-id-card',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/cek-nip*'],
+                ],
+                [
+                    'text' => 'Custom Menu Siswa',
+                    'route' => 'admin.custom-menu.index',
+                    'icon' => 'fas fa-fw fa-th-list',
+                    'can' => 'view-siswa',
+                    'active' => ['admin/custom-menu*'],
+                ],
+                [
+                    'text' => 'Profile',
+                    'route' => 'admin.profile',
+                    'icon' => 'fas fa-fw fa-user',
+                    'can' => 'admin-access',
+                    'active' => ['admin/profile*'],
+                ],
+            ],
         ],
 
         // ============================================
@@ -447,12 +482,10 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
             'can' => 'siswa-access',
         ],
+        
+        // PROFIL & DATA - Collapsible
         [
-            'header' => 'KELENGKAPAN DATA',
-            'can' => 'siswa-access',
-        ],
-        [
-            'text' => 'Profil Siswa',
+            'text' => 'Profil & Data',
             'icon' => 'fas fa-fw fa-user-circle',
             'can' => 'siswa-access',
             'submenu' => [
@@ -466,24 +499,27 @@ return [
                     'route' => 'siswa.profile.ortu',
                     'icon' => 'fas fa-fw fa-users',
                 ],
+                [
+                    'text' => 'Dokumen Siswa',
+                    'route' => 'siswa.dokumen',
+                    'icon' => 'fas fa-fw fa-folder-open',
+                    'key' => 'siswa-dokumen',
+                ],
             ],
         ],
+        
+        // AKUN - Collapsible
         [
-            'text' => 'Dokumen Siswa',
-            'route' => 'siswa.dokumen',
-            'icon' => 'fas fa-fw fa-folder-open',
+            'text' => 'Pengaturan Akun',
+            'icon' => 'fas fa-fw fa-user-cog',
             'can' => 'siswa-access',
-            'key' => 'siswa-dokumen',
-        ],
-        [
-            'header' => 'AKUN',
-            'can' => 'siswa-access',
-        ],
-        [
-            'text' => 'Ubah Password',
-            'route' => 'siswa.profile.password',
-            'icon' => 'fas fa-fw fa-lock',
-            'can' => 'siswa-access',
+            'submenu' => [
+                [
+                    'text' => 'Ubah Password',
+                    'route' => 'siswa.profile.password',
+                    'icon' => 'fas fa-fw fa-lock',
+                ],
+            ],
         ],
     ],
 

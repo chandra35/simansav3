@@ -52,22 +52,22 @@ class Ortu extends Model
 
     public function provinsi()
     {
-        return $this->belongsTo(Province::class, 'provinsi_id');
+        return $this->belongsTo(Province::class, 'provinsi_id', 'code');
     }
 
     public function kabupaten()
     {
-        return $this->belongsTo(City::class, 'kabupaten_id');
+        return $this->belongsTo(City::class, 'kabupaten_id', 'code');
     }
 
     public function kecamatan()
     {
-        return $this->belongsTo(District::class, 'kecamatan_id');
+        return $this->belongsTo(District::class, 'kecamatan_id', 'code');
     }
 
     public function kelurahan()
     {
-        return $this->belongsTo(Village::class, 'kelurahan_id');
+        return $this->belongsTo(Village::class, 'kelurahan_id', 'code');
     }
 
     // Helper methods

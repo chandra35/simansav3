@@ -46,14 +46,26 @@ class LoginController extends Controller
                 'description' => 'User logged in',
             ], $logData));
             
-            // Redirect based on user role
-            if ($user->isSiswa()) {
-                // Siswa → Siswa Dashboard
-                return redirect()->intended('siswa/dashboard');
-            } elseif ($user->hasRole('GTK')) {
-                // GTK (Guru & Tenaga Kependidikan) → GTK Personal Dashboard
-                // Note: This includes all GTK staff regardless of kategori_ptk/jenis_ptk
+            // Redirect based on user RELASI, not just role
+            // Priority: Check actual data relationship first (more reliable than role field)
+            
+            // 1. Check if user has GTK record (GTK → GTK Dashboard)
+            if ($user->gtk) {
                 return redirect()->intended('admin/gtk/dashboard');
+            }
+            
+            // 2. Check if user has Siswa record (Siswa → Siswa Dashboard)
+            if ($user->siswa) {
+                return redirect()->intended('siswa/dashboard');
+            }
+            
+            // 3. Fallback: Check role-based (for admin, super admin, etc. without gtk/siswa record)
+            if ($user->hasRole('GTK')) {
+                // GTK role but no record yet - redirect to GTK dashboard
+                return redirect()->intended('admin/gtk/dashboard');
+            } elseif ($user->isSiswa()) {
+                // Siswa role but no record yet - redirect to siswa dashboard
+                return redirect()->intended('siswa/dashboard');
             } else {
                 // Super Admin, Admin, Kepala, WAKA, Operator, BK → Admin Management Dashboard
                 return redirect()->intended('admin/dashboard');

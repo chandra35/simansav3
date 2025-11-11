@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'kemenag' => [
+        'api_url' => env('KEMENAG_API_URL', 'https://be-pintar.kemenag.go.id/api/v1'),
+        'bearer_token' => env('KEMENAG_BEARER_TOKEN'),
+    ],
+
 ];

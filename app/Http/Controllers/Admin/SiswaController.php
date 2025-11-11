@@ -371,12 +371,32 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
 
-        $siswa->load(['user', 'ortu', 'creator', 'updater']);
+        $siswa->load([
+            'user', 
+            'ortu.provinsi', 
+            'ortu.kabupaten', 
+            'ortu.kecamatan', 
+            'ortu.kelurahan',
+            'creator', 
+            'updater', 
+            'sekolahAsal'
+        ]);
         
         // Format data for display
         $data = $siswa->toArray();
         $data['created_by_name'] = $siswa->creator ? $siswa->creator->name : 'System';
         $data['updated_by_name'] = $siswa->updater ? $siswa->updater->name : '-';
+        
+        // Ensure nested relations are properly serialized
+        if ($siswa->ortu) {
+            $data['ortu'] = [
+                ...$data['ortu'],
+                'provinsi' => $siswa->ortu->provinsi ? $siswa->ortu->provinsi->toArray() : null,
+                'kabupaten' => $siswa->ortu->kabupaten ? $siswa->ortu->kabupaten->toArray() : null,
+                'kecamatan' => $siswa->ortu->kecamatan ? $siswa->ortu->kecamatan->toArray() : null,
+                'kelurahan' => $siswa->ortu->kelurahan ? $siswa->ortu->kelurahan->toArray() : null,
+            ];
+        }
         
         return response()->json([
             'success' => true,

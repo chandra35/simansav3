@@ -58,7 +58,10 @@
                 <div class="card-tools">
                     @can('create-siswa')
                         <a href="{{ route('admin.siswa.import') }}" class="btn btn-success mr-2">
-                            <i class="fas fa-file-excel"></i> Import dari Excel
+                            <i class="fas fa-file-excel"></i> Import Data Siswa
+                        </a>
+                        <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-info mr-2">
+                            <i class="fas fa-school"></i> Import NPSN
                         </a>
                         <button type="button" class="btn btn-primary" onclick="addSiswa()">
                             <i class="fas fa-plus"></i> Tambah Siswa
@@ -236,6 +239,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="sekolah-asal-tab" data-toggle="tab" href="#sekolah-asal" role="tab">
+                            <i class="fas fa-school"></i> Sekolah Asal
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" id="dokumen-tab" data-toggle="tab" href="#dokumen" role="tab">
                             <i class="fas fa-file-alt"></i> Dokumen
                         </a>
@@ -251,6 +259,9 @@
                         <!-- Content will be loaded here -->
                     </div>
                     <div class="tab-pane fade" id="data-ortu" role="tabpanel">
+                        <!-- Content will be loaded here -->
+                    </div>
+                    <div class="tab-pane fade" id="sekolah-asal" role="tabpanel">
                         <!-- Content will be loaded here -->
                     </div>
                     <div class="tab-pane fade" id="dokumen" role="tabpanel">
@@ -456,6 +467,7 @@ function showSiswa(id) {
                 loadSiswaDataTab(siswa);
                 loadDataDiriTab(siswa);
                 loadDataOrtuTab(siswa);
+                loadSekolahAsalTab(siswa);
                 loadDokumenTab(siswa.id);
                 $('#viewSiswaModal').modal('show');
             }
@@ -505,6 +517,54 @@ function loadSiswaDataTab(siswa) {
 function loadDataDiriTab(siswa) {
     const tglLahir = siswa.tanggal_lahir ? new Date(siswa.tanggal_lahir).toLocaleDateString('id-ID') : '-';
     
+    // Handle alamat siswa
+    let alamatHtml = '';
+    
+    // Cek jenis tempat tinggal atau alamat_sama_ortu
+    const tinggalBersamaOrtu = siswa.jenis_tempat_tinggal === 'Bersama Orang Tua' || siswa.alamat_sama_ortu;
+    
+    if (tinggalBersamaOrtu) {
+        // Alamat sama dengan ortu / tinggal bersama ortu
+        const ortu = siswa.ortu;
+        if (ortu && ortu.alamat_ortu) {
+            const jenisInfo = siswa.jenis_tempat_tinggal === 'Bersama Orang Tua' 
+                ? 'Tinggal Bersama Orang Tua' 
+                : 'Alamat sama dengan Orang Tua';
+            
+            alamatHtml = `
+                <div class="alert alert-info mb-2">
+                    <i class="fas fa-info-circle"></i> <strong>${jenisInfo}</strong>
+                </div>
+                <table class="table table-detail table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>No. KK</strong></td><td>${ortu.no_kk || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Alamat</strong></td><td>${ortu.alamat_ortu}</td></tr>
+                    <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${ortu.rt_ortu || '-'} / ${ortu.rw_ortu || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kelurahan/Desa</strong></td><td>${ortu.kelurahan ? ortu.kelurahan.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kecamatan</strong></td><td>${ortu.kecamatan ? ortu.kecamatan.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kab/Kota</strong></td><td>${ortu.kabupaten ? ortu.kabupaten.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Provinsi</strong></td><td>${ortu.provinsi ? ortu.provinsi.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kodepos</strong></td><td>${ortu.kodepos || '-'}</td></tr>
+                </table>
+            `;
+        } else {
+            alamatHtml = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Tinggal bersama ortu, tapi data alamat ortu belum dilengkapi</div>';
+        }
+    } else if (siswa.alamat_siswa) {
+        // Alamat sendiri
+        const jenisInfo = siswa.jenis_tempat_tinggal ? `<div class="alert alert-info mb-2"><i class="fas fa-home"></i> <strong>Jenis Tempat Tinggal: ${siswa.jenis_tempat_tinggal}</strong></div>` : '';
+        
+        alamatHtml = `
+            ${jenisInfo}
+            <table class="table table-detail table-sm table-bordered">
+                <tr><td width="40%" class="bg-light"><strong>Alamat</strong></td><td>${siswa.alamat_siswa}</td></tr>
+                <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${siswa.rt_siswa || '-'} / ${siswa.rw_siswa || '-'}</td></tr>
+                <tr><td class="bg-light"><strong>Kodepos</strong></td><td>${siswa.kodepos_siswa || '-'}</td></tr>
+            </table>
+        `;
+    } else {
+        alamatHtml = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Data alamat belum dilengkapi</div>';
+    }
+    
     const html = `
         <div class="row">
             <div class="col-md-6">
@@ -521,13 +581,7 @@ function loadDataDiriTab(siswa) {
             </div>
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-map-marker-alt"></i> Alamat Siswa</h6>
-                ${siswa.alamat_siswa ? `
-                <table class="table table-detail table-sm table-bordered">
-                    <tr><td width="40%" class="bg-light"><strong>Alamat</strong></td><td>${siswa.alamat_siswa}</td></tr>
-                    <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${siswa.rt_siswa || '-'} / ${siswa.rw_siswa || '-'}</td></tr>
-                    <tr><td class="bg-light"><strong>Kodepos</strong></td><td>${siswa.kodepos_siswa || '-'}</td></tr>
-                </table>
-                ` : '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Data alamat belum dilengkapi</div>'}
+                ${alamatHtml}
             </div>
         </div>
     `;
@@ -578,12 +632,72 @@ function loadDataOrtuTab(siswa) {
                     <tr><td width="20%" class="bg-light"><strong>No. KK</strong></td><td>${ortu.no_kk || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Alamat</strong></td><td>${ortu.alamat_ortu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${ortu.rt_ortu || '-'} / ${ortu.rw_ortu || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kelurahan/Desa</strong></td><td>${ortu.kelurahan ? ortu.kelurahan.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kecamatan</strong></td><td>${ortu.kecamatan ? ortu.kecamatan.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kab/Kota</strong></td><td>${ortu.kabupaten ? ortu.kabupaten.name : '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Provinsi</strong></td><td>${ortu.provinsi ? ortu.provinsi.name : '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Kodepos</strong></td><td>${ortu.kodepos || '-'}</td></tr>
                 </table>
             </div>
         </div>
     `;
     $('#data-ortu').html(html);
+}
+
+function loadSekolahAsalTab(siswa) {
+    if (!siswa.npsn_asal_sekolah) {
+        $('#sekolah-asal').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Data sekolah asal belum diisi
+            </div>
+        `);
+        return;
+    }
+    
+    // Handle both camelCase and snake_case
+    const sekolah = siswa.sekolah_asal || siswa.sekolahAsal;
+    
+    if (!sekolah) {
+        $('#sekolah-asal').html(`
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> NPSN: ${siswa.npsn_asal_sekolah} - Data sekolah tidak ditemukan di database
+            </div>
+        `);
+        return;
+    }
+    
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-school"></i> Informasi Sekolah</h6>
+                <table class="table table-detail table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>NPSN</strong></td><td><span class="badge badge-primary">${sekolah.npsn || '-'}</span></td></tr>
+                    <tr><td class="bg-light"><strong>Nama Sekolah</strong></td><td><strong>${sekolah.nama || '-'}</strong></td></tr>
+                    <tr><td class="bg-light"><strong>Bentuk Pendidikan</strong></td><td>${sekolah.bentuk_pendidikan || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Status</strong></td><td>
+                        ${sekolah.status_sekolah == 'Negeri' ? '<span class="badge badge-success">Negeri</span>' : sekolah.status_sekolah == 'Swasta' ? '<span class="badge badge-info">Swasta</span>' : '<span class="badge badge-secondary">' + (sekolah.status_sekolah || '-') + '</span>'}
+                    </td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Sekolah</h6>
+                <table class="table table-detail table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Provinsi</strong></td><td>${sekolah.provinsi || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kab/Kota</strong></td><td>${sekolah.kabupaten_kota || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Kecamatan</strong></td><td>${sekolah.kecamatan || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Alamat</strong></td><td>${sekolah.alamat_jalan || '-'}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12 text-center">
+                <a href="{{ url('admin/sekolah-asal') }}/${sekolah.npsn}" class="btn btn-primary btn-sm" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Lihat Detail Sekolah & Daftar Siswa
+                </a>
+            </div>
+        </div>
+    `;
+    $('#sekolah-asal').html(html);
 }
 
 function loadDokumenTab(siswaId) {
