@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\User;
+use App\Services\GtkKemenagSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -165,10 +166,11 @@ class GtkController extends Controller
         
         // Edit button
         if ($user->can('edit-gtk')) {
+            $editUrl = route('admin.gtk.edit', $item->id);
             $buttons .= '
-                <button type="button" class="btn btn-warning btn-sm" onclick="editGtk(\''.$item->id.'\')">
+                <a href="'.$editUrl.'" class="btn btn-warning btn-sm" title="Edit">
                     <i class="fas fa-edit"></i>
-                </button>';
+                </a>';
         }
         
         // Reset Password button
@@ -279,68 +281,144 @@ class GtkController extends Controller
         ]);
     }
 
+
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        $gtk = Gtk::with(['user.roles', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan', 'kemenagSync.syncedBy'])->findOrFail($id);
+        
+        // Get all provinces for dropdown
+        $provinces = \Laravolt\Indonesia\Models\Province::all();
+        
+        // Get cities, districts, villages based on current data
+        $cities = [];
+        $districts = [];
+        $villages = [];
+        
+        if ($gtk->provinsi_id) {
+            $cities = \Laravolt\Indonesia\Models\City::where('province_code', $gtk->provinsi_id)->get();
+        }
+        
+        if ($gtk->kabupaten_id) {
+            $districts = \Laravolt\Indonesia\Models\District::where('city_code', $gtk->kabupaten_id)->get();
+        }
+        
+        if ($gtk->kecamatan_id) {
+            $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $gtk->kecamatan_id)->get();
+        }
+        
+        // Get all roles for dropdown
+        $roles = \Spatie\Permission\Models\Role::all();
+        
+        return view('admin.gtk.edit', compact('gtk', 'provinces', 'cities', 'districts', 'villages', 'roles'));
+    }
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
     {
+        $gtk = Gtk::with('user')->findOrFail($id);
+        
+        // Determine which tab is being updated
+        $tab = $request->input('tab', 'diri');
+        
         try {
-            $gtk = Gtk::findOrFail($id);
-
-            $validated = $request->validate([
-                'nama_lengkap' => 'required|string|max:255',
-                'nik' => ['required', 'string', 'size:16', Rule::unique('gtks', 'nik')->ignore($gtk->id)],
-                'nuptk' => ['nullable', 'string', 'size:16', Rule::unique('gtks', 'nuptk')->ignore($gtk->id)],
-                'nip' => ['nullable', 'string', 'max:18', Rule::unique('gtks', 'nip')->ignore($gtk->id)],
-                'jenis_kelamin' => 'required|in:L,P',
-                'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
-                'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
-                'tempat_lahir' => 'nullable|string|max:255',
-                'tanggal_lahir' => 'nullable|date',
-                'email' => 'nullable|email|max:255',
-                'nomor_hp' => 'nullable|string|max:15',
-                'status_kepegawaian' => 'nullable|in:PNS,PPPK,GTY,PTY,Honorer',
-                'jabatan' => 'nullable|string|max:255',
-                'tmt_kerja' => 'nullable|date',
-                // Alamat fields
-                'alamat' => 'nullable|string',
-                'rt' => 'nullable|string|max:3',
-                'rw' => 'nullable|string|max:3',
-                'provinsi_id' => 'nullable|exists:indonesia_provinces,code',
-                'kabupaten_id' => 'nullable|exists:indonesia_cities,code',
-                'kecamatan_id' => 'nullable|exists:indonesia_districts,code',
-                'kelurahan_id' => 'nullable|exists:indonesia_villages,code',
-                'kodepos' => 'nullable|string|max:5',
-            ]);
-
             DB::beginTransaction();
-
-            // Update GTK data
-            $validated['updated_by'] = Auth::id();
-            $gtk->update($validated);
-
-            // Update user name if changed
-            if ($gtk->user && $gtk->nama_lengkap !== $gtk->user->name) {
-                $gtk->user->update(['name' => $gtk->nama_lengkap]);
+            
+            if ($tab === 'diri') {
+                // Update Data Pribadi
+                $validated = $request->validate([
+                    'nama_lengkap' => 'required|string|max:255',
+                    'nik' => 'required|string|size:16|unique:gtks,nik,' . $gtk->id,
+                    'nuptk' => 'nullable|string|max:20',
+                    'jenis_kelamin' => 'required|in:L,P',
+                    'tempat_lahir' => 'nullable|string|max:100',
+                    'tanggal_lahir' => 'nullable|date',
+                    'nomor_hp' => 'nullable|string|max:20',
+                    'email' => 'nullable|email|max:255',
+                    'alamat' => 'nullable|string',
+                    'rt' => 'nullable|string|max:5',
+                    'rw' => 'nullable|string|max:5',
+                    'provinsi_id' => 'nullable|string',
+                    'kabupaten_id' => 'nullable|string',
+                    'kecamatan_id' => 'nullable|string',
+                    'kelurahan_id' => 'nullable|string',
+                    'kodepos' => 'nullable|string|max:10',
+                ]);
+                
+                $gtk->update($validated);
+                
+                // Check if data diri is complete
+                $dataLengkap = !empty($gtk->nik) && !empty($gtk->nama_lengkap) && 
+                               !empty($gtk->jenis_kelamin) && !empty($gtk->tempat_lahir) && 
+                               !empty($gtk->tanggal_lahir);
+                $gtk->update(['data_diri_completed' => $dataLengkap]);
+                
+                $message = 'Data pribadi berhasil diperbarui';
+                
+            } elseif ($tab === 'kepeg') {
+                // Update Data Kepegawaian
+                $validated = $request->validate([
+                    'nip' => 'nullable|string|max:20',
+                    'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
+                    'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
+                    'status_kepegawaian' => 'nullable|in:PNS,PPPK,GTY,PTY,Honorer',
+                    'jabatan' => 'nullable|string|max:100',
+                    'tmt_kerja' => 'nullable|date',
+                ]);
+                
+                $gtk->update($validated);
+                
+                // Check if data kepegawaian is complete
+                $kepegLengkap = !empty($gtk->status_kepegawaian) && !empty($gtk->jabatan) && !empty($gtk->tmt_kerja);
+                $gtk->update(['data_kepegawaian_completed' => $kepegLengkap]);
+                
+                $message = 'Data kepegawaian berhasil diperbarui';
+                
+            } elseif ($tab === 'akun') {
+                // Update Akun User
+                if (!$gtk->user) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'GTK tidak memiliki akun user'
+                    ], 404);
+                }
+                
+                $validated = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'username' => 'required|string|max:255|unique:users,username,' . $gtk->user->id,
+                    'email' => 'required|email|max:255|unique:users,email,' . $gtk->user->id,
+                    'is_active' => 'required|boolean',
+                    'role' => 'required|exists:roles,name',
+                ]);
+                
+                $gtk->user->update([
+                    'name' => $validated['name'],
+                    'username' => $validated['username'],
+                    'email' => $validated['email'],
+                    'is_active' => $validated['is_active'],
+                ]);
+                
+                // Sync role
+                $gtk->user->syncRoles([$validated['role']]);
+                
+                $message = 'Data akun berhasil diperbarui';
             }
-
-            // Check completion status
-            $dataLengkap = !empty($gtk->tempat_lahir) && !empty($gtk->tanggal_lahir) && 
-                          !empty($gtk->alamat) && !empty($gtk->nomor_hp);
-            $gtk->update(['data_diri_completed' => $dataLengkap]);
-
-            $kepegLengkap = !empty($gtk->status_kepegawaian) && !empty($gtk->jabatan) && !empty($gtk->tmt_kerja);
-            $gtk->update(['data_kepegawaian_completed' => $kepegLengkap]);
-
+            
             DB::commit();
-
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Data GTK berhasil diperbarui',
-                'data' => $gtk
+                'message' => $message,
+                'data' => $gtk->fresh(['user.roles'])
             ]);
-
+            
         } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
@@ -427,6 +505,122 @@ class GtkController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get cities by province
+     */
+    public function getCities($provinceCode)
+    {
+        $cities = \Laravolt\Indonesia\Models\City::where('province_code', $provinceCode)->get();
+        return response()->json($cities);
+    }
+
+    /**
+     * Get districts by city
+     */
+    public function getDistricts($cityCode)
+    {
+        $districts = \Laravolt\Indonesia\Models\District::where('city_code', $cityCode)->get();
+        return response()->json($districts);
+    }
+
+    /**
+     * Get villages by district
+     */
+    public function getVillages($districtCode)
+    {
+        $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $districtCode)->get();
+        return response()->json($villages);
+    }
+
+    /**
+     * Sync GTK dengan API Kemenag BE-PINTAR
+     */
+    public function syncKemenag($id, GtkKemenagSyncService $syncService)
+    {
+        try {
+            // Load GTK dengan relasi wilayah untuk comparison alamat
+            $gtk = Gtk::with(['provinsi', 'kabupaten', 'kecamatan', 'kelurahan'])
+                ->findOrFail($id);
+            
+            // Check permission
+            if (!auth()->user()->can('edit-gtk')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi'
+                ], 403);
+            }
+
+            // Check if GTK has NIP
+            if (empty($gtk->nip)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'GTK ini tidak memiliki NIP. Sinkronisasi tidak dapat dilakukan.'
+                ]);
+            }
+
+            // Perform sync
+            $result = $syncService->syncGtkData($gtk, auth()->id());
+
+            return response()->json($result);
+
+        } catch (\Exception $e) {
+            Log::error('GtkController: Sync Kemenag error', [
+                'gtk_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat sinkronisasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Apply data Kemenag ke data lokal GTK
+     */
+    public function applyKemenagData($id, GtkKemenagSyncService $syncService)
+    {
+        try {
+            $gtk = Gtk::with('kemenagSync')->findOrFail($id);
+            
+            // Check permission
+            if (!auth()->user()->can('edit-gtk')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk menerapkan data'
+                ], 403);
+            }
+
+            // Check if sync data exists
+            if (!$gtk->kemenagSync) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Belum ada data sinkronisasi. Silakan lakukan sinkronisasi terlebih dahulu.'
+                ], 404);
+            }
+
+            // Apply data
+            $result = $syncService->applyKemenagDataToLocal(
+                $gtk->kemenagSync, 
+                auth()->id()
+            );
+
+            return response()->json($result);
+
+        } catch (\Exception $e) {
+            Log::error('GtkController: Apply Kemenag data error', [
+                'gtk_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menerapkan data: ' . $e->getMessage()
             ], 500);
         }
     }

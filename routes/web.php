@@ -44,10 +44,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen');
     Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
     
+    // Sekolah Asal Management
+    Route::middleware(['permission:view-siswa'])->group(function () {
+        Route::get('/sekolah-asal', [App\Http\Controllers\Admin\SekolahAsalController::class, 'index'])->name('sekolah-asal.index');
+        Route::get('/sekolah-asal/{npsn}', [App\Http\Controllers\Admin\SekolahAsalController::class, 'show'])->name('sekolah-asal.show');
+        Route::get('/sekolah-asal/{npsn}/siswa-data', [App\Http\Controllers\Admin\SekolahAsalController::class, 'getSiswaData'])->name('sekolah-asal.siswa-data');
+    });
+    
     // Siswa Import
     Route::get('/siswa/import/form', [SiswaImportController::class, 'index'])->name('siswa.import');
     Route::get('/siswa/import/template', [SiswaImportController::class, 'downloadTemplate'])->name('siswa.import.template');
     Route::post('/siswa/import/process', [SiswaImportController::class, 'import'])->name('siswa.import.process');
+    
+    // NPSN Import
+    Route::get('/siswa/import-npsn/form', [App\Http\Controllers\Admin\NpsnImportController::class, 'index'])->name('siswa.import-npsn');
+    Route::get('/siswa/import-npsn/template', [App\Http\Controllers\Admin\NpsnImportController::class, 'downloadTemplate'])->name('siswa.import-npsn.template');
+    Route::post('/siswa/import-npsn/process', [App\Http\Controllers\Admin\NpsnImportController::class, 'import'])->name('siswa.import-npsn.process');
     
     // Custom Menu Management
     Route::resource('custom-menu', App\Http\Controllers\Admin\CustomMenuController::class);
@@ -63,6 +75,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/monitoring/users/{user}', [App\Http\Controllers\Admin\UserMonitoringController::class, 'show'])->name('monitoring.users.show');
     Route::get('/monitoring/online-count', [App\Http\Controllers\Admin\UserMonitoringController::class, 'getOnlineCount'])->name('monitoring.online-count');
     Route::post('/monitoring/users/{user}/force-logout', [App\Http\Controllers\Admin\UserMonitoringController::class, 'forceLogout'])->name('monitoring.users.force-logout');
+    
+    // Pengaturan - Cek NIP (Super Admin Only)
+    Route::get('/pengaturan/cek-nip', [App\Http\Controllers\Admin\NipCheckerController::class, 'index'])->name('pengaturan.cek-nip');
+    Route::post('/pengaturan/cek-nip/check', [App\Http\Controllers\Admin\NipCheckerController::class, 'check'])->name('pengaturan.cek-nip.check');
     
     // Tahun Pelajaran Management
     Route::resource('tahun-pelajaran', TahunPelajaranController::class);
@@ -126,6 +142,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:edit-gtk'])->group(function () {
         Route::get('/gtk/{gtk}/edit', [App\Http\Controllers\Admin\GtkController::class, 'edit'])->name('gtk.edit');
         Route::put('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'update'])->name('gtk.update');
+        // API for cascade dropdown
+        Route::get('/api/cities/{province}', [App\Http\Controllers\Admin\GtkController::class, 'getCities'])->name('admin.api.cities');
+        Route::get('/api/districts/{city}', [App\Http\Controllers\Admin\GtkController::class, 'getDistricts'])->name('admin.api.districts');
+        Route::get('/api/villages/{district}', [App\Http\Controllers\Admin\GtkController::class, 'getVillages'])->name('admin.api.villages');
     });
     
     Route::middleware(['permission:delete-gtk'])->group(function () {
@@ -134,6 +154,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     Route::middleware(['permission:reset-password-gtk'])->group(function () {
         Route::put('/gtk/{gtk}/reset-password', [App\Http\Controllers\Admin\GtkController::class, 'resetPassword'])->name('gtk.reset-password');
+    });
+    
+    // GTK Kemenag Sync
+    Route::middleware(['permission:edit-gtk'])->group(function () {
+        Route::post('/gtk/{gtk}/sync-kemenag', [App\Http\Controllers\Admin\GtkController::class, 'syncKemenag'])->name('gtk.sync-kemenag');
+        Route::post('/gtk/{gtk}/apply-kemenag-data', [App\Http\Controllers\Admin\GtkController::class, 'applyKemenagData'])->name('gtk.apply-kemenag-data');
     });
     
     // GTK Import

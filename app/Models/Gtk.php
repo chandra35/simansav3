@@ -166,4 +166,12 @@ class Gtk extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /**
+     * Relasi dengan data sync Kemenag
+     */
+    public function kemenagSync()
+    {
+        return $this->hasOne(GtkKemenagSync::class, 'gtk_id');
+    }
 }
