@@ -69,7 +69,14 @@ class EmisNisnService
                 if ($response1->successful()) {
                     $data = $response1->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results'])) {
-                        $kemdikbudData = $data['results'];
+                        // Check if data is "data tidak ditemukan"
+                        if (is_array($data['results']) && isset($data['results']['data']) && 
+                            $data['results']['data'] === 'data tidak ditemukan') {
+                            // Data not found, keep null
+                            $kemdikbudData = null;
+                        } else {
+                            $kemdikbudData = $data['results'];
+                        }
                     }
                 }
             } catch (\Exception $e) {
