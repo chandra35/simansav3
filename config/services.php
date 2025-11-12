@@ -40,4 +40,10 @@ return [
         'bearer_token' => env('KEMENAG_BEARER_TOKEN'),
     ],
 
+    // EMIS API for Student Data (NISN)
+    'emis' => [
+        'api_url' => env('EMIS_API_URL', 'https://api-emis.kemenag.go.id/v1'),
+        'bearer_token' => env('EMIS_BEARER_TOKEN'),
+    ],
+
 ];

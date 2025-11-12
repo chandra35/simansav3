@@ -457,6 +457,13 @@ return [
                     'active' => ['admin/pengaturan/cek-nip*'],
                 ],
                 [
+                    'text' => 'Cek NISN Siswa',
+                    'route' => 'admin.pengaturan.cek-nisn.index',
+                    'icon' => 'fas fa-fw fa-user-graduate',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/cek-nisn*'],
+                ],
+                [
                     'text' => 'Custom Menu Siswa',
                     'route' => 'admin.custom-menu.index',
                     'icon' => 'fas fa-fw fa-th-list',
