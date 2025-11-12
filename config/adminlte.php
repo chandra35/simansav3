@@ -451,7 +451,7 @@ return [
                 ],
                 [
                     'text' => 'Cek NIP',
-                    'route' => 'admin.pengaturan.cek-nip',
+                    'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
                     'can' => 'manage-settings',
                     'active' => ['admin/pengaturan/cek-nip*'],
@@ -460,7 +460,7 @@ return [
                     'text' => 'Custom Menu Siswa',
                     'route' => 'admin.custom-menu.index',
                     'icon' => 'fas fa-fw fa-th-list',
-                    'can' => 'view-siswa',
+                    'can' => 'manage-settings',
                     'active' => ['admin/custom-menu*'],
                 ],
                 [

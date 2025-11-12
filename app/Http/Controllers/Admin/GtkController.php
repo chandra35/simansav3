@@ -532,7 +532,16 @@ class GtkController extends Controller
      */
     public function getVillages($districtCode)
     {
-        $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $districtCode)->get();
+        $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $districtCode)
+            ->get()
+            ->map(function($village) {
+                return [
+                    'code' => $village->code,
+                    'district_code' => $village->district_code,
+                    'name' => $village->name,
+                    'meta' => $village->meta_json ? json_decode($village->meta_json, true) : null,
+                ];
+            });
         return response()->json($villages);
     }
 

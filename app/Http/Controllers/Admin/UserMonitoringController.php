@@ -11,6 +11,16 @@ use Yajra\DataTables\Facades\DataTables;
 
 class UserMonitoringController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->can('admin-access')) {
+                abort(403, 'Akses ditolak. Hanya Admin yang dapat mengakses monitoring users.');
+            }
+            return $next($request);
+        });
+    }
+
     /**
      * Display list of users with their online status
      */

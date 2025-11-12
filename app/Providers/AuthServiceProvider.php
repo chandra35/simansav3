@@ -22,7 +22,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Define gates for permissions
         Gate::define('admin-access', function ($user) {
-            return in_array($user->role, ['super_admin', 'admin', 'gtk', 'operator']);
+            return in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
 
         Gate::define('super-admin-access', function ($user) {

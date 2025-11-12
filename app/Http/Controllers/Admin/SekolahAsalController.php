@@ -16,11 +16,36 @@ class SekolahAsalController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Get all sekolah with siswa count
-            $sekolah = Sekolah::query()
-                ->withCount('siswa')
-                ->orderBy('siswa_count', 'desc')
-                ->get();
+            $user = auth()->user();
+            
+            // Load GTK with kelas relation if user is GTK
+            $isWaliKelas = false;
+            if ($user->hasRole('GTK') && $user->gtk) {
+                $user->gtk->load('kelas.siswaAktif');
+                $isWaliKelas = $user->gtk->kelas !== null;
+            }
+            
+            if ($isWaliKelas) {
+                // GTK Wali Kelas: only show sekolah from their class students
+                $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
+                
+                $sekolah = Sekolah::query()
+                    ->whereHas('siswa', function ($query) use ($siswaKelasIds) {
+                        $query->whereIn('id', $siswaKelasIds);
+                    })
+                    ->withCount(['siswa' => function ($query) use ($siswaKelasIds) {
+                        // Count only students in their class
+                        $query->whereIn('id', $siswaKelasIds);
+                    }])
+                    ->orderBy('siswa_count', 'desc')
+                    ->get();
+            } else {
+                // Admin/Super Admin: show all sekolah
+                $sekolah = Sekolah::query()
+                    ->withCount('siswa')
+                    ->orderBy('siswa_count', 'desc')
+                    ->get();
+            }
 
             return DataTables::of($sekolah)
                 ->addIndexColumn()
@@ -66,22 +91,57 @@ class SekolahAsalController extends Controller
      */
     public function show($npsn)
     {
-        $sekolah = Sekolah::with(['siswa' => function ($query) {
-            $query->with(['kelasSaatIni.tahunPelajaran', 'user'])
-                  ->orderBy('nama_lengkap', 'asc');
-        }])
-        ->withCount('siswa')
-        ->findOrFail($npsn);
-
-        // Get statistics
-        $stats = [
-            'total' => $sekolah->siswa_count,
-            'aktif' => $sekolah->siswa()->where('status_siswa', 'aktif')->count(),
-            'lulus' => $sekolah->siswa()->where('status_siswa', 'lulus')->count(),
-            'keluar' => $sekolah->siswa()->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
-            'laki' => $sekolah->siswa()->where('jenis_kelamin', 'L')->count(),
-            'perempuan' => $sekolah->siswa()->where('jenis_kelamin', 'P')->count(),
-        ];
+        $user = auth()->user();
+        
+        // Load GTK with kelas relation if user is GTK
+        $isWaliKelas = false;
+        if ($user->hasRole('GTK') && $user->gtk) {
+            $user->gtk->load('kelas.siswaAktif');
+            $isWaliKelas = $user->gtk->kelas !== null;
+        }
+        
+        if ($isWaliKelas) {
+            // GTK Wali Kelas: only show students from their class
+            $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
+            
+            $sekolah = Sekolah::with(['siswa' => function ($query) use ($siswaKelasIds) {
+                $query->whereIn('id', $siswaKelasIds)
+                      ->with(['kelasSaatIni.tahunPelajaran', 'user'])
+                      ->orderBy('nama_lengkap', 'asc');
+            }])
+            ->withCount(['siswa' => function ($query) use ($siswaKelasIds) {
+                $query->whereIn('id', $siswaKelasIds);
+            }])
+            ->findOrFail($npsn);
+            
+            // Get statistics only for their class
+            $stats = [
+                'total' => $sekolah->siswa_count,
+                'aktif' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('status_siswa', 'aktif')->count(),
+                'lulus' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('status_siswa', 'lulus')->count(),
+                'keluar' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
+                'laki' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('jenis_kelamin', 'L')->count(),
+                'perempuan' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('jenis_kelamin', 'P')->count(),
+            ];
+        } else {
+            // Admin: show all students
+            $sekolah = Sekolah::with(['siswa' => function ($query) {
+                $query->with(['kelasSaatIni.tahunPelajaran', 'user'])
+                      ->orderBy('nama_lengkap', 'asc');
+            }])
+            ->withCount('siswa')
+            ->findOrFail($npsn);
+            
+            // Get statistics for all students
+            $stats = [
+                'total' => $sekolah->siswa_count,
+                'aktif' => $sekolah->siswa()->where('status_siswa', 'aktif')->count(),
+                'lulus' => $sekolah->siswa()->where('status_siswa', 'lulus')->count(),
+                'keluar' => $sekolah->siswa()->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
+                'laki' => $sekolah->siswa()->where('jenis_kelamin', 'L')->count(),
+                'perempuan' => $sekolah->siswa()->where('jenis_kelamin', 'P')->count(),
+            ];
+        }
 
         // Group siswa by current kelas
         $siswaPerKelas = $sekolah->siswa()
@@ -100,9 +160,25 @@ class SekolahAsalController extends Controller
      */
     public function getSiswaData($npsn)
     {
-        $siswa = Siswa::with(['kelasSaatIni.tahunPelajaran', 'user'])
-            ->where('npsn_asal_sekolah', $npsn)
-            ->select('siswa.*');
+        $user = auth()->user();
+        
+        // Load GTK with kelas relation if user is GTK
+        $isWaliKelas = false;
+        if ($user->hasRole('GTK') && $user->gtk) {
+            $user->gtk->load('kelas.siswaAktif');
+            $isWaliKelas = $user->gtk->kelas !== null;
+        }
+        
+        $query = Siswa::with(['kelasSaatIni.tahunPelajaran', 'user'])
+            ->where('npsn_asal_sekolah', $npsn);
+        
+        if ($isWaliKelas) {
+            // GTK Wali Kelas: only show students from their class
+            $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
+            $query->whereIn('id', $siswaKelasIds);
+        }
+        
+        $siswa = $query->select('siswa.*');
 
         return DataTables::of($siswa)
             ->addIndexColumn()

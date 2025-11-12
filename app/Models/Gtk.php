@@ -174,4 +174,13 @@ class Gtk extends Model
     {
         return $this->hasOne(GtkKemenagSync::class, 'gtk_id');
     }
+
+    /**
+     * Relasi dengan Kelas sebagai Wali Kelas
+     * GTK yang menjadi wali kelas akan memiliki kelas
+     */
+    public function kelas()
+    {
+        return $this->hasOne(Kelas::class, 'wali_kelas_id', 'user_id');
+    }
 }

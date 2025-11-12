@@ -16,11 +16,25 @@ use Illuminate\Support\Str;
 class CustomMenuController extends Controller
 {
     /**
+     * Constructor - Restrict access to Super Admin only
+     */
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            // Check if user is Super Admin
+            if (!auth()->user()->hasRole('Super Admin')) {
+                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengakses halaman ini.');
+            }
+            return $next($request);
+        });
+    }
+
+    /**
      * Display a listing of custom menus
      */
     public function index(Request $request)
     {
-        $this->authorize('view-siswa'); // Reuse existing permission
+        // No need for authorize, already checked in constructor
 
         if ($request->ajax()) {
             $query = CustomMenu::with('createdBy')
@@ -99,8 +113,6 @@ class CustomMenuController extends Controller
      */
     public function create()
     {
-        $this->authorize('create-siswa'); // Reuse existing permission
-
         return view('admin.custom-menu.create');
     }
 
@@ -109,7 +121,6 @@ class CustomMenuController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create-siswa');
 
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
@@ -164,8 +175,6 @@ class CustomMenuController extends Controller
      */
     public function edit(CustomMenu $customMenu)
     {
-        $this->authorize('edit-siswa');
-
         return view('admin.custom-menu.edit', compact('customMenu'));
     }
 
@@ -174,7 +183,6 @@ class CustomMenuController extends Controller
      */
     public function update(Request $request, CustomMenu $customMenu)
     {
-        $this->authorize('edit-siswa');
 
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
@@ -231,8 +239,6 @@ class CustomMenuController extends Controller
      */
     public function destroy(CustomMenu $customMenu)
     {
-        $this->authorize('delete-siswa');
-
         try {
             // Get menu title for response message
             $judul = $customMenu->judul;

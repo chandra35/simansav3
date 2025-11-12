@@ -743,6 +743,11 @@ class KelasController extends Controller
                     'nomor_urut_absen' => $lastAbsen + 1,
                 ]);
 
+                // Update kelas_saat_ini_id pada tabel siswa
+                Siswa::where('id', $siswaId)->update([
+                    'kelas_saat_ini_id' => $kelas->id
+                ]);
+
                 $successCount++;
             }
 
@@ -867,6 +872,9 @@ class KelasController extends Controller
                         'status' => 'aktif',
                         'nomor_urut_absen' => $lastAbsen + 1,
                     ]);
+
+                    // Update kelas_saat_ini_id pada tabel siswa
+                    $siswa->update(['kelas_saat_ini_id' => $kelas->id]);
 
                     $successCount++;
 

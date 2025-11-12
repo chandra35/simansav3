@@ -693,11 +693,14 @@
                 $('#kodepos').val('');
 
                 if (kecamatanCode) {
+                                    if (kecamatanCode) {
                     $.get(`{{ url('admin/gtk/api/villages') }}/${kecamatanCode}`, function(data) {
                         let options = '<option value="">-- Pilih Kelurahan/Desa --</option>';
                         data.forEach(function(item) {
                             const selected = item.code == initialKelurahan ? 'selected' : '';
-                            options += `<option value="${item.code}" data-postal="${item.meta ? item.meta.pos : ''}" ${selected}>${item.name}</option>`;
+                            // Get postal code from meta if available
+                            const postalCode = item.meta && item.meta.pos ? item.meta.pos : '';
+                            options += `<option value="${item.code}" data-postal="${postalCode}" ${selected}>${item.name}</option>`;
                         });
                         $('#kelurahan_id').html(options).prop('disabled', false);
                         
@@ -709,6 +712,29 @@
                         alert('Gagal memuat data kelurahan/desa');
                         $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').prop('disabled', false);
                     });
+                } else {
+                    $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').prop('disabled', true);
+                }
+            });
+
+            // Auto-fill Kodepos when Kelurahan selected
+            $('#kelurahan_id').on('change', function() {
+                const selectedOption = $(this).find(':selected');
+                const kelurahanCode = selectedOption.val();
+                
+                if (kelurahanCode) {
+                    // Get postal code from data attribute (from meta_json)
+                    const postalCode = selectedOption.data('postal');
+                    if (postalCode) {
+                        $('#kodepos').val(postalCode);
+                    } else {
+                        // Fallback: don't auto-fill if not available
+                        $('#kodepos').val('');
+                    }
+                } else {
+                    $('#kodepos').val('');
+                }
+            });
                 } else {
                     $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').prop('disabled', false);
                 }
