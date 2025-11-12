@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\ActivityLogService;
 use App\Helpers\StorageHelper;
+use App\Helpers\ImageCompressionHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -41,13 +42,13 @@ class DokumenController extends Controller
         try {
             $request->validate([
                 'jenis_dokumen' => 'required|in:kk,ijazah_smp,kip,sktm,lainnya',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // max 2MB
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // max 5MB (akan di-compress otomatis jika image >2MB)
                 'keterangan' => 'nullable|string|max:500',
                 'nama_dokumen' => 'required_if:jenis_dokumen,lainnya|string|max:255',
             ], [
                 'file.required' => 'File dokumen wajib diupload',
                 'file.mimes' => 'File harus berformat PDF, JPG, JPEG, atau PNG',
-                'file.max' => 'Ukuran file maksimal 2MB',
+                'file.max' => 'Ukuran file maksimal 5MB (image akan di-compress otomatis)',
                 'nama_dokumen.required_if' => 'Nama dokumen wajib diisi untuk jenis dokumen lainnya',
             ]);
 
@@ -96,6 +97,12 @@ class DokumenController extends Controller
 
             // Generate UUID for secure filename
             $file = $request->file('file');
+            $originalFileSize = $file->getSize();
+            
+            // Auto-compress image if needed (tidak membebani server, hanya file >2MB)
+            // Hanya berlaku untuk image files (JPG, PNG, GIF, WEBP)
+            $file = ImageCompressionHelper::compressImage($file);
+            
             $uuid = Str::uuid()->toString();
             $extension = $file->getClientOriginalExtension();
             $originalName = $file->getClientOriginalName();
@@ -110,6 +117,16 @@ class DokumenController extends Controller
             Storage::disk($disk)->put($filePath, file_get_contents($file));
             
             $fileSize = round($file->getSize() / 1024, 2); // Convert to KB
+            
+            // Log compression if happened
+            if ($originalFileSize > $file->getSize()) {
+                $savedPercentage = round((($originalFileSize - $file->getSize()) / $originalFileSize) * 100, 2);
+                Log::info("File compressed on upload", [
+                    'original_size' => round($originalFileSize / 1024, 2) . ' KB',
+                    'compressed_size' => $fileSize . ' KB',
+                    'saved' => $savedPercentage . '%',
+                ]);
+            }
 
             // Get active tahun pelajaran
             $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();

@@ -76,10 +76,11 @@
             <h5><i class="fas fa-info-circle"></i> Petunjuk Upload Dokumen</h5>
             <ul class="mb-0">
                 <li>Format file yang diperbolehkan: <strong>PDF, JPG, JPEG, PNG</strong></li>
-                <li>Ukuran maksimal file: <strong>2 MB</strong></li>
+                <li>Ukuran maksimal file: <strong>5 MB</strong> (gambar akan di-compress otomatis)</li>
                 <li>Pastikan dokumen <strong>jelas dan dapat dibaca</strong></li>
                 <li>Upload ulang akan <strong>mengganti dokumen lama</strong></li>
                 <li>Dokumen <strong>KK dan Ijazah SMP</strong> adalah wajib, sedangkan <strong>KIP dan SKTM</strong> opsional</li>
+                <li><span class="badge badge-success"><i class="fas fa-compress"></i> Auto-Compress</span> File gambar besar akan dikompres otomatis tanpa mengurangi kualitas visual</li>
             </ul>
         </div>
     </div>
@@ -420,7 +421,7 @@
                             <label class="custom-file-label" for="file">Pilih file...</label>
                         </div>
                         <small class="form-text text-muted">
-                            Format: PDF, JPG, JPEG, PNG (Max: 2MB)
+                            Format: PDF, JPG, JPEG, PNG (Max: 5MB - gambar akan di-compress otomatis)
                         </small>
                     </div>
 
@@ -476,7 +477,7 @@
                             <label class="custom-file-label" for="file_lainnya">Pilih file...</label>
                         </div>
                         <small class="form-text text-muted">
-                            Format: PDF, JPG, JPEG, PNG (Max: 2MB)
+                            Format: PDF, JPG, JPEG, PNG (Max: 5MB - gambar akan di-compress otomatis)
                         </small>
                     </div>
 

@@ -74,4 +74,39 @@ return [
         // Log jika pakai fallback
         'log_fallback' => env('DOKUMEN_LOG_FALLBACK', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dokumen Compression Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi auto-compress untuk file dokumen siswa
+    | Hanya berlaku untuk file image (JPG, PNG, GIF, WEBP)
+    | Membantu menghemat storage tanpa mengurangi kualitas visual
+    |
+    */
+    'dokumen_compression' => [
+        // Enable/disable auto compression
+        'enabled' => env('DOKUMEN_COMPRESS_ENABLED', true),
+        
+        // Ukuran maksimal file sebelum di-compress (dalam MB)
+        // File lebih besar dari ini akan di-compress otomatis
+        'max_size_mb' => env('DOKUMEN_MAX_SIZE_MB', 2),
+        
+        // Kualitas kompresi untuk JPG/JPEG (1-100)
+        // 85 = kualitas tinggi, hemat 60-70% ukuran
+        // 80 = kualitas bagus, hemat 70-80% ukuran
+        'image_quality' => env('DOKUMEN_IMAGE_QUALITY', 85),
+        
+        // Resolusi maksimal (dalam pixel)
+        // Image lebih besar akan di-resize (maintain aspect ratio)
+        // 1920px cukup untuk scan dokumen berkualitas tinggi
+        'max_width' => env('DOKUMEN_MAX_WIDTH', 1920),
+        'max_height' => env('DOKUMEN_MAX_HEIGHT', 1920),
+        
+        // Auto convert PNG ke JPG untuk file >1MB
+        // PNG biasanya 3-5x lebih besar dari JPG untuk foto/scan
+        // Tetap PNG jika file kecil (biasanya screenshot/diagram)
+        'convert_png_to_jpg' => env('DOKUMEN_CONVERT_PNG', true),
+    ],
 ];
