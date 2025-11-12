@@ -464,6 +464,13 @@ return [
                     'active' => ['admin/pengaturan/cek-nisn*'],
                 ],
                 [
+                    'text' => 'Update Token EMIS',
+                    'route' => 'admin.pengaturan.update-emis-token.index',
+                    'icon' => 'fas fa-fw fa-key',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/update-emis-token*'],
+                ],
+                [
                     'text' => 'Custom Menu Siswa',
                     'route' => 'admin.custom-menu.index',
                     'icon' => 'fas fa-fw fa-th-list',

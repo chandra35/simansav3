@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class EmisNisnService
@@ -15,7 +16,11 @@ class EmisNisnService
     public function __construct()
     {
         $this->apiUrl = config('services.emis.api_url', 'https://api-emis.kemenag.go.id/v1');
-        $this->bearerToken = config('services.emis.bearer_token');
+        
+        // Get token from database first, fallback to config
+        $tokenData = DB::table('api_tokens')->where('name', 'emis_api_token')->first();
+        $this->bearerToken = $tokenData ? $tokenData->token : config('services.emis.bearer_token');
+        
         $this->timeout = 30; // 30 seconds timeout
     }
 

@@ -84,6 +84,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pengaturan/cek-nisn', [App\Http\Controllers\Admin\NisnCheckerController::class, 'index'])->name('pengaturan.cek-nisn.index');
     Route::post('/pengaturan/cek-nisn/check', [App\Http\Controllers\Admin\NisnCheckerController::class, 'check'])->name('pengaturan.cek-nisn.check');
     
+    // Pengaturan - Update EMIS Token (Super Admin Only)
+    Route::get('/pengaturan/update-emis-token', [App\Http\Controllers\Admin\EmisTokenController::class, 'index'])->name('pengaturan.update-emis-token.index');
+    Route::post('/pengaturan/update-emis-token', [App\Http\Controllers\Admin\EmisTokenController::class, 'update'])->name('pengaturan.update-emis-token.update');
+    
     // Tahun Pelajaran Management
     Route::resource('tahun-pelajaran', TahunPelajaranController::class);
     Route::post('/tahun-pelajaran/{tahunPelajaran}/set-active', [TahunPelajaranController::class, 'setActive'])->name('tahun-pelajaran.set-active');
