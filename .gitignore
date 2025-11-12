@@ -21,3 +21,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Dokumen Siswa - Jangan push ke git (file upload)
+/dokumen-siswa/*
+!/dokumen-siswa/.gitkeep
+
+# Backup dan temporary files
+/backup/
+*.backup
+*.tmp

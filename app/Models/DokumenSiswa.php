@@ -24,6 +24,7 @@ class DokumenSiswa extends Model
         // New security fields
         'file_uuid',
         'original_name',
+        'storage_disk',
         'tahun_pelajaran',
         'kelas_id',
         'uploaded_by_role',

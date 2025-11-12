@@ -8,6 +8,7 @@ use App\Models\DokumenSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\ActivityLogService;
+use App\Helpers\StorageHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -60,6 +61,12 @@ class DokumenController extends Controller
                 ], 404);
             }
 
+            // Ensure storage exists
+            StorageHelper::ensureStorageExists();
+            
+            // Get writable disk
+            $disk = StorageHelper::getDokumenDisk();
+
             // For non-lainnya dokumen, check if already exists and replace
             if ($request->jenis_dokumen !== 'lainnya') {
                 $existing = DokumenSiswa::where('siswa_id', $siswa->id)
@@ -67,18 +74,21 @@ class DokumenController extends Controller
                     ->first();
 
                 if ($existing) {
-                    // Delete old file (check both storage disks for backward compatibility)
-                    if ($existing->file_uuid) {
-                        // New secure storage
-                        if (Storage::disk('private')->exists($existing->file_path)) {
-                            Storage::disk('private')->delete($existing->file_path);
+                    // Delete old file (check all possible disks for backward compatibility)
+                    $oldDisk = $existing->storage_disk ?? StorageHelper::getDiskFromPath($existing->file_path);
+                    
+                    try {
+                        if (Storage::disk($oldDisk)->exists($existing->file_path)) {
+                            Storage::disk($oldDisk)->delete($existing->file_path);
                         }
-                    } else {
-                        // Old public storage
-                        if (Storage::disk('public')->exists($existing->file_path)) {
-                            Storage::disk('public')->delete($existing->file_path);
-                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to delete old file', [
+                            'file_path' => $existing->file_path,
+                            'disk' => $oldDisk,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
+                    
                     // Delete old record
                     $existing->delete();
                 }
@@ -93,11 +103,11 @@ class DokumenController extends Controller
             // Secure filename: {UUID}.ext
             $fileName = "{$uuid}.{$extension}";
             
-            // Store in private storage: dokumen-siswa/{NISN}/{UUID}.ext
+            // Store in new storage: {NISN}/{UUID}.ext
             $nisn = $siswa->nisn;
-            $filePath = "dokumen-siswa/{$nisn}/{$fileName}";
+            $filePath = "{$nisn}/{$fileName}";
             
-            Storage::disk('private')->put($filePath, file_get_contents($file));
+            Storage::disk($disk)->put($filePath, file_get_contents($file));
             
             $fileSize = round($file->getSize() / 1024, 2); // Convert to KB
 
@@ -122,6 +132,7 @@ class DokumenController extends Controller
                 'kelas_id' => $currentKelas ? $currentKelas->id : null,
                 'uploaded_by_role' => 'siswa',
                 'status' => 'pending',
+                'storage_disk' => $disk, // Track which disk used
             ]);
 
             // Enhanced activity log
@@ -188,17 +199,19 @@ class DokumenController extends Controller
                 ], 403);
             }
 
-            // Delete file from storage (check both disks for backward compatibility)
-            if ($dokumen->file_uuid) {
-                // New secure storage
-                if (Storage::disk('private')->exists($dokumen->file_path)) {
-                    Storage::disk('private')->delete($dokumen->file_path);
+            // Delete file from storage
+            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
+            
+            try {
+                if (Storage::disk($disk)->exists($dokumen->file_path)) {
+                    Storage::disk($disk)->delete($dokumen->file_path);
                 }
-            } else {
-                // Old public storage
-                if (Storage::disk('public')->exists($dokumen->file_path)) {
-                    Storage::disk('public')->delete($dokumen->file_path);
-                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to delete file from storage', [
+                    'file_path' => $dokumen->file_path,
+                    'disk' => $disk,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             $jenisDokumen = $dokumen->jenis_dokumen;
@@ -253,17 +266,18 @@ class DokumenController extends Controller
             $dokumen->increment('access_count');
             $dokumen->update(['accessed_at' => now()]);
 
-            // Get file path (support both old and new format)
-            $filePath = $dokumen->getSecureFilePath();
+            // Get disk and file path
+            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
             
-            if (!file_exists($filePath)) {
+            if (!Storage::disk($disk)->exists($dokumen->file_path)) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
-            // Stream file with original name
+            // Get file content
+            $fileContent = Storage::disk($disk)->get($dokumen->file_path);
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
             
-            return response()->file($filePath, [
+            return response($fileContent, 200, [
                 'Content-Type' => $dokumen->mime_type,
                 'Content-Disposition' => 'inline; filename="' . $fileName . '"',
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
@@ -303,18 +317,20 @@ class DokumenController extends Controller
             $dokumen->increment('access_count');
             $dokumen->update(['accessed_at' => now()]);
 
-            // Get file path (support both old and new format)
-            $filePath = $dokumen->getSecureFilePath();
+            // Get disk and file path
+            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
             
-            if (!file_exists($filePath)) {
+            if (!Storage::disk($disk)->exists($dokumen->file_path)) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
             // Download file with original name
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
+            $fileContent = Storage::disk($disk)->get($dokumen->file_path);
             
-            return response()->download($filePath, $fileName, [
+            return response($fileContent, 200, [
                 'Content-Type' => $dokumen->mime_type,
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
             ]);
 
         } catch (\Exception $e) {

@@ -68,6 +68,33 @@ return [
             'report' => false,
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Dokumen Siswa Storage Disks
+        |--------------------------------------------------------------------------
+        |
+        | Storage untuk dokumen siswa dengan primary dan fallback disk
+        | Primary: folder dokumen-siswa di root project (git-ignored)
+        | Fallback: Laravel storage default jika primary tidak writable
+        |
+        */
+
+        'dokumen' => [
+            'driver' => 'local',
+            'root' => config('simansa.dokumen_storage.primary_path', base_path('dokumen-siswa')),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'dokumen_fallback' => [
+            'driver' => 'local',
+            'root' => config('simansa.dokumen_storage.fallback_path', storage_path('app/private/dokumen-siswa')),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

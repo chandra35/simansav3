@@ -46,4 +46,32 @@ return [
         '5jt_10jt' => 'Rp 5.000.000 - Rp 10.000.000',
         'lebih_10jt' => 'Lebih dari Rp 10.000.000',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dokumen Storage Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi penyimpanan dokumen siswa
+    | Path bisa dikonfigurasi via .env untuk flexibility
+    |
+    */
+    'dokumen_storage' => [
+        // Primary storage path - default ke folder dokumen-siswa di root project
+        // Bisa diubah via .env: DOKUMEN_STORAGE_PATH=/path/custom
+        'primary_path' => env('DOKUMEN_STORAGE_PATH', base_path('dokumen-siswa')),
+        
+        // Fallback storage path - jika primary tidak writable
+        // Menggunakan Laravel storage default
+        'fallback_path' => storage_path('app/private/dokumen-siswa'),
+        
+        // Auto create folder jika belum ada
+        'auto_create' => env('DOKUMEN_AUTO_CREATE', true),
+        
+        // Check writable sebelum pakai
+        'check_writable' => env('DOKUMEN_CHECK_WRITABLE', true),
+        
+        // Log jika pakai fallback
+        'log_fallback' => env('DOKUMEN_LOG_FALLBACK', true),
+    ],
 ];
