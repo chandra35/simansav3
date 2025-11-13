@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -12,7 +13,8 @@ class EmisTokenController extends Controller
     public function index()
     {
         // Cek permission Super Admin atau manage-settings
-        if (!auth()->user()->can('manage-settings') && !auth()->user()->hasRole('Super Admin')) {
+        $user = Auth::user();
+        if (!$user->can('manage-settings') && !$user->hasRole('Super Admin')) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini');
         }
 
@@ -25,7 +27,8 @@ class EmisTokenController extends Controller
     public function update(Request $request)
     {
         // Cek permission Super Admin atau manage-settings
-        if (!auth()->user()->can('manage-settings') && !auth()->user()->hasRole('Super Admin')) {
+        $user = Auth::user();
+        if (!$user->can('manage-settings') && !$user->hasRole('Super Admin')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
@@ -70,8 +73,8 @@ class EmisTokenController extends Controller
 
             // Log activity
             Log::info('EMIS Token Updated', [
-                'user_id' => auth()->id(),
-                'user_name' => auth()->user()->name,
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name,
                 'expires_at' => $expiresAt,
                 'timestamp' => now()
             ]);
@@ -85,7 +88,7 @@ class EmisTokenController extends Controller
         } catch (\Exception $e) {
             Log::error('EMIS Token Update Failed', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => Auth::id()
             ]);
 
             return response()->json([

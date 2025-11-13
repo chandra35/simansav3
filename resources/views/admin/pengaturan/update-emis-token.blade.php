@@ -6,6 +6,8 @@
     <h1 class="m-0 text-dark">Update Token EMIS</h1>
 @stop
 
+@section('plugins.Sweetalert2', true)
+
 @section('content')
 <div class="row">
     <div class="col-md-8">
