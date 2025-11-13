@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class KemenagNipService
@@ -15,7 +16,11 @@ class KemenagNipService
     public function __construct()
     {
         $this->apiUrl = config('services.kemenag.api_url', 'https://be-pintar.kemenag.go.id/api/v1');
-        $this->bearerToken = config('services.kemenag.bearer_token');
+        
+        // Get token from database first, fallback to config
+        $tokenData = DB::table('api_tokens')->where('name', 'kemenag_nip_token')->first();
+        $this->bearerToken = $tokenData ? $tokenData->token : config('services.kemenag.bearer_token');
+        
         $this->timeout = 30; // 30 seconds timeout
     }
 

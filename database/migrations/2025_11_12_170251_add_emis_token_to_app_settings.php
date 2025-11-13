@@ -31,6 +31,16 @@ return new class extends Migration
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Insert default Kemenag NIP token
+        DB::table('api_tokens')->insert([
+            'name' => 'kemenag_nip_token',
+            'token' => env('KEMENAG_BEARER_TOKEN', ''),
+            'description' => 'Token Bearer untuk API Kemenag BE-PINTAR (Cek NIP)',
+            'expires_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**
