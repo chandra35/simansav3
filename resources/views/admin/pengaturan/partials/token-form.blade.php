@@ -17,7 +17,7 @@
 
         <div class="form-group">
             <label>Token Saat Ini</label>
-            <textarea class="form-control" rows="2" readonly>{{ $tokenData ? substr($tokenData->token, 0, 50) . '...' . substr($tokenData->token, -20) : 'Belum ada token' }}</textarea>
+            <textarea class="form-control" rows="2" readonly style="resize: none;">{{ $tokenData ? substr($tokenData->token, 0, 50) . '...' . substr($tokenData->token, -20) : 'Belum ada token' }}</textarea>
             <small class="form-text text-muted">Token ditampilkan sebagian untuk keamanan</small>
         </div>
 
@@ -34,6 +34,7 @@
                       rows="5" 
                       name="token" 
                       placeholder="Paste token baru di sini..."
+                      style="resize: vertical; min-height: 120px;"
                       required></textarea>
             <small class="form-text text-muted">Paste token lengkap yang didapat dari {{ $tokenName }}</small>
         </div>
