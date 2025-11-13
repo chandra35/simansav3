@@ -88,6 +88,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pengaturan/update-api-token', [App\Http\Controllers\Admin\ApiTokenController::class, 'index'])->name('pengaturan.update-api-token.index');
     Route::post('/pengaturan/update-api-token', [App\Http\Controllers\Admin\ApiTokenController::class, 'update'])->name('pengaturan.update-api-token.update');
     
+    // Pengaturan - Reset System (Super Admin Only)
+    Route::get('/pengaturan/reset-system', [App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('reset-system.index');
+    Route::post('/pengaturan/reset-system/verify-password', [App\Http\Controllers\Admin\SystemResetController::class, 'verifyPassword'])->name('reset-system.verify-password');
+    Route::post('/pengaturan/reset-system/delete-all', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteAll'])->name('reset-system.delete-all');
+    Route::post('/pengaturan/reset-system/delete-siswa', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteSiswa'])->name('reset-system.delete-siswa');
+    Route::post('/pengaturan/reset-system/delete-gtk', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteGtk'])->name('reset-system.delete-gtk');
+    Route::post('/pengaturan/reset-system/delete-kelas', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteKelas'])->name('reset-system.delete-kelas');
+    Route::post('/pengaturan/reset-system/create-backup', [App\Http\Controllers\Admin\SystemResetController::class, 'createBackup'])->name('reset-system.create-backup');
+    Route::get('/pengaturan/reset-system/download-backup/{filename}', [App\Http\Controllers\Admin\SystemResetController::class, 'downloadBackup'])->name('reset-system.download-backup');
+    Route::delete('/pengaturan/reset-system/delete-backup/{filename}', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteBackup'])->name('reset-system.delete-backup');
+    Route::post('/pengaturan/reset-system/restore-backup', [App\Http\Controllers\Admin\SystemResetController::class, 'restoreBackup'])->name('reset-system.restore-backup');
+    
     // Tahun Pelajaran Management
     Route::resource('tahun-pelajaran', TahunPelajaranController::class);
     Route::post('/tahun-pelajaran/{tahunPelajaran}/set-active', [TahunPelajaranController::class, 'setActive'])->name('tahun-pelajaran.set-active');

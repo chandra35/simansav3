@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasUuid;
 use App\Traits\HasCreatedUpdatedBy;
 use Illuminate\Support\Facades\Storage;
 
 class DokumenSiswa extends Model
 {
-    use HasUuid, HasCreatedUpdatedBy;
+    use HasUuid, HasCreatedUpdatedBy, SoftDeletes;
 
     protected $table = 'dokumen_siswa';
 

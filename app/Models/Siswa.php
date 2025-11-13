@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasUuid;
 use App\Traits\HasActivityLog;
 use App\Traits\HasCreatedUpdatedBy;
@@ -13,7 +14,7 @@ use Laravolt\Indonesia\Models\Village;
 
 class Siswa extends Model
 {
-    use HasUuid, HasActivityLog, HasCreatedUpdatedBy;
+    use HasUuid, HasActivityLog, HasCreatedUpdatedBy, SoftDeletes;
 
     protected $table = 'siswa';
 

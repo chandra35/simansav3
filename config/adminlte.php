@@ -493,6 +493,14 @@ return [
                     'can' => 'manage-settings',
                     'active' => ['admin/pengaturan/update-api-token*'],
                 ],
+                [
+                    'text' => 'Reset Data Sistem',
+                    'route' => 'admin.reset-system.index',
+                    'icon' => 'fas fa-fw fa-exclamation-triangle',
+                    'icon_color' => 'danger',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/reset-system*'],
+                ],
             ],
         ],
 
