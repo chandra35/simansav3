@@ -450,6 +450,29 @@ return [
                     'active' => ['admin/settings*'],
                 ],
                 [
+                    'text' => 'Custom Menu Siswa',
+                    'route' => 'admin.custom-menu.index',
+                    'icon' => 'fas fa-fw fa-th-list',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/custom-menu*'],
+                ],
+                [
+                    'text' => 'Profile',
+                    'route' => 'admin.profile',
+                    'icon' => 'fas fa-fw fa-user',
+                    'can' => 'admin-access',
+                    'active' => ['admin/profile*'],
+                ],
+            ],
+        ],
+
+        // TOOLS - Collapsible
+        [
+            'text' => 'Tools',
+            'icon' => 'fas fa-fw fa-tools',
+            'can' => 'manage-settings',
+            'submenu' => [
+                [
                     'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
@@ -469,20 +492,6 @@ return [
                     'icon' => 'fas fa-fw fa-key',
                     'can' => 'manage-settings',
                     'active' => ['admin/pengaturan/update-emis-token*'],
-                ],
-                [
-                    'text' => 'Custom Menu Siswa',
-                    'route' => 'admin.custom-menu.index',
-                    'icon' => 'fas fa-fw fa-th-list',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/custom-menu*'],
-                ],
-                [
-                    'text' => 'Profile',
-                    'route' => 'admin.profile',
-                    'icon' => 'fas fa-fw fa-user',
-                    'can' => 'admin-access',
-                    'active' => ['admin/profile*'],
                 ],
             ],
         ],
