@@ -390,6 +390,13 @@ return [
                     'active' => ['admin/kurikulum*'],
                 ],
                 [
+                    'text' => 'Mata Pelajaran',
+                    'route' => 'admin.mapel.index',
+                    'icon' => 'fas fa-fw fa-book',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/mapel*'],
+                ],
+                [
                     'text' => 'Manajemen Kelas',
                     'route' => 'admin.kelas.index',
                     'icon' => 'fas fa-fw fa-school',

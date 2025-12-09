@@ -115,6 +115,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/kurikulum/{kurikulum}/jurusan/{jurusan}', [KurikulumController::class, 'updateJurusan'])->name('kurikulum.jurusan.update')->middleware('permission:manage-jurusan');
     Route::delete('/kurikulum/{kurikulum}/jurusan/{jurusan}', [KurikulumController::class, 'deleteJurusan'])->name('kurikulum.jurusan.delete')->middleware('permission:manage-jurusan');
     
+    // Mata Pelajaran Management
+    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class);
+    Route::get('/mapel-data', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'data'])->name('mapel.data');
+    Route::post('/mapel-bulk-store', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'bulkStore'])->name('mapel.bulk-store');
+    Route::post('/mapel/{mapel}/toggle-status', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'toggleStatus'])->name('mapel.toggle-status');
+    Route::post('/mapel/{mapel}/duplicate', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'duplicate'])->name('mapel.duplicate');
+    
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
     Route::post('/kelas/{id}/restore', [KelasController::class, 'restore'])->name('kelas.restore')->middleware('permission:create-kelas');

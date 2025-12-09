@@ -48,24 +48,43 @@ class ApiTokenController extends Controller
 
     public function update(Request $request)
     {
+        Log::info('API Token Update Request Received', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->except('token')
+        ]);
+
         // Cek permission Super Admin atau manage-settings
         $user = Auth::user();
         if (!$user->can('manage-settings') && !$user->hasRole('Super Admin')) {
+            Log::warning('API Token Update: Unauthorized access attempt', [
+                'user_id' => Auth::id(),
+                'user_roles' => $user->getRoleNames()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access'
             ], 403);
         }
 
-        $request->validate([
-            'token_type' => 'required|in:' . implode(',', array_keys($this->tokenTypes)),
-            'token' => 'required|string|min:100'
-        ], [
-            'token_type.required' => 'Tipe token wajib dipilih',
-            'token_type.in' => 'Tipe token tidak valid',
-            'token.required' => 'Token wajib diisi',
-            'token.min' => 'Token minimal 100 karakter'
-        ]);
+        try {
+            $request->validate([
+                'token_type' => 'required|in:' . implode(',', array_keys($this->tokenTypes)),
+                'token' => 'required|string|min:100'
+            ], [
+                'token_type.required' => 'Tipe token wajib dipilih',
+                'token_type.in' => 'Tipe token tidak valid',
+                'token.required' => 'Token wajib diisi',
+                'token.min' => 'Token minimal 100 karakter'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('API Token Update: Validation failed', [
+                'errors' => $e->errors()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all())
+            ], 422);
+        }
 
         try {
             $tokenType = $request->token_type;
@@ -86,15 +105,21 @@ class ApiTokenController extends Controller
             }
 
             // Update or insert token
-            DB::table('api_tokens')->updateOrInsert(
+            $affected = DB::table('api_tokens')->updateOrInsert(
                 ['name' => $tokenType],
                 [
                     'token' => $token,
                     'description' => $tokenInfo['description'],
                     'expires_at' => $expiresAt,
+                    'created_at' => DB::raw('COALESCE(created_at, NOW())'),
                     'updated_at' => now()
                 ]
             );
+
+            Log::info('API Token Update - Database Operation', [
+                'affected' => $affected,
+                'token_type' => $tokenType
+            ]);
 
             // Log activity
             Log::info('API Token Updated', [

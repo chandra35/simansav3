@@ -116,5 +116,134 @@ function decodeJwtPayload(token) {
         return null;
     }
 }
+
+// Initialize token forms after DOM ready
+$(document).ready(function() {
+    console.log('Initializing token forms...');
+    
+    // Initialize each token form
+    $('.form-update-token').each(function() {
+        const form = $(this);
+        const tokenType = form.data('token-type');
+        const tokenInput = form.find('.token-input');
+        const tokenInfo = form.find('.token-info');
+        const formatStatus = form.find('.format-status');
+        const expiryTime = form.find('.expiry-time');
+        const btnSubmit = form.find('.btn-submit');
+
+        console.log('Initializing form for token type:', tokenType);
+
+        // Auto-validate token format on input
+        tokenInput.on('input', function() {
+            const token = $(this).val().trim();
+            
+            if (token.length > 100) {
+                validateToken(token, tokenInfo, formatStatus, expiryTime);
+            } else {
+                tokenInfo.addClass('d-none');
+            }
+        });
+
+        // Handle form submission
+        form.on('submit', function(e) {
+            e.preventDefault();
+            
+            const token = tokenInput.val().trim();
+            
+            if (token.length < 100) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Token Tidak Valid',
+                    text: 'Token terlalu pendek. Pastikan Anda copy token lengkap.'
+                });
+                return;
+            }
+
+            // Disable submit button
+            btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+            $.ajax({
+                url: '{{ route("admin.pengaturan.update-api-token.update") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    token_type: tokenType,
+                    token: token
+                },
+                success: function(response) {
+                    if (response.success) {
+                        let message = response.message;
+                        if (response.expires_at) {
+                            message += '<br><small>Kadaluarsa: ' + response.expires_at + '</small>';
+                        }
+                        if (!response.is_jwt) {
+                            message += '<br><small class="text-warning">Token bukan format JWT</small>';
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            html: message,
+                            timer: 3000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message
+                        });
+                        btnSubmit.prop('disabled', false).html('<i class="fas fa-save"></i> Update Token');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'Terjadi kesalahan saat update token';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: message
+                    });
+                    
+                    btnSubmit.prop('disabled', false).html('<i class="fas fa-save"></i> Update Token');
+                }
+            });
+        });
+    });
+    
+    // Validate token function
+    function validateToken(token, tokenInfo, formatStatus, expiryTime) {
+        const isJwt = validateTokenFormat(token);
+        
+        if (isJwt) {
+            formatStatus.html('<span class="badge badge-success">Valid JWT</span>');
+            
+            const payload = decodeJwtPayload(token);
+            if (payload && payload.exp) {
+                const expiryDate = new Date(payload.exp * 1000);
+                const now = new Date();
+                
+                if (expiryDate > now) {
+                    expiryTime.html('<span class="badge badge-success">' + expiryDate.toLocaleString('id-ID') + '</span>');
+                } else {
+                    expiryTime.html('<span class="badge badge-danger">Sudah Kadaluarsa (' + expiryDate.toLocaleString('id-ID') + ')</span>');
+                }
+            } else {
+                expiryTime.html('<span class="badge badge-warning">Tidak ada info expiry</span>');
+            }
+            
+            tokenInfo.removeClass('d-none');
+        } else {
+            formatStatus.html('<span class="badge badge-warning">Bukan JWT (Token biasa)</span>');
+            expiryTime.html('<span class="badge badge-secondary">N/A</span>');
+            tokenInfo.removeClass('d-none');
+        }
+    }
+});
 </script>
 @stop
