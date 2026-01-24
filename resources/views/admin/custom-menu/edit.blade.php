@@ -193,9 +193,21 @@
                     <ul class="pl-3" style="font-size: 0.9em;">
                         <li>Gunakan <strong>Tipe Umum</strong> untuk pengumuman yang sama untuk semua siswa</li>
                         <li>Gunakan <strong>Tipe Personal</strong> untuk data yang berbeda per siswa (akun, hasil)</li>
-                        <li>Setelah save, Anda bisa assign siswa via Excel atau manual</li>
+                        <li class="text-primary"><strong>Setelah simpan → klik "Assign Siswa" → Download Template Excel</strong></li>
                         <li>Menu bisa di-enable/disable kapan saja</li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="card card-success">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-bolt"></i> Aksi Cepat</h3>
+                </div>
+                <div class="card-body">
+                    <a href="{{ route('admin.custom-menu.assign', $customMenu->id) }}" class="btn btn-success btn-block mb-2">
+                        <i class="fas fa-users"></i> Assign Siswa & Download Template
+                    </a>
                 </div>
             </div>
         </div>
@@ -343,6 +355,11 @@ $(document).ready(function() {
             $('#custom-fields-card').slideDown();
         }
     });
+
+    // Trigger on load if already personal
+    if ($('#content_type').val() === 'personal') {
+        $('#custom-fields-card').show();
+    }
 
     // Has Personal Data Toggle Handler
     $('#has_personal_data').change(function() {

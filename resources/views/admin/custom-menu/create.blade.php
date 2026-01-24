@@ -190,9 +190,25 @@
                     <ul class="pl-3" style="font-size: 0.9em;">
                         <li>Gunakan <strong>Tipe Umum</strong> untuk pengumuman yang sama untuk semua siswa</li>
                         <li>Gunakan <strong>Tipe Personal</strong> untuk data yang berbeda per siswa (akun, hasil)</li>
-                        <li>Setelah save, Anda bisa assign siswa via Excel atau manual</li>
+                        <li class="text-primary"><strong>Setelah simpan → klik "Assign Siswa" → Download Template Excel</strong></li>
                         <li>Menu bisa di-enable/disable kapan saja</li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- Workflow Card -->
+            <div class="card card-warning" id="workflow-card" style="display:none;">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-tasks"></i> Langkah Selanjutnya</h3>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Setelah simpan menu ini:</strong></p>
+                    <ol class="pl-3 mb-0" style="font-size: 0.9em;">
+                        <li>Klik tombol <strong>"Assign Siswa"</strong></li>
+                        <li>Download <strong>Template Excel</strong></li>
+                        <li>Isi NISN + data personal di Excel</li>
+                        <li>Upload kembali untuk assign</li>
+                    </ol>
                 </div>
             </div>
         </div>
@@ -266,10 +282,12 @@ $(document).ready(function() {
             $('#content-type-label').text('(Konten Umum)');
             $('#content-help').text('Konten ini akan sama untuk semua siswa yang di-assign');
             $('#custom-fields-card').slideUp();
+            $('#workflow-card').slideUp();
         } else if (type === 'personal') {
             $('#content-type-label').text('(Header/Pengantar)');
             $('#content-help').text('Konten ini adalah header. Data personal ditambahkan melalui Custom Fields di bawah');
             $('#custom-fields-card').slideDown();
+            $('#workflow-card').slideDown();
         }
     });
 
