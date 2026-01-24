@@ -100,48 +100,34 @@
             </div>
 
             <!-- Custom Fields Card (only for personal type) -->
-            <div class="card" id="custom-fields-card" style="display:none;">
+            <div class="card" id="custom-fields-card" style="{{ $customMenu->content_type === 'personal' ? '' : 'display:none;' }}">
                 <div class="card-header bg-warning">
                     <h3 class="card-title"><i class="fas fa-cogs"></i> Custom Fields (Data Personal)</h3>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
+                    <div class="alert alert-info mb-3">
                         <i class="fas fa-info-circle"></i> 
-                        <strong>Fitur Data Personal:</strong> Anda dapat mendefinisikan field data yang akan berbeda untuk setiap siswa. 
-                        Data ini akan ditampilkan di halaman siswa saat membuka menu ini.
+                        <strong>Definisikan Field Data Personal:</strong><br>
+                        Field yang Anda tambahkan di sini akan menjadi kolom di template Excel saat Assign Siswa.
+                        Setiap siswa akan melihat data personalnya masing-masing.
                     </div>
                     
-                    <div class="form-group">
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="has_personal_data" name="has_personal_data"
-                                   {{ $customMenu->has_personal_data ? 'checked' : '' }}>
-                            <label class="custom-control-label" for="has_personal_data">
-                                <strong>Aktifkan Data Personal</strong>
-                            </label>
-                        </div>
-                        <small class="text-muted">Centang jika menu ini memiliki data khusus per siswa (username, password, dll)</small>
+                    <div id="custom-fields-container">
+                        <!-- Dynamic fields will be added here -->
                     </div>
-                    
-                    <div id="fields-builder" style="{{ $customMenu->has_personal_data ? '' : 'display:none;' }}">
-                        <hr>
-                        <p class="text-muted"><i class="fas fa-list"></i> Definisikan field data yang berbeda untuk setiap siswa:</p>
-                        
-                        <div id="custom-fields-container">
-                            <!-- Dynamic fields will be added here -->
-                        </div>
 
-                        <button type="button" class="btn btn-sm btn-success" id="add-custom-field">
-                            <i class="fas fa-plus"></i> Tambah Field
-                        </button>
-                        
-                        <div class="alert alert-secondary mt-3">
-                            <small>
-                                <strong>💡 Tips:</strong><br>
-                                • Field yang Anda definisikan akan muncul sebagai kolom di template Excel<br>
-                                • Siswa akan melihat data ini di halaman menu mereka<br>
-                                • Tipe "password" akan dienkripsi dan bisa di-show/hide oleh siswa
-                            </small>
-                        </div>
+                    <button type="button" class="btn btn-success" id="add-custom-field">
+                        <i class="fas fa-plus"></i> Tambah Field
+                    </button>
+                    
+                    <div class="alert alert-secondary mt-3">
+                        <small>
+                            <strong>💡 Contoh Field:</strong><br>
+                            • <strong>Username</strong> (tipe: text) - untuk akun login<br>
+                            • <strong>Password</strong> (tipe: password) - akan terenkripsi<br>
+                            • <strong>Email</strong> (tipe: email) - alamat email<br>
+                            • <strong>Nomor Registrasi</strong> (tipe: text) - nomor unik
+                        </small>
                     </div>
                 </div>
             </div>
@@ -361,15 +347,6 @@ $(document).ready(function() {
         $('#custom-fields-card').show();
     }
 
-    // Has Personal Data Toggle Handler
-    $('#has_personal_data').change(function() {
-        if ($(this).is(':checked')) {
-            $('#fields-builder').slideDown();
-        } else {
-            $('#fields-builder').slideUp();
-        }
-    });
-
     // Add Custom Field
     $('#add-custom-field').click(function() {
         fieldCounter++;
@@ -451,6 +428,9 @@ $(document).ready(function() {
             });
         }
 
+        // has_personal_data = 1 jika content_type personal dan ada custom fields
+        const hasPersonalData = ($('#content_type').val() === 'personal' && Object.keys(customFieldsData).length > 0) ? 1 : 0;
+
         const formData = {
             _token: '{{ csrf_token() }}',
             _method: 'PUT',
@@ -459,7 +439,7 @@ $(document).ready(function() {
             menu_group: $('#menu_group').val(),
             content_type: $('#content_type').val(),
             konten: content,
-            has_personal_data: $('#has_personal_data').is(':checked') ? 1 : 0,
+            has_personal_data: hasPersonalData,
             custom_fields: JSON.stringify(customFieldsData),
             urutan: $('#urutan').val(),
             is_active: $('#is_active').is(':checked') ? 1 : 0
