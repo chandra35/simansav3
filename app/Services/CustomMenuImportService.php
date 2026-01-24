@@ -208,7 +208,8 @@ class CustomMenuImportService
             // Add notes section - skip a row for visual separation
             $noteStartRow = 6;
             
-            $sheet->setCellValue('A' . $noteStartRow, '=== PETUNJUK PENGISIAN ===');
+            // Use setCellValueExplicit to prevent formula interpretation
+            $sheet->setCellValueExplicit('A' . $noteStartRow, 'PETUNJUK PENGISIAN', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->getStyle('A' . $noteStartRow)->getFont()->setBold(true)->setColor(
                 new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKBLUE)
             );
@@ -222,7 +223,7 @@ class CustomMenuImportService
             // Add custom field notes if personal type
             if ($this->menu->content_type === 'personal' && !empty($customFields)) {
                 $notes[] = '';
-                $notes[] = '=== PENJELASAN KOLOM DATA PERSONAL ===';
+                $notes[] = 'PENJELASAN KOLOM DATA PERSONAL:';
                 
                 $fieldIndex = 1;
                 foreach ($customFields as $fieldKey => $field) {
@@ -247,14 +248,15 @@ class CustomMenuImportService
             
             foreach ($notes as $i => $note) {
                 $row = $noteStartRow + 1 + $i;
-                $sheet->setCellValue('A' . $row, $note);
+                // Use setCellValueExplicit to prevent any formula interpretation
+                $sheet->setCellValueExplicit('A' . $row, $note, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 
                 // Style for section headers
-                if (str_contains($note, '===')) {
+                if (str_contains($note, 'PENJELASAN') || str_contains($note, 'PETUNJUK')) {
                     $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(
                         new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKBLUE)
                     );
-                } else {
+                } elseif (!empty($note)) {
                     $sheet->getStyle('A' . $row)->getFont()->setItalic(true)->setColor(
                         new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKGREEN)
                     );
