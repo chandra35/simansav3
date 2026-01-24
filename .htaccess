@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect trailing slashes if not a folder
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+    
+    # Handle assets and public files directly
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ public/index.php [L]
+    
+    # If accessing public folder directly, serve from there
+    RewriteCond %{REQUEST_URI} ^/public/
+    RewriteRule ^public/(.*)$ public/$1 [L]
+</IfModule>
