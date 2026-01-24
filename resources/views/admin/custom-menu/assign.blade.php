@@ -22,7 +22,12 @@
             <div class="card-header p-0 pt-1">
                 <ul class="nav nav-tabs" id="custom-tabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="tab-excel" data-toggle="pill" href="#excel" role="tab">
+                        <a class="nav-link active" id="tab-nisn" data-toggle="pill" href="#nisn" role="tab">
+                            <i class="fas fa-list-ol"></i> Input NISN
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-excel" data-toggle="pill" href="#excel" role="tab">
                             <i class="fas fa-file-excel"></i> Upload Excel
                         </a>
                     </li>
@@ -45,8 +50,82 @@
             </div>
             <div class="card-body">
                 <div class="tab-content" id="custom-tabContent">
+                    <!-- Tab: Input NISN -->
+                    <div class="tab-pane fade show active" id="nisn" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <h5><i class="fas fa-list-ol"></i> Assign Berdasarkan NISN</h5>
+                                <p class="text-muted">
+                                    Masukkan NISN siswa yang ingin di-assign. Cocok untuk menu informatif seperti pengumuman SNBP, daftar siswa eligible, dll.
+                                </p>
+                                
+                                <form id="form-assign-nisn">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label>Daftar NISN <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="nisn_list" name="nisn_list" rows="10" 
+                                                  placeholder="Masukkan NISN (satu per baris)&#10;Contoh:&#10;0123456789&#10;0123456790&#10;0123456791"></textarea>
+                                        <small class="text-muted">
+                                            Satu NISN per baris. Data siswa akan diambil otomatis dari database.
+                                        </small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-user-plus"></i> Assign Siswa
+                                        </button>
+                                        <span class="text-muted" id="nisn-count">0 NISN</span>
+                                    </div>
+                                </form>
+
+                                <div id="nisn-result" class="mt-3" style="display:none;">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> Hasil Assign:</h6>
+                                        <ul id="nisn-summary"></ul>
+                                    </div>
+                                    <div id="nisn-errors" style="display:none;">
+                                        <h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> NISN Tidak Ditemukan:</h6>
+                                        <ul id="nisn-error-list" class="text-danger"></ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="card card-success">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-lightbulb"></i> Kapan Gunakan Fitur Ini?</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="mb-0 pl-3">
+                                            <li class="mb-2">
+                                                <strong>Pengumuman SNBP:</strong><br>
+                                                <small class="text-muted">Assign daftar siswa eligible/tidak eligible</small>
+                                            </li>
+                                            <li class="mb-2">
+                                                <strong>Informasi Beasiswa:</strong><br>
+                                                <small class="text-muted">Assign siswa penerima beasiswa</small>
+                                            </li>
+                                            <li class="mb-2">
+                                                <strong>Pengumuman Khusus:</strong><br>
+                                                <small class="text-muted">Kirim info hanya ke siswa tertentu</small>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                @if($customMenu->content_type === 'personal' && $customMenu->has_personal_data)
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Catatan:</strong><br>
+                                    Menu ini memiliki Custom Fields. Jika ingin mengisi data personal per siswa, gunakan tab <strong>Upload Excel</strong>.
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tab: Upload Excel -->
-                    <div class="tab-pane fade show active" id="excel" role="tabpanel">
+                    <div class="tab-pane fade" id="excel" role="tabpanel">
                         <div class="row">
                             <div class="col-md-8">
                                 <h5><i class="fas fa-upload"></i> Upload File Excel</h5>
@@ -253,6 +332,95 @@ if (typeof Swal === 'undefined') {
 $(document).ready(function() {
     // Initialize Select2
     $('.select2').select2();
+
+    // ===== NISN Count =====
+    $('#nisn_list').on('input', function() {
+        var lines = $(this).val().split('\n').filter(line => line.trim() !== '');
+        $('#nisn-count').text(lines.length + ' NISN');
+    });
+
+    // ===== Form Assign by NISN =====
+    $('#form-assign-nisn').on('submit', function(e) {
+        e.preventDefault();
+        
+        var nisnList = $('#nisn_list').val().trim();
+        if (!nisnList) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: 'Masukkan minimal 1 NISN'
+            });
+            return;
+        }
+
+        // Parse NISN list
+        var nisns = nisnList.split('\n').map(n => n.trim()).filter(n => n !== '');
+        
+        if (nisns.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: 'Masukkan minimal 1 NISN yang valid'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Proses Assign',
+            html: 'Mengassign ' + nisns.length + ' NISN...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            url: '{{ route("admin.custom-menu.assign-by-nisn", $customMenu->id) }}',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                nisn_list: nisns
+            },
+            success: function(response) {
+                Swal.close();
+                
+                if (response.success) {
+                    $('#nisn-result').show();
+                    $('#nisn-summary').html(
+                        '<li>Total NISN: <strong>' + response.data.total + '</strong></li>' +
+                        '<li>Berhasil: <strong class="text-success">' + response.data.success + '</strong></li>' +
+                        '<li>Sudah ter-assign: <strong class="text-info">' + response.data.duplicate + '</strong></li>' +
+                        '<li>Tidak ditemukan: <strong class="text-danger">' + response.data.not_found + '</strong></li>'
+                    );
+
+                    if (response.data.not_found_nisns && response.data.not_found_nisns.length > 0) {
+                        $('#nisn-errors').show();
+                        var errorHtml = response.data.not_found_nisns.map(n => '<li>' + n + '</li>').join('');
+                        $('#nisn-error-list').html(errorHtml);
+                    } else {
+                        $('#nisn-errors').hide();
+                    }
+
+                    if (response.data.success > 0) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.data.success + ' siswa berhasil di-assign',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                });
+            }
+        });
+    });
 
     // Initialize DataTables for assigned siswa table
     var assignedTable = $('#table-assigned').DataTable({

@@ -66,6 +66,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/custom-menu/{customMenu}/toggle-status', [App\Http\Controllers\Admin\CustomMenuController::class, 'toggleStatus'])->name('custom-menu.toggle-status');
     Route::get('/custom-menu/{customMenu}/assign', [App\Http\Controllers\Admin\CustomMenuController::class, 'assign'])->name('custom-menu.assign');
     Route::post('/custom-menu/{customMenu}/assign-siswa', [App\Http\Controllers\Admin\CustomMenuController::class, 'assignSiswa'])->name('custom-menu.assign-siswa');
+    Route::post('/custom-menu/{customMenu}/assign-by-nisn', [App\Http\Controllers\Admin\CustomMenuController::class, 'assignByNisn'])->name('custom-menu.assign-by-nisn');
     Route::post('/custom-menu/{customMenu}/remove-siswa', [App\Http\Controllers\Admin\CustomMenuController::class, 'removeSiswa'])->name('custom-menu.remove-siswa');
     Route::post('/custom-menu/{customMenu}/upload-excel', [App\Http\Controllers\Admin\CustomMenuController::class, 'uploadExcel'])->name('custom-menu.upload-excel');
     Route::get('/custom-menu/{customMenu}/template', [App\Http\Controllers\Admin\CustomMenuController::class, 'downloadTemplate'])->name('custom-menu.template');

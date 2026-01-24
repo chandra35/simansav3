@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomMenu;
+use App\Models\CustomMenuSiswa;
 use App\Models\Siswa;
 use App\Models\Kelas;
 use App\Services\CustomMenuImportService;
@@ -339,6 +340,83 @@ class CustomMenuController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal assign siswa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Assign siswa by NISN list (textarea input)
+     */
+    public function assignByNisn(Request $request, CustomMenu $customMenu)
+    {
+        $this->authorize('edit-siswa');
+
+        $validated = $request->validate([
+            'nisn_list' => 'required|array',
+            'nisn_list.*' => 'string',
+        ]);
+
+        try {
+            $nisnList = array_map('trim', $validated['nisn_list']);
+            $nisnList = array_filter($nisnList); // Remove empty
+            $nisnList = array_unique($nisnList); // Remove duplicates
+
+            $result = [
+                'total' => count($nisnList),
+                'success' => 0,
+                'duplicate' => 0,
+                'not_found' => 0,
+                'not_found_nisns' => [],
+            ];
+
+            // Get already assigned siswa IDs
+            $existingAssignments = CustomMenuSiswa::where('custom_menu_id', $customMenu->id)
+                ->pluck('siswa_id')
+                ->toArray();
+
+            foreach ($nisnList as $nisn) {
+                // Find siswa by NISN
+                $siswa = Siswa::where('nisn', $nisn)->first();
+
+                if (!$siswa) {
+                    $result['not_found']++;
+                    $result['not_found_nisns'][] = $nisn;
+                    continue;
+                }
+
+                // Check if already assigned
+                if (in_array($siswa->id, $existingAssignments)) {
+                    $result['duplicate']++;
+                    continue;
+                }
+
+                // Create assignment
+                CustomMenuSiswa::create([
+                    'custom_menu_id' => $customMenu->id,
+                    'siswa_id' => $siswa->id,
+                    'personal_data' => null,
+                    'is_read' => false,
+                ]);
+
+                $existingAssignments[] = $siswa->id;
+                $result['success']++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['success'] . ' siswa berhasil di-assign',
+                'data' => $result
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error assigning by NISN', [
+                'menu_id' => $customMenu->id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal assign siswa: ' . $e->getMessage()
