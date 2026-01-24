@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 foreach ($customMenus as $groupKey => $menus) {
                     // Add group header
                     $groupInfo = $groupLabels[$groupKey] ?? $groupLabels['lainnya'];
-                    $event->menu->addAfter('siswa-dokumen', [
+                    $event->menu->addAfter('siswa-profil-data', [
                         'type' => 'header',
                         'text' => $groupInfo['label'],
                         'icon' => $groupInfo['icon'],

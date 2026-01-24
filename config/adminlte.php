@@ -526,6 +526,7 @@ return [
             'text' => 'Profil & Data',
             'icon' => 'fas fa-fw fa-user-circle',
             'can' => 'siswa-access',
+            'key' => 'siswa-profil-data',
             'submenu' => [
                 [
                     'text' => 'Data Diri',
@@ -541,7 +542,6 @@ return [
                     'text' => 'Dokumen Siswa',
                     'route' => 'siswa.dokumen',
                     'icon' => 'fas fa-fw fa-folder-open',
-                    'key' => 'siswa-dokumen',
                 ],
             ],
         ],
@@ -551,6 +551,7 @@ return [
             'text' => 'Pengaturan Akun',
             'icon' => 'fas fa-fw fa-user-cog',
             'can' => 'siswa-access',
+            'key' => 'siswa-pengaturan-akun',
             'submenu' => [
                 [
                     'text' => 'Ubah Password',
