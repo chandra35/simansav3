@@ -17,6 +17,7 @@ class CustomMenu extends Model
         'menu_group',
         'content_type',
         'konten',
+        'has_personal_data',
         'custom_fields',
         'urutan',
         'is_active',
@@ -25,6 +26,7 @@ class CustomMenu extends Model
 
     protected $casts = [
         'custom_fields' => 'array',
+        'has_personal_data' => 'boolean',
         'is_active' => 'boolean',
         'urutan' => 'integer',
     ];

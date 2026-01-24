@@ -205,10 +205,64 @@ class CustomMenuImportService
                 }
             }
 
-            // Add note on row 6
-            $sheet->setCellValue('A6', '* Catatan: Masukkan NISN siswa yang akan di-assign.');
-            $sheet->setCellValue('A7', '* Data siswa (nama, kelas, dll) akan diambil otomatis dari database.');
-            $sheet->getStyle('A6:A7')->getFont()->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKGREEN));
+            // Add notes section - skip a row for visual separation
+            $noteStartRow = 6;
+            
+            $sheet->setCellValue('A' . $noteStartRow, '=== PETUNJUK PENGISIAN ===');
+            $sheet->getStyle('A' . $noteStartRow)->getFont()->setBold(true)->setColor(
+                new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKBLUE)
+            );
+            
+            $notes = [
+                '1. Masukkan NISN siswa yang akan di-assign ke menu ini.',
+                '2. Data siswa (nama, kelas, dll) akan diambil otomatis dari database berdasarkan NISN.',
+                '3. NISN yang tidak ditemukan akan dilewati dan dilaporkan sebagai error.',
+            ];
+            
+            // Add custom field notes if personal type
+            if ($this->menu->content_type === 'personal' && !empty($customFields)) {
+                $notes[] = '';
+                $notes[] = '=== PENJELASAN KOLOM DATA PERSONAL ===';
+                
+                $fieldIndex = 1;
+                foreach ($customFields as $fieldKey => $field) {
+                    $label = is_array($field) && isset($field['label']) ? $field['label'] : $fieldKey;
+                    $type = is_array($field) && isset($field['type']) ? $field['type'] : 'text';
+                    
+                    $typeDesc = match($type) {
+                        'password' => '(akan disimpan terenkripsi, siswa bisa lihat dengan klik tombol "show")',
+                        'email' => '(format email, contoh: user@domain.com)',
+                        'number' => '(hanya angka)',
+                        default => '(teks bebas)',
+                    };
+                    
+                    $notes[] = "{$fieldIndex}. Kolom \"{$label}\" = isi {$label} untuk siswa {$typeDesc}";
+                    $fieldIndex++;
+                }
+                
+                $notes[] = '';
+                $notes[] = '* Data personal ini akan tampil di halaman siswa saat membuka menu "' . $this->menu->judul . '"';
+                $notes[] = '* Siswa hanya bisa melihat data miliknya sendiri, tidak bisa edit.';
+            }
+            
+            foreach ($notes as $i => $note) {
+                $row = $noteStartRow + 1 + $i;
+                $sheet->setCellValue('A' . $row, $note);
+                
+                // Style for section headers
+                if (str_contains($note, '===')) {
+                    $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setColor(
+                        new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKBLUE)
+                    );
+                } else {
+                    $sheet->getStyle('A' . $row)->getFont()->setItalic(true)->setColor(
+                        new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_DARKGREEN)
+                    );
+                }
+            }
+            
+            // Widen column A to fit notes
+            $sheet->getColumnDimension('A')->setWidth(100);
 
             // Create writer and download
             $writer = new Xlsx($spreadsheet);

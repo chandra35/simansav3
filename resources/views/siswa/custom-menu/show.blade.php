@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="row">
-    <div class="col-md-{{ $menu->content_type === 'personal' && count($personalData) > 0 ? '8' : '12' }}">
+    <div class="col-md-{{ ($menu->has_personal_data && count($personalData) > 0) ? '8' : '12' }}">
         <div class="card">
             <div class="card-header bg-primary">
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi</h3>
@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    @if($menu->content_type === 'personal' && count($personalData) > 0)
+    @if($menu->has_personal_data && count($personalData) > 0)
         <div class="col-md-4">
             <div class="card card-info">
                 <div class="card-header">
