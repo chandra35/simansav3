@@ -207,6 +207,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::get('/permission-matrix', [App\Http\Controllers\Admin\UserController::class, 'permissionMatrix'])->name('users.permission-matrix');
     
+    // Role & Permission Management (RBAC)
+    Route::middleware(['permission:assign-roles'])->group(function () {
+        Route::resource('roles', App\Http\Controllers\Admin\RoleController::class);
+        Route::post('/roles/{role}/assign-user', [App\Http\Controllers\Admin\RoleController::class, 'assignUser'])->name('roles.assign-user');
+        Route::delete('/roles/{role}/remove-user', [App\Http\Controllers\Admin\RoleController::class, 'removeUser'])->name('roles.remove-user');
+    });
+    
+    Route::middleware(['permission:assign-permissions'])->group(function () {
+        Route::resource('permissions', App\Http\Controllers\Admin\PermissionController::class);
+        Route::post('/permissions/bulk-create', [App\Http\Controllers\Admin\PermissionController::class, 'bulkCreate'])->name('permissions.bulk-create');
+    });
+    
     // Tugas Tambahan Management
     Route::post('/users/{user}/tugas-tambahan', [App\Http\Controllers\Admin\UserController::class, 'assignTugasTambahan'])->name('users.tugas-tambahan.assign');
     Route::post('/tugas-tambahan/{tugasTambahan}/deactivate', [App\Http\Controllers\Admin\UserController::class, 'deactivateTugasTambahan'])->name('tugas-tambahan.deactivate');
