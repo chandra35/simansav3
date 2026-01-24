@@ -360,6 +360,15 @@ return [
                     'can' => 'view-gtk',
                     'active' => ['admin/gtk*'],
                 ],
+            ],
+        ],
+        
+        // USER & ROLE - Collapsible
+        [
+            'text' => 'User & Role',
+            'icon' => 'fas fa-fw fa-users-cog',
+            'can' => 'view-users',
+            'submenu' => [
                 [
                     'text' => 'Data User',
                     'route' => 'admin.users.index',
@@ -368,11 +377,18 @@ return [
                     'active' => ['admin/users*'],
                 ],
                 [
-                    'text' => 'Role & Permission',
+                    'text' => 'Role Management',
                     'route' => 'admin.roles.index',
                     'icon' => 'fas fa-fw fa-user-tag',
                     'can' => 'assign-roles',
-                    'active' => ['admin/roles*', 'admin/permissions*'],
+                    'active' => ['admin/roles*'],
+                ],
+                [
+                    'text' => 'Permission Management',
+                    'route' => 'admin.permissions.index',
+                    'icon' => 'fas fa-fw fa-key',
+                    'can' => 'assign-permissions',
+                    'active' => ['admin/permissions*'],
                 ],
             ],
         ],
