@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\TugasTambahan;
+use App\Services\PermissionSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -314,6 +315,26 @@ class UserController extends Controller
             ], 403);
         }
 
+        // Protect Super Admin accounts
+        if ($user->hasRole('Super Admin')) {
+            // Check if this is the last Super Admin
+            $superAdminCount = User::role('Super Admin')->count();
+            if ($superAdminCount <= 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus Super Admin terakhir. Sistem harus memiliki minimal satu Super Admin.'
+                ], 403);
+            }
+            
+            // Only another Super Admin can delete a Super Admin
+            if (!auth()->user()->hasRole('Super Admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya Super Admin yang dapat menghapus akun Super Admin lainnya.'
+                ], 403);
+            }
+        }
+
         DB::beginTransaction();
         try {
             // Remove all roles and permissions
@@ -466,28 +487,354 @@ class UserController extends Controller
     }
 
     /**
-     * Show permission matrix
+     * Show enhanced permission matrix with editable checkboxes
      */
     public function permissionMatrix()
     {
         $this->authorize('view-permission');
 
-        $roles = Role::withCount(['users', 'permissions'])->get();
-        $permissions = Permission::all();
+        $permissionService = new PermissionSyncService();
         
-        $permissionsByModule = $permissions->groupBy(function ($permission) {
-            $parts = explode('-', $permission->name);
-            return count($parts) > 1 ? $parts[1] : 'other';
-        });
-
+        // Get all roles with user count
+        $roles = Role::withCount('users')->get();
+        
+        // Get permissions grouped by module from service
+        $moduleDefinitions = $permissionService->getModuleDefinitions();
+        
+        // Build permission matrix data
+        $permissionMatrix = $permissionService->getRolePermissionMatrix();
+        
+        // Get all registered permissions
+        $allPermissions = Permission::all()->pluck('name')->toArray();
+        
+        // Get unregistered permissions (for scan feature)
+        $unregisteredPermissions = $permissionService->getUnregisteredPermissions();
+        
         $totalUsers = User::count();
+        $totalPermissions = Permission::count();
 
         return view('admin.users.permission-matrix', compact(
             'roles',
-            'permissions',
-            'permissionsByModule',
-            'totalUsers'
+            'moduleDefinitions',
+            'permissionMatrix',
+            'allPermissions',
+            'unregisteredPermissions',
+            'totalUsers',
+            'totalPermissions'
         ));
+    }
+
+    /**
+     * Update permission matrix via AJAX
+     */
+    public function updatePermissionMatrix(Request $request)
+    {
+        $this->authorize('manage-permission');
+
+        $validated = $request->validate([
+            'changes' => 'required|array',
+            'changes.*.role_id' => 'required|integer|exists:roles,id',
+            'changes.*.permission' => 'required|string',
+            'changes.*.action' => 'required|in:grant,revoke',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $grantCount = 0;
+            $revokeCount = 0;
+
+            foreach ($validated['changes'] as $change) {
+                $role = Role::find($change['role_id']);
+                
+                // Protect Super Admin role
+                if ($role->name === 'Super Admin') {
+                    continue; // Skip changes to Super Admin
+                }
+
+                $permission = Permission::where('name', $change['permission'])->first();
+                
+                if (!$permission) {
+                    continue; // Skip if permission doesn't exist
+                }
+
+                if ($change['action'] === 'grant') {
+                    if (!$role->hasPermissionTo($permission)) {
+                        $role->givePermissionTo($permission);
+                        $grantCount++;
+                    }
+                } else {
+                    if ($role->hasPermissionTo($permission)) {
+                        $role->revokePermissionTo($permission);
+                        $revokeCount++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            // Clear permission cache
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil update permission: {$grantCount} diberikan, {$revokeCount} dicabut",
+                'granted' => $grantCount,
+                'revoked' => $revokeCount
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating permission matrix: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update permission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Scan for unregistered permissions
+     */
+    public function scanPermissions()
+    {
+        $this->authorize('manage-permission');
+
+        $permissionService = new PermissionSyncService();
+        
+        try {
+            $unregistered = $permissionService->getUnregisteredPermissions();
+            $fromRoutes = $permissionService->scanRoutesForPermissions();
+            $fromMenu = $permissionService->scanMenuForPermissions();
+            
+            return response()->json([
+                'success' => true,
+                'unregistered' => $unregistered,
+                'from_routes' => count($fromRoutes),
+                'from_menu' => count($fromMenu),
+                'total' => count($unregistered)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error scanning permissions: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal scan permission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Sync/register all permissions from module definitions
+     */
+    public function syncPermissions()
+    {
+        $this->authorize('manage-permission');
+
+        $permissionService = new PermissionSyncService();
+        
+        DB::beginTransaction();
+        try {
+            $result = $permissionService->syncPermissionsFromModules();
+            
+            DB::commit();
+
+            // Clear permission cache
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil sync permission: {$result['created']} baru, {$result['existing']} sudah ada",
+                'created' => $result['created'],
+                'existing' => $result['existing']
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error syncing permissions: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal sync permission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk update role permissions (select all / clear all for a role)
+     */
+    public function bulkUpdateRolePermissions(Request $request)
+    {
+        $this->authorize('manage-permission');
+
+        $validated = $request->validate([
+            'role_id' => 'required|integer|exists:roles,id',
+            'action' => 'required|in:grant_all,revoke_all',
+            'module' => 'nullable|string',
+        ]);
+
+        $role = Role::find($validated['role_id']);
+        
+        // Protect Super Admin role
+        if ($role->name === 'Super Admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Role Super Admin tidak dapat diubah'
+            ], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $permissionService = new PermissionSyncService();
+            $moduleDefinitions = $permissionService->getModuleDefinitions();
+            
+            $permissions = [];
+            
+            if (!empty($validated['module'])) {
+                // Only for specific module
+                if (isset($moduleDefinitions[$validated['module']])) {
+                    $permissions = $moduleDefinitions[$validated['module']]['permissions'];
+                }
+            } else {
+                // All permissions from all modules
+                foreach ($moduleDefinitions as $module) {
+                    $permissions = array_merge($permissions, $module['permissions']);
+                }
+            }
+
+            $count = 0;
+            foreach ($permissions as $permName) {
+                $permission = Permission::where('name', $permName)->first();
+                if (!$permission) continue;
+
+                if ($validated['action'] === 'grant_all') {
+                    if (!$role->hasPermissionTo($permission)) {
+                        $role->givePermissionTo($permission);
+                        $count++;
+                    }
+                } else {
+                    if ($role->hasPermissionTo($permission)) {
+                        $role->revokePermissionTo($permission);
+                        $count++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            // Clear permission cache
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            $actionText = $validated['action'] === 'grant_all' ? 'diberikan' : 'dicabut';
+            
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} permission {$actionText} untuk role {$role->name}",
+                'count' => $count
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error bulk updating role permissions: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update permission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a new role
+     */
+    public function storeRole(Request $request)
+    {
+        $this->authorize('create-role');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $role = Role::create([
+                'name' => $validated['name'],
+                'guard_name' => 'web',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Role '{$role->name}' berhasil dibuat",
+                'role' => [
+                    'id' => $role->id,
+                    'name' => $role->name
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating role: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat role: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a role (with protection)
+     */
+    public function destroyRole(Role $role)
+    {
+        $this->authorize('delete-role');
+
+        // Protect system roles
+        $protectedRoles = ['Super Admin', 'Admin', 'GTK', 'Siswa', 'Kepala Madrasah', 'Wali Kelas'];
+        
+        if (in_array($role->name, $protectedRoles)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Role '{$role->name}' adalah role sistem dan tidak dapat dihapus"
+            ], 403);
+        }
+
+        // Check if role has users
+        if ($role->users()->count() > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Role '{$role->name}' masih digunakan oleh " . $role->users()->count() . " user"
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Revoke all permissions first
+            $role->syncPermissions([]);
+            
+            $roleName = $role->name;
+            $role->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Role '{$roleName}' berhasil dihapus"
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting role: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus role: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -363,36 +363,6 @@ return [
             ],
         ],
         
-        // USER & ROLE - Collapsible
-        [
-            'text' => 'User & Role',
-            'icon' => 'fas fa-fw fa-users-cog',
-            'can' => 'view-users',
-            'submenu' => [
-                [
-                    'text' => 'Data User',
-                    'route' => 'admin.users.index',
-                    'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'view-users',
-                    'active' => ['admin/users*'],
-                ],
-                [
-                    'text' => 'Role Management',
-                    'route' => 'admin.roles.index',
-                    'icon' => 'fas fa-fw fa-user-tag',
-                    'can' => 'assign-roles',
-                    'active' => ['admin/roles*'],
-                ],
-                [
-                    'text' => 'Permission Management',
-                    'route' => 'admin.permissions.index',
-                    'icon' => 'fas fa-fw fa-key',
-                    'can' => 'assign-permissions',
-                    'active' => ['admin/permissions*'],
-                ],
-            ],
-        ],
-        
         // AKADEMIK - Collapsible
         [
             'text' => 'Akademik',
@@ -492,6 +462,43 @@ return [
                     'icon' => 'fas fa-fw fa-user',
                     'can' => 'admin-access',
                     'active' => ['admin/profile*'],
+                ],
+            ],
+        ],
+        
+        // USER & ROLE - Collapsible (dibawah Pengaturan)
+        [
+            'text' => 'User & Role',
+            'icon' => 'fas fa-fw fa-users-cog',
+            'can' => 'view-users',
+            'submenu' => [
+                [
+                    'text' => 'Data User',
+                    'route' => 'admin.users.index',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'view-users',
+                    'active' => ['admin/users*'],
+                ],
+                [
+                    'text' => 'Permission Matrix',
+                    'route' => 'admin.users.permission-matrix',
+                    'icon' => 'fas fa-fw fa-th',
+                    'can' => 'view-permission',
+                    'active' => ['admin/permission-matrix*'],
+                ],
+                [
+                    'text' => 'Role Management',
+                    'route' => 'admin.roles.index',
+                    'icon' => 'fas fa-fw fa-user-tag',
+                    'can' => 'assign-roles',
+                    'active' => ['admin/roles*'],
+                ],
+                [
+                    'text' => 'Permission List',
+                    'route' => 'admin.permissions.index',
+                    'icon' => 'fas fa-fw fa-key',
+                    'can' => 'assign-permissions',
+                    'active' => ['admin/permissions*'],
                 ],
             ],
         ],

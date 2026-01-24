@@ -3,108 +3,182 @@
 @section('title', 'Permission Matrix - SIMANSA')
 
 @section('content_header')
-    <h1>Permission Matrix</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-shield-alt mr-2"></i> Permission Matrix</h1>
+        <div>
+            <button type="button" class="btn btn-info" id="btnScan" title="Scan Permission">
+                <i class="fas fa-search"></i> Scan
+            </button>
+            <button type="button" class="btn btn-success" id="btnAddRole" title="Tambah Role">
+                <i class="fas fa-plus"></i> Tambah Role
+            </button>
+        </div>
+    </div>
 @stop
 
 @section('content')
 <div class="row">
-    <div class="col-12">
-        <div class="card card-primary card-outline">
+    <!-- Left Sidebar: Roles -->
+    <div class="col-md-3">
+        <div class="card card-primary card-outline sticky-top" style="top: 10px; z-index: 100;">
             <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-shield-alt mr-1"></i>
-                    Role vs Permissions Matrix
-                </h3>
+                <h3 class="card-title"><i class="fas fa-user-tag mr-1"></i> Roles</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="roleList">
+                    @foreach($roles as $role)
+                    <div class="list-group-item d-flex justify-content-between align-items-center role-item {{ $role->name === 'Super Admin' ? 'bg-warning-subtle' : '' }}" 
+                         data-role-id="{{ $role->id }}" data-role-name="{{ $role->name }}">
+                        <div>
+                            <strong>{{ $role->name }}</strong>
+                            @if($role->name === 'Super Admin')
+                            <i class="fas fa-crown text-warning ml-1" title="Protected"></i>
+                            @endif
+                            <br>
+                            <small class="text-muted">{{ $role->users_count }} users</small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            @if($role->name !== 'Super Admin')
+                            <button type="button" class="btn btn-outline-success btn-xs btn-role-grant-all" 
+                                    data-role-id="{{ $role->id }}" title="Grant All">
+                                <i class="fas fa-check-double"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-xs btn-role-revoke-all" 
+                                    data-role-id="{{ $role->id }}" title="Revoke All">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Super Admin memiliki semua akses
+                </small>
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="card card-info card-outline mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-chart-pie mr-1"></i> Statistik</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Roles:</span>
+                    <strong>{{ $roles->count() }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Permissions:</span>
+                    <strong>{{ $totalPermissions }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Users:</span>
+                    <strong>{{ $totalUsers }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Total Modules:</span>
+                    <strong>{{ count($moduleDefinitions) }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content: Permission Matrix -->
+    <div class="col-md-9">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-th mr-1"></i> Permission per Module</h3>
                 <div class="card-tools">
-                    <button class="btn btn-sm btn-info" id="expandAll">
-                        <i class="fas fa-expand"></i> Expand All
+                    <button class="btn btn-sm btn-default" id="expandAll">
+                        <i class="fas fa-expand-alt"></i> Expand All
                     </button>
-                    <button class="btn btn-sm btn-secondary" id="collapseAll">
-                        <i class="fas fa-compress"></i> Collapse All
+                    <button class="btn btn-sm btn-default" id="collapseAll">
+                        <i class="fas fa-compress-alt"></i> Collapse All
                     </button>
                 </div>
             </div>
-            <div class="card-body">
-                <!-- Summary Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="info-box bg-gradient-primary">
-                            <span class="info-box-icon"><i class="fas fa-shield-alt"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Total Roles</span>
-                                <span class="info-box-number">{{ $roles->count() }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-box bg-gradient-success">
-                            <span class="info-box-icon"><i class="fas fa-key"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Total Permissions</span>
-                                <span class="info-box-number">{{ $permissions->count() }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-box bg-gradient-warning">
-                            <span class="info-box-icon"><i class="fas fa-cube"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Modules</span>
-                                <span class="info-box-number">{{ $permissionsByModule->count() }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-box bg-gradient-info">
-                            <span class="info-box-icon"><i class="fas fa-users"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Total Users</span>
-                                <span class="info-box-number">{{ $totalUsers }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Permission Matrix by Module -->
+            <div class="card-body p-2">
                 <div class="accordion" id="permissionAccordion">
-                    @foreach($permissionsByModule as $module => $perms)
-                    <div class="card mb-2">
-                        <div class="card-header p-2 bg-light" id="heading{{ $loop->index }}">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link btn-block text-left collapsed" type="button" 
-                                        data-toggle="collapse" data-target="#collapse{{ $loop->index }}">
-                                    <i class="fas fa-cube mr-2"></i>
-                                    <strong>{{ strtoupper($module) }}</strong>
-                                    <span class="badge badge-secondary float-right">{{ $perms->count() }} permissions</span>
+                    @foreach($moduleDefinitions as $moduleKey => $module)
+                    @php
+                        $modulePermissions = $module['permissions'];
+                        $registeredCount = 0;
+                        foreach($modulePermissions as $perm) {
+                            if(in_array($perm, $allPermissions)) $registeredCount++;
+                        }
+                    @endphp
+                    <div class="card mb-1 module-card" data-module="{{ $moduleKey }}">
+                        <div class="card-header p-2 bg-light" id="heading{{ $moduleKey }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-link text-left p-0 module-toggle" type="button" 
+                                        data-toggle="collapse" data-target="#collapse{{ $moduleKey }}"
+                                        aria-expanded="false" aria-controls="collapse{{ $moduleKey }}">
+                                    <i class="fas fa-{{ $module['icon'] ?? 'cube' }} mr-2 text-{{ $module['color'] ?? 'primary' }}"></i>
+                                    <strong>{{ $module['label'] }}</strong>
+                                    <span class="badge badge-{{ $registeredCount == count($modulePermissions) ? 'success' : 'warning' }} ml-2">
+                                        {{ $registeredCount }}/{{ count($modulePermissions) }}
+                                    </span>
                                 </button>
-                            </h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-success btn-xs btn-module-grant-all" 
+                                            data-module="{{ $moduleKey }}" title="Grant All for this Module">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-xs btn-module-revoke-all" 
+                                            data-module="{{ $moduleKey }}" title="Revoke All for this Module">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div id="collapse{{ $loop->index }}" class="collapse" data-parent="#permissionAccordion">
+                        <div id="collapse{{ $moduleKey }}" class="collapse" data-parent="#permissionAccordion">
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered table-hover mb-0">
-                                        <thead class="bg-gradient-primary">
+                                    <table class="table table-sm table-bordered table-hover table-striped mb-0 permission-table">
+                                        <thead class="bg-gradient-secondary">
                                             <tr>
-                                                <th style="width: 30%">Permission</th>
+                                                <th style="min-width: 200px;">Permission</th>
                                                 @foreach($roles as $role)
-                                                <th class="text-center" style="width: {{ 70 / $roles->count() }}%">
-                                                    {{ $role->name }}
+                                                <th class="text-center" style="min-width: 80px;">
+                                                    <small>{{ Str::limit($role->name, 10) }}</small>
                                                 </th>
                                                 @endforeach
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($perms as $perm)
-                                            <tr>
+                                            @foreach($modulePermissions as $permName)
+                                            @php
+                                                $isRegistered = in_array($permName, $allPermissions);
+                                            @endphp
+                                            <tr class="{{ !$isRegistered ? 'table-warning' : '' }}">
                                                 <td>
-                                                    <code class="text-sm">{{ $perm->name }}</code>
+                                                    <code class="text-xs {{ !$isRegistered ? 'text-danger' : '' }}">{{ $permName }}</code>
+                                                    @if(!$isRegistered)
+                                                    <span class="badge badge-warning badge-sm ml-1" title="Not registered">!</span>
+                                                    @endif
                                                 </td>
                                                 @foreach($roles as $role)
-                                                <td class="text-center">
-                                                    @if($role->hasPermissionTo($perm->name))
-                                                        <i class="fas fa-check-circle text-success" title="Has Permission"></i>
+                                                <td class="text-center p-1">
+                                                    @if($role->name === 'Super Admin')
+                                                    <i class="fas fa-check-circle text-success" title="Super Admin has all permissions"></i>
+                                                    @elseif($isRegistered)
+                                                    @php
+                                                        $hasPermission = isset($permissionMatrix[$role->id][$permName]) && $permissionMatrix[$role->id][$permName];
+                                                    @endphp
+                                                    <div class="custom-control custom-checkbox d-inline">
+                                                        <input type="checkbox" 
+                                                               class="custom-control-input permission-checkbox" 
+                                                               id="perm_{{ $role->id }}_{{ md5($permName) }}"
+                                                               data-role-id="{{ $role->id }}"
+                                                               data-permission="{{ $permName }}"
+                                                               {{ $hasPermission ? 'checked' : '' }}>
+                                                        <label class="custom-control-label" for="perm_{{ $role->id }}_{{ md5($permName) }}"></label>
+                                                    </div>
                                                     @else
-                                                        <i class="fas fa-times-circle text-danger" title="No Permission"></i>
+                                                    <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
                                                 @endforeach
@@ -118,81 +192,415 @@
                     </div>
                     @endforeach
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <!-- Role Details -->
-                <div class="mt-4">
-                    <h5 class="mb-3"><i class="fas fa-info-circle"></i> Role Details</h5>
-                    <div class="row">
-                        @foreach($roles as $role)
-                        <div class="col-md-4">
-                            <div class="card card-widget widget-user-2">
-                                <div class="widget-user-header 
-                                    @if($role->name == 'Super Admin') bg-danger
-                                    @elseif($role->name == 'Admin') bg-primary
-                                    @elseif($role->name == 'Operator') bg-info
-                                    @elseif($role->name == 'Guru') bg-success
-                                    @else bg-secondary
-                                    @endif
-                                ">
-                                    <h3 class="widget-user-username">{{ $role->name }}</h3>
-                                    <h5 class="widget-user-desc">{{ $role->permissions->count() }} Permissions</h5>
-                                </div>
-                                <div class="card-footer p-0">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <span class="nav-link">
-                                                Total Users <span class="float-right badge bg-info">{{ $role->users->count() }}</span>
-                                            </span>
-                                        </li>
-                                        <li class="nav-item">
-                                            <span class="nav-link">
-                                                Guard <span class="float-right badge bg-success">{{ $role->guard_name }}</span>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
+<!-- Floating Save Button -->
+<div id="floatingSaveBtn" class="floating-save-btn d-none">
+    <button type="button" class="btn btn-lg btn-success shadow-lg" id="btnSaveChanges">
+        <i class="fas fa-save mr-2"></i> Simpan Perubahan
+        <span class="badge badge-light ml-2" id="changeCount">0</span>
+    </button>
+</div>
+
+<!-- Scan Modal -->
+<div class="modal fade" id="scanModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-search mr-2"></i> Scan Permissions</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="scanLoading" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p class="mt-2">Scanning permissions...</p>
+                </div>
+                <div id="scanResults" class="d-none">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Ditemukan <strong id="totalUnregistered">0</strong> permission yang belum terdaftar
+                    </div>
+                    <div class="list-group" id="unregisteredList">
+                        <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-success" id="btnSyncPermissions">
+                    <i class="fas fa-sync mr-1"></i> Sync All Permissions
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Role Modal -->
+<div class="modal fade" id="addRoleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-plus-circle mr-2"></i> Tambah Role Baru</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="formAddRole">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="roleName">Nama Role <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="roleName" name="name" required
+                               placeholder="Contoh: Koordinator BK">
+                    </div>
+                    <div class="form-group">
+                        <label for="roleDescription">Deskripsi</label>
+                        <textarea class="form-control" id="roleDescription" name="description" rows="2"
+                                  placeholder="Deskripsi role (opsional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i> Simpan Role
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 @stop
 
-@push('css')
+@section('css')
 <style>
-    .table-sm td, .table-sm th {
-        padding: 0.5rem;
-        vertical-align: middle;
+    .floating-save-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1050;
+        animation: pulse 2s infinite;
     }
-    code {
-        font-size: 0.9rem;
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
-    .accordion .btn-link {
-        text-decoration: none;
-        color: #333;
+
+    .permission-checkbox {
+        cursor: pointer;
     }
-    .accordion .btn-link:hover {
-        color: #007bff;
+
+    .permission-checkbox:checked + .custom-control-label::before {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .role-item {
+        transition: all 0.2s ease;
+    }
+
+    .role-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .role-item.active {
+        background-color: #e3f2fd;
+        border-left: 3px solid #2196f3;
+    }
+
+    .module-card {
+        border-left: 3px solid transparent;
+        transition: border-color 0.2s ease;
+    }
+
+    .module-card:hover {
+        border-left-color: #007bff;
+    }
+
+    .module-toggle {
+        text-decoration: none !important;
+    }
+
+    .module-toggle:hover {
+        color: #0056b3 !important;
+    }
+
+    .permission-table th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fff3cd !important;
+    }
+
+    .badge-sm {
+        font-size: 0.65rem;
+        padding: 2px 5px;
+    }
+
+    /* Changed indicator */
+    .permission-checkbox.changed + .custom-control-label::after {
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.5);
+    }
+
+    /* Checkbox size adjustment */
+    .custom-checkbox .custom-control-label::before,
+    .custom-checkbox .custom-control-label::after {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+
+    .custom-control {
+        padding-left: 1.8rem;
+        min-height: 1.2rem;
     }
 </style>
-@endpush
+@stop
 
-@push('js')
+@section('js')
 <script>
 $(document).ready(function() {
-    // Expand All
+    let pendingChanges = [];
+    
+    // Track permission checkbox changes
+    $(document).on('change', '.permission-checkbox', function() {
+        const $checkbox = $(this);
+        const roleId = $checkbox.data('role-id');
+        const permission = $checkbox.data('permission');
+        const isChecked = $checkbox.is(':checked');
+        
+        // Mark as changed
+        $checkbox.addClass('changed');
+        
+        // Add to pending changes
+        const changeIndex = pendingChanges.findIndex(c => 
+            c.role_id === roleId && c.permission === permission
+        );
+        
+        const change = {
+            role_id: roleId,
+            permission: permission,
+            action: isChecked ? 'grant' : 'revoke'
+        };
+        
+        if (changeIndex >= 0) {
+            pendingChanges[changeIndex] = change;
+        } else {
+            pendingChanges.push(change);
+        }
+        
+        updateSaveButton();
+    });
+    
+    // Update floating save button
+    function updateSaveButton() {
+        const $btn = $('#floatingSaveBtn');
+        const $count = $('#changeCount');
+        
+        if (pendingChanges.length > 0) {
+            $btn.removeClass('d-none');
+            $count.text(pendingChanges.length);
+        } else {
+            $btn.addClass('d-none');
+        }
+    }
+    
+    // Save changes
+    $('#btnSaveChanges').on('click', function() {
+        if (pendingChanges.length === 0) return;
+        
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...');
+        
+        $.ajax({
+            url: '{{ route("admin.permission-matrix.update") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                changes: pendingChanges
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    pendingChanges = [];
+                    $('.permission-checkbox.changed').removeClass('changed');
+                    updateSaveButton();
+                } else {
+                    toastr.error(response.message || 'Gagal menyimpan perubahan');
+                }
+            },
+            error: function(xhr) {
+                toastr.error('Terjadi kesalahan: ' + (xhr.responseJSON?.message || 'Unknown error'));
+            },
+            complete: function() {
+                $btn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i> Simpan Perubahan <span class="badge badge-light ml-2" id="changeCount">0</span>');
+            }
+        });
+    });
+    
+    // Expand/Collapse all
     $('#expandAll').on('click', function() {
         $('.collapse').collapse('show');
     });
-
-    // Collapse All
+    
     $('#collapseAll').on('click', function() {
         $('.collapse').collapse('hide');
     });
+    
+    // Scan permissions
+    $('#btnScan').on('click', function() {
+        $('#scanModal').modal('show');
+        $('#scanLoading').removeClass('d-none');
+        $('#scanResults').addClass('d-none');
+        
+        $.get('{{ route("admin.permission-matrix.scan") }}', function(response) {
+            $('#scanLoading').addClass('d-none');
+            $('#scanResults').removeClass('d-none');
+            
+            if (response.success) {
+                $('#totalUnregistered').text(response.total);
+                
+                const $list = $('#unregisteredList');
+                $list.empty();
+                
+                if (response.unregistered.length === 0) {
+                    $list.html('<div class="alert alert-success"><i class="fas fa-check-circle mr-2"></i> Semua permission sudah terdaftar!</div>');
+                } else {
+                    response.unregistered.forEach(function(perm) {
+                        $list.append(`
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <code>${perm}</code>
+                                <span class="badge badge-warning">Belum terdaftar</span>
+                            </div>
+                        `);
+                    });
+                }
+            }
+        }).fail(function(xhr) {
+            $('#scanLoading').addClass('d-none');
+            toastr.error('Gagal scan permissions');
+        });
+    });
+    
+    // Sync permissions
+    $('#btnSyncPermissions').on('click', function() {
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Syncing...');
+        
+        $.post('{{ route("admin.permission-matrix.sync") }}', {
+            _token: '{{ csrf_token() }}'
+        }, function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            } else {
+                toastr.error(response.message);
+            }
+        }).fail(function(xhr) {
+            toastr.error('Gagal sync permissions');
+        }).always(function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-sync mr-1"></i> Sync All Permissions');
+        });
+    });
+    
+    // Add role
+    $('#btnAddRole').on('click', function() {
+        $('#addRoleModal').modal('show');
+    });
+    
+    $('#formAddRole').on('submit', function(e) {
+        e.preventDefault();
+        
+        const $form = $(this);
+        const $btn = $form.find('button[type="submit"]');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+        
+        $.post('{{ route("admin.permission-matrix.role.store") }}', $form.serialize(), function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                $('#addRoleModal').modal('hide');
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                toastr.error(response.message);
+            }
+        }).fail(function(xhr) {
+            toastr.error('Gagal membuat role: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }).always(function() {
+            $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Role');
+        });
+    });
+    
+    // Grant all for role
+    $(document).on('click', '.btn-role-grant-all', function() {
+        const roleId = $(this).data('role-id');
+        
+        if (!confirm('Berikan semua permission ke role ini?')) return;
+        
+        bulkUpdateRole(roleId, 'grant_all');
+    });
+    
+    // Revoke all for role
+    $(document).on('click', '.btn-role-revoke-all', function() {
+        const roleId = $(this).data('role-id');
+        
+        if (!confirm('Cabut semua permission dari role ini?')) return;
+        
+        bulkUpdateRole(roleId, 'revoke_all');
+    });
+    
+    function bulkUpdateRole(roleId, action) {
+        $.post('{{ route("admin.permission-matrix.role.bulk") }}', {
+            _token: '{{ csrf_token() }}',
+            role_id: roleId,
+            action: action
+        }, function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                toastr.error(response.message);
+            }
+        }).fail(function(xhr) {
+            toastr.error('Gagal update permission');
+        });
+    }
+    
+    // Module-level grant/revoke
+    $(document).on('click', '.btn-module-grant-all', function() {
+        const module = $(this).data('module');
+        // Check all checkboxes in this module
+        $(`#collapse${module} .permission-checkbox`).prop('checked', true).trigger('change');
+    });
+    
+    $(document).on('click', '.btn-module-revoke-all', function() {
+        const module = $(this).data('module');
+        // Uncheck all checkboxes in this module
+        $(`#collapse${module} .permission-checkbox`).prop('checked', false).trigger('change');
+    });
+    
+    // Keyboard shortcut: Ctrl+S to save
+    $(document).on('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            if (pendingChanges.length > 0) {
+                $('#btnSaveChanges').click();
+            }
+        }
+    });
 });
 </script>
-@endpush
+@stop

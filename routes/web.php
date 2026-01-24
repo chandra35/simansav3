@@ -205,7 +205,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/{user}/assign-role-form', [App\Http\Controllers\Admin\UserController::class, 'assignRoleForm'])->name('users.assign-role-form');
     Route::post('/users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');
     Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    
+    // Permission Matrix (Enhanced RBAC UI)
     Route::get('/permission-matrix', [App\Http\Controllers\Admin\UserController::class, 'permissionMatrix'])->name('users.permission-matrix');
+    Route::post('/permission-matrix/update', [App\Http\Controllers\Admin\UserController::class, 'updatePermissionMatrix'])->name('admin.permission-matrix.update');
+    Route::get('/permission-matrix/scan', [App\Http\Controllers\Admin\UserController::class, 'scanPermissions'])->name('admin.permission-matrix.scan');
+    Route::post('/permission-matrix/sync', [App\Http\Controllers\Admin\UserController::class, 'syncPermissions'])->name('admin.permission-matrix.sync');
+    Route::post('/permission-matrix/role/store', [App\Http\Controllers\Admin\UserController::class, 'storeRole'])->name('admin.permission-matrix.role.store');
+    Route::post('/permission-matrix/role/bulk', [App\Http\Controllers\Admin\UserController::class, 'bulkUpdateRolePermissions'])->name('admin.permission-matrix.role.bulk');
+    Route::delete('/permission-matrix/role/{role}', [App\Http\Controllers\Admin\UserController::class, 'destroyRole'])->name('admin.permission-matrix.role.destroy');
     
     // Role & Permission Management (RBAC)
     Route::middleware(['permission:assign-roles'])->group(function () {
