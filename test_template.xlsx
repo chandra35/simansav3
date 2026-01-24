@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="C9AAdj74ZDCB9NGO7WiS4eD240Qo3w4hb91upzCE">
+
+    
+    
+    
+    <title>
+                Login - SIMANSA         - MAN 1 Metro    </title>
+
+    
+        <link rel="stylesheet" href="http://127.0.0.1:8000/vendor/icheck-bootstrap/icheck-bootstrap.min.css">
+
+    
+                            <link rel="stylesheet" href="http://127.0.0.1:8000/vendor/fontawesome-free/css/all.min.css">
+                <link rel="stylesheet" href="http://127.0.0.1:8000/vendor/overlayScrollbars/css/OverlayScrollbars.min.css">
+                <link rel="stylesheet" href="http://127.0.0.1:8000/vendor/adminlte/dist/css/adminlte.min.css">
+
+                                    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+                            
+    
+    <link rel="stylesheet" href="http://127.0.0.1:8000/css/custom-compact.css">
+            
+            
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+    
+    
+            
+    
+    
+</head>
+
+<body class="login-page" >
+
+    
+        <div class="login-box">
+
+        
+        <div class="login-logo">
+            <a href="http://127.0.0.1:8000/home">
+
+                
+                                    <img src="http://127.0.0.1:8000/vendor/adminlte/dist/img/AdminLTELogo.png"
+                         alt="SIMANSA Logo" height="50">
+                
+                
+                <b>SIMANSA</b>
+
+            </a>
+        </div>
+
+        
+        <div class="card card-outline card-primary">
+
+            
+                            <div class="card-header ">
+                    <h3 class="card-title float-none text-center">
+                        Sistem Informasi MAN 1 Metro                    </h3>
+                </div>
+            
+            
+            <div class="card-body login-card-body ">
+                <form action="http://127.0.0.1:8000/login" method="post" id="loginForm">
+    <input type="hidden" name="_token" value="C9AAdj74ZDCB9NGO7WiS4eD240Qo3w4hb91upzCE" autocomplete="off">    
+    
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+    
+    
+    <div class="input-group mb-3">
+        <input type="text" name="username" class="form-control "
+               value="" placeholder="Username / NISN" autofocus>
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-user"></span>
+            </div>
+        </div>
+            </div>
+
+    
+    <div class="input-group mb-3">
+        <input type="password" name="password" class="form-control "
+               placeholder="Password">
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+            </div>
+        </div>
+            </div>
+
+    
+    <div class="row">
+        <div class="col-8">
+            <div class="icheck-primary">
+                <input type="checkbox" id="remember" name="remember" >
+                <label for="remember">
+                    Ingat Saya
+                </label>
+            </div>
+        </div>
+        <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+        </div>
+    </div>
+    
+    
+    <div class="row mt-2">
+        <div class="col-12">
+            <small id="locationStatus" class="text-muted">
+                <i class="fas fa-map-marker-alt"></i> Mendeteksi lokasi...
+            </small>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Try to get device location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Success - got GPS coordinates
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                document.getElementById('locationStatus').innerHTML = 
+                    '<i class="fas fa-check-circle text-success"></i> Lokasi terdeteksi';
+            },
+            function(error) {
+                // Failed or denied
+                console.log('Geolocation error:', error);
+                document.getElementById('locationStatus').innerHTML = 
+                    '<i class="fas fa-info-circle text-info"></i> Lokasi dari IP akan digunakan';
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        document.getElementById('locationStatus').innerHTML = 
+            '<i class="fas fa-info-circle text-info"></i> Browser tidak support GPS';
+    }
+});
+</script>
+            </div>
+
+            
+                            <div class="card-footer ">
+                    <p class="mb-1">
+    <small class="text-muted">
+        Gunakan username/NISN dan password yang telah diberikan.<br>
+        Untuk siswa, NISN adalah username default Anda.
+    </small>
+</p>
+                </div>
+            
+        </div>
+
+    </div>
+
+    
+                            <script src="http://127.0.0.1:8000/vendor/jquery/jquery.min.js"></script>
+                <script src="http://127.0.0.1:8000/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+                <script src="http://127.0.0.1:8000/vendor/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+                <script src="http://127.0.0.1:8000/vendor/adminlte/dist/js/adminlte.min.js"></script>
+            
+    
+    
+    
+    
+    
+            
+</body>
+
+</html>

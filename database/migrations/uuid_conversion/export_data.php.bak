@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * STEP 1: Export Current Data to JSON Files
+ * 
+ * Run this before converting to UUID:
+ * php artisan tinker < database/migrations/uuid_conversion/export_data.php
+ */
+
+use App\Models\Kurikulum;
+use App\Models\Jurusan;
+use App\Models\TahunPelajaran;
+use App\Models\Kelas;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+// Create backup directory
+$backupPath = storage_path('app/uuid_conversion_backup');
+if (!file_exists($backupPath)) {
+    mkdir($backupPath, 0755, true);
+}
+
+echo "📦 Exporting data for UUID conversion...\n\n";
+
+// 1. Export Kurikulum
+echo "1️⃣  Exporting Kurikulum... ";
+$kurikulumData = Kurikulum::with('jurusans')->get()->toArray();
+file_put_contents($backupPath . '/kurikulum.json', json_encode($kurikulumData, JSON_PRETTY_PRINT));
+echo count($kurikulumData) . " records\n";
+
+// 2. Export Jurusan
+echo "2️⃣  Exporting Jurusan... ";
+$jurusanData = Jurusan::all()->toArray();
+file_put_contents($backupPath . '/jurusan.json', json_encode($jurusanData, JSON_PRETTY_PRINT));
+echo count($jurusanData) . " records\n";
+
+// 3. Export Tahun Pelajaran
+echo "3️⃣  Exporting Tahun Pelajaran... ";
+$tahunPelajaranData = TahunPelajaran::all()->toArray();
+file_put_contents($backupPath . '/tahun_pelajaran.json', json_encode($tahunPelajaranData, JSON_PRETTY_PRINT));
+echo count($tahunPelajaranData) . " records\n";
+
+// 4. Export Kelas
+echo "4️⃣  Exporting Kelas... ";
+$kelasData = Kelas::all()->toArray();
+file_put_contents($backupPath . '/kelas.json', json_encode($kelasData, JSON_PRETTY_PRINT));
+echo count($kelasData) . " records\n";
+
+// 5. Export Siswa Kelas (pivot)
+echo "5️⃣  Exporting Siswa Kelas... ";
+$siswaKelasData = DB::table('siswa_kelas')->get()->toArray();
+file_put_contents($backupPath . '/siswa_kelas.json', json_encode($siswaKelasData, JSON_PRETTY_PRINT));
+echo count($siswaKelasData) . " records\n";
+
+// Create mapping file (old ID -> will be replaced with UUID after migration)
+$mappings = [
+    'kurikulum' => collect($kurikulumData)->pluck('id')->toArray(),
+    'jurusan' => collect($jurusanData)->pluck('id', 'kurikulum_id')->toArray(),
+    'tahun_pelajaran' => collect($tahunPelajaranData)->pluck('id', 'kurikulum_id')->toArray(),
+    'kelas' => collect($kelasData)->pluck('id')->toArray(),
+];
+file_put_contents($backupPath . '/id_mappings.json', json_encode($mappings, JSON_PRETTY_PRINT));
+
+echo "\n✅ Data exported successfully to: {$backupPath}\n";
+echo "\n📋 Summary:\n";
+echo "   - Kurikulum: " . count($kurikulumData) . " records\n";
+echo "   - Jurusan: " . count($jurusanData) . " records\n";
+echo "   - Tahun Pelajaran: " . count($tahunPelajaranData) . " records\n";
+echo "   - Kelas: " . count($kelasData) . " records\n";
+echo "   - Siswa Kelas: " . count($siswaKelasData) . " records\n";
+echo "\n⚠️  Next: Run UUID conversion migrations\n";
+

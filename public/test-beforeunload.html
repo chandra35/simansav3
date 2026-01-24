@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test beforeunload - Import Siswa</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .status-idle {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .status-uploading {
+            background: #fff3cd;
+            color: #856404;
+            animation: pulse 1.5s infinite;
+        }
+        .status-done {
+            background: #d4edda;
+            color: #155724;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center text-white mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-shield-alt"></i> Test beforeunload Event
+            </h1>
+            <p class="lead">Verifikasi navigasi setelah import selesai</p>
+        </div>
+
+        <!-- Status -->
+        <div class="test-card">
+            <h3><i class="fas fa-info-circle"></i> Current Status</h3>
+            <div class="status-box status-idle" id="status">
+                <i class="fas fa-circle"></i> IDLE
+            </div>
+            <div class="alert alert-info">
+                <strong>Upload Flag:</strong> <code id="uploadingFlag">false</code><br>
+                <strong>beforeunload Active:</strong> <code id="beforeunloadStatus">NO</code>
+            </div>
+        </div>
+
+        <!-- Test Scenarios -->
+        <div class="test-card">
+            <h3><i class="fas fa-vials"></i> Test Scenarios</h3>
+            
+            <!-- Scenario 1 -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <strong>Test #1:</strong> Navigasi saat IDLE
+                </div>
+                <div class="card-body">
+                    <p>Seharusnya: <strong class="text-success">Langsung pindah (NO WARNING)</strong></p>
+                    <a href="https://google.com" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Test Navigate (New Tab)
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="testLeave()">
+                        <i class="fas fa-sign-out-alt"></i> Test Leave Page
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scenario 2 -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-dark">
+                    <strong>Test #2:</strong> Navigasi saat UPLOAD
+                </div>
+                <div class="card-body">
+                    <p>Seharusnya: <strong class="text-warning">Ada WARNING konfirmasi</strong></p>
+                    <button class="btn btn-warning" onclick="startUpload()">
+                        <i class="fas fa-upload"></i> Start Upload (Simulasi)
+                    </button>
+                    <button class="btn btn-outline-warning ml-2" onclick="testLeave()" id="btnTestWhileUpload" disabled>
+                        <i class="fas fa-sign-out-alt"></i> Test Leave (Should Warn)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scenario 3 -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <strong>Test #3:</strong> Navigasi setelah SUCCESS
+                </div>
+                <div class="card-body">
+                    <p>Seharusnya: <strong class="text-success">Langsung pindah (NO WARNING)</strong></p>
+                    <p class="text-muted"><small>⚠️ Bug sebelumnya: Ada warning karena uploading flag tidak direset</small></p>
+                    <button class="btn btn-success" onclick="simulateSuccess()">
+                        <i class="fas fa-check-circle"></i> Simulate Success
+                    </button>
+                    <a href="https://google.com" class="btn btn-outline-success ml-2" target="_blank" id="btnTestAfterSuccess" style="display:none;">
+                        <i class="fas fa-external-link-alt"></i> Test Navigate (Should Work)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Scenario 4 -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <strong>Test #4:</strong> Navigasi setelah ERROR
+                </div>
+                <div class="card-body">
+                    <p>Seharusnya: <strong class="text-success">Langsung pindah (NO WARNING)</strong></p>
+                    <button class="btn btn-danger" onclick="simulateError()">
+                        <i class="fas fa-times-circle"></i> Simulate Error
+                    </button>
+                    <a href="https://google.com" class="btn btn-outline-danger ml-2" target="_blank" id="btnTestAfterError" style="display:none;">
+                        <i class="fas fa-external-link-alt"></i> Test Navigate (Should Work)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log -->
+        <div class="test-card">
+            <h3><i class="fas fa-terminal"></i> Event Log</h3>
+            <div class="log" id="log">
+                <div>✅ Test page loaded</div>
+                <div>💡 beforeunload handler registered</div>
+                <div>📊 Current state: IDLE (uploading = false)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simulate the same logic as import page
+        let uploading = false;
+
+        // Register beforeunload handler (sama seperti di import page)
+        window.addEventListener('beforeunload', function(e) {
+            if (uploading) {
+                addLog('⚠️  beforeunload triggered: BLOCKING navigation');
+                e.preventDefault();
+                e.returnValue = 'Import sedang berjalan. Yakin ingin meninggalkan halaman?';
+                return e.returnValue;
+            } else {
+                addLog('✅ beforeunload triggered: ALLOWING navigation');
+            }
+        });
+
+        function updateStatus(status, flag) {
+            let statusBox = $('#status');
+            let statusClass = 'status-idle';
+            let icon = 'fa-circle';
+            
+            if (status === 'UPLOADING') {
+                statusClass = 'status-uploading';
+                icon = 'fa-spinner fa-spin';
+            } else if (status === 'DONE') {
+                statusClass = 'status-done';
+                icon = 'fa-check-circle';
+            }
+            
+            statusBox.removeClass('status-idle status-uploading status-done').addClass(statusClass);
+            statusBox.html(`<i class="fas ${icon}"></i> ${status}`);
+            
+            $('#uploadingFlag').text(flag);
+            $('#beforeunloadStatus').text(flag ? 'YES - WILL WARN' : 'NO - SAFE TO LEAVE').css('color', flag ? 'red' : 'green');
+        }
+
+        function addLog(message) {
+            let log = $('#log');
+            let timestamp = new Date().toLocaleTimeString();
+            log.append(`<div>[${timestamp}] ${message}</div>`);
+            log.scrollTop(log[0].scrollHeight);
+        }
+
+        function startUpload() {
+            uploading = true;
+            updateStatus('UPLOADING', true);
+            addLog('');
+            addLog('═══════════════════════════════════════');
+            addLog('🚀 Upload started');
+            addLog('📤 uploading = true');
+            addLog('🛡️  beforeunload ACTIVE: Page leave will show warning');
+            addLog('═══════════════════════════════════════');
+            $('#btnTestWhileUpload').prop('disabled', false);
+            
+            // Auto complete after 5 seconds
+            setTimeout(function() {
+                addLog('⏱️  Auto-completing in 5 seconds...');
+            }, 0);
+            
+            setTimeout(function() {
+                addLog('⚠️  ⚠️  ⚠️  WARNING ⚠️  ⚠️  ⚠️');
+                addLog('🐛 OLD BUG: uploading flag NOT reset here!');
+                addLog('🐛 Result: User stuck, cannot navigate!');
+                addLog('');
+                addLog('✅ FIXED: uploading = false after success/error');
+            }, 5000);
+        }
+
+        function simulateSuccess() {
+            if (!uploading) {
+                startUpload();
+            }
+            
+            setTimeout(function() {
+                addLog('');
+                addLog('═══════════════════════════════════════');
+                addLog('✅ Import SUCCESS!');
+                addLog('🔧 FIXED: uploading = false (reset flag)');
+                addLog('🛡️  beforeunload DISABLED: Navigation allowed');
+                addLog('═══════════════════════════════════════');
+                
+                // FIXED: Reset uploading flag
+                uploading = false;
+                
+                updateStatus('DONE', false);
+                $('#btnTestAfterSuccess').fadeIn();
+                addLog('');
+                addLog('💡 Try navigating now - should work without warning!');
+            }, 2000);
+        }
+
+        function simulateError() {
+            if (!uploading) {
+                startUpload();
+            }
+            
+            setTimeout(function() {
+                addLog('');
+                addLog('═══════════════════════════════════════');
+                addLog('❌ Import ERROR!');
+                addLog('🔧 FIXED: uploading = false (reset flag)');
+                addLog('🛡️  beforeunload DISABLED: Navigation allowed');
+                addLog('═══════════════════════════════════════');
+                
+                // FIXED: Reset uploading flag
+                uploading = false;
+                
+                updateStatus('DONE', false);
+                $('#btnTestAfterError').fadeIn();
+                addLog('');
+                addLog('💡 Try navigating now - should work without warning!');
+            }, 2000);
+        }
+
+        function testLeave() {
+            if (uploading) {
+                addLog('');
+                addLog('🧪 TEST: Attempting to leave page...');
+                addLog('⚠️  Upload in progress: Browser will show warning');
+                addLog('💡 This is CORRECT behavior!');
+            } else {
+                addLog('');
+                addLog('🧪 TEST: Attempting to leave page...');
+                addLog('✅ No upload in progress: Navigation allowed');
+                addLog('💡 This is CORRECT behavior!');
+            }
+            
+            // Try to navigate
+            setTimeout(function() {
+                if (confirm('Test navigation?\n\n(Jika ada warning beforeunload, itu berarti beforeunload masih aktif)')) {
+                    window.location.href = 'about:blank';
+                }
+            }, 500);
+        }
+
+        // Update initial status
+        updateStatus('IDLE', false);
+    </script>
+</body>
+</html>
