@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AppSetting;
 use App\Models\EmailLog;
+use App\Models\EmailTemplate;
 use Illuminate\Support\Facades\Log;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -113,10 +114,37 @@ class EmailService
     }
 
     /**
+     * Send email using template
+     */
+    public function sendUsingTemplate(string $templateCode, string $to, array $data = [], string $type = null): array
+    {
+        $template = EmailTemplate::getByCode($templateCode);
+        
+        if (!$template) {
+            return [
+                'success' => false,
+                'message' => "Template email '{$templateCode}' tidak ditemukan atau tidak aktif."
+            ];
+        }
+
+        $rendered = $template->render($data);
+        
+        return $this->send($to, $rendered['subject'], $rendered['body'], $type ?? $templateCode);
+    }
+
+    /**
      * Send test email
      */
     public function sendTest(string $to): array
     {
+        // Try to use template first
+        $template = EmailTemplate::getByCode('test_email');
+        
+        if ($template) {
+            return $this->sendUsingTemplate('test_email', $to, [], 'test');
+        }
+        
+        // Fallback to hardcoded template
         $subject = 'Test Email SIMANSA';
         $body = $this->getTestEmailBody();
         
@@ -128,10 +156,37 @@ class EmailService
      */
     public function sendPasswordReset(string $to, string $name, string $resetUrl): array
     {
+        // Try to use template first
+        $template = EmailTemplate::getByCode('password_reset');
+        
+        if ($template) {
+            return $this->sendUsingTemplate('password_reset', $to, [
+                '[nama_user]' => $name,
+                '[reset_link]' => $resetUrl,
+            ], 'password_reset');
+        }
+        
+        // Fallback to hardcoded template
         $subject = 'Reset Password - SIMANSA';
         $body = $this->getPasswordResetBody($name, $resetUrl);
         
         return $this->send($to, $subject, $body, 'password_reset');
+    }
+
+    /**
+     * Send welcome email to siswa
+     */
+    public function sendWelcomeSiswa(string $to, array $data): array
+    {
+        return $this->sendUsingTemplate('welcome_siswa', $to, $data, 'welcome_siswa');
+    }
+
+    /**
+     * Send general notification
+     */
+    public function sendNotification(string $to, array $data): array
+    {
+        return $this->sendUsingTemplate('notification_general', $to, $data, 'notification');
     }
 
     /**

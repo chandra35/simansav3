@@ -580,6 +580,13 @@ return [
                     'active' => ['admin/email-logs*'],
                 ],
                 [
+                    'text' => 'Template Email',
+                    'route' => 'admin.email-templates.index',
+                    'icon' => 'fas fa-fw fa-file-alt',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/email-templates*'],
+                ],
+                [
                     'text' => 'Activity Logs',
                     'route' => 'admin.activity-logs.index',
                     'icon' => 'fas fa-fw fa-history',

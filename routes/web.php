@@ -263,6 +263,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/email-logs', [App\Http\Controllers\Admin\EmailLogController::class, 'index'])->name('email-logs.index');
         Route::get('/email-logs/{emailLog}', [App\Http\Controllers\Admin\EmailLogController::class, 'show'])->name('email-logs.show');
         Route::post('/email-logs/cleanup', [App\Http\Controllers\Admin\EmailLogController::class, 'cleanup'])->name('email-logs.cleanup');
+        
+        // Email Templates
+        Route::resource('email-templates', App\Http\Controllers\Admin\EmailTemplateController::class);
+        Route::get('/email-templates/{emailTemplate}/preview', [App\Http\Controllers\Admin\EmailTemplateController::class, 'preview'])->name('email-templates.preview');
+        Route::post('/email-templates/preview-form', [App\Http\Controllers\Admin\EmailTemplateController::class, 'previewForm'])->name('email-templates.preview-form');
+        Route::post('/email-templates/{emailTemplate}/duplicate', [App\Http\Controllers\Admin\EmailTemplateController::class, 'duplicate'])->name('email-templates.duplicate');
+        Route::post('/email-templates/{emailTemplate}/toggle-status', [App\Http\Controllers\Admin\EmailTemplateController::class, 'toggleStatus'])->name('email-templates.toggle-status');
+        Route::post('/email-templates/seed-defaults', [App\Http\Controllers\Admin\EmailTemplateController::class, 'seedDefaults'])->name('email-templates.seed-defaults');
+        Route::post('/email-templates/{emailTemplate}/reset-default', [App\Http\Controllers\Admin\EmailTemplateController::class, 'resetToDefault'])->name('email-templates.reset-default');
     });
     
     // Cetak (Print Reports)
