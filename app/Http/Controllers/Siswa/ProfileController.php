@@ -154,53 +154,58 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload foto profile only (AJAX)
+     * Upload foto profile only (AJAX) - supports both file and cropped base64
      */
     public function uploadFoto(Request $request)
     {
-        // Enhanced validation with strict rules
-        $request->validate([
-            'foto_profile' => [
-                'required',
-                'image',
-                'mimes:jpg,jpeg,png',
-                'max:2048', // 2MB max
-                'dimensions:min_width=100,min_height=100,max_width=5000,max_height=5000',
-            ]
-        ], [
-            'foto_profile.required' => 'Foto profil wajib dipilih',
-            'foto_profile.image' => 'File harus berupa gambar',
-            'foto_profile.mimes' => 'Format gambar hanya: JPG, JPEG, atau PNG',
-            'foto_profile.max' => 'Ukuran file maksimal 2MB',
-            'foto_profile.dimensions' => 'Dimensi gambar minimal 100x100 pixel',
-        ]);
-
         $user = Auth::user();
         $siswa = $user->siswa;
 
         try {
-            // Additional security check: Verify it's actually an image
-            $file = $request->file('foto_profile');
-            $imageInfo = @getimagesize($file->getRealPath());
-            
-            if ($imageInfo === false) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File bukan gambar yang valid!'
-                ], 400);
-            }
+            // Check if it's a cropped image (base64)
+            if ($request->has('cropped_image')) {
+                $path = $this->handleCroppedImageUpload($request->cropped_image, $siswa);
+            } else {
+                // Enhanced validation with strict rules for file upload
+                $request->validate([
+                    'foto_profile' => [
+                        'required',
+                        'image',
+                        'mimes:jpg,jpeg,png',
+                        'max:2048', // 2MB max
+                        'dimensions:min_width=100,min_height=100,max_width=5000,max_height=5000',
+                    ]
+                ], [
+                    'foto_profile.required' => 'Foto profil wajib dipilih',
+                    'foto_profile.image' => 'File harus berupa gambar',
+                    'foto_profile.mimes' => 'Format gambar hanya: JPG, JPEG, atau PNG',
+                    'foto_profile.max' => 'Ukuran file maksimal 2MB',
+                    'foto_profile.dimensions' => 'Dimensi gambar minimal 100x100 pixel',
+                ]);
 
-            // Check MIME type from actual file content (not just extension)
-            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
-            if (!in_array($imageInfo['mime'], $allowedMimes)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Format gambar tidak didukung. Hanya JPG, JPEG, dan PNG.'
-                ], 400);
-            }
+                // Additional security check: Verify it's actually an image
+                $file = $request->file('foto_profile');
+                $imageInfo = @getimagesize($file->getRealPath());
+                
+                if ($imageInfo === false) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File bukan gambar yang valid!'
+                    ], 400);
+                }
 
-            // Upload and process image
-            $path = $this->handleFotoUpload($file, $siswa);
+                // Check MIME type from actual file content (not just extension)
+                $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!in_array($imageInfo['mime'], $allowedMimes)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Format gambar tidak didukung. Hanya JPG, JPEG, dan PNG.'
+                    ], 400);
+                }
+
+                // Upload and process image
+                $path = $this->handleFotoUpload($file, $siswa);
+            }
             
             // Get old path before update
             $oldFoto = $siswa->foto_profile;
@@ -236,6 +241,74 @@ class ProfileController extends Controller
                 'message' => 'Gagal mengupload foto: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Handle cropped image upload (base64)
+     */
+    protected function handleCroppedImageUpload($base64Image, $siswa)
+    {
+        // Delete old foto if exists
+        if ($siswa->foto_profile) {
+            Storage::disk('public')->delete($siswa->foto_profile);
+        }
+
+        // Decode base64 image
+        $imageData = $base64Image;
+        if (strpos($base64Image, 'data:image') === 0) {
+            list($type, $imageData) = explode(';', $base64Image);
+            list(, $imageData) = explode(',', $imageData);
+        }
+        
+        $imageData = base64_decode($imageData);
+        
+        if ($imageData === false) {
+            throw new \Exception('Invalid base64 image data');
+        }
+
+        // Generate unique filename
+        $filename = $siswa->id . '_' . time() . '.jpg';
+        $path = 'foto-profile/' . $filename;
+        $fullPath = storage_path('app/public/' . $path);
+
+        // Create directory if not exists
+        $directory = dirname($fullPath);
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        // Create image from string and resize to 400x400
+        $source = @imagecreatefromstring($imageData);
+        if ($source === false) {
+            throw new \Exception('Failed to create image from data');
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+
+        // Create 400x400 canvas
+        $canvas = imagecreatetruecolor(400, 400);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefill($canvas, 0, 0, $white);
+
+        // Calculate dimensions to fit in 400x400
+        $ratio = min(400 / $width, 400 / $height);
+        $newWidth = (int)($width * $ratio);
+        $newHeight = (int)($height * $ratio);
+        $x = (int)((400 - $newWidth) / 2);
+        $y = (int)((400 - $newHeight) / 2);
+
+        // Resize and place
+        imagecopyresampled($canvas, $source, $x, $y, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        // Save as JPEG
+        imagejpeg($canvas, $fullPath, 90);
+
+        // Free memory
+        imagedestroy($source);
+        imagedestroy($canvas);
+
+        return $path;
     }
 
     public function updateDiri(Request $request)

@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <!-- SweetAlert2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
 <style>
     /* Flatpickr Custom Styling */
     .flatpickr-calendar {
@@ -446,19 +448,27 @@
                 </div>
                 <div class="card-body text-center">
                     <div class="form-group">
+                        <!-- Square Photo Preview -->
                         <div class="mb-3 position-relative foto-container">
-                            <img id="previewFoto" 
-                                 src="{{ $siswa->foto_profile_url }}" 
-                                 class="img-thumbnail foto-clickable" 
-                                 style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease;"
-                                 alt="Foto Profile {{ $siswa->nama_lengkap }}"
-                                 data-toggle="tooltip" 
-                                 data-placement="top" 
-                                 title="Klik untuk melihat foto ukuran penuh"
-                                 onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background=6c757d&color=fff'">
+                            <div class="foto-frame">
+                                <img id="previewFoto" 
+                                     src="{{ $siswa->foto_profile_url }}" 
+                                     class="foto-preview foto-clickable" 
+                                     alt="Foto Profile {{ $siswa->nama_lengkap }}"
+                                     data-toggle="tooltip" 
+                                     data-placement="top" 
+                                     title="Klik untuk melihat foto ukuran penuh"
+                                     onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background=6c757d&color=fff'">
+                                
+                                <!-- Upload overlay -->
+                                <div class="foto-overlay" id="uploadOverlay">
+                                    <i class="fas fa-camera fa-2x"></i>
+                                    <span>Ubah Foto</span>
+                                </div>
+                            </div>
                             
                             @if(!$siswa->foto_profile)
-                                <div class="position-absolute" style="bottom: 10px; left: 50%; transform: translateX(-50%);">
+                                <div class="mt-2">
                                     <span class="badge badge-info badge-pulse">
                                         <i class="fas fa-magic"></i> Avatar Otomatis
                                     </span>
@@ -469,21 +479,25 @@
                                 </button>
                             @endif
                         </div>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="foto_profile" accept="image/jpeg,image/jpg,image/png">
-                            <label class="custom-file-label" for="foto_profile">Pilih Foto</label>
+                        
+                        <!-- Upload Buttons -->
+                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                            <button type="button" class="btn btn-outline-primary" id="btnChooseFile">
+                                <i class="fas fa-folder-open"></i> Pilih File
+                            </button>
+                            <button type="button" class="btn btn-outline-success" id="btnOpenCamera">
+                                <i class="fas fa-camera"></i> Kamera
+                            </button>
                         </div>
+                        
+                        <input type="file" id="foto_profile" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                        
                         <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB, Min 100x100px
+                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB
                         </small>
                         <small class="form-text text-success">
-                            <i class="fas fa-magic"></i> <strong>Auto-Save:</strong> Foto langsung tersimpan (400x400px, tidak terpotong)
+                            <i class="fas fa-crop-alt"></i> <strong>Crop & Resize:</strong> Foto dipotong square 1:1
                         </small>
-                        @if(!$siswa->foto_profile)
-                            <small class="text-info d-block mt-1">
-                                <i class="fas fa-lightbulb"></i> Upload foto sendiri untuk tampilan lebih personal
-                            </small>
-                        @endif
                         @error('foto_profile')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -1090,10 +1104,198 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Crop Image -->
+<div class="modal fade" id="cropModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-crop-alt mr-2"></i> Crop Foto Profil
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="img-container" style="max-height: 400px; background: #f5f5f5; border-radius: 8px; overflow: hidden;">
+                            <img id="cropImage" src="" style="max-width: 100%; display: block;">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <p class="text-muted mb-2"><i class="fas fa-eye"></i> Preview</p>
+                            <div class="preview-container mx-auto" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #007bff; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                                <div class="preview" style="width: 100%; height: 100%; overflow: hidden;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary" id="rotateLeft" title="Rotate Left">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="rotateRight" title="Rotate Right">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="flipH" title="Flip Horizontal">
+                                <i class="fas fa-arrows-alt-h"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="flipV" title="Flip Vertical">
+                                <i class="fas fa-arrows-alt-v"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="btn-group btn-group-sm w-100 mb-3" role="group">
+                            <button type="button" class="btn btn-outline-info" id="zoomIn" title="Zoom In">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-info" id="zoomOut" title="Zoom Out">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" id="resetCrop" title="Reset">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="alert alert-info py-2 small">
+                            <i class="fas fa-info-circle"></i> Atur area yang ingin dipotong, lalu klik <strong>Simpan</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="saveCrop">
+                    <i class="fas fa-check"></i> Simpan Foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Camera -->
+<div class="modal fade" id="cameraModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera mr-2"></i> Ambil Foto dari Kamera
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="camera-container mb-3" style="position: relative; max-width: 500px; margin: 0 auto;">
+                    <video id="cameraVideo" autoplay playsinline style="width: 100%; border-radius: 10px; background: #000;"></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    
+                    <!-- Camera overlay guide -->
+                    <div class="camera-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; border: 3px dashed rgba(255,255,255,0.5); border-radius: 50%; pointer-events: none;"></div>
+                </div>
+                
+                <div id="cameraError" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <span id="cameraErrorMsg">Kamera tidak tersedia</span>
+                </div>
+                
+                <div class="camera-controls">
+                    <button type="button" class="btn btn-danger btn-lg rounded-circle" id="capturePhoto" style="width: 70px; height: 70px;">
+                        <i class="fas fa-camera fa-2x"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb"></i> Posisikan wajah dalam lingkaran, lalu tekan tombol untuk mengambil foto
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('css')
     <style>
+        /* Foto Frame Styling */
+        .foto-frame {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border: 3px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .foto-frame:hover {
+            border-color: #007bff;
+            box-shadow: 0 6px 20px rgba(0,123,255,0.25);
+        }
+        
+        .foto-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        
+        .foto-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,123,255,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .foto-frame:hover .foto-overlay {
+            opacity: 1;
+        }
+        
+        .foto-overlay i {
+            margin-bottom: 8px;
+        }
+        
+        .foto-overlay span {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .btn-download-foto {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
         .callout {
             border-left: 5px solid #17a2b8;
             border-radius: 5px;
@@ -1219,6 +1421,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Cropper.js -->
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 
 <script>
 // Configure toastr
@@ -1229,15 +1433,252 @@ toastr.options = {
     "timeOut": "3000"
 };
 
+// Global variables
+var cropper = null;
+var cameraStream = null;
+
 $(document).ready(function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
-    // Foto Preview - Click to Open Modal
-    $('#previewFoto').on('click', function() {
-        var imgSrc = $(this).attr('src');
-        $('#modalFotoImg').attr('src', imgSrc);
-        $('#modalFotoPreview').modal('show');
+    // ==================== FOTO UPLOAD WITH CROP ====================
+    
+    // Click on frame to change foto
+    $('#uploadOverlay').on('click', function(e) {
+        e.stopPropagation();
+        $('#foto_profile').click();
+    });
+    
+    // Choose file button
+    $('#btnChooseFile').on('click', function() {
+        $('#foto_profile').click();
+    });
+    
+    // Open camera button
+    $('#btnOpenCamera').on('click', function() {
+        openCamera();
+    });
+    
+    // File selected - open crop modal
+    $('#foto_profile').on('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file
+        if (file.size > 2048000) {
+            toastr.error('Ukuran file maksimal 2MB');
+            $(this).val('');
+            return;
+        }
+        
+        var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            toastr.error('Format file harus JPG, JPEG, atau PNG!');
+            $(this).val('');
+            return;
+        }
+        
+        // Read file and open crop modal
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            openCropModal(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Open crop modal with image
+    function openCropModal(imageSrc) {
+        $('#cropImage').attr('src', imageSrc);
+        $('#cropModal').modal('show');
+    }
+    
+    // Initialize cropper when modal opens
+    $('#cropModal').on('shown.bs.modal', function() {
+        var image = document.getElementById('cropImage');
+        
+        if (cropper) {
+            cropper.destroy();
+        }
+        
+        cropper = new Cropper(image, {
+            aspectRatio: 1,
+            viewMode: 2,
+            dragMode: 'move',
+            autoCropArea: 0.8,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            preview: '.preview',
+        });
+    });
+    
+    // Destroy cropper when modal closes
+    $('#cropModal').on('hidden.bs.modal', function() {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        $('#foto_profile').val('');
+    });
+    
+    // Crop controls
+    $('#rotateLeft').on('click', function() { if (cropper) cropper.rotate(-90); });
+    $('#rotateRight').on('click', function() { if (cropper) cropper.rotate(90); });
+    $('#flipH').on('click', function() { if (cropper) cropper.scaleX(cropper.getData().scaleX === -1 ? 1 : -1); });
+    $('#flipV').on('click', function() { if (cropper) cropper.scaleY(cropper.getData().scaleY === -1 ? 1 : -1); });
+    $('#zoomIn').on('click', function() { if (cropper) cropper.zoom(0.1); });
+    $('#zoomOut').on('click', function() { if (cropper) cropper.zoom(-0.1); });
+    $('#resetCrop').on('click', function() { if (cropper) cropper.reset(); });
+    
+    // Save cropped image
+    $('#saveCrop').on('click', function() {
+        if (!cropper) return;
+        
+        var canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+        
+        if (!canvas) {
+            toastr.error('Gagal memproses gambar');
+            return;
+        }
+        
+        var croppedImage = canvas.toDataURL('image/jpeg', 0.9);
+        uploadCroppedImage(croppedImage);
+    });
+    
+    // Upload cropped image
+    function uploadCroppedImage(base64Image) {
+        $('#cropModal').modal('hide');
+        
+        Swal.fire({
+            title: 'Mengupload Foto',
+            html: '<div class="text-center"><i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><div class="progress" style="height: 8px;"><div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div></div><p class="mt-2">Mohon tunggu...</p></div>',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+        });
+        
+        $.ajax({
+            url: '{{ route("siswa.profile.foto.upload") }}',
+            method: 'POST',
+            data: {
+                cropped_image: base64Image,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                Swal.close();
+                
+                if (response.success) {
+                    $('#previewFoto').fadeOut(200, function() {
+                        $(this).attr('src', response.foto_url + '?t=' + Date.now()).fadeIn(200);
+                    });
+                    
+                    $('.badge-info:contains("Avatar Otomatis")').fadeOut();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    toastr.error(response.message || 'Gagal mengupload foto');
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                var errorMsg = xhr.responseJSON?.message || 'Gagal mengupload foto';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Upload',
+                    text: errorMsg
+                });
+            }
+        });
+    }
+    
+    // ==================== CAMERA FUNCTIONALITY ====================
+    
+    function openCamera() {
+        $('#cameraError').hide();
+        $('#cameraModal').modal('show');
+        
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'user',
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            } 
+        })
+        .then(function(stream) {
+            cameraStream = stream;
+            var video = document.getElementById('cameraVideo');
+            video.srcObject = stream;
+        })
+        .catch(function(err) {
+            console.error('Camera error:', err);
+            $('#cameraError').show();
+            $('#cameraErrorMsg').text(err.message || 'Tidak dapat mengakses kamera');
+        });
+    }
+    
+    // Capture photo from camera
+    $('#capturePhoto').on('click', function() {
+        var video = document.getElementById('cameraVideo');
+        var canvas = document.getElementById('cameraCanvas');
+        var ctx = canvas.getContext('2d');
+        
+        // Set canvas size to video size
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0);
+        
+        // Get image data
+        var imageData = canvas.toDataURL('image/jpeg', 0.9);
+        
+        // Stop camera and close modal
+        stopCamera();
+        $('#cameraModal').modal('hide');
+        
+        // Open crop modal with captured image
+        openCropModal(imageData);
+    });
+    
+    // Stop camera when modal closes
+    $('#cameraModal').on('hidden.bs.modal', function() {
+        stopCamera();
+    });
+    
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+            cameraStream = null;
+        }
+    }
+    
+    // ==================== LIGHTBOX PREVIEW ====================
+    
+    // Foto Preview - Click to Open Modal (on the image, not overlay)
+    $('#previewFoto').on('click', function(e) {
+        // Check if not clicking on overlay
+        if (!$(e.target).closest('#uploadOverlay').length) {
+            var imgSrc = $(this).attr('src');
+            $('#modalFotoImg').attr('src', imgSrc);
+            $('#modalFotoPreview').modal('show');
+        }
     });
     
     // Download Foto from Modal
@@ -1551,168 +1992,6 @@ $(document).ready(function() {
         }
     });
 
-    // Auto-upload foto when file selected
-    $('#foto_profile').on('change', function(e) {
-        var file = e.target.files[0];
-        if (!file) return;
-        
-        // Client-side validation
-        // 1. Check file size (max 2MB)
-        if (file.size > 2048000) {
-            toastr.error('Ukuran file maksimal 2MB', '', {timeOut: 3000});
-            $(this).val('');
-            $(this).next('.custom-file-label').html('Pilih Foto');
-            return;
-        }
-        
-        // 2. Strict file type validation
-        var validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (!validTypes.includes(file.type)) {
-            toastr.error('Format file harus JPG, JPEG, atau PNG saja!', '', {timeOut: 3000});
-            $(this).val('');
-            $(this).next('.custom-file-label').html('Pilih Foto');
-            return;
-        }
-        
-        // 3. Validate file extension
-        var fileName = file.name.toLowerCase();
-        var validExtensions = ['.jpg', '.jpeg', '.png'];
-        var hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
-        if (!hasValidExtension) {
-            toastr.error('Ekstensi file tidak valid!', '', {timeOut: 3000});
-            $(this).val('');
-            $(this).next('.custom-file-label').html('Pilih Foto');
-            return;
-        }
-        
-        // 4. Check image dimensions using Image object
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var img = new Image();
-            img.onload = function() {
-                // Check minimum dimensions
-                if (this.width < 100 || this.height < 100) {
-                    toastr.error('Ukuran gambar minimal 100x100 pixel', '', {timeOut: 3000});
-                    $('#foto_profile').val('');
-                    $('.custom-file-label').html('Pilih Foto');
-                    return;
-                }
-                
-                // Check maximum dimensions
-                if (this.width > 5000 || this.height > 5000) {
-                    toastr.error('Ukuran gambar maksimal 5000x5000 pixel', '', {timeOut: 3000});
-                    $('#foto_profile').val('');
-                    $('.custom-file-label').html('Pilih Foto');
-                    return;
-                }
-                
-                // All validations passed, proceed with upload
-                uploadFotoProfile(file, e.target.result);
-            };
-            img.onerror = function() {
-                toastr.error('File bukan gambar yang valid!', '', {timeOut: 3000});
-                $('#foto_profile').val('');
-                $('.custom-file-label').html('Pilih Foto');
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-    
-    // Function to upload foto profile via AJAX
-    function uploadFotoProfile(file, previewUrl) {
-        var formData = new FormData();
-        formData.append('foto_profile', file);
-        formData.append('_token', '{{ csrf_token() }}');
-        
-        // Update UI - show loading
-        $('.custom-file-label').html('<i class="fas fa-spinner fa-spin"></i> Mengupload...');
-        $('#previewFoto').css('opacity', '0.5');
-        
-        // Show loading overlay
-        Swal.fire({
-            title: 'Mengupload Foto',
-            html: '<div class="text-center"><i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br>Mohon tunggu, foto sedang diproses dan disimpan...</div>',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-        
-        $.ajax({
-            url: '{{ route("siswa.profile.foto.upload") }}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                Swal.close();
-                
-                if (response.success) {
-                    // Update preview with fade effect
-                    $('#previewFoto').fadeOut(300, function() {
-                        $(this).attr('src', response.foto_url + '?t=' + Date.now())
-                               .css('opacity', '1')
-                               .fadeIn(300);
-                    });
-                    
-                    // Update label
-                    $('.custom-file-label').html('<i class="fas fa-check-circle text-success"></i> ' + file.name);
-                    
-                    // Remove "Avatar Otomatis" badge if exists
-                    $('.badge-info:contains("Avatar Otomatis")').fadeOut();
-                    
-                    // Show success message
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        html: '<p>' + response.message + '</p><small class="text-muted">Foto profil akan langsung ditampilkan</small>',
-                        timer: 2500,
-                        showConfirmButton: false
-                    });
-                    
-                    toastr.success(response.message, '', {
-                        timeOut: 3000,
-                        progressBar: true
-                    });
-                } else {
-                    toastr.error(response.message || 'Gagal mengupload foto', '', {timeOut: 3000});
-                    resetFileInput();
-                }
-            },
-            error: function(xhr) {
-                Swal.close();
-                
-                var errorMsg = 'Gagal mengupload foto';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // Validation errors
-                    var errors = xhr.responseJSON.errors;
-                    errorMsg = Object.values(errors).flat().join('<br>');
-                }
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Upload',
-                    html: errorMsg,
-                    confirmButtonText: 'OK'
-                });
-                
-                resetFileInput();
-            }
-        });
-    }
-    
-    // Helper function to reset file input
-    function resetFileInput() {
-        $('#foto_profile').val('');
-        $('.custom-file-label').html('Pilih Foto');
-        $('#previewFoto').css('opacity', '1');
-    }
-    
     // Search Sekolah by NPSN
     $('#btnCariSekolah').on('click', function() {
         var npsn = $('#npsn_asal_sekolah').val().trim();

@@ -124,16 +124,20 @@
         <div class="card card-primary card-outline">
             <div class="card-body box-profile">
                 <div class="text-center">
-                    <img class="profile-user-img img-fluid img-circle" 
-                         src="{{ $siswa->foto_profile_url }}" 
-                         alt="Foto {{ $siswa->nama_lengkap }}"
-                         style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #007bff; cursor: pointer;"
-                         id="fotoProfile"
-                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=300&background={{ $siswa->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
+                    <!-- Enhanced Profile Photo -->
+                    <div class="profile-photo-wrapper mx-auto" style="position: relative; width: 160px; height: 160px;">
+                        <div class="profile-photo-ring" style="position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border-radius: 50%; background: linear-gradient(135deg, {{ $siswa->jenis_kelamin == 'L' ? '#007bff, #00d4ff' : '#e83e8c, #ff6b9d' }}); animation: pulse-ring 2s ease-in-out infinite;"></div>
+                        <img class="profile-user-img img-fluid" 
+                             src="{{ $siswa->foto_profile_url }}" 
+                             alt="Foto {{ $siswa->nama_lengkap }}"
+                             style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; position: relative; z-index: 1; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15);"
+                             id="fotoProfile"
+                             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=300&background={{ $siswa->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
+                    </div>
                     
                     @if(!$siswa->foto_profile)
                         <div class="mt-2">
-                            <span class="badge badge-info">
+                            <span class="badge badge-info" style="animation: pulse 2s infinite;">
                                 <i class="fas fa-magic"></i> Avatar Otomatis
                             </span>
                         </div>
@@ -412,50 +416,32 @@
             </div>
             <div class="card-body p-0">
                 @if($temanSekelas->count() > 0)
-                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="bg-light" style="position: sticky; top: 0; z-index: 10;">
-                                <tr>
-                                    <th width="5%" class="text-center">#</th>
-                                    <th width="50%">Nama Lengkap</th>
-                                    <th width="20%">NISN</th>
-                                    <th width="15%">JK</th>
-                                    <th width="10%" class="text-center">Profil</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($temanSekelas as $index => $teman)
-                                <tr>
-                                    <td class="text-center">{{ $index + 1 }}</td>
-                                    <td>
-                                        <i class="fas fa-user-circle text-primary mr-1"></i>
-                                        <strong>{{ $teman->nama_lengkap }}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-info">{{ $teman->nisn }}</span>
-                                    </td>
-                                    <td>
+                    <div class="teman-sekelas-grid p-3" style="max-height: 450px; overflow-y: auto;">
+                        <div class="row">
+                            @foreach($temanSekelas as $teman)
+                            <div class="col-6 col-md-4 col-lg-3 mb-3">
+                                <div class="teman-card text-center p-2" style="background: #f8f9fa; border-radius: 10px; transition: all 0.3s ease;">
+                                    <div class="teman-foto mx-auto mb-2" style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid {{ $teman->jenis_kelamin == 'L' ? '#007bff' : '#e83e8c' }}; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                        <img src="{{ $teman->foto_profile_url }}" 
+                                             alt="{{ $teman->nama_lengkap }}"
+                                             style="width: 100%; height: 100%; object-fit: cover;"
+                                             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($teman->nama_lengkap) }}&size=100&background={{ $teman->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
+                                    </div>
+                                    <h6 class="mb-0 small font-weight-bold text-truncate" title="{{ $teman->nama_lengkap }}">
+                                        {{ Str::limit($teman->nama_lengkap, 15) }}
+                                    </h6>
+                                    <small class="text-muted">{{ $teman->nisn }}</small>
+                                    <div class="mt-1">
                                         @if($teman->jenis_kelamin == 'L')
-                                            <i class="fas fa-mars text-primary"></i> Laki-laki
+                                            <span class="badge badge-primary badge-sm"><i class="fas fa-mars"></i></span>
                                         @else
-                                            <i class="fas fa-venus text-danger"></i> Perempuan
+                                            <span class="badge badge-sm" style="background-color: #e83e8c; color: white;"><i class="fas fa-venus"></i></span>
                                         @endif
-                                    </td>
-                                    <td class="text-center">
-                                        @if($teman->foto_profile)
-                                            <img src="{{ Storage::url($teman->foto_profile) }}" 
-                                                 class="img-circle elevation-2" 
-                                                 width="30" height="30"
-                                                 alt="{{ $teman->nama_lengkap }}"
-                                                 style="object-fit: cover;">
-                                        @else
-                                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                     
                     <div class="card-footer bg-light">
@@ -546,16 +532,58 @@
             transform: translateY(0);
         }
     }
+    
+    /* Pulse Ring Animation for Profile Photo */
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .profile-photo-wrapper {
+        margin: 5px auto;
+    }
 
     /* Profile Photo Hover Effect */
     #fotoProfile {
         transition: all 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     #fotoProfile:hover {
-        transform: scale(1.08);
-        box-shadow: 0 5px 25px rgba(0, 123, 255, 0.5);
+        transform: scale(1.05);
+    }
+    
+    /* Teman Sekelas Card Hover */
+    .teman-card {
+        cursor: default;
+    }
+    
+    .teman-card:hover {
+        background: #e9ecef !important;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .teman-foto img {
+        transition: all 0.3s ease;
+    }
+    
+    .teman-card:hover .teman-foto img {
+        transform: scale(1.1);
     }
 
     /* Info Box Hover */
