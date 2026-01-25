@@ -103,6 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('auth_footer')
 <p class="mb-1">
+    <a href="{{ route('password.request') }}" class="text-primary">
+        <i class="fas fa-key"></i> Lupa Password?
+    </a>
+</p>
+<p class="mb-1">
     <small class="text-muted">
         Gunakan username/NISN dan password yang telah diberikan.<br>
         Untuk siswa, NISN adalah username default Anda.
