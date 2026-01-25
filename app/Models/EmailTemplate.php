@@ -73,6 +73,7 @@ class EmailTemplate extends Model
             // System placeholders
             'system' => [
                 '[nama_sekolah]' => 'Nama sekolah/madrasah',
+                '[logo_sekolah]' => 'Logo sekolah (HTML img)',
                 '[alamat_sekolah]' => 'Alamat sekolah',
                 '[telepon_sekolah]' => 'Telepon sekolah',
                 '[email_sekolah]' => 'Email sekolah',
@@ -87,6 +88,7 @@ class EmailTemplate extends Model
                 '[login_link]' => 'Link login',
                 '[verification_link]' => 'Link verifikasi',
                 '[action_url]' => 'URL aksi khusus',
+                '[waktu]' => 'Waktu aksi dilakukan',
             ],
         ];
     }
@@ -121,6 +123,14 @@ class EmailTemplate extends Model
 
         // Add system placeholders
         $settings = AppSetting::getInstance();
+        
+        // Generate logo HTML if exists
+        $logoHtml = '';
+        if ($settings->logo_sekolah && \Illuminate\Support\Facades\Storage::disk('public')->exists($settings->logo_sekolah)) {
+            $logoUrl = url('storage/' . $settings->logo_sekolah);
+            $logoHtml = '<img src="' . $logoUrl . '" alt="Logo" style="max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px;">';
+        }
+
         $systemData = [
             '[nama_sekolah]' => $settings->nama_sekolah ?? 'SIMANSA',
             '[alamat_sekolah]' => $settings->alamat ?? '',
@@ -131,6 +141,7 @@ class EmailTemplate extends Model
             '[tanggal_sekarang]' => now()->format('d F Y'),
             '[waktu_sekarang]' => now()->format('H:i:s'),
             '[login_link]' => url('/login'),
+            '[logo_sekolah]' => $logoHtml,
         ];
 
         $data = array_merge($systemData, $data);
@@ -247,6 +258,15 @@ class EmailTemplate extends Model
                 'description' => 'Template notifikasi umum',
                 'available_placeholders' => ['user', 'system'],
                 'is_system' => false,
+            ],
+            [
+                'code' => 'password_changed',
+                'name' => 'Password Berhasil Diubah',
+                'subject' => 'Password Berhasil Diubah - [nama_sekolah]',
+                'body' => self::getDefaultPasswordChangedBody(),
+                'description' => 'Template notifikasi saat password berhasil diubah',
+                'available_placeholders' => ['user', 'system'],
+                'is_system' => true,
             ],
         ];
 
@@ -449,6 +469,60 @@ HTML;
             <p>Ini adalah pemberitahuan dari sistem [nama_sekolah].</p>
             
             <p>Tanggal: [tanggal_sekarang]</p>
+        </div>
+        <div class="footer">
+            <p>Email ini dikirim otomatis oleh sistem [nama_sekolah]</p>
+            <p>[alamat_sekolah] | [telepon_sekolah]</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    private static function getDefaultPasswordChangedBody(): string
+    {
+        return <<<'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .logo { max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px; }
+        .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
+        .footer { background: #f5f5f5; color: #666; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+        .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+        h1, h2 { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            [logo_sekolah]
+            <h1>🔒 Notifikasi Keamanan</h1>
+            <p style="margin: 10px 0 0 0;">[nama_sekolah]</p>
+        </div>
+        <div class="content">
+            <p style="text-align: center; font-size: 48px; margin: 20px 0;">✅</p>
+            <h2 style="text-align: center; color: #28a745;">Password Berhasil Diubah!</h2>
+            
+            <p>Halo, <strong>[nama_user]</strong>!</p>
+            
+            <div class="success-box">
+                <strong>✅ Password akun Anda telah berhasil diubah.</strong><br>
+                <small>Waktu perubahan: [waktu]</small>
+            </div>
+            
+            <p>Mulai sekarang, gunakan password baru Anda untuk login ke sistem.</p>
+            
+            <div class="warning-box">
+                <strong>⚠️ Bukan Anda yang mengubah password?</strong><br>
+                <small>Jika Anda tidak melakukan perubahan ini, segera hubungi administrator sekolah untuk mengamankan akun Anda.</small>
+            </div>
         </div>
         <div class="footer">
             <p>Email ini dikirim otomatis oleh sistem [nama_sekolah]</p>

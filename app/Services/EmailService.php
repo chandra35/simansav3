@@ -190,12 +190,35 @@ class EmailService
     }
 
     /**
+     * Send password changed notification
+     */
+    public function sendPasswordChanged(string $to, string $name): array
+    {
+        // Try to use template first
+        $template = EmailTemplate::getByCode('password_changed');
+        
+        if ($template) {
+            return $this->sendUsingTemplate('password_changed', $to, [
+                '[nama_user]' => $name,
+                '[waktu]' => now()->format('d F Y H:i'),
+            ], 'password_changed');
+        }
+        
+        // Fallback to hardcoded template
+        $subject = 'Password Berhasil Diubah - ' . ($this->settings->nama_sekolah ?? 'SIMANSA');
+        $body = $this->getPasswordChangedBody($name);
+        
+        return $this->send($to, $subject, $body, 'password_changed');
+    }
+
+    /**
      * Get test email HTML body
      */
     protected function getTestEmailBody(): string
     {
         $appName = $this->settings->nama_sekolah ?? 'SIMANSA';
         $date = now()->format('d F Y H:i:s');
+        $logoUrl = $this->getSchoolLogoUrl();
 
         return <<<HTML
 <!DOCTYPE html>
@@ -206,6 +229,7 @@ class EmailService
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .logo { max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px; }
         .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
         .footer { background: #333; color: #999; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
         .success-icon { font-size: 48px; color: #28a745; }
@@ -215,6 +239,7 @@ class EmailService
 <body>
     <div class="container">
         <div class="header">
+            {$logoUrl}
             <h1>✉️ {$appName}</h1>
             <p>Test Email Berhasil!</p>
         </div>
@@ -239,6 +264,7 @@ class EmailService
         </div>
         <div class="footer">
             <p>Email ini dikirim otomatis oleh sistem {$appName}</p>
+            <p style="color: #666; margin-top: 10px;">© {$appName} - Sistem Informasi Madrasah Aliyah</p>
         </div>
     </div>
 </body>
@@ -252,6 +278,7 @@ HTML;
     protected function getPasswordResetBody(string $name, string $resetUrl): string
     {
         $appName = $this->settings->nama_sekolah ?? 'SIMANSA';
+        $logoUrl = $this->getSchoolLogoUrl();
 
         return <<<HTML
 <!DOCTYPE html>
@@ -262,6 +289,7 @@ HTML;
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .logo { max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px; }
         .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
         .footer { background: #333; color: #999; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
         .btn { display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
@@ -271,6 +299,7 @@ HTML;
 <body>
     <div class="container">
         <div class="header">
+            {$logoUrl}
             <h1>🔐 {$appName}</h1>
             <p>Reset Password</p>
         </div>
@@ -294,10 +323,87 @@ HTML;
         </div>
         <div class="footer">
             <p>Email ini dikirim otomatis oleh sistem {$appName}</p>
+            <p style="color: #666; margin-top: 10px;">© {$appName} - Sistem Informasi Madrasah Aliyah</p>
         </div>
     </div>
 </body>
 </html>
 HTML;
+    }
+
+    /**
+     * Get password changed notification HTML body
+     */
+    protected function getPasswordChangedBody(string $name): string
+    {
+        $appName = $this->settings->nama_sekolah ?? 'SIMANSA';
+        $logoUrl = $this->getSchoolLogoUrl();
+        $date = now()->format('d F Y H:i');
+
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .logo { max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px; }
+        .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
+        .footer { background: #333; color: #999; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+        .success-icon { font-size: 48px; color: #28a745; }
+        .info-box { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {$logoUrl}
+            <h1>🔒 {$appName}</h1>
+            <p>Notifikasi Keamanan</p>
+        </div>
+        <div class="content">
+            <p style="text-align: center; font-size: 48px;">✅</p>
+            <h2 style="text-align: center; color: #28a745;">Password Berhasil Diubah!</h2>
+            
+            <p>Halo, <strong>{$name}</strong>!</p>
+            
+            <div class="info-box">
+                <strong>✅ Password akun Anda telah berhasil diubah.</strong><br>
+                <small>Waktu perubahan: {$date}</small>
+            </div>
+            
+            <p>Mulai sekarang, gunakan password baru Anda untuk login ke sistem.</p>
+            
+            <div class="warning">
+                <strong>⚠️ Bukan Anda yang mengubah password?</strong><br>
+                <small>Jika Anda tidak melakukan perubahan ini, segera hubungi administrator sekolah untuk mengamankan akun Anda.</small>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Email ini dikirim otomatis oleh sistem {$appName}</p>
+            <p style="color: #666; margin-top: 10px;">© {$appName} - Sistem Informasi Madrasah Aliyah</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Get school logo URL for email header
+     */
+    protected function getSchoolLogoUrl(): string
+    {
+        $logoPath = $this->settings->logo_sekolah ?? null;
+        
+        if ($logoPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath)) {
+            $logoUrl = url('storage/' . $logoPath);
+            return '<img src="' . $logoUrl . '" alt="Logo" class="logo">';
+        }
+        
+        return '';
     }
 }

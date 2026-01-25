@@ -109,6 +109,38 @@ class DokumenSiswa extends Model
         }
     }
 
+    /**
+     * Get file extension from file path or mime type
+     */
+    public function getFileExtension()
+    {
+        // Try from file path first
+        if ($this->file_path) {
+            $ext = pathinfo($this->file_path, PATHINFO_EXTENSION);
+            if ($ext) return strtolower($ext);
+        }
+
+        // Try from original name
+        if ($this->original_name) {
+            $ext = pathinfo($this->original_name, PATHINFO_EXTENSION);
+            if ($ext) return strtolower($ext);
+        }
+
+        // Try from mime type
+        if ($this->mime_type) {
+            $mimeToExt = [
+                'application/pdf' => 'pdf',
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+            ];
+            return $mimeToExt[$this->mime_type] ?? 'unknown';
+        }
+
+        return 'unknown';
+    }
+
     // Delete file when model is deleted
     protected static function boot()
     {

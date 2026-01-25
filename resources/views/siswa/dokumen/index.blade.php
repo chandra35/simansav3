@@ -124,9 +124,9 @@
                         </div>
                     </div>
                     <div class="btn-group btn-block">
-                        <a href="{{ $kk->getFileUrl() }}" target="_blank" class="btn btn-info btn-sm">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewDokumen('{{ $kk->getFileUrl() }}', 'Kartu Keluarga (KK)', '{{ $kk->getFileExtension() }}')">
                             <i class="fas fa-eye"></i> Lihat
-                        </a>
+                        </button>
                         <button type="button" class="btn btn-warning btn-sm" onclick="showUploadModal('kk', 'Kartu Keluarga (KK)')">
                             <i class="fas fa-sync"></i> Ganti
                         </button>
@@ -183,9 +183,9 @@
                         </div>
                     </div>
                     <div class="btn-group btn-block">
-                        <a href="{{ $ijazah->getFileUrl() }}" target="_blank" class="btn btn-info btn-sm">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewDokumen('{{ $ijazah->getFileUrl() }}', 'Ijazah SMP', '{{ $ijazah->getFileExtension() }}')">
                             <i class="fas fa-eye"></i> Lihat
-                        </a>
+                        </button>
                         <button type="button" class="btn btn-warning btn-sm" onclick="showUploadModal('ijazah_smp', 'Ijazah SMP')">
                             <i class="fas fa-sync"></i> Ganti
                         </button>
@@ -242,9 +242,9 @@
                         </div>
                     </div>
                     <div class="btn-group btn-block">
-                        <a href="{{ $kip->getFileUrl() }}" target="_blank" class="btn btn-info btn-sm">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewDokumen('{{ $kip->getFileUrl() }}', 'Kartu Indonesia Pintar (KIP)', '{{ $kip->getFileExtension() }}')">
                             <i class="fas fa-eye"></i> Lihat
-                        </a>
+                        </button>
                         <button type="button" class="btn btn-warning btn-sm" onclick="showUploadModal('kip', 'Kartu Indonesia Pintar (KIP)')">
                             <i class="fas fa-sync"></i> Ganti
                         </button>
@@ -301,9 +301,9 @@
                         </div>
                     </div>
                     <div class="btn-group btn-block">
-                        <a href="{{ $sktm->getFileUrl() }}" target="_blank" class="btn btn-info btn-sm">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewDokumen('{{ $sktm->getFileUrl() }}', 'Surat Keterangan Tidak Mampu (SKTM)', '{{ $sktm->getFileExtension() }}')">
                             <i class="fas fa-eye"></i> Lihat
-                        </a>
+                        </button>
                         <button type="button" class="btn btn-warning btn-sm" onclick="showUploadModal('sktm', 'Surat Keterangan Tidak Mampu (SKTM)')">
                             <i class="fas fa-sync"></i> Ganti
                         </button>
@@ -372,9 +372,9 @@
                                     <td>{{ $file->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ $file->getFileUrl() }}" target="_blank" class="btn btn-info" title="Lihat">
+                                            <button type="button" class="btn btn-info" onclick="previewDokumen('{{ $file->getFileUrl() }}', '{{ $file->nama_file }}', '{{ $file->getFileExtension() }}')" title="Lihat">
                                                 <i class="fas fa-eye"></i>
-                                            </a>
+                                            </button>
                                             <button type="button" class="btn btn-danger" onclick="deleteDokumen('{{ $file->id }}', 'File Lainnya')" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -499,6 +499,62 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Preview Dokumen -->
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white" id="previewModalTitle">
+                    <i class="fas fa-eye"></i> Preview Dokumen
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" style="min-height: 500px;">
+                <!-- Preview container for images -->
+                <div id="previewImage" class="text-center p-3" style="display: none;">
+                    <img src="" alt="Preview" class="img-fluid" style="max-height: 70vh; cursor: zoom-in;" onclick="openFullscreen(this)">
+                </div>
+                <!-- Preview container for PDF -->
+                <div id="previewPdf" style="display: none;">
+                    <iframe src="" frameborder="0" style="width: 100%; height: 70vh;"></iframe>
+                </div>
+                <!-- Loading indicator -->
+                <div id="previewLoading" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Memuat dokumen...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="btnDownloadDoc" class="btn btn-success" download>
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <a href="#" id="btnOpenNewTab" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Buka di Tab Baru
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div class="modal fade" id="fullscreenModal" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.95);">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 95vw;">
+        <div class="modal-content bg-transparent border-0">
+            <button type="button" class="close text-white position-absolute" style="top: 10px; right: 20px; z-index: 1060; font-size: 2rem;" data-dismiss="modal">
+                <span>&times;</span>
+            </button>
+            <div class="modal-body text-center p-0">
+                <img src="" alt="Fullscreen" id="fullscreenImage" style="max-width: 100%; max-height: 95vh; cursor: zoom-out;">
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('css')
@@ -506,6 +562,17 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+    <style>
+        #previewModal .modal-body { background: #f4f6f9; }
+        #previewImage img { 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        #previewImage img:hover { transform: scale(1.02); }
+        #fullscreenModal { z-index: 1060; }
+        #fullscreenModal .modal-content { box-shadow: none; }
+    </style>
 @stop
 
 @section('js')
@@ -522,6 +589,66 @@ toastr.options = {
     "positionClass": "toast-top-right",
     "timeOut": "3000"
 };
+
+// Preview dokumen in modal
+function previewDokumen(url, title, extension) {
+    // Reset preview
+    $('#previewImage').hide();
+    $('#previewPdf').hide();
+    $('#previewLoading').show();
+    
+    // Set title and URLs
+    $('#previewModalTitle').html('<i class="fas fa-eye"></i> ' + title);
+    $('#btnDownloadDoc').attr('href', url);
+    $('#btnOpenNewTab').attr('href', url);
+    
+    // Show modal
+    $('#previewModal').modal('show');
+    
+    // Determine file type and show appropriate preview
+    var ext = extension.toLowerCase();
+    
+    if (ext === 'pdf') {
+        // Show PDF in iframe
+        $('#previewPdf iframe').attr('src', url);
+        setTimeout(function() {
+            $('#previewLoading').hide();
+            $('#previewPdf').show();
+        }, 500);
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        // Show image
+        var img = new Image();
+        img.onload = function() {
+            $('#previewImage img').attr('src', url);
+            $('#previewLoading').hide();
+            $('#previewImage').show();
+        };
+        img.onerror = function() {
+            $('#previewLoading').hide();
+            toastr.error('Gagal memuat gambar');
+        };
+        img.src = url;
+    } else {
+        // Unknown format - open in new tab
+        $('#previewModal').modal('hide');
+        window.open(url, '_blank');
+    }
+}
+
+// Open image in fullscreen
+function openFullscreen(imgElement) {
+    $('#fullscreenImage').attr('src', imgElement.src);
+    $('#previewModal').modal('hide');
+    $('#fullscreenModal').modal('show');
+}
+
+// Reset preview when modal is closed
+$('#previewModal').on('hidden.bs.modal', function() {
+    $('#previewImage img').attr('src', '');
+    $('#previewPdf iframe').attr('src', '');
+    $('#previewImage').hide();
+    $('#previewPdf').hide();
+});
 
 // Show upload modal
 function showUploadModal(jenisDokumen, label) {

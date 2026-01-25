@@ -2,6 +2,113 @@
 
 @section('title', 'Setup Akun - SIMANSA')
 
+@section('css')
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
+<style>
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .loading-content {
+        text-align: center;
+    }
+    .progress-bar {
+        transition: width 0.3s, background-color 0.3s;
+    }
+    .widget-user-header {
+        padding: 20px;
+        text-align: center;
+    }
+    .widget-user-image {
+        margin-bottom: 10px;
+    }
+    .widget-user-image img {
+        width: 80px;
+        height: 80px;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+    .widget-user-username {
+        font-size: 1.25rem;
+        margin-bottom: 5px;
+    }
+    .widget-user-desc {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    /* Foto Upload Styling */
+    .foto-frame {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        cursor: pointer;
+    }
+    .foto-ring {
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007bff, #00d4ff);
+        animation: pulse-ring 2s ease-in-out infinite;
+    }
+    @keyframes pulse-ring {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.02); }
+    }
+    .foto-img {
+        width: 140px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .foto-overlay {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 10;
+    }
+    .foto-frame:hover .foto-overlay {
+        opacity: 1;
+    }
+    /* Cropper Modal */
+    #cropperModal .modal-body { 
+        padding: 0;
+        max-height: 70vh;
+        overflow: hidden;
+    }
+    #cropperPreview {
+        max-width: 100%;
+        display: block;
+    }
+</style>
+@stop
+
 @section('content_header')
     <div class="row">
         <div class="col-12">
@@ -134,11 +241,51 @@
     </div>
 
     <div class="col-lg-4">
+        <!-- Foto Profile Card -->
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-camera"></i> Foto Profile (Opsional)
+                </h3>
+            </div>
+            <div class="card-body text-center">
+                <div class="foto-frame" id="fotoFrame" title="Klik untuk upload foto">
+                    <div class="foto-ring"></div>
+                    <img id="previewFoto" 
+                         src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
+                         class="foto-img"
+                         alt="Foto Profile">
+                    <div class="foto-overlay">
+                        <i class="fas fa-camera fa-2x mb-2"></i>
+                        <span>Upload Foto</span>
+                    </div>
+                </div>
+                <input type="file" id="fotoInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                
+                <div class="mt-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnChooseFoto">
+                        <i class="fas fa-folder-open"></i> Pilih File
+                    </button>
+                </div>
+                
+                <small class="text-muted d-block mt-2">
+                    <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB
+                </small>
+                <small class="text-success">
+                    <i class="fas fa-crop-alt"></i> Foto dipotong 1:1 otomatis
+                </small>
+                
+                <div id="fotoStatus" class="mt-2" style="display: none;">
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Foto berhasil diupload</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Welcome Card -->
         <div class="card card-widget widget-user-2 shadow-sm">
             <div class="widget-user-header bg-gradient-primary">
                 <div class="widget-user-image">
-                    <img class="img-circle elevation-2" 
+                    <img class="img-circle elevation-2" id="welcomeFoto"
                          src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
                          alt="User Avatar">
                 </div>
@@ -202,53 +349,150 @@
         <p class="mt-3 text-white">Menyimpan data...</p>
     </div>
 </div>
-@stop
 
-@section('css')
-<style>
-    #loadingOverlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-    .loading-content {
-        text-align: center;
-    }
-    .progress-bar {
-        transition: width 0.3s, background-color 0.3s;
-    }
-    .widget-user-header {
-        padding: 20px;
-        text-align: center;
-    }
-    .widget-user-image {
-        margin-bottom: 10px;
-    }
-    .widget-user-image img {
-        width: 80px;
-        height: 80px;
-        border: 3px solid rgba(255,255,255,0.3);
-    }
-    .widget-user-username {
-        font-size: 1.25rem;
-        margin-bottom: 5px;
-    }
-    .widget-user-desc {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-</style>
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-crop-alt"></i> Crop Foto Profile
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img id="cropperPreview" src="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="btnCropSave">
+                    <i class="fas fa-check"></i> Simpan Foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('js')
+<!-- Cropper.js -->
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 <script>
+var cropper = null;
+
+// Foto upload handlers
+$('#fotoFrame, #btnChooseFoto').on('click', function() {
+    $('#fotoInput').click();
+});
+
+$('#fotoInput').on('change', function() {
+    var file = this.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Format file harus JPG atau PNG!');
+        this.value = '';
+        return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran file maksimal 2MB!');
+        this.value = '';
+        return;
+    }
+    
+    // Read and show in cropper
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        $('#cropperPreview').attr('src', e.target.result);
+        $('#cropperModal').modal('show');
+    };
+    reader.readAsDataURL(file);
+});
+
+// Initialize cropper when modal is shown
+$('#cropperModal').on('shown.bs.modal', function() {
+    var image = document.getElementById('cropperPreview');
+    if (cropper) {
+        cropper.destroy();
+    }
+    cropper = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 2,
+        dragMode: 'move',
+        autoCropArea: 0.8,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+    });
+});
+
+// Destroy cropper when modal is hidden
+$('#cropperModal').on('hidden.bs.modal', function() {
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    $('#fotoInput').val('');
+});
+
+// Save cropped image
+$('#btnCropSave').on('click', function() {
+    if (!cropper) return;
+    
+    var btn = $(this);
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+    
+    var canvas = cropper.getCroppedCanvas({
+        width: 400,
+        height: 400,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+    });
+    
+    var base64 = canvas.toDataURL('image/jpeg', 0.9);
+    
+    // Upload via AJAX
+    $.ajax({
+        url: '{{ route("siswa.profile.diri.upload-foto") }}',
+        type: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}',
+            cropped_image: base64
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update preview images
+                $('#previewFoto').attr('src', response.foto_url);
+                $('#welcomeFoto').attr('src', response.foto_url);
+                $('#fotoStatus').show();
+                $('#cropperModal').modal('hide');
+                alert('Foto berhasil diupload!');
+            } else {
+                alert('Gagal: ' + response.message);
+            }
+        },
+        error: function(xhr) {
+            var msg = xhr.responseJSON?.message || 'Terjadi kesalahan';
+            alert('Error: ' + msg);
+        },
+        complete: function() {
+            btn.prop('disabled', false).html('<i class="fas fa-check"></i> Simpan Foto');
+        }
+    });
+});
+
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
     const icon = document.getElementById(fieldId + '-icon');

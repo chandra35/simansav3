@@ -9,6 +9,7 @@ use App\Models\Ortu;
 use App\Models\ActivityLog;
 use App\Services\KemendikbudApiService;
 use App\Services\ActivityLogService;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -67,6 +68,21 @@ class ProfileController extends Controller
 
         User::logCustomActivity('password_change', 'Password berhasil diubah');
 
+        // Send email notification if user has email
+        if ($user->email) {
+            try {
+                $emailService = new EmailService();
+                if ($emailService->isConfigured()) {
+                    $emailService->sendPasswordChanged($user->email, $user->name);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to send password changed email', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
         return back()->with('success', 'Password berhasil diubah');
     }
 
@@ -113,6 +129,19 @@ class ProfileController extends Controller
         ]);
 
         User::logCustomActivity('first_login_setup', 'Setup awal berhasil: password dan email diperbarui');
+
+        // Send email notification
+        try {
+            $emailService = new EmailService();
+            if ($emailService->isConfigured()) {
+                $emailService->sendPasswordChanged($request->email, $user->name);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to send password changed email', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return redirect()->route('siswa.dashboard')
             ->with('success', 'Password dan email berhasil disimpan. Selamat datang!');
