@@ -25,7 +25,7 @@ class ActivityLogController extends Controller
      */
     public function getData(Request $request)
     {
-        $query = ActivityLog::with('user.roles')->select('activity_logs.*');
+        $query = ActivityLog::with(['user.roles', 'user.siswa'])->select('activity_logs.*');
 
         // Filter by current user (except Super Admin can see all logs)
         $currentUser = auth()->user();
@@ -76,6 +76,52 @@ class ActivityLogController extends Controller
         }
 
         return DataTables::of($query)
+            ->addColumn('foto', function ($log) {
+                if ($log->user) {
+                    $fotoUrl = null;
+                    $name = $log->user->name;
+                    $jenisKelamin = 'L'; // Default laki-laki
+                    
+                    // Cek apakah user adalah siswa dan punya foto
+                    if ($log->user->siswa) {
+                        $siswa = $log->user->siswa;
+                        $jenisKelamin = $siswa->jenis_kelamin ?? 'L';
+                        
+                        if ($siswa->foto_profile) {
+                            $fotoUrl = asset('storage/' . $siswa->foto_profile);
+                        }
+                    }
+                    
+                    // Jika tidak ada foto, gunakan UI Avatars
+                    if (!$fotoUrl) {
+                        $encodedName = urlencode($name);
+                        // Warna berdasarkan jenis kelamin
+                        if ($jenisKelamin === 'L') {
+                            $backgrounds = ['3498db', '2980b9', '2c3e50', '34495e', '16a085'];
+                        } else {
+                            $backgrounds = ['e74c3c', 'e91e63', '9b59b6', 'f39c12', 'c0392b'];
+                        }
+                        $index = abs(crc32($name)) % count($backgrounds);
+                        $background = $backgrounds[$index];
+                        $fotoUrl = "https://ui-avatars.com/api/?name={$encodedName}&size=100&background={$background}&color=FFFFFF&font-size=0.45&bold=true";
+                    }
+                    
+                    return '
+                        <div class="text-center">
+                            <img src="' . $fotoUrl . '" alt="' . e($name) . '" 
+                                 class="img-circle elevation-2" 
+                                 style="width: 45px; height: 45px; object-fit: cover;">
+                        </div>
+                    ';
+                }
+                return '
+                    <div class="text-center">
+                        <img src="https://ui-avatars.com/api/?name=Unknown&size=100&background=999999&color=FFFFFF" 
+                             alt="Unknown" class="img-circle elevation-2" 
+                             style="width: 45px; height: 45px; object-fit: cover;">
+                    </div>
+                ';
+            })
             ->addColumn('user_info', function ($log) {
                 if ($log->user) {
                     $role = $log->user->roles()->first()?->name ?? 'N/A';
@@ -160,7 +206,7 @@ class ActivityLogController extends Controller
                     </button>
                 ';
             })
-            ->rawColumns(['user_info', 'activity', 'device_info', 'location', 'changes', 'timestamp', 'action'])
+            ->rawColumns(['foto', 'user_info', 'activity', 'device_info', 'location', 'changes', 'timestamp', 'action'])
             ->make(true);
     }
 

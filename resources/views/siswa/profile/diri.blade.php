@@ -534,7 +534,7 @@
                             @enderror
                         </div>
                         <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Masukkan 8 digit NPSN kemudian klik tombol <strong>Cari</strong>
+                            <i class="fas fa-info-circle"></i> Masukkan 8 digit NPSN, pencarian otomatis dilakukan
                         </small>
                     </div>
 
@@ -2035,18 +2035,17 @@ $(document).ready(function() {
         }
     });
 
-    // Search Sekolah by NPSN
-    $('#btnCariSekolah').on('click', function() {
+    // Search Sekolah by NPSN - Function
+    function searchSekolahByNPSN() {
         var npsn = $('#npsn_asal_sekolah').val().trim();
         
         // Validate NPSN format
         if (npsn.length !== 8 || !/^\d+$/.test(npsn)) {
-            toastr.error('NPSN harus 8 digit angka');
-            return;
+            return; // Silent return for autocomplete (not 8 digits yet)
         }
         
         // Disable button & show loading
-        var $btn = $(this);
+        var $btn = $('#btnCariSekolah');
         var originalBtnHtml = '<i class="fas fa-search"></i> Cari';
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mencari...');
         
@@ -2106,6 +2105,30 @@ $(document).ready(function() {
                 $btn.prop('disabled', false).html(originalBtnHtml);
             }
         });
+    }
+    
+    // Debounce function for NPSN input
+    var npsnDebounceTimer;
+    $('#npsn_asal_sekolah').on('input', function() {
+        clearTimeout(npsnDebounceTimer);
+        var npsn = $(this).val().trim();
+        
+        // Only trigger auto-search when exactly 8 digits entered
+        if (npsn.length === 8 && /^\d+$/.test(npsn)) {
+            npsnDebounceTimer = setTimeout(function() {
+                searchSekolahByNPSN();
+            }, 500); // 500ms debounce
+        }
+    });
+    
+    // Button click still works
+    $('#btnCariSekolah').on('click', function() {
+        var npsn = $('#npsn_asal_sekolah').val().trim();
+        if (npsn.length !== 8 || !/^\d+$/.test(npsn)) {
+            toastr.error('NPSN harus 8 digit angka');
+            return;
+        }
+        searchSekolahByNPSN();
     });
     
     // Auto-search on page load ONLY if NPSN exists but fields are empty

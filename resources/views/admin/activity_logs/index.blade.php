@@ -206,10 +206,11 @@
             <table id="logsTable" class="table table-bordered table-striped table-hover">
                 <thead>
                     <tr>
+                        <th width="5%">Foto</th>
                         <th width="15%">User</th>
                         <th width="15%">Activity</th>
                         <th width="15%">Device</th>
-                        <th width="20%">Location</th>
+                        <th width="15%">Location</th>
                         <th width="10%">Changes</th>
                         <th width="15%">Timestamp</th>
                         <th width="10%">Action</th>
@@ -329,6 +330,7 @@ $(document).ready(function() {
             }
         },
         columns: [
+            { data: 'foto', name: 'foto', orderable: false, searchable: false },
             { data: 'user_info', name: 'user.name' },
             { data: 'activity', name: 'activity_type' },
             { data: 'device_info', name: 'device_type', orderable: false },
@@ -337,7 +339,7 @@ $(document).ready(function() {
             { data: 'timestamp', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[5, 'desc']],
+        order: [[6, 'desc']],
         pageLength: 25,
         language: {
             processing: '<i class="fas fa-spinner fa-spin"></i> Loading...',
@@ -568,7 +570,7 @@ function showDetail(id) {
                                     <table class="table table-sm mb-0 detail-table">
                                         <tr><th>URL</th><td><small style="word-break: break-all;">${log.url || 'N/A'}</small></td></tr>
                                         <tr><th>Method</th><td><span class="badge badge-secondary">${log.method || 'N/A'}</span></td></tr>
-                                        <tr><th>Model</th><td>${log.model_type ? log.model_type.split('\\\\').pop() : 'N/A'}</td></tr>
+                                        <tr><th>Model</th><td>${log.model_type ? log.model_type.split('\\').pop() : 'N/A'}</td></tr>
                                         <tr><th>Model ID</th><td><code>${log.model_id || 'N/A'}</code></td></tr>
                                     </table>
                                 </div>
