@@ -161,6 +161,9 @@ $(document).ready(function() {
         ajax: {
             url: '{{ route("admin.email-templates.index") }}',
             type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             data: function(d) {
                 d.status = $('#filterStatus').val();
                 d.type = $('#filterType').val();

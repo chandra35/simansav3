@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -21,16 +22,26 @@ class EmailTemplateController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax() || $request->wantsJson() || $request->has('draw')) {
-            $query = EmailTemplate::with(['creator', 'updater']);
+        // Debug logging
+        Log::info('EmailTemplate index called', [
+            'has_draw' => $request->has('draw'),
+            'draw' => $request->get('draw'),
+            'is_ajax' => $request->ajax(),
+            'all_params' => $request->all()
+        ]);
+
+        // Check if DataTables request
+        if ($request->has('draw')) {
+            Log::info('DataTables request detected');
+            $query = EmailTemplate::query();
 
             // Filter by status
-            if ($request->has('status') && $request->status !== '') {
+            if ($request->filled('status')) {
                 $query->where('is_active', $request->status == '1');
             }
 
             // Filter by type
-            if ($request->has('type') && $request->type !== '') {
+            if ($request->filled('type')) {
                 $query->where('is_system', $request->type == 'system');
             }
 
@@ -47,7 +58,7 @@ class EmailTemplateController extends Controller
                         : '<span class="badge badge-secondary">Custom</span>';
                 })
                 ->addColumn('updated_at_formatted', function ($row) {
-                    return $row->updated_at?->format('d M Y H:i') ?? '-';
+                    return $row->updated_at ? $row->updated_at->format('d M Y H:i') : '-';
                 })
                 ->addColumn('action', function ($row) {
                     $buttons = '<div class="btn-group btn-group-sm">';
