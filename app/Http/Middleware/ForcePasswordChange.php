@@ -34,6 +34,7 @@ class ForcePasswordChange
                 'siswa.profile.password.update',
                 'siswa.force-setup',
                 'siswa.force-setup.update',
+                'siswa.profile.foto.upload',
                 'logout',
             ];
 

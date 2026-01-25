@@ -5,6 +5,8 @@
 @section('css')
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
+<!-- Toastr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
     #loadingOverlay {
         position: fixed;
@@ -124,7 +126,7 @@
         <div class="card card-primary card-outline">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-key"></i> Pengaturan Password & Email
+                    <i class="fas fa-user-cog"></i> Setup Akun Siswa
                 </h3>
             </div>
             <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm">
@@ -149,90 +151,159 @@
                     @endif
 
                     <div class="callout callout-info">
-                        <h5><i class="fas fa-info-circle"></i> Penting!</h5>
-                        <p class="mb-0">Untuk keamanan akun, Anda wajib mengubah password default dan mengisi email aktif sebelum melanjutkan.</p>
+                        <h5><i class="fas fa-info-circle"></i> Selamat Datang!</h5>
+                        <p class="mb-0">Lengkapi data berikut untuk mengaktifkan akun Anda. Upload foto profile, ubah password default, dan isi email aktif.</p>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <!-- Email -->
-                            <div class="form-group">
-                                <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
-                                <input type="email" name="email" id="email" 
-                                       class="form-control @error('email') is-invalid @enderror" 
-                                       value="{{ old('email', $user->email) }}"
-                                       placeholder="Masukkan email aktif Anda"
-                                       required>
-                                <small class="text-muted">Email akan digunakan untuk reset password dan notifikasi penting</small>
-                                @error('email')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                    <!-- STEP 1: Foto Profile -->
+                    <div class="card card-outline card-primary mb-4">
+                        <div class="card-header py-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge badge-primary mr-2">1</span>
+                                <i class="fas fa-camera"></i> Upload Foto Profile 
+                                <small class="text-muted">(Opsional)</small>
+                            </h5>
                         </div>
-                        <div class="col-md-6">
-                            <!-- Username (readonly) -->
-                            <div class="form-group">
-                                <label><i class="fas fa-user text-secondary"></i> Username</label>
-                                <input type="text" class="form-control" value="{{ $user->username }}" readonly disabled>
-                                <small class="text-muted">Username tidak dapat diubah</small>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <div class="foto-frame" id="fotoFrame" title="Klik untuk upload foto">
+                                        <div class="foto-ring"></div>
+                                        <img id="previewFoto" 
+                                             src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
+                                             class="foto-img"
+                                             alt="Foto Profile">
+                                        <div class="foto-overlay">
+                                            <i class="fas fa-camera fa-2x mb-2"></i>
+                                            <span>Upload</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="fotoInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                                </div>
+                                <div class="col-md-8">
+                                    <h5 class="text-primary mb-3">
+                                        <i class="fas fa-user-circle"></i> Foto Profile Anda
+                                    </h5>
+                                    <p class="text-muted mb-2">Klik gambar atau tombol di bawah untuk memilih foto:</p>
+                                    <button type="button" class="btn btn-primary" id="btnChooseFoto">
+                                        <i class="fas fa-upload"></i> Pilih Foto
+                                    </button>
+                                    <div class="mt-3">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Maksimal 2MB
+                                        </small>
+                                        <small class="text-success">
+                                            <i class="fas fa-crop-alt"></i> Foto akan dipotong otomatis (1:1)
+                                        </small>
+                                    </div>
+                                    <div id="fotoStatus" class="mt-2" style="display: none;">
+                                        <span class="badge badge-success"><i class="fas fa-check"></i> Foto berhasil diupload</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <hr>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <!-- Password Baru -->
-                            <div class="form-group">
-                                <label for="password"><i class="fas fa-lock text-primary"></i> Password Baru <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="password" name="password" id="password" 
-                                           class="form-control @error('password') is-invalid @enderror" 
-                                           placeholder="Minimal 8 karakter"
-                                           required minlength="8">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
-                                            <i class="fas fa-eye" id="password-icon"></i>
-                                        </button>
+                    <!-- STEP 2: Email -->
+                    <div class="card card-outline card-info mb-4">
+                        <div class="card-header py-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge badge-info mr-2">2</span>
+                                <i class="fas fa-envelope"></i> Email & Username
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Email -->
+                                    <div class="form-group">
+                                        <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
+                                        <input type="email" name="email" id="email" 
+                                               class="form-control @error('email') is-invalid @enderror" 
+                                               value="{{ old('email', $user->email) }}"
+                                               placeholder="Masukkan email aktif Anda"
+                                               required>
+                                        <small class="text-muted">Email akan digunakan untuk reset password dan notifikasi penting</small>
+                                        @error('email')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
                                     </div>
                                 </div>
-                                @error('password')
-                                    <span class="invalid-feedback d-block">{{ $message }}</span>
-                                @enderror
-                                
-                                <!-- Password Strength -->
-                                <div class="mt-2">
-                                    <small class="text-muted">Kekuatan Password:</small>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar" id="password-strength" role="progressbar" style="width: 0%"></div>
+                                <div class="col-md-6">
+                                    <!-- Username (readonly) -->
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user text-secondary"></i> Username</label>
+                                        <input type="text" class="form-control" value="{{ $user->username }}" readonly disabled>
+                                        <small class="text-muted">Username tidak dapat diubah</small>
                                     </div>
-                                    <small id="password-hint" class="text-muted"></small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <!-- Konfirmasi Password -->
-                            <div class="form-group">
-                                <label for="password_confirmation"><i class="fas fa-lock text-primary"></i> Konfirmasi Password <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="password" name="password_confirmation" id="password_confirmation" 
-                                           class="form-control" 
-                                           placeholder="Ulangi password baru"
-                                           required>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirmation')">
-                                            <i class="fas fa-eye" id="password_confirmation-icon"></i>
-                                        </button>
+                    </div>
+
+                    <!-- STEP 3: Password -->
+                    <div class="card card-outline card-warning mb-0">
+                        <div class="card-header py-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge badge-warning mr-2">3</span>
+                                <i class="fas fa-lock"></i> Ubah Password
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Password Baru -->
+                                    <div class="form-group">
+                                        <label for="password"><i class="fas fa-lock text-primary"></i> Password Baru <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" name="password" id="password" 
+                                                   class="form-control @error('password') is-invalid @enderror" 
+                                                   placeholder="Minimal 8 karakter"
+                                                   required minlength="8">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                                                    <i class="fas fa-eye" id="password-icon"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        @error('password')
+                                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                                        @enderror
+                                        
+                                        <!-- Password Strength -->
+                                        <div class="mt-2">
+                                            <small class="text-muted">Kekuatan Password:</small>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar" id="password-strength" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <small id="password-hint" class="text-muted"></small>
+                                        </div>
                                     </div>
                                 </div>
-                                <div id="password-match" class="mt-2"></div>
+                                <div class="col-md-6">
+                                    <!-- Konfirmasi Password -->
+                                    <div class="form-group">
+                                        <label for="password_confirmation"><i class="fas fa-lock text-primary"></i> Konfirmasi Password <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" name="password_confirmation" id="password_confirmation" 
+                                                   class="form-control" 
+                                                   placeholder="Ulangi password baru"
+                                                   required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirmation')">
+                                                    <i class="fas fa-eye" id="password_confirmation-icon"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="password-match" class="mt-2"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                         <i class="fas fa-save"></i> Simpan & Lanjutkan ke Dashboard
                     </button>
                 </div>
@@ -241,46 +312,6 @@
     </div>
 
     <div class="col-lg-4">
-        <!-- Foto Profile Card -->
-        <div class="card card-primary card-outline">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-camera"></i> Foto Profile (Opsional)
-                </h3>
-            </div>
-            <div class="card-body text-center">
-                <div class="foto-frame" id="fotoFrame" title="Klik untuk upload foto">
-                    <div class="foto-ring"></div>
-                    <img id="previewFoto" 
-                         src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
-                         class="foto-img"
-                         alt="Foto Profile">
-                    <div class="foto-overlay">
-                        <i class="fas fa-camera fa-2x mb-2"></i>
-                        <span>Upload Foto</span>
-                    </div>
-                </div>
-                <input type="file" id="fotoInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
-                
-                <div class="mt-3">
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnChooseFoto">
-                        <i class="fas fa-folder-open"></i> Pilih File
-                    </button>
-                </div>
-                
-                <small class="text-muted d-block mt-2">
-                    <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB
-                </small>
-                <small class="text-success">
-                    <i class="fas fa-crop-alt"></i> Foto dipotong 1:1 otomatis
-                </small>
-                
-                <div id="fotoStatus" class="mt-2" style="display: none;">
-                    <span class="badge badge-success"><i class="fas fa-check"></i> Foto berhasil diupload</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Welcome Card -->
         <div class="card card-widget widget-user-2 shadow-sm">
             <div class="widget-user-header bg-gradient-primary">
@@ -381,7 +412,18 @@
 @section('js')
 <!-- Cropper.js -->
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
+<!-- Toastr -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+// Toastr configuration
+toastr.options = {
+    "closeButton": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "timeOut": "3000",
+    "extendedTimeOut": "1000"
+};
+
 var cropper = null;
 
 // Foto upload handlers
@@ -396,14 +438,14 @@ $('#fotoInput').on('change', function() {
     // Validate file type
     var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-        alert('Format file harus JPG atau PNG!');
+        toastr.error('Format file harus JPG atau PNG!');
         this.value = '';
         return;
     }
     
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-        alert('Ukuran file maksimal 2MB!');
+        toastr.error('Ukuran file maksimal 2MB!');
         this.value = '';
         return;
     }
@@ -465,27 +507,40 @@ $('#btnCropSave').on('click', function() {
     
     // Upload via AJAX
     $.ajax({
-        url: '{{ route("siswa.profile.diri.upload-foto") }}',
+        url: '{{ route("siswa.profile.foto.upload") }}',
         type: 'POST',
         data: {
             _token: '{{ csrf_token() }}',
             cropped_image: base64
         },
         success: function(response) {
+            console.log('Response:', response);
             if (response.success) {
                 // Update preview images
                 $('#previewFoto').attr('src', response.foto_url);
                 $('#welcomeFoto').attr('src', response.foto_url);
                 $('#fotoStatus').show();
                 $('#cropperModal').modal('hide');
-                alert('Foto berhasil diupload!');
+                toastr.success('Foto berhasil diupload!');
             } else {
-                alert('Gagal: ' + response.message);
+                toastr.error('Gagal: ' + (response.message || 'Terjadi kesalahan tidak diketahui'));
             }
         },
-        error: function(xhr) {
-            var msg = xhr.responseJSON?.message || 'Terjadi kesalahan';
-            alert('Error: ' + msg);
+        error: function(xhr, status, error) {
+            console.log('Error:', xhr.status, xhr.responseText);
+            var msg = 'Terjadi kesalahan';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            } else if (xhr.status === 419) {
+                msg = 'Sesi telah berakhir. Silakan refresh halaman.';
+            } else if (xhr.status === 404) {
+                msg = 'Data siswa tidak ditemukan.';
+            } else if (xhr.status === 500) {
+                msg = 'Server error. Silakan coba lagi.';
+            } else if (error) {
+                msg = error;
+            }
+            toastr.error(msg);
         },
         complete: function() {
             btn.prop('disabled', false).html('<i class="fas fa-check"></i> Simpan Foto');

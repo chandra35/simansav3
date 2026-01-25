@@ -245,6 +245,14 @@ class ProfileController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
+        // Check if siswa exists
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data siswa tidak ditemukan. Silakan hubungi administrator.'
+            ], 404);
+        }
+
         try {
             // Check if it's a cropped image (base64)
             if ($request->has('cropped_image')) {
