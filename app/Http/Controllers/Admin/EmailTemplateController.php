@@ -47,12 +47,16 @@ class EmailTemplateController extends Controller
             $total = EmailTemplate::count();
             $filtered = $query->count();
 
-            // Ordering
-            $orderColumn = $request->input('order.0.column', 0);
+            // Ordering - column 0 is DT_RowIndex (No), so offset by 1
+            $orderColumn = $request->input('order.0.column', 1);
             $orderDir = $request->input('order.0.dir', 'asc');
-            $columns = ['code', 'name', 'subject', 'is_active', 'is_system', 'updated_at'];
+            $columns = ['', 'code', 'name', 'subject', 'is_active', 'is_system', 'updated_at'];
             $orderColumnName = $columns[$orderColumn] ?? 'code';
-            $query->orderBy($orderColumnName, $orderDir);
+            if (!empty($orderColumnName)) {
+                $query->orderBy($orderColumnName, $orderDir);
+            } else {
+                $query->orderBy('code', 'asc');
+            }
 
             // Pagination
             $start = $request->input('start', 0);

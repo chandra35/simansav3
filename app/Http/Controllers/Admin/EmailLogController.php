@@ -9,13 +9,16 @@ use Yajra\DataTables\Facades\DataTables;
 
 class EmailLogController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:manage-settings');
+    }
+
     /**
      * Display email logs listing
      */
     public function index(Request $request)
     {
-        $this->authorize('manage-settings');
-
         if ($request->ajax()) {
             $query = EmailLog::with('sender')
                 ->orderBy('created_at', 'desc');
@@ -88,8 +91,6 @@ class EmailLogController extends Controller
      */
     public function show(EmailLog $emailLog)
     {
-        $this->authorize('manage-settings');
-
         $emailLog->load('sender');
 
         return response()->json([
@@ -119,8 +120,6 @@ class EmailLogController extends Controller
      */
     public function cleanup(Request $request)
     {
-        $this->authorize('manage-settings');
-
         $days = $request->input('days', 30);
         
         $deleted = EmailLog::where('created_at', '<', now()->subDays($days))->delete();
