@@ -449,12 +449,11 @@
                 <div class="card-body text-center">
                     <div class="form-group">
                         <!-- Square Photo Preview -->
-                        <div class="mb-3 position-relative foto-container">
-                            <div class="foto-frame" style="width: 200px; height: 200px; overflow: hidden;">
+                        <div class="mb-3 foto-container" style="display: flex; flex-direction: column; align-items: center;">
+                            <div id="fotoFrame" style="width: 200px; height: 200px; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 3px solid #e9ecef; cursor: pointer;">
                                 <img id="previewFoto" 
                                      src="{{ $siswa->foto_profile_url }}" 
-                                     class="foto-preview foto-clickable" 
-                                     style="width: 200px; height: 200px; object-fit: cover;"
+                                     style="width: 200px; height: 200px; object-fit: cover; display: block;"
                                      alt="Foto Profile {{ $siswa->nama_lengkap }}"
                                      data-toggle="tooltip" 
                                      data-placement="top" 
@@ -462,9 +461,9 @@
                                      onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background=6c757d&color=fff'">
                                 
                                 <!-- Upload overlay -->
-                                <div class="foto-overlay" id="uploadOverlay">
-                                    <i class="fas fa-camera fa-2x"></i>
-                                    <span>Ubah Foto</span>
+                                <div id="uploadOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,123,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                                    <i class="fas fa-camera fa-2x" style="margin-bottom: 8px;"></i>
+                                    <span style="font-weight: 600; font-size: 14px;">Ubah Foto</span>
                                 </div>
                             </div>
                             
@@ -1456,10 +1455,22 @@ $(document).ready(function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
+    // ==================== FOTO FRAME HOVER EFFECT ====================
+    $('#fotoFrame').hover(
+        function() {
+            $(this).css('border-color', '#007bff');
+            $('#uploadOverlay').css('opacity', '1');
+        },
+        function() {
+            $(this).css('border-color', '#e9ecef');
+            $('#uploadOverlay').css('opacity', '0');
+        }
+    );
+    
     // ==================== FOTO UPLOAD WITH CROP ====================
     
     // Click on frame to change foto
-    $('#uploadOverlay').on('click', function(e) {
+    $('#fotoFrame, #uploadOverlay').on('click', function(e) {
         e.stopPropagation();
         $('#foto_profile').click();
     });
