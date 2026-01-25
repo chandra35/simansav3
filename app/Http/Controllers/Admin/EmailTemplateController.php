@@ -7,6 +7,7 @@ use App\Models\EmailTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Yajra\DataTables\Facades\DataTables;
 
 class EmailTemplateController extends Controller
 {
@@ -33,62 +34,34 @@ class EmailTemplateController extends Controller
                 $query->where('is_system', $request->type == 'system');
             }
 
-            // Search
-            if ($request->has('search') && !empty($request->search['value'])) {
-                $search = $request->search['value'];
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('code', 'like', "%{$search}%")
-                      ->orWhere('subject', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
-
-            $total = EmailTemplate::count();
-            $filtered = $query->count();
-
-            // Ordering - column 0 is DT_RowIndex (No), so offset by 1
-            $orderColumn = $request->input('order.0.column', 1);
-            $orderDir = $request->input('order.0.dir', 'asc');
-            $columns = ['', 'code', 'name', 'subject', 'is_active', 'is_system', 'updated_at'];
-            $orderColumnName = $columns[$orderColumn] ?? 'code';
-            if (!empty($orderColumnName)) {
-                $query->orderBy($orderColumnName, $orderDir);
-            } else {
-                $query->orderBy('code', 'asc');
-            }
-
-            // Pagination
-            $start = $request->input('start', 0);
-            $length = $request->input('length', 10);
-            $templates = $query->skip($start)->take($length)->get();
-
-            return response()->json([
-                'draw' => intval($request->draw),
-                'recordsTotal' => $total,
-                'recordsFiltered' => $filtered,
-                'data' => $templates->map(function ($template, $index) use ($start) {
-                    return [
-                        'DT_RowIndex' => $start + $index + 1,
-                        'id' => $template->id,
-                        'code' => $template->code,
-                        'name' => $template->name,
-                        'subject' => $template->subject,
-                        'description' => $template->description ?? '-',
-                        'is_active' => $template->is_active,
-                        'is_active_badge' => $template->is_active 
-                            ? '<span class="badge badge-success">Aktif</span>' 
-                            : '<span class="badge badge-danger">Nonaktif</span>',
-                        'is_system' => $template->is_system,
-                        'is_system_badge' => $template->is_system 
-                            ? '<span class="badge badge-primary">Sistem</span>' 
-                            : '<span class="badge badge-secondary">Custom</span>',
-                        'created_by' => $template->creator?->name ?? '-',
-                        'updated_by' => $template->updater?->name ?? '-',
-                        'updated_at' => $template->updated_at?->format('d M Y H:i'),
-                    ];
-                }),
-            ]);
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('is_active_badge', function ($row) {
+                    return $row->is_active 
+                        ? '<span class="badge badge-success">Aktif</span>' 
+                        : '<span class="badge badge-danger">Nonaktif</span>';
+                })
+                ->addColumn('is_system_badge', function ($row) {
+                    return $row->is_system 
+                        ? '<span class="badge badge-primary">Sistem</span>' 
+                        : '<span class="badge badge-secondary">Custom</span>';
+                })
+                ->addColumn('updated_at_formatted', function ($row) {
+                    return $row->updated_at?->format('d M Y H:i') ?? '-';
+                })
+                ->addColumn('action', function ($row) {
+                    $buttons = '<div class="btn-group btn-group-sm">';
+                    $buttons .= '<button type="button" class="btn btn-info btn-preview" data-id="' . $row->id . '" title="Preview"><i class="fas fa-eye"></i></button>';
+                    $buttons .= '<a href="' . route('admin.email-templates.edit', $row->id) . '" class="btn btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
+                    $buttons .= '<button type="button" class="btn btn-secondary btn-duplicate" data-id="' . $row->id . '" title="Duplikasi"><i class="fas fa-copy"></i></button>';
+                    if (!$row->is_system) {
+                        $buttons .= '<button type="button" class="btn btn-danger btn-delete" data-id="' . $row->id . '" data-name="' . $row->name . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
+                    $buttons .= '</div>';
+                    return $buttons;
+                })
+                ->rawColumns(['is_active_badge', 'is_system_badge', 'action'])
+                ->make(true);
         }
 
         // Statistics

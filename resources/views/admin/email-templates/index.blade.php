@@ -158,9 +158,6 @@ $(function() {
         ajax: {
             url: '{{ route("admin.email-templates.index") }}',
             type: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
             data: function(d) {
                 d.status = $('#filterStatus').val();
                 d.type = $('#filterType').val();
@@ -168,33 +165,17 @@ $(function() {
             error: function(xhr, error, thrown) {
                 console.error('DataTables Error:', error, thrown);
                 console.log('Response:', xhr.responseText);
-                toastr.error('Gagal memuat data: ' + thrown);
             }
         },
         columns: [
-            { data: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'code' },
-            { data: 'name' },
-            { data: 'subject' },
-            { data: 'is_active_badge', orderable: true, searchable: false },
-            { data: 'is_system_badge', orderable: true, searchable: false },
-            { data: 'updated_at' },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function(data, type, row) {
-                    var buttons = '<div class="btn-group btn-group-sm">';
-                    buttons += '<button type="button" class="btn btn-info btn-preview" data-id="' + row.id + '" title="Preview"><i class="fas fa-eye"></i></button>';
-                    buttons += '<a href="{{ url("admin/email-templates") }}/' + row.id + '/edit" class="btn btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
-                    buttons += '<button type="button" class="btn btn-secondary btn-duplicate" data-id="' + row.id + '" title="Duplikasi"><i class="fas fa-copy"></i></button>';
-                    if (!row.is_system) {
-                        buttons += '<button type="button" class="btn btn-danger btn-delete" data-id="' + row.id + '" data-name="' + row.name + '" title="Hapus"><i class="fas fa-trash"></i></button>';
-                    }
-                    buttons += '</div>';
-                    return buttons;
-                }
-            }
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'code', name: 'code' },
+            { data: 'name', name: 'name' },
+            { data: 'subject', name: 'subject' },
+            { data: 'is_active_badge', name: 'is_active', orderable: false, searchable: false },
+            { data: 'is_system_badge', name: 'is_system', orderable: false, searchable: false },
+            { data: 'updated_at_formatted', name: 'updated_at' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
         order: [[1, 'asc']],
         language: {
