@@ -293,15 +293,22 @@ class SiswaController extends Controller
 
             DB::beginTransaction();
             
+            // Default password is NISN
+            $defaultPassword = $request->nisn;
+            
             // Create user account for siswa
             $user = User::create([
                 'name' => $request->nama_lengkap,
                 'username' => $request->nisn,
                 'email' => $request->nisn . '@student.man1metro.sch.id',
-                'password' => Hash::make($request->nisn), // Default password is NISN
+                'password' => Hash::make($defaultPassword),
                 'role' => 'siswa',
                 'is_first_login' => true,
             ]);
+            
+            // Save readable password (encrypted)
+            $user->readable_password = $defaultPassword;
+            $user->save();
 
             Log::info('User created successfully', ['user_id' => $user->id]);
 
@@ -386,6 +393,11 @@ class SiswaController extends Controller
         $data = $siswa->toArray();
         $data['created_by_name'] = $siswa->creator ? $siswa->creator->name : 'System';
         $data['updated_by_name'] = $siswa->updater ? $siswa->updater->name : '-';
+        
+        // Add readable password for admin (encrypted in database)
+        if ($siswa->user) {
+            $data['user']['readable_password'] = $siswa->user->readable_password;
+        }
         
         // Ensure nested relations are properly serialized
         if ($siswa->ortu) {

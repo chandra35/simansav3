@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Traits\HasUuid;
 use App\Traits\HasActivityLog;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Crypt;
 
 class User extends Authenticatable
 {
@@ -31,6 +32,7 @@ class User extends Authenticatable
         'is_first_login',
         'is_active',
         'phone',
+        'encrypted_password',
     ];
 
     /**
@@ -41,6 +43,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'encrypted_password',
     ];
 
     /**
@@ -56,6 +59,33 @@ class User extends Authenticatable
             'is_first_login' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the decrypted readable password
+     * This is used for displaying password in admin panel
+     */
+    public function getReadablePasswordAttribute(): ?string
+    {
+        if (empty($this->encrypted_password)) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($this->encrypted_password);
+        } catch (\Exception $e) {
+            // If decryption fails, return the value as-is (might be old plain password)
+            return $this->encrypted_password;
+        }
+    }
+
+    /**
+     * Set password with encryption
+     * Use: $user->readable_password = 'password123';
+     */
+    public function setReadablePasswordAttribute(string $value): void
+    {
+        $this->attributes['encrypted_password'] = Crypt::encryptString($value);
     }
 
     // Relations

@@ -6,7 +6,71 @@
     {{-- Header moved to welcome banner inside content --}}
 @stop
 
+@section('css')
+<style>
+    /* Page Loading Overlay */
+    .page-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .page-loader.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .page-loader .loader-content {
+        text-align: center;
+        color: white;
+    }
+
+    .page-loader .lottie-container {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+
+    .page-loader .loading-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 15px;
+        opacity: 0.9;
+        animation: pulse-text 1.5s ease-in-out infinite;
+    }
+
+    .page-loader .loading-subtext {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-top: 5px;
+    }
+
+    @keyframes pulse-text {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+    }
+</style>
+@stop
+
 @section('content')
+<!-- Page Loading Overlay with Lottie Animation -->
+<div class="page-loader" id="pageLoader">
+    <div class="loader-content">
+        <div class="lottie-container" id="lottieLoader"></div>
+        <div class="loading-text">Memuat Dashboard...</div>
+        <div class="loading-subtext">Mohon tunggu sebentar</div>
+    </div>
+</div>
+
 <!-- Welcome Banner -->
 <div class="row mb-2">
     <div class="col-12">
@@ -841,7 +905,31 @@
 @stop
 
 @section('js')
+<!-- Lottie Animation Library -->
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 <script>
+    // Initialize Lottie animation for page loader
+    var loaderAnimation = lottie.loadAnimation({
+        container: document.getElementById('lottieLoader'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://lottie.host/2fa0b14e-88bc-4f36-8e63-0b24b8d0c1d2/x6kISxXhXW.json' // Cute student/study loading animation
+    });
+
+    // Hide loader when page is fully loaded
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            var loader = document.getElementById('pageLoader');
+            loader.classList.add('fade-out');
+            // Remove from DOM after animation
+            setTimeout(function() {
+                loader.style.display = 'none';
+            }, 500);
+        }, 800); // Show for at least 800ms for smooth UX
+    });
+
     $(document).ready(function() {
         console.log("Dashboard siswa loaded!");
         

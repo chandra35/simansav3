@@ -563,7 +563,28 @@ return [
                     'route' => 'admin.settings.edit',
                     'icon' => 'fas fa-fw fa-sliders-h',
                     'can' => 'manage-settings',
-                    'active' => ['admin/settings*'],
+                    'active' => ['admin/settings'],
+                ],
+                [
+                    'text' => 'Pengaturan SMTP',
+                    'route' => 'admin.settings.smtp',
+                    'icon' => 'fas fa-fw fa-envelope',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/settings/smtp*'],
+                ],
+                [
+                    'text' => 'Log Email',
+                    'route' => 'admin.email-logs.index',
+                    'icon' => 'fas fa-fw fa-envelope-open-text',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/email-logs*'],
+                ],
+                [
+                    'text' => 'Activity Logs',
+                    'route' => 'admin.activity-logs.index',
+                    'icon' => 'fas fa-fw fa-history',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/activity-logs*'],
                 ],
                 [
                     'text' => 'Custom Menu Siswa',
@@ -571,6 +592,13 @@ return [
                     'icon' => 'fas fa-fw fa-th-list',
                     'can' => 'manage-settings',
                     'active' => ['admin/custom-menu*'],
+                ],
+                [
+                    'text' => 'Menu SNBP',
+                    'route' => 'admin.snbp-menu.index',
+                    'icon' => 'fas fa-fw fa-graduation-cap',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/snbp-menu*'],
                 ],
                 [
                     'text' => 'Profile',
@@ -706,6 +734,15 @@ return [
                 ],
             ],
         ],
+        
+        // SNBP Menu for Siswa (shown via custom blade check for kelas 12)
+        [
+            'text' => 'SNBP',
+            'route' => 'siswa.snbp.index',
+            'icon' => 'fas fa-fw fa-graduation-cap',
+            'can' => 'siswa-access',
+            'key' => 'siswa-snbp',
+        ],
     ],
 
     /*
@@ -728,6 +765,7 @@ return [
         JeroenNoten\LaravelAdminLte\Menu\Filters\ClassesFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class,
+        App\Menu\Filters\SnbpMenuFilter::class,
     ],
 
     /*

@@ -301,4 +301,93 @@ class AppSettingController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Show SMTP settings form
+     */
+    public function smtpSettings()
+    {
+        $this->authorize('manage-settings');
+        
+        $setting = AppSetting::getInstance();
+        
+        return view('admin.settings.smtp', compact('setting'));
+    }
+
+    /**
+     * Update SMTP settings
+     */
+    public function updateSmtp(Request $request)
+    {
+        $this->authorize('manage-settings');
+        
+        $validator = Validator::make($request->all(), [
+            'smtp_host' => 'nullable|string|max:255',
+            'smtp_port' => 'nullable|integer|min:1|max:65535',
+            'smtp_username' => 'nullable|string|max:255',
+            'smtp_password' => 'nullable|string|max:255',
+            'smtp_encryption' => 'nullable|in:tls,ssl,none',
+            'smtp_from_address' => 'nullable|email',
+            'smtp_from_name' => 'nullable|string|max:255',
+            'smtp_enabled' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $setting = AppSetting::getInstance();
+        
+        $setting->update([
+            'smtp_host' => $request->smtp_host,
+            'smtp_port' => $request->smtp_port,
+            'smtp_username' => $request->smtp_username,
+            'smtp_encryption' => $request->smtp_encryption === 'none' ? null : $request->smtp_encryption,
+            'smtp_from_address' => $request->smtp_from_address,
+            'smtp_from_name' => $request->smtp_from_name,
+            'smtp_enabled' => $request->boolean('smtp_enabled'),
+        ]);
+
+        // Only update password if provided
+        if ($request->filled('smtp_password')) {
+            $setting->smtp_password = $request->smtp_password;
+            $setting->save();
+        }
+
+        // Log activity
+        activity()
+            ->performedOn($setting)
+            ->causedBy(Auth::user())
+            ->log('Update pengaturan SMTP email');
+
+        return redirect()->back()
+            ->with('success', 'Pengaturan SMTP berhasil diperbarui.');
+    }
+
+    /**
+     * Test SMTP connection
+     */
+    public function testSmtp(Request $request)
+    {
+        $this->authorize('manage-settings');
+        
+        $request->validate([
+            'test_email' => 'required|email'
+        ]);
+
+        $emailService = new \App\Services\EmailService();
+        
+        if (!$emailService->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SMTP belum dikonfigurasi atau tidak aktif. Pastikan semua field terisi dan SMTP diaktifkan.'
+            ]);
+        }
+
+        $result = $emailService->sendTest($request->test_email);
+        
+        return response()->json($result);
+    }
 }

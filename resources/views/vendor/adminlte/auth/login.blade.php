@@ -86,18 +86,16 @@
 
 @section('auth_footer')
     {{-- Password reset link --}}
-    @if($passResetUrl)
-        <p class="my-0">
-            <a href="{{ $passResetUrl }}">
-                {{ __('adminlte::adminlte.i_forgot_my_password') }}
-            </a>
-        </p>
-    @endif
+    <p class="my-0">
+        <a href="{{ route('password.request') }}">
+            <i class="fas fa-key"></i> {{ __('adminlte::adminlte.i_forgot_my_password') }}
+        </a>
+    </p>
 
     {{-- Register link --}}
     <p class="my-0">
         <a href="{{ url('/pendaftar') }}">
-            Pendaftaran PPDB
+            <i class="fas fa-user-plus"></i> Pendaftaran PPDB
         </a>
     </p>
 @stop

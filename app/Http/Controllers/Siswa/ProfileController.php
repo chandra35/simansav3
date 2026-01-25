@@ -58,6 +58,9 @@ class ProfileController extends Controller
             return back()->withErrors(['current_password' => 'Password lama tidak sesuai']);
         }
 
+        // Save plain password for admin view
+        $user->readable_password = $request->password;
+        
         $user->update([
             'password' => Hash::make($request->password),
         ]);
@@ -67,6 +70,54 @@ class ProfileController extends Controller
         return back()->with('success', 'Password berhasil diubah');
     }
 
+    /**
+     * Show force setup form (password + email)
+     */
+    public function forceSetup()
+    {
+        $user = Auth::user();
+        
+        if (!$user->is_first_login) {
+            return redirect()->route('siswa.dashboard');
+        }
+
+        return view('siswa.profile.force-setup', compact('user'));
+    }
+
+    /**
+     * Update force setup (password + email)
+     */
+    public function updateForceSetup(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+            'email' => 'required|email|unique:users,email,' . Auth::id(),
+        ], [
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan.',
+        ]);
+
+        $user = Auth::user();
+        
+        // Save plain password for admin view
+        $user->readable_password = $request->password;
+        
+        $user->update([
+            'password' => Hash::make($request->password),
+            'email' => $request->email,
+            'is_first_login' => false,
+        ]);
+
+        User::logCustomActivity('first_login_setup', 'Setup awal berhasil: password dan email diperbarui');
+
+        return redirect()->route('siswa.dashboard')
+            ->with('success', 'Password dan email berhasil disimpan. Selamat datang!');
+    }
+
     public function updatePassword(Request $request)
     {
         $request->validate([
@@ -74,6 +125,10 @@ class ProfileController extends Controller
         ]);
 
         $user = Auth::user();
+        
+        // Save plain password for admin view
+        $user->readable_password = $request->password;
+        
         $user->update([
             'password' => Hash::make($request->password),
             'is_first_login' => false,

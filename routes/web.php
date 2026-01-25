@@ -22,6 +22,12 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Forgot Password Routes
+Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'reset'])->name('password.update');
+
 // Admin Routes (Super Admin, Admin, GTK, Operator)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -247,6 +253,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/settings/upload-logo-kemenag', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoKemenag'])->name('settings.upload-logo-kemenag');
         Route::post('/settings/upload-logo-sekolah', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoSekolah'])->name('settings.upload-logo-sekolah');
         Route::post('/settings/upload-kop-surat', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadKopSurat'])->name('settings.upload-kop-surat');
+        
+        // SMTP Settings
+        Route::get('/settings/smtp', [App\Http\Controllers\Admin\AppSettingController::class, 'smtpSettings'])->name('settings.smtp');
+        Route::put('/settings/smtp', [App\Http\Controllers\Admin\AppSettingController::class, 'updateSmtp'])->name('settings.smtp.update');
+        Route::post('/settings/smtp/test', [App\Http\Controllers\Admin\AppSettingController::class, 'testSmtp'])->name('settings.smtp.test');
+        
+        // Email Logs
+        Route::get('/email-logs', [App\Http\Controllers\Admin\EmailLogController::class, 'index'])->name('email-logs.index');
+        Route::get('/email-logs/{emailLog}', [App\Http\Controllers\Admin\EmailLogController::class, 'show'])->name('email-logs.show');
+        Route::post('/email-logs/cleanup', [App\Http\Controllers\Admin\EmailLogController::class, 'cleanup'])->name('email-logs.cleanup');
     });
     
     // Cetak (Print Reports)
@@ -328,6 +344,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve');
     Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject');
     Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print');
+    
+    // ==================== FITUR BARU: MENU SNBP (Eligibility Kelas 12) ====================
+    Route::resource('snbp-menu', App\Http\Controllers\Admin\SnbpMenuController::class);
+    Route::get('/snbp-menu/{snbpMenu}/assign-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'assignEligible'])->name('snbp-menu.assign-eligible');
+    Route::post('/snbp-menu/{snbpMenu}/store-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeEligible'])->name('snbp-menu.store-eligible');
+    Route::get('/snbp-menu/{snbpMenu}/assign-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'assignNotEligible'])->name('snbp-menu.assign-not-eligible');
+    Route::post('/snbp-menu/{snbpMenu}/store-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeNotEligible'])->name('snbp-menu.store-not-eligible');
+    Route::delete('/snbp-menu/{snbpSiswa}/remove-assignment', [App\Http\Controllers\Admin\SnbpMenuController::class, 'removeAssignment'])->name('snbp-menu.remove-assignment');
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)
@@ -394,6 +418,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 // Siswa Routes
 Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () {
+    // Force setup (password + email) - no middleware restriction
+    Route::get('/force-setup', [SiswaProfileController::class, 'forceSetup'])->name('force-setup');
+    Route::post('/force-setup', [SiswaProfileController::class, 'updateForceSetup'])->name('force-setup.update');
+    
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
     
     // Profile Management for Siswa
@@ -426,6 +454,9 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/menu', [App\Http\Controllers\Siswa\CustomMenuController::class, 'index'])->name('menu.index');
     Route::get('/menu/{slug}', [App\Http\Controllers\Siswa\CustomMenuController::class, 'show'])->name('menu.show');
     Route::post('/menu/{id}/read', [App\Http\Controllers\Siswa\CustomMenuController::class, 'markAsRead'])->name('menu.read');
+    
+    // SNBP Menu for Siswa (Kelas 12 only)
+    Route::get('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'index'])->name('snbp.index');
     
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

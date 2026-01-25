@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Crypt;
 
 class AppSetting extends Model
 {
@@ -41,6 +42,15 @@ class AppSetting extends Model
         'kop_surat_custom_path',
         'kop_margin_top',
         'kop_height',
+        // SMTP Settings
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password_encrypted',
+        'smtp_encryption',
+        'smtp_from_address',
+        'smtp_from_name',
+        'smtp_enabled',
     ];
 
     protected $casts = [
@@ -51,7 +61,37 @@ class AppSetting extends Model
         'logo_sekolah_height' => 'integer',
         'logo_display_height' => 'integer',
         'logo_column_width' => 'integer',
+        'smtp_port' => 'integer',
+        'smtp_enabled' => 'boolean',
     ];
+
+    protected $hidden = [
+        'smtp_password_encrypted',
+    ];
+
+    /**
+     * Get decrypted SMTP password
+     */
+    public function getSmtpPasswordAttribute(): ?string
+    {
+        if (empty($this->smtp_password_encrypted)) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($this->smtp_password_encrypted);
+        } catch (\Exception $e) {
+            return $this->smtp_password_encrypted;
+        }
+    }
+
+    /**
+     * Set encrypted SMTP password
+     */
+    public function setSmtpPasswordAttribute(string $value): void
+    {
+        $this->attributes['smtp_password_encrypted'] = Crypt::encryptString($value);
+    }
 
     /**
      * Singleton Pattern - Get or Create Instance

@@ -16,10 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
         
         // Track user activity untuk authenticated users
         $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserActivity::class);
+        
+        // Force password change for siswa
+        $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

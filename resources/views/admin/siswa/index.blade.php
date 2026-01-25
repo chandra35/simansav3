@@ -498,7 +498,14 @@ function loadSiswaDataTab(siswa) {
                 <table class="table table-detail table-sm table-bordered">
                     <tr><td width="40%" class="bg-light"><strong>Data Ortu</strong></td><td>${siswa.data_ortu_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
                     <tr><td class="bg-light"><strong>Data Diri</strong></td><td>${siswa.data_diri_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
-                    <tr><td class="bg-light"><strong>Status Login</strong></td><td>${siswa.user.is_first_login ? '<span class="badge badge-warning"><i class="fas fa-clock"></i> Belum Pernah Login</span>' : '<span class="badge badge-success"><i class="fas fa-check"></i> Sudah Login</span>'}</td></tr>
+                    <tr><td class="bg-light"><strong>Status Login</strong></td><td>${siswa.user.is_first_login ? '<span class="badge badge-warning"><i class="fas fa-clock"></i> Belum Ganti Password</span>' : '<span class="badge badge-success"><i class="fas fa-check"></i> Sudah Ganti Password</span>'}</td></tr>
+                </table>
+                
+                <h6 class="text-primary mt-3"><i class="fas fa-key"></i> Akun Login</h6>
+                <table class="table table-detail table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Username</strong></td><td><code>${siswa.user.username || '-'}</code></td></tr>
+                    <tr><td class="bg-light"><strong>Email</strong></td><td>${siswa.user.email || '<span class="text-muted">Belum diisi</span>'}</td></tr>
+                    <tr><td class="bg-light"><strong>Password</strong></td><td>${siswa.user.readable_password ? '<code class="text-danger">' + siswa.user.readable_password + '</code> <small class="text-muted">(encrypted)</small>' : '<span class="text-muted">Tidak tersedia</span>'}</td></tr>
                 </table>
                 
                 <h6 class="text-primary mt-3"><i class="fas fa-history"></i> History</h6>
