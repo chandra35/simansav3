@@ -5,6 +5,18 @@
 @section('auth_header', 'Sistem Informasi MAN 1 Metro')
 
 @section('auth_body')
+{{-- Success Message (Password Reset) --}}
+@if (session('status'))
+    <div class="alert alert-success alert-dismissible fade show mb-3">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+            <h5 class="mb-1"><strong>Berhasil!</strong></h5>
+            <p class="mb-0">{{ session('status') }}</p>
+        </div>
+    </div>
+@endif
+
 <form action="{{ route('login') }}" method="post" id="loginForm">
     @csrf
     

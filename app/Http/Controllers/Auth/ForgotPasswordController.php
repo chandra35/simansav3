@@ -173,7 +173,13 @@ class ForgotPasswordController extends Controller
 
         User::logCustomActivity('password_reset_complete', 'Password berhasil direset untuk email: ' . $user->email);
 
+        // Send notification email about password change
+        $emailService = new EmailService();
+        if ($emailService->isConfigured()) {
+            $emailService->sendPasswordChanged($user->email, $user->name);
+        }
+
         return redirect()->route('login')
-            ->with('status', 'Password berhasil direset. Silakan login dengan password baru.');
+            ->with('status', 'Password Anda berhasil diubah! Silakan login menggunakan password baru Anda.');
     }
 }
