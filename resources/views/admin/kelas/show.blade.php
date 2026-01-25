@@ -199,8 +199,10 @@
                                     </td>
                                     <td>{{ $siswa->nisn }}</td>
                                     <td>
-                                        <a href="{{ route('admin.siswa.show', $siswa->id) }}" target="_blank">
-                                            {{ $siswa->nama_lengkap }}
+                                        <a href="javascript:void(0)" class="btn-show-siswa text-primary" 
+                                           data-siswa-id="{{ $siswa->id }}"
+                                           style="text-decoration: none; cursor: pointer;">
+                                            <strong>{{ $siswa->nama_lengkap }}</strong>
                                         </a>
                                     </td>
                                     <td class="text-center">
@@ -577,6 +579,32 @@
         </div>
     </div>
     @endcan
+
+    {{-- Modal Detail Siswa --}}
+    <div class="modal fade" id="modalDetailSiswa" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white"><i class="fas fa-user-graduate"></i> Detail Siswa</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="detailSiswaContent">
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                        <p class="mt-3">Memuat data siswa...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" id="btnViewFullSiswa" class="btn btn-info" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Lihat Detail Lengkap
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -1109,6 +1137,103 @@
                             title: 'Gagal!',
                             text: xhr.responseJSON?.message || 'Terjadi kesalahan saat assign wali kelas'
                         });
+                    }
+                });
+            });
+
+            // Show Detail Siswa - Click Handler
+            $('.btn-show-siswa').on('click', function() {
+                let siswaId = $(this).data('siswa-id');
+                
+                // Show loading in modal
+                $('#detailSiswaContent').html(`
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                        <p class="mt-3">Memuat data siswa...</p>
+                    </div>
+                `);
+                
+                // Update link to full detail
+                $('#btnViewFullSiswa').attr('href', '{{ url("admin/siswa") }}/' + siswaId);
+                
+                // Show modal
+                $('#modalDetailSiswa').modal('show');
+                
+                // Load siswa detail via AJAX
+                $.ajax({
+                    url: '{{ url("admin/siswa") }}/' + siswaId + '/quick-detail',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            let siswa = response.siswa;
+                            let fotoUrl = siswa.foto_profile_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(siswa.nama_lengkap) + '&size=200&background=3498db&color=FFFFFF';
+                            let jkBadge = siswa.jenis_kelamin === 'L' 
+                                ? '<span class="badge badge-primary"><i class="fas fa-male"></i> Laki-laki</span>' 
+                                : '<span class="badge badge-danger"><i class="fas fa-female"></i> Perempuan</span>';
+                            
+                            let html = `
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <img src="${fotoUrl}" alt="${siswa.nama_lengkap}" 
+                                             class="img-thumbnail mb-3" style="width: 180px; height: 180px; object-fit: cover;">
+                                        <h5 class="font-weight-bold">${siswa.nama_lengkap}</h5>
+                                        <p class="text-muted">${siswa.nisn || '-'}</p>
+                                        ${jkBadge}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <table class="table table-sm table-borderless">
+                                            <tr>
+                                                <th width="35%"><i class="fas fa-id-card text-primary"></i> NISN</th>
+                                                <td>${siswa.nisn || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-id-badge text-info"></i> NIS</th>
+                                                <td>${siswa.nis || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-birthday-cake text-warning"></i> Tanggal Lahir</th>
+                                                <td>${siswa.tanggal_lahir_formatted || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-map-marker-alt text-danger"></i> Tempat Lahir</th>
+                                                <td>${siswa.tempat_lahir || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-phone text-success"></i> No. HP</th>
+                                                <td>${siswa.nomor_hp || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-envelope text-secondary"></i> Email</th>
+                                                <td>${siswa.email || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-home text-info"></i> Alamat</th>
+                                                <td>${siswa.alamat_siswa || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-school text-primary"></i> Asal Sekolah</th>
+                                                <td>${siswa.nama_sekolah_asal || '-'}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            $('#detailSiswaContent').html(html);
+                        } else {
+                            $('#detailSiswaContent').html(`
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> ${response.message || 'Gagal memuat data siswa'}
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#detailSiswaContent').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Gagal memuat data siswa. Silakan coba lagi.
+                            </div>
+                        `);
                     }
                 });
             });

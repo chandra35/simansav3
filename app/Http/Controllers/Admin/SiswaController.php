@@ -417,6 +417,32 @@ class SiswaController extends Controller
     }
 
     /**
+     * Get quick detail for modal display
+     */
+    public function quickDetail(Siswa $siswa)
+    {
+        $this->authorize('view-siswa');
+
+        return response()->json([
+            'success' => true,
+            'siswa' => [
+                'id' => $siswa->id,
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'nisn' => $siswa->nisn,
+                'nis' => $siswa->nis,
+                'jenis_kelamin' => $siswa->jenis_kelamin,
+                'tempat_lahir' => $siswa->tempat_lahir,
+                'tanggal_lahir_formatted' => $siswa->tanggal_lahir ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d F Y') : null,
+                'nomor_hp' => $siswa->nomor_hp,
+                'email' => $siswa->user?->email,
+                'alamat_siswa' => $siswa->alamat_siswa,
+                'nama_sekolah_asal' => $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal,
+                'foto_profile_url' => $siswa->foto_profile_url,
+            ]
+        ]);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Siswa $siswa)
