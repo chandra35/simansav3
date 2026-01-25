@@ -77,8 +77,41 @@ class CustomMenuController extends Controller
         
         // Get custom fields configuration
         $customFields = $menu->getCustomFieldsArray();
+        
+        // Separate fields: siswa-sourced fields (like nisn) vs custom fields (username, password)
+        $siswaSourcedFields = ['nisn', 'nis', 'nama', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'alamat', 'nama_ayah', 'nama_ibu', 'kelas'];
+        
+        $additionalFields = []; // Fields yang perlu ditampilkan di card (username, password, etc)
+        $siswaFields = []; // Fields dari data siswa (nisn, nis, nama, etc)
+        
+        foreach ($customFields as $key => $field) {
+            if (isset($personalData[$key])) {
+                $fieldKey = $field['key'] ?? $key;
+                // Check if this field is sourced from siswa data
+                if (in_array(strtolower($fieldKey), $siswaSourcedFields) || 
+                    (isset($field['source']) && $field['source'] === 'siswa')) {
+                    $siswaFields[$key] = $field;
+                } else {
+                    // This is an additional/custom field (like username, password)
+                    $additionalFields[$key] = $field;
+                }
+            }
+        }
+        
+        // Determine if we should show the personal data card
+        // Only show if there are additional fields (not just siswa-sourced data)
+        $showPersonalDataCard = count($additionalFields) > 0;
 
-        return view('siswa.custom-menu.show', compact('menu', 'assignment', 'personalData', 'customFields'));
+        return view('siswa.custom-menu.show', compact(
+            'menu', 
+            'assignment', 
+            'personalData', 
+            'customFields',
+            'additionalFields',
+            'siswaFields',
+            'showPersonalDataCard',
+            'siswa'
+        ));
     }
 
     /**
