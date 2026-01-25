@@ -6,13 +6,14 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
     
-    # Handle assets and public files directly
+    # Serve assets from public folder (css, js, vendor, images, storage)
+    RewriteCond %{REQUEST_URI} ^/(css|js|vendor|images|storage|build|favicon\.ico|robots\.txt)(.*)$
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Handle all other requests through Laravel
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ public/index.php [L]
-    
-    # If accessing public folder directly, serve from there
-    RewriteCond %{REQUEST_URI} ^/public/
-    RewriteRule ^public/(.*)$ public/$1 [L]
-</IfModule>

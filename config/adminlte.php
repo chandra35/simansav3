@@ -397,6 +397,20 @@ return [
                     'active' => ['admin/kelas*'],
                 ],
                 [
+                    'text' => 'Jadwal Pelajaran',
+                    'route' => 'admin.jadwal-pelajaran.index',
+                    'icon' => 'fas fa-fw fa-clock',
+                    'can' => 'admin-access',
+                    'active' => ['admin/jadwal-pelajaran*'],
+                ],
+                [
+                    'text' => 'Kalender Akademik',
+                    'route' => 'admin.kalender-akademik.index',
+                    'icon' => 'fas fa-fw fa-calendar',
+                    'can' => 'admin-access',
+                    'active' => ['admin/kalender-akademik*'],
+                ],
+                [
                     'text' => 'Cetak Dokumen',
                     'route' => 'admin.cetak.index',
                     'icon' => 'fas fa-fw fa-print',
@@ -411,6 +425,108 @@ return [
                     'label' => 'Soon',
                     'label_color' => 'warning',
                     'active' => ['admin/mutasi*'],
+                ],
+            ],
+        ],
+        
+        // KESISWAAN - Collapsible
+        [
+            'text' => 'Kesiswaan',
+            'icon' => 'fas fa-fw fa-users',
+            'submenu' => [
+                [
+                    'text' => 'Prestasi Siswa',
+                    'route' => 'admin.prestasi-siswa.index',
+                    'icon' => 'fas fa-fw fa-trophy',
+                    'can' => 'admin-access',
+                    'active' => ['admin/prestasi-siswa*'],
+                ],
+                [
+                    'text' => 'Ekstrakurikuler',
+                    'route' => 'admin.ekstrakurikuler.index',
+                    'icon' => 'fas fa-fw fa-futbol',
+                    'can' => 'admin-access',
+                    'active' => ['admin/ekstrakurikuler*'],
+                ],
+                [
+                    'text' => 'Catatan Konseling',
+                    'route' => 'admin.catatan-konseling.index',
+                    'icon' => 'fas fa-fw fa-comments',
+                    'can' => 'admin-access',
+                    'active' => ['admin/catatan-konseling*'],
+                ],
+            ],
+        ],
+        
+        // KEUANGAN - Collapsible
+        [
+            'text' => 'Keuangan',
+            'icon' => 'fas fa-fw fa-money-bill-wave',
+            'submenu' => [
+                [
+                    'text' => 'Jenis Pembayaran',
+                    'route' => 'admin.pembayaran.jenis',
+                    'icon' => 'fas fa-fw fa-list',
+                    'can' => 'admin-access',
+                    'active' => ['admin/pembayaran/jenis*'],
+                ],
+                [
+                    'text' => 'Tagihan',
+                    'route' => 'admin.pembayaran.tagihan',
+                    'icon' => 'fas fa-fw fa-file-invoice',
+                    'can' => 'admin-access',
+                    'active' => ['admin/pembayaran/tagihan*'],
+                ],
+                [
+                    'text' => 'Pembayaran',
+                    'route' => 'admin.pembayaran.index',
+                    'icon' => 'fas fa-fw fa-cash-register',
+                    'can' => 'admin-access',
+                    'active' => ['admin/pembayaran'],
+                ],
+                [
+                    'text' => 'Laporan Keuangan',
+                    'route' => 'admin.pembayaran.laporan',
+                    'icon' => 'fas fa-fw fa-chart-pie',
+                    'can' => 'admin-access',
+                    'active' => ['admin/pembayaran/laporan*'],
+                ],
+            ],
+        ],
+        
+        // LAYANAN SURAT - Collapsible
+        [
+            'text' => 'Layanan Surat',
+            'icon' => 'fas fa-fw fa-envelope',
+            'submenu' => [
+                [
+                    'text' => 'Template Surat',
+                    'route' => 'admin.surat-keterangan.template',
+                    'icon' => 'fas fa-fw fa-file-alt',
+                    'can' => 'admin-access',
+                    'active' => ['admin/surat-keterangan/template*'],
+                ],
+                [
+                    'text' => 'Surat Keterangan',
+                    'route' => 'admin.surat-keterangan.index',
+                    'icon' => 'fas fa-fw fa-file-signature',
+                    'can' => 'admin-access',
+                    'active' => ['admin/surat-keterangan'],
+                ],
+            ],
+        ],
+        
+        // INFORMASI - Collapsible
+        [
+            'text' => 'Informasi',
+            'icon' => 'fas fa-fw fa-bullhorn',
+            'submenu' => [
+                [
+                    'text' => 'Pengumuman',
+                    'route' => 'admin.pengumuman.index',
+                    'icon' => 'fas fa-fw fa-bell',
+                    'can' => 'admin-access',
+                    'active' => ['admin/pengumuman*'],
                 ],
             ],
         ],
