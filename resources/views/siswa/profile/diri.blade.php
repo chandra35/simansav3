@@ -448,20 +448,17 @@
                 </div>
                 <div class="card-body text-center">
                     <div class="form-group">
-                        <!-- Square Photo Preview -->
-                        <div class="mb-3 foto-container" style="display: flex; flex-direction: column; align-items: center;">
-                            <div id="fotoFrame" style="width: 200px; height: 200px; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 3px solid #e9ecef; cursor: pointer;">
+                        <!-- Square Photo Preview - Using aspect-ratio trick -->
+                        <div class="mb-3" style="display: flex; flex-direction: column; align-items: center;">
+                            <div id="fotoFrame" style="width: 200px; aspect-ratio: 1/1; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 3px solid #e9ecef; cursor: pointer; background: #f5f5f5;">
                                 <img id="previewFoto" 
                                      src="{{ $siswa->foto_profile_url }}" 
-                                     style="width: 200px; height: 200px; object-fit: cover; display: block;"
+                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
                                      alt="Foto Profile {{ $siswa->nama_lengkap }}"
-                                     data-toggle="tooltip" 
-                                     data-placement="top" 
-                                     title="Klik untuk melihat foto ukuran penuh"
                                      onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background=6c757d&color=fff'">
                                 
                                 <!-- Upload overlay -->
-                                <div id="uploadOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,123,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0; transition: opacity 0.3s ease;">
+                                <div id="uploadOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,123,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0; transition: opacity 0.3s ease; z-index: 10;">
                                     <i class="fas fa-camera fa-2x" style="margin-bottom: 8px;"></i>
                                     <span style="font-weight: 600; font-size: 14px;">Ubah Foto</span>
                                 </div>
