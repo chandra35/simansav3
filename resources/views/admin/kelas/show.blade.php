@@ -173,13 +173,14 @@
                         <thead class="thead-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th width="8%">Absen</th>
-                                <th width="12%">NISN</th>
+                                <th width="5%">Foto</th>
+                                <th width="7%">Absen</th>
+                                <th width="10%">NISN</th>
                                 <th>Nama Lengkap</th>
-                                <th width="8%">JK</th>
+                                <th width="6%">JK</th>
                                 <th width="12%">Tanggal Masuk</th>
                                 @can('remove-siswa-kelas')
-                                <th width="10%">Aksi</th>
+                                <th width="8%">Aksi</th>
                                 @endcan
                             </tr>
                         </thead>
@@ -187,6 +188,12 @@
                             @foreach($kelas->siswaAktif->sortBy('pivot.nomor_urut_absen') as $index => $siswa)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
+                                    <td class="text-center">
+                                        <img src="{{ $siswa->foto_profile_url }}" 
+                                             alt="{{ $siswa->nama_lengkap }}" 
+                                             class="img-circle elevation-2" 
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                    </td>
                                     <td class="text-center">
                                         <span class="badge badge-primary">{{ $siswa->pivot->nomor_urut_absen }}</span>
                                     </td>
