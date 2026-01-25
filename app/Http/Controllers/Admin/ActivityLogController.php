@@ -25,7 +25,7 @@ class ActivityLogController extends Controller
      */
     public function getData(Request $request)
     {
-        $query = ActivityLog::with('user')->select('activity_logs.*');
+        $query = ActivityLog::with('user.roles')->select('activity_logs.*');
 
         // Filter by current user (except Super Admin can see all logs)
         $currentUser = auth()->user();
@@ -49,6 +49,20 @@ class ActivityLogController extends Controller
         // Filter by user (only for Super Admin)
         if ($request->filled('user_id') && $currentUser->hasRole('Super Admin')) {
             $query->where('user_id', $request->user_id);
+        }
+
+        // Filter by user role (only for Super Admin)
+        if ($request->filled('user_role') && $currentUser->hasRole('Super Admin')) {
+            $role = $request->user_role;
+            $query->whereHas('user.roles', function($q) use ($role) {
+                if ($role === 'siswa') {
+                    $q->where('name', 'Siswa');
+                } elseif ($role === 'admin') {
+                    $q->whereIn('name', ['Super Admin', 'Admin']);
+                } elseif ($role === 'guru') {
+                    $q->whereIn('name', ['Guru', 'GTK', 'Kepala Madrasah']);
+                }
+            });
         }
 
         // Filter by device type
@@ -159,10 +173,10 @@ class ActivityLogController extends Controller
         
         // Super Admin can see all logs
         if ($currentUser->hasRole('Super Admin')) {
-            $log = ActivityLog::with('user')->findOrFail($id);
+            $log = ActivityLog::with(['user.roles'])->findOrFail($id);
         } else {
             // Other users can only see their own logs
-            $log = ActivityLog::with('user')
+            $log = ActivityLog::with(['user.roles'])
                 ->where('id', $id)
                 ->where('user_id', $currentUser->id)
                 ->firstOrFail();
@@ -171,7 +185,7 @@ class ActivityLogController extends Controller
         return response()->json([
             'success' => true,
             'log' => $log,
-            'user' => $log->user,
+            'user' => $log->user ? $log->user->load('roles') : null,
         ]);
     }
 
