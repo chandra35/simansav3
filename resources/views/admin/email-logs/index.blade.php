@@ -2,6 +2,9 @@
 
 @section('title', 'Log Email - SIMANSA')
 
+@section('plugins.Datatables', true)
+@section('plugins.DatatablesPlugins', true)
+
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">

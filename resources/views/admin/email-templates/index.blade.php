@@ -2,6 +2,9 @@
 
 @section('title', 'Template Email')
 
+@section('plugins.Datatables', true)
+@section('plugins.DatatablesPlugins', true)
+
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-envelope-open-text text-primary"></i> Template Email</h1>
