@@ -448,17 +448,21 @@
                 </div>
                 <div class="card-body text-center">
                     <div class="form-group">
-                        <!-- Square Photo Preview - Using aspect-ratio trick -->
+                        <!-- Circle Photo Preview - Same as Dashboard -->
                         <div class="mb-3" style="display: flex; flex-direction: column; align-items: center;">
-                            <div id="fotoFrame" style="width: 200px; aspect-ratio: 1/1; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 3px solid #e9ecef; cursor: pointer; background: #f5f5f5;">
+                            <div id="fotoFrame" style="position: relative; width: 180px; height: 180px; cursor: pointer;">
+                                <!-- Animated Ring -->
+                                <div id="fotoRing" style="position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border-radius: 50%; background: linear-gradient(135deg, {{ $siswa->jenis_kelamin == 'L' ? '#007bff, #00d4ff' : '#e83e8c, #ff6b9d' }}); animation: pulse-ring 2s ease-in-out infinite;"></div>
+                                
+                                <!-- Photo -->
                                 <img id="previewFoto" 
                                      src="{{ $siswa->foto_profile_url }}" 
-                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+                                     style="width: 170px; height: 170px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; position: relative; z-index: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.15);"
                                      alt="Foto Profile {{ $siswa->nama_lengkap }}"
-                                     onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background=6c757d&color=fff'">
+                                     onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=400&background={{ $siswa->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
                                 
                                 <!-- Upload overlay -->
-                                <div id="uploadOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,123,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0; transition: opacity 0.3s ease; z-index: 10;">
+                                <div id="uploadOverlay" style="position: absolute; top: 5px; left: 5px; width: 170px; height: 170px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0; transition: opacity 0.3s ease; z-index: 10;">
                                     <i class="fas fa-camera fa-2x" style="margin-bottom: 8px;"></i>
                                     <span style="font-weight: 600; font-size: 14px;">Ubah Foto</span>
                                 </div>
@@ -1224,7 +1228,23 @@
 
 @section('css')
     <style>
-        /* Foto Frame Styling - Force Square */
+        /* Pulse Ring Animation for Profile Photo */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.03);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* Foto Frame Styling */
         .foto-container {
             display: flex;
             flex-direction: column;
