@@ -450,10 +450,11 @@
                     <div class="form-group">
                         <!-- Square Photo Preview -->
                         <div class="mb-3 position-relative foto-container">
-                            <div class="foto-frame">
+                            <div class="foto-frame" style="width: 200px; height: 200px; overflow: hidden;">
                                 <img id="previewFoto" 
                                      src="{{ $siswa->foto_profile_url }}" 
                                      class="foto-preview foto-clickable" 
+                                     style="width: 200px; height: 200px; object-fit: cover;"
                                      alt="Foto Profile {{ $siswa->nama_lengkap }}"
                                      data-toggle="tooltip" 
                                      data-placement="top" 
@@ -1227,18 +1228,29 @@
 
 @section('css')
     <style>
-        /* Foto Frame Styling */
+        /* Foto Frame Styling - Force Square */
+        .foto-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
         .foto-frame {
-            width: 200px;
-            height: 200px;
+            width: 200px !important;
+            height: 200px !important;
+            max-width: 200px !important;
+            max-height: 200px !important;
+            min-width: 200px !important;
+            min-height: 200px !important;
             margin: 0 auto;
             position: relative;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: hidden !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             border: 3px solid #e9ecef;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: block;
         }
         
         .foto-frame:hover {
@@ -1247,9 +1259,12 @@
         }
         
         .foto-preview {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 200px !important;
+            height: 200px !important;
+            max-width: 200px !important;
+            max-height: 200px !important;
+            object-fit: cover !important;
+            display: block !important;
             transition: all 0.3s ease;
         }
         
