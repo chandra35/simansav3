@@ -285,46 +285,70 @@ class EmailTemplate extends Model
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }
-        .footer { background: #f5f5f5; color: #666; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none; }
-        .btn { display: inline-block; background: #007bff; color: white !important; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
-        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
-        h1, h2 { margin: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .wrapper { padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header .logo { margin-bottom: 15px; }
+        .header .logo img { max-width: 80px; height: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .header p { margin: 8px 0 0 0; opacity: 0.9; font-size: 14px; }
+        .content { padding: 40px 30px; }
+        .content h2 { margin: 0 0 20px 0; color: #333; font-size: 22px; }
+        .content p { margin: 0 0 15px 0; color: #555; }
+        .btn-container { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .btn:hover { opacity: 0.9; }
+        .warning { background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); border-left: 4px solid #ffc107; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .warning strong { color: #856404; }
+        .link-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; word-break: break-all; }
+        .link-box p { margin: 0 0 10px 0; font-size: 12px; color: #666; }
+        .link-box a { color: #667eea; font-size: 12px; }
+        .footer { background: #2d3748; color: #a0aec0; padding: 25px; text-align: center; font-size: 12px; }
+        .footer p { margin: 5px 0; }
+        .footer .school-name { color: #fff; font-weight: 600; font-size: 14px; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e0e0e0, transparent); margin: 20px 0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔐 [nama_sekolah]</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">Reset Password</p>
-        </div>
-        <div class="content">
-            <h2>Halo, [nama_user]!</h2>
-            <p>Kami menerima permintaan untuk mereset password akun Anda.</p>
-            <p>Klik tombol di bawah ini untuk membuat password baru:</p>
-            
-            <p style="text-align: center;">
-                <a href="[reset_link]" class="btn">Reset Password</a>
-            </p>
-            
-            <div class="warning">
-                <strong>⚠️ Perhatian:</strong><br>
-                Link ini akan kadaluarsa dalam 60 menit.<br>
-                Jika Anda tidak meminta reset password, abaikan email ini.
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="logo">[logo_sekolah]</div>
+                <h1>🔐 Reset Password</h1>
+                <p>Sistem Informasi [nama_sekolah]</p>
             </div>
-            
-            <p style="font-size: 12px; color: #666;">
-                Jika tombol tidak berfungsi, copy link berikut ke browser:<br>
-                <a href="[reset_link]">[reset_link]</a>
-            </p>
-        </div>
-        <div class="footer">
-            <p>Email ini dikirim otomatis oleh sistem [nama_sekolah]</p>
-            <p>[alamat_sekolah] | [telepon_sekolah]</p>
+            <div class="content">
+                <h2>Halo, [nama_user]!</h2>
+                <p>Kami menerima permintaan untuk mereset password akun Anda di <strong>[nama_sekolah]</strong>.</p>
+                <p>Untuk melanjutkan proses reset password, silakan klik tombol di bawah ini:</p>
+                
+                <div class="btn-container">
+                    <a href="[reset_link]" class="btn">🔑 Reset Password Sekarang</a>
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Perhatian Keamanan:</strong><br>
+                    • Link ini hanya berlaku selama <strong>60 menit</strong><br>
+                    • Jika Anda tidak meminta reset password, abaikan email ini<br>
+                    • Jangan bagikan link ini kepada siapapun
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="link-box">
+                    <p>Jika tombol tidak berfungsi, salin dan tempel link berikut ke browser:</p>
+                    <a href="[reset_link]">[reset_link]</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p class="school-name">[nama_sekolah]</p>
+                <p>[alamat_sekolah]</p>
+                <p>📞 [telepon_sekolah] | 📧 [email_sekolah]</p>
+                <p style="margin-top: 15px; color: #718096;">Email ini dikirim otomatis oleh sistem. Mohon tidak membalas email ini.</p>
+            </div>
         </div>
     </div>
 </body>

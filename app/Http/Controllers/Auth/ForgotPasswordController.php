@@ -15,11 +15,34 @@ use Carbon\Carbon;
 class ForgotPasswordController extends Controller
 {
     /**
+     * Default email domain yang tidak bisa digunakan untuk reset password
+     */
+    protected $defaultEmailDomains = [
+        '@siswa.simansa.sch.id',
+        '@student.simansa.sch.id',
+        '@siswa.ma.sch.id',
+    ];
+
+    /**
      * Show forgot password form
      */
     public function showLinkRequestForm()
     {
         return view('auth.forgot-password');
+    }
+
+    /**
+     * Check if email is a default/system generated email
+     */
+    protected function isDefaultEmail(string $email): bool
+    {
+        $email = strtolower($email);
+        foreach ($this->defaultEmailDomains as $domain) {
+            if (Str::endsWith($email, strtolower($domain))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -35,8 +58,15 @@ class ForgotPasswordController extends Controller
         $emailService = new EmailService();
         if (!$emailService->isConfigured()) {
             return back()->withErrors([
-                'email' => 'Fitur reset password via email belum aktif. Silakan hubungi administrator.'
-            ]);
+                'email' => 'Fitur reset password via email belum aktif. Silakan hubungi administrator/operator.'
+            ])->withInput();
+        }
+
+        // Check if email is using default domain
+        if ($this->isDefaultEmail($request->email)) {
+            return back()->withErrors([
+                'email' => 'Email yang Anda masukkan adalah email default sistem (@siswa.simansa.sch.id). Untuk reset password, silakan hubungi Operator Sekolah. Atau update email Anda melalui menu profil setelah login.'
+            ])->withInput();
         }
 
         // Find user
@@ -45,6 +75,13 @@ class ForgotPasswordController extends Controller
         if (!$user) {
             // Don't reveal if email exists or not for security
             return back()->with('status', 'Jika email terdaftar, kami telah mengirimkan link reset password.');
+        }
+
+        // Double check - verify user's email is not default
+        if ($this->isDefaultEmail($user->email)) {
+            return back()->withErrors([
+                'email' => 'Email ini adalah email default sistem. Silakan hubungi Operator Sekolah untuk reset password.'
+            ])->withInput();
         }
 
         // Generate token
@@ -60,17 +97,17 @@ class ForgotPasswordController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        // Send email using EmailService
+        // Send email using EmailService with template
         $resetLink = route('password.reset', ['token' => $token, 'email' => $user->email]);
         $result = $emailService->sendPasswordReset($user->email, $user->name, $resetLink);
 
         if ($result['success']) {
             User::logCustomActivity('password_reset_request', 'Request reset password untuk email: ' . $user->email);
-            return back()->with('status', 'Link reset password telah dikirim ke email Anda.');
+            return back()->with('status', 'Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.');
         } else {
             return back()->withErrors([
-                'email' => $result['message']
-            ]);
+                'email' => 'Gagal mengirim email: ' . $result['message']
+            ])->withInput();
         }
     }
 
