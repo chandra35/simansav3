@@ -154,6 +154,10 @@
 @section('js')
 <script>
 $(function() {
+    console.log('Initializing DataTable...');
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('DataTables available:', typeof $.fn.DataTable);
+    
     // Initialize DataTable
     var table = $('#templatesTable').DataTable({
         processing: true,
@@ -168,6 +172,10 @@ $(function() {
             error: function(xhr, error, thrown) {
                 console.error('DataTables Error:', error, thrown);
                 console.log('Response:', xhr.responseText);
+            },
+            dataSrc: function(json) {
+                console.log('DataTables response:', json);
+                return json.data;
             }
         },
         columns: [
@@ -185,6 +193,8 @@ $(function() {
             url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json'
         }
     });
+    
+    console.log('DataTable initialized');
 
     // Filter change
     $('#filterStatus, #filterType').on('change', function() {
