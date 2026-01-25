@@ -20,7 +20,7 @@ class EmailTemplateController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()) {
+        if ($request->ajax() || $request->wantsJson() || $request->has('draw')) {
             $query = EmailTemplate::with(['creator', 'updater']);
 
             // Filter by status

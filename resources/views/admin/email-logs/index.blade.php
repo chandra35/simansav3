@@ -232,11 +232,20 @@ $(document).ready(function() {
         serverSide: true,
         ajax: {
             url: '{{ route("admin.email-logs.index") }}',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             data: function(d) {
                 d.status = $('#filterStatus').val();
                 d.type = $('#filterType').val();
                 d.date_from = $('#filterDateFrom').val();
                 d.date_to = $('#filterDateTo').val();
+            },
+            error: function(xhr, error, thrown) {
+                console.error('DataTables Error:', error, thrown);
+                console.log('Response:', xhr.responseText);
+                toastr.error('Gagal memuat data: ' + thrown);
             }
         },
         columns: [
