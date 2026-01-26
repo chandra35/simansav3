@@ -520,8 +520,9 @@
                         <div class="input-group">
                             <input type="text" name="npsn_asal_sekolah" id="npsn_asal_sekolah" 
                                    class="form-control @error('npsn_asal_sekolah') is-invalid @enderror" 
-                                   placeholder="Contoh: 10648374" 
+                                   placeholder="Contoh: 10648374 atau A1234567" 
                                    maxlength="8" 
+                                   style="text-transform: uppercase;"
                                    value="{{ old('npsn_asal_sekolah', $siswa->npsn_asal_sekolah ?? '') }}"
                                    required>
                             <div class="input-group-append">
@@ -534,7 +535,7 @@
                             @enderror
                         </div>
                         <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Masukkan 8 digit NPSN, pencarian otomatis dilakukan
+                            <i class="fas fa-info-circle"></i> Masukkan 8 karakter NPSN (huruf/angka), pencarian otomatis dilakukan
                         </small>
                     </div>
 
@@ -2037,11 +2038,11 @@ $(document).ready(function() {
 
     // Search Sekolah by NPSN - Function
     function searchSekolahByNPSN() {
-        var npsn = $('#npsn_asal_sekolah').val().trim();
+        var npsn = $('#npsn_asal_sekolah').val().trim().toUpperCase();
         
-        // Validate NPSN format
-        if (npsn.length !== 8 || !/^\d+$/.test(npsn)) {
-            return; // Silent return for autocomplete (not 8 digits yet)
+        // Validate NPSN format (8 characters, alphanumeric)
+        if (npsn.length !== 8 || !/^[A-Z0-9]+$/.test(npsn)) {
+            return; // Silent return for autocomplete (not 8 characters yet)
         }
         
         // Disable button & show loading
@@ -2111,10 +2112,10 @@ $(document).ready(function() {
     var npsnDebounceTimer;
     $('#npsn_asal_sekolah').on('input', function() {
         clearTimeout(npsnDebounceTimer);
-        var npsn = $(this).val().trim();
+        var npsn = $(this).val().trim().toUpperCase();
         
-        // Only trigger auto-search when exactly 8 digits entered
-        if (npsn.length === 8 && /^\d+$/.test(npsn)) {
+        // Only trigger auto-search when exactly 8 alphanumeric characters entered
+        if (npsn.length === 8 && /^[A-Z0-9]+$/.test(npsn)) {
             npsnDebounceTimer = setTimeout(function() {
                 searchSekolahByNPSN();
             }, 500); // 500ms debounce
@@ -2123,9 +2124,9 @@ $(document).ready(function() {
     
     // Button click still works
     $('#btnCariSekolah').on('click', function() {
-        var npsn = $('#npsn_asal_sekolah').val().trim();
-        if (npsn.length !== 8 || !/^\d+$/.test(npsn)) {
-            toastr.error('NPSN harus 8 digit angka');
+        var npsn = $('#npsn_asal_sekolah').val().trim().toUpperCase();
+        if (npsn.length !== 8 || !/^[A-Z0-9]+$/.test(npsn)) {
+            toastr.error('NPSN harus 8 karakter (huruf/angka)');
             return;
         }
         searchSekolahByNPSN();

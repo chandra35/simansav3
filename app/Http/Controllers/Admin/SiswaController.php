@@ -386,34 +386,41 @@ class SiswaController extends Controller
             'ortu.kelurahan',
             'creator', 
             'updater', 
-            'sekolahAsal'
+            'sekolahAsal',
+            'kelasAktif'
         ]);
         
-        // Format data for display
-        $data = $siswa->toArray();
-        $data['created_by_name'] = $siswa->creator ? $siswa->creator->name : 'System';
-        $data['updated_by_name'] = $siswa->updater ? $siswa->updater->name : '-';
-        
-        // Add readable password for admin (encrypted in database)
-        if ($siswa->user) {
-            $data['user']['readable_password'] = $siswa->user->readable_password;
+        // Check if request wants JSON (AJAX) or HTML (direct access)
+        if (request()->wantsJson() || request()->ajax()) {
+            // Format data for display
+            $data = $siswa->toArray();
+            $data['created_by_name'] = $siswa->creator ? $siswa->creator->name : 'System';
+            $data['updated_by_name'] = $siswa->updater ? $siswa->updater->name : '-';
+            
+            // Add readable password for admin (encrypted in database)
+            if ($siswa->user) {
+                $data['user']['readable_password'] = $siswa->user->readable_password;
+            }
+            
+            // Ensure nested relations are properly serialized
+            if ($siswa->ortu) {
+                $data['ortu'] = [
+                    ...$data['ortu'],
+                    'provinsi' => $siswa->ortu->provinsi ? $siswa->ortu->provinsi->toArray() : null,
+                    'kabupaten' => $siswa->ortu->kabupaten ? $siswa->ortu->kabupaten->toArray() : null,
+                    'kecamatan' => $siswa->ortu->kecamatan ? $siswa->ortu->kecamatan->toArray() : null,
+                    'kelurahan' => $siswa->ortu->kelurahan ? $siswa->ortu->kelurahan->toArray() : null,
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
         }
         
-        // Ensure nested relations are properly serialized
-        if ($siswa->ortu) {
-            $data['ortu'] = [
-                ...$data['ortu'],
-                'provinsi' => $siswa->ortu->provinsi ? $siswa->ortu->provinsi->toArray() : null,
-                'kabupaten' => $siswa->ortu->kabupaten ? $siswa->ortu->kabupaten->toArray() : null,
-                'kecamatan' => $siswa->ortu->kecamatan ? $siswa->ortu->kecamatan->toArray() : null,
-                'kelurahan' => $siswa->ortu->kelurahan ? $siswa->ortu->kelurahan->toArray() : null,
-            ];
-        }
-        
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        // Return HTML view for direct browser access
+        return view('admin.siswa.show', compact('siswa'));
     }
 
     /**
