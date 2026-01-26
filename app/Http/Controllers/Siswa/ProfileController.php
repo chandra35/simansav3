@@ -407,7 +407,7 @@ class ProfileController extends Controller
     {
         // Foto profile is handled separately via uploadFoto() method
         $request->validate([
-            'npsn_asal_sekolah' => 'required|digits:8|exists:sekolah,npsn',
+            'npsn_asal_sekolah' => ['required', 'size:8', 'regex:/^[A-Za-z0-9]+$/', 'exists:sekolah,npsn'],
             'nik' => 'required|string|max:20',
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
@@ -430,7 +430,8 @@ class ProfileController extends Controller
             'kodepos_siswa' => 'nullable|string|max:10',
         ], [
             'npsn_asal_sekolah.required' => 'NPSN Asal Sekolah wajib diisi',
-            'npsn_asal_sekolah.digits' => 'NPSN harus 8 digit angka',
+            'npsn_asal_sekolah.size' => 'NPSN harus 8 karakter',
+            'npsn_asal_sekolah.regex' => 'NPSN hanya boleh berisi huruf dan angka',
             'npsn_asal_sekolah.exists' => 'NPSN tidak ditemukan. Silakan klik tombol "Cari" terlebih dahulu untuk memvalidasi NPSN.',
             'nik.required' => 'NIK wajib diisi',
             'nik.max' => 'NIK maksimal 20 karakter',
@@ -651,7 +652,11 @@ class ProfileController extends Controller
     public function searchSekolah(Request $request)
     {
         $request->validate([
-            'npsn' => 'required|digits:8'
+            'npsn' => ['required', 'size:8', 'regex:/^[A-Za-z0-9]+$/']
+        ], [
+            'npsn.required' => 'NPSN wajib diisi',
+            'npsn.size' => 'NPSN harus 8 karakter',
+            'npsn.regex' => 'NPSN hanya boleh berisi huruf dan angka'
         ]);
 
         $apiService = new KemendikbudApiService();
