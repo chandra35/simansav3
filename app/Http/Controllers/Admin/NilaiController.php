@@ -81,16 +81,23 @@ class NilaiController extends Controller
         
         $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$semester] ?? "Semester {$semester}";
         
-        // Get mapel yang ada nilainya untuk semester ini
+        // Get mapel sesuai urutan di config
+        $urutanMapel = config('nilai.urutan_mapel');
         $mapelList = MataPelajaran::whereHas('nilaiSiswa', function ($q) use ($semester, $selectedTahun) {
             $q->where('semester', $semester);
             if ($selectedTahun) {
                 $q->where('tahun_pelajaran_id', $selectedTahun->id);
             }
-        })->orderBy('kode_mapel')->get();
+        })
+        ->whereIn('kode_mapel', $urutanMapel)
+        ->get()
+        ->sortBy(function($mapel) use ($urutanMapel) {
+            return array_search($mapel->kode_mapel, $urutanMapel);
+        })
+        ->values();
         
         if ($request->ajax()) {
-            return $this->getSemesterData($request, $semester, $selectedTahun);
+            return $this->getSemesterData($request, $semester, $selectedTahun, $urutanMapel);
         }
         
         return view('admin.nilai.semester', compact(
@@ -105,8 +112,12 @@ class NilaiController extends Controller
     /**
      * Get data for DataTable
      */
-    private function getSemesterData(Request $request, $semester, $selectedTahun)
+    private function getSemesterData(Request $request, $semester, $selectedTahun, $urutanMapel = null)
     {
+        if (!$urutanMapel) {
+            $urutanMapel = config('nilai.urutan_mapel');
+        }
+        
         // Get siswa yang punya nilai di semester ini
         $siswaIds = NilaiSiswa::where('semester', $semester)
             ->when($selectedTahun, function ($q) use ($selectedTahun) {
@@ -129,10 +140,12 @@ class NilaiController extends Controller
             ->addIndexColumn()
             ->addColumn('nisn', fn($siswa) => $siswa->nisn)
             ->addColumn('nama', fn($siswa) => $siswa->nama_lengkap)
-            ->addColumn('nilai_list', function ($siswa) {
+            ->addColumn('nilai_list', function ($siswa) use ($urutanMapel) {
                 $nilai = [];
-                foreach ($siswa->nilaiSiswa as $n) {
-                    $nilai[$n->mataPelajaran->kode_mapel] = $n->nilai;
+                // Urutkan sesuai config
+                foreach ($urutanMapel as $kode) {
+                    $found = $siswa->nilaiSiswa->first(fn($n) => $n->mataPelajaran->kode_mapel === $kode);
+                    $nilai[$kode] = $found ? $found->nilai : null;
                 }
                 return $nilai;
             })
@@ -256,7 +269,7 @@ class NilaiController extends Controller
     }
 
     /**
-     * Process upload excel - menggunakan urutan kolom FIXED dari config
+     * Process upload excel - Preview data sebelum disimpan
      */
     public function upload(Request $request)
     {
@@ -278,8 +291,8 @@ class NilaiController extends Controller
 
             // Ambil config urutan mapel
             $urutanMapel = config('nilai.urutan_mapel');
-            $kolomNisn = config('nilai.kolom_nisn', 2);         // Default: kolom C (index 2)
-            $kolomNilaiMulai = config('nilai.kolom_nilai_mulai', 5); // Default: kolom F (index 5)
+            $kolomNisn = config('nilai.kolom_nisn', 2);
+            $kolomNilaiMulai = config('nilai.kolom_nilai_mulai', 5);
             
             // Get semua mapel dengan kode sesuai urutan
             $mapelByKode = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
@@ -299,80 +312,165 @@ class NilaiController extends Controller
                 return back()->with('error', 'Kode mapel tidak ditemukan di database: ' . implode(', ', $missingMapel) . '. Silakan tambahkan mapel tersebut terlebih dahulu.');
             }
 
-            // Baris data dimulai dari config (1-indexed ke 0-indexed)
-            // Baris 1 = Header (index 0)
-            // Baris 2 = Data pertama (index 1)
+            // Baris data dimulai dari config
             $barisDataMulai = config('nilai.baris_data_mulai', 2);
-            $dataStartRow = $barisDataMulai - 1; // Convert ke 0-indexed
-
-            DB::beginTransaction();
+            $dataStartRow = $barisDataMulai - 1;
 
             $semester = $request->semester;
             $tahunPelajaranId = $request->tahun_pelajaran_id;
-            $successCount = 0;
-            $nilaiCount = 0;
-            $errorCount = 0;
+            $tahunPelajaran = TahunPelajaran::find($tahunPelajaranId);
+            
+            // Parse data untuk preview
+            $previewData = [];
             $notFoundNisn = [];
-            $importedAt = now();
+            $foundCount = 0;
 
-            // Process data rows
             for ($i = $dataStartRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 $nisn = trim(strval($row[$kolomNisn] ?? ''));
                 
-                // Skip baris kosong atau baris total
                 if (empty($nisn) || !is_numeric($nisn)) continue;
 
-                // Cari siswa berdasarkan NISN
                 $siswa = Siswa::where('nisn', $nisn)->first();
                 
                 if (!$siswa) {
                     $notFoundNisn[] = $nisn;
-                    $errorCount++;
                     continue;
                 }
 
-                // Insert/update nilai untuk setiap mapel sesuai urutan
-                $siswaHasNilai = false;
+                $nilaiSiswa = [];
+                $nilaiCount = 0;
                 
                 for ($mapelIndex = 0; $mapelIndex < count($urutanMapel); $mapelIndex++) {
                     $kodeMapel = $urutanMapel[$mapelIndex];
-                    $mapel = $mapelByKode[$kodeMapel] ?? null;
-                    
-                    if (!$mapel) continue;
-                    
                     $colIndex = $kolomNilaiMulai + $mapelIndex;
                     $nilai = $row[$colIndex] ?? null;
-                    
-                    // Konversi ke string dan trim
                     $nilaiStr = trim(strval($nilai));
                     
-                    if ($nilaiStr === '' || !is_numeric($nilaiStr)) {
-                        continue;
-                    }
-
-                    $nilai = floatval($nilaiStr);
-                    $siswaHasNilai = true;
-                    
-                    try {
-                        NilaiSiswa::updateOrCreate(
-                            [
-                                'siswa_id' => $siswa->id,
-                                'mata_pelajaran_id' => $mapel->id,
-                                'tahun_pelajaran_id' => $tahunPelajaranId,
-                                'semester' => $semester,
-                            ],
-                            [
-                                'nilai' => $nilai,
-                                'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                                'sumber_data' => 'import_excel',
-                                'imported_at' => $importedAt,
-                            ]
-                        );
+                    if ($nilaiStr !== '' && is_numeric($nilaiStr)) {
+                        $nilaiSiswa[$kodeMapel] = floatval($nilaiStr);
                         $nilaiCount++;
-                    } catch (\Exception $e) {
-                        Log::warning("Error saving nilai for siswa {$nisn}, mapel {$kodeMapel}: " . $e->getMessage());
+                    } else {
+                        $nilaiSiswa[$kodeMapel] = null;
                     }
+                }
+                
+                if ($nilaiCount > 0) {
+                    $previewData[] = [
+                        'siswa_id' => $siswa->id,
+                        'nisn' => $siswa->nisn,
+                        'nama' => $siswa->nama_lengkap,
+                        'nilai' => $nilaiSiswa,
+                        'jumlah_mapel' => $nilaiCount,
+                    ];
+                    $foundCount++;
+                }
+            }
+
+            if (empty($previewData)) {
+                return back()->with('error', 'Tidak ada data nilai yang valid untuk diimport.');
+            }
+
+            // Simpan ke session untuk digunakan saat confirm
+            session([
+                'nilai_preview' => [
+                    'data' => $previewData,
+                    'semester' => $semester,
+                    'tahun_pelajaran_id' => $tahunPelajaranId,
+                    'tahun_pelajaran_nama' => $tahunPelajaran->nama,
+                    'not_found_nisn' => $notFoundNisn,
+                    'urutan_mapel' => $urutanMapel,
+                ]
+            ]);
+
+            return redirect()->route('admin.nilai.preview');
+
+        } catch (\Exception $e) {
+            Log::error('Error parsing nilai: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show preview before saving
+     */
+    public function preview()
+    {
+        $preview = session('nilai_preview');
+        
+        if (!$preview) {
+            return redirect()->route('admin.nilai.upload-form')
+                ->with('error', 'Tidak ada data untuk di-preview. Silakan upload file Excel terlebih dahulu.');
+        }
+        
+        $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$preview['semester']] ?? "Semester {$preview['semester']}";
+        
+        return view('admin.nilai.preview', [
+            'previewData' => $preview['data'],
+            'semester' => $preview['semester'],
+            'semesterLabel' => $semesterLabel,
+            'tahunPelajaranNama' => $preview['tahun_pelajaran_nama'],
+            'notFoundNisn' => $preview['not_found_nisn'],
+            'urutanMapel' => $preview['urutan_mapel'],
+            'totalSiswa' => count($preview['data']),
+            'totalNilai' => array_sum(array_column($preview['data'], 'jumlah_mapel')),
+        ]);
+    }
+
+    /**
+     * Confirm and save uploaded data
+     */
+    public function confirmUpload(Request $request)
+    {
+        $preview = session('nilai_preview');
+        
+        if (!$preview) {
+            return redirect()->route('admin.nilai.upload-form')
+                ->with('error', 'Session expired. Silakan upload ulang file Excel.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $semester = $preview['semester'];
+            $tahunPelajaranId = $preview['tahun_pelajaran_id'];
+            $urutanMapel = $preview['urutan_mapel'];
+            $importedAt = now();
+            
+            // Get mapel
+            $mapelByKode = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+                ->where('is_active', true)
+                ->get()
+                ->keyBy('kode_mapel');
+
+            $nilaiCount = 0;
+            $successCount = 0;
+
+            foreach ($preview['data'] as $item) {
+                $siswaHasNilai = false;
+                
+                foreach ($item['nilai'] as $kodeMapel => $nilai) {
+                    if ($nilai === null) continue;
+                    
+                    $mapel = $mapelByKode[$kodeMapel] ?? null;
+                    if (!$mapel) continue;
+                    
+                    NilaiSiswa::updateOrCreate(
+                        [
+                            'siswa_id' => $item['siswa_id'],
+                            'mata_pelajaran_id' => $mapel->id,
+                            'tahun_pelajaran_id' => $tahunPelajaranId,
+                            'semester' => $semester,
+                        ],
+                        [
+                            'nilai' => $nilai,
+                            'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                            'sumber_data' => 'import_excel',
+                            'imported_at' => $importedAt,
+                        ]
+                    );
+                    $nilaiCount++;
+                    $siswaHasNilai = true;
                 }
                 
                 if ($siswaHasNilai) {
@@ -381,25 +479,28 @@ class NilaiController extends Controller
             }
 
             DB::commit();
-
-            $message = "Berhasil mengimport {$nilaiCount} nilai untuk {$successCount} siswa.";
             
-            if ($errorCount > 0) {
-                $message .= " {$errorCount} NISN tidak ditemukan.";
-            }
-            
-            if (!empty($notFoundNisn) && count($notFoundNisn) <= 10) {
-                $message .= " NISN tidak ditemukan: " . implode(', ', $notFoundNisn);
-            }
+            // Clear session
+            session()->forget('nilai_preview');
 
             return redirect()->route('admin.nilai.semester', $semester)
-                ->with('success', $message);
+                ->with('success', "Berhasil menyimpan {$nilaiCount} nilai untuk {$successCount} siswa.");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error importing nilai: ' . $e->getMessage());
-            return back()->with('error', 'Gagal mengimport nilai: ' . $e->getMessage());
+            Log::error('Error saving nilai: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyimpan nilai: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Cancel upload preview
+     */
+    public function cancelUpload()
+    {
+        session()->forget('nilai_preview');
+        return redirect()->route('admin.nilai.upload-form')
+            ->with('info', 'Upload dibatalkan.');
     }
 
     /**
