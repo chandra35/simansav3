@@ -79,6 +79,9 @@
             <a href="{{ route('admin.nilai.export-legger-form') }}?tingkat=12" class="btn btn-warning">
                 <i class="fas fa-file-export"></i> Export Custom
             </a>
+            <a href="{{ route('admin.nilai.export-span') }}" class="btn btn-success">
+                <i class="fas fa-graduation-cap"></i> Export SPAN-PTKIN
+            </a>
             @endif
         </div>
     </div>

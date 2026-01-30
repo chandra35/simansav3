@@ -914,4 +914,204 @@ class NilaiController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
+
+    /**
+     * Export legger format SPAN-PTKIN
+     * Format: Semester 1 | mapel1, mapel2... | Jumlah Mapel | Total Nilai | Semester 2 | ...
+     */
+    public function exportSpan(Request $request)
+    {
+        $tingkat = 12; // SPAN hanya untuk kelas 12
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tahun pelajaran aktif tidak ditemukan.');
+        }
+        
+        $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+        $urutanMapel = config('nilai.urutan_mapel');
+        
+        // Get all mapel sesuai urutan
+        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('kode_mapel');
+        
+        // Sort mapel sesuai urutan
+        $sortedMapels = collect($urutanMapel)
+            ->filter(fn($kode) => isset($mapels[$kode]))
+            ->map(fn($kode) => $mapels[$kode])
+            ->values();
+        
+        // Collect tahun pelajaran IDs for all semesters
+        $tahunIds = [];
+        foreach ($semesterConfig as $sem => $config) {
+            $tahunPelajaran = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+            if ($tahunPelajaran) {
+                $tahunIds[$sem] = $tahunPelajaran->id;
+            }
+        }
+        
+        // Get siswa kelas 12
+        $siswaList = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif) {
+            $q->where('kelas.tingkat', $tingkat)
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
+        })
+        ->with(['kelas' => function($q) use ($tahunAktif) {
+            $q->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
+        }])
+        ->orderBy('nama_lengkap')
+        ->get();
+        
+        if ($siswaList->isEmpty()) {
+            return back()->with('error', 'Tidak ada siswa kelas 12 yang ditemukan.');
+        }
+        
+        $siswaIds = $siswaList->pluck('id');
+        
+        // Get all nilai for these siswa
+        $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
+            ->whereIn('tahun_pelajaran_id', array_values($tahunIds))
+            ->get()
+            ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
+        
+        // Create Excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Legger SPAN-PTKIN');
+        
+        // Mapping semester ke kelas
+        $semesterKelas = [
+            1 => 'Kelas 10 Semester 1',
+            2 => 'Kelas 10 Semester 2',
+            3 => 'Kelas 11 Semester 1',
+            4 => 'Kelas 11 Semester 2',
+            5 => 'Kelas 12 Semester 1',
+        ];
+        
+        // Static columns
+        $staticCols = ['No', 'NISN', 'Nama Lengkap'];
+        $staticColCount = count($staticCols);
+        $mapelCount = $sortedMapels->count();
+        
+        // Build header row
+        $col = 'A';
+        
+        // Write static headers
+        foreach ($staticCols as $header) {
+            $sheet->setCellValue($col++ . '1', $header);
+        }
+        
+        // Write semester headers
+        foreach ($semesterConfig as $sem => $config) {
+            // Semester marker
+            $semLabel = $semesterKelas[$sem] ?? "Semester {$sem}";
+            
+            // Write each mapel for this semester
+            foreach ($sortedMapels as $mapel) {
+                $sheet->setCellValue($col++ . '1', $mapel->nama_mapel);
+            }
+            
+            // Jumlah Mata Pelajaran column
+            $sheet->setCellValue($col . '1', "Jumlah Mata Pelajaran {$semLabel}");
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $col++;
+            
+            // Total Nilai column
+            $sheet->setCellValue($col . '1', "Total Nilai Mapel {$semLabel}");
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $col++;
+        }
+        
+        // Style header row
+        $lastCol = $col;
+        $lastColPrev = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(
+            \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($col) - 1
+        );
+        $sheet->getStyle('A1:' . $lastColPrev . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastColPrev . '1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('D9EAD3');
+        $sheet->getStyle('A1:' . $lastColPrev . '1')->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('A1:' . $lastColPrev . '1')->getAlignment()->setWrapText(true);
+        $sheet->getRowDimension(1)->setRowHeight(40);
+        
+        // Write data starting from row 2
+        $row = 2;
+        foreach ($siswaList as $index => $siswa) {
+            $col = 'A';
+            $sheet->setCellValue($col++ . $row, $index + 1);
+            $sheet->setCellValue($col++ . $row, "'" . $siswa->nisn); // Force text
+            $sheet->setCellValue($col++ . $row, $siswa->nama_lengkap);
+            
+            // Write nilai per semester
+            foreach ($semesterConfig as $sem => $config) {
+                $nilaiCount = 0;
+                $nilaiTotal = 0;
+                
+                foreach ($sortedMapels as $mapel) {
+                    $nilai = null;
+                    if (isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
+                        $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
+                    }
+                    
+                    $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
+                    
+                    if ($nilai !== null) {
+                        $nilaiCount++;
+                        $nilaiTotal += $nilai;
+                    }
+                }
+                
+                // Jumlah Mata Pelajaran yang ada nilainya
+                $sheet->setCellValue($col++ . $row, $nilaiCount);
+                
+                // Total Nilai
+                $sheet->setCellValue($col++ . $row, $nilaiTotal > 0 ? $nilaiTotal : '');
+            }
+            
+            $row++;
+        }
+        
+        // Add borders to data
+        $lastDataRow = $row - 1;
+        $sheet->getStyle('A2:' . $lastColPrev . $lastDataRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        
+        // Auto width for first columns
+        $sheet->getColumnDimension('A')->setWidth(5);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        
+        // Set width for mapel columns (narrower)
+        $colIndex = 4;
+        foreach ($semesterConfig as $sem => $config) {
+            for ($i = 0; $i < $mapelCount; $i++) {
+                $colStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->getColumnDimension($colStr)->setWidth(8);
+                $colIndex++;
+            }
+            // Jumlah & Total columns wider
+            $colStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $sheet->getColumnDimension($colStr)->setWidth(12);
+            $colIndex++;
+            $colStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $sheet->getColumnDimension($colStr)->setWidth(12);
+            $colIndex++;
+        }
+        
+        // Freeze pane
+        $sheet->freezePane('D2');
+        
+        $filename = "legger_span_ptkin_" . date('Y-m-d_His') . '.xlsx';
+        
+        $writer = new Xlsx($spreadsheet);
+        
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }
