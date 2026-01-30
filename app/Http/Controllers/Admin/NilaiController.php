@@ -251,9 +251,13 @@ class NilaiController extends Controller
             $semester = $request->semester;
             $tahunPelajaranId = $request->tahun_pelajaran_id;
             $successCount = 0;
+            $nilaiCount = 0; // Counter untuk nilai yang berhasil disimpan
             $errorCount = 0;
             $notFoundNisn = [];
             $importedAt = now();
+            
+            // Debug: log mapel yang ditemukan
+            \Log::info('Mapel mapping:', array_map(fn($m) => $m->kode_mapel, $mapelMapping));
 
             // Tentukan baris data dimulai (setelah header2 jika ada sub-header, else setelah header1)
             $dataStartRow = $headerRowIndex + 1;
@@ -271,9 +275,19 @@ class NilaiController extends Controller
             }
 
             // Process data rows
+            $debugFirstRow = true;
             for ($i = $dataStartRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 $nisn = trim(strval($row[$nisnIndex] ?? ''));
+                
+                // Debug first row
+                if ($debugFirstRow) {
+                    \Log::info('First data row index: ' . $i);
+                    \Log::info('NISN index: ' . $nisnIndex . ', value: ' . $nisn);
+                    \Log::info('Row data (first 25 cols): ', array_slice($row, 0, 25));
+                    \Log::info('Mapel mapping columns: ' . implode(', ', array_keys($mapelMapping)));
+                    $debugFirstRow = false;
+                }
                 
                 // Skip baris kosong atau baris total
                 if (empty($nisn) || !is_numeric($nisn)) continue;
@@ -288,51 +302,89 @@ class NilaiController extends Controller
                 }
 
                 // Insert/update nilai untuk setiap mapel
+                // Track mapel yang sudah diproses untuk siswa ini (hindari duplikat dalam 1 baris)
+                $processedMapels = [];
+                $siswaHasNilai = false;
+                
                 foreach ($mapelMapping as $colIndex => $mapel) {
+                    // Skip jika mapel ini sudah diproses untuk siswa ini
+                    if (in_array($mapel->id, $processedMapels)) {
+                        continue;
+                    }
+                    
                     $nilai = $row[$colIndex] ?? null;
                     
-                    if ($nilai === null || $nilai === '' || !is_numeric($nilai)) {
+                    // Konversi ke string dan trim untuk handle berbagai format
+                    $nilaiStr = trim(strval($nilai));
+                    
+                    if ($nilaiStr === '' || !is_numeric($nilaiStr)) {
                         continue;
                     }
 
-                    $nilai = floatval($nilai);
+                    $nilai = floatval($nilaiStr);
+                    $siswaHasNilai = true;
                     
-                    // Cari nilai yang sudah ada
-                    $nilaiSiswa = NilaiSiswa::where('siswa_id', $siswa->id)
-                        ->where('mata_pelajaran_id', $mapel->id)
-                        ->where('tahun_pelajaran_id', $tahunPelajaranId)
-                        ->where('semester', $semester)
-                        ->first();
-                    
-                    if ($nilaiSiswa) {
-                        // Update existing
-                        $nilaiSiswa->update([
-                            'nilai' => $nilai,
-                            'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                            'sumber_data' => 'import_excel',
-                            'imported_at' => $importedAt,
-                        ]);
-                    } else {
-                        // Create new
-                        NilaiSiswa::create([
-                            'siswa_id' => $siswa->id,
-                            'mata_pelajaran_id' => $mapel->id,
-                            'tahun_pelajaran_id' => $tahunPelajaranId,
-                            'semester' => $semester,
-                            'nilai' => $nilai,
-                            'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                            'sumber_data' => 'import_excel',
-                            'imported_at' => $importedAt,
-                        ]);
+                    try {
+                        // Cari nilai yang sudah ada
+                        $nilaiSiswa = NilaiSiswa::where('siswa_id', $siswa->id)
+                            ->where('mata_pelajaran_id', $mapel->id)
+                            ->where('tahun_pelajaran_id', $tahunPelajaranId)
+                            ->where('semester', $semester)
+                            ->first();
+                        
+                        if ($nilaiSiswa) {
+                            // Update existing
+                            $nilaiSiswa->update([
+                                'nilai' => $nilai,
+                                'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                                'sumber_data' => 'import_excel',
+                                'imported_at' => $importedAt,
+                            ]);
+                        } else {
+                            // Create new
+                            NilaiSiswa::create([
+                                'siswa_id' => $siswa->id,
+                                'mata_pelajaran_id' => $mapel->id,
+                                'tahun_pelajaran_id' => $tahunPelajaranId,
+                                'semester' => $semester,
+                                'nilai' => $nilai,
+                                'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                                'sumber_data' => 'import_excel',
+                                'imported_at' => $importedAt,
+                            ]);
+                        }
+                        
+                        $processedMapels[] = $mapel->id;
+                        $nilaiCount++;
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // Jika duplicate key, coba update saja
+                        if ($e->getCode() == 23000) {
+                            NilaiSiswa::where('siswa_id', $siswa->id)
+                                ->where('mata_pelajaran_id', $mapel->id)
+                                ->where('tahun_pelajaran_id', $tahunPelajaranId)
+                                ->where('semester', $semester)
+                                ->update([
+                                    'nilai' => $nilai,
+                                    'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                                    'sumber_data' => 'import_excel',
+                                    'imported_at' => $importedAt,
+                                ]);
+                            $processedMapels[] = $mapel->id;
+                            $nilaiCount++;
+                        } else {
+                            throw $e;
+                        }
                     }
                 }
                 
-                $successCount++;
+                if ($siswaHasNilai) {
+                    $successCount++;
+                }
             }
 
             DB::commit();
 
-            $message = "Berhasil mengimport nilai untuk {$successCount} siswa.";
+            $message = "Berhasil mengimport {$nilaiCount} nilai untuk {$successCount} siswa.";
             
             if ($errorCount > 0) {
                 $message .= " {$errorCount} NISN tidak ditemukan.";
