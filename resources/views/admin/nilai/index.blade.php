@@ -77,7 +77,7 @@
             </a>
             @if(request('tingkat') == 12)
             <a href="{{ route('admin.nilai.export-legger-form') }}?tingkat=12" class="btn btn-warning">
-                <i class="fas fa-file-export"></i> Export Legger SPAN-PTKIN
+                <i class="fas fa-file-export"></i> Export Custom
             </a>
             @endif
         </div>

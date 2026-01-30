@@ -1,11 +1,11 @@
 @extends('adminlte::page')
 
-@section('title', 'Export Legger')
+@section('title', 'Export Custom')
 
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1><i class="fas fa-file-export"></i> Export Legger Kelas {{ $tingkat }}</h1>
+            <h1><i class="fas fa-file-export"></i> Export Custom Kelas {{ $tingkat }}</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -78,7 +78,7 @@
                                                name="kelas[]" value="{{ $kelas->id }}" id="kelas_{{ $kelas->id }}">
                                         <label class="form-check-label" for="kelas_{{ $kelas->id }}">
                                             {{ $kelas->nama_kelas }}
-                                            <small class="text-muted">({{ $kelas->siswa_count }} siswa)</small>
+                                            <small class="text-muted">({{ $kelas->siswas_count }} siswa)</small>
                                         </label>
                                     </div>
                                 </div>
