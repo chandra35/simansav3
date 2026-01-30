@@ -76,7 +76,7 @@
                 <i class="fas fa-download"></i> Download Template Excel
             </a>
             @if(request('tingkat') == 12)
-            <a href="{{ route('admin.nilai.export-legger') }}?tingkat=12" class="btn btn-warning">
+            <a href="{{ route('admin.nilai.export-legger-form') }}?tingkat=12" class="btn btn-warning">
                 <i class="fas fa-file-export"></i> Export Legger SPAN-PTKIN
             </a>
             @endif
