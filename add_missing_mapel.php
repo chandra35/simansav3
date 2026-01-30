@@ -20,6 +20,16 @@ $missingCodes = [
     'INFO' => ['nama' => 'Informatika', 'kelompok' => 'B'],
     'BLMP' => ['nama' => 'Bimbingan Lomba/Prestasi', 'kelompok' => 'C'],
     'KAG' => ['nama' => 'Keagamaan', 'kelompok' => 'A'],
+    'BIO' => ['nama' => 'Biologi', 'kelompok' => 'C'],
+    'KIM' => ['nama' => 'Kimia', 'kelompok' => 'C'],
+    'FIS' => ['nama' => 'Fisika', 'kelompok' => 'C'],
+    'NFOI' => ['nama' => 'Informatika Peminatan', 'kelompok' => 'C'],
+    'EKO' => ['nama' => 'Ekonomi', 'kelompok' => 'C'],
+    'GEO' => ['nama' => 'Geografi', 'kelompok' => 'C'],
+    // Mapel semester 4-5 dengan kode berbeda
+    'ULOK PRK' => ['nama' => 'Muatan Lokal Prakarya', 'kelompok' => 'C'],
+    'INFOP' => ['nama' => 'Informatika Peminatan', 'kelompok' => 'C'],
+    'SEJ' => ['nama' => 'Sejarah', 'kelompok' => 'B'],
 ];
 
 $kurikulum = Kurikulum::first();

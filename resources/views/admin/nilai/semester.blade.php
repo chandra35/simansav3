@@ -66,6 +66,11 @@
             <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Upload Nilai Semester {{ $semester }}
             </a>
+            @if($selectedTahun && $mapelList->count() > 0)
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exportModal">
+                <i class="fas fa-download"></i> Export Nilai
+            </button>
+            @endif
             <a href="{{ route('admin.nilai.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
@@ -108,6 +113,91 @@
             @endif
         </div>
     </div>
+
+    {{-- Export Modal --}}
+    @if($selectedTahun && $mapelList->count() > 0)
+    <div class="modal fade" id="exportModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form action="{{ route('admin.nilai.export-semester-preview', $semester) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="tahun_pelajaran_id" value="{{ $selectedTahun->id }}">
+                    
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title text-white">
+                            <i class="fas fa-download"></i> Export Nilai {{ $semesterLabel }}
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Export nilai sesuai urutan NISN dan mapel yang dipilih.
+                            Urutan akan sama persis dengan input NISN, cocok untuk template SPAN yang sudah ter-protect.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-list-ol"></i> Daftar NISN (satu per baris) <span class="text-danger">*</span></label>
+                                    <textarea name="nisn_list" class="form-control" rows="15" 
+                                        placeholder="Masukkan NISN per baris, contoh:&#10;1234567890&#10;0987654321&#10;1122334455" required></textarea>
+                                    <small class="text-muted">Copy-paste NISN dari template SPAN, satu NISN per baris</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-book"></i> Pilih Mata Pelajaran <span class="text-danger">*</span></label>
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllMapel">
+                                            <i class="fas fa-check-square"></i> Pilih Semua
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllMapel">
+                                            <i class="fas fa-square"></i> Hapus Semua
+                                        </button>
+                                    </div>
+                                    <div class="border rounded p-2" style="max-height: 350px; overflow-y: auto;">
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-arrows-alt-v"></i> Drag untuk mengubah urutan
+                                        </small>
+                                        <ul class="list-group" id="mapelSortable">
+                                            @foreach($mapelList as $mapel)
+                                            <li class="list-group-item list-group-item-action py-1 px-2" data-kode="{{ $mapel->kode_mapel }}" style="cursor: move;">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-grip-vertical text-muted mr-2"></i>
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input mapel-check" 
+                                                            id="mapel_{{ $mapel->kode_mapel }}" 
+                                                            name="mapel_list[]" 
+                                                            value="{{ $mapel->kode_mapel }}" checked>
+                                                        <label class="custom-control-label" for="mapel_{{ $mapel->kode_mapel }}">
+                                                            <strong>{{ $mapel->kode_mapel }}</strong> 
+                                                            <small class="text-muted">- {{ $mapel->nama_mapel }}</small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Batal
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Export Excel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 @stop
 
 @section('css')
@@ -121,6 +211,22 @@
         #nilai-table th {
             white-space: nowrap;
         }
+        #mapelSortable .list-group-item {
+            border-left: 3px solid #007bff;
+        }
+        #mapelSortable .list-group-item.ui-sortable-helper {
+            background: #f8f9fa;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        #mapelSortable .list-group-item.ui-sortable-placeholder {
+            visibility: visible !important;
+            background: #e9ecef;
+            border: 2px dashed #adb5bd;
+        }
+        #exportModal textarea[name="nisn_list"] {
+            resize: vertical;
+            min-height: 200px;
+        }
     </style>
 @stop
 
@@ -128,6 +234,7 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script>
         $(document).ready(function() {
             var mapelCodes = @json($mapelList->pluck('kode_mapel'));
@@ -201,6 +308,45 @@
                         });
                     }
                 });
+            });
+
+            // Make mapel list sortable
+            $('#mapelSortable').sortable({
+                placeholder: 'list-group-item ui-sortable-placeholder',
+                handle: '.fa-grip-vertical',
+                update: function(event, ui) {
+                    // Optional: update order visual
+                }
+            });
+
+            // Select all mapel
+            $('#selectAllMapel').click(function() {
+                $('.mapel-check').prop('checked', true);
+            });
+
+            // Deselect all mapel
+            $('#deselectAllMapel').click(function() {
+                $('.mapel-check').prop('checked', false);
+            });
+
+            // Validate export form
+            $('#exportModal form').submit(function(e) {
+                var nisnList = $('textarea[name="nisn_list"]').val().trim();
+                var mapelChecked = $('.mapel-check:checked').length;
+                
+                if (!nisnList) {
+                    e.preventDefault();
+                    Swal.fire('Error', 'Masukkan minimal 1 NISN', 'error');
+                    return false;
+                }
+                
+                if (mapelChecked === 0) {
+                    e.preventDefault();
+                    Swal.fire('Error', 'Pilih minimal 1 mata pelajaran', 'error');
+                    return false;
+                }
+                
+                return true;
             });
         });
     </script>

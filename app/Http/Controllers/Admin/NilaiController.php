@@ -18,6 +18,25 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class NilaiController extends Controller
 {
     /**
+     * Get urutan mapel berdasarkan semester
+     */
+    private function getMapelBySemester($semester)
+    {
+        $semester = (int) $semester;
+        
+        if ($semester === 5) {
+            return config('nilai.urutan_mapel_sem_5');
+        } elseif ($semester === 4) {
+            return config('nilai.urutan_mapel_sem_4');
+        } elseif ($semester === 3) {
+            return config('nilai.urutan_mapel_sem_3');
+        } else {
+            // Semester 1-2
+            return config('nilai.urutan_mapel_sem_1_2', config('nilai.urutan_mapel'));
+        }
+    }
+
+    /**
      * Semester config per tingkat kelas
      */
     private function getSemesterConfig($tingkat, $tahunAktif)
@@ -112,6 +131,8 @@ class NilaiController extends Controller
      */
     public function semester(Request $request, $semester)
     {
+        $semester = (int) $semester;
+        
         $tahunPelajarans = TahunPelajaran::orderBy('is_active', 'desc')
             ->orderBy('tahun_mulai', 'desc')
             ->get();
@@ -119,39 +140,42 @@ class NilaiController extends Controller
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
         
         // Jika ada request tahun_pelajaran_id, gunakan itu
-        // Jika tidak, coba gunakan tahun aktif
-        // Jika tidak ada tahun aktif, cari tahun pelajaran yang ada nilainya
         $selectedTahun = null;
         if ($request->tahun_pelajaran_id) {
             $selectedTahun = TahunPelajaran::find($request->tahun_pelajaran_id);
-        } elseif ($tahunAktif) {
-            $selectedTahun = $tahunAktif;
         } else {
-            // Cari tahun pelajaran yang ada nilainya
+            // Cari tahun pelajaran yang ada nilainya untuk semester ini
             $tahunIdWithNilai = NilaiSiswa::where('semester', $semester)
                 ->distinct()
                 ->first(['tahun_pelajaran_id']);
+            
             if ($tahunIdWithNilai) {
                 $selectedTahun = TahunPelajaran::find($tahunIdWithNilai->tahun_pelajaran_id);
+                
+                // Redirect dengan parameter tahun_pelajaran_id agar URL konsisten
+                if (!$request->ajax()) {
+                    return redirect()->route('admin.nilai.semester', [
+                        'semester' => $semester,
+                        'tahun_pelajaran_id' => $selectedTahun->id
+                    ]);
+                }
+            } elseif ($tahunAktif) {
+                // Jika tidak ada nilai, gunakan tahun aktif
+                $selectedTahun = $tahunAktif;
             }
         }
         
         $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$semester] ?? "Semester {$semester}";
         
-        // Get mapel sesuai urutan di config
-        $urutanMapel = config('nilai.urutan_mapel');
-        $mapelList = MataPelajaran::whereHas('nilaiSiswa', function ($q) use ($semester, $selectedTahun) {
-            $q->where('semester', $semester);
-            if ($selectedTahun) {
-                $q->where('tahun_pelajaran_id', $selectedTahun->id);
-            }
-        })
-        ->whereIn('kode_mapel', $urutanMapel)
-        ->get()
-        ->sortBy(function($mapel) use ($urutanMapel) {
-            return array_search($mapel->kode_mapel, $urutanMapel);
-        })
-        ->values();
+        // Get mapel sesuai urutan di config berdasarkan semester - tampilkan semua meskipun kosong
+        $urutanMapel = $this->getMapelBySemester($semester);
+        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->sortBy(function($mapel) use ($urutanMapel) {
+                return array_search($mapel->kode_mapel, $urutanMapel);
+            })
+            ->values();
         
         if ($request->ajax()) {
             return $this->getSemesterData($request, $semester, $selectedTahun, $urutanMapel);
@@ -162,7 +186,8 @@ class NilaiController extends Controller
             'semesterLabel', 
             'tahunPelajarans', 
             'selectedTahun',
-            'mapelList'
+            'mapelList',
+            'urutanMapel'
         ));
     }
 
@@ -171,8 +196,10 @@ class NilaiController extends Controller
      */
     private function getSemesterData(Request $request, $semester, $selectedTahun, $urutanMapel = null)
     {
+        $semester = (int) $semester;
+        
         if (!$urutanMapel) {
-            $urutanMapel = config('nilai.urutan_mapel');
+            $urutanMapel = $this->getMapelBySemester($semester);
         }
         
         // Get siswa yang punya nilai di semester ini
@@ -201,7 +228,7 @@ class NilaiController extends Controller
                 $nilai = [];
                 // Urutkan sesuai config
                 foreach ($urutanMapel as $kode) {
-                    $found = $siswa->nilaiSiswa->first(fn($n) => $n->mataPelajaran->kode_mapel === $kode);
+                    $found = $siswa->nilaiSiswa->first(fn($n) => $n->mataPelajaran && $n->mataPelajaran->kode_mapel === $kode);
                     $nilai[$kode] = $found ? $found->nilai : null;
                 }
                 return $nilai;
@@ -249,7 +276,10 @@ class NilaiController extends Controller
      */
     public function downloadTemplate(Request $request)
     {
-        $urutanMapel = config('nilai.urutan_mapel');
+        $semester = (int) $request->input('semester', 1);
+        
+        // Pilih config berdasarkan semester
+        $urutanMapel = $this->getMapelBySemester($semester);
         
         // Get mapel dari database sesuai urutan
         $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
@@ -316,7 +346,7 @@ class NilaiController extends Controller
         // Set active sheet back to template
         $spreadsheet->setActiveSheetIndex(0);
         
-        $filename = 'template_nilai_span_ptkin.xlsx';
+        $filename = 'template_nilai_semester_' . $semester . '.xlsx';
         $writer = new Xlsx($spreadsheet);
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -348,8 +378,11 @@ class NilaiController extends Controller
                 return back()->with('error', 'File Excel kosong atau format tidak sesuai.');
             }
 
-            // Ambil config urutan mapel
-            $urutanMapel = config('nilai.urutan_mapel');
+            $semester = (int) $request->semester;
+            
+            // Pilih config berdasarkan semester
+            $urutanMapel = $this->getMapelBySemester($semester);
+            
             $kolomNisn = config('nilai.kolom_nisn', 2);
             $kolomNilaiMulai = config('nilai.kolom_nilai_mulai', 5);
             
@@ -375,7 +408,6 @@ class NilaiController extends Controller
             $barisDataMulai = config('nilai.baris_data_mulai', 2);
             $dataStartRow = $barisDataMulai - 1;
 
-            $semester = $request->semester;
             $tahunPelajaranId = $request->tahun_pelajaran_id;
             $tahunPelajaran = TahunPelajaran::find($tahunPelajaranId);
             
@@ -632,6 +664,148 @@ class NilaiController extends Controller
                 'message' => 'Gagal menghapus data nilai: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Preview export nilai semester
+     */
+    public function exportSemesterPreview(Request $request, $semester)
+    {
+        $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'nisn_list' => 'required|string',
+            'mapel_list' => 'required|array|min:1',
+        ]);
+
+        $semester = (int) $semester;
+        $tahunPelajaran = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
+        
+        // Parse NISN dari textarea (per baris)
+        $nisnList = array_filter(array_map('trim', explode("\n", $request->nisn_list)));
+        
+        if (empty($nisnList)) {
+            return back()->with('error', 'NISN tidak boleh kosong.');
+        }
+
+        // Get mapel yang dipilih dengan urutan sesuai checklist
+        $mapelCodes = $request->mapel_list;
+
+        // Get nilai siswa berdasarkan urutan NISN
+        $exportData = [];
+        $notFoundNisn = [];
+        $noNilaiNisn = [];
+        
+        foreach ($nisnList as $nisn) {
+            $nisn = trim($nisn);
+            if (empty($nisn)) continue;
+            
+            $siswa = Siswa::where('nisn', $nisn)->first();
+            
+            if (!$siswa) {
+                $notFoundNisn[] = $nisn;
+                $row = ['nisn' => $nisn, 'nama' => 'TIDAK DITEMUKAN', 'found' => false, 'total_nilai_semester' => 0, 'total_mapel_semester' => 0];
+                foreach ($mapelCodes as $kode) {
+                    $row[$kode] = '';
+                }
+                $exportData[] = $row;
+                continue;
+            }
+            
+            // Get SEMUA nilai siswa untuk semester ini (untuk total nilai & mapel)
+            $semuaNilaiSiswa = NilaiSiswa::where('siswa_id', $siswa->id)
+                ->where('semester', $semester)
+                ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+                ->with('mataPelajaran')
+                ->get();
+            
+            // Hitung total nilai dan mapel di semester ini
+            $totalNilaiSemester = $semuaNilaiSiswa->sum('nilai');
+            $totalMapelSemester = $semuaNilaiSiswa->count();
+            
+            $row = [
+                'nisn' => $siswa->nisn,
+                'nama' => $siswa->nama_lengkap,
+                'found' => true,
+                'total_nilai_semester' => $totalNilaiSemester,
+                'total_mapel_semester' => $totalMapelSemester,
+            ];
+            
+            $hasNilai = false;
+            foreach ($mapelCodes as $kode) {
+                $nilai = $semuaNilaiSiswa->first(fn($n) => $n->mataPelajaran && $n->mataPelajaran->kode_mapel === $kode);
+                $row[$kode] = $nilai ? $nilai->nilai : '';
+                if ($nilai) $hasNilai = true;
+            }
+            
+            if (!$hasNilai) {
+                $noNilaiNisn[] = $nisn;
+            }
+            
+            $exportData[] = $row;
+        }
+
+        // Hitung statistik per mapel
+        $mapelStats = [];
+        foreach ($mapelCodes as $kode) {
+            $count = 0;
+            foreach ($exportData as $row) {
+                if (!empty($row[$kode]) && $row[$kode] !== '') {
+                    $count++;
+                }
+            }
+            $mapelStats[$kode] = $count;
+        }
+
+        $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$semester] ?? "Semester {$semester}";
+        
+        // Simpan data ke session untuk download
+        session([
+            'export_nilai_data' => $exportData,
+            'export_nilai_mapel' => $mapelCodes,
+            'export_nilai_stats' => $mapelStats,
+            'export_nilai_semester' => $semester,
+            'export_nilai_tahun' => $tahunPelajaran->nama,
+            'export_nilai_tahun_id' => $tahunPelajaran->id,
+        ]);
+
+        return view('admin.nilai.export-preview', compact(
+            'exportData', 
+            'mapelCodes', 
+            'mapelStats', 
+            'semester', 
+            'semesterLabel',
+            'tahunPelajaran',
+            'notFoundNisn',
+            'noNilaiNisn'
+        ));
+    }
+
+    /**
+     * Download export nilai semester dari session
+     */
+    public function exportSemesterDownload(Request $request, $semester)
+    {
+        $exportData = session('export_nilai_data');
+        $mapelCodes = session('export_nilai_mapel');
+        $mapelStats = session('export_nilai_stats');
+        $tahunNama = session('export_nilai_tahun');
+        
+        if (!$exportData || !$mapelCodes) {
+            return redirect()->route('admin.nilai.semester', $semester)
+                ->with('error', 'Data export tidak ditemukan. Silakan ulangi proses export.');
+        }
+
+        // Generate filename
+        $tahunNamaSafe = str_replace(['/', '\\'], '-', $tahunNama);
+        $filename = "nilai_semester_{$semester}_{$tahunNamaSafe}_" . date('Y-m-d_His') . ".xlsx";
+        
+        // Clear session
+        session()->forget(['export_nilai_data', 'export_nilai_mapel', 'export_nilai_stats', 'export_nilai_semester', 'export_nilai_tahun', 'export_nilai_tahun_id']);
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\NilaiSemesterExport($exportData, $mapelCodes, $mapelStats, $semester, $tahunNama),
+            $filename
+        );
     }
 
     /**

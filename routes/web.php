@@ -146,6 +146,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/nilai/export-span', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSpan'])->name('nilai.export-span');
     Route::get('/nilai/siswa/{siswa}', [\App\Http\Controllers\Admin\NilaiController::class, 'siswa'])->name('nilai.siswa');
     Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester');
+    Route::post('/nilai/semester/{semester}/export-preview', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterPreview'])->name('nilai.export-semester-preview');
+    Route::get('/nilai/semester/{semester}/export-download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterDownload'])->name('nilai.export-semester-download');
     
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);

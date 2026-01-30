@@ -14,7 +14,10 @@ use App\Models\Kurikulum;
 
 echo "=== SINKRONISASI MAPEL UNTUK NILAI SPAN-PTKIN ===\n\n";
 
-$urutanMapel = config('nilai.urutan_mapel');
+// Ambil semua mapel dari config (dasar + peminatan)
+$mapelDasar = config('nilai.urutan_mapel_dasar', config('nilai.urutan_mapel', []));
+$mapelPeminatan = config('nilai.urutan_mapel_peminatan', []);
+$urutanMapel = array_merge($mapelDasar, $mapelPeminatan);
 
 // Definisi lengkap mapel
 $mapelDefinitions = [
@@ -26,18 +29,23 @@ $mapelDefinitions = [
     'PP' => ['nama' => 'Pendidikan Pancasila', 'kelompok' => 'A'],
     'BINDO' => ['nama' => 'Bahasa Indonesia', 'kelompok' => 'B'],
     'MTK' => ['nama' => 'Matematika', 'kelompok' => 'B'],
+    'IPAT' => ['nama' => 'IPA Terpadu', 'kelompok' => 'C'],
+    'IPST' => ['nama' => 'IPS Terpadu', 'kelompok' => 'C'],
     'BING' => ['nama' => 'Bahasa Inggris', 'kelompok' => 'B'],
     'PJOK' => ['nama' => 'Pendidikan Jasmani, Olahraga, dan Kesehatan', 'kelompok' => 'B'],
-    'SEJ' => ['nama' => 'Sejarah', 'kelompok' => 'B'],
+    'INFO' => ['nama' => 'Informatika', 'kelompok' => 'B'],
     'SB' => ['nama' => 'Seni Budaya', 'kelompok' => 'B'],
     'MULOK PRKW' => ['nama' => 'Muatan Lokal Prakarya', 'kelompok' => 'C'],
+    'BLMP' => ['nama' => 'Bimbingan Lomba/Prestasi', 'kelompok' => 'C'],
+    'KAG' => ['nama' => 'Keagamaan', 'kelompok' => 'A'],
     'THF' => ['nama' => 'Tahfidz', 'kelompok' => 'A'],
+    // Mapel Peminatan (Semester 4-5)
     'BIO' => ['nama' => 'Biologi', 'kelompok' => 'C'],
     'KIM' => ['nama' => 'Kimia', 'kelompok' => 'C'],
     'FIS' => ['nama' => 'Fisika', 'kelompok' => 'C'],
-    'INFOP' => ['nama' => 'Informatika Peminatan', 'kelompok' => 'C'],
-    'MTL' => ['nama' => 'Matematika Lanjut', 'kelompok' => 'C'],
+    'NFOI' => ['nama' => 'Informatika Peminatan', 'kelompok' => 'C'],
     'EKO' => ['nama' => 'Ekonomi', 'kelompok' => 'C'],
+    'GEO' => ['nama' => 'Geografi', 'kelompok' => 'C'],
 ];
 
 $kurikulum = Kurikulum::first();

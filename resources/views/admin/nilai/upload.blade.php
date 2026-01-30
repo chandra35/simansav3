@@ -109,9 +109,32 @@
                         <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit" disabled>
                             <i class="fas fa-upload"></i> Upload & Preview
                         </button>
-                        <a href="{{ route('admin.nilai.template') }}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Download Template
-                        </a>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-download"></i> Download Template
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Semester 1-2 (18 Mapel)</h6>
+                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 1]) }}">
+                                    <i class="fas fa-file-excel text-success"></i> Template Semester 1-2
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Semester 3 (18 Mapel)</h6>
+                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 3]) }}">
+                                    <i class="fas fa-file-excel text-primary"></i> Template Semester 3
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Semester 4 (20 Mapel)</h6>
+                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 4]) }}">
+                                    <i class="fas fa-file-excel text-info"></i> Template Semester 4
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Semester 5 (21 Mapel)</h6>
+                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 5]) }}">
+                                    <i class="fas fa-file-excel text-warning"></i> Template Semester 5
+                                </a>
+                            </div>
+                        </div>
                         <a href="{{ route('admin.nilai.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
@@ -219,9 +242,20 @@
                     </table>
                 </div>
                 <div class="card-footer text-center">
-                    <a href="{{ route('admin.nilai.template') }}" class="btn btn-success btn-block">
-                        <i class="fas fa-download"></i> Download Template
-                    </a>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{{ route('admin.nilai.template', ['semester' => 1]) }}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Template Semester 1-2 (18 Mapel)
+                        </a>
+                        <a href="{{ route('admin.nilai.template', ['semester' => 3]) }}" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Template Semester 3 (18 Mapel)
+                        </a>
+                        <a href="{{ route('admin.nilai.template', ['semester' => 4]) }}" class="btn btn-info">
+                            <i class="fas fa-download"></i> Template Semester 4 (20 Mapel)
+                        </a>
+                        <a href="{{ route('admin.nilai.template', ['semester' => 5]) }}" class="btn btn-warning">
+                            <i class="fas fa-download"></i> Template Semester 5 (21 Mapel)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
