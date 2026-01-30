@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class NilaiController extends Controller
 {
@@ -159,16 +161,102 @@ class NilaiController extends Controller
         
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
         
-        // Get mapel untuk referensi
-        $mapelList = MataPelajaran::where('is_active', true)
-            ->orderBy('kode_mapel')
-            ->get(['id', 'kode_mapel', 'nama_mapel']);
+        // Get mapel sesuai urutan di config untuk referensi
+        $urutanMapel = config('nilai.urutan_mapel');
+        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->sortBy(function($mapel) use ($urutanMapel) {
+                return array_search($mapel->kode_mapel, $urutanMapel);
+            })
+            ->values();
         
-        return view('admin.nilai.upload', compact('tahunPelajarans', 'tahunAktif', 'mapelList'));
+        return view('admin.nilai.upload', compact('tahunPelajarans', 'tahunAktif', 'mapelList', 'urutanMapel'));
     }
 
     /**
-     * Process upload excel
+     * Download template Excel untuk upload nilai
+     */
+    public function downloadTemplate(Request $request)
+    {
+        $urutanMapel = config('nilai.urutan_mapel');
+        
+        // Get mapel dari database sesuai urutan
+        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('kode_mapel');
+        
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Nilai');
+        
+        // Header row
+        $headers = ['No', 'NIS', 'NISN', 'Nama', 'JK'];
+        foreach ($urutanMapel as $kode) {
+            $headers[] = $kode;
+        }
+        
+        // Write header
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('CCCCCC');
+            $col++;
+        }
+        
+        // Sample data row
+        $sheet->setCellValue('A2', '1');
+        $sheet->setCellValue('B2', '12345');
+        $sheet->setCellValue('C2', '0012345678');
+        $sheet->setCellValue('D2', 'Nama Siswa');
+        $sheet->setCellValue('E2', 'L');
+        
+        // Auto width
+        foreach (range('A', $col) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+        
+        // Add second sheet with mapel reference
+        $refSheet = $spreadsheet->createSheet();
+        $refSheet->setTitle('Kode Mapel');
+        $refSheet->setCellValue('A1', 'No');
+        $refSheet->setCellValue('B1', 'Kode');
+        $refSheet->setCellValue('C1', 'Nama Mapel');
+        $refSheet->getStyle('A1:C1')->getFont()->setBold(true);
+        
+        $row = 2;
+        foreach ($urutanMapel as $index => $kode) {
+            $mapel = $mapels[$kode] ?? null;
+            $refSheet->setCellValue('A' . $row, $index + 1);
+            $refSheet->setCellValue('B' . $row, $kode);
+            $refSheet->setCellValue('C' . $row, $mapel ? $mapel->nama_mapel : '-');
+            $row++;
+        }
+        
+        $refSheet->getColumnDimension('A')->setAutoSize(true);
+        $refSheet->getColumnDimension('B')->setAutoSize(true);
+        $refSheet->getColumnDimension('C')->setAutoSize(true);
+        
+        // Set active sheet back to template
+        $spreadsheet->setActiveSheetIndex(0);
+        
+        $filename = 'template_nilai_span_ptkin.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * Process upload excel - menggunakan urutan kolom FIXED dari config
      */
     public function upload(Request $request)
     {
@@ -184,81 +272,46 @@ class NilaiController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
-            if (count($rows) < 8) {
+            if (count($rows) < 2) {
                 return back()->with('error', 'File Excel kosong atau format tidak sesuai.');
             }
 
-            // Format Excel RDM:
-            // Baris 1: LEGGER NILAI XII.2
-            // Baris 2: Kelas, Semester
-            // Baris 3: Madrasah, Tahun Ajaran
-            // Baris 4: kosong
-            // Baris 5: kosong
-            // Baris 6: No, NIS, Nisn, Nama, JK, PAI (merged), BAR, PP, ..., MULOK (merged), THF, KMPM (merged), KMPS (merged)
-            // Baris 7: (kosong), (kosong), ..., QH, AA, FIK, SKI, ..., PRKW, ..., BIO, KIM, FIS, INFOP, MTL, EKO
-            // Baris 8+: Data siswa
+            // Ambil config urutan mapel
+            $urutanMapel = config('nilai.urutan_mapel');
+            $kolomNisn = config('nilai.kolom_nisn', 2);         // Default: kolom C (index 2)
+            $kolomNilaiMulai = config('nilai.kolom_nilai_mulai', 5); // Default: kolom F (index 5)
+            
+            // Get semua mapel dengan kode sesuai urutan
+            $mapelByKode = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+                ->where('is_active', true)
+                ->get()
+                ->keyBy('kode_mapel');
+            
+            // Validasi apakah semua mapel ada di database
+            $missingMapel = [];
+            foreach ($urutanMapel as $kode) {
+                if (!isset($mapelByKode[$kode])) {
+                    $missingMapel[] = $kode;
+                }
+            }
+            
+            if (!empty($missingMapel)) {
+                return back()->with('error', 'Kode mapel tidak ditemukan di database: ' . implode(', ', $missingMapel) . '. Silakan tambahkan mapel tersebut terlebih dahulu.');
+            }
 
-            // Cari baris header (baris yang mengandung "Nisn")
-            $headerRowIndex = null;
+            // Cari baris data (baris pertama yang kolom NISN-nya berisi angka)
+            $dataStartRow = null;
             for ($i = 0; $i < min(10, count($rows)); $i++) {
-                $row = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$i])));
-                if (in_array('NISN', $row)) {
-                    $headerRowIndex = $i;
+                $nisnValue = trim(strval($rows[$i][$kolomNisn] ?? ''));
+                // Jika kolom NISN berisi angka (bukan header), ini adalah baris data
+                if (!empty($nisnValue) && is_numeric($nisnValue) && strlen($nisnValue) >= 8) {
+                    $dataStartRow = $i;
                     break;
                 }
             }
-
-            if ($headerRowIndex === null) {
-                return back()->with('error', 'Kolom NISN tidak ditemukan di header Excel. Pastikan format sesuai dengan Excel RDM.');
-            }
-
-            // Header row 1 (main header)
-            $header1 = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex])));
             
-            // Header row 2 (sub header for merged cells like PAI -> QH, AA, FIK, SKI)
-            $header2 = [];
-            if (isset($rows[$headerRowIndex + 1])) {
-                $header2 = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex + 1])));
-            }
-            
-            // Cari index kolom NISN
-            $nisnIndex = array_search('NISN', $header1);
-            
-            // Get semua mapel dengan kode
-            $mapelByKode = MataPelajaran::where('is_active', true)
-                ->get()
-                ->keyBy(function ($item) {
-                    return strtoupper($item->kode_mapel);
-                });
-
-            // Mapping header ke mapel
-            // Prioritas: header2 (detail) jika ada, fallback ke header1
-            $mapelMapping = [];
-            $skipColumns = ['NO', 'NIS', 'NISN', 'NAMA', 'JK', 'JUMLAH', 'PAI', 'KMPM', 'KMPS', ''];
-            
-            for ($index = 0; $index < max(count($header1), count($header2)); $index++) {
-                // Cek header2 dulu (sub-header untuk detail mapel)
-                $kode2 = isset($header2[$index]) ? strtoupper(trim($header2[$index])) : '';
-                $kode1 = isset($header1[$index]) ? strtoupper(trim($header1[$index])) : '';
-                
-                // Gunakan header2 jika ada dan bukan kosong, else gunakan header1
-                $kode = !empty($kode2) ? $kode2 : $kode1;
-                
-                // Handle MULOK PRKW (split across 2 rows: MULOK + PRKW)
-                if ($kode1 === 'MULOK' && $kode2 === 'PRKW') {
-                    $kode = 'MULOK PRKW';
-                }
-                
-                // Skip kolom non-mapel
-                if (in_array($kode, $skipColumns)) continue;
-                
-                if (isset($mapelByKode[$kode])) {
-                    $mapelMapping[$index] = $mapelByKode[$kode];
-                }
-            }
-
-            if (empty($mapelMapping)) {
-                return back()->with('error', 'Tidak ada kode mapel yang cocok di header Excel. Pastikan kode mapel sesuai dengan data di sistem.');
+            if ($dataStartRow === null) {
+                return back()->with('error', 'Tidak ditemukan data siswa dengan NISN yang valid. Pastikan kolom C berisi NISN (minimal 8 digit).');
             }
 
             DB::beginTransaction();
@@ -266,43 +319,15 @@ class NilaiController extends Controller
             $semester = $request->semester;
             $tahunPelajaranId = $request->tahun_pelajaran_id;
             $successCount = 0;
-            $nilaiCount = 0; // Counter untuk nilai yang berhasil disimpan
+            $nilaiCount = 0;
             $errorCount = 0;
             $notFoundNisn = [];
             $importedAt = now();
-            
-            // Debug: log mapel yang ditemukan
-            \Log::info('Mapel mapping:', array_map(fn($m) => $m->kode_mapel, $mapelMapping));
-
-            // Tentukan baris data dimulai (setelah header2 jika ada sub-header, else setelah header1)
-            $dataStartRow = $headerRowIndex + 1;
-            // Cek apakah baris berikutnya adalah sub-header (mengandung QH, AA, dll) atau data
-            if (isset($rows[$headerRowIndex + 1])) {
-                $potentialSubHeader = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex + 1])));
-                // Jika ada QH, AA, FIK, SKI atau BIO, KIM, dll di baris ini, ini adalah sub-header
-                $subHeaderMapels = ['QH', 'AA', 'FIK', 'SKI', 'BIO', 'KIM', 'FIS', 'EKO', 'PRKW'];
-                foreach ($potentialSubHeader as $val) {
-                    if (in_array($val, $subHeaderMapels)) {
-                        $dataStartRow = $headerRowIndex + 2;
-                        break;
-                    }
-                }
-            }
 
             // Process data rows
-            $debugFirstRow = true;
             for ($i = $dataStartRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
-                $nisn = trim(strval($row[$nisnIndex] ?? ''));
-                
-                // Debug first row
-                if ($debugFirstRow) {
-                    \Log::info('First data row index: ' . $i);
-                    \Log::info('NISN index: ' . $nisnIndex . ', value: ' . $nisn);
-                    \Log::info('Row data (first 25 cols): ', array_slice($row, 0, 25));
-                    \Log::info('Mapel mapping columns: ' . implode(', ', array_keys($mapelMapping)));
-                    $debugFirstRow = false;
-                }
+                $nisn = trim(strval($row[$kolomNisn] ?? ''));
                 
                 // Skip baris kosong atau baris total
                 if (empty($nisn) || !is_numeric($nisn)) continue;
@@ -316,20 +341,19 @@ class NilaiController extends Controller
                     continue;
                 }
 
-                // Insert/update nilai untuk setiap mapel
-                // Track mapel yang sudah diproses untuk siswa ini (hindari duplikat dalam 1 baris)
-                $processedMapels = [];
+                // Insert/update nilai untuk setiap mapel sesuai urutan
                 $siswaHasNilai = false;
                 
-                foreach ($mapelMapping as $colIndex => $mapel) {
-                    // Skip jika mapel ini sudah diproses untuk siswa ini
-                    if (in_array($mapel->id, $processedMapels)) {
-                        continue;
-                    }
+                for ($mapelIndex = 0; $mapelIndex < count($urutanMapel); $mapelIndex++) {
+                    $kodeMapel = $urutanMapel[$mapelIndex];
+                    $mapel = $mapelByKode[$kodeMapel] ?? null;
                     
+                    if (!$mapel) continue;
+                    
+                    $colIndex = $kolomNilaiMulai + $mapelIndex;
                     $nilai = $row[$colIndex] ?? null;
                     
-                    // Konversi ke string dan trim untuk handle berbagai format
+                    // Konversi ke string dan trim
                     $nilaiStr = trim(strval($nilai));
                     
                     if ($nilaiStr === '' || !is_numeric($nilaiStr)) {
@@ -340,55 +364,23 @@ class NilaiController extends Controller
                     $siswaHasNilai = true;
                     
                     try {
-                        // Cari nilai yang sudah ada
-                        $nilaiSiswa = NilaiSiswa::where('siswa_id', $siswa->id)
-                            ->where('mata_pelajaran_id', $mapel->id)
-                            ->where('tahun_pelajaran_id', $tahunPelajaranId)
-                            ->where('semester', $semester)
-                            ->first();
-                        
-                        if ($nilaiSiswa) {
-                            // Update existing
-                            $nilaiSiswa->update([
-                                'nilai' => $nilai,
-                                'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                                'sumber_data' => 'import_excel',
-                                'imported_at' => $importedAt,
-                            ]);
-                        } else {
-                            // Create new
-                            NilaiSiswa::create([
+                        NilaiSiswa::updateOrCreate(
+                            [
                                 'siswa_id' => $siswa->id,
                                 'mata_pelajaran_id' => $mapel->id,
                                 'tahun_pelajaran_id' => $tahunPelajaranId,
                                 'semester' => $semester,
+                            ],
+                            [
                                 'nilai' => $nilai,
                                 'predikat' => NilaiSiswa::hitungPredikat($nilai),
                                 'sumber_data' => 'import_excel',
                                 'imported_at' => $importedAt,
-                            ]);
-                        }
-                        
-                        $processedMapels[] = $mapel->id;
+                            ]
+                        );
                         $nilaiCount++;
-                    } catch (\Illuminate\Database\QueryException $e) {
-                        // Jika duplicate key, coba update saja
-                        if ($e->getCode() == 23000) {
-                            NilaiSiswa::where('siswa_id', $siswa->id)
-                                ->where('mata_pelajaran_id', $mapel->id)
-                                ->where('tahun_pelajaran_id', $tahunPelajaranId)
-                                ->where('semester', $semester)
-                                ->update([
-                                    'nilai' => $nilai,
-                                    'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                                    'sumber_data' => 'import_excel',
-                                    'imported_at' => $importedAt,
-                                ]);
-                            $processedMapels[] = $mapel->id;
-                            $nilaiCount++;
-                        } else {
-                            throw $e;
-                        }
+                    } catch (\Exception $e) {
+                        Log::warning("Error saving nilai for siswa {$nisn}, mapel {$kodeMapel}: " . $e->getMessage());
                     }
                 }
                 

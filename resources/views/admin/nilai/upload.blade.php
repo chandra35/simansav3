@@ -87,12 +87,21 @@
                             @enderror
                         </div>
 
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> <strong>Petunjuk:</strong>
+                            <ol class="mb-0 mt-2">
+                                <li>Download template terlebih dahulu dengan klik tombol di bawah</li>
+                                <li>Isi data NISN dan nilai sesuai urutan kolom mapel</li>
+                                <li>Upload file yang sudah diisi</li>
+                            </ol>
+                        </div>
+
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle"></i> <strong>Perhatian:</strong>
                             <ul class="mb-0 mt-2">
                                 <li>Jika NISN sudah memiliki nilai untuk mapel dan semester yang sama, nilai akan <strong>di-update</strong>.</li>
                                 <li>Pastikan NISN siswa sudah terdaftar di sistem.</li>
-                                <li>Kode mapel di header Excel harus sesuai dengan kode mapel di sistem.</li>
+                                <li><strong>Urutan kolom mapel harus sesuai dengan template!</strong></li>
                             </ul>
                         </div>
                     </div>
@@ -100,6 +109,9 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-upload"></i> Upload
                         </button>
+                        <a href="{{ route('admin.nilai.template') }}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download Template
+                        </a>
                         <a href="{{ route('admin.nilai.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
@@ -109,94 +121,107 @@
         </div>
 
         <div class="col-md-4">
-            {{-- Kode Mapel Reference --}}
-            <div class="card card-info card-outline">
+            {{-- Urutan Mapel --}}
+            <div class="card card-success card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-list"></i> Kode Mapel di Sistem</h3>
+                    <h3 class="card-title"><i class="fas fa-sort-numeric-down"></i> Urutan Kolom Mapel</h3>
                 </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-bordered">
-                        <thead>
+                <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="bg-light sticky-top">
                             <tr>
+                                <th width="40">Kol</th>
                                 <th>Kode</th>
                                 <th>Nama Mapel</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <tr class="text-muted">
+                                <td>A</td>
+                                <td>No</td>
+                                <td><small>Nomor urut</small></td>
+                            </tr>
+                            <tr class="text-muted">
+                                <td>B</td>
+                                <td>NIS</td>
+                                <td><small>Nomor Induk Siswa</small></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>C</strong></td>
+                                <td><strong>NISN</strong></td>
+                                <td><small><strong>Kunci matching</strong></small></td>
+                            </tr>
+                            <tr class="text-muted">
+                                <td>D</td>
+                                <td>Nama</td>
+                                <td><small>Nama siswa</small></td>
+                            </tr>
+                            <tr class="text-muted">
+                                <td>E</td>
+                                <td>JK</td>
+                                <td><small>Jenis Kelamin</small></td>
+                            </tr>
+                            @php $col = 'F'; @endphp
                             @foreach($mapelList as $mapel)
                             <tr>
+                                <td><code>{{ $col }}</code></td>
                                 <td><code>{{ $mapel->kode_mapel }}</code></td>
-                                <td>{{ $mapel->nama_mapel }}</td>
+                                <td><small>{{ $mapel->nama_mapel }}</small></td>
                             </tr>
+                            @php $col++; @endphp
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer">
-                    <small class="text-muted">
-                        <i class="fas fa-info-circle"></i> 
-                        Kode mapel di header Excel harus sama persis (case-insensitive).
-                    </small>
+                <div class="card-footer text-center">
+                    <a href="{{ route('admin.nilai.template') }}" class="btn btn-success btn-block">
+                        <i class="fas fa-download"></i> Download Template Excel
+                    </a>
                 </div>
             </div>
 
-            {{-- Format Example --}}
+            {{-- Format Info --}}
             <div class="card card-secondary card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Contoh Format Excel RDM</h3>
+                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Format Excel</h3>
                 </div>
                 <div class="card-body">
-                    <p><strong>Format Excel Legger dari RDM:</strong></p>
-                    <div class="alert alert-info small mb-2 p-2">
-                        <i class="fas fa-info-circle"></i> 
-                        Baris 2: Kelas, Semester<br>
-                        Baris 3: Madrasah, Tahun Ajaran<br>
-                        Baris 5: Header grup (PAI, KMPM, KMPS)<br>
-                        <strong>Baris 6: Header kolom (No, NIS, Nisn, Nama, JK, QH, AA, ...)</strong><br>
-                        Baris 7+: Data siswa
-                    </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered" style="font-size: 9px;">
                             <thead class="bg-light">
                                 <tr>
                                     <th>No</th>
                                     <th>NIS</th>
-                                    <th>Nisn</th>
+                                    <th class="bg-info text-white">NISN</th>
                                     <th>Nama</th>
                                     <th>JK</th>
                                     <th>QH</th>
                                     <th>AA</th>
-                                    <th>FIK</th>
-                                    <th>SKI</th>
-                                    <th>BAR</th>
                                     <th>...</th>
-                                    <th>Jumlah</th>
+                                    <th>EKO</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>1</td>
                                     <td>1234</td>
-                                    <td>0012345678</td>
+                                    <td class="bg-info text-white">0012345678</td>
                                     <td>Ahmad</td>
                                     <td>L</td>
                                     <td>85</td>
                                     <td>87</td>
-                                    <td>80</td>
-                                    <td>82</td>
-                                    <td>78</td>
                                     <td>...</td>
-                                    <td>1650</td>
+                                    <td>80</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="mt-2">
-                        <p class="text-success small mb-1">
-                            <i class="fas fa-check"></i> <strong>Acuan matching:</strong> kolom <code>Nisn</code>
+                        <p class="text-info small mb-1">
+                            <i class="fas fa-key"></i> Kolom <code>NISN</code> (C) digunakan untuk mencocokkan siswa
                         </p>
                         <p class="text-muted small mb-0">
-                            <i class="fas fa-info-circle"></i> Kolom <code>No</code>, <code>NIS</code>, <code>Nama</code>, <code>JK</code>, <code>Jumlah</code> akan diabaikan
+                            <i class="fas fa-info-circle"></i> Kolom No, NIS, Nama, JK diabaikan (opsional)
                         </p>
                     </div>
                 </div>
