@@ -633,9 +633,9 @@ class NilaiController extends Controller
     }
 
     /**
-     * Export Legger untuk SPAN-PTKIN/SNBP
+     * Show export legger form
      */
-    public function exportLegger(Request $request)
+    public function exportLeggerForm(Request $request)
     {
         $tingkat = $request->tingkat ?? 12;
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
@@ -648,7 +648,62 @@ class NilaiController extends Controller
         $urutanMapel = config('nilai.urutan_mapel');
         
         // Get all mapel
-        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->sortBy(function($mapel) use ($urutanMapel) {
+                return array_search($mapel->kode_mapel, $urutanMapel);
+            })
+            ->values();
+        
+        // Get kelas tingkat 12
+        $kelasList = \App\Models\Kelas::where('tingkat', $tingkat)
+            ->where('tahun_pelajaran_id', $tahunAktif->id)
+            ->orderBy('nama')
+            ->get();
+        
+        // Count siswa kelas 12
+        $totalSiswa = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif) {
+            $q->where('tingkat', $tingkat)
+              ->where('tahun_pelajaran_id', $tahunAktif->id);
+        })->count();
+        
+        return view('admin.nilai.export-legger', compact(
+            'tingkat', 
+            'tahunAktif', 
+            'semesterConfig', 
+            'mapelList', 
+            'kelasList',
+            'totalSiswa',
+            'urutanMapel'
+        ));
+    }
+
+    /**
+     * Export Legger untuk SPAN-PTKIN/SNBP
+     */
+    public function exportLegger(Request $request)
+    {
+        $tingkat = $request->tingkat ?? 12;
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tahun pelajaran aktif tidak ditemukan.');
+        }
+        
+        $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+        
+        // Get mapel yang dipilih atau semua
+        $selectedMapel = $request->mapel ?? config('nilai.urutan_mapel');
+        if (!is_array($selectedMapel)) {
+            $selectedMapel = config('nilai.urutan_mapel');
+        }
+        
+        // Get selected kelas atau semua
+        $selectedKelas = $request->kelas ?? [];
+        
+        // Get all mapel
+        $mapels = MataPelajaran::whereIn('kode_mapel', $selectedMapel)
             ->where('is_active', true)
             ->get()
             ->keyBy('kode_mapel');
@@ -662,18 +717,26 @@ class NilaiController extends Controller
             }
         }
         
-        // Get all siswa yang memiliki nilai di semester manapun
-        $siswaIds = NilaiSiswa::whereIn('tahun_pelajaran_id', array_values($tahunIds))
-            ->whereIn('semester', array_keys($semesterConfig))
-            ->distinct()
-            ->pluck('siswa_id');
+        // Get siswa kelas 12 (dari kelas, bukan dari nilai)
+        $siswaQuery = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
+            $q->where('tingkat', $tingkat)
+              ->where('tahun_pelajaran_id', $tahunAktif->id);
+            if (!empty($selectedKelas)) {
+                $q->whereIn('kelas.id', $selectedKelas);
+            }
+        })
+        ->with(['kelas' => function($q) use ($tahunAktif) {
+            $q->where('tahun_pelajaran_id', $tahunAktif->id);
+        }])
+        ->orderBy('nama');
         
-        $siswaList = Siswa::whereIn('id', $siswaIds)
-            ->with(['kelas' => function($q) {
-                $q->orderByDesc('tingkat');
-            }])
-            ->orderBy('nama')
-            ->get();
+        $siswaList = $siswaQuery->get();
+        
+        if ($siswaList->isEmpty()) {
+            return back()->with('error', 'Tidak ada siswa kelas ' . $tingkat . ' yang ditemukan.');
+        }
+        
+        $siswaIds = $siswaList->pluck('id');
         
         // Get all nilai for these siswa
         $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
@@ -686,35 +749,78 @@ class NilaiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Legger Kelas ' . $tingkat);
         
-        // Build header
-        $headers = ['No', 'NISN', 'Nama', 'JK', 'Kelas'];
+        // Build multi-row header
+        // Row 1: Mapel names (merged cells)
+        // Row 2: Semester numbers
         
-        // Add semester headers per mapel
-        foreach ($urutanMapel as $kode) {
-            foreach (array_keys($semesterConfig) as $sem) {
-                $headers[] = "{$kode}_S{$sem}";
-            }
-            $headers[] = "{$kode}_AVG"; // Rata-rata
-        }
-        $headers[] = 'RATA-RATA TOTAL';
+        $staticCols = ['No', 'NISN', 'NIS', 'Nama', 'L/P', 'Kelas'];
+        $staticColCount = count($staticCols);
+        $semesterCount = count($semesterConfig);
         
-        // Write header
+        // Write static column headers (merged row 1-2)
         $col = 'A';
-        foreach ($headers as $header) {
+        foreach ($staticCols as $header) {
             $sheet->setCellValue($col . '1', $header);
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
-            $sheet->getStyle($col . '1')->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('CCCCCC');
+            $sheet->mergeCells($col . '1:' . $col . '2');
+            $sheet->getStyle($col . '1:' . $col . '2')->getAlignment()
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $col++;
         }
         
-        // Write data
-        $row = 2;
+        // Write mapel headers with semester sub-headers
+        $colIndex = $staticColCount;
+        foreach ($selectedMapel as $kode) {
+            $mapel = $mapels[$kode] ?? null;
+            $startCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+            $endCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + $semesterCount + 1); // +1 for AVG
+            
+            // Row 1: Mapel name
+            $sheet->setCellValue($startCol . '1', $kode);
+            $sheet->mergeCells($startCol . '1:' . $endCol . '1');
+            $sheet->getStyle($startCol . '1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            
+            // Row 2: Semester numbers
+            $semCol = $colIndex;
+            foreach (array_keys($semesterConfig) as $sem) {
+                $semColStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($semCol + 1);
+                $sheet->setCellValue($semColStr . '2', "S{$sem}");
+                $sheet->getStyle($semColStr . '2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $semCol++;
+            }
+            // AVG column
+            $avgColStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($semCol + 1);
+            $sheet->setCellValue($avgColStr . '2', 'Avg');
+            $sheet->getStyle($avgColStr . '2')->getFont()->setBold(true);
+            
+            $colIndex += $semesterCount + 1;
+        }
+        
+        // Total AVG column
+        $totalAvgCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+        $sheet->setCellValue($totalAvgCol . '1', 'RATA2');
+        $sheet->mergeCells($totalAvgCol . '1:' . $totalAvgCol . '2');
+        $sheet->getStyle($totalAvgCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle($totalAvgCol . '1')->getAlignment()
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        
+        // Style header rows
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+        $sheet->getStyle('A1:' . $lastCol . '2')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '2')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('D9EAD3');
+        $sheet->getStyle('A1:' . $lastCol . '2')->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        
+        // Write data starting from row 3
+        $row = 3;
         foreach ($siswaList as $index => $siswa) {
             $col = 'A';
             $sheet->setCellValue($col++ . $row, $index + 1);
-            $sheet->setCellValue($col++ . $row, $siswa->nisn);
+            $sheet->setCellValue($col++ . $row, "'" . $siswa->nisn); // Force text
+            $sheet->setCellValue($col++ . $row, $siswa->nis ?? '');
             $sheet->setCellValue($col++ . $row, $siswa->nama);
             $sheet->setCellValue($col++ . $row, $siswa->jenis_kelamin == 'L' ? 'L' : 'P');
             $sheet->setCellValue($col++ . $row, $siswa->kelas->first()->nama ?? '-');
@@ -722,7 +828,7 @@ class NilaiController extends Controller
             $totalNilai = 0;
             $totalCount = 0;
             
-            foreach ($urutanMapel as $kode) {
+            foreach ($selectedMapel as $kode) {
                 $mapel = $mapels[$kode] ?? null;
                 $mapelNilai = [];
                 
@@ -731,7 +837,7 @@ class NilaiController extends Controller
                     if ($mapel && isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
                         $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
                     }
-                    $sheet->setCellValue($col++ . $row, $nilai ?? '');
+                    $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
                     if ($nilai !== null) {
                         $mapelNilai[] = $nilai;
                     }
@@ -754,10 +860,23 @@ class NilaiController extends Controller
             $row++;
         }
         
-        // Auto width
-        foreach (range('A', 'Z') as $columnID) {
+        // Add borders to data
+        $lastDataRow = $row - 1;
+        $sheet->getStyle('A3:' . $lastCol . $lastDataRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        
+        // Auto width for static columns
+        foreach (range('A', 'F') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
+        // Set width for nilai columns
+        for ($i = 7; $i <= $colIndex + 1; $i++) {
+            $colStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
+            $sheet->getColumnDimension($colStr)->setWidth(5);
+        }
+        
+        // Freeze header rows and first columns
+        $sheet->freezePane('G3');
         
         // Add summary sheet
         $summarySheet = $spreadsheet->createSheet();
