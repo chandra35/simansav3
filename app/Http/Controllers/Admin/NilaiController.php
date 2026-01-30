@@ -297,20 +297,34 @@ class NilaiController extends Controller
 
                     $nilai = floatval($nilai);
                     
-                    NilaiSiswa::updateOrCreate(
-                        [
-                            'siswa_id' => $siswa->id,
-                            'mata_pelajaran_id' => $mapel->id,
-                            'tahun_pelajaran_id' => $tahunPelajaranId,
-                            'semester' => $semester,
-                        ],
-                        [
+                    // Cari nilai yang sudah ada
+                    $nilaiSiswa = NilaiSiswa::where('siswa_id', $siswa->id)
+                        ->where('mata_pelajaran_id', $mapel->id)
+                        ->where('tahun_pelajaran_id', $tahunPelajaranId)
+                        ->where('semester', $semester)
+                        ->first();
+                    
+                    if ($nilaiSiswa) {
+                        // Update existing
+                        $nilaiSiswa->update([
                             'nilai' => $nilai,
                             'predikat' => NilaiSiswa::hitungPredikat($nilai),
                             'sumber_data' => 'import_excel',
                             'imported_at' => $importedAt,
-                        ]
-                    );
+                        ]);
+                    } else {
+                        // Create new
+                        NilaiSiswa::create([
+                            'siswa_id' => $siswa->id,
+                            'mata_pelajaran_id' => $mapel->id,
+                            'tahun_pelajaran_id' => $tahunPelajaranId,
+                            'semester' => $semester,
+                            'nilai' => $nilai,
+                            'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                            'sumber_data' => 'import_excel',
+                            'imported_at' => $importedAt,
+                        ]);
+                    }
                 }
                 
                 $successCount++;
