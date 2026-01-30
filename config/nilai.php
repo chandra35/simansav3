@@ -23,18 +23,20 @@ return [
         'PP',           // 6. Pendidikan Pancasila
         'BINDO',        // 7. Bahasa Indonesia
         'MTK',          // 8. Matematika
-        'BING',         // 9. Bahasa Inggris
-        'PJOK',         // 10. Pendidikan Jasmani Olahraga dan Kesehatan
-        'SEJ',          // 11. Sejarah
-        'SB',           // 12. Seni Budaya
-        'MULOK PRKW',   // 13. Muatan Lokal Prakarya
-        'THF',          // 14. Tahfidz
-        'BIO',          // 15. Biologi
-        'KIM',          // 16. Kimia
-        'FIS',          // 17. Fisika
-        'INFOP',        // 18. Informatika Peminatan
-        'MTL',          // 19. Matematika Lanjut
-        'EKO',          // 20. Ekonomi
+        'IPAT',         // 9. IPA Terpadu
+        'IPST',         // 10. IPS Terpadu
+        'BING',         // 11. Bahasa Inggris
+        'PJOK',         // 12. Pendidikan Jasmani Olahraga dan Kesehatan
+        'SEJ',          // 13. Sejarah
+        'SB',           // 14. Seni Budaya
+        'MULOK PRKW',   // 15. Muatan Lokal Prakarya
+        'THF',          // 16. Tahfidz
+        'BIO',          // 17. Biologi
+        'KIM',          // 18. Kimia
+        'FIS',          // 19. Fisika
+        'INFOP',        // 20. Informatika Peminatan
+        'MTL',          // 21. Matematika Lanjut
+        'EKO',          // 22. Ekonomi
     ],
 
     /*
