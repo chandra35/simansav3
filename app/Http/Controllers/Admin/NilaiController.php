@@ -822,9 +822,9 @@ class NilaiController extends Controller
             $sheet->setCellValue($col++ . $row, $index + 1);
             $sheet->setCellValue($col++ . $row, "'" . $siswa->nisn); // Force text
             $sheet->setCellValue($col++ . $row, $siswa->nis ?? '');
-            $sheet->setCellValue($col++ . $row, $siswa->nama);
+            $sheet->setCellValue($col++ . $row, $siswa->nama_lengkap);
             $sheet->setCellValue($col++ . $row, $siswa->jenis_kelamin == 'L' ? 'L' : 'P');
-            $sheet->setCellValue($col++ . $row, $siswa->kelas->first()->nama ?? '-');
+            $sheet->setCellValue($col++ . $row, $siswa->kelas->first()->nama_kelas ?? '-');
             
             $totalNilai = 0;
             $totalCount = 0;
