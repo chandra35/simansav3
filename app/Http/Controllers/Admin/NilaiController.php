@@ -169,19 +169,39 @@ class NilaiController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
-            if (count($rows) < 2) {
-                return back()->with('error', 'File Excel kosong atau tidak memiliki data.');
+            if (count($rows) < 7) {
+                return back()->with('error', 'File Excel kosong atau format tidak sesuai.');
             }
 
-            // Header row (baris pertama)
-            $header = array_map('strtoupper', array_map('trim', $rows[0]));
+            // Format Excel RDM:
+            // Baris 1: kosong
+            // Baris 2: Kelas, Semester
+            // Baris 3: Madrasah, Tahun Ajaran
+            // Baris 4: kosong
+            // Baris 5: Header grup (PAI merged, dll)
+            // Baris 6: Header kolom (No, NIS, Nisn, Nama, JK, QH, AA, FIK, ...)
+            // Baris 7+: Data siswa
+
+            // Cari baris header (baris yang mengandung "Nisn")
+            $headerRowIndex = null;
+            for ($i = 0; $i < min(10, count($rows)); $i++) {
+                $row = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$i])));
+                if (in_array('NISN', $row)) {
+                    $headerRowIndex = $i;
+                    break;
+                }
+            }
+
+            if ($headerRowIndex === null) {
+                return back()->with('error', 'Kolom NISN tidak ditemukan di header Excel. Pastikan format sesuai dengan Excel RDM.');
+            }
+
+            // Header row
+            $header = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex])));
             
             // Cari index kolom NISN
             $nisnIndex = array_search('NISN', $header);
-            if ($nisnIndex === false) {
-                return back()->with('error', 'Kolom NISN tidak ditemukan di header Excel.');
-            }
-
+            
             // Get semua mapel dengan kode
             $mapelByKode = MataPelajaran::where('is_active', true)
                 ->get()
@@ -189,12 +209,16 @@ class NilaiController extends Controller
                     return strtoupper($item->kode_mapel);
                 });
 
-            // Mapping header ke mapel
+            // Mapping header ke mapel (skip kolom sebelum mapel: No, NIS, Nisn, Nama, JK)
             $mapelMapping = [];
+            $skipColumns = ['NO', 'NIS', 'NISN', 'NAMA', 'JK', 'JUMLAH', ''];
+            
             foreach ($header as $index => $col) {
-                if ($index <= $nisnIndex) continue; // Skip kolom sebelum dan termasuk NISN
-                
                 $kode = strtoupper(trim($col));
+                
+                // Skip kolom non-mapel
+                if (in_array($kode, $skipColumns)) continue;
+                
                 if (isset($mapelByKode[$kode])) {
                     $mapelMapping[$index] = $mapelByKode[$kode];
                 }
@@ -213,12 +237,13 @@ class NilaiController extends Controller
             $notFoundNisn = [];
             $importedAt = now();
 
-            // Process data rows (skip header)
-            for ($i = 1; $i < count($rows); $i++) {
+            // Process data rows (mulai dari baris setelah header)
+            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
                 $row = $rows[$i];
-                $nisn = trim($row[$nisnIndex] ?? '');
+                $nisn = trim(strval($row[$nisnIndex] ?? ''));
                 
-                if (empty($nisn)) continue;
+                // Skip baris kosong atau baris total
+                if (empty($nisn) || !is_numeric($nisn)) continue;
 
                 // Cari siswa berdasarkan NISN
                 $siswa = Siswa::where('nisn', $nisn)->first();
@@ -327,41 +352,94 @@ class NilaiController extends Controller
     }
 
     /**
-     * Download template excel
+     * Download template excel (format sesuai RDM)
      */
     public function downloadTemplate(Request $request)
     {
         $semester = $request->semester ?? 1;
+        $semesterText = $semester % 2 == 1 ? 'Ganjil' : 'Genap';
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        $tahunAjaran = $tahunAktif ? $tahunAktif->nama : date('Y') . '/' . (date('Y') + 1);
         
-        // Get active mapel
+        // Tentukan kelas berdasarkan semester
+        $kelasRomawi = match(true) {
+            $semester <= 2 => 'X',
+            $semester <= 4 => 'XI',
+            default => 'XII',
+        };
+        
+        // Get mapel dengan urutan sesuai RDM
+        // Urutan: QH, AA, FIK, SKI (PAI) | BAR, PP, BINDO, MTK, BING, PJOK, SEJ, SB, MULOK PRKW, THF | BIO, KIM, FIS, INFOP, MTL (KMPM) | EKO (KMPS)
+        $mapelOrder = ['QH', 'AA', 'FIK', 'SKI', 'BAR', 'PP', 'BINDO', 'MTK', 'BING', 'PJOK', 'SEJ', 'SB', 'MULOK PRKW', 'THF', 'BIO', 'KIM', 'FIS', 'INFOP', 'MTL', 'EKO'];
+        
         $mapelList = MataPelajaran::where('is_active', true)
-            ->orderBy('kelompok')
-            ->orderBy('kode_mapel')
-            ->get(['kode_mapel', 'nama_mapel']);
+            ->whereIn('kode_mapel', $mapelOrder)
+            ->get()
+            ->sortBy(function ($mapel) use ($mapelOrder) {
+                return array_search($mapel->kode_mapel, $mapelOrder);
+            });
         
         // Get siswa aktif
         $siswaList = Siswa::where('status_siswa', 'aktif')
             ->orderBy('nama_lengkap')
-            ->get(['nisn', 'nama_lengkap']);
+            ->get(['nisn', 'nama_lengkap', 'jenis_kelamin']);
         
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Template Nilai Sem ' . $semester);
+        $sheet->setTitle('LEGGER NILAI KELAS ' . $kelasRomawi);
         
-        // Header
+        // Baris 1: kosong (skip)
+        
+        // Baris 2: Kelas dan Semester
+        $sheet->setCellValue('A2', 'Kelas:');
+        $sheet->setCellValue('B2', $kelasRomawi . '.1');
+        $sheet->setCellValue('D2', 'Semester:');
+        $sheet->setCellValue('E2', $semesterText);
+        
+        // Style baris 2 (kuning)
+        $sheet->getStyle('B2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFF00');
+        $sheet->getStyle('E2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFF00');
+        
+        // Baris 3: Madrasah dan Tahun Ajaran
+        $sheet->setCellValue('A3', 'Madrasah:');
+        $sheet->setCellValue('B3', 'MAN 1 METRO');
+        $sheet->setCellValue('D3', 'Tahun Ajaran:');
+        $sheet->setCellValue('E3', $tahunAjaran);
+        
+        // Style baris 3 (kuning)
+        $sheet->getStyle('B3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFF00');
+        $sheet->getStyle('E3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFF00');
+        
+        // Baris 4: kosong
+        
+        // Baris 5: Header grup (PAI, KMPM, KMPS)
+        $sheet->setCellValue('F5', 'PAI');
+        $sheet->mergeCells('F5:I5'); // QH, AA, FIK, SKI
+        
+        // Baris 6: Header kolom
+        $headerRow = 6;
         $col = 1;
-        $sheet->setCellValueByColumnAndRow($col++, 1, 'No');
-        $sheet->setCellValueByColumnAndRow($col++, 1, 'NIS');
-        $sheet->setCellValueByColumnAndRow($col++, 1, 'Nisn');
-        $sheet->setCellValueByColumnAndRow($col++, 1, 'Nama');
-        $sheet->setCellValueByColumnAndRow($col++, 1, 'JK');
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'No');
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'NIS');
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'Nisn');
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'Nama');
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'JK');
         
         foreach ($mapelList as $mapel) {
-            $sheet->setCellValueByColumnAndRow($col++, 1, $mapel->kode_mapel);
+            $sheet->setCellValueByColumnAndRow($col++, $headerRow, $mapel->kode_mapel);
         }
         
-        // Data siswa
-        $row = 2;
+        $sheet->setCellValueByColumnAndRow($col++, $headerRow, 'Jumlah');
+        
+        // Style header baris 6
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col - 1);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$headerRow}")->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('CCCCCC');
+        
+        // Data siswa mulai baris 7
+        $row = 7;
         $no = 1;
         foreach ($siswaList as $siswa) {
             $col = 1;
@@ -369,23 +447,16 @@ class NilaiController extends Controller
             $sheet->setCellValueByColumnAndRow($col++, $row, ''); // NIS
             $sheet->setCellValueByColumnAndRow($col++, $row, $siswa->nisn);
             $sheet->setCellValueByColumnAndRow($col++, $row, $siswa->nama_lengkap);
-            $sheet->setCellValueByColumnAndRow($col++, $row, ''); // JK
+            $sheet->setCellValueByColumnAndRow($col++, $row, $siswa->jenis_kelamin ?? ''); // JK
             $row++;
         }
-        
-        // Style header
-        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col - 1);
-        $sheet->getStyle("A1:{$lastCol}1")->getFont()->setBold(true);
-        $sheet->getStyle("A1:{$lastCol}1")->getFill()
-            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('CCCCCC');
         
         // Auto width
         foreach (range('A', $lastCol) as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
         
-        $filename = 'template_nilai_semester_' . $semester . '.xlsx';
+        $filename = 'LEGGER_NILAI_KELAS_' . $kelasRomawi . '_SEM_' . $semester . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

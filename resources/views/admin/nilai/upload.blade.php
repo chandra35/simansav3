@@ -143,12 +143,20 @@
             {{-- Format Example --}}
             <div class="card card-secondary card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Contoh Format Excel</h3>
+                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Contoh Format Excel RDM</h3>
                 </div>
                 <div class="card-body">
-                    <p>Format Excel dari RDM/Legger:</p>
+                    <p><strong>Format Excel Legger dari RDM:</strong></p>
+                    <div class="alert alert-info small mb-2 p-2">
+                        <i class="fas fa-info-circle"></i> 
+                        Baris 2: Kelas, Semester<br>
+                        Baris 3: Madrasah, Tahun Ajaran<br>
+                        Baris 5: Header grup (PAI, KMPM, KMPS)<br>
+                        <strong>Baris 6: Header kolom (No, NIS, Nisn, Nama, JK, QH, AA, ...)</strong><br>
+                        Baris 7+: Data siswa
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered" style="font-size: 10px;">
+                        <table class="table table-sm table-bordered" style="font-size: 9px;">
                             <thead class="bg-light">
                                 <tr>
                                     <th>No</th>
@@ -158,7 +166,11 @@
                                     <th>JK</th>
                                     <th>QH</th>
                                     <th>AA</th>
+                                    <th>FIK</th>
+                                    <th>SKI</th>
+                                    <th>BAR</th>
                                     <th>...</th>
+                                    <th>Jumlah</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -170,14 +182,23 @@
                                     <td>L</td>
                                     <td>85</td>
                                     <td>87</td>
+                                    <td>80</td>
+                                    <td>82</td>
+                                    <td>78</td>
                                     <td>...</td>
+                                    <td>1650</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-muted small mb-0">
-                        <i class="fas fa-check text-success"></i> Acuan matching: kolom <strong>Nisn</strong>
-                    </p>
+                    <div class="mt-2">
+                        <p class="text-success small mb-1">
+                            <i class="fas fa-check"></i> <strong>Acuan matching:</strong> kolom <code>Nisn</code>
+                        </p>
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-info-circle"></i> Kolom <code>No</code>, <code>NIS</code>, <code>Nama</code>, <code>JK</code>, <code>Jumlah</code> akan diabaikan
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
