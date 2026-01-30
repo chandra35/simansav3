@@ -1,17 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Upload Nilai Excel')
+@section('title', 'Upload Nilai Legger')
 
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1><i class="fas fa-file-excel"></i> Upload Nilai dari Excel</h1>
+            <h1><i class="fas fa-file-excel"></i> Upload Nilai Legger</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{{ route('admin.nilai.index') }}">Nilai Siswa</a></li>
-                <li class="breadcrumb-item active">Upload Excel</li>
+                <li class="breadcrumb-item active">Upload Legger</li>
             </ol>
         </div>
     </div>
@@ -38,46 +38,53 @@
             {{-- Upload Form --}}
             <div class="card card-primary card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-upload"></i> Upload File</h3>
+                    <h3 class="card-title"><i class="fas fa-upload"></i> Upload Nilai Legger</h3>
                 </div>
-                <form action="{{ route('admin.nilai.upload') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.nilai.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                     @csrf
+                    <input type="hidden" name="tahun_pelajaran_id" id="tahun_pelajaran_id">
+                    
                     <div class="card-body">
+                        {{-- Step 1: Pilih Tingkat Kelas --}}
                         <div class="form-group">
-                            <label for="tahun_pelajaran_id">Tahun Pelajaran <span class="text-danger">*</span></label>
-                            <select name="tahun_pelajaran_id" id="tahun_pelajaran_id" class="form-control @error('tahun_pelajaran_id') is-invalid @enderror" required>
-                                @foreach($tahunPelajarans as $tp)
-                                    <option value="{{ $tp->id }}" {{ ($tahunAktif && $tahunAktif->id == $tp->id) ? 'selected' : '' }}>
-                                        {{ $tp->nama }} {{ $tp->is_active ? '(Aktif)' : '' }}
-                                    </option>
-                                @endforeach
+                            <label for="tingkat_kelas">1. Pilih Tingkat Kelas <span class="text-danger">*</span></label>
+                            <select name="tingkat_kelas" id="tingkat_kelas" class="form-control form-control-lg" required>
+                                <option value="">-- Pilih Tingkat Kelas --</option>
+                                <option value="12">Kelas 12 (Legger untuk SPAN-PTKIN/SNBP/UTBK)</option>
+                                <option value="11">Kelas 11</option>
+                                <option value="10">Kelas 10</option>
                             </select>
-                            @error('tahun_pelajaran_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <small class="text-muted">Pilih tingkat kelas siswa saat ini</small>
                         </div>
 
-                        <div class="form-group">
-                            <label for="semester">Semester <span class="text-danger">*</span></label>
-                            <select name="semester" id="semester" class="form-control @error('semester') is-invalid @enderror" required>
+                        {{-- Step 2: Pilih Semester --}}
+                        <div class="form-group" id="semesterGroup" style="display: none;">
+                            <label for="semester">2. Pilih Semester Legger <span class="text-danger">*</span></label>
+                            <select name="semester" id="semester" class="form-control form-control-lg" required disabled>
                                 <option value="">-- Pilih Semester --</option>
-                                <option value="1" {{ request('semester') == 1 ? 'selected' : '' }}>Semester 1 (Kelas X - Sem 1)</option>
-                                <option value="2" {{ request('semester') == 2 ? 'selected' : '' }}>Semester 2 (Kelas X - Sem 2)</option>
-                                <option value="3" {{ request('semester') == 3 ? 'selected' : '' }}>Semester 3 (Kelas XI - Sem 1)</option>
-                                <option value="4" {{ request('semester') == 4 ? 'selected' : '' }}>Semester 4 (Kelas XI - Sem 2)</option>
-                                <option value="5" {{ request('semester') == 5 ? 'selected' : '' }}>Semester 5 (Kelas XII - Sem 1)</option>
                             </select>
-                            @error('semester')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <small class="text-muted">Semester berdasarkan tingkat kelas yang dipilih</small>
                         </div>
 
-                        <div class="form-group">
-                            <label for="file">File Excel <span class="text-danger">*</span></label>
+                        {{-- Step 3: Info Tahun Pelajaran (Auto) --}}
+                        <div class="form-group" id="tahunInfo" style="display: none;">
+                            <label>3. Tahun Pelajaran (Otomatis)</label>
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-calendar"></i> 
+                                <strong id="tahunPelajaranLabel">-</strong>
+                                <span id="tahunNotFound" class="text-danger" style="display: none;">
+                                    <br><i class="fas fa-exclamation-triangle"></i> Tahun pelajaran tidak ditemukan! Silakan buat di menu <a href="{{ route('admin.tahun-pelajaran.index') }}">Tahun Pelajaran</a>
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Step 4: Upload File --}}
+                        <div class="form-group" id="fileGroup" style="display: none;">
+                            <label for="file">4. File Excel <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <div class="custom-file">
                                     <input type="file" class="custom-file-input @error('file') is-invalid @enderror" 
-                                           id="file" name="file" accept=".xlsx,.xls" required>
+                                           id="file" name="file" accept=".xlsx,.xls" required disabled>
                                     <label class="custom-file-label" for="file">Pilih file...</label>
                                 </div>
                             </div>
@@ -87,27 +94,20 @@
                             @enderror
                         </div>
 
-                        <div class="alert alert-info">
+                        <div class="alert alert-warning mt-3">
                             <i class="fas fa-info-circle"></i> <strong>Petunjuk:</strong>
                             <ol class="mb-0 mt-2">
-                                <li>Download template terlebih dahulu dengan klik tombol di bawah</li>
-                                <li>Isi data NISN dan nilai sesuai urutan kolom mapel</li>
+                                <li>Pilih <strong>Tingkat Kelas</strong> siswa saat ini (misal: Kelas 12)</li>
+                                <li>Pilih <strong>Semester Legger</strong> yang akan diupload (1-5)</li>
+                                <li>Tahun Pelajaran akan <strong>otomatis dihitung</strong></li>
+                                <li>Download template dan isi data nilai</li>
                                 <li>Upload file yang sudah diisi</li>
                             </ol>
                         </div>
-
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> <strong>Perhatian:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li>Jika NISN sudah memiliki nilai untuk mapel dan semester yang sama, nilai akan <strong>di-update</strong>.</li>
-                                <li>Pastikan NISN siswa sudah terdaftar di sistem.</li>
-                                <li><strong>Urutan kolom mapel harus sesuai dengan template!</strong></li>
-                            </ul>
-                        </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload"></i> Upload
+                        <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit" disabled>
+                            <i class="fas fa-upload"></i> Upload & Preview
                         </button>
                         <a href="{{ route('admin.nilai.template') }}" class="btn btn-success">
                             <i class="fas fa-download"></i> Download Template
@@ -118,6 +118,51 @@
                     </div>
                 </form>
             </div>
+
+            {{-- Panduan Semester --}}
+            <div class="card card-info card-outline">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-question-circle"></i> Panduan Semester Legger</h3>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Semester Legger</th>
+                                <th>Tingkat</th>
+                                <th>Contoh untuk Kelas 12 (TA {{ $tahunAktif->nama ?? '2025/2026' }})</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-primary">Semester 1</span></td>
+                                <td>Kelas X - Semester 1</td>
+                                <td>Tahun Pelajaran 2023/2024</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-primary">Semester 2</span></td>
+                                <td>Kelas X - Semester 2</td>
+                                <td>Tahun Pelajaran 2023/2024</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Semester 3</span></td>
+                                <td>Kelas XI - Semester 1</td>
+                                <td>Tahun Pelajaran 2024/2025</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">Semester 4</span></td>
+                                <td>Kelas XI - Semester 2</td>
+                                <td>Tahun Pelajaran 2024/2025</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">Semester 5</span></td>
+                                <td>Kelas XII - Semester 1</td>
+                                <td>Tahun Pelajaran 2025/2026 (Aktif)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div class="col-md-4">
@@ -126,7 +171,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-sort-numeric-down"></i> Urutan Kolom Mapel</h3>
                 </div>
-                <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-sm table-striped mb-0">
                         <thead class="bg-light sticky-top">
                             <tr>
@@ -175,55 +220,8 @@
                 </div>
                 <div class="card-footer text-center">
                     <a href="{{ route('admin.nilai.template') }}" class="btn btn-success btn-block">
-                        <i class="fas fa-download"></i> Download Template Excel
+                        <i class="fas fa-download"></i> Download Template
                     </a>
-                </div>
-            </div>
-
-            {{-- Format Info --}}
-            <div class="card card-secondary card-outline">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Format Excel</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered" style="font-size: 9px;">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th>No</th>
-                                    <th>NIS</th>
-                                    <th class="bg-info text-white">NISN</th>
-                                    <th>Nama</th>
-                                    <th>JK</th>
-                                    <th>QH</th>
-                                    <th>AA</th>
-                                    <th>...</th>
-                                    <th>EKO</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>1234</td>
-                                    <td class="bg-info text-white">0012345678</td>
-                                    <td>Ahmad</td>
-                                    <td>L</td>
-                                    <td>85</td>
-                                    <td>87</td>
-                                    <td>...</td>
-                                    <td>80</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-2">
-                        <p class="text-info small mb-1">
-                            <i class="fas fa-key"></i> Kolom <code>NISN</code> (C) digunakan untuk mencocokkan siswa
-                        </p>
-                        <p class="text-muted small mb-0">
-                            <i class="fas fa-info-circle"></i> Kolom No, NIS, Nama, JK diabaikan (opsional)
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -235,6 +233,121 @@
     <script>
         $(document).ready(function() {
             bsCustomFileInput.init();
+            
+            // Data tahun pelajaran dari server
+            const tahunPelajarans = @json($tahunPelajarans);
+            const tahunAktif = @json($tahunAktif);
+            
+            // Semester mapping untuk setiap tingkat kelas
+            const semesterOptions = {
+                12: [
+                    { value: 1, label: 'Semester 1 - Kelas X Sem 1', offset: -2 },
+                    { value: 2, label: 'Semester 2 - Kelas X Sem 2', offset: -2 },
+                    { value: 3, label: 'Semester 3 - Kelas XI Sem 1', offset: -1 },
+                    { value: 4, label: 'Semester 4 - Kelas XI Sem 2', offset: -1 },
+                    { value: 5, label: 'Semester 5 - Kelas XII Sem 1', offset: 0 }
+                ],
+                11: [
+                    { value: 1, label: 'Semester 1 - Kelas X Sem 1', offset: -1 },
+                    { value: 2, label: 'Semester 2 - Kelas X Sem 2', offset: -1 },
+                    { value: 3, label: 'Semester 3 - Kelas XI Sem 1', offset: 0 },
+                    { value: 4, label: 'Semester 4 - Kelas XI Sem 2', offset: 0 }
+                ],
+                10: [
+                    { value: 1, label: 'Semester 1 - Kelas X Sem 1', offset: 0 },
+                    { value: 2, label: 'Semester 2 - Kelas X Sem 2', offset: 0 }
+                ]
+            };
+            
+            // Event: Tingkat kelas berubah
+            $('#tingkat_kelas').change(function() {
+                const tingkat = $(this).val();
+                const $semester = $('#semester');
+                const $semesterGroup = $('#semesterGroup');
+                
+                if (!tingkat) {
+                    $semesterGroup.hide();
+                    $('#tahunInfo').hide();
+                    $('#fileGroup').hide();
+                    $semester.prop('disabled', true);
+                    return;
+                }
+                
+                // Populate semester options
+                $semester.empty().append('<option value="">-- Pilih Semester --</option>');
+                semesterOptions[tingkat].forEach(function(opt) {
+                    $semester.append(`<option value="${opt.value}" data-offset="${opt.offset}">${opt.label}</option>`);
+                });
+                
+                $semester.prop('disabled', false);
+                $semesterGroup.show();
+                $('#tahunInfo').hide();
+                $('#fileGroup').hide();
+                updateSubmitButton();
+            });
+            
+            // Event: Semester berubah
+            $('#semester').change(function() {
+                const semester = $(this).val();
+                const tingkat = $('#tingkat_kelas').val();
+                const $tahunInfo = $('#tahunInfo');
+                const $fileGroup = $('#fileGroup');
+                
+                if (!semester) {
+                    $tahunInfo.hide();
+                    $fileGroup.hide();
+                    updateSubmitButton();
+                    return;
+                }
+                
+                // Hitung tahun pelajaran berdasarkan offset
+                const offset = $(this).find(':selected').data('offset');
+                const tahunAktifMulai = tahunAktif ? tahunAktif.tahun_mulai : new Date().getFullYear();
+                const tahunTarget = tahunAktifMulai + offset;
+                
+                // Cari tahun pelajaran yang sesuai
+                let tahunFound = null;
+                tahunPelajarans.forEach(function(tp) {
+                    if (tp.tahun_mulai == tahunTarget) {
+                        tahunFound = tp;
+                    }
+                });
+                
+                if (tahunFound) {
+                    $('#tahunPelajaranLabel').html(
+                        `<strong>${tahunFound.nama}</strong>` + 
+                        (tahunFound.is_active ? ' <span class="badge badge-success">Aktif</span>' : '')
+                    );
+                    $('#tahun_pelajaran_id').val(tahunFound.id);
+                    $('#tahunNotFound').hide();
+                    $('#file').prop('disabled', false);
+                } else {
+                    const tahunNama = `${tahunTarget}/${tahunTarget + 1}`;
+                    $('#tahunPelajaranLabel').html(`<span class="text-danger">${tahunNama}</span>`);
+                    $('#tahun_pelajaran_id').val('');
+                    $('#tahunNotFound').show();
+                    $('#file').prop('disabled', true);
+                }
+                
+                $tahunInfo.show();
+                $fileGroup.show();
+                updateSubmitButton();
+            });
+            
+            // Update submit button state
+            function updateSubmitButton() {
+                const tingkat = $('#tingkat_kelas').val();
+                const semester = $('#semester').val();
+                const tahunId = $('#tahun_pelajaran_id').val();
+                
+                const canSubmit = tingkat && semester && tahunId;
+                $('#btnSubmit').prop('disabled', !canSubmit);
+            }
+            
+            // File change event
+            $('#file').change(function() {
+                updateSubmitButton();
+            });
         });
     </script>
 @stop

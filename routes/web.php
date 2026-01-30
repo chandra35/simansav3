@@ -141,6 +141,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/nilai/confirm-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'confirmUpload'])->name('nilai.confirm-upload');
     Route::get('/nilai/cancel-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'cancelUpload'])->name('nilai.cancel-upload');
     Route::get('/nilai/template', [\App\Http\Controllers\Admin\NilaiController::class, 'downloadTemplate'])->name('nilai.template');
+    Route::get('/nilai/export-legger', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLegger'])->name('nilai.export-legger');
     Route::get('/nilai/siswa/{siswa}', [\App\Http\Controllers\Admin\NilaiController::class, 'siswa'])->name('nilai.siswa');
     Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester');
     

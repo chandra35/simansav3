@@ -18,7 +18,48 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class NilaiController extends Controller
 {
     /**
-     * Display nilai index
+     * Semester config per tingkat kelas
+     */
+    private function getSemesterConfig($tingkat, $tahunAktif)
+    {
+        $tahunAktifMulai = $tahunAktif ? $tahunAktif->tahun_mulai : date('Y');
+        
+        $configs = [
+            12 => [
+                1 => ['label' => 'Sem 1 (X-1)', 'offset' => -2],
+                2 => ['label' => 'Sem 2 (X-2)', 'offset' => -2],
+                3 => ['label' => 'Sem 3 (XI-1)', 'offset' => -1],
+                4 => ['label' => 'Sem 4 (XI-2)', 'offset' => -1],
+                5 => ['label' => 'Sem 5 (XII-1)', 'offset' => 0],
+            ],
+            11 => [
+                1 => ['label' => 'Sem 1 (X-1)', 'offset' => -1],
+                2 => ['label' => 'Sem 2 (X-2)', 'offset' => -1],
+                3 => ['label' => 'Sem 3 (XI-1)', 'offset' => 0],
+                4 => ['label' => 'Sem 4 (XI-2)', 'offset' => 0],
+            ],
+            10 => [
+                1 => ['label' => 'Sem 1 (X-1)', 'offset' => 0],
+                2 => ['label' => 'Sem 2 (X-2)', 'offset' => 0],
+            ],
+        ];
+        
+        return $configs[$tingkat] ?? $configs[12];
+    }
+
+    /**
+     * Get tahun pelajaran by offset from tahun aktif
+     */
+    private function getTahunPelajaranByOffset($tahunAktif, $offset)
+    {
+        if (!$tahunAktif) return null;
+        
+        $targetTahun = $tahunAktif->tahun_mulai + $offset;
+        return TahunPelajaran::where('tahun_mulai', $targetTahun)->first();
+    }
+
+    /**
+     * Display nilai index with tingkat filter
      */
     public function index(Request $request)
     {
@@ -28,26 +69,42 @@ class NilaiController extends Controller
         
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
         
-        // Get summary per semester
-        $summaryQuery = NilaiSiswa::select('semester', DB::raw('COUNT(DISTINCT siswa_id) as jumlah_siswa'))
-            ->when($request->tahun_pelajaran_id, function ($q) use ($request) {
-                return $q->where('tahun_pelajaran_id', $request->tahun_pelajaran_id);
-            }, function ($q) use ($tahunAktif) {
-                return $tahunAktif ? $q->where('tahun_pelajaran_id', $tahunAktif->id) : $q;
-            })
-            ->groupBy('semester')
-            ->get()
-            ->keyBy('semester');
+        $tingkat = $request->tingkat;
+        $semesterList = [];
+        $overviewStats = [];
         
-        $summary = [];
-        foreach (NilaiSiswa::SEMESTER_LABELS as $sem => $label) {
-            $summary[$sem] = [
-                'label' => $label,
-                'jumlah_siswa' => $summaryQuery[$sem]->jumlah_siswa ?? 0
+        if ($tingkat) {
+            // Get semester config for selected tingkat
+            $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+            
+            foreach ($semesterConfig as $sem => $config) {
+                $tahunPelajaran = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+                
+                $jumlahSiswa = 0;
+                if ($tahunPelajaran) {
+                    $jumlahSiswa = NilaiSiswa::where('semester', $sem)
+                        ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+                        ->distinct('siswa_id')
+                        ->count('siswa_id');
+                }
+                
+                $semesterList[$sem] = [
+                    'label' => $config['label'],
+                    'tahun_pelajaran' => $tahunPelajaran ? $tahunPelajaran->nama : 'Tidak ada',
+                    'tahun_pelajaran_id' => $tahunPelajaran ? $tahunPelajaran->id : null,
+                    'jumlah_siswa' => $jumlahSiswa,
+                ];
+            }
+        } else {
+            // Overview stats
+            $overviewStats = [
+                'kelas_12' => NilaiSiswa::whereIn('semester', [1,2,3,4,5])->distinct('siswa_id')->count('siswa_id'),
+                'kelas_11' => NilaiSiswa::whereIn('semester', [1,2,3,4])->distinct('siswa_id')->count('siswa_id'),
+                'kelas_10' => NilaiSiswa::whereIn('semester', [1,2])->distinct('siswa_id')->count('siswa_id'),
             ];
         }
         
-        return view('admin.nilai.index', compact('tahunPelajarans', 'tahunAktif', 'summary'));
+        return view('admin.nilai.index', compact('tahunPelajarans', 'tahunAktif', 'semesterList', 'overviewStats'));
     }
 
     /**
@@ -573,5 +630,168 @@ class NilaiController extends Controller
                 'message' => 'Gagal menghapus data nilai: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Export Legger untuk SPAN-PTKIN/SNBP
+     */
+    public function exportLegger(Request $request)
+    {
+        $tingkat = $request->tingkat ?? 12;
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tahun pelajaran aktif tidak ditemukan.');
+        }
+        
+        $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+        $urutanMapel = config('nilai.urutan_mapel');
+        
+        // Get all mapel
+        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('kode_mapel');
+        
+        // Collect tahun pelajaran IDs for all semesters
+        $tahunIds = [];
+        foreach ($semesterConfig as $sem => $config) {
+            $tahunPelajaran = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+            if ($tahunPelajaran) {
+                $tahunIds[$sem] = $tahunPelajaran->id;
+            }
+        }
+        
+        // Get all siswa yang memiliki nilai di semester manapun
+        $siswaIds = NilaiSiswa::whereIn('tahun_pelajaran_id', array_values($tahunIds))
+            ->whereIn('semester', array_keys($semesterConfig))
+            ->distinct()
+            ->pluck('siswa_id');
+        
+        $siswaList = Siswa::whereIn('id', $siswaIds)
+            ->with(['kelas' => function($q) {
+                $q->orderByDesc('tingkat');
+            }])
+            ->orderBy('nama')
+            ->get();
+        
+        // Get all nilai for these siswa
+        $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
+            ->whereIn('tahun_pelajaran_id', array_values($tahunIds))
+            ->get()
+            ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
+        
+        // Create Excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Legger Kelas ' . $tingkat);
+        
+        // Build header
+        $headers = ['No', 'NISN', 'Nama', 'JK', 'Kelas'];
+        
+        // Add semester headers per mapel
+        foreach ($urutanMapel as $kode) {
+            foreach (array_keys($semesterConfig) as $sem) {
+                $headers[] = "{$kode}_S{$sem}";
+            }
+            $headers[] = "{$kode}_AVG"; // Rata-rata
+        }
+        $headers[] = 'RATA-RATA TOTAL';
+        
+        // Write header
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getStyle($col . '1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('CCCCCC');
+            $col++;
+        }
+        
+        // Write data
+        $row = 2;
+        foreach ($siswaList as $index => $siswa) {
+            $col = 'A';
+            $sheet->setCellValue($col++ . $row, $index + 1);
+            $sheet->setCellValue($col++ . $row, $siswa->nisn);
+            $sheet->setCellValue($col++ . $row, $siswa->nama);
+            $sheet->setCellValue($col++ . $row, $siswa->jenis_kelamin == 'L' ? 'L' : 'P');
+            $sheet->setCellValue($col++ . $row, $siswa->kelas->first()->nama ?? '-');
+            
+            $totalNilai = 0;
+            $totalCount = 0;
+            
+            foreach ($urutanMapel as $kode) {
+                $mapel = $mapels[$kode] ?? null;
+                $mapelNilai = [];
+                
+                foreach (array_keys($semesterConfig) as $sem) {
+                    $nilai = null;
+                    if ($mapel && isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
+                        $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
+                    }
+                    $sheet->setCellValue($col++ . $row, $nilai ?? '');
+                    if ($nilai !== null) {
+                        $mapelNilai[] = $nilai;
+                    }
+                }
+                
+                // Average per mapel
+                $avg = count($mapelNilai) > 0 ? round(array_sum($mapelNilai) / count($mapelNilai), 2) : null;
+                $sheet->setCellValue($col++ . $row, $avg ?? '');
+                
+                if ($avg !== null) {
+                    $totalNilai += $avg;
+                    $totalCount++;
+                }
+            }
+            
+            // Total average
+            $totalAvg = $totalCount > 0 ? round($totalNilai / $totalCount, 2) : null;
+            $sheet->setCellValue($col . $row, $totalAvg ?? '');
+            
+            $row++;
+        }
+        
+        // Auto width
+        foreach (range('A', 'Z') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+        
+        // Add summary sheet
+        $summarySheet = $spreadsheet->createSheet();
+        $summarySheet->setTitle('Info Legger');
+        $summarySheet->setCellValue('A1', 'Informasi Legger');
+        $summarySheet->setCellValue('A3', 'Tingkat Kelas');
+        $summarySheet->setCellValue('B3', $tingkat);
+        $summarySheet->setCellValue('A4', 'Tahun Pelajaran Aktif');
+        $summarySheet->setCellValue('B4', $tahunAktif->nama);
+        $summarySheet->setCellValue('A5', 'Jumlah Siswa');
+        $summarySheet->setCellValue('B5', $siswaList->count());
+        $summarySheet->setCellValue('A6', 'Tanggal Export');
+        $summarySheet->setCellValue('B6', now()->format('d-m-Y H:i:s'));
+        
+        $summarySheet->setCellValue('A8', 'Mapping Semester:');
+        $rowSum = 9;
+        foreach ($semesterConfig as $sem => $config) {
+            $tahunPelajaran = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+            $summarySheet->setCellValue('A' . $rowSum, "Semester {$sem}");
+            $summarySheet->setCellValue('B' . $rowSum, $config['label']);
+            $summarySheet->setCellValue('C' . $rowSum, $tahunPelajaran ? $tahunPelajaran->nama : 'Tidak ada');
+            $rowSum++;
+        }
+        
+        $spreadsheet->setActiveSheetIndex(0);
+        
+        $filename = "legger_kelas_{$tingkat}_" . date('Y-m-d_His') . '.xlsx';
+        
+        $writer = new Xlsx($spreadsheet);
+        
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }
