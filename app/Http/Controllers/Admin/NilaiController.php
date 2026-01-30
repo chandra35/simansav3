@@ -444,6 +444,7 @@ class NilaiController extends Controller
                 ->keyBy('kode_mapel');
 
             $nilaiCount = 0;
+            $updatedCount = 0;
             $successCount = 0;
 
             foreach ($preview['data'] as $item) {
@@ -455,20 +456,39 @@ class NilaiController extends Controller
                     $mapel = $mapelByKode[$kodeMapel] ?? null;
                     if (!$mapel) continue;
                     
-                    NilaiSiswa::updateOrCreate(
-                        [
-                            'siswa_id' => $item['siswa_id'],
-                            'mata_pelajaran_id' => $mapel->id,
-                            'tahun_pelajaran_id' => $tahunPelajaranId,
-                            'semester' => $semester,
-                        ],
-                        [
+                    // Cari existing record termasuk yang soft deleted
+                    $existingNilai = NilaiSiswa::withTrashed()
+                        ->where('siswa_id', $item['siswa_id'])
+                        ->where('mata_pelajaran_id', $mapel->id)
+                        ->where('tahun_pelajaran_id', $tahunPelajaranId)
+                        ->where('semester', $semester)
+                        ->first();
+                    
+                    if ($existingNilai) {
+                        // Restore jika soft deleted dan update
+                        if ($existingNilai->trashed()) {
+                            $existingNilai->restore();
+                        }
+                        $existingNilai->update([
                             'nilai' => $nilai,
                             'predikat' => NilaiSiswa::hitungPredikat($nilai),
                             'sumber_data' => 'import_excel',
                             'imported_at' => $importedAt,
-                        ]
-                    );
+                        ]);
+                        $updatedCount++;
+                    } else {
+                        // Create baru
+                        NilaiSiswa::create([
+                            'siswa_id' => $item['siswa_id'],
+                            'mata_pelajaran_id' => $mapel->id,
+                            'tahun_pelajaran_id' => $tahunPelajaranId,
+                            'semester' => $semester,
+                            'nilai' => $nilai,
+                            'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                            'sumber_data' => 'import_excel',
+                            'imported_at' => $importedAt,
+                        ]);
+                    }
                     $nilaiCount++;
                     $siswaHasNilai = true;
                 }
@@ -482,14 +502,20 @@ class NilaiController extends Controller
             
             // Clear session
             session()->forget('nilai_preview');
+            
+            $message = "Berhasil menyimpan {$nilaiCount} nilai untuk {$successCount} siswa.";
+            if ($updatedCount > 0) {
+                $message .= " ({$updatedCount} data diperbarui)";
+            }
 
             return redirect()->route('admin.nilai.semester', $semester)
-                ->with('success', "Berhasil menyimpan {$nilaiCount} nilai untuk {$successCount} siswa.");
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error saving nilai: ' . $e->getMessage());
-            return back()->with('error', 'Gagal menyimpan nilai: ' . $e->getMessage());
+            return redirect()->route('admin.nilai.preview')
+                ->with('error', 'Gagal menyimpan nilai: ' . $e->getMessage());
         }
     }
 

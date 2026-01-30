@@ -19,6 +19,21 @@
 @stop
 
 @section('content')
+    {{-- Flash Messages --}}
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+    </div>
+    @endif
+    
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <i class="fas fa-check-circle"></i> {{ session('success') }}
+    </div>
+    @endif
+
     {{-- Summary --}}
     <div class="row">
         <div class="col-md-3">
