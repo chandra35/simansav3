@@ -659,7 +659,7 @@ class NilaiController extends Controller
         // Get kelas tingkat 12
         $kelasList = \App\Models\Kelas::where('tingkat', $tingkat)
             ->where('tahun_pelajaran_id', $tahunAktif->id)
-            ->orderBy('nama')
+            ->orderBy('nama_kelas')
             ->get();
         
         // Count siswa kelas 12
@@ -728,7 +728,7 @@ class NilaiController extends Controller
         ->with(['kelas' => function($q) use ($tahunAktif) {
             $q->where('tahun_pelajaran_id', $tahunAktif->id);
         }])
-        ->orderBy('nama');
+        ->orderBy('nama_lengkap');
         
         $siswaList = $siswaQuery->get();
         
