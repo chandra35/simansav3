@@ -70,6 +70,11 @@ class MataPelajaran extends Model
         return $this->belongsTo(Jurusan::class);
     }
 
+    public function nilaiSiswa()
+    {
+        return $this->hasMany(NilaiSiswa::class);
+    }
+
     /**
      * Scopes
      */

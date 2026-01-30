@@ -390,6 +390,13 @@ return [
                     'active' => ['admin/mapel*'],
                 ],
                 [
+                    'text' => 'Nilai Siswa',
+                    'route' => 'admin.nilai.index',
+                    'icon' => 'fas fa-fw fa-chart-line',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/nilai*'],
+                ],
+                [
                     'text' => 'Manajemen Kelas',
                     'route' => 'admin.kelas.index',
                     'icon' => 'fas fa-fw fa-school',
