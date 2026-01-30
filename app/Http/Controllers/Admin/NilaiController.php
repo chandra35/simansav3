@@ -299,20 +299,11 @@ class NilaiController extends Controller
                 return back()->with('error', 'Kode mapel tidak ditemukan di database: ' . implode(', ', $missingMapel) . '. Silakan tambahkan mapel tersebut terlebih dahulu.');
             }
 
-            // Cari baris data (baris pertama yang kolom NISN-nya berisi angka)
-            $dataStartRow = null;
-            for ($i = 0; $i < min(10, count($rows)); $i++) {
-                $nisnValue = trim(strval($rows[$i][$kolomNisn] ?? ''));
-                // Jika kolom NISN berisi angka (bukan header), ini adalah baris data
-                if (!empty($nisnValue) && is_numeric($nisnValue) && strlen($nisnValue) >= 8) {
-                    $dataStartRow = $i;
-                    break;
-                }
-            }
-            
-            if ($dataStartRow === null) {
-                return back()->with('error', 'Tidak ditemukan data siswa dengan NISN yang valid. Pastikan kolom C berisi NISN (minimal 8 digit).');
-            }
+            // Baris data dimulai dari config (1-indexed ke 0-indexed)
+            // Baris 1 = Header (index 0)
+            // Baris 2 = Data pertama (index 1)
+            $barisDataMulai = config('nilai.baris_data_mulai', 2);
+            $dataStartRow = $barisDataMulai - 1; // Convert ke 0-indexed
 
             DB::beginTransaction();
 
