@@ -664,8 +664,8 @@ class NilaiController extends Controller
         
         // Count siswa kelas 12
         $totalSiswa = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif) {
-            $q->where('tingkat', $tingkat)
-              ->where('tahun_pelajaran_id', $tahunAktif->id);
+            $q->where('kelas.tingkat', $tingkat)
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
         })->count();
         
         return view('admin.nilai.export-legger', compact(
@@ -719,14 +719,14 @@ class NilaiController extends Controller
         
         // Get siswa kelas 12 (dari kelas, bukan dari nilai)
         $siswaQuery = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
-            $q->where('tingkat', $tingkat)
-              ->where('tahun_pelajaran_id', $tahunAktif->id);
+            $q->where('kelas.tingkat', $tingkat)
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
             if (!empty($selectedKelas)) {
                 $q->whereIn('kelas.id', $selectedKelas);
             }
         })
         ->with(['kelas' => function($q) use ($tahunAktif) {
-            $q->where('tahun_pelajaran_id', $tahunAktif->id);
+            $q->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
         }])
         ->orderBy('nama_lengkap');
         
