@@ -285,8 +285,10 @@ class NilaiController extends Controller
         $sheet->setCellValue('D2', 'Nama Siswa');
         $sheet->setCellValue('E2', 'L');
         
-        // Auto width
-        foreach (range('A', $col) as $columnID) {
+        // Auto width - use column index for multi-letter columns (AA, AB, etc)
+        $lastColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($col);
+        for ($i = 1; $i <= $lastColIndex; $i++) {
+            $columnID = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
         
