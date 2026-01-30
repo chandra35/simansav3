@@ -993,52 +993,82 @@ class NilaiController extends Controller
         $staticCols = ['No', 'NISN', 'Nama Lengkap'];
         $staticColCount = count($staticCols);
         $mapelCount = $sortedMapels->count();
+        $colsPerSemester = $mapelCount + 2; // mapels + Jumlah + Total
         
-        // Build header row
+        // Row 1: Static headers (merged 1-2) + Semester headers (merged across mapel columns)
+        // Row 2: Static headers (merged) + Mapel names + Jumlah + Total
+        
+        // Write static column headers (merged row 1-2)
         $col = 'A';
-        
-        // Write static headers
         foreach ($staticCols as $header) {
-            $sheet->setCellValue($col++ . '1', $header);
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->mergeCells($col . '1:' . $col . '2');
+            $sheet->getStyle($col . '1:' . $col . '2')->getAlignment()
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $col++;
         }
         
-        // Write semester headers
+        // Write semester headers (Row 1) and mapel headers (Row 2)
+        $colIndex = $staticColCount + 1; // 1-based index for Coordinate functions
+        
         foreach ($semesterConfig as $sem => $config) {
-            // Semester marker
             $semLabel = $semesterKelas[$sem] ?? "Semester {$sem}";
             
-            // Write each mapel for this semester
+            // Calculate start and end columns for this semester
+            $startCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $endCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + $colsPerSemester - 1);
+            
+            // Row 1: Semester header (merged)
+            $sheet->setCellValue($startCol . '1', $semLabel);
+            $sheet->mergeCells($startCol . '1:' . $endCol . '1');
+            $sheet->getStyle($startCol . '1')->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($startCol . '1')->getFont()->setBold(true);
+            
+            // Row 2: Mapel names
+            $mapelColIndex = $colIndex;
             foreach ($sortedMapels as $mapel) {
-                $sheet->setCellValue($col++ . '1', $mapel->nama_mapel);
+                $mapelCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($mapelColIndex);
+                $sheet->setCellValue($mapelCol . '2', $mapel->nama_mapel);
+                $mapelColIndex++;
             }
             
             // Jumlah Mata Pelajaran column
-            $sheet->setCellValue($col . '1', "Jumlah Mata Pelajaran {$semLabel}");
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
-            $col++;
+            $jumlahCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($mapelColIndex);
+            $sheet->setCellValue($jumlahCol . '2', 'Jumlah Mapel');
+            $sheet->getStyle($jumlahCol . '2')->getFont()->setBold(true);
+            $mapelColIndex++;
             
             // Total Nilai column
-            $sheet->setCellValue($col . '1', "Total Nilai Mapel {$semLabel}");
-            $sheet->getStyle($col . '1')->getFont()->setBold(true);
-            $col++;
+            $totalCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($mapelColIndex);
+            $sheet->setCellValue($totalCol . '2', 'Total Nilai');
+            $sheet->getStyle($totalCol . '2')->getFont()->setBold(true);
+            
+            $colIndex += $colsPerSemester;
         }
         
-        // Style header row
-        $lastCol = $col;
-        $lastColPrev = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(
-            \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($col) - 1
-        );
-        $sheet->getStyle('A1:' . $lastColPrev . '1')->getFont()->setBold(true);
+        // Calculate last column
+        $lastColIndex = $colIndex - 1;
+        $lastColPrev = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIndex);
+        
+        // Style header rows
+        $sheet->getStyle('A1:' . $lastColPrev . '2')->getFont()->setBold(true);
         $sheet->getStyle('A1:' . $lastColPrev . '1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('D9EAD3');
-        $sheet->getStyle('A1:' . $lastColPrev . '1')->getBorders()->getAllBorders()
+            ->getStartColor()->setRGB('4A90D9'); // Blue for semester row
+        $sheet->getStyle('A1:' . $lastColPrev . '1')->getFont()->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A2:' . $lastColPrev . '2')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('D9EAD3'); // Light green for mapel row
+        $sheet->getStyle('A1:' . $lastColPrev . '2')->getBorders()->getAllBorders()
             ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-        $sheet->getStyle('A1:' . $lastColPrev . '1')->getAlignment()->setWrapText(true);
-        $sheet->getRowDimension(1)->setRowHeight(40);
+        $sheet->getStyle('A2:' . $lastColPrev . '2')->getAlignment()->setWrapText(true);
+        $sheet->getRowDimension(1)->setRowHeight(25);
+        $sheet->getRowDimension(2)->setRowHeight(40);
         
-        // Write data starting from row 2
-        $row = 2;
+        // Write data starting from row 3
+        $row = 3;
         foreach ($siswaList as $index => $siswa) {
             $col = 'A';
             $sheet->setCellValue($col++ . $row, $index + 1);
@@ -1076,7 +1106,7 @@ class NilaiController extends Controller
         
         // Add borders to data
         $lastDataRow = $row - 1;
-        $sheet->getStyle('A2:' . $lastColPrev . $lastDataRow)->getBorders()->getAllBorders()
+        $sheet->getStyle('A3:' . $lastColPrev . $lastDataRow)->getBorders()->getAllBorders()
             ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
         
         // Auto width for first columns
@@ -1101,8 +1131,8 @@ class NilaiController extends Controller
             $colIndex++;
         }
         
-        // Freeze pane
-        $sheet->freezePane('D2');
+        // Freeze pane (freeze after row 2 headers and column C)
+        $sheet->freezePane('D3');
         
         $filename = "legger_span_ptkin_" . date('Y-m-d_His') . '.xlsx';
         
