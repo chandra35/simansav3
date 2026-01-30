@@ -10,7 +10,7 @@ return [
     | Urutan ini digunakan untuk menentukan kolom mana berisi nilai mapel apa.
     |
     | Format Excel yang diharapkan:
-    | No | NIS | NISN | Nama | JK | QH | AA | FIK | SKI | BAR | PP | BINDO | MTK | BING | PJOK | SEJ | SB | PRKW MULOK | THF | BIO | KIM | FIS | INFOP | MTL | EKO
+    | No | NIS | NISN | Nama | JK | QH | AA | FIK | SKI | BAR | PP | BINDO | MTK | IPAT | IPST | BING | PJOK | INFO | SB | MULOK PRKW | BLMP | KAG | THF
     |
     */
 
@@ -27,16 +27,12 @@ return [
         'IPST',         // 10. IPS Terpadu
         'BING',         // 11. Bahasa Inggris
         'PJOK',         // 12. Pendidikan Jasmani Olahraga dan Kesehatan
-        'SEJ',          // 13. Sejarah
+        'INFO',         // 13. Informatika
         'SB',           // 14. Seni Budaya
         'MULOK PRKW',   // 15. Muatan Lokal Prakarya
-        'THF',          // 16. Tahfidz
-        'BIO',          // 17. Biologi
-        'KIM',          // 18. Kimia
-        'FIS',          // 19. Fisika
-        'INFOP',        // 20. Informatika Peminatan
-        'MTL',          // 21. Matematika Lanjut
-        'EKO',          // 22. Ekonomi
+        'BLMP',         // 16. Bimbingan Lomba/Prestasi
+        'KAG',          // 17. Keagamaan
+        'THF',          // 18. Tahfidz
     ],
 
     /*
