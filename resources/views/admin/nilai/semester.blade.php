@@ -43,6 +43,7 @@
                 <div class="form-group mr-3">
                     <label class="mr-2">Tahun Pelajaran:</label>
                     <select name="tahun_pelajaran_id" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Semua Tahun --</option>
                         @foreach($tahunPelajarans as $tp)
                             <option value="{{ $tp->id }}" {{ ($selectedTahun && $selectedTahun->id == $tp->id) ? 'selected' : '' }}>
                                 {{ $tp->nama }} {{ $tp->is_active ? '(Aktif)' : '' }}
@@ -50,6 +51,11 @@
                         @endforeach
                     </select>
                 </div>
+                @if($selectedTahun)
+                <span class="text-muted ml-2">
+                    <i class="fas fa-info-circle"></i> Menampilkan nilai tahun: {{ $selectedTahun->nama }}
+                </span>
+                @endif
             </form>
         </div>
     </div>

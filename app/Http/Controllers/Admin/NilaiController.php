@@ -58,9 +58,24 @@ class NilaiController extends Controller
             ->get();
         
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
-        $selectedTahun = $request->tahun_pelajaran_id 
-            ? TahunPelajaran::find($request->tahun_pelajaran_id) 
-            : $tahunAktif;
+        
+        // Jika ada request tahun_pelajaran_id, gunakan itu
+        // Jika tidak, coba gunakan tahun aktif
+        // Jika tidak ada tahun aktif, cari tahun pelajaran yang ada nilainya
+        $selectedTahun = null;
+        if ($request->tahun_pelajaran_id) {
+            $selectedTahun = TahunPelajaran::find($request->tahun_pelajaran_id);
+        } elseif ($tahunAktif) {
+            $selectedTahun = $tahunAktif;
+        } else {
+            // Cari tahun pelajaran yang ada nilainya
+            $tahunIdWithNilai = NilaiSiswa::where('semester', $semester)
+                ->distinct()
+                ->first(['tahun_pelajaran_id']);
+            if ($tahunIdWithNilai) {
+                $selectedTahun = TahunPelajaran::find($tahunIdWithNilai->tahun_pelajaran_id);
+            }
+        }
         
         $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$semester] ?? "Semester {$semester}";
         
