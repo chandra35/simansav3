@@ -169,18 +169,19 @@ class NilaiController extends Controller
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
 
-            if (count($rows) < 7) {
+            if (count($rows) < 8) {
                 return back()->with('error', 'File Excel kosong atau format tidak sesuai.');
             }
 
             // Format Excel RDM:
-            // Baris 1: kosong
+            // Baris 1: LEGGER NILAI XII.2
             // Baris 2: Kelas, Semester
             // Baris 3: Madrasah, Tahun Ajaran
             // Baris 4: kosong
-            // Baris 5: Header grup (PAI merged, dll)
-            // Baris 6: Header kolom (No, NIS, Nisn, Nama, JK, QH, AA, FIK, ...)
-            // Baris 7+: Data siswa
+            // Baris 5: kosong
+            // Baris 6: No, NIS, Nisn, Nama, JK, PAI (merged), BAR, PP, ..., MULOK (merged), THF, KMPM (merged), KMPS (merged)
+            // Baris 7: (kosong), (kosong), ..., QH, AA, FIK, SKI, ..., PRKW, ..., BIO, KIM, FIS, INFOP, MTL, EKO
+            // Baris 8+: Data siswa
 
             // Cari baris header (baris yang mengandung "Nisn")
             $headerRowIndex = null;
@@ -196,11 +197,17 @@ class NilaiController extends Controller
                 return back()->with('error', 'Kolom NISN tidak ditemukan di header Excel. Pastikan format sesuai dengan Excel RDM.');
             }
 
-            // Header row
-            $header = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex])));
+            // Header row 1 (main header)
+            $header1 = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex])));
+            
+            // Header row 2 (sub header for merged cells like PAI -> QH, AA, FIK, SKI)
+            $header2 = [];
+            if (isset($rows[$headerRowIndex + 1])) {
+                $header2 = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex + 1])));
+            }
             
             // Cari index kolom NISN
-            $nisnIndex = array_search('NISN', $header);
+            $nisnIndex = array_search('NISN', $header1);
             
             // Get semua mapel dengan kode
             $mapelByKode = MataPelajaran::where('is_active', true)
@@ -209,12 +216,23 @@ class NilaiController extends Controller
                     return strtoupper($item->kode_mapel);
                 });
 
-            // Mapping header ke mapel (skip kolom sebelum mapel: No, NIS, Nisn, Nama, JK)
+            // Mapping header ke mapel
+            // Prioritas: header2 (detail) jika ada, fallback ke header1
             $mapelMapping = [];
-            $skipColumns = ['NO', 'NIS', 'NISN', 'NAMA', 'JK', 'JUMLAH', ''];
+            $skipColumns = ['NO', 'NIS', 'NISN', 'NAMA', 'JK', 'JUMLAH', 'PAI', 'KMPM', 'KMPS', ''];
             
-            foreach ($header as $index => $col) {
-                $kode = strtoupper(trim($col));
+            for ($index = 0; $index < max(count($header1), count($header2)); $index++) {
+                // Cek header2 dulu (sub-header untuk detail mapel)
+                $kode2 = isset($header2[$index]) ? strtoupper(trim($header2[$index])) : '';
+                $kode1 = isset($header1[$index]) ? strtoupper(trim($header1[$index])) : '';
+                
+                // Gunakan header2 jika ada dan bukan kosong, else gunakan header1
+                $kode = !empty($kode2) ? $kode2 : $kode1;
+                
+                // Handle MULOK PRKW (split across 2 rows: MULOK + PRKW)
+                if ($kode1 === 'MULOK' && $kode2 === 'PRKW') {
+                    $kode = 'MULOK PRKW';
+                }
                 
                 // Skip kolom non-mapel
                 if (in_array($kode, $skipColumns)) continue;
@@ -237,8 +255,23 @@ class NilaiController extends Controller
             $notFoundNisn = [];
             $importedAt = now();
 
-            // Process data rows (mulai dari baris setelah header)
-            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+            // Tentukan baris data dimulai (setelah header2 jika ada sub-header, else setelah header1)
+            $dataStartRow = $headerRowIndex + 1;
+            // Cek apakah baris berikutnya adalah sub-header (mengandung QH, AA, dll) atau data
+            if (isset($rows[$headerRowIndex + 1])) {
+                $potentialSubHeader = array_map('strtoupper', array_map('trim', array_map('strval', $rows[$headerRowIndex + 1])));
+                // Jika ada QH, AA, FIK, SKI atau BIO, KIM, dll di baris ini, ini adalah sub-header
+                $subHeaderMapels = ['QH', 'AA', 'FIK', 'SKI', 'BIO', 'KIM', 'FIS', 'EKO', 'PRKW'];
+                foreach ($potentialSubHeader as $val) {
+                    if (in_array($val, $subHeaderMapels)) {
+                        $dataStartRow = $headerRowIndex + 2;
+                        break;
+                    }
+                }
+            }
+
+            // Process data rows
+            for ($i = $dataStartRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 $nisn = trim(strval($row[$nisnIndex] ?? ''));
                 
