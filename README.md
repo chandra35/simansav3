@@ -7,6 +7,22 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## SIMANSA V3
+
+### Update (Windows)
+
+Jalankan dari root project:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\update-simansa.ps1
+```
+
+### Update (Linux/Server)
+
+```bash
+./update-simansa.sh
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
