@@ -668,6 +668,14 @@ return [
             'can' => 'manage-settings',
             'submenu' => [
                 [
+                    'text' => 'Exam Browser',
+                    'route' => 'admin.exam-browser.index',
+                    'icon' => 'fas fa-fw fa-desktop',
+                    'icon_color' => 'info',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/exam-browser*'],
+                ],
+                [
                     'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',

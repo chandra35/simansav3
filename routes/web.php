@@ -379,6 +379,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/snbp-menu/{snbpMenu}/assign-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'assignNotEligible'])->name('snbp-menu.assign-not-eligible');
     Route::post('/snbp-menu/{snbpMenu}/store-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeNotEligible'])->name('snbp-menu.store-not-eligible');
     Route::delete('/snbp-menu/{snbpSiswa}/remove-assignment', [App\Http\Controllers\Admin\SnbpMenuController::class, 'removeAssignment'])->name('snbp-menu.remove-assignment');
+    
+    // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================
+    Route::get('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'index'])->name('exam-browser.index');
+    Route::put('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'update'])->name('exam-browser.update');
+    Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
+    Route::post('/exam-browser/generate-seb-key', [App\Http\Controllers\Admin\ExamBrowserController::class, 'generateSebKey'])->name('exam-browser.generate-seb-key');
+    Route::get('/exam-browser/preview-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'previewConfig'])->name('exam-browser.preview-config');
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)
@@ -489,4 +496,13 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
     Route::get('/api/districts/{city}', [App\Http\Controllers\Siswa\OrtuController::class, 'getDistricts'])->name('api.districts');
     Route::get('/api/villages/{district}', [App\Http\Controllers\Siswa\OrtuController::class, 'getVillages'])->name('api.villages');
+});
+
+// ==================== PUBLIC API: EXAM BROWSER (ExamAnmet App) ====================
+// These endpoints are consumed by the mobile ExamAnmet app
+// No authentication required - data is non-sensitive config
+Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () {
+    Route::get('/ping', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'ping'])->name('ping');
+    Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])->name('config');
+    Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])->name('verify-password');
 });
