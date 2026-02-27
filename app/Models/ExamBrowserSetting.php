@@ -108,6 +108,7 @@ class ExamBrowserSetting extends Model
             'allow_clipboard' => $this->allow_clipboard,
             'allow_navigation' => $this->allow_navigation,
             'allow_reload' => $this->allow_reload,
+            'is_active' => $this->is_active,
             'show_toolbar' => $this->show_toolbar,
             'allowed_urls' => $this->allowed_urls_array,
             'blocked_apps' => $this->blocked_apps_array,
