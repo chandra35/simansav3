@@ -16,7 +16,7 @@
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-paper-plane"></i> Kirim Notifikasi Baru</h3>
             </div>
-            <form action="{{ route('exam-notifications.store') }}" method="POST">
+            <form action="{{ route('admin.exam-notifications.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
                     @if($errors->any())
@@ -157,7 +157,7 @@
                                     </td>
                                     <td>
                                         @if($notif->is_active)
-                                            <form action="{{ route('exam-notifications.destroy', $notif) }}" method="POST"
+                                            <form action="{{ route('admin.exam-notifications.destroy', $notif) }}" method="POST"
                                                   onsubmit="return confirm('Nonaktifkan notifikasi ini?')">
                                                 @csrf
                                                 @method('DELETE')
