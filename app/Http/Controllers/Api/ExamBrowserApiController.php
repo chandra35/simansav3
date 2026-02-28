@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamBrowserSetting;
+use App\Models\ExamNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -80,9 +81,37 @@ class ExamBrowserApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => 'ExamAnmet API is running',
+            'message' => 'ExaManmet API is running',
             'timestamp' => now()->toIso8601String(),
             'version' => '1.0.0',
+        ]);
+    }
+
+    /**
+     * Get notifications for the app.
+     * Supports ?since=ISO8601 to get only newer notifications.
+     */
+    public function notifications(Request $request): JsonResponse
+    {
+        $query = ExamNotification::active()->orderBy('created_at', 'desc');
+
+        // If 'since' parameter provided, only return newer notifications
+        if ($request->has('since')) {
+            try {
+                $since = \Carbon\Carbon::parse($request->input('since'));
+                $query->newerThan($since);
+            } catch (\Exception $e) {
+                // Ignore invalid date
+            }
+        }
+
+        $notifications = $query->limit(20)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications->map->toApiFormat(),
+            'count' => $notifications->count(),
+            'server_time' => now()->toIso8601String(),
         ]);
     }
 }

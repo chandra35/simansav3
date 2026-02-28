@@ -386,6 +386,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
     Route::post('/exam-browser/generate-seb-key', [App\Http\Controllers\Admin\ExamBrowserController::class, 'generateSebKey'])->name('exam-browser.generate-seb-key');
     Route::get('/exam-browser/preview-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'previewConfig'])->name('exam-browser.preview-config');
+
+    // ==================== FITUR BARU: NOTIFIKASI EXAM BROWSER ====================
+    Route::get('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'index'])->name('exam-notifications.index');
+    Route::post('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'store'])->name('exam-notifications.store');
+    Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)
@@ -505,4 +510,5 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
     Route::get('/ping', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'ping'])->name('ping');
     Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])->name('config');
     Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])->name('verify-password');
+    Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])->name('notifications');
 });

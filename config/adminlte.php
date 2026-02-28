@@ -676,6 +676,14 @@ return [
                     'active' => ['admin/exam-browser*'],
                 ],
                 [
+                    'text' => 'Notifikasi Exam',
+                    'route' => 'admin.exam-notifications.index',
+                    'icon' => 'fas fa-fw fa-bell',
+                    'icon_color' => 'warning',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/exam-notifications*'],
+                ],
+                [
                     'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
