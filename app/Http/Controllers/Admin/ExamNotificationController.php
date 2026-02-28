@@ -37,7 +37,7 @@ class ExamNotificationController extends Controller
 
         ExamNotification::create($validated);
 
-        return redirect()->route('exam-notifications.index')
+        return redirect()->route('admin.exam-notifications.index')
             ->with('success', 'Notifikasi berhasil dikirim ke semua device.');
     }
 
@@ -48,7 +48,7 @@ class ExamNotificationController extends Controller
     {
         $examNotification->update(['is_active' => false]);
 
-        return redirect()->route('exam-notifications.index')
+        return redirect()->route('admin.exam-notifications.index')
             ->with('success', 'Notifikasi berhasil dinonaktifkan.');
     }
 
