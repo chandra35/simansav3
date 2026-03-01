@@ -80,15 +80,25 @@
         </div>
 
         {{-- Info Card --}}
-        <div class="card card-info card-outline">
+        <div class="card card-{{ $fcmConfigured ? 'success' : 'warning' }} card-outline">
             <div class="card-body">
-                <h6><i class="fas fa-info-circle"></i> Cara Kerja</h6>
-                <ul class="mb-0 pl-3">
-                    <li><strong>Saat app terbuka:</strong> Notifikasi muncul dalam <strong>~30 detik</strong></li>
-                    <li><strong>Saat app tertutup:</strong> Notifikasi muncul dalam <strong>~15 menit</strong></li>
-                    <li>Tipe <strong>Urgent</strong> akan muncul sebagai dialog popup di app</li>
-                    <li>Tipe <strong>Info/Warning</strong> muncul sebagai notifikasi biasa</li>
-                </ul>
+                @if($fcmConfigured)
+                    <h6><i class="fas fa-bolt text-success"></i> Push Notification Aktif (Realtime)</h6>
+                    <ul class="mb-0 pl-3">
+                        <li><strong>Saat app terbuka:</strong> Notifikasi muncul <strong>INSTAN</strong> via push</li>
+                        <li><strong>Saat app tertutup:</strong> Notifikasi muncul <strong>INSTAN</strong> via push</li>
+                        <li>Tipe <strong>Urgent</strong> akan muncul sebagai dialog popup di app</li>
+                        <li>Tipe <strong>Info/Warning</strong> muncul sebagai notifikasi biasa</li>
+                    </ul>
+                @else
+                    <h6><i class="fas fa-exclamation-triangle text-warning"></i> Push Notification Belum Dikonfigurasi</h6>
+                    <ul class="mb-0 pl-3">
+                        <li><strong>Saat app terbuka:</strong> Notifikasi muncul dalam <strong>~30 detik</strong> (polling)</li>
+                        <li><strong>Saat app tertutup:</strong> Notifikasi muncul dalam <strong>~15 menit</strong> (polling)</li>
+                        <li class="text-info mt-1">Konfigurasi Firebase untuk push notification realtime</li>
+                        <li class="text-muted"><small>Letakkan <code>service-account.json</code> di <code>storage/app/firebase/</code></small></li>
+                    </ul>
+                @endif
             </div>
         </div>
     </div>

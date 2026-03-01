@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamNotification;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ExamNotificationController extends Controller
 {
@@ -16,11 +18,15 @@ class ExamNotificationController extends Controller
         $notifications = ExamNotification::orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.exam-notifications.index', compact('notifications'));
+        // Check if FCM is configured
+        $fcmService = new FcmService();
+        $fcmConfigured = $fcmService->isConfigured();
+
+        return view('admin.exam-notifications.index', compact('notifications', 'fcmConfigured'));
     }
 
     /**
-     * Store a new notification
+     * Store a new notification and push via FCM
      */
     public function store(Request $request)
     {
@@ -35,10 +41,34 @@ class ExamNotificationController extends Controller
         $validated['sent_by'] = auth()->id();
         $validated['is_active'] = true;
 
-        ExamNotification::create($validated);
+        $notification = ExamNotification::create($validated);
+
+        // Send real-time push notification via FCM
+        $fcmSent = false;
+        try {
+            $fcm = new FcmService();
+            if ($fcm->isConfigured()) {
+                $fcmSent = $fcm->sendToAllDevices(
+                    $validated['title'],
+                    $validated['message'],
+                    $validated['type'],
+                    $notification->id,
+                );
+            }
+        } catch (\Exception $e) {
+            Log::warning('[ExamNotification] FCM push failed: ' . $e->getMessage());
+        }
+
+        $successMsg = 'Notifikasi berhasil dikirim ke semua device.';
+        if ($fcmSent) {
+            $successMsg = 'Notifikasi berhasil dikirim secara REALTIME ke semua device via push notification.';
+        } else {
+            $successMsg = 'Notifikasi berhasil disimpan. (Push FCM tidak aktif — device akan menerima saat polling berikutnya)';
+        }
 
         return redirect()->route('admin.exam-notifications.index')
-            ->with('success', 'Notifikasi berhasil dikirim ke semua device.');
+            ->with('success', $successMsg);
+    }
     }
 
     /**
