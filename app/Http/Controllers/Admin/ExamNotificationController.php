@@ -69,7 +69,6 @@ class ExamNotificationController extends Controller
         return redirect()->route('admin.exam-notifications.index')
             ->with('success', $successMsg);
     }
-    }
 
     /**
      * Deactivate a notification
