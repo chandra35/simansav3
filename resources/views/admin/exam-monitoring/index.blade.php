@@ -95,7 +95,7 @@
         </div>
         <div class="refresh-ind">
             <span class="spinner-grow spinner-grow-sm text-success"></span>
-            Auto <span id="countdown">10</span>s
+            Auto <span id="countdown">5</span>s
         </div>
         <button class="btn btn-sm btn-outline-primary" onclick="refreshData()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
     </div>
@@ -296,17 +296,17 @@
 const csrf = '{{ csrf_token() }}';
 let activeFilter = 'all';
 let allSessions = [];
-let cd = 10;
+let cd = 5;
 
 // ===== Auto Refresh =====
 setInterval(() => {
     cd--;
     document.getElementById('countdown').textContent = cd;
-    if (cd <= 0) { cd = 10; refreshData(); }
+    if (cd <= 0) { cd = 5; refreshData(); }
 }, 1000);
 
 function refreshData() {
-    cd = 10;
+    cd = 5;
     document.getElementById('countdown').textContent = '...';
     fetch('{{ route("admin.exam-monitoring.api.sessions") }}?date=' + currentDateFilter)
         .then(r => r.json())
@@ -317,9 +317,9 @@ function refreshData() {
                 renderTable();
                 updateFilterCounts();
             }
-            document.getElementById('countdown').textContent = '10';
+            document.getElementById('countdown').textContent = '5';
         })
-        .catch(() => { document.getElementById('countdown').textContent = '10'; });
+        .catch(() => { document.getElementById('countdown').textContent = '5'; });
 }
 
 function updateStats(st) {
@@ -443,11 +443,14 @@ function lockSession(id) {
         inputValidator: v => { if (!v) return 'Alasan wajib diisi!'; }
     }).then(r => {
         if (r.isConfirmed) {
+            // Optimistic UI — instant visual feedback
+            const s = allSessions.find(x => x.id == id);
+            if (s) { s.is_locked = true; s.lock_reason = r.value; renderTable(); }
             fetch(`/admin/exam-monitoring/${id}/lock`, {
                 method: 'POST',
                 headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
                 body: JSON.stringify({reason: r.value})
-            }).then(r=>r.json()).then(d => { if(d.success) { toast('Ujian dikunci!','success'); refreshData(); }});
+            }).then(r=>r.json()).then(d => { if(d.success) { toast('Ujian dikunci! (FCM terkirim)','success'); refreshData(); } else { refreshData(); }}).catch(() => refreshData());
         }
     });
 }
@@ -463,9 +466,12 @@ function unlockSession(id) {
         cancelButtonText: 'Batal'
     }).then(r => {
         if (r.isConfirmed) {
+            // Optimistic UI — instant visual feedback
+            const s = allSessions.find(x => x.id == id);
+            if (s) { s.is_locked = false; s.lock_reason = null; renderTable(); }
             fetch(`/admin/exam-monitoring/${id}/unlock`, {
                 method: 'POST', headers: {'X-CSRF-TOKEN':csrf}
-            }).then(r=>r.json()).then(d => { if(d.success) { toast('Kunci dibuka!','success'); refreshData(); }});
+            }).then(r=>r.json()).then(d => { if(d.success) { toast('Kunci dibuka! (FCM terkirim)','success'); refreshData(); } else { refreshData(); }}).catch(() => refreshData());
         }
     });
 }
@@ -530,12 +536,15 @@ function bulkLock() {
         confirmButtonColor: '#dc3545', confirmButtonText: 'Kunci Semua'
     }).then(r => {
         if (r.isConfirmed) {
+            // Optimistic UI — update local state immediately
+            t.forEach(s => { s.is_locked = true; s.lock_reason = 'Kunci massal oleh pengawas'; });
+            renderTable();
             Promise.all(t.map(s =>
                 fetch(`/admin/exam-monitoring/${s.id}/lock`, {
                     method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
                     body: JSON.stringify({reason:'Kunci massal oleh pengawas'})
                 })
-            )).then(() => { toast(`${t.length} siswa dikunci`,'success'); refreshData(); });
+            )).then(() => { toast(`${t.length} siswa dikunci (FCM terkirim)`,'success'); refreshData(); });
         }
     });
 }
@@ -549,9 +558,12 @@ function bulkUnlock() {
         confirmButtonColor: '#28a745', confirmButtonText: 'Buka Semua'
     }).then(r => {
         if (r.isConfirmed) {
+            // Optimistic UI — update local state immediately
+            t.forEach(s => { s.is_locked = false; s.lock_reason = null; });
+            renderTable();
             Promise.all(t.map(s =>
                 fetch(`/admin/exam-monitoring/${s.id}/unlock`, {method:'POST',headers:{'X-CSRF-TOKEN':csrf}})
-            )).then(() => { toast(`${t.length} siswa dibuka`,'success'); refreshData(); });
+            )).then(() => { toast(`${t.length} siswa dibuka (FCM terkirim)`,'success'); refreshData(); });
         }
     });
 }
