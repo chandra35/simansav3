@@ -5,258 +5,269 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
-    .stats-card {
-        border-radius: 10px;
-        padding: 15px 20px;
-        color: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .stats-card .stats-number { font-size: 2rem; font-weight: 700; line-height: 1; }
-    .stats-card .stats-label { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
-    .stats-online { background: linear-gradient(135deg, #28a745, #1e7e34); }
-    .stats-total { background: linear-gradient(135deg, #007bff, #0056b3); }
-    .stats-locked { background: linear-gradient(135deg, #dc3545, #bd2130); }
-    .stats-violations { background: linear-gradient(135deg, #ffc107, #d39e00); }
+    /* Stats cards - compact */
+    .stat-box { border-radius: 8px; padding: 12px 16px; color: #fff; }
+    .stat-box .num { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .stat-box .lbl { font-size: 0.72rem; opacity: 0.9; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .bg-stat-total { background: linear-gradient(135deg,#007bff,#0056b3); }
+    .bg-stat-online { background: linear-gradient(135deg,#28a745,#1e7e34); }
+    .bg-stat-idle { background: linear-gradient(135deg,#fd7e14,#e8590c); }
+    .bg-stat-locked { background: linear-gradient(135deg,#dc3545,#bd2130); }
+    .bg-stat-violation { background: linear-gradient(135deg,#ffc107,#d39e00); }
+    .bg-stat-offline { background: linear-gradient(135deg,#6c757d,#495057); }
 
-    .session-card {
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s;
-        margin-bottom: 12px;
-    }
-    .session-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .session-card.locked { border-left: 4px solid #dc3545; background: #fff5f5; }
-    .session-card.has-violations { border-left: 4px solid #ffc107; }
+    /* Status dots */
+    .sd { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .sd.online { background: #28a745; box-shadow: 0 0 5px rgba(40,167,69,.5); animation: pulse 2s infinite; }
+    .sd.idle { background: #fd7e14; }
+    .sd.offline { background: #dc3545; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-    .status-dot {
-        width: 10px; height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 6px;
-    }
-    .status-dot.online { background: #28a745; box-shadow: 0 0 6px rgba(40,167,69,0.5); animation: pulse 2s infinite; }
-    .status-dot.idle { background: #ffc107; }
-    .status-dot.offline { background: #dc3545; }
+    /* Compact table */
+    #tbl-sessions { font-size: 0.82rem; }
+    #tbl-sessions th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .3px; background: #f8f9fa; border-bottom: 2px solid #dee2e6; white-space: nowrap; padding: 8px 10px; }
+    #tbl-sessions td { padding: 6px 10px; vertical-align: middle; }
+    #tbl-sessions tbody tr:hover { background: #f0f7ff; }
+    #tbl-sessions tbody tr.row-locked { background: #fff5f5; }
+    #tbl-sessions tbody tr.row-locked:hover { background: #ffe8e8; }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
+    /* Violation chip */
+    .v-chip { display: inline-block; border-radius: 12px; padding: 1px 8px; font-size: .7rem; font-weight: 700; }
+    .v-chip.danger { background: #dc3545; color: #fff; }
+    .v-chip.warning { background: #ffc107; color: #000; }
+    .v-chip.ok { background: #e9ecef; color: #6c757d; }
 
-    .violation-badge {
-        background: linear-gradient(135deg, #dc3545, #bd2130);
-        color: #fff;
-        border-radius: 20px;
-        padding: 2px 10px;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .violation-badge.warning {
-        background: linear-gradient(135deg, #ffc107, #d39e00);
-        color: #000;
-    }
+    /* Lock badge */
+    .lock-badge { background: #dc3545; color: #fff; border-radius: 4px; padding: 1px 6px; font-size: .68rem; font-weight: 700; }
 
-    .btn-lock {
-        border-radius: 20px;
-        font-size: 0.78rem;
-        padding: 4px 14px;
-        font-weight: 600;
-    }
+    /* Action buttons */
+    .btn-xs { padding: 2px 8px; font-size: .72rem; border-radius: 4px; }
 
-    .auto-refresh-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: #6c757d;
-        font-size: 0.8rem;
-    }
-    .auto-refresh-indicator .spinner-grow {
-        width: 8px; height: 8px;
-    }
+    /* Filter tabs */
+    .filter-tabs .btn { border-radius: 20px; font-size: .78rem; padding: 4px 14px; font-weight: 600; }
+    .filter-tabs .btn.active { box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 
-    .siswa-avatar {
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #e9ecef;
-    }
-    .siswa-avatar-placeholder {
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #6c757d, #495057);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
+    /* Avatar */
+    .av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid #dee2e6; }
+    .av-ph { width: 28px; height: 28px; border-radius: 50%; background: #6c757d; color: #fff; display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 700; }
 
-    .device-info { font-size: 0.75rem; color: #6c757d; }
+    /* Refresh indicator */
+    .refresh-ind { display: inline-flex; align-items: center; gap: 5px; color: #6c757d; font-size: .75rem; }
+    .refresh-ind .spinner-grow { width: 7px; height: 7px; }
 
-    .violation-timeline { max-height: 400px; overflow-y: auto; }
-    .violation-item {
-        padding: 8px 12px;
-        border-left: 3px solid #dee2e6;
-        margin-bottom: 8px;
-        background: #f8f9fa;
-        border-radius: 0 6px 6px 0;
-    }
-    .violation-item.danger { border-left-color: #dc3545; }
-    .violation-item.warning { border-left-color: #ffc107; }
-    .violation-item.info { border-left-color: #17a2b8; }
+    /* Violation modal */
+    .viol-item { padding: 7px 10px; border-left: 3px solid #dee2e6; margin-bottom: 6px; background: #f8f9fa; border-radius: 0 4px 4px 0; font-size: .82rem; }
+    .viol-item.danger { border-left-color: #dc3545; }
+    .viol-item.warning { border-left-color: #ffc107; }
+    .viol-item.info { border-left-color: #17a2b8; }
+    .viol-list { max-height: 400px; overflow-y: auto; }
 
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #adb5bd;
-    }
-    .empty-state i { font-size: 4rem; margin-bottom: 15px; }
+    /* Scrollable table container */
+    .table-wrap { max-height: calc(100vh - 340px); overflow-y: auto; }
+    .table-wrap thead th { position: sticky; top: 0; z-index: 2; }
+
+    /* Search box */
+    .search-box input { border-radius: 20px; font-size: .82rem; padding: 5px 14px; width: 220px; }
 </style>
 @endsection
 
 @section('content_header')
-<div class="d-flex justify-content-between align-items-center">
+<div class="d-flex justify-content-between align-items-center flex-wrap">
     <div>
-        <h1 class="mb-0"><i class="fas fa-tv mr-2 text-primary"></i>Monitoring Ujian</h1>
-        <small class="text-muted">Pantau aktivitas siswa secara real-time</small>
+        <h1 class="h4 mb-0"><i class="fas fa-tv mr-2 text-primary"></i>Monitoring Ujian</h1>
+        <small class="text-muted">Real-time monitoring peserta ujian ExaManmet</small>
     </div>
-    <div class="auto-refresh-indicator">
-        <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
-        Auto-refresh <span id="countdown">10</span>s
+    <div class="d-flex align-items-center">
+        <div class="refresh-ind mr-3">
+            <span class="spinner-grow spinner-grow-sm text-success"></span>
+            Auto <span id="countdown">10</span>s
+        </div>
+        <button class="btn btn-sm btn-outline-primary" onclick="refreshData()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
     </div>
 </div>
 @endsection
 
 @section('content')
-{{-- Stats Cards --}}
-<div class="row mb-4">
-    <div class="col-md-3 col-6 mb-2">
-        <div class="stats-card stats-total">
-            <div class="stats-number" id="stat-total">{{ $stats['total_active'] }}</div>
-            <div class="stats-label"><i class="fas fa-users mr-1"></i>Total Aktif</div>
+{{-- Stats Row --}}
+<div class="row mb-3">
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-total">
+            <div class="num" id="s-total">{{ $stats['total_active'] }}</div>
+            <div class="lbl"><i class="fas fa-users mr-1"></i>Total Aktif</div>
         </div>
     </div>
-    <div class="col-md-3 col-6 mb-2">
-        <div class="stats-card stats-online">
-            <div class="stats-number" id="stat-online">{{ $stats['online'] }}</div>
-            <div class="stats-label"><i class="fas fa-circle mr-1"></i>Online</div>
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-online">
+            <div class="num" id="s-online">{{ $stats['online'] }}</div>
+            <div class="lbl"><i class="fas fa-wifi mr-1"></i>Online</div>
         </div>
     </div>
-    <div class="col-md-3 col-6 mb-2">
-        <div class="stats-card stats-locked">
-            <div class="stats-number" id="stat-locked">{{ $stats['locked'] }}</div>
-            <div class="stats-label"><i class="fas fa-lock mr-1"></i>Terkunci</div>
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-idle">
+            <div class="num" id="s-idle">{{ $stats['idle'] ?? 0 }}</div>
+            <div class="lbl"><i class="fas fa-clock mr-1"></i>Idle</div>
         </div>
     </div>
-    <div class="col-md-3 col-6 mb-2">
-        <div class="stats-card stats-violations">
-            <div class="stats-number" id="stat-violations">{{ $stats['with_violations'] }}</div>
-            <div class="stats-label"><i class="fas fa-exclamation-triangle mr-1"></i>Bermasalah</div>
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-offline">
+            <div class="num" id="s-offline">{{ $stats['offline'] ?? 0 }}</div>
+            <div class="lbl"><i class="fas fa-plug mr-1"></i>Offline</div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-locked">
+            <div class="num" id="s-locked">{{ $stats['locked'] }}</div>
+            <div class="lbl"><i class="fas fa-lock mr-1"></i>Terkunci</div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 mb-2">
+        <div class="stat-box bg-stat-violation">
+            <div class="num" id="s-violations">{{ $stats['with_violations'] }}</div>
+            <div class="lbl"><i class="fas fa-exclamation-triangle mr-1"></i>Bermasalah</div>
         </div>
     </div>
 </div>
 
-{{-- Session List --}}
-<div class="card">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-list mr-2"></i>Daftar Peserta Ujian</h5>
-        <div>
-            <button class="btn btn-sm btn-outline-primary" onclick="refreshData()">
-                <i class="fas fa-sync-alt mr-1"></i>Refresh
-            </button>
-        </div>
-    </div>
-    <div class="card-body p-0" id="sessions-container">
-        @forelse ($activeSessions as $session)
-        <div class="session-card p-3 mx-3 mt-3 {{ $session->is_locked ? 'locked' : ($session->violation_count > 0 ? 'has-violations' : '') }}"
-             id="session-{{ $session->id }}">
-            <div class="d-flex align-items-center">
-                {{-- Avatar --}}
-                <div class="mr-3">
-                    @if($session->siswa?->foto_profile)
-                        <img src="{{ asset('storage/' . $session->siswa->foto_profile) }}" class="siswa-avatar" alt="">
-                    @else
-                        <div class="siswa-avatar-placeholder">
-                            {{ strtoupper(substr($session->siswa?->nama_lengkap ?? $session->moodle_fullname ?? '?', 0, 1)) }}
-                        </div>
-                    @endif
+{{-- Main Card --}}
+<div class="card card-outline card-primary mb-0">
+    <div class="card-header py-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            {{-- Filter Tabs --}}
+            <div class="filter-tabs d-flex flex-wrap" id="filters" style="gap:4px">
+                <button class="btn btn-primary btn-sm active" data-filter="all" onclick="setFilter('all',this)">
+                    Semua <span class="badge badge-light ml-1" id="f-all">{{ $stats['total_active'] }}</span>
+                </button>
+                <button class="btn btn-outline-success btn-sm" data-filter="online" onclick="setFilter('online',this)">
+                    <i class="fas fa-wifi mr-1"></i>Online <span class="badge badge-success ml-1" id="f-online">{{ $stats['online'] }}</span>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" data-filter="locked" onclick="setFilter('locked',this)">
+                    <i class="fas fa-lock mr-1"></i>Terkunci <span class="badge badge-danger ml-1" id="f-locked">{{ $stats['locked'] }}</span>
+                </button>
+                <button class="btn btn-outline-warning btn-sm" data-filter="violations" onclick="setFilter('violations',this)">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>Bermasalah <span class="badge badge-warning ml-1" id="f-violations">{{ $stats['with_violations'] }}</span>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" data-filter="offline" onclick="setFilter('offline',this)">
+                    <i class="fas fa-plug mr-1"></i>Offline <span class="badge badge-secondary ml-1" id="f-offline">{{ $stats['offline'] ?? 0 }}</span>
+                </button>
+            </div>
+            <div class="d-flex align-items-center mt-1 mt-md-0" style="gap:6px">
+                {{-- Search --}}
+                <div class="search-box">
+                    <input type="text" class="form-control form-control-sm" id="search-input" placeholder="Cari nama / NISN / kelas..." oninput="filterTable()">
                 </div>
-
-                {{-- Info --}}
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center">
-                        <span class="status-dot {{ $session->status }}"></span>
-                        <strong>{{ $session->siswa?->nama_lengkap ?? $session->moodle_fullname ?? $session->moodle_username ?? 'Unknown' }}</strong>
-                        @if($session->is_locked)
-                            <span class="badge badge-danger ml-2"><i class="fas fa-lock mr-1"></i>DIKUNCI</span>
-                        @endif
-                        @if($session->violation_count > 0)
-                            <span class="violation-badge {{ $session->violation_count >= 3 ? '' : 'warning' }} ml-2">
-                                {{ $session->violation_count }} pelanggaran
-                            </span>
-                        @endif
+                {{-- Bulk actions --}}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Aksi Massal"><i class="fas fa-ellipsis-v"></i></button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item text-danger" href="#" onclick="bulkLock(); return false;"><i class="fas fa-lock mr-2"></i>Kunci Semua Bermasalah</a>
+                        <a class="dropdown-item text-success" href="#" onclick="bulkUnlock(); return false;"><i class="fas fa-unlock mr-2"></i>Buka Semua Kunci</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-muted" href="#" onclick="endAllOffline(); return false;"><i class="fas fa-power-off mr-2"></i>Akhiri Semua Offline</a>
                     </div>
-                    <div class="device-info mt-1">
-                        <span class="mr-3"><i class="fas fa-id-card mr-1"></i>{{ $session->siswa?->nisn ?? $session->moodle_username ?? '-' }}</span>
-                        <span class="mr-3"><i class="fas fa-school mr-1"></i>{{ $session->siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</span>
-                        <span class="mr-3"><i class="fas fa-mobile-alt mr-1"></i>{{ $session->device_model ?? '-' }}</span>
-                        <span class="mr-3"><i class="fas fa-clock mr-1"></i>{{ $session->last_heartbeat?->diffForHumans() }}</span>
-                        <span><i class="fas fa-globe mr-1"></i>{{ $session->ip_address ?? '-' }}</span>
-                    </div>
-                </div>
-
-                {{-- Actions --}}
-                <div class="ml-3 d-flex gap-1">
-                    @if($session->is_locked)
-                        <button class="btn btn-success btn-lock btn-sm" onclick="unlockSession('{{ $session->id }}')">
-                            <i class="fas fa-unlock mr-1"></i>Buka
-                        </button>
-                    @else
-                        <button class="btn btn-danger btn-lock btn-sm" onclick="lockSession('{{ $session->id }}')">
-                            <i class="fas fa-lock mr-1"></i>Kunci
-                        </button>
-                    @endif
-                    <button class="btn btn-info btn-lock btn-sm ml-1" onclick="showViolations('{{ $session->id }}')">
-                        <i class="fas fa-eye mr-1"></i>Detail
-                    </button>
                 </div>
             </div>
-
-            @if($session->is_locked && $session->lock_reason)
-                <div class="mt-2 small text-danger">
-                    <i class="fas fa-info-circle mr-1"></i>{{ $session->lock_reason }}
-                </div>
-            @endif
         </div>
-        @empty
-        <div class="empty-state">
-            <i class="fas fa-desktop"></i>
-            <h5>Belum Ada Siswa Ujian</h5>
-            <p>Siswa yang sedang menggunakan aplikasi ExaManmet akan muncul di sini secara otomatis.</p>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-wrap">
+            <table class="table table-hover mb-0" id="tbl-sessions">
+                <thead>
+                    <tr>
+                        <th style="width:30px">#</th>
+                        <th>Status</th>
+                        <th>Siswa</th>
+                        <th>NISN</th>
+                        <th>Kelas</th>
+                        <th>Device</th>
+                        <th>IP</th>
+                        <th>Mulai</th>
+                        <th>Heartbeat</th>
+                        <th>Pelanggaran</th>
+                        <th style="width:120px">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-sessions">
+                    @forelse ($activeSessions as $i => $s)
+                    <tr class="{{ $s->is_locked ? 'row-locked' : '' }}" id="row-{{ $s->id }}">
+                        <td class="text-muted">{{ $i + 1 }}</td>
+                        <td>
+                            <span class="sd {{ $s->status }}"></span>
+                            <small class="text-{{ $s->status_color }}">{{ $s->status_label }}</small>
+                            @if($s->is_locked)<span class="lock-badge ml-1"><i class="fas fa-lock"></i></span>@endif
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                @if($s->siswa?->foto_profile)
+                                    <img src="{{ asset('storage/' . $s->siswa->foto_profile) }}" class="av mr-2">
+                                @else
+                                    <div class="av-ph mr-2">{{ strtoupper(substr($s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? '?', 0, 1)) }}</div>
+                                @endif
+                                <div>
+                                    <div style="line-height:1.2"><strong>{{ $s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? $s->moodle_username ?? '-' }}</strong></div>
+                                    @if($s->is_locked && $s->lock_reason)<div class="text-danger" style="font-size:.68rem"><i class="fas fa-info-circle"></i> {{ Str::limit($s->lock_reason, 35) }}</div>@endif
+                                </div>
+                            </div>
+                        </td>
+                        <td><code style="font-size:.75rem">{{ $s->siswa?->nisn ?? $s->moodle_username ?? '-' }}</code></td>
+                        <td>{{ $s->siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
+                        <td><small>{{ $s->device_model ?? '-' }}</small></td>
+                        <td><small>{{ $s->ip_address ?? '-' }}</small></td>
+                        <td><small>{{ $s->started_at?->format('H:i') }}</small></td>
+                        <td><small>{{ $s->last_heartbeat?->diffForHumans(short: true) }}</small></td>
+                        <td>
+                            @if($s->violation_count >= 3)
+                                <span class="v-chip danger">{{ $s->violation_count }}x</span>
+                            @elseif($s->violation_count > 0)
+                                <span class="v-chip warning">{{ $s->violation_count }}x</span>
+                            @else
+                                <span class="v-chip ok">0</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($s->is_locked)
+                                <button class="btn btn-success btn-xs" onclick="unlockSession('{{ $s->id }}')" title="Buka Kunci"><i class="fas fa-unlock"></i></button>
+                            @else
+                                <button class="btn btn-danger btn-xs" onclick="lockSession('{{ $s->id }}')" title="Kunci"><i class="fas fa-lock"></i></button>
+                            @endif
+                            <button class="btn btn-info btn-xs" onclick="showViolations('{{ $s->id }}')" title="Detail Pelanggaran"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-secondary btn-xs" onclick="endSession('{{ $s->id }}')" title="Akhiri Session"><i class="fas fa-power-off"></i></button>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr id="empty-row"><td colspan="11" class="text-center text-muted py-5">
+                        <i class="fas fa-desktop fa-3x d-block mb-2"></i>
+                        Belum ada siswa yang menggunakan ExaManmet
+                    </td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @endforelse
-        <div class="mb-3"></div>
+    </div>
+    <div class="card-footer py-2 bg-white d-flex justify-content-between">
+        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Heartbeat 30s &bull; Online &le;60s &bull; Idle 60-120s &bull; Offline &gt;120s &bull; Auto-lock &ge;3 pelanggaran</small>
+        <small class="text-muted" id="showing-count"></small>
     </div>
 </div>
 
 {{-- Violation Detail Modal --}}
-<div class="modal fade" id="violationModal" tabindex="-1">
+<div class="modal fade" id="violModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Detail Pelanggaran</h5>
+            <div class="modal-header py-2 bg-danger text-white">
+                <h6 class="modal-title mb-0"><i class="fas fa-exclamation-triangle mr-2"></i>Detail Pelanggaran &mdash; <span id="viol-name"></span></h6>
                 <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 id="violation-siswa-name" class="mb-0"></h6>
-                    <span id="violation-count-badge" class="badge badge-danger"></span>
-                </div>
-                <div class="violation-timeline" id="violation-list">
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-spinner fa-spin mr-1"></i>Memuat...
+                    <div>
+                        <span class="badge badge-dark" id="viol-device"></span>
+                        <span class="badge badge-info" id="viol-ip"></span>
+                        <span class="badge badge-secondary" id="viol-started"></span>
                     </div>
+                    <span class="badge badge-danger" id="viol-count"></span>
+                </div>
+                <div class="viol-list" id="viol-list">
+                    <div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>
                 </div>
             </div>
         </div>
@@ -267,206 +278,309 @@
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-let refreshInterval;
-let countdownInterval;
-let countdown = 10;
+const csrf = '{{ csrf_token() }}';
+let activeFilter = 'all';
+let allSessions = [];
+let cd = 10;
 
-// Auto-refresh every 10 seconds
-function startAutoRefresh() {
-    countdown = 10;
-    countdownInterval = setInterval(() => {
-        countdown--;
-        document.getElementById('countdown').textContent = countdown;
-        if (countdown <= 0) {
-            countdown = 10;
-            refreshData();
-        }
-    }, 1000);
-}
+// ===== Auto Refresh =====
+setInterval(() => {
+    cd--;
+    document.getElementById('countdown').textContent = cd;
+    if (cd <= 0) { cd = 10; refreshData(); }
+}, 1000);
 
 function refreshData() {
-    countdown = 10;
+    cd = 10;
     document.getElementById('countdown').textContent = '...';
-
     fetch('{{ route("admin.exam-monitoring.api.sessions") }}')
         .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                updateStats(data.stats);
-                updateSessions(data.sessions);
+        .then(d => {
+            if (d.success) {
+                allSessions = d.sessions;
+                updateStats(d.stats);
+                renderTable();
+                updateFilterCounts();
             }
             document.getElementById('countdown').textContent = '10';
         })
-        .catch(() => document.getElementById('countdown').textContent = '10');
+        .catch(() => { document.getElementById('countdown').textContent = '10'; });
 }
 
-function updateStats(stats) {
-    document.getElementById('stat-total').textContent = stats.total_active;
-    document.getElementById('stat-online').textContent = stats.online;
-    document.getElementById('stat-locked').textContent = stats.locked;
-    document.getElementById('stat-violations').textContent = stats.with_violations;
+function updateStats(st) {
+    document.getElementById('s-total').textContent = st.total_active;
+    document.getElementById('s-online').textContent = st.online;
+    document.getElementById('s-idle').textContent = st.idle || 0;
+    document.getElementById('s-offline').textContent = st.offline || 0;
+    document.getElementById('s-locked').textContent = st.locked;
+    document.getElementById('s-violations').textContent = st.with_violations;
 }
 
-function updateSessions(sessions) {
-    const container = document.getElementById('sessions-container');
+function updateFilterCounts() {
+    document.getElementById('f-all').textContent = allSessions.length;
+    document.getElementById('f-online').textContent = allSessions.filter(s => s.status === 'online').length;
+    document.getElementById('f-locked').textContent = allSessions.filter(s => s.is_locked).length;
+    document.getElementById('f-violations').textContent = allSessions.filter(s => s.violation_count > 0).length;
+    document.getElementById('f-offline').textContent = allSessions.filter(s => s.status === 'offline').length;
+}
 
-    if (sessions.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-desktop"></i>
-                <h5>Belum Ada Siswa Ujian</h5>
-                <p>Siswa yang sedang menggunakan aplikasi ExaManmet akan muncul di sini secara otomatis.</p>
-            </div>`;
+// ===== Filtered data =====
+function getFiltered() {
+    let data = allSessions;
+    if (activeFilter === 'online') data = data.filter(s => s.status === 'online');
+    else if (activeFilter === 'locked') data = data.filter(s => s.is_locked);
+    else if (activeFilter === 'violations') data = data.filter(s => s.violation_count > 0);
+    else if (activeFilter === 'offline') data = data.filter(s => s.status === 'offline');
+
+    const q = document.getElementById('search-input').value.toLowerCase().trim();
+    if (q) {
+        data = data.filter(s =>
+            (s.siswa_nama || '').toLowerCase().includes(q) ||
+            (s.siswa_nisn || '').toLowerCase().includes(q) ||
+            (s.kelas || '').toLowerCase().includes(q) ||
+            (s.device_model || '').toLowerCase().includes(q) ||
+            (s.ip_address || '').toLowerCase().includes(q)
+        );
+    }
+    return data;
+}
+
+// ===== Render =====
+function renderTable() {
+    const tbody = document.getElementById('tbody-sessions');
+    const filtered = getFiltered();
+    const showCount = document.getElementById('showing-count');
+    showCount.textContent = `Menampilkan ${filtered.length} dari ${allSessions.length} session`;
+
+    if (!allSessions.length) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-5"><i class="fas fa-desktop fa-3x d-block mb-2"></i>Belum ada siswa yang menggunakan ExaManmet</td></tr>';
+        return;
+    }
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-4"><i class="fas fa-search mr-1"></i>Tidak ditemukan</td></tr>';
         return;
     }
 
     let html = '';
-    sessions.forEach(s => {
-        const cardClass = s.is_locked ? 'locked' : (s.violation_count > 0 ? 'has-violations' : '');
-        const initial = (s.siswa_nama || '?')[0].toUpperCase();
-        const avatar = s.foto
-            ? `<img src="/storage/${s.foto}" class="siswa-avatar" alt="">`
-            : `<div class="siswa-avatar-placeholder">${initial}</div>`;
-
-        const lockBadge = s.is_locked ? '<span class="badge badge-danger ml-2"><i class="fas fa-lock mr-1"></i>DIKUNCI</span>' : '';
-        const violBadge = s.violation_count > 0
-            ? `<span class="violation-badge ${s.violation_count >= 3 ? '' : 'warning'} ml-2">${s.violation_count} pelanggaran</span>`
-            : '';
-
-        const lockBtn = s.is_locked
-            ? `<button class="btn btn-success btn-lock btn-sm" onclick="unlockSession('${s.id}')"><i class="fas fa-unlock mr-1"></i>Buka</button>`
-            : `<button class="btn btn-danger btn-lock btn-sm" onclick="lockSession('${s.id}')"><i class="fas fa-lock mr-1"></i>Kunci</button>`;
+    filtered.forEach((s, i) => {
+        const init = (s.siswa_nama || '?')[0].toUpperCase();
+        const av = s.foto ? `<img src="/storage/${s.foto}" class="av mr-2">` : `<div class="av-ph mr-2">${init}</div>`;
+        const stColor = s.status === 'online' ? 'success' : s.status === 'idle' ? 'warning' : 'danger';
+        const stLabel = s.status_label || s.status.charAt(0).toUpperCase() + s.status.slice(1);
+        const lockIcon = s.is_locked ? ' <span class="lock-badge"><i class="fas fa-lock"></i></span>' : '';
+        const rowClass = s.is_locked ? 'row-locked' : '';
 
         const lockReason = s.is_locked && s.lock_reason
-            ? `<div class="mt-2 small text-danger"><i class="fas fa-info-circle mr-1"></i>${s.lock_reason}</div>`
-            : '';
+            ? `<div class="text-danger" style="font-size:.68rem"><i class="fas fa-info-circle"></i> ${s.lock_reason.substring(0,35)}${s.lock_reason.length>35?'...':''}</div>` : '';
 
-        html += `
-        <div class="session-card p-3 mx-3 mt-3 ${cardClass}" id="session-${s.id}">
-            <div class="d-flex align-items-center">
-                <div class="mr-3">${avatar}</div>
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center">
-                        <span class="status-dot ${s.status}"></span>
-                        <strong>${s.siswa_nama}</strong>
-                        ${lockBadge}${violBadge}
-                    </div>
-                    <div class="device-info mt-1">
-                        <span class="mr-3"><i class="fas fa-id-card mr-1"></i>${s.siswa_nisn || '-'}</span>
-                        <span class="mr-3"><i class="fas fa-school mr-1"></i>${s.kelas || '-'}</span>
-                        <span class="mr-3"><i class="fas fa-mobile-alt mr-1"></i>${s.device_model}</span>
-                        <span class="mr-3"><i class="fas fa-clock mr-1"></i>${s.last_heartbeat}</span>
-                        <span><i class="fas fa-globe mr-1"></i>${s.ip_address || '-'}</span>
-                    </div>
-                </div>
-                <div class="ml-3 d-flex">
-                    ${lockBtn}
-                    <button class="btn btn-info btn-lock btn-sm ml-1" onclick="showViolations('${s.id}')">
-                        <i class="fas fa-eye mr-1"></i>Detail
-                    </button>
-                </div>
-            </div>
-            ${lockReason}
-        </div>`;
+        let vChip;
+        if (s.violation_count >= 3) vChip = `<span class="v-chip danger">${s.violation_count}x</span>`;
+        else if (s.violation_count > 0) vChip = `<span class="v-chip warning">${s.violation_count}x</span>`;
+        else vChip = '<span class="v-chip ok">0</span>';
+
+        const lockBtn = s.is_locked
+            ? `<button class="btn btn-success btn-xs" onclick="unlockSession('${s.id}')" title="Buka Kunci"><i class="fas fa-unlock"></i></button>`
+            : `<button class="btn btn-danger btn-xs" onclick="lockSession('${s.id}')" title="Kunci"><i class="fas fa-lock"></i></button>`;
+
+        html += `<tr class="${rowClass}" id="row-${s.id}">
+            <td class="text-muted">${i+1}</td>
+            <td><span class="sd ${s.status}"></span> <small class="text-${stColor}">${stLabel}</small>${lockIcon}</td>
+            <td><div class="d-flex align-items-center">${av}<div><div style="line-height:1.2"><strong>${s.siswa_nama}</strong></div>${lockReason}</div></div></td>
+            <td><code style="font-size:.75rem">${s.siswa_nisn || '-'}</code></td>
+            <td>${s.kelas || '-'}</td>
+            <td><small>${s.device_model}</small></td>
+            <td><small>${s.ip_address || '-'}</small></td>
+            <td><small>${s.started_at || '-'}</small></td>
+            <td><small>${s.last_heartbeat || '-'}</small></td>
+            <td>${vChip}</td>
+            <td>${lockBtn} <button class="btn btn-info btn-xs" onclick="showViolations('${s.id}')" title="Detail"><i class="fas fa-eye"></i></button> <button class="btn btn-secondary btn-xs" onclick="endSession('${s.id}')" title="Akhiri"><i class="fas fa-power-off"></i></button></td>
+        </tr>`;
     });
-    html += '<div class="mb-3"></div>';
-    container.innerHTML = html;
+    tbody.innerHTML = html;
 }
 
-function lockSession(sessionId) {
+// ===== Filters =====
+function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('#filters .btn').forEach(b => {
+        const c = {all:'primary',online:'success',locked:'danger',violations:'warning',offline:'secondary'}[b.dataset.filter];
+        b.className = `btn btn-outline-${c} btn-sm`;
+    });
+    const c = {all:'primary',online:'success',locked:'danger',violations:'warning',offline:'secondary'}[f];
+    btn.className = `btn btn-${c} btn-sm active`;
+    renderTable();
+}
+
+function filterTable() { renderTable(); }
+
+// ===== Actions =====
+function lockSession(id) {
     Swal.fire({
         title: 'Kunci Ujian Siswa?',
         input: 'text',
-        inputLabel: 'Alasan penguncian:',
-        inputPlaceholder: 'Contoh: Terdeteksi keluar aplikasi 3x',
+        inputLabel: 'Alasan:',
+        inputPlaceholder: 'Contoh: Terdeteksi keluar aplikasi',
         inputValue: 'Dikunci oleh pengawas',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         confirmButtonText: '<i class="fas fa-lock mr-1"></i>Kunci',
         cancelButtonText: 'Batal',
-        inputValidator: (value) => {
-            if (!value) return 'Alasan wajib diisi!';
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/admin/exam-monitoring/${sessionId}/lock`, {
+        inputValidator: v => { if (!v) return 'Alasan wajib diisi!'; }
+    }).then(r => {
+        if (r.isConfirmed) {
+            fetch(`/admin/exam-monitoring/${id}/lock`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ reason: result.value })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil!', 'Ujian siswa telah dikunci.', 'success');
-                    refreshData();
-                }
-            });
+                headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+                body: JSON.stringify({reason: r.value})
+            }).then(r=>r.json()).then(d => { if(d.success) { toast('Ujian dikunci!','success'); refreshData(); }});
         }
     });
 }
 
-function unlockSession(sessionId) {
+function unlockSession(id) {
     Swal.fire({
-        title: 'Buka Kunci Ujian?',
-        text: 'Siswa akan bisa melanjutkan ujian kembali.',
+        title: 'Buka Kunci?',
+        text: 'Siswa akan melanjutkan ujian.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
-        confirmButtonText: '<i class="fas fa-unlock mr-1"></i>Buka Kunci',
-        cancelButtonText: 'Batal',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`/admin/exam-monitoring/${sessionId}/unlock`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Berhasil!', 'Ujian siswa telah dibuka.', 'success');
-                    refreshData();
-                }
-            });
+        confirmButtonText: '<i class="fas fa-unlock mr-1"></i>Buka',
+        cancelButtonText: 'Batal'
+    }).then(r => {
+        if (r.isConfirmed) {
+            fetch(`/admin/exam-monitoring/${id}/unlock`, {
+                method: 'POST', headers: {'X-CSRF-TOKEN':csrf}
+            }).then(r=>r.json()).then(d => { if(d.success) { toast('Kunci dibuka!','success'); refreshData(); }});
         }
     });
 }
 
-function showViolations(sessionId) {
-    document.getElementById('violation-list').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin mr-1"></i>Memuat...</div>';
-    $('#violationModal').modal('show');
+function endSession(id) {
+    Swal.fire({
+        title: 'Akhiri Session?',
+        text: 'Session ditutup paksa.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#6c757d',
+        confirmButtonText: 'Akhiri',
+        cancelButtonText: 'Batal'
+    }).then(r => {
+        if (r.isConfirmed) {
+            fetch(`/admin/exam-monitoring/${id}/end`, {
+                method: 'POST', headers: {'X-CSRF-TOKEN':csrf}
+            }).then(r=>r.json()).then(d => { if(d.success) { toast('Session diakhiri','info'); refreshData(); }});
+        }
+    });
+}
 
-    fetch(`/admin/exam-monitoring/${sessionId}/violations`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('violation-siswa-name').textContent = data.session.siswa_nama;
-                document.getElementById('violation-count-badge').textContent = data.session.violation_count + ' pelanggaran';
+function showViolations(id) {
+    document.getElementById('viol-list').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Memuat...</div>';
+    $('#violModal').modal('show');
+    fetch(`/admin/exam-monitoring/${id}/violations`)
+        .then(r=>r.json())
+        .then(d => {
+            if (!d.success) return;
+            document.getElementById('viol-name').textContent = d.session.siswa_nama;
+            document.getElementById('viol-count').textContent = d.session.violation_count + ' pelanggaran';
+            const sess = allSessions.find(s => s.id === id);
+            document.getElementById('viol-device').textContent = sess ? sess.device_model : '-';
+            document.getElementById('viol-ip').textContent = sess ? (sess.ip_address || '-') : '-';
+            document.getElementById('viol-started').textContent = sess ? ('Mulai: ' + (sess.started_at || '-')) : '';
 
-                if (data.violations.length === 0) {
-                    document.getElementById('violation-list').innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-check-circle mr-1 text-success"></i>Tidak ada pelanggaran tercatat.</div>';
-                    return;
-                }
-
-                let html = '';
-                data.violations.forEach(v => {
-                    html += `
-                    <div class="violation-item ${v.severity_color}">
-                        <div class="d-flex justify-content-between">
-                            <span><span class="badge badge-${v.severity_color}">${v.type_label}</span></span>
-                            <small class="text-muted">${v.time} (${v.time_ago})</small>
-                        </div>
-                        ${v.detail ? `<div class="small text-muted mt-1">${v.detail}</div>` : ''}
-                    </div>`;
-                });
-                document.getElementById('violation-list').innerHTML = html;
+            if (!d.violations.length) {
+                document.getElementById('viol-list').innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-check-circle text-success mr-1"></i>Tidak ada pelanggaran</div>';
+                return;
             }
+            let html = '';
+            d.violations.forEach(v => {
+                html += `<div class="viol-item ${v.severity_color}">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge badge-${v.severity_color}">${v.type_label}</span>
+                        <small class="text-muted">${v.time} (${v.time_ago})</small>
+                    </div>
+                    ${v.detail ? `<div class="small text-muted mt-1">${v.detail}</div>` : ''}
+                </div>`;
+            });
+            document.getElementById('viol-list').innerHTML = html;
         });
 }
 
-// Start auto-refresh on page load
-document.addEventListener('DOMContentLoaded', startAutoRefresh);
+// ===== Bulk Actions =====
+function bulkLock() {
+    const t = allSessions.filter(s => s.violation_count > 0 && !s.is_locked);
+    if (!t.length) { toast('Tidak ada siswa bermasalah','info'); return; }
+    Swal.fire({
+        title: `Kunci ${t.length} siswa bermasalah?`,
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#dc3545', confirmButtonText: 'Kunci Semua'
+    }).then(r => {
+        if (r.isConfirmed) {
+            Promise.all(t.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/lock`, {
+                    method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+                    body: JSON.stringify({reason:'Kunci massal oleh pengawas'})
+                })
+            )).then(() => { toast(`${t.length} siswa dikunci`,'success'); refreshData(); });
+        }
+    });
+}
+
+function bulkUnlock() {
+    const t = allSessions.filter(s => s.is_locked);
+    if (!t.length) { toast('Tidak ada siswa terkunci','info'); return; }
+    Swal.fire({
+        title: `Buka kunci ${t.length} siswa?`,
+        icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#28a745', confirmButtonText: 'Buka Semua'
+    }).then(r => {
+        if (r.isConfirmed) {
+            Promise.all(t.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/unlock`, {method:'POST',headers:{'X-CSRF-TOKEN':csrf}})
+            )).then(() => { toast(`${t.length} siswa dibuka`,'success'); refreshData(); });
+        }
+    });
+}
+
+function endAllOffline() {
+    const t = allSessions.filter(s => s.status === 'offline');
+    if (!t.length) { toast('Tidak ada session offline','info'); return; }
+    Swal.fire({
+        title: `Akhiri ${t.length} session offline?`,
+        icon: 'warning', showCancelButton: true, confirmButtonText: 'Akhiri Semua'
+    }).then(r => {
+        if (r.isConfirmed) {
+            Promise.all(t.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/end`, {method:'POST',headers:{'X-CSRF-TOKEN':csrf}})
+            )).then(() => { toast(`${t.length} session diakhiri`,'info'); refreshData(); });
+        }
+    });
+}
+
+function toast(msg, icon) {
+    Swal.fire({toast:true, position:'top-end', icon:icon, title:msg, showConfirmButton:false, timer:2000});
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+    allSessions = @json($activeSessions->map(fn($s) => [
+        'id' => $s->id,
+        'siswa_nama' => $s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? $s->moodle_username ?? '-',
+        'siswa_nisn' => $s->siswa?->nisn ?? $s->moodle_username,
+        'kelas' => $s->siswa?->kelasSaatIni?->nama_kelas ?? '-',
+        'device_model' => $s->device_model ?? '-',
+        'status' => $s->status,
+        'status_label' => $s->status_label,
+        'status_color' => $s->status_color,
+        'is_locked' => $s->is_locked,
+        'lock_reason' => $s->lock_reason,
+        'violation_count' => $s->violation_count,
+        'last_heartbeat' => $s->last_heartbeat?->diffForHumans(short: true),
+        'started_at' => $s->started_at?->format('H:i'),
+        'ip_address' => $s->ip_address,
+        'app_version' => $s->app_version,
+        'foto' => $s->siswa?->foto_profile,
+    ]));
+    document.getElementById('showing-count').textContent = `Menampilkan ${allSessions.length} session`;
+});
 </script>
 @endsection

@@ -55,8 +55,8 @@ class ExamMonitoringController extends Controller
                     'is_locked' => $session->is_locked,
                     'lock_reason' => $session->lock_reason,
                     'violation_count' => $session->violation_count,
-                    'last_heartbeat' => $session->last_heartbeat?->diffForHumans(),
-                    'started_at' => $session->started_at?->format('H:i:s'),
+                    'last_heartbeat' => $session->last_heartbeat?->diffForHumans(short: true),
+                    'started_at' => $session->started_at?->format('H:i'),
                     'ip_address' => $session->ip_address,
                     'app_version' => $session->app_version,
                     'foto' => $session->siswa?->foto_profile,
@@ -66,6 +66,8 @@ class ExamMonitoringController extends Controller
         $stats = [
             'total_active' => $sessions->count(),
             'online' => $sessions->filter(fn($s) => $s['status'] === 'online')->count(),
+            'idle' => $sessions->filter(fn($s) => $s['status'] === 'idle')->count(),
+            'offline' => $sessions->filter(fn($s) => $s['status'] === 'offline')->count(),
             'locked' => $sessions->filter(fn($s) => $s['is_locked'])->count(),
             'with_violations' => $sessions->filter(fn($s) => $s['violation_count'] > 0)->count(),
         ];
