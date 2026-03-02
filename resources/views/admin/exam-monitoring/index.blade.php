@@ -68,6 +68,29 @@
 
     /* Search box */
     .search-box input { border-radius: 20px; font-size: .82rem; padding: 5px 14px; width: 220px; }
+
+    /* Sortable headers */
+    .sortable { cursor: pointer; user-select: none; position: relative; }
+    .sortable:hover { background: #e9ecef !important; }
+    .sort-icon { font-size: .6rem; margin-left: 3px; opacity: .35; }
+    .sortable.asc .sort-icon, .sortable.desc .sort-icon { opacity: 1; color: #007bff; }
+
+    /* Checkbox */
+    #tbl-sessions .chk-cell { width: 32px; text-align: center; }
+    #tbl-sessions .chk-cell input { cursor: pointer; width: 15px; height: 15px; }
+    #tbl-sessions tbody tr.row-selected { background: #e3f0ff !important; }
+    #tbl-sessions tbody tr.row-selected.row-locked { background: #ffe0e0 !important; }
+
+    /* Floating bulk action bar */
+    .bulk-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1050;
+      background: #1e1e2f; color: #fff; border-radius: 12px; padding: 10px 20px;
+      display: none; align-items: center; gap: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.35);
+      font-size: .85rem; animation: slideUp .25s ease; }
+    .bulk-bar.show { display: flex; }
+    .bulk-bar .count { font-weight: 700; font-size: 1rem; min-width: 28px; text-align: center;
+      background: #007bff; border-radius: 6px; padding: 2px 8px; }
+    .bulk-bar .btn { border-radius: 8px; font-size: .78rem; font-weight: 600; padding: 5px 14px; }
+    @keyframes slideUp { from { opacity:0; transform: translateX(-50%) translateY(20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
 </style>
 @endsection
 
@@ -188,23 +211,23 @@
             <table class="table table-hover mb-0" id="tbl-sessions">
                 <thead>
                     <tr>
-                        <th style="width:30px">#</th>
-                        <th>Status</th>
-                        <th>Siswa</th>
+                        <th class="chk-cell"><input type="checkbox" id="chk-all" title="Pilih Semua" onchange="toggleAllCheckboxes(this)"></th>
+                        <th class="sortable" data-sort="status" onclick="sortBy('status',this)"># Status <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-sort="siswa_nama" onclick="sortBy('siswa_nama',this)">Siswa <i class="fas fa-sort sort-icon"></i></th>
                         <th>NISN</th>
-                        <th>Kelas</th>
+                        <th class="sortable" data-sort="kelas" onclick="sortBy('kelas',this)">Kelas <i class="fas fa-sort sort-icon"></i></th>
                         <th>Device</th>
                         <th>IP</th>
-                        <th>Mulai</th>
-                        <th>Heartbeat</th>
-                        <th>Pelanggaran</th>
+                        <th class="sortable" data-sort="started_at_raw" onclick="sortBy('started_at_raw',this)">Mulai <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-sort="last_heartbeat_raw" onclick="sortBy('last_heartbeat_raw',this)">Heartbeat <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-sort="violation_count" onclick="sortBy('violation_count',this)">Pelanggaran <i class="fas fa-sort sort-icon"></i></th>
                         <th style="width:120px">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-sessions">
                     @forelse ($activeSessions as $i => $s)
                     <tr class="{{ $s->is_locked ? 'row-locked' : '' }}" id="row-{{ $s->id }}">
-                        <td class="text-muted">{{ $i + 1 }}</td>
+                        <td class="chk-cell"><input type="checkbox" onchange="toggleRow('{{ $s->id }}',this)"></td>
                         <td>
                             <span class="sd {{ $s->status }}"></span>
                             <small class="text-{{ $s->status_color }}">{{ $s->status_label }}</small>
@@ -249,7 +272,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr id="empty-row"><td colspan="11" class="text-center text-muted py-5">
+                    <tr id="empty-row"><td colspan="12" class="text-center text-muted py-5">
                         <i class="fas fa-desktop fa-3x d-block mb-2"></i>
                         Belum ada siswa yang menggunakan ExaManmet
                     </td></tr>
@@ -259,9 +282,19 @@
         </div>
     </div>
     <div class="card-footer py-2 bg-white d-flex justify-content-between">
-        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Heartbeat 30s &bull; Online &le;60s &bull; Idle 60-120s &bull; Offline &gt;120s &bull; Auto-lock &ge;3 pelanggaran</small>
+        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Heartbeat 10s &bull; Online &le;60s &bull; Idle 60-120s &bull; Offline &gt;120s &bull; Auto-lock &ge;3 pelanggaran</small>
         <small class="text-muted" id="showing-count"></small>
     </div>
+</div>
+
+{{-- Floating Bulk Action Bar --}}
+<div class="bulk-bar" id="bulk-bar">
+    <span class="count" id="sel-count">0</span>
+    <span>dipilih</span>
+    <button class="btn btn-danger btn-sm" onclick="bulkLockSelected()"><i class="fas fa-lock mr-1"></i>Kunci</button>
+    <button class="btn btn-success btn-sm" onclick="bulkUnlockSelected()"><i class="fas fa-unlock mr-1"></i>Buka Kunci</button>
+    <button class="btn btn-secondary btn-sm" onclick="bulkEndSelected()"><i class="fas fa-power-off mr-1"></i>Akhiri</button>
+    <button class="btn btn-outline-light btn-sm" onclick="clearSelection()" title="Batal"><i class="fas fa-times"></i></button>
 </div>
 
 {{-- Violation Detail Modal --}}
@@ -297,6 +330,9 @@ const csrf = '{{ csrf_token() }}';
 let activeFilter = 'all';
 let allSessions = [];
 let cd = 5;
+let selectedIds = new Set();
+let sortCol = '';
+let sortDir = 'asc';
 
 // ===== Auto Refresh =====
 setInterval(() => {
@@ -339,7 +375,7 @@ function updateFilterCounts() {
     document.getElementById('f-offline').textContent = allSessions.filter(s => s.status === 'offline').length;
 }
 
-// ===== Filtered data =====
+// ===== Filtered + Sorted data =====
 function getFiltered() {
     let data = allSessions;
     if (activeFilter === 'online') data = data.filter(s => s.status === 'online');
@@ -357,6 +393,30 @@ function getFiltered() {
             (s.ip_address || '').toLowerCase().includes(q)
         );
     }
+
+    // Sort
+    if (sortCol) {
+        const statusOrder = {online: 0, idle: 1, offline: 2};
+        data = [...data].sort((a, b) => {
+            let va, vb;
+            if (sortCol === 'status') {
+                va = (a.is_locked ? 10 : 0) + (statusOrder[a.status] ?? 9);
+                vb = (b.is_locked ? 10 : 0) + (statusOrder[b.status] ?? 9);
+            } else if (sortCol === 'violation_count') {
+                va = a.violation_count || 0;
+                vb = b.violation_count || 0;
+            } else if (sortCol === 'started_at_raw' || sortCol === 'last_heartbeat_raw') {
+                va = a[sortCol] || '';
+                vb = b[sortCol] || '';
+            } else {
+                va = (a[sortCol] || '').toString().toLowerCase();
+                vb = (b[sortCol] || '').toString().toLowerCase();
+            }
+            if (va < vb) return sortDir === 'asc' ? -1 : 1;
+            if (va > vb) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
     return data;
 }
 
@@ -368,11 +428,13 @@ function renderTable() {
     showCount.textContent = `Menampilkan ${filtered.length} dari ${allSessions.length} session`;
 
     if (!allSessions.length) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-5"><i class="fas fa-desktop fa-3x d-block mb-2"></i>Belum ada siswa yang menggunakan ExaManmet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-5"><i class="fas fa-desktop fa-3x d-block mb-2"></i>Belum ada siswa yang menggunakan ExaManmet</td></tr>';
+        updateBulkBar();
         return;
     }
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted py-4"><i class="fas fa-search mr-1"></i>Tidak ditemukan</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted py-4"><i class="fas fa-search mr-1"></i>Tidak ditemukan</td></tr>';
+        updateBulkBar();
         return;
     }
 
@@ -383,7 +445,9 @@ function renderTable() {
         const stColor = s.status === 'online' ? 'success' : s.status === 'idle' ? 'warning' : 'danger';
         const stLabel = s.status_label || s.status.charAt(0).toUpperCase() + s.status.slice(1);
         const lockIcon = s.is_locked ? ' <span class="lock-badge"><i class="fas fa-lock"></i></span>' : '';
-        const rowClass = s.is_locked ? 'row-locked' : '';
+        let rowClass = s.is_locked ? 'row-locked' : '';
+        if (selectedIds.has(s.id)) rowClass += ' row-selected';
+        const checked = selectedIds.has(s.id) ? 'checked' : '';
 
         const lockReason = s.is_locked && s.lock_reason
             ? `<div class="text-danger" style="font-size:.68rem"><i class="fas fa-info-circle"></i> ${s.lock_reason.substring(0,35)}${s.lock_reason.length>35?'...':''}</div>` : '';
@@ -398,7 +462,7 @@ function renderTable() {
             : `<button class="btn btn-danger btn-xs" onclick="lockSession('${s.id}')" title="Kunci"><i class="fas fa-lock"></i></button>`;
 
         html += `<tr class="${rowClass}" id="row-${s.id}">
-            <td class="text-muted">${i+1}</td>
+            <td class="chk-cell"><input type="checkbox" ${checked} onchange="toggleRow('${s.id}',this)"></td>
             <td><span class="sd ${s.status}"></span> <small class="text-${stColor}">${stLabel}</small>${lockIcon}</td>
             <td><div class="d-flex align-items-center">${av}<div><div style="line-height:1.2"><strong>${s.siswa_nama}</strong></div>${lockReason}</div></div></td>
             <td><code style="font-size:.75rem">${s.siswa_nisn || '-'}</code></td>
@@ -412,6 +476,16 @@ function renderTable() {
         </tr>`;
     });
     tbody.innerHTML = html;
+    // Update header checkbox state
+    const chkAll = document.getElementById('chk-all');
+    if (chkAll) {
+        const visibleIds = filtered.map(s => s.id);
+        const allChecked = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+        const someChecked = visibleIds.some(id => selectedIds.has(id));
+        chkAll.checked = allChecked;
+        chkAll.indeterminate = someChecked && !allChecked;
+    }
+    updateBulkBar();
 }
 
 // ===== Filters =====
@@ -427,6 +501,136 @@ function setFilter(f, btn) {
 }
 
 function filterTable() { renderTable(); }
+
+// ===== Sort =====
+function sortBy(col, th) {
+    if (sortCol === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortCol = col;
+        sortDir = 'asc';
+    }
+    // Update header styles
+    document.querySelectorAll('#tbl-sessions thead .sortable').forEach(h => {
+        h.classList.remove('asc','desc');
+        h.querySelector('.sort-icon').className = 'fas fa-sort sort-icon';
+    });
+    th.classList.add(sortDir);
+    th.querySelector('.sort-icon').className = `fas fa-sort-${sortDir === 'asc' ? 'up' : 'down'} sort-icon`;
+    renderTable();
+}
+
+// ===== Checkbox Selection =====
+function toggleAllCheckboxes(chk) {
+    const filtered = getFiltered();
+    if (chk.checked) {
+        filtered.forEach(s => selectedIds.add(s.id));
+    } else {
+        filtered.forEach(s => selectedIds.delete(s.id));
+    }
+    renderTable();
+}
+
+function toggleRow(id, chk) {
+    if (chk.checked) {
+        selectedIds.add(id);
+    } else {
+        selectedIds.delete(id);
+    }
+    // Update row highlight without full re-render
+    const row = document.getElementById('row-' + id);
+    if (row) row.classList.toggle('row-selected', chk.checked);
+    // Update header checkbox
+    const filtered = getFiltered();
+    const chkAll = document.getElementById('chk-all');
+    const visibleIds = filtered.map(s => s.id);
+    const allChecked = visibleIds.length > 0 && visibleIds.every(i => selectedIds.has(i));
+    const someChecked = visibleIds.some(i => selectedIds.has(i));
+    chkAll.checked = allChecked;
+    chkAll.indeterminate = someChecked && !allChecked;
+    updateBulkBar();
+}
+
+function clearSelection() {
+    selectedIds.clear();
+    renderTable();
+}
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulk-bar');
+    const count = selectedIds.size;
+    document.getElementById('sel-count').textContent = count;
+    if (count > 0) {
+        bar.classList.add('show');
+    } else {
+        bar.classList.remove('show');
+    }
+}
+
+// ===== Bulk Actions for Selected =====
+function getSelectedSessions() {
+    return allSessions.filter(s => selectedIds.has(s.id));
+}
+
+function bulkLockSelected() {
+    const sel = getSelectedSessions().filter(s => !s.is_locked);
+    if (!sel.length) { toast('Tidak ada yang bisa dikunci dari pilihan','info'); return; }
+    Swal.fire({
+        title: `Kunci ${sel.length} siswa terpilih?`,
+        input: 'text',
+        inputLabel: 'Alasan:',
+        inputPlaceholder: 'Contoh: Terdeteksi keluar aplikasi',
+        inputValue: 'Dikunci oleh pengawas',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#dc3545', confirmButtonText: `<i class="fas fa-lock mr-1"></i>Kunci ${sel.length}`,
+        inputValidator: v => { if (!v) return 'Alasan wajib diisi!'; }
+    }).then(r => {
+        if (r.isConfirmed) {
+            sel.forEach(s => { s.is_locked = true; s.lock_reason = r.value; });
+            renderTable();
+            Promise.all(sel.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/lock`, {
+                    method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf},
+                    body: JSON.stringify({reason: r.value})
+                })
+            )).then(() => { toast(`${sel.length} siswa dikunci (FCM terkirim)`,'success'); selectedIds.clear(); refreshData(); });
+        }
+    });
+}
+
+function bulkUnlockSelected() {
+    const sel = getSelectedSessions().filter(s => s.is_locked);
+    if (!sel.length) { toast('Tidak ada yang terkunci dari pilihan','info'); return; }
+    Swal.fire({
+        title: `Buka kunci ${sel.length} siswa terpilih?`,
+        icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#28a745', confirmButtonText: `<i class="fas fa-unlock mr-1"></i>Buka ${sel.length}`
+    }).then(r => {
+        if (r.isConfirmed) {
+            sel.forEach(s => { s.is_locked = false; s.lock_reason = null; });
+            renderTable();
+            Promise.all(sel.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/unlock`, {method:'POST',headers:{'X-CSRF-TOKEN':csrf}})
+            )).then(() => { toast(`${sel.length} siswa dibuka (FCM terkirim)`,'success'); selectedIds.clear(); refreshData(); });
+        }
+    });
+}
+
+function bulkEndSelected() {
+    const sel = getSelectedSessions();
+    if (!sel.length) { toast('Tidak ada yang dipilih','info'); return; }
+    Swal.fire({
+        title: `Akhiri ${sel.length} session terpilih?`,
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: `Akhiri ${sel.length}`
+    }).then(r => {
+        if (r.isConfirmed) {
+            Promise.all(sel.map(s =>
+                fetch(`/admin/exam-monitoring/${s.id}/end`, {method:'POST',headers:{'X-CSRF-TOKEN':csrf}})
+            )).then(() => { toast(`${sel.length} session diakhiri`,'info'); selectedIds.clear(); refreshData(); });
+        }
+    });
+}
 
 // ===== Actions =====
 function lockSession(id) {
