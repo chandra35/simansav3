@@ -684,6 +684,14 @@ return [
                     'active' => ['admin/exam-notifications*'],
                 ],
                 [
+                    'text' => 'Monitoring Ujian',
+                    'route' => 'admin.exam-monitoring.index',
+                    'icon' => 'fas fa-fw fa-tv',
+                    'icon_color' => 'success',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/exam-monitoring*'],
+                ],
+                [
                     'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
