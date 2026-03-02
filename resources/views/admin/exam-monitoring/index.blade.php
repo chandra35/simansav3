@@ -77,8 +77,23 @@
         <h1 class="h4 mb-0"><i class="fas fa-tv mr-2 text-primary"></i>Monitoring Ujian</h1>
         <small class="text-muted">Real-time monitoring peserta ujian ExaManmet</small>
     </div>
-    <div class="d-flex align-items-center">
-        <div class="refresh-ind mr-3">
+    <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+        {{-- Date Filter --}}
+        <div class="input-group input-group-sm" style="width:auto">
+            <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+            </div>
+            <select class="form-control form-control-sm" id="date-filter" onchange="changeDateFilter(this.value)" style="width:auto;min-width:140px">
+                <option value="{{ now()->format('Y-m-d') }}" {{ $dateFilter === now()->format('Y-m-d') ? 'selected' : '' }}>Hari Ini ({{ now()->format('d M') }})</option>
+                @foreach($availableDates as $d)
+                    @if($d !== now()->format('Y-m-d'))
+                        <option value="{{ $d }}" {{ $dateFilter === $d ? 'selected' : '' }}>{{ \Carbon\Carbon::parse($d)->format('d M Y') }}</option>
+                    @endif
+                @endforeach
+                <option value="all" {{ $dateFilter === 'all' ? 'selected' : '' }}>Semua Hari</option>
+            </select>
+        </div>
+        <div class="refresh-ind">
             <span class="spinner-grow spinner-grow-sm text-success"></span>
             Auto <span id="countdown">10</span>s
         </div>
@@ -293,7 +308,7 @@ setInterval(() => {
 function refreshData() {
     cd = 10;
     document.getElementById('countdown').textContent = '...';
-    fetch('{{ route("admin.exam-monitoring.api.sessions") }}')
+    fetch('{{ route("admin.exam-monitoring.api.sessions") }}?date=' + currentDateFilter)
         .then(r => r.json())
         .then(d => {
             if (d.success) {
@@ -560,26 +575,18 @@ function toast(msg, icon) {
     Swal.fire({toast:true, position:'top-end', icon:icon, title:msg, showConfirmButton:false, timer:2000});
 }
 
+// ===== Date Filter =====
+let currentDateFilter = '{{ $dateFilter }}';
+
+function changeDateFilter(val) {
+    currentDateFilter = val;
+    // Reload page with date param for server-side initial data
+    window.location.href = '{{ route("admin.exam-monitoring.index") }}?date=' + val;
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
-    allSessions = @json($activeSessions->map(fn($s) => [
-        'id' => $s->id,
-        'siswa_nama' => $s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? $s->moodle_username ?? '-',
-        'siswa_nisn' => $s->siswa?->nisn ?? $s->moodle_username,
-        'kelas' => $s->siswa?->kelasSaatIni?->nama_kelas ?? '-',
-        'device_model' => $s->device_model ?? '-',
-        'status' => $s->status,
-        'status_label' => $s->status_label,
-        'status_color' => $s->status_color,
-        'is_locked' => $s->is_locked,
-        'lock_reason' => $s->lock_reason,
-        'violation_count' => $s->violation_count,
-        'last_heartbeat' => $s->last_heartbeat?->diffForHumans(short: true),
-        'started_at' => $s->started_at?->format('H:i'),
-        'ip_address' => $s->ip_address,
-        'app_version' => $s->app_version,
-        'foto' => $s->siswa?->foto_profile,
-    ]));
+    allSessions = @json($sessionsJson);
     document.getElementById('showing-count').textContent = `Menampilkan ${allSessions.length} session`;
 });
 </script>

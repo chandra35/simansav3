@@ -5,20 +5,77 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamBrowserSession;
 use App\Models\ExamBrowserViolation;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ExamMonitoringController extends Controller
 {
     /**
-     * Main monitoring page — shows all active exam sessions.
+     * Auto-end sessions that have been offline for more than 2 hours.
+     * This prevents zombie sessions from accumulating over multi-day exams.
      */
-    public function index()
+    private function autoCleanupStaleSessions(): int
     {
-        $activeSessions = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni', 'siswa.user'])
+        return ExamBrowserSession::where('is_active', true)
+            ->where(function ($q) {
+                $q->where('last_heartbeat', '<', now()->subHours(2))
+                  ->orWhereNull('last_heartbeat');
+            })
+            ->update([
+                'is_active' => false,
+                'ended_at' => now(),
+            ]);
+    }
+
+    /**
+     * Map session to JSON-safe array for frontend.
+     */
+    private function mapSessionToArray(ExamBrowserSession $s): array
+    {
+        return [
+            'id' => $s->id,
+            'siswa_nama' => $s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? $s->moodle_username ?? '-',
+            'siswa_nisn' => $s->siswa?->nisn ?? $s->moodle_username,
+            'kelas' => $s->siswa?->kelasSaatIni?->nama_kelas ?? '-',
+            'device_model' => $s->device_model ?? '-',
+            'device_id' => $s->device_id,
+            'status' => $s->status,
+            'status_label' => $s->status_label,
+            'status_color' => $s->status_color,
+            'is_locked' => $s->is_locked,
+            'lock_reason' => $s->lock_reason,
+            'violation_count' => $s->violation_count,
+            'last_heartbeat' => $s->last_heartbeat ? $s->last_heartbeat->diffForHumans(short: true) : null,
+            'started_at' => $s->started_at?->format('H:i'),
+            'started_date' => $s->started_at?->format('Y-m-d'),
+            'ip_address' => $s->ip_address,
+            'app_version' => $s->app_version,
+            'foto' => $s->siswa?->foto_profile,
+        ];
+    }
+
+    /**
+     * Main monitoring page — shows all active exam sessions.
+     * Supports ?date=YYYY-MM-DD filter for multi-day exams.
+     */
+    public function index(Request $request)
+    {
+        // Auto-cleanup stale offline sessions (>2 hours)
+        $this->autoCleanupStaleSessions();
+
+        $dateFilter = $request->get('date', now()->format('Y-m-d'));
+
+        $query = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni', 'siswa.user'])
             ->active()
-            ->orderBy('last_heartbeat', 'desc')
-            ->get();
+            ->orderBy('last_heartbeat', 'desc');
+
+        // Filter by date if not "all"
+        if ($dateFilter !== 'all') {
+            $query->whereDate('started_at', $dateFilter);
+        }
+
+        $activeSessions = $query->get();
 
         $stats = [
             'total_active' => $activeSessions->count(),
@@ -29,39 +86,39 @@ class ExamMonitoringController extends Controller
             'with_violations' => $activeSessions->filter(fn($s) => $s->violation_count > 0)->count(),
         ];
 
-        return view('admin.exam-monitoring.index', compact('activeSessions', 'stats'));
+        // Pre-map sessions to plain array (avoids Blade @json parsing issues)
+        $sessionsJson = $activeSessions->map(fn($s) => $this->mapSessionToArray($s))->values();
+
+        // Get available dates for the date picker
+        $availableDates = ExamBrowserSession::where('is_active', true)
+            ->selectRaw('DATE(started_at) as exam_date')
+            ->groupBy('exam_date')
+            ->orderBy('exam_date', 'desc')
+            ->pluck('exam_date')
+            ->filter()
+            ->values();
+
+        return view('admin.exam-monitoring.index', compact(
+            'activeSessions', 'stats', 'sessionsJson', 'dateFilter', 'availableDates'
+        ));
     }
 
     /**
      * API endpoint for AJAX refresh (auto-refresh every 10 seconds).
      */
-    public function apiSessions(): JsonResponse
+    public function apiSessions(Request $request): JsonResponse
     {
-        $sessions = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni'])
+        $dateFilter = $request->get('date', now()->format('Y-m-d'));
+
+        $query = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni'])
             ->active()
-            ->orderBy('last_heartbeat', 'desc')
-            ->get()
-            ->map(function ($session) {
-                return [
-                    'id' => $session->id,
-                    'siswa_nama' => $session->siswa?->nama_lengkap ?? $session->moodle_fullname ?? $session->moodle_username ?? 'Unknown',
-                    'siswa_nisn' => $session->siswa?->nisn ?? $session->moodle_username,
-                    'kelas' => $session->siswa?->kelasSaatIni?->nama_kelas ?? '-',
-                    'device_model' => $session->device_model ?? '-',
-                    'device_id' => $session->device_id,
-                    'status' => $session->status,
-                    'status_color' => $session->status_color,
-                    'status_label' => $session->status_label,
-                    'is_locked' => $session->is_locked,
-                    'lock_reason' => $session->lock_reason,
-                    'violation_count' => $session->violation_count,
-                    'last_heartbeat' => $session->last_heartbeat?->diffForHumans(short: true),
-                    'started_at' => $session->started_at?->format('H:i'),
-                    'ip_address' => $session->ip_address,
-                    'app_version' => $session->app_version,
-                    'foto' => $session->siswa?->foto_profile,
-                ];
-            });
+            ->orderBy('last_heartbeat', 'desc');
+
+        if ($dateFilter !== 'all') {
+            $query->whereDate('started_at', $dateFilter);
+        }
+
+        $sessions = $query->get()->map(fn($s) => $this->mapSessionToArray($s));
 
         $stats = [
             'total_active' => $sessions->count(),
@@ -74,7 +131,7 @@ class ExamMonitoringController extends Controller
 
         return response()->json([
             'success' => true,
-            'sessions' => $sessions,
+            'sessions' => $sessions->values(),
             'stats' => $stats,
         ]);
     }
