@@ -306,6 +306,24 @@
                         </div>
                     </div>
 
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><i class="fas fa-user-shield text-warning"></i> Password Pengawas (Unlock Offline)</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="supervisor_password" 
+                                        value="{{ old('supervisor_password', $setting->supervisor_password) }}" 
+                                        placeholder="Wajib diisi untuk fitur unlock offline">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('supervisor_password')">
+                                            <i class="fas fa-random"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Password ini digunakan pengawas untuk unlock ujian siswa saat internet mati. Disimpan di APK saat pertama kali load.</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="section-divider"></div>
 
                     <h6 class="text-bold mb-3"><i class="fas fa-lock"></i> Pengaturan Keamanan Perangkat</h6>

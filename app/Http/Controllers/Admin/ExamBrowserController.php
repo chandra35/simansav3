@@ -52,6 +52,7 @@ class ExamBrowserController extends Controller
             'user_agent' => 'required|string|max:500',
             'app_password' => 'nullable|string|max:255',
             'exit_password' => 'nullable|string|max:255',
+            'supervisor_password' => 'nullable|string|max:255',
             'seb_config_key' => 'nullable|string',
             'seb_exam_key' => 'nullable|string',
             'allow_screenshot' => 'boolean',

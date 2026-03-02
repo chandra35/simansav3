@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamBrowserSession;
 use App\Models\ExamBrowserViolation;
+use App\Services\FcmService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -147,6 +148,9 @@ class ExamMonitoringController extends Controller
 
         $session->lockSession($request->reason, auth()->id());
 
+        // Push FCM so the app gets instant lock even if heartbeat is delayed
+        $this->sendLockFcm($session->id, true, $request->reason);
+
         return response()->json([
             'success' => true,
             'message' => 'Ujian siswa berhasil dikunci.',
@@ -160,10 +164,39 @@ class ExamMonitoringController extends Controller
     {
         $session->unlockSession();
 
+        // Push FCM so the app gets instant unlock
+        $this->sendLockFcm($session->id, false);
+
         return response()->json([
             'success' => true,
             'message' => 'Ujian siswa berhasil dibuka kembali.',
         ]);
+    }
+
+    /**
+     * Send FCM push to notify app of lock/unlock status change.
+     */
+    private function sendLockFcm(string $sessionId, bool $isLocked, ?string $reason = null): void
+    {
+        try {
+            $fcm = new FcmService();
+            if (!$fcm->isConfigured()) return;
+
+            $fcm->sendToTopic(
+                'examanmet_all',
+                $isLocked ? 'Ujian Dikunci' : 'Ujian Dibuka',
+                $isLocked ? ($reason ?? 'Dikunci oleh pengawas') : 'Kunci ujian telah dibuka oleh pengawas',
+                'urgent',
+                [
+                    'action' => 'lock_status',
+                    'session_id' => $sessionId,
+                    'is_locked' => $isLocked ? '1' : '0',
+                    'lock_reason' => $reason ?? '',
+                ]
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('[ExamMonitoring] FCM lock push failed: ' . $e->getMessage());
+        }
     }
 
     /**
