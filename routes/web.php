@@ -391,6 +391,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'index'])->name('exam-notifications.index');
     Route::post('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'store'])->name('exam-notifications.store');
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
+
+    // ==================== FITUR BARU: MONITORING UJIAN (ExamAnmet) ====================
+    Route::get('/exam-monitoring', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'index'])->name('exam-monitoring.index');
+    Route::get('/exam-monitoring/api/sessions', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'apiSessions'])->name('exam-monitoring.api.sessions');
+    Route::post('/exam-monitoring/{session}/lock', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'lock'])->name('exam-monitoring.lock');
+    Route::post('/exam-monitoring/{session}/unlock', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'unlock'])->name('exam-monitoring.unlock');
+    Route::post('/exam-monitoring/{session}/end', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'endSession'])->name('exam-monitoring.end');
+    Route::get('/exam-monitoring/{session}/violations', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'violations'])->name('exam-monitoring.violations');
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)
@@ -511,4 +519,10 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
     Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])->name('config');
     Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])->name('verify-password');
     Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])->name('notifications');
+
+    // Session & Violation reporting (from ExaManmet app)
+    Route::post('/session/start', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionStart'])->name('session.start');
+    Route::post('/session/heartbeat', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionHeartbeat'])->name('session.heartbeat');
+    Route::post('/session/violation', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionViolation'])->name('session.violation');
+    Route::post('/session/end', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionEnd'])->name('session.end');
 });
