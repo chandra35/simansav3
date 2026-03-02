@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
         
+        // Exclude ExaManmet API routes from CSRF verification
+        // These are called from the Flutter mobile app (no browser session/cookies)
+        $middleware->validateCsrfTokens(except: [
+            'api/exam-browser/*',
+        ]);
+        
         // Track user activity untuk authenticated users
         $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserActivity::class);
         
