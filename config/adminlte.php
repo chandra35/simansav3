@@ -661,27 +661,20 @@ return [
             ],
         ],
 
-        // TOOLS - Collapsible
+        // CBT EXAM - Collapsible
         [
-            'text' => 'Tools',
-            'icon' => 'fas fa-fw fa-tools',
+            'text' => 'CBT Exam',
+            'icon' => 'fas fa-fw fa-laptop-code',
+            'icon_color' => 'info',
             'can' => 'manage-settings',
             'submenu' => [
                 [
-                    'text' => 'Exam Browser',
+                    'text' => 'Pengaturan Browser',
                     'route' => 'admin.exam-browser.index',
                     'icon' => 'fas fa-fw fa-desktop',
                     'icon_color' => 'info',
                     'can' => 'manage-settings',
                     'active' => ['admin/exam-browser*'],
-                ],
-                [
-                    'text' => 'Notifikasi Exam',
-                    'route' => 'admin.exam-notifications.index',
-                    'icon' => 'fas fa-fw fa-bell',
-                    'icon_color' => 'warning',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/exam-notifications*'],
                 ],
                 [
                     'text' => 'Monitoring Ujian',
@@ -691,6 +684,23 @@ return [
                     'can' => 'manage-settings',
                     'active' => ['admin/exam-monitoring*'],
                 ],
+                [
+                    'text' => 'Notifikasi Exam',
+                    'route' => 'admin.exam-notifications.index',
+                    'icon' => 'fas fa-fw fa-bell',
+                    'icon_color' => 'warning',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/exam-notifications*'],
+                ],
+            ],
+        ],
+
+        // TOOLS - Collapsible
+        [
+            'text' => 'Tools',
+            'icon' => 'fas fa-fw fa-tools',
+            'can' => 'manage-settings',
+            'submenu' => [
                 [
                     'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
