@@ -238,6 +238,7 @@ class ExamBrowserApiController extends Controller
      * Report a violation from the app.
      * Server stores it and increments violation count.
      * May trigger auto-lock if threshold exceeded.
+     * Rate-limited: same session + same type within 10 seconds is deduplicated.
      */
     public function sessionViolation(Request $request): JsonResponse
     {
@@ -256,19 +257,28 @@ class ExamBrowserApiController extends Controller
             ], 404);
         }
 
-        // Create violation record
-        ExamBrowserViolation::create([
-            'session_id' => $session->id,
-            'siswa_id' => $session->siswa_id,
-            'violation_type' => $request->violation_type,
-            'violation_detail' => $request->violation_detail,
-            'device_id' => $session->device_id,
-            'ip_address' => $request->ip(),
-        ]);
+        // Rate-limit: skip if same violation type was recorded within 10 seconds
+        // This prevents rapid-fire violations from filling the database
+        $recentDuplicate = ExamBrowserViolation::where('session_id', $session->id)
+            ->where('violation_type', $request->violation_type)
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->exists();
 
-        // Increment violation count
-        $session->increment('violation_count');
-        $session->refresh();
+        if (!$recentDuplicate) {
+            // Create violation record
+            ExamBrowserViolation::create([
+                'session_id' => $session->id,
+                'siswa_id' => $session->siswa_id,
+                'violation_type' => $request->violation_type,
+                'violation_detail' => $request->violation_detail,
+                'device_id' => $session->device_id,
+                'ip_address' => $request->ip(),
+            ]);
+
+            // Increment violation count
+            $session->increment('violation_count');
+            $session->refresh();
+        }
 
         // Check auto-lock (3 violations = auto-lock)
         $autoLockThreshold = 3;

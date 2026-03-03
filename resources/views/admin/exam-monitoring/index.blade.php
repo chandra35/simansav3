@@ -118,7 +118,7 @@
         </div>
         <div class="refresh-ind">
             <span class="spinner-grow spinner-grow-sm text-success"></span>
-            Auto <span id="countdown">5</span>s
+            Auto <span id="countdown">10</span>s
         </div>
         <button class="btn btn-sm btn-outline-primary" onclick="refreshData()"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
     </div>
@@ -329,7 +329,7 @@
 const csrf = '{{ csrf_token() }}';
 let activeFilter = 'all';
 let allSessions = [];
-let cd = 5;
+let cd = 10;
 let selectedIds = new Set();
 let sortCol = '';
 let sortDir = 'asc';
@@ -338,11 +338,11 @@ let sortDir = 'asc';
 setInterval(() => {
     cd--;
     document.getElementById('countdown').textContent = cd;
-    if (cd <= 0) { cd = 5; refreshData(); }
+    if (cd <= 0) { cd = 10; refreshData(); }
 }, 1000);
 
 function refreshData() {
-    cd = 5;
+    cd = 10;
     document.getElementById('countdown').textContent = '...';
     fetch('{{ route("admin.exam-monitoring.api.sessions") }}?date=' + currentDateFilter)
         .then(r => r.json())
@@ -353,9 +353,9 @@ function refreshData() {
                 renderTable();
                 updateFilterCounts();
             }
-            document.getElementById('countdown').textContent = '5';
+            document.getElementById('countdown').textContent = '10';
         })
-        .catch(() => { document.getElementById('countdown').textContent = '5'; });
+        .catch(() => { document.getElementById('countdown').textContent = '10'; });
 }
 
 function updateStats(st) {

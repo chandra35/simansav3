@@ -64,12 +64,9 @@ class ExamMonitoringController extends Controller
      */
     public function index(Request $request)
     {
-        // Auto-cleanup stale offline sessions (>2 hours)
-        $this->autoCleanupStaleSessions();
-
         $dateFilter = $request->get('date', now()->format('Y-m-d'));
 
-        $query = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni', 'siswa.user'])
+        $query = ExamBrowserSession::with(['siswa:id,nama_lengkap,nisn,foto_profile', 'siswa.kelasSaatIni:id,nama_kelas'])
             ->active()
             ->orderBy('last_heartbeat', 'desc');
 
@@ -107,13 +104,14 @@ class ExamMonitoringController extends Controller
     }
 
     /**
-     * API endpoint for AJAX refresh (auto-refresh every 10 seconds).
+     * API endpoint for AJAX refresh (auto-refresh every 5 seconds).
+     * Optimized: uses select() and lightweight eager loading.
      */
     public function apiSessions(Request $request): JsonResponse
     {
         $dateFilter = $request->get('date', now()->format('Y-m-d'));
 
-        $query = ExamBrowserSession::with(['siswa', 'siswa.kelasSaatIni'])
+        $query = ExamBrowserSession::with(['siswa:id,nama_lengkap,nisn,foto_profile', 'siswa.kelasSaatIni:id,nama_kelas'])
             ->active()
             ->orderBy('last_heartbeat', 'desc');
 
