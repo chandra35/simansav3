@@ -181,7 +181,7 @@
                                 ['Toleh Kanan', 'Putar kepala ke kanan', 'kanan'],
                                 ['Toleh Kiri', 'Putar kepala ke kiri', 'kiri'],
                                 ['Senyum', 'Tersenyum natural', 'senyum'],
-                                ['Kedipkan Mata', 'Kedip 2x (liveness)', 'kedip'],
+                                ['Kedipkan Mata', 'Kedip 1x (liveness)', 'kedip'],
                             ];
                             @endphp
                             @foreach($steps as $i => [$title, $desc, $angle])
@@ -250,13 +250,15 @@
 
     let blinkCount = 0;
     let lastEAR = 1;
+    let earHistory = [];
+    let eyeWasClosed = false;
 
     const STEPS = [
         { angle: 'frontal', text: 'Lihat lurus ke kamera', icon: 'fa-user' },
         { angle: 'kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right' },
         { angle: 'kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left' },
         { angle: 'senyum', text: 'Tersenyum natural', icon: 'fa-smile' },
-        { angle: 'kedip', text: 'Kedipkan mata 2 kali', icon: 'fa-eye' },
+        { angle: 'kedip', text: 'Kedipkan mata 1 kali', icon: 'fa-eye' },
     ];
 
     // ============================================
@@ -264,7 +266,7 @@
     // ============================================
     $(function() {
         const table = $('#tabelGtk').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
             pageLength: 25,
             order: [[1, 'asc']],
             columnDefs: [{ orderable: false, targets: [8] }],
@@ -364,6 +366,8 @@
         capturedAngles = [];
         currentStep = 0;
         blinkCount = 0;
+        earHistory = [];
+        eyeWasClosed = false;
         faceStableStart = null;
         autoCapturing = false;
 
@@ -400,7 +404,7 @@
         document.getElementById('stepInstruction').style.display = 'block';
         document.getElementById('stepIcon').className = 'fas ' + step.icon + ' mr-2';
         document.getElementById('stepText').textContent = step.text;
-        if (step.angle === 'kedip') blinkCount = 0;
+        if (step.angle === 'kedip') { blinkCount = 0; earHistory = []; eyeWasClosed = false; }
         faceStableStart = null;
         hideCountdownRing();
     }
@@ -458,7 +462,8 @@
                 setFaceStatus('Arahkan wajah ke kamera', false);
                 if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
             }
-            requestAnimationFrame(() => setTimeout(detect, 150));
+            const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 60 : 150;
+            requestAnimationFrame(() => setTimeout(detect, delay));
         }
         detect();
     }
@@ -500,11 +505,25 @@
     // ============================================
     function detectBlink(landmarks) {
         const leftEye = landmarks.getLeftEye(), rightEye = landmarks.getRightEye();
-        const ear = (eyeAspectRatio(leftEye) + eyeAspectRatio(rightEye)) / 2;
-        if (lastEAR > 0.21 && ear < 0.21) {
+        const rawEar = (eyeAspectRatio(leftEye) + eyeAspectRatio(rightEye)) / 2;
+
+        // Smoothing: average last 3 frames to reduce noise from tiny model
+        earHistory.push(rawEar);
+        if (earHistory.length > 3) earHistory.shift();
+        const ear = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
+
+        // Show live EAR for feedback
+        const threshold = 0.26;
+        setFaceStatus(`Kedipkan mata! EAR: ${ear.toFixed(3)} ${ear < threshold ? '👁️ TERTUTUP' : '👀 Terbuka'} (${blinkCount}/1)`, true);
+
+        // State machine: open → closed → open = 1 blink
+        if (ear < threshold && !eyeWasClosed) {
+            eyeWasClosed = true;
+        } else if (ear > threshold + 0.03 && eyeWasClosed) {
+            eyeWasClosed = false;
             blinkCount++;
-            document.getElementById('stepText').textContent = `Kedipkan mata (${blinkCount}/2)`;
-            if (blinkCount >= 2 && !autoCapturing) {
+            document.getElementById('stepText').textContent = `Kedip terdeteksi! (${blinkCount}/1)`;
+            if (blinkCount >= 1 && !autoCapturing) {
                 autoCapturing = true;
                 doCapture().then(() => { autoCapturing = false; });
             }
@@ -602,6 +621,8 @@
         capturedAngles = [];
         currentStep = -1;
         blinkCount = 0;
+        earHistory = [];
+        eyeWasClosed = false;
         faceStableStart = null;
         resetUI();
         setTimeout(() => beginAutoRegistration(), 300);
