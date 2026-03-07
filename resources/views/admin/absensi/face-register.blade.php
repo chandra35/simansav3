@@ -1,6 +1,8 @@
 @extends('adminlte::page')
 
 @section('title', 'Registrasi Wajah')
+@section('plugins.Datatables', true)
+@section('plugins.DatatablesPlugins', true)
 
 @section('content_header')
     <h1><i class="fas fa-user-shield"></i> Registrasi Wajah GTK</h1>
