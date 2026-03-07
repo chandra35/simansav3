@@ -17,6 +17,10 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// Public Verification Routes (No Auth Required - for QR Code scanning)
+Route::get('/verifikasi/gtk/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiGtk'])->name('verifikasi.gtk');
+Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiSiswa'])->name('verifikasi.siswa');
+
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -196,6 +200,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:edit-gtk'])->group(function () {
         Route::get('/gtk/{gtk}/edit', [App\Http\Controllers\Admin\GtkController::class, 'edit'])->name('gtk.edit');
         Route::put('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'update'])->name('gtk.update');
+        Route::post('/gtk/{gtk}/upload-foto', [App\Http\Controllers\Admin\GtkController::class, 'uploadFoto'])->name('gtk.upload-foto');
+        Route::delete('/gtk/{gtk}/delete-foto', [App\Http\Controllers\Admin\GtkController::class, 'deleteFoto'])->name('gtk.delete-foto');
         // API for cascade dropdown
         Route::get('/api/cities/{province}', [App\Http\Controllers\Admin\GtkController::class, 'getCities'])->name('admin.api.cities');
         Route::get('/api/districts/{city}', [App\Http\Controllers\Admin\GtkController::class, 'getDistricts'])->name('admin.api.districts');
@@ -298,6 +304,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/cetak/absensi-batch', [App\Http\Controllers\Admin\CetakController::class, 'cetakAbsensiBatch'])->name('cetak.absensi-batch');
         Route::get('/cetak/kelas-by-filter', [App\Http\Controllers\Admin\CetakController::class, 'getKelasByFilter'])->name('cetak.kelas-by-filter');
     });
+
+    // Cetak ID Card Siswa
+    Route::get('/cetak/id-card-siswa', [App\Http\Controllers\Admin\CetakController::class, 'idCardSiswaIndex'])->name('cetak.id-card-siswa.index')->middleware('permission:view-siswa');
+    Route::post('/cetak/id-card-siswa', [App\Http\Controllers\Admin\CetakController::class, 'cetakIdCardSiswa'])->name('cetak.id-card-siswa')->middleware('permission:view-siswa');
+
+    // Cetak ID Card GTK
+    Route::get('/cetak/id-card-gtk', [App\Http\Controllers\Admin\CetakController::class, 'idCardGtkIndex'])->name('cetak.id-card-gtk.index')->middleware('permission:view-gtk');
+    Route::post('/cetak/id-card-gtk', [App\Http\Controllers\Admin\CetakController::class, 'cetakIdCardGtk'])->name('cetak.id-card-gtk')->middleware('permission:view-gtk');
+    Route::get('/cetak/gtk-by-filter', [App\Http\Controllers\Admin\CetakController::class, 'getGtkByFilter'])->name('cetak.gtk-by-filter')->middleware('permission:view-gtk');
     
     // ==================== FITUR BARU: PENGUMUMAN ====================
     Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class);
