@@ -333,6 +333,14 @@ return [
             'icon' => 'fas fa-fw fa-user-circle',
             'can' => 'gtk-menu-only',
         ],
+        [
+            'key' => 'gtk-face-register',
+            'text' => 'Registrasi Wajah',
+            'route' => 'admin.absensi.face-register',
+            'icon' => 'fas fa-fw fa-user-shield',
+            'can' => 'gtk-menu-only',
+            'active' => ['admin/absensi/face-register*'],
+        ],
         
         // MANAJEMEN DATA - Collapsible
         [
@@ -487,6 +495,56 @@ return [
             ],
         ],
         
+        // ABSENSI WAJAH - Face Attendance System
+        [
+            'text' => 'Absensi Wajah',
+            'icon' => 'fas fa-fw fa-fingerprint',
+            'submenu' => [
+                [
+                    'text' => 'Absensi Hari Ini',
+                    'route' => 'admin.absensi.index',
+                    'icon' => 'fas fa-fw fa-clipboard-check',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi'],
+                ],
+                [
+                    'text' => 'Mode Kiosk',
+                    'route' => 'admin.absensi.kiosk',
+                    'icon' => 'fas fa-fw fa-desktop',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi/kiosk*'],
+                ],
+                [
+                    'text' => 'Rekap Bulanan',
+                    'route' => 'admin.absensi.rekap',
+                    'icon' => 'fas fa-fw fa-chart-bar',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi/rekap*'],
+                ],
+                [
+                    'text' => 'Registrasi Wajah',
+                    'route' => 'admin.absensi.face-register',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'view-gtk-dashboard',
+                    'active' => ['admin/absensi/face-register*'],
+                ],
+                [
+                    'text' => 'Verifikasi Wajah',
+                    'route' => 'admin.absensi.face-verification',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'edit-absensi',
+                    'active' => ['admin/absensi/face-verification*'],
+                ],
+                [
+                    'text' => 'Pengaturan Absensi',
+                    'route' => 'admin.absensi.settings',
+                    'icon' => 'fas fa-fw fa-cog',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/absensi/settings*'],
+                ],
+            ],
+        ],
+
         // KEUANGAN - Collapsible
         [
             'text' => 'Keuangan',

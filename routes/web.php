@@ -476,6 +476,59 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         
         return '<pre>' . json_encode($response->getData(), JSON_PRETTY_PRINT) . '</pre>';
     })->name('debug.users.data');
+
+    // ============================================
+    // ABSENSI WAJAH (Face Attendance System)
+    // ============================================
+    
+    // Absensi Dashboard & Management (Admin/Operator)
+    Route::middleware(['permission:view-absensi'])->group(function () {
+        Route::get('/absensi', [App\Http\Controllers\Admin\AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('/absensi/rekap', [App\Http\Controllers\Admin\AbsensiController::class, 'rekap'])->name('absensi.rekap');
+        Route::get('/absensi/export', [App\Http\Controllers\Admin\AbsensiController::class, 'export'])->name('absensi.export');
+        Route::get('/absensi/today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.today-data');
+    });
+
+    // Absensi Kiosk Mode (Fullscreen)
+    Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
+
+    // Absensi Input & Edit
+    Route::middleware(['permission:create-absensi'])->group(function () {
+        Route::post('/absensi/manual', [App\Http\Controllers\Admin\AbsensiController::class, 'manualInput'])->name('absensi.manual');
+        Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');
+    });
+
+    Route::middleware(['permission:edit-absensi'])->group(function () {
+        Route::put('/absensi/{absensi}', [App\Http\Controllers\Admin\AbsensiController::class, 'update'])->name('absensi.update');
+    });
+
+    // Face Registration (Self-service for GTK)
+    Route::middleware(['permission:view-gtk-dashboard'])->group(function () {
+        Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
+        Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
+    });
+
+    // Face Verification (Admin only)
+    Route::middleware(['permission:edit-absensi'])->group(function () {
+        Route::get('/absensi/face-verification', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'verificationList'])->name('absensi.face-verification');
+        Route::post('/absensi/face-verify/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'verify'])->name('absensi.face-verify');
+    });
+
+    // Face Descriptors API (for kiosk matching)
+    Route::get('/absensi/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('absensi.face-descriptors');
+
+    // Absensi Settings (Admin)
+    Route::middleware(['permission:manage-settings'])->group(function () {
+        Route::get('/absensi/settings', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'index'])->name('absensi.settings');
+        Route::post('/absensi/settings', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'updateSettings'])->name('absensi.settings.update');
+        Route::post('/absensi/location', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'storeLocation'])->name('absensi.location.store');
+        Route::put('/absensi/location/{location}', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'updateLocation'])->name('absensi.location.update');
+        Route::post('/absensi/location/{location}/toggle', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'toggleLocation'])->name('absensi.location.toggle');
+        Route::delete('/absensi/location/{location}', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'destroyLocation'])->name('absensi.location.destroy');
+        Route::post('/absensi/hari-libur', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'storeHariLibur'])->name('absensi.hari-libur.store');
+        Route::delete('/absensi/hari-libur/{hariLibur}', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'destroyHariLibur'])->name('absensi.hari-libur.destroy');
+        Route::post('/absensi/hari-libur/seed', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'seedHariLibur'])->name('absensi.hari-libur.seed');
+    });
 });
 
 // Siswa Routes
