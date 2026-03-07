@@ -211,6 +211,9 @@
                     </div>
                 </div>
             </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary" onclick="closeRegister()"><i class="fas fa-times"></i> Batal</button>
+            </div>
         </div>
     </div>
 </div>
@@ -524,8 +527,8 @@
             const jawW = Math.sqrt((jawRight.x - jawLeft.x)**2 + (jawRight.y - jawLeft.y)**2);
             const smileRatio = mouthW / jawW;
             // Normal ≈ 0.35-0.40, smiling > 0.44
-            const ok = smileRatio > 0.44;
-            setFaceStatus(ok ? 'Senyum terdeteksi! Tahan...' : `Tersenyum lebih lebar! (${(smileRatio*100).toFixed(0)}%, butuh > 44%)`, ok);
+            const ok = smileRatio > 0.38;
+            setFaceStatus(ok ? 'Senyum terdeteksi! Tahan...' : `Tersenyum lebih lebar! (${(smileRatio*100).toFixed(0)}%, butuh > 38%)`, ok);
             return ok;
         }
 
