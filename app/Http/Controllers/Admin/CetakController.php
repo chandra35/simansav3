@@ -277,9 +277,9 @@ class CetakController extends Controller
         }
 
         // Generate card backgrounds
-        $kemenagLogoPath = $setting && $setting->logo_kemenag_path ? storage_path('app/public/' . $setting->logo_kemenag_path) : null;
+        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/' . $setting->logo_sekolah_path) : null;
         $bgFrontBase64 = $this->generateCardFrontBg();
-        $bgBackBase64 = $this->generateCardGradient(true, $kemenagLogoPath);
+        $bgBackBase64 = $this->generateCardGradient(true, $sekolahLogoPath);
 
         $data = [
             'kelasList' => $kelasList,
@@ -336,9 +336,9 @@ class CetakController extends Controller
         }
 
         // Generate card backgrounds
-        $kemenagLogoPath = $setting && $setting->logo_kemenag_path ? storage_path('app/public/' . $setting->logo_kemenag_path) : null;
+        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/' . $setting->logo_sekolah_path) : null;
         $bgFrontBase64 = $this->generateCardFrontBg();
-        $bgBackBase64 = $this->generateCardGradient(true, $kemenagLogoPath);
+        $bgBackBase64 = $this->generateCardGradient(true, $sekolahLogoPath);
 
         $data = [
             'gtkList' => $gtkList,
@@ -494,7 +494,7 @@ class CetakController extends Controller
                 imagesavealpha($scaled, true);
                 imagefill($scaled, 0, 0, imagecolorallocatealpha($scaled, 0, 0, 0, 127));
                 imagecopyresampled($scaled, $logo, 0, 0, 0, 0, $tw, $th, $lw, $lh);
-                imagecopymerge($img, $scaled, (int)(($width - $tw) / 2), (int)(($height - $th) / 2) - 30, 0, 0, $tw, $th, 15);
+                imagecopymerge($img, $scaled, (int)(($width - $tw) / 2), (int)(($height - $th) / 2) - 30, 0, 0, $tw, $th, 10);
                 imagedestroy($scaled);
                 imagedestroy($logo);
             }
