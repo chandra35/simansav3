@@ -448,7 +448,7 @@
                     if (STEPS[currentStep].angle === 'kedip') {
                         detectBlink(detection.landmarks);
                     } else {
-                        const poseOk = validatePose(detection.landmarks, detection.detection.box, STEPS[currentStep].angle);
+                        const poseOk = validatePose(detection.landmarks, STEPS[currentStep].angle);
                         if (poseOk) {
                             if (!faceStableStart) {
                                 faceStableStart = Date.now();
@@ -480,57 +480,56 @@
     }
 
     // ============================================
-    // POSE VALIDATION
+    // POSE VALIDATION (jaw-landmark distance method)
     // ============================================
-    function validatePose(landmarks, box, angle) {
-        const nose = landmarks.getNose();
-        const mouth = landmarks.getMouth();
-        // Nose tip = point 30 (index 4 in getNose which returns points 27-35)
-        const noseTip = nose[3]; // landmark point 30
-        // Yaw estimation: nose X position relative to face bounding box
-        // 0.0 = left edge, 0.5 = center, 1.0 = right edge
-        const noseRelX = (noseTip.x - box.x) / box.width;
-        // NOTE: video is mirrored (scaleX(-1)), so visually:
-        //   user turns head RIGHT -> nose moves LEFT in raw coords -> noseRelX < 0.5
-        //   user turns head LEFT  -> nose moves RIGHT in raw coords -> noseRelX > 0.5
+    function validatePose(landmarks, angle) {
+        const pts = landmarks.positions; // 68 landmark points
+        const noseTip = pts[30];          // nose tip
+        const jawLeft = pts[0];           // right ear area (person's right, image left)
+        const jawRight = pts[16];         // left ear area (person's left, image right)
+
+        // Yaw estimation: ratio of nose-to-jawLeft vs nose-to-jawRight distance
+        // This works because jaw points stay at ears while nose shifts with head turn
+        const dL = Math.sqrt((noseTip.x - jawLeft.x)**2 + (noseTip.y - jawLeft.y)**2);
+        const dR = Math.sqrt((noseTip.x - jawRight.x)**2 + (noseTip.y - jawRight.y)**2);
+        const yawRatio = dL / dR;
+        // yawRatio ≈ 1.0 = facing forward
+        // yawRatio < 1   = nose closer to jawLeft = user turned HEAD RIGHT (mirrored display)
+        // yawRatio > 1   = nose closer to jawRight = user turned HEAD LEFT (mirrored display)
 
         if (angle === 'frontal') {
-            const centered = noseRelX > 0.35 && noseRelX < 0.65;
-            if (!centered) setFaceStatus(`Lihat lurus ke depan (${(noseRelX*100).toFixed(0)}%)`, false);
-            else setFaceStatus('Bagus! Tetap menghadap depan...', true);
-            return centered;
+            const ok = yawRatio > 0.82 && yawRatio < 1.22;
+            setFaceStatus(ok ? 'Bagus! Tetap menghadap depan...' : `Lihat lurus ke kamera (rasio: ${yawRatio.toFixed(2)})`, ok);
+            return ok;
         }
 
         if (angle === 'kanan') {
-            // User turns RIGHT visually -> in mirrored video, raw noseRelX shifts LEFT (< 0.5)
-            const turned = noseRelX < 0.38;
-            if (!turned) setFaceStatus(`Putar kepala ke KANAN Anda (${(noseRelX*100).toFixed(0)}%)`, false);
-            else setFaceStatus('Bagus! Tahan posisi...', true);
-            return turned;
+            // User turns right -> nose closer to jawLeft -> ratio decreases
+            const ok = yawRatio < 0.82;
+            setFaceStatus(ok ? 'Bagus! Tahan posisi...' : `Putar kepala ke KANAN Anda (rasio: ${yawRatio.toFixed(2)}, butuh < 0.82)`, ok);
+            return ok;
         }
 
         if (angle === 'kiri') {
-            // User turns LEFT visually -> in mirrored video, raw noseRelX shifts RIGHT (> 0.5)
-            const turned = noseRelX > 0.62;
-            if (!turned) setFaceStatus(`Putar kepala ke KIRI Anda (${(noseRelX*100).toFixed(0)}%)`, false);
-            else setFaceStatus('Bagus! Tahan posisi...', true);
-            return turned;
+            // User turns left -> nose closer to jawRight -> ratio increases
+            const ok = yawRatio > 1.22;
+            setFaceStatus(ok ? 'Bagus! Tahan posisi...' : `Putar kepala ke KIRI Anda (rasio: ${yawRatio.toFixed(2)}, butuh > 1.22)`, ok);
+            return ok;
         }
 
         if (angle === 'senyum') {
-            // Smile detection via Mouth Aspect Ratio
-            // mouth points: 0=left corner, 6=right corner, 3=top lip center, 9=bottom lip center
-            const mouthWidth = Math.sqrt((mouth[6].x - mouth[0].x)**2 + (mouth[6].y - mouth[0].y)**2);
-            const mouthHeight = Math.sqrt((mouth[9].x - mouth[3].x)**2 + (mouth[9].y - mouth[3].y)**2);
-            const mar = mouthWidth / (mouthHeight + 0.001);
-            // When smiling, mouth gets wider -> MAR increases (typically > 4.5)
-            const smiling = mar > 4.0;
-            if (!smiling) setFaceStatus(`Tersenyum lebih lebar! (MAR: ${mar.toFixed(1)})`, false);
-            else setFaceStatus('Senyum terdeteksi! Tahan...', true);
-            return smiling;
+            // Smile: mouth width relative to jaw width
+            const mouthL = pts[48], mouthR = pts[54]; // lip corners
+            const mouthW = Math.sqrt((mouthR.x - mouthL.x)**2 + (mouthR.y - mouthL.y)**2);
+            const jawW = Math.sqrt((jawRight.x - jawLeft.x)**2 + (jawRight.y - jawLeft.y)**2);
+            const smileRatio = mouthW / jawW;
+            // Normal ≈ 0.35-0.40, smiling > 0.44
+            const ok = smileRatio > 0.44;
+            setFaceStatus(ok ? 'Senyum terdeteksi! Tahan...' : `Tersenyum lebih lebar! (${(smileRatio*100).toFixed(0)}%, butuh > 44%)`, ok);
+            return ok;
         }
 
-        return true; // fallback
+        return true;
     }
 
     // ============================================
