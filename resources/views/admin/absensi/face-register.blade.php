@@ -448,13 +448,18 @@
                     if (STEPS[currentStep].angle === 'kedip') {
                         detectBlink(detection.landmarks);
                     } else {
-                        if (!faceStableStart) {
-                            faceStableStart = Date.now();
-                            showCountdownRing();
-                        } else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) {
-                            autoCapturing = true;
-                            await doCapture();
-                            autoCapturing = false;
+                        const poseOk = validatePose(detection.landmarks, detection.detection.box, STEPS[currentStep].angle);
+                        if (poseOk) {
+                            if (!faceStableStart) {
+                                faceStableStart = Date.now();
+                                showCountdownRing();
+                            } else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) {
+                                autoCapturing = true;
+                                await doCapture();
+                                autoCapturing = false;
+                            }
+                        } else {
+                            if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
                         }
                     }
                 }
@@ -472,6 +477,60 @@
         const el = document.getElementById('faceStatus');
         el.style.color = ok ? '#00e676' : '#ff5252';
         el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
+    }
+
+    // ============================================
+    // POSE VALIDATION
+    // ============================================
+    function validatePose(landmarks, box, angle) {
+        const nose = landmarks.getNose();
+        const mouth = landmarks.getMouth();
+        // Nose tip = point 30 (index 4 in getNose which returns points 27-35)
+        const noseTip = nose[3]; // landmark point 30
+        // Yaw estimation: nose X position relative to face bounding box
+        // 0.0 = left edge, 0.5 = center, 1.0 = right edge
+        const noseRelX = (noseTip.x - box.x) / box.width;
+        // NOTE: video is mirrored (scaleX(-1)), so visually:
+        //   user turns head RIGHT -> nose moves LEFT in raw coords -> noseRelX < 0.5
+        //   user turns head LEFT  -> nose moves RIGHT in raw coords -> noseRelX > 0.5
+
+        if (angle === 'frontal') {
+            const centered = noseRelX > 0.35 && noseRelX < 0.65;
+            if (!centered) setFaceStatus(`Lihat lurus ke depan (${(noseRelX*100).toFixed(0)}%)`, false);
+            else setFaceStatus('Bagus! Tetap menghadap depan...', true);
+            return centered;
+        }
+
+        if (angle === 'kanan') {
+            // User turns RIGHT visually -> in mirrored video, raw noseRelX shifts LEFT (< 0.5)
+            const turned = noseRelX < 0.38;
+            if (!turned) setFaceStatus(`Putar kepala ke KANAN Anda (${(noseRelX*100).toFixed(0)}%)`, false);
+            else setFaceStatus('Bagus! Tahan posisi...', true);
+            return turned;
+        }
+
+        if (angle === 'kiri') {
+            // User turns LEFT visually -> in mirrored video, raw noseRelX shifts RIGHT (> 0.5)
+            const turned = noseRelX > 0.62;
+            if (!turned) setFaceStatus(`Putar kepala ke KIRI Anda (${(noseRelX*100).toFixed(0)}%)`, false);
+            else setFaceStatus('Bagus! Tahan posisi...', true);
+            return turned;
+        }
+
+        if (angle === 'senyum') {
+            // Smile detection via Mouth Aspect Ratio
+            // mouth points: 0=left corner, 6=right corner, 3=top lip center, 9=bottom lip center
+            const mouthWidth = Math.sqrt((mouth[6].x - mouth[0].x)**2 + (mouth[6].y - mouth[0].y)**2);
+            const mouthHeight = Math.sqrt((mouth[9].x - mouth[3].x)**2 + (mouth[9].y - mouth[3].y)**2);
+            const mar = mouthWidth / (mouthHeight + 0.001);
+            // When smiling, mouth gets wider -> MAR increases (typically > 4.5)
+            const smiling = mar > 4.0;
+            if (!smiling) setFaceStatus(`Tersenyum lebih lebar! (MAR: ${mar.toFixed(1)})`, false);
+            else setFaceStatus('Senyum terdeteksi! Tahan...', true);
+            return smiling;
+        }
+
+        return true; // fallback
     }
 
     // ============================================
