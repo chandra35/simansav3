@@ -494,7 +494,41 @@ class CetakController extends Controller
                 imagesavealpha($scaled, true);
                 imagefill($scaled, 0, 0, imagecolorallocatealpha($scaled, 0, 0, 0, 127));
                 imagecopyresampled($scaled, $logo, 0, 0, 0, 0, $tw, $th, $lw, $lh);
-                imagecopymerge($img, $scaled, (int)(($width - $tw) / 2), (int)(($height - $th) / 2) - 30, 0, 0, $tw, $th, 10);
+
+                // Manual alpha-aware merge (imagecopymerge ignores transparency)
+                $dstX = (int)(($width - $tw) / 2);
+                $dstY = (int)(($height - $th) / 2) - 30;
+                $opacity = 0.10; // 10% opacity
+
+                for ($y = 0; $y < $th; $y++) {
+                    for ($x = 0; $x < $tw; $x++) {
+                        $srcColor = imagecolorat($scaled, $x, $y);
+                        $srcA = ($srcColor >> 24) & 0x7F; // 0=opaque, 127=transparent
+                        if ($srcA >= 127) continue; // fully transparent, skip
+
+                        $srcR = ($srcColor >> 16) & 0xFF;
+                        $srcG = ($srcColor >> 8) & 0xFF;
+                        $srcB = $srcColor & 0xFF;
+
+                        $px = $dstX + $x;
+                        $py = $dstY + $y;
+                        if ($px < 0 || $px >= $width || $py < 0 || $py >= $height) continue;
+
+                        $dstColor = imagecolorat($img, $px, $py);
+                        $dstR = ($dstColor >> 16) & 0xFF;
+                        $dstG = ($dstColor >> 8) & 0xFF;
+                        $dstB = $dstColor & 0xFF;
+
+                        // Combine source alpha with desired opacity
+                        $srcAlpha = (1 - $srcA / 127) * $opacity;
+                        $newR = (int)($dstR * (1 - $srcAlpha) + $srcR * $srcAlpha);
+                        $newG = (int)($dstG * (1 - $srcAlpha) + $srcG * $srcAlpha);
+                        $newB = (int)($dstB * (1 - $srcAlpha) + $srcB * $srcAlpha);
+
+                        imagesetpixel($img, $px, $py, imagecolorallocate($img, $newR, $newG, $newB));
+                    }
+                }
+
                 imagedestroy($scaled);
                 imagedestroy($logo);
             }
