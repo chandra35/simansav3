@@ -45,8 +45,8 @@
                 <button class="btn btn-sm btn-outline-success" data-filter="Verified"><i class="fas fa-check"></i> Verified</button>
             </div>
         </div>
-    </div>
-    <div class="card-body table-responsive p-0 pt-0">
+
+        <div class="table-responsive">
         <table class="table table-hover table-striped table-sm" id="tabelGtk">
             <thead>
                 <tr>
@@ -121,6 +121,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 
