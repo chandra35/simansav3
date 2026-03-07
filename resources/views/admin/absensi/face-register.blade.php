@@ -34,7 +34,19 @@
     <div class="card-header">
         <h3 class="card-title"><i class="fas fa-table"></i> Daftar GTK & Status Registrasi Wajah</h3>
     </div>
-    <div class="card-body table-responsive p-0">
+    <div class="card-body">
+        {{-- Filter Buttons --}}
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="mr-2 font-weight-bold"><i class="fas fa-filter"></i> Filter:</span>
+            <div class="btn-group" id="statusFilter">
+                <button class="btn btn-sm btn-outline-primary active" data-filter="">Semua</button>
+                <button class="btn btn-sm btn-outline-secondary" data-filter="Belum"><i class="fas fa-times"></i> Belum Daftar</button>
+                <button class="btn btn-sm btn-outline-warning" data-filter="Pending"><i class="fas fa-clock"></i> Pending</button>
+                <button class="btn btn-sm btn-outline-success" data-filter="Verified"><i class="fas fa-check"></i> Verified</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body table-responsive p-0 pt-0">
         <table class="table table-hover table-striped table-sm" id="tabelGtk">
             <thead>
                 <tr>
@@ -248,11 +260,24 @@
     // DATATABLE
     // ============================================
     $(function() {
-        $('#tabelGtk').DataTable({
+        const table = $('#tabelGtk').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
             pageLength: 25,
             order: [[1, 'asc']],
             columnDefs: [{ orderable: false, targets: [8] }],
+        });
+
+        // Status filter buttons
+        let activeFilter = '';
+        $.fn.dataTable.ext.search.push(function(settings, data) {
+            if (!activeFilter) return true;
+            return data[3].indexOf(activeFilter) !== -1; // column 3 = Status
+        });
+        $('#statusFilter').on('click', 'button', function() {
+            $('#statusFilter button').removeClass('active');
+            $(this).addClass('active');
+            activeFilter = $(this).data('filter');
+            table.draw();
         });
     });
 
