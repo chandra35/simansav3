@@ -3,14 +3,18 @@
 @section('title', 'Dashboard - SIMANSA')
 
 @section('content_header')
-    <h1>Dashboard Super Admin</h1>
-    @if($tahunPelajaranAktif)
-    <p class="text-muted" style="font-size: 0.85rem; margin-top: 5px;">
-        <i class="fas fa-calendar-alt"></i> Tahun Pelajaran Aktif: 
-        <strong>{{ $tahunPelajaranAktif->nama }}</strong> 
-        (Semester {{ $tahunPelajaranAktif->semester_aktif }})
-    </p>
-    @endif
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><i class="fas fa-tachometer-alt mr-2" style="color: var(--primary, #4f46e5);"></i>Dashboard</h1>
+            @if($tahunPelajaranAktif)
+            <p class="text-muted mb-0" style="font-size: 0.85rem; margin-top: 4px;">
+                <i class="fas fa-calendar-alt"></i> Tahun Pelajaran Aktif: 
+                <strong>{{ $tahunPelajaranAktif->nama }}</strong> 
+                (Semester {{ $tahunPelajaranAktif->semester_aktif }})
+            </p>
+            @endif
+        </div>
+    </div>
 @stop
 
 @section('content')

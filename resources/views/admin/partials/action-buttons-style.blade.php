@@ -1,14 +1,14 @@
 {{-- Admin Action Buttons Style - Include this in your admin layout or specific pages --}}
 <style>
 /* ============================================
-   Action Buttons - Unified Style
+   Action Buttons - Refined Elegant Style
    ============================================ */
 
 /* Base Action Button Group */
 .action-btns {
     display: inline-flex;
     flex-wrap: nowrap;
-    gap: 3px;
+    gap: 4px;
     align-items: center;
     justify-content: center;
 }
@@ -22,17 +22,18 @@
 }
 
 .action-btns .btn {
-    padding: 0.25rem 0.45rem;
+    padding: 0.3rem 0.5rem;
     font-size: 0.75rem;
-    border-radius: 4px;
-    transition: all 0.15s ease;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    height: 28px;
+    min-width: 30px;
+    height: 30px;
     line-height: 1;
     vertical-align: middle;
+    border: none;
 }
 
 .action-btns .btn i {
@@ -41,87 +42,80 @@
 
 .action-btns .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
 }
 
 .action-btns .btn:active {
     transform: translateY(0);
 }
 
-/* View Button */
+/* View Button - Soft blue */
 .action-btns .btn-action-view {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    border: none;
-    color: white;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
 }
 .action-btns .btn-action-view:hover {
-    background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+    background: #3b82f6;
     color: white;
 }
 
-/* Edit Button */
+/* Edit Button - Soft amber */
 .action-btns .btn-action-edit {
-    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-    border: none;
-    color: #212529;
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
 }
 .action-btns .btn-action-edit:hover {
-    background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
-    color: #212529;
+    background: #f59e0b;
+    color: white;
 }
 
-/* Delete Button */
+/* Delete Button - Soft red */
 .action-btns .btn-action-delete {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    border: none;
-    color: white;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 .action-btns .btn-action-delete:hover {
-    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    background: #ef4444;
     color: white;
 }
 
-/* Success/Activate Button */
+/* Success/Activate Button - Soft green */
 .action-btns .btn-action-success {
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-    border: none;
-    color: white;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
 }
 .action-btns .btn-action-success:hover {
-    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    background: #10b981;
     color: white;
 }
 
-/* Secondary/Neutral Button */
+/* Secondary/Neutral Button - Soft gray */
 .action-btns .btn-action-secondary {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-    border: none;
-    color: white;
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
 }
 .action-btns .btn-action-secondary:hover {
-    background: linear-gradient(135deg, #5a6268 0%, #545b62 100%);
+    background: #64748b;
     color: white;
 }
 
-/* Primary Button */
+/* Primary Button - Soft indigo */
 .action-btns .btn-action-primary {
-    background: linear-gradient(135deg, #007bff 0%, #0069d9 100%);
-    border: none;
-    color: white;
+    background: rgba(79, 70, 229, 0.1);
+    color: #4f46e5;
 }
 .action-btns .btn-action-primary:hover {
-    background: linear-gradient(135deg, #0069d9 0%, #0056b3 100%);
+    background: #4f46e5;
     color: white;
 }
 
-/* Warning Button */
+/* Warning Button - Soft orange */
 .action-btns .btn-action-warning {
-    background: linear-gradient(135deg, #fd7e14 0%, #e06700 100%);
-    border: none;
-    color: white;
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
 }
 .action-btns .btn-action-warning:hover {
-    background: linear-gradient(135deg, #e06700 0%, #cc5c00 100%);
+    background: #ea580c;
     color: white;
 }
 
@@ -134,26 +128,26 @@
     color: white;
 }
 .action-btns .btn-action-outline.btn-outline-info {
-    color: #17a2b8;
+    color: #3b82f6;
 }
 .action-btns .btn-action-outline.btn-outline-info:hover {
-    background: #17a2b8;
-    border-color: #17a2b8;
+    background: #3b82f6;
+    border-color: #3b82f6;
 }
 .action-btns .btn-action-outline.btn-outline-warning {
-    color: #ffc107;
+    color: #f59e0b;
 }
 .action-btns .btn-action-outline.btn-outline-warning:hover {
-    background: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
 }
 .action-btns .btn-action-outline.btn-outline-danger {
-    color: #dc3545;
+    color: #ef4444;
 }
 .action-btns .btn-action-outline.btn-outline-danger:hover {
-    background: #dc3545;
-    border-color: #dc3545;
+    background: #ef4444;
+    border-color: #ef4444;
 }
 
 /* Responsive adjustments */

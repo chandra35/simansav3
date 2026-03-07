@@ -17,7 +17,7 @@
                             <a class="nav-link active" id="data-diri-tab" data-toggle="pill" href="#data-diri" role="tab">
                                 <i class="fas fa-user"></i> Data Diri
                                 @if(!$gtk->data_diri_completed)
-                                    <span class="badge badge-warning ml-1">Belum Lengkap</span>
+                                    <span class="badge badge-danger ml-1">Belum Lengkap</span>
                                 @endif
                             </a>
                         </li>
@@ -25,7 +25,7 @@
                             <a class="nav-link" id="data-kepeg-tab" data-toggle="pill" href="#data-kepeg" role="tab">
                                 <i class="fas fa-briefcase"></i> Data Kepegawaian
                                 @if(!$gtk->data_kepeg_completed)
-                                    <span class="badge badge-warning ml-1">Belum Lengkap</span>
+                                    <span class="badge badge-danger ml-1">Belum Lengkap</span>
                                 @endif
                             </a>
                         </li>
@@ -35,9 +35,31 @@
                     <div class="tab-content" id="custom-tabs-tabContent">
                         {{-- DATA DIRI TAB --}}
                         <div class="tab-pane fade show active" id="data-diri" role="tabpanel">
-                            <form id="formDataDiri" action="{{ route('admin.gtk.profile.diri.update') }}" method="POST">
+                            <form id="formDataDiri" action="{{ route('admin.gtk.profile.diri.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
+
+                                {{-- Foto Profile --}}
+                                <div class="card card-outline card-info mb-3">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-camera"></i> Foto Profile</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="mr-3">
+                                                <img id="fotoPreview" 
+                                                     src="{{ $gtk->foto_profile_url }}" 
+                                                     alt="Foto" 
+                                                     style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #dee2e6;">
+                                            </div>
+                                            <div>
+                                                <input type="file" class="form-control-file" name="foto_profile" id="foto_profile"
+                                                       accept="image/jpeg,image/png,image/jpg">
+                                                <small class="text-muted">Format: JPG, JPEG, PNG. Maks: 2MB</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {{-- Card: Data Pribadi --}}
                                 <div class="card card-outline card-primary">
@@ -484,6 +506,18 @@
         };
 
         $(document).ready(function() {
+            // Foto preview
+            $('#foto_profile').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#fotoPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
             // Initialize Select2
             $('.select2').select2({
                 theme: 'bootstrap4',
@@ -515,7 +549,9 @@
                 $.ajax({
                     url: $(this).attr('action'),
                     method: 'POST',
-                    data: $(this).serialize(),
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     },

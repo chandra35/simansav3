@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class GtkController extends Controller
@@ -135,10 +136,10 @@ class GtkController extends Controller
                 'username' => $item->user->username ?? '-',
                 'status_diri' => $item->data_diri_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-warning">Belum Lengkap</span>',
+                    '<span class="badge badge-danger">Belum Lengkap</span>',
                 'status_kepeg' => $item->data_kepegawaian_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-warning">Belum Lengkap</span>',
+                    '<span class="badge badge-danger">Belum Lengkap</span>',
                 'actions' => $this->getActionButtons($item)
             ];
         });
@@ -349,7 +350,7 @@ class GtkController extends Controller
                     'kelurahan_id' => 'nullable|string',
                     'kodepos' => 'nullable|string|max:10',
                 ]);
-                
+
                 $gtk->update($validated);
                 
                 // Check if data diri is complete
@@ -431,6 +432,72 @@ class GtkController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload foto profile GTK via AJAX
+     */
+    public function uploadFoto(Request $request, $id)
+    {
+        $gtk = Gtk::findOrFail($id);
+
+        $request->validate([
+            'foto_profile' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'foto_profile.required' => 'File foto wajib dipilih.',
+            'foto_profile.image' => 'File harus berupa gambar.',
+            'foto_profile.mimes' => 'Format yang diizinkan: JPG, JPEG, PNG.',
+            'foto_profile.max' => 'Ukuran file maksimal 2MB.',
+        ]);
+
+        try {
+            // Delete old foto if exists
+            if ($gtk->foto_profile) {
+                Storage::disk('public')->delete($gtk->foto_profile);
+            }
+
+            $path = $request->file('foto_profile')->store('foto_profile/gtk', 'public');
+            $gtk->update(['foto_profile' => $path]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil diupload.',
+                'foto_url' => asset('storage/' . $path),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error uploading GTK foto: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupload foto.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete foto profile GTK via AJAX
+     */
+    public function deleteFoto($id)
+    {
+        $gtk = Gtk::findOrFail($id);
+
+        try {
+            if ($gtk->foto_profile) {
+                Storage::disk('public')->delete($gtk->foto_profile);
+                $gtk->update(['foto_profile' => null]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil dihapus.',
+                'default_url' => $gtk->fresh()->foto_profile_url,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting GTK foto: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto.',
             ], 500);
         }
     }

@@ -174,7 +174,7 @@ return [
     'classes_auth_card' => 'card-outline card-primary',
     'classes_auth_header' => '',
     'classes_auth_body' => '',
-    'classes_auth_footer' => '',
+    'classes_auth_footer' => 'text-center',
     'classes_auth_icon' => '',
     'classes_auth_btn' => 'btn-flat btn-primary',
 
@@ -196,7 +196,7 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4 text-sm',
+    'classes_sidebar' => 'sidebar-dark-indigo elevation-4 text-sm',
     'classes_sidebar_nav' => 'nav-compact nav-flat',
     'classes_topnav' => 'navbar-white navbar-light text-sm',
     'classes_topnav_nav' => 'navbar-expand',
@@ -419,10 +419,32 @@ return [
                 ],
                 [
                     'text' => 'Cetak Dokumen',
-                    'route' => 'admin.cetak.index',
                     'icon' => 'fas fa-fw fa-print',
                     'can' => 'view-kelas',
                     'active' => ['admin/cetak*'],
+                    'submenu' => [
+                        [
+                            'text' => 'Cetak Absensi',
+                            'route' => 'admin.cetak.index',
+                            'icon' => 'fas fa-fw fa-clipboard-check',
+                            'can' => 'view-kelas',
+                            'active' => ['admin/cetak'],
+                        ],
+                        [
+                            'text' => 'ID Card Siswa',
+                            'route' => 'admin.cetak.id-card-siswa.index',
+                            'icon' => 'fas fa-fw fa-id-card',
+                            'can' => 'view-siswa',
+                            'active' => ['admin/cetak/id-card-siswa*'],
+                        ],
+                        [
+                            'text' => 'ID Card GTK',
+                            'route' => 'admin.cetak.id-card-gtk.index',
+                            'icon' => 'fas fa-fw fa-id-badge',
+                            'can' => 'view-gtk',
+                            'active' => ['admin/cetak/id-card-gtk*'],
+                        ],
+                    ],
                 ],
                 [
                     'text' => 'Mutasi Siswa',
@@ -829,6 +851,16 @@ return [
     */
 
     'plugins' => [
+        'GoogleFontsInter' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => false,
+                    'location' => '//fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+                ],
+            ],
+        ],
         'CustomCompact' => [
             'active' => true,
             'files' => [

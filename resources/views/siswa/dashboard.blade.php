@@ -359,11 +359,11 @@
                                 @if($siswa->data_diri_completed)
                                     <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>
                                 @else
-                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Belum Lengkap</span>
+                                    <span class="badge badge-danger"><i class="fas fa-clock"></i> Belum Lengkap</span>
                                 @endif
                             </span>
                             <div class="progress progress-sm mt-2 mb-3">
-                                <div class="progress-bar {{ $siswa->data_diri_completed ? 'bg-success' : 'bg-warning' }}" 
+                                <div class="progress-bar {{ $siswa->data_diri_completed ? 'bg-success' : 'bg-danger' }}" 
                                      style="width: {{ $siswa->data_diri_completed ? 100 : 50 }}%"></div>
                             </div>
                         </div>
@@ -376,11 +376,11 @@
                                 @if($siswa->data_ortu_completed)
                                     <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>
                                 @else
-                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Belum Lengkap</span>
+                                    <span class="badge badge-danger"><i class="fas fa-clock"></i> Belum Lengkap</span>
                                 @endif
                             </span>
                             <div class="progress progress-sm mt-2 mb-3">
-                                <div class="progress-bar {{ $siswa->data_ortu_completed ? 'bg-success' : 'bg-warning' }}" 
+                                <div class="progress-bar {{ $siswa->data_ortu_completed ? 'bg-success' : 'bg-danger' }}" 
                                      style="width: {{ $siswa->data_ortu_completed ? 100 : 50 }}%"></div>
                             </div>
                         </div>

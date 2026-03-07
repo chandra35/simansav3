@@ -205,10 +205,10 @@ class SiswaController extends Controller
                 'username' => $item->user->username ?? '-',
                 'status_ortu' => $item->data_ortu_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-warning">Belum Lengkap</span>',
+                    '<span class="badge badge-danger">Belum Lengkap</span>',
                 'status_diri' => $item->data_diri_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-warning">Belum Lengkap</span>',
+                    '<span class="badge badge-danger">Belum Lengkap</span>',
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item)
             ];

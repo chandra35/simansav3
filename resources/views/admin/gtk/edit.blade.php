@@ -62,10 +62,70 @@
                     <div class="tab-content mt-3" id="gtkEditTabsContent">
                         <!-- Tab Data Pribadi -->
                         <div class="tab-pane fade show active" id="diri" role="tabpanel">
-                            <form id="formDataDiri">
+                            <form id="formDataDiri" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="tab" value="diri">
+
+                                {{-- Foto Profile - AJAX Upload --}}
+                                <div class="card card-outline card-primary mb-3">
+                                    <div class="card-header py-2">
+                                        <h3 class="card-title"><i class="fas fa-camera mr-1"></i> Foto Profile</h3>
+                                    </div>
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center">
+                                            {{-- Current Photo --}}
+                                            <div id="fotoContainer" class="mr-4 text-center" style="position: relative; flex-shrink: 0;">
+                                                @php
+                                                    $hasFoto = !empty($gtk->foto_profile);
+                                                    $initialsBg = $gtk->jenis_kelamin === 'P' ? '#f06292' : '#42a5f5';
+                                                    $initials = collect(explode(' ', $gtk->nama_lengkap ?? 'G'))->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))->take(2)->join('');
+                                                @endphp
+                                                {{-- Foto Image (hidden if no foto) --}}
+                                                <img id="fotoPreview" 
+                                                     src="{{ $hasFoto ? asset('storage/' . $gtk->foto_profile) : '' }}" 
+                                                     alt=""
+                                                     style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #dee2e6; {{ $hasFoto ? '' : 'display:none;' }}">
+                                                {{-- Avatar Inisial (shown if no foto) --}}
+                                                <div id="fotoInitials" 
+                                                     style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #dee2e6; background: {{ $initialsBg }}; color: #fff; font-size: 36px; font-weight: 600; display: {{ $hasFoto ? 'none' : 'flex' }}; align-items: center; justify-content: center; line-height: 1;">
+                                                    {{ $initials }}
+                                                </div>
+                                                {{-- Delete Button --}}
+                                                <button type="button" id="btnDeleteFoto" 
+                                                        style="position:absolute; top:2px; right:2px; width:26px; height:26px; border-radius:50%; border:2px solid #fff; background:#dc3545; color:#fff; font-size:11px; padding:0; line-height:22px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.3); {{ $hasFoto ? '' : 'display:none;' }}"
+                                                        title="Hapus foto">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+
+                                            {{-- Upload Area --}}
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div id="dropZone" 
+                                                     style="border: 2px dashed #c3c4c7; border-radius: 8px; padding: 24px 16px; text-align: center; cursor: pointer; background: #fafbfc; transition: all 0.2s ease;">
+                                                    <input type="file" id="fotoFileInput" 
+                                                           accept="image/jpeg,image/png,image/jpg"
+                                                           style="display: none;">
+                                                    <div id="dropZoneContent">
+                                                        <i class="fas fa-cloud-upload-alt text-primary mb-2" style="font-size: 28px; display:block; opacity:0.7;"></i>
+                                                        <p class="mb-1" style="font-size: 14px; color: #495057;">
+                                                            <strong>Klik</strong> atau <strong>seret foto</strong> ke sini
+                                                        </p>
+                                                        <small class="text-muted">JPG, JPEG, PNG &bull; Maks 2MB</small>
+                                                    </div>
+                                                    {{-- Progress Bar --}}
+                                                    <div id="uploadProgress" style="display: none;" class="mt-2 px-4">
+                                                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                                                            <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                                                 style="width: 0%; border-radius: 4px;"></div>
+                                                        </div>
+                                                        <small id="uploadStatusText" class="text-muted mt-1" style="display:block;">Mengupload...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 <div class="row">
                                     <div class="col-md-6">
@@ -823,6 +883,190 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            // ===== FOTO UPLOAD AJAX =====
+            const $dropZone = $('#dropZone');
+            const $fileInput = $('#fotoFileInput');
+            const $preview = $('#fotoPreview');
+            const $initials = $('#fotoInitials');
+            const $progress = $('#uploadProgress');
+            const $progressBar = $('#uploadProgressBar');
+            const $statusText = $('#uploadStatusText');
+            const $dropContent = $('#dropZoneContent');
+            const $btnDelete = $('#btnDeleteFoto');
+            const uploadUrl = '{{ route("admin.gtk.upload-foto", $gtk->id) }}';
+            const deleteUrl = '{{ route("admin.gtk.delete-foto", $gtk->id) }}';
+            const csrfToken = '{{ csrf_token() }}';
+
+            // Hover effect on drop zone
+            $dropZone.on('mouseenter', function() {
+                $(this).css({ 'border-color': '#007bff', 'background': '#f0f6ff' });
+            }).on('mouseleave', function() {
+                $(this).css({ 'border-color': '#c3c4c7', 'background': '#fafbfc' });
+            });
+
+            // Click to open file dialog
+            $dropZone.on('click', function(e) {
+                if (e.target === $fileInput[0]) return;
+                $fileInput.trigger('click');
+            });
+
+            // Drag & drop visual feedback
+            $dropZone.on('dragover dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css({ 'border-color': '#28a745', 'background': '#e8f5e9' });
+            });
+            $dropZone.on('dragleave drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css({ 'border-color': '#c3c4c7', 'background': '#fafbfc' });
+            });
+
+            // Handle drop
+            $dropZone.on('drop', function(e) {
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) handleUpload(files[0]);
+            });
+
+            // Handle file input change
+            $fileInput.on('change', function() {
+                if (this.files.length > 0) handleUpload(this.files[0]);
+            });
+
+            function showPhoto(src) {
+                $preview.attr('src', src).show();
+                $initials.hide();
+            }
+
+            function showInitials() {
+                $preview.hide().attr('src', '');
+                $initials.show();
+                $btnDelete.hide();
+            }
+
+            function handleUpload(file) {
+                // Validate client-side
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!validTypes.includes(file.type)) {
+                    Swal.fire({ icon: 'error', title: 'Format Salah', text: 'Hanya file JPG, JPEG, dan PNG yang diizinkan.' });
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'File Terlalu Besar', text: 'Ukuran file maksimal 2MB.' });
+                    return;
+                }
+
+                // Show instant preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    showPhoto(e.target.result);
+                    $preview.css('border-color', '#ffc107');
+                };
+                reader.readAsDataURL(file);
+
+                // Prepare upload
+                const formData = new FormData();
+                formData.append('foto_profile', file);
+                formData.append('_token', csrfToken);
+
+                // Show progress
+                $dropContent.hide();
+                $progress.show();
+                $progressBar.css('width', '0%').removeClass('bg-danger').addClass('bg-primary');
+                $statusText.text('Mengupload...').removeClass('text-danger text-success').addClass('text-muted');
+
+                $.ajax({
+                    url: uploadUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function() {
+                        const xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                const pct = Math.round((e.loaded / e.total) * 100);
+                                $progressBar.css('width', pct + '%');
+                                $statusText.text('Mengupload... ' + pct + '%');
+                            }
+                        });
+                        return xhr;
+                    },
+                    success: function(res) {
+                        $progressBar.css('width', '100%');
+                        $statusText.text('Upload berhasil!').removeClass('text-muted text-danger').addClass('text-success');
+                        showPhoto(res.foto_url);
+                        $preview.css('border-color', '#28a745');
+                        $btnDelete.show();
+
+                        setTimeout(function() {
+                            $progress.hide();
+                            $dropContent.show();
+                            $preview.css('border-color', '#dee2e6');
+                        }, 1500);
+
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: res.message, showConfirmButton: false, timer: 2000
+                        });
+                    },
+                    error: function(xhr) {
+                        $progressBar.css('width', '100%').removeClass('bg-primary').addClass('bg-danger');
+                        let msg = 'Gagal mengupload foto.';
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                            const errs = xhr.responseJSON.errors;
+                            msg = Object.values(errs).flat().join(', ');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        $statusText.text(msg).removeClass('text-muted text-success').addClass('text-danger');
+                        $preview.css('border-color', '#dc3545');
+
+                        setTimeout(function() {
+                            $progress.hide();
+                            $dropContent.show();
+                            $progressBar.removeClass('bg-danger').addClass('bg-primary');
+                            $preview.css('border-color', '#dee2e6');
+                        }, 3000);
+                    }
+                });
+
+                // Reset file input
+                $fileInput.val('');
+            }
+
+            // Delete foto
+            $btnDelete.on('click', function(e) {
+                e.stopPropagation();
+                Swal.fire({
+                    title: 'Hapus Foto?',
+                    text: 'Foto profile akan dihapus.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: deleteUrl,
+                            type: 'DELETE',
+                            data: { _token: csrfToken },
+                            success: function(res) {
+                                showInitials();
+                                Swal.fire({
+                                    toast: true, position: 'top-end', icon: 'success',
+                                    title: res.message, showConfirmButton: false, timer: 2000
+                                });
+                            },
+                            error: function() {
+                                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus foto.' });
+                            }
+                        });
+                    }
+                });
+            });
+
             // Initialize Select2
             $('.select2').select2({
                 theme: 'bootstrap4',

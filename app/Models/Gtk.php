@@ -32,6 +32,7 @@ class Gtk extends Model
         'tanggal_lahir',
         'email',
         'nomor_hp',
+        'foto_profile',
         'alamat',
         'rt',
         'rw',
@@ -98,6 +99,19 @@ class Gtk extends Model
     public function kelurahan()
     {
         return $this->belongsTo(Village::class, 'kelurahan_id', 'code');
+    }
+
+    /**
+     * Accessor untuk foto profile URL
+     */
+    public function getFotoProfileUrlAttribute()
+    {
+        if ($this->foto_profile) {
+            return asset('storage/' . $this->foto_profile);
+        }
+        $name = urlencode($this->nama_lengkap ?? 'GTK');
+        $bg = $this->jenis_kelamin === 'P' ? 'f06292' : '42a5f5';
+        return "https://ui-avatars.com/api/?name={$name}&size=150&background={$bg}&color=ffffff";
     }
 
     /**

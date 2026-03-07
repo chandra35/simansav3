@@ -319,8 +319,8 @@ function loadSiswaDataTab(siswa) {
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-check-circle"></i> Status Kelengkapan</h6>
                 <table class="table table-detail table-sm table-bordered">
-                    <tr><td width="40%" class="bg-light"><strong>Data Ortu</strong></td><td>${siswa.data_ortu_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
-                    <tr><td class="bg-light"><strong>Data Diri</strong></td><td>${siswa.data_diri_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
+                    <tr><td width="40%" class="bg-light"><strong>Data Ortu</strong></td><td>${siswa.data_ortu_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
+                    <tr><td class="bg-light"><strong>Data Diri</strong></td><td>${siswa.data_diri_completed ? '<span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>' : '<span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Belum Lengkap</span>'}</td></tr>
                     <tr><td class="bg-light"><strong>Status Login</strong></td><td>${siswa.user.is_first_login ? '<span class="badge badge-warning"><i class="fas fa-clock"></i> Belum Pernah Login</span>' : '<span class="badge badge-success"><i class="fas fa-check"></i> Sudah Login</span>'}</td></tr>
                 </table>
                 

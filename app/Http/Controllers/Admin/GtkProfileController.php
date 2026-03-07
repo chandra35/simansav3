@@ -11,6 +11,7 @@ use Laravolt\Indonesia\Models\Village;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class GtkProfileController extends Controller
@@ -104,6 +105,7 @@ class GtkProfileController extends Controller
             'jenis_kelamin' => 'required|in:L,P',
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
+            'foto_profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'provinsi_id' => 'nullable|exists:indonesia_provinces,code',
             'kabupaten_id' => 'nullable|exists:indonesia_cities,code',
             'kecamatan_id' => 'nullable|exists:indonesia_districts,code',
@@ -114,8 +116,17 @@ class GtkProfileController extends Controller
             'kodepos' => 'nullable|string|max:5',
         ]);
 
+        // Handle foto upload
+        $fotoData = [];
+        if ($request->hasFile('foto_profile')) {
+            if ($gtk->foto_profile) {
+                Storage::disk('public')->delete($gtk->foto_profile);
+            }
+            $fotoData['foto_profile'] = $request->file('foto_profile')->store('foto_profile/gtk', 'public');
+        }
+
         // Update GTK data
-        $gtk->update([
+        $gtk->update(array_merge([
             'nama_lengkap' => $request->nama_lengkap,
             'nik' => $request->nik,
             'jenis_kelamin' => $request->jenis_kelamin,
@@ -140,7 +151,7 @@ class GtkProfileController extends Controller
                                      !empty($request->kelurahan_id) && 
                                      !empty($request->alamat),
             'updated_by' => $user->id,
-        ]);
+        ], $fotoData));
 
         // Update user name and username
         $user->update([
