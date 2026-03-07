@@ -502,8 +502,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/absensi/{absensi}', [App\Http\Controllers\Admin\AbsensiController::class, 'update'])->name('absensi.update');
     });
 
-    // Face Registration (Self-service for GTK)
-    Route::middleware(['permission:view-gtk-dashboard'])->group(function () {
+    // Face Registration (Admin/Operator mendaftarkan wajah GTK)
+    Route::middleware(['permission:view-absensi|view-gtk-dashboard'])->group(function () {
         Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
         Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
     });

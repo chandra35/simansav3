@@ -4,22 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FaceEncoding;
+use App\Models\Gtk;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class FaceRegistrationController extends Controller
 {
     /**
-     * Halaman registrasi wajah (self-service untuk GTK)
+     * Halaman registrasi wajah
      */
     public function index()
     {
-        $user = Auth::user();
-        $faceData = FaceEncoding::where('user_id', $user->id)
-            ->where('user_type', 'gtk')
-            ->first();
+        // Daftar GTK untuk pilihan user
+        $gtkList = Gtk::whereNotNull('user_id')
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'user_id', 'nama_lengkap', 'nip']);
 
-        return view('admin.absensi.face-register', compact('faceData'));
+        // Cek face data per user yang sudah terdaftar
+        $registeredFaces = FaceEncoding::where('user_type', 'gtk')
+            ->where('is_active', true)
+            ->pluck('user_id')
+            ->toArray();
+
+        return view('admin.absensi.face-register', compact('gtkList', 'registeredFaces'));
     }
 
     /**
@@ -28,31 +36,32 @@ class FaceRegistrationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'user_id' => 'required|exists:users,id',
             'descriptors' => 'required|array|min:3',
             'descriptors.*' => 'required|array',
             'angles' => 'required|array|min:3',
             'angles.*' => 'required|string',
             'quality_score' => 'nullable|numeric|min:0|max:100',
-            'photo' => 'nullable|string', // base64 foto thumbnail
+            'photo' => 'nullable|string',
         ]);
 
-        $user = Auth::user();
+        $userId = $request->user_id;
 
         // Simpan foto thumbnail jika ada
         $photoPath = null;
         if ($request->photo) {
-            $photoPath = $this->saveBase64Photo($request->photo, $user->id);
+            $photoPath = $this->saveBase64Photo($request->photo, $userId);
         }
 
         $faceData = FaceEncoding::updateOrCreate(
-            ['user_id' => $user->id, 'user_type' => 'gtk'],
+            ['user_id' => $userId, 'user_type' => 'gtk'],
             [
                 'descriptors' => $request->descriptors,
                 'capture_angles' => $request->angles,
                 'total_captures' => count($request->descriptors),
                 'quality_score' => $request->quality_score,
                 'is_active' => true,
-                'is_verified' => false, // perlu verifikasi admin
+                'is_verified' => false,
             ]
         );
 

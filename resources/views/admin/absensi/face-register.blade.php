@@ -9,26 +9,45 @@
 @section('content')
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        {{-- Status Card --}}
-        @if($faceData && $faceData->is_active)
-            <div class="alert alert-{{ $faceData->is_verified ? 'success' : 'warning' }}">
-                <i class="fas fa-{{ $faceData->is_verified ? 'check-circle' : 'clock' }}"></i>
-                @if($faceData->is_verified)
-                    <strong>Wajah Anda sudah terdaftar dan terverifikasi.</strong>
-                    Terakhir diperbarui: {{ $faceData->updated_at->diffForHumans() }}
-                @else
-                    <strong>Wajah Anda sudah terdaftar, menunggu verifikasi admin.</strong>
-                    Didaftarkan: {{ $faceData->created_at->diffForHumans() }}
-                @endif
-                <button class="btn btn-sm btn-outline-dark float-right" onclick="startRegistration()">
-                    <i class="fas fa-redo"></i> Daftar Ulang
+
+        {{-- Step 1: Pilih User --}}
+        <div class="card card-primary card-outline" id="cardSelectUser">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-user-check"></i> Pilih GTK untuk Registrasi Wajah</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="selectGtk">Nama GTK <span class="text-danger">*</span></label>
+                    <select class="form-control select2" id="selectGtk" style="width:100%;">
+                        <option value="">-- Pilih GTK --</option>
+                        @foreach($gtkList as $gtk)
+                            <option value="{{ $gtk->user_id }}"
+                                    data-nama="{{ $gtk->nama_lengkap }}"
+                                    data-nip="{{ $gtk->nip }}"
+                                    data-registered="{{ in_array($gtk->user_id, $registeredFaces) ? '1' : '0' }}">
+                                {{ $gtk->nama_lengkap }} {{ $gtk->nip ? '('.$gtk->nip.')' : '' }}
+                                @if(in_array($gtk->user_id, $registeredFaces)) ✓ Sudah Terdaftar @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="selectedUserInfo" class="alert alert-info d-none">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="selectedUserText"></span>
+                </div>
+                <button class="btn btn-primary" id="btnStartCamera" disabled onclick="startCamera()">
+                    <i class="fas fa-camera"></i> Mulai Registrasi Wajah
                 </button>
             </div>
-        @endif
+        </div>
 
-        <div class="card card-primary card-outline">
+        {{-- Step 2: Camera & Registration (hidden until user selected) --}}
+        <div class="card card-primary card-outline d-none" id="cardCamera">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-camera"></i> Capture Wajah</h3>
+                <h3 class="card-title"><i class="fas fa-camera"></i> Capture Wajah — <span id="headerUserName"></span></h3>
+                <div class="card-tools">
+                    <button class="btn btn-sm btn-default" onclick="backToSelect()"><i class="fas fa-arrow-left"></i> Ganti User</button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="row no-gutters">
@@ -48,6 +67,16 @@
                             <span id="stepText">Lihat ke kamera</span>
                         </div>
 
+                        {{-- Auto-capture countdown ring --}}
+                        <div id="autoCaptureIndicator" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:6; display:none;">
+                            <svg width="80" height="80" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="35" stroke="#333" stroke-width="4" fill="none" opacity="0.3"/>
+                                <circle id="countdownCircle" cx="40" cy="40" r="35" stroke="#00e676" stroke-width="4" fill="none"
+                                    stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round"
+                                    style="transition: stroke-dashoffset 1.5s linear; transform: rotate(-90deg); transform-origin: center;"/>
+                            </svg>
+                        </div>
+
                         {{-- Face detection indicator --}}
                         <div id="faceStatus" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#aaa; padding:8px 20px; border-radius:20px; font-size:0.9rem; z-index:5;">
                             <i class="fas fa-video"></i> Menunggu...
@@ -58,58 +87,30 @@
                     <div class="col-md-4" style="background:#f8f9fa;">
                         <div class="p-3">
                             <h5 class="mb-3"><i class="fas fa-list-ol"></i> Langkah Registrasi</h5>
+                            <p class="text-muted small mb-2"><i class="fas fa-magic"></i> Capture otomatis saat wajah stabil terdeteksi</p>
 
                             <div class="step-list">
-                                <div class="step-item" id="step-0" data-angle="frontal">
+                                @php
+                                $steps = [
+                                    ['Wajah Depan', 'Lihat lurus ke kamera', 'frontal'],
+                                    ['Toleh Kanan', 'Putar kepala ke kanan', 'kanan'],
+                                    ['Toleh Kiri', 'Putar kepala ke kiri', 'kiri'],
+                                    ['Senyum', 'Tersenyum natural', 'senyum'],
+                                    ['Kedipkan Mata', 'Kedip 2 kali (liveness)', 'kedip'],
+                                ];
+                                @endphp
+                                @foreach($steps as $i => [$title, $desc, $angle])
+                                <div class="step-item" id="step-{{ $i }}" data-angle="{{ $angle }}">
                                     <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">1</div>
+                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">{{ $i+1 }}</div>
                                         <div>
-                                            <strong>Wajah Depan</strong><br>
-                                            <small class="text-muted">Lihat lurus ke kamera</small>
+                                            <strong>{{ $title }}</strong><br>
+                                            <small class="text-muted">{{ $desc }}</small>
                                         </div>
                                         <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
                                     </div>
                                 </div>
-                                <div class="step-item" id="step-1" data-angle="kanan">
-                                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">2</div>
-                                        <div>
-                                            <strong>Toleh Kanan</strong><br>
-                                            <small class="text-muted">Putar kepala ke kanan</small>
-                                        </div>
-                                        <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
-                                    </div>
-                                </div>
-                                <div class="step-item" id="step-2" data-angle="kiri">
-                                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">3</div>
-                                        <div>
-                                            <strong>Toleh Kiri</strong><br>
-                                            <small class="text-muted">Putar kepala ke kiri</small>
-                                        </div>
-                                        <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
-                                    </div>
-                                </div>
-                                <div class="step-item" id="step-3" data-angle="senyum">
-                                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">4</div>
-                                        <div>
-                                            <strong>Senyum</strong><br>
-                                            <small class="text-muted">Tersenyum natural</small>
-                                        </div>
-                                        <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
-                                    </div>
-                                </div>
-                                <div class="step-item" id="step-4" data-angle="kedip">
-                                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">5</div>
-                                        <div>
-                                            <strong>Kedipkan Mata</strong><br>
-                                            <small class="text-muted">Kedip 2 kali (liveness)</small>
-                                        </div>
-                                        <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
-                                    </div>
-                                </div>
+                                @endforeach
                             </div>
 
                             {{-- Progress --}}
@@ -122,17 +123,8 @@
 
                             {{-- Buttons --}}
                             <div class="mt-3">
-                                <button class="btn btn-primary btn-block" id="btnStart" onclick="startRegistration()">
-                                    <i class="fas fa-play"></i> Mulai Registrasi
-                                </button>
-                                <button class="btn btn-warning btn-block d-none" id="btnCapture" onclick="captureStep()">
-                                    <i class="fas fa-camera"></i> Capture <span id="btnCaptureStep"></span>
-                                </button>
-                                <button class="btn btn-success btn-block d-none" id="btnSave" onclick="saveRegistration()">
-                                    <i class="fas fa-save"></i> Simpan Data Wajah
-                                </button>
-                                <button class="btn btn-secondary btn-block mt-2 d-none" id="btnReset" onclick="resetRegistration()">
-                                    <i class="fas fa-redo"></i> Ulangi
+                                <button class="btn btn-secondary btn-block d-none" id="btnReset" onclick="resetRegistration()">
+                                    <i class="fas fa-redo"></i> Ulangi dari Awal
                                 </button>
                             </div>
                         </div>
@@ -145,10 +137,11 @@
         <div class="callout callout-info">
             <h5><i class="fas fa-info-circle"></i> Petunjuk</h5>
             <ul class="mb-0">
+                <li>Pilih nama GTK terlebih dahulu, kemudian klik <strong>Mulai Registrasi Wajah</strong></li>
                 <li>Pastikan pencahayaan cukup dan wajah terlihat jelas</li>
                 <li>Lepas kacamata hitam, masker, atau penutup wajah</li>
-                <li>Ikuti instruksi setiap langkah (frontal, kanan, kiri, senyum, kedip)</li>
-                <li>Setelah semua langkah selesai, klik <strong>Simpan</strong></li>
+                <li>Setiap langkah <strong>otomatis tercapture</strong> saat wajah stabil terdeteksi (~1.5 detik)</li>
+                <li>Langkah terakhir memerlukan kedipan mata 2x sebagai liveness check</li>
                 <li>Data wajah akan diverifikasi oleh admin sebelum bisa digunakan untuk absensi</li>
             </ul>
         </div>
@@ -161,48 +154,115 @@
     .step-item.active .d-flex { border-color: #007bff !important; background: #e8f4fd !important; }
     .step-item.done .d-flex { border-color: #28a745 !important; }
     .step-item.done .step-number { background: #28a745 !important; }
-    .step-item.active .step-number { background: #007bff !important; }
+    .step-item.active .step-number { background: #007bff !important; animation: pulse 1.5s infinite; }
+    .step-item.capturing .d-flex { border-color: #ffc107 !important; background: #fff8e1 !important; }
+    .step-item.capturing .step-number { background: #ffc107 !important; }
+    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+    .select2-container--default .select2-selection--single { height: 38px !important; }
 </style>
 @stop
 
 @section('js')
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
+    // ============================================
+    // STATE
+    // ============================================
+    let selectedUserId = null;
+    let selectedUserName = '';
     let currentStep = -1;
-    let totalSteps = 5;
+    const totalSteps = 5;
     let capturedDescriptors = [];
     let capturedAngles = [];
     let isDetecting = false;
+    let modelsLoaded = false;
+    let cameraReady = false;
+
+    // Auto-capture state
+    let faceStableStart = null;        // timestamp when face first detected stably
+    let autoCapturing = false;         // currently doing an auto-capture
+    const STABLE_DURATION_MS = 1500;   // hold face 1.5s to auto-capture
+
+    // Blink detection
     let blinkCount = 0;
-    let lastEAR = 1; // Eye Aspect Ratio for blink detection
+    let lastEAR = 1;
 
     const STEPS = [
         { angle: 'frontal', text: 'Lihat lurus ke kamera', icon: 'fa-user' },
         { angle: 'kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right' },
         { angle: 'kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left' },
-        { angle: 'senyum', text: 'Tersenyum!', icon: 'fa-smile' },
+        { angle: 'senyum', text: 'Tersenyum natural', icon: 'fa-smile' },
         { angle: 'kedip', text: 'Kedipkan mata 2 kali', icon: 'fa-eye' },
     ];
 
     // ============================================
-    // LOAD MODELS
+    // USER SELECTION
+    // ============================================
+    $(function() {
+        $('#selectGtk').select2({ placeholder: '-- Pilih GTK --', allowClear: true });
+        $('#selectGtk').on('change', function() {
+            const opt = $(this).find(':selected');
+            selectedUserId = $(this).val();
+            if (selectedUserId) {
+                selectedUserName = opt.data('nama');
+                const nip = opt.data('nip');
+                const registered = opt.data('registered') === '1';
+                let info = `<strong>${selectedUserName}</strong>`;
+                if (nip) info += ` — NIP: ${nip}`;
+                if (registered) info += '<br><span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Sudah pernah registrasi. Data lama akan ditimpa.</span>';
+                $('#selectedUserInfo').removeClass('d-none').html('<i class="fas fa-info-circle"></i> ' + info);
+                $('#btnStartCamera').prop('disabled', false);
+            } else {
+                selectedUserId = null;
+                $('#selectedUserInfo').addClass('d-none');
+                $('#btnStartCamera').prop('disabled', true);
+            }
+        });
+    });
+
+    function startCamera() {
+        if (!selectedUserId) return;
+        $('#cardSelectUser').addClass('d-none');
+        $('#cardCamera').removeClass('d-none');
+        $('#headerUserName').text(selectedUserName);
+
+        if (!modelsLoaded) {
+            loadModels();
+        } else if (cameraReady) {
+            beginAutoRegistration();
+        }
+    }
+
+    function backToSelect() {
+        isDetecting = false;
+        resetRegistration();
+        $('#cardCamera').addClass('d-none');
+        $('#cardSelectUser').removeClass('d-none');
+    }
+
+    // ============================================
+    // LOAD MODELS & CAMERA
     // ============================================
     async function loadModels() {
         const MODEL_URL = '{{ asset("vendor/face-api/models") }}';
-        
-        setLoadingText('Memuat model deteksi wajah...');
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        
-        setLoadingText('Memuat model landmark wajah...');
-        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
-        
-        setLoadingText('Memuat model pengenalan wajah...');
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        try {
+            setLoadingText('Memuat model deteksi wajah...');
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            setLoadingText('Memuat model landmark wajah...');
+            await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+            setLoadingText('Memuat model pengenalan wajah...');
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            modelsLoaded = true;
 
-        setLoadingText('Menyalakan kamera...');
-        await initCamera();
-        
-        document.getElementById('loadingOverlay').style.display = 'none';
+            setLoadingText('Menyalakan kamera...');
+            await initCamera();
+            cameraReady = true;
+            document.getElementById('loadingOverlay').style.display = 'none';
+
+            beginAutoRegistration();
+        } catch (err) {
+            setLoadingText('Error: ' + err.message);
+        }
     }
 
     function setLoadingText(text) {
@@ -211,37 +271,32 @@
 
     async function initCamera() {
         const video = document.getElementById('videoElement');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
-            });
-            video.srcObject = stream;
-        } catch (err) {
-            alert('Kamera tidak tersedia. Pastikan browser memiliki izin akses kamera.');
-        }
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+        });
+        video.srcObject = stream;
+        await new Promise(r => { video.onloadedmetadata = r; });
     }
 
     // ============================================
-    // REGISTRATION FLOW
+    // AUTO REGISTRATION FLOW
     // ============================================
-    function startRegistration() {
+    function beginAutoRegistration() {
         capturedDescriptors = [];
         capturedAngles = [];
         currentStep = 0;
         blinkCount = 0;
+        faceStableStart = null;
+        autoCapturing = false;
 
-        // Reset UI
+        // Reset step UI
         document.querySelectorAll('.step-item').forEach(el => {
-            el.classList.remove('active', 'done');
+            el.classList.remove('active', 'done', 'capturing');
             el.querySelector('.step-check').style.display = 'none';
         });
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressText').textContent = '0 / 5 selesai';
-
-        document.getElementById('btnStart').classList.add('d-none');
-        document.getElementById('btnCapture').classList.remove('d-none');
         document.getElementById('btnReset').classList.remove('d-none');
-        document.getElementById('btnSave').classList.add('d-none');
 
         updateStepUI();
         startDetectionLoop();
@@ -251,14 +306,11 @@
         if (currentStep >= totalSteps) return;
 
         document.querySelectorAll('.step-item').forEach((el, i) => {
+            el.classList.remove('active', 'capturing');
             if (i < currentStep) {
                 el.classList.add('done');
-                el.classList.remove('active');
             } else if (i === currentStep) {
                 el.classList.add('active');
-                el.classList.remove('done');
-            } else {
-                el.classList.remove('active', 'done');
             }
         });
 
@@ -266,40 +318,33 @@
         document.getElementById('stepInstruction').style.display = 'block';
         document.getElementById('stepIcon').className = 'fas ' + step.icon + ' mr-2';
         document.getElementById('stepText').textContent = step.text;
-        document.getElementById('btnCaptureStep').textContent = `(Step ${currentStep + 1})`;
 
-        // Auto-capture for blink step
         if (step.angle === 'kedip') {
-            document.getElementById('btnCapture').disabled = true;
-            document.getElementById('btnCapture').innerHTML = '<i class="fas fa-eye"></i> Menunggu kedipan...';
             blinkCount = 0;
-        } else {
-            document.getElementById('btnCapture').disabled = false;
-            document.getElementById('btnCapture').innerHTML = `<i class="fas fa-camera"></i> Capture (Step ${currentStep + 1})`;
         }
+
+        // Reset stable timer for new step
+        faceStableStart = null;
+        hideCountdownRing();
     }
 
     // ============================================
-    // DETECTION LOOP (CONTINUOUS TRACKING)
+    // DETECTION LOOP (CONTINUOUS + AUTO-CAPTURE)
     // ============================================
     function startDetectionLoop() {
         isDetecting = true;
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('overlayCanvas');
         const ctx = canvas.getContext('2d');
-
         const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
         async function detect() {
-            if (!isDetecting || video.paused) return;
+            if (!isDetecting || video.paused || currentStep < 0) return;
 
             canvas.width = video.videoWidth || video.clientWidth;
             canvas.height = video.videoHeight || video.clientHeight;
 
-            const detection = await faceapi
-                .detectSingleFace(video, options)
-                .withFaceLandmarks(true);
-
+            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks(true);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (detection) {
@@ -307,8 +352,7 @@
                 const resized = faceapi.resizeResults(detection, dims);
 
                 // Draw landmarks
-                const positions = resized.landmarks.positions;
-                positions.forEach(pt => {
+                resized.landmarks.positions.forEach(pt => {
                     ctx.beginPath();
                     ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI);
                     ctx.fillStyle = '#00e5ff';
@@ -323,14 +367,33 @@
                 ctx.lineWidth = 2;
                 ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-                setFaceStatus('Wajah terdeteksi', true);
+                const score = detection.detection.score;
+                setFaceStatus(`Wajah terdeteksi (${(score*100).toFixed(0)}%)`, true);
 
-                // Blink detection for step 4
-                if (currentStep === 4) {
-                    detectBlink(detection.landmarks);
+                if (currentStep < totalSteps && !autoCapturing) {
+                    if (STEPS[currentStep].angle === 'kedip') {
+                        // Blink detection for last step
+                        detectBlink(detection.landmarks);
+                    } else {
+                        // Auto-capture: start stable timer
+                        if (!faceStableStart) {
+                            faceStableStart = Date.now();
+                            showCountdownRing();
+                        } else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) {
+                            // Face has been stable long enough → auto capture
+                            autoCapturing = true;
+                            await doCapture();
+                            autoCapturing = false;
+                        }
+                    }
                 }
             } else {
                 setFaceStatus('Arahkan wajah ke kamera', false);
+                // Face lost → reset stable timer
+                if (faceStableStart) {
+                    faceStableStart = null;
+                    hideCountdownRing();
+                }
             }
 
             requestAnimationFrame(() => setTimeout(detect, 150));
@@ -346,33 +409,58 @@
     }
 
     // ============================================
-    // BLINK DETECTION (Liveness)
+    // COUNTDOWN RING (visual feedback for auto-capture)
+    // ============================================
+    function showCountdownRing() {
+        const ring = document.getElementById('autoCaptureIndicator');
+        const circle = document.getElementById('countdownCircle');
+        ring.style.display = 'block';
+        // Reset then animate
+        circle.style.transition = 'none';
+        circle.style.strokeDashoffset = '220';
+        requestAnimationFrame(() => {
+            circle.style.transition = `stroke-dashoffset ${STABLE_DURATION_MS}ms linear`;
+            circle.style.strokeDashoffset = '0';
+        });
+        // Highlight step as capturing
+        if (currentStep >= 0 && currentStep < totalSteps) {
+            document.getElementById('step-' + currentStep).classList.add('capturing');
+        }
+    }
+
+    function hideCountdownRing() {
+        document.getElementById('autoCaptureIndicator').style.display = 'none';
+        const circle = document.getElementById('countdownCircle');
+        circle.style.transition = 'none';
+        circle.style.strokeDashoffset = '220';
+        if (currentStep >= 0 && currentStep < totalSteps) {
+            document.getElementById('step-' + currentStep).classList.remove('capturing');
+        }
+    }
+
+    // ============================================
+    // BLINK DETECTION (Liveness - step 5)
     // ============================================
     function detectBlink(landmarks) {
-        // Eye Aspect Ratio (EAR) based blink detection
         const leftEye = landmarks.getLeftEye();
         const rightEye = landmarks.getRightEye();
-
         const earLeft = eyeAspectRatio(leftEye);
         const earRight = eyeAspectRatio(rightEye);
         const ear = (earLeft + earRight) / 2;
-
         const EAR_THRESHOLD = 0.21;
 
         if (lastEAR > EAR_THRESHOLD && ear < EAR_THRESHOLD) {
             blinkCount++;
             document.getElementById('stepText').textContent = `Kedipkan mata (${blinkCount}/2)`;
-            
-            if (blinkCount >= 2) {
-                // Auto capture after blinks detected
-                captureStep();
+            if (blinkCount >= 2 && !autoCapturing) {
+                autoCapturing = true;
+                doCapture().then(() => { autoCapturing = false; });
             }
         }
         lastEAR = ear;
     }
 
     function eyeAspectRatio(eye) {
-        // EAR = (|p2-p6| + |p3-p5|) / (2 * |p1-p4|)
         const dist = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
         const A = dist(eye[1], eye[5]);
         const B = dist(eye[2], eye[4]);
@@ -381,9 +469,9 @@
     }
 
     // ============================================
-    // CAPTURE STEP
+    // CAPTURE (shared by auto + blink)
     // ============================================
-    async function captureStep() {
+    async function doCapture() {
         if (currentStep >= totalSteps) return;
 
         const video = document.getElementById('videoElement');
@@ -395,7 +483,9 @@
             .withFaceDescriptor();
 
         if (!detection) {
-            alert('Wajah tidak terdeteksi. Pastikan wajah terlihat jelas.');
+            // Failed to extract descriptor → reset stable timer, try again
+            faceStableStart = null;
+            hideCountdownRing();
             return;
         }
 
@@ -405,35 +495,43 @@
 
         // Mark step done
         const stepEl = document.getElementById('step-' + currentStep);
+        stepEl.classList.remove('active', 'capturing');
         stepEl.classList.add('done');
-        stepEl.classList.remove('active');
         stepEl.querySelector('.step-check').style.display = 'block';
+        hideCountdownRing();
 
-        // Update progress
+        // Flash feedback
+        flashGreen();
+
+        // Advance
         currentStep++;
         const progress = (currentStep / totalSteps) * 100;
         document.getElementById('progressBar').style.width = progress + '%';
         document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps} selesai`;
 
         if (currentStep >= totalSteps) {
-            // All done!
+            // All done → auto-save
             document.getElementById('stepInstruction').style.display = 'none';
-            document.getElementById('btnCapture').classList.add('d-none');
-            document.getElementById('btnSave').classList.remove('d-none');
-            setFaceStatus('Semua langkah selesai! Klik Simpan.', true);
+            setFaceStatus('Semua langkah selesai! Menyimpan...', true);
+            await saveRegistration();
         } else {
+            // Brief pause so user can see the checkmark
+            await new Promise(r => setTimeout(r, 600));
             updateStepUI();
         }
+    }
+
+    function flashGreen() {
+        const video = document.getElementById('videoElement');
+        video.style.boxShadow = 'inset 0 0 60px rgba(0,230,118,0.5)';
+        video.style.outline = '4px solid #00e676';
+        setTimeout(() => { video.style.boxShadow = ''; video.style.outline = ''; }, 500);
     }
 
     // ============================================
     // SAVE REGISTRATION
     // ============================================
     async function saveRegistration() {
-        const btn = document.getElementById('btnSave');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
         // Capture thumbnail photo
         const video = document.getElementById('videoElement');
         const tmpCanvas = document.createElement('canvas');
@@ -451,9 +549,10 @@
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({
+                    user_id: selectedUserId,
                     descriptors: capturedDescriptors,
                     angles: capturedAngles,
-                    quality_score: capturedDescriptors.length * 20, // simple score
+                    quality_score: capturedDescriptors.length * 20,
                     photo: photoData,
                 }),
             });
@@ -461,17 +560,18 @@
             const result = await response.json();
 
             if (result.success) {
-                alert('Data wajah berhasil disimpan! Menunggu verifikasi admin.');
-                window.location.reload();
+                setFaceStatus('Berhasil disimpan! Menunggu verifikasi admin.', true);
+                document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle text-success mr-2"></i><span class="text-white">Registrasi berhasil!</span>';
+                document.getElementById('stepInstruction').style.display = 'block';
+                document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.85)';
+
+                // Auto reload after 2s
+                setTimeout(() => window.location.reload(), 2000);
             } else {
-                alert('Gagal menyimpan: ' + (result.message || 'Unknown error'));
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Simpan Data Wajah';
+                setFaceStatus('Gagal menyimpan: ' + (result.message || 'Error'), false);
             }
         } catch (err) {
-            alert('Error: ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Simpan Data Wajah';
+            setFaceStatus('Error: ' + err.message, false);
         }
     }
 
@@ -480,31 +580,30 @@
     // ============================================
     function resetRegistration() {
         isDetecting = false;
+        autoCapturing = false;
         capturedDescriptors = [];
         capturedAngles = [];
         currentStep = -1;
         blinkCount = 0;
+        faceStableStart = null;
 
         document.querySelectorAll('.step-item').forEach(el => {
-            el.classList.remove('active', 'done');
+            el.classList.remove('active', 'done', 'capturing');
             el.querySelector('.step-check').style.display = 'none';
         });
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressText').textContent = '0 / 5 selesai';
         document.getElementById('stepInstruction').style.display = 'none';
-
-        document.getElementById('btnStart').classList.remove('d-none');
-        document.getElementById('btnCapture').classList.add('d-none');
-        document.getElementById('btnSave').classList.add('d-none');
+        document.getElementById('stepInstruction').style.background = 'rgba(0,0,0,0.7)';
         document.getElementById('btnReset').classList.add('d-none');
+        hideCountdownRing();
 
         const canvas = document.getElementById('overlayCanvas');
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    }
 
-    // ============================================
-    // INIT
-    // ============================================
-    document.addEventListener('DOMContentLoaded', loadModels);
+        if (cameraReady) {
+            setTimeout(() => beginAutoRegistration(), 300);
+        }
+    }
 </script>
 @stop
