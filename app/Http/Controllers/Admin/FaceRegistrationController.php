@@ -16,18 +16,18 @@ class FaceRegistrationController extends Controller
      */
     public function index()
     {
-        // Daftar GTK untuk pilihan user
+        // GTK list with face registration status
         $gtkList = Gtk::whereNotNull('user_id')
             ->orderBy('nama_lengkap')
             ->get(['id', 'user_id', 'nama_lengkap', 'nip']);
 
-        // Cek face data per user yang sudah terdaftar
-        $registeredFaces = FaceEncoding::where('user_type', 'gtk')
+        // Face data indexed by user_id
+        $faceMap = FaceEncoding::where('user_type', 'gtk')
             ->where('is_active', true)
-            ->pluck('user_id')
-            ->toArray();
+            ->get()
+            ->keyBy('user_id');
 
-        return view('admin.absensi.face-register', compact('gtkList', 'registeredFaces'));
+        return view('admin.absensi.face-register', compact('gtkList', 'faceMap'));
     }
 
     /**

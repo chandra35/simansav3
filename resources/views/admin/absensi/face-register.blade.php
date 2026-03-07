@@ -3,56 +3,127 @@
 @section('title', 'Registrasi Wajah')
 
 @section('content_header')
-    <h1><i class="fas fa-user-shield"></i> Registrasi Wajah</h1>
+    <h1><i class="fas fa-user-shield"></i> Registrasi Wajah GTK</h1>
 @stop
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-
-        {{-- Step 1: Pilih User --}}
-        <div class="card card-primary card-outline" id="cardSelectUser">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-user-check"></i> Pilih GTK untuk Registrasi Wajah</h3>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="selectGtk">Nama GTK <span class="text-danger">*</span></label>
-                    <select class="form-control select2" id="selectGtk" style="width:100%;">
-                        <option value="">-- Pilih GTK --</option>
-                        @foreach($gtkList as $gtk)
-                            <option value="{{ $gtk->user_id }}"
-                                    data-nama="{{ $gtk->nama_lengkap }}"
-                                    data-nip="{{ $gtk->nip }}"
-                                    data-registered="{{ in_array($gtk->user_id, $registeredFaces) ? '1' : '0' }}">
-                                {{ $gtk->nama_lengkap }} {{ $gtk->nip ? '('.$gtk->nip.')' : '' }}
-                                @if(in_array($gtk->user_id, $registeredFaces)) ✓ Sudah Terdaftar @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div id="selectedUserInfo" class="alert alert-info d-none">
-                    <i class="fas fa-info-circle"></i>
-                    <span id="selectedUserText"></span>
-                </div>
-                <button class="btn btn-primary" id="btnStartCamera" disabled onclick="startCamera()">
-                    <i class="fas fa-camera"></i> Mulai Registrasi Wajah
-                </button>
-            </div>
+{{-- Summary --}}
+<div class="row">
+    <div class="col-lg-4 col-6">
+        <div class="small-box bg-info">
+            <div class="inner"><h3>{{ $gtkList->count() }}</h3><p>Total GTK</p></div>
+            <div class="icon"><i class="fas fa-users"></i></div>
         </div>
+    </div>
+    <div class="col-lg-4 col-6">
+        <div class="small-box bg-success">
+            <div class="inner"><h3>{{ $faceMap->count() }}</h3><p>Sudah Registrasi</p></div>
+            <div class="icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner"><h3>{{ $gtkList->count() - $faceMap->count() }}</h3><p>Belum Registrasi</p></div>
+            <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+    </div>
+</div>
 
-        {{-- Step 2: Camera & Registration (hidden until user selected) --}}
-        <div class="card card-primary card-outline d-none" id="cardCamera">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-camera"></i> Capture Wajah — <span id="headerUserName"></span></h3>
-                <div class="card-tools">
-                    <button class="btn btn-sm btn-default" onclick="backToSelect()"><i class="fas fa-arrow-left"></i> Ganti User</button>
-                </div>
+{{-- Table --}}
+<div class="card card-primary card-outline">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-table"></i> Daftar GTK & Status Registrasi Wajah</h3>
+    </div>
+    <div class="card-body table-responsive p-0">
+        <table class="table table-hover table-striped table-sm" id="tabelGtk">
+            <thead>
+                <tr>
+                    <th width="40">No</th>
+                    <th>Nama GTK</th>
+                    <th>NIP</th>
+                    <th>Status</th>
+                    <th>Capture</th>
+                    <th>Quality</th>
+                    <th>Verifikasi</th>
+                    <th>Tgl Registrasi</th>
+                    <th width="130">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($gtkList as $i => $gtk)
+                    @php $face = $faceMap[$gtk->user_id] ?? null; @endphp
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td><strong>{{ $gtk->nama_lengkap }}</strong></td>
+                        <td>{{ $gtk->nip ?? '-' }}</td>
+                        <td>
+                            @if($face)
+                                @if($face->is_verified)
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
+                                @else
+                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                                @endif
+                            @else
+                                <span class="badge badge-secondary"><i class="fas fa-times"></i> Belum</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($face)
+                                <span class="badge badge-info">{{ $face->total_captures }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            @if($face)
+                                @php $q = $face->quality_score ?? 0; @endphp
+                                <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            @if($face && $face->is_verified)
+                                <small>{{ $face->verified_at?->format('d/m/Y') }}</small>
+                            @elseif($face)
+                                <small class="text-muted">Menunggu</small>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            @if($face)
+                                <small>{{ $face->created_at->format('d/m/Y H:i') }}</small>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }}"
+                                    onclick="openRegister('{{ $gtk->user_id }}', '{{ addslashes($gtk->nama_lengkap) }}')">
+                                <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
+                                {{ $face ? 'Ulang' : 'Daftar' }}
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{-- Modal Camera Registration --}}
+<div class="modal fade" id="modalRegister" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title"><i class="fas fa-camera"></i> Registrasi Wajah — <span id="modalUserName"></span></h5>
+                <button type="button" class="close text-white" onclick="closeRegister()"><span>&times;</span></button>
             </div>
-            <div class="card-body p-0">
+            <div class="modal-body p-0">
                 <div class="row no-gutters">
-                    {{-- Camera Area --}}
-                    <div class="col-md-8 position-relative" style="background:#000; min-height:480px;">
+                    {{-- Camera --}}
+                    <div class="col-md-8 position-relative" style="background:#000; min-height:400px;">
                         <div id="loadingOverlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;">
                             <div class="spinner-border text-info mb-3" role="status"></div>
                             <p class="text-white" id="loadingText">Memuat model face detection...</p>
@@ -61,13 +132,13 @@
                         <video id="videoElement" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
                         <canvas id="overlayCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; transform:scaleX(-1);"></canvas>
 
-                        {{-- Step instruction overlay --}}
+                        {{-- Step instruction --}}
                         <div id="stepInstruction" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#00e5ff; padding:10px 25px; border-radius:25px; font-size:1.1rem; font-weight:600; text-align:center; z-index:5; display:none;">
                             <i class="fas fa-arrow-right" id="stepIcon"></i>
                             <span id="stepText">Lihat ke kamera</span>
                         </div>
 
-                        {{-- Auto-capture countdown ring --}}
+                        {{-- Countdown ring --}}
                         <div id="autoCaptureIndicator" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:6; display:none;">
                             <svg width="80" height="80" viewBox="0 0 80 80">
                                 <circle cx="40" cy="40" r="35" stroke="#333" stroke-width="4" fill="none" opacity="0.3"/>
@@ -77,7 +148,7 @@
                             </svg>
                         </div>
 
-                        {{-- Face detection indicator --}}
+                        {{-- Face status --}}
                         <div id="faceStatus" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#aaa; padding:8px 20px; border-radius:20px; font-size:0.9rem; z-index:5;">
                             <i class="fas fa-video"></i> Menunggu...
                         </div>
@@ -86,64 +157,45 @@
                     {{-- Steps Panel --}}
                     <div class="col-md-4" style="background:#f8f9fa;">
                         <div class="p-3">
-                            <h5 class="mb-3"><i class="fas fa-list-ol"></i> Langkah Registrasi</h5>
-                            <p class="text-muted small mb-2"><i class="fas fa-magic"></i> Capture otomatis saat wajah stabil terdeteksi</p>
+                            <h6 class="mb-2"><i class="fas fa-list-ol"></i> Langkah Registrasi</h6>
+                            <p class="text-muted small mb-2"><i class="fas fa-magic"></i> Auto-capture saat wajah stabil (~1.5s)</p>
 
-                            <div class="step-list">
-                                @php
-                                $steps = [
-                                    ['Wajah Depan', 'Lihat lurus ke kamera', 'frontal'],
-                                    ['Toleh Kanan', 'Putar kepala ke kanan', 'kanan'],
-                                    ['Toleh Kiri', 'Putar kepala ke kiri', 'kiri'],
-                                    ['Senyum', 'Tersenyum natural', 'senyum'],
-                                    ['Kedipkan Mata', 'Kedip 2 kali (liveness)', 'kedip'],
-                                ];
-                                @endphp
-                                @foreach($steps as $i => [$title, $desc, $angle])
-                                <div class="step-item" id="step-{{ $i }}" data-angle="{{ $angle }}">
-                                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background:#fff; border:2px solid #ddd;">
-                                        <div class="step-number mr-3" style="width:30px; height:30px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">{{ $i+1 }}</div>
-                                        <div>
-                                            <strong>{{ $title }}</strong><br>
-                                            <small class="text-muted">{{ $desc }}</small>
-                                        </div>
-                                        <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
+                            @php
+                            $steps = [
+                                ['Wajah Depan', 'Lihat lurus ke kamera', 'frontal'],
+                                ['Toleh Kanan', 'Putar kepala ke kanan', 'kanan'],
+                                ['Toleh Kiri', 'Putar kepala ke kiri', 'kiri'],
+                                ['Senyum', 'Tersenyum natural', 'senyum'],
+                                ['Kedipkan Mata', 'Kedip 2x (liveness)', 'kedip'],
+                            ];
+                            @endphp
+                            @foreach($steps as $i => [$title, $desc, $angle])
+                            <div class="step-item" id="step-{{ $i }}" data-angle="{{ $angle }}">
+                                <div class="d-flex align-items-center p-2 mb-1 rounded" style="background:#fff; border:2px solid #ddd;">
+                                    <div class="step-number mr-2" style="width:26px; height:26px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">{{ $i+1 }}</div>
+                                    <div>
+                                        <strong style="font-size:0.9rem;">{{ $title }}</strong><br>
+                                        <small class="text-muted">{{ $desc }}</small>
                                     </div>
+                                    <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success"></i></div>
                                 </div>
-                                @endforeach
                             </div>
+                            @endforeach
 
-                            {{-- Progress --}}
-                            <div class="mt-3">
-                                <div class="progress" style="height:8px;">
+                            <div class="mt-2">
+                                <div class="progress" style="height:6px;">
                                     <div class="progress-bar bg-success" id="progressBar" style="width:0%"></div>
                                 </div>
                                 <small class="text-muted" id="progressText">0 / 5 selesai</small>
                             </div>
 
-                            {{-- Buttons --}}
-                            <div class="mt-3">
-                                <button class="btn btn-secondary btn-block d-none" id="btnReset" onclick="resetRegistration()">
-                                    <i class="fas fa-redo"></i> Ulangi dari Awal
-                                </button>
-                            </div>
+                            <button class="btn btn-secondary btn-sm btn-block mt-2 d-none" id="btnReset" onclick="resetRegistration()">
+                                <i class="fas fa-redo"></i> Ulangi
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        {{-- Instructions --}}
-        <div class="callout callout-info">
-            <h5><i class="fas fa-info-circle"></i> Petunjuk</h5>
-            <ul class="mb-0">
-                <li>Pilih nama GTK terlebih dahulu, kemudian klik <strong>Mulai Registrasi Wajah</strong></li>
-                <li>Pastikan pencahayaan cukup dan wajah terlihat jelas</li>
-                <li>Lepas kacamata hitam, masker, atau penutup wajah</li>
-                <li>Setiap langkah <strong>otomatis tercapture</strong> saat wajah stabil terdeteksi (~1.5 detik)</li>
-                <li>Langkah terakhir memerlukan kedipan mata 2x sebagai liveness check</li>
-                <li>Data wajah akan diverifikasi oleh admin sebelum bisa digunakan untuk absensi</li>
-            </ul>
         </div>
     </div>
 </div>
@@ -158,7 +210,6 @@
     .step-item.capturing .d-flex { border-color: #ffc107 !important; background: #fff8e1 !important; }
     .step-item.capturing .step-number { background: #ffc107 !important; }
     @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
-    .select2-container--default .select2-selection--single { height: 38px !important; }
 </style>
 @stop
 
@@ -176,14 +227,12 @@
     let capturedAngles = [];
     let isDetecting = false;
     let modelsLoaded = false;
-    let cameraReady = false;
+    let cameraStream = null;
 
-    // Auto-capture state
-    let faceStableStart = null;        // timestamp when face first detected stably
-    let autoCapturing = false;         // currently doing an auto-capture
-    const STABLE_DURATION_MS = 1500;   // hold face 1.5s to auto-capture
+    let faceStableStart = null;
+    let autoCapturing = false;
+    const STABLE_DURATION_MS = 1500;
 
-    // Blink detection
     let blinkCount = 0;
     let lastEAR = 1;
 
@@ -196,55 +245,47 @@
     ];
 
     // ============================================
-    // USER SELECTION
+    // DATATABLE
     // ============================================
     $(function() {
-        $('#selectGtk').select2({ placeholder: '-- Pilih GTK --', allowClear: true });
-        $('#selectGtk').on('change', function() {
-            const opt = $(this).find(':selected');
-            selectedUserId = $(this).val();
-            if (selectedUserId) {
-                selectedUserName = opt.data('nama');
-                const nip = opt.data('nip');
-                const registered = opt.data('registered') === '1';
-                let info = `<strong>${selectedUserName}</strong>`;
-                if (nip) info += ` — NIP: ${nip}`;
-                if (registered) info += '<br><span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Sudah pernah registrasi. Data lama akan ditimpa.</span>';
-                $('#selectedUserInfo').removeClass('d-none').html('<i class="fas fa-info-circle"></i> ' + info);
-                $('#btnStartCamera').prop('disabled', false);
-            } else {
-                selectedUserId = null;
-                $('#selectedUserInfo').addClass('d-none');
-                $('#btnStartCamera').prop('disabled', true);
-            }
+        $('#tabelGtk').DataTable({
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+            pageLength: 25,
+            order: [[1, 'asc']],
+            columnDefs: [{ orderable: false, targets: [8] }],
         });
-
-        // Auto-select user jika ada query param ?user_id=xxx
-        const urlParams = new URLSearchParams(window.location.search);
-        const preselect = urlParams.get('user_id');
-        if (preselect && $('#selectGtk option[value="' + preselect + '"]').length) {
-            $('#selectGtk').val(preselect).trigger('change');
-        }
     });
 
-    function startCamera() {
-        if (!selectedUserId) return;
-        $('#cardSelectUser').addClass('d-none');
-        $('#cardCamera').removeClass('d-none');
-        $('#headerUserName').text(selectedUserName);
+    // ============================================
+    // OPEN / CLOSE REGISTER MODAL
+    // ============================================
+    function openRegister(userId, userName) {
+        selectedUserId = userId;
+        selectedUserName = userName;
+        document.getElementById('modalUserName').textContent = userName;
+        $('#modalRegister').modal('show');
 
         if (!modelsLoaded) {
             loadModels();
-        } else if (cameraReady) {
-            beginAutoRegistration();
+        } else {
+            startCameraAndRegister();
         }
     }
 
-    function backToSelect() {
+    function closeRegister() {
         isDetecting = false;
-        resetRegistration();
-        $('#cardCamera').addClass('d-none');
-        $('#cardSelectUser').removeClass('d-none');
+        stopCamera();
+        resetUI();
+        $('#modalRegister').modal('hide');
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        const video = document.getElementById('videoElement');
+        if (video) video.srcObject = null;
     }
 
     // ============================================
@@ -260,29 +301,31 @@
             setLoadingText('Memuat model pengenalan wajah...');
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             modelsLoaded = true;
-
-            setLoadingText('Menyalakan kamera...');
-            await initCamera();
-            cameraReady = true;
-            document.getElementById('loadingOverlay').style.display = 'none';
-
-            beginAutoRegistration();
+            startCameraAndRegister();
         } catch (err) {
             setLoadingText('Error: ' + err.message);
         }
     }
 
-    function setLoadingText(text) {
-        document.getElementById('loadingText').textContent = text;
+    async function startCameraAndRegister() {
+        setLoadingText('Menyalakan kamera...');
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        const video = document.getElementById('videoElement');
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+            });
+            video.srcObject = cameraStream;
+            await new Promise(r => { video.onloadedmetadata = r; });
+            document.getElementById('loadingOverlay').style.display = 'none';
+            beginAutoRegistration();
+        } catch (err) {
+            setLoadingText('Kamera tidak tersedia: ' + err.message);
+        }
     }
 
-    async function initCamera() {
-        const video = document.getElementById('videoElement');
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
-        });
-        video.srcObject = stream;
-        await new Promise(r => { video.onloadedmetadata = r; });
+    function setLoadingText(text) {
+        document.getElementById('loadingText').textContent = text;
     }
 
     // ============================================
@@ -296,47 +339,46 @@
         faceStableStart = null;
         autoCapturing = false;
 
-        // Reset step UI
+        resetUI();
+        document.getElementById('btnReset').classList.remove('d-none');
+        updateStepUI();
+        startDetectionLoop();
+    }
+
+    function resetUI() {
         document.querySelectorAll('.step-item').forEach(el => {
             el.classList.remove('active', 'done', 'capturing');
             el.querySelector('.step-check').style.display = 'none';
         });
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressText').textContent = '0 / 5 selesai';
-        document.getElementById('btnReset').classList.remove('d-none');
-
-        updateStepUI();
-        startDetectionLoop();
+        document.getElementById('stepInstruction').style.display = 'none';
+        document.getElementById('stepInstruction').style.background = 'rgba(0,0,0,0.7)';
+        document.getElementById('stepInstruction').style.color = '#00e5ff';
+        document.getElementById('btnReset').classList.add('d-none');
+        hideCountdownRing();
+        const canvas = document.getElementById('overlayCanvas');
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function updateStepUI() {
         if (currentStep >= totalSteps) return;
-
         document.querySelectorAll('.step-item').forEach((el, i) => {
             el.classList.remove('active', 'capturing');
-            if (i < currentStep) {
-                el.classList.add('done');
-            } else if (i === currentStep) {
-                el.classList.add('active');
-            }
+            if (i < currentStep) el.classList.add('done');
+            else if (i === currentStep) el.classList.add('active');
         });
-
         const step = STEPS[currentStep];
         document.getElementById('stepInstruction').style.display = 'block';
         document.getElementById('stepIcon').className = 'fas ' + step.icon + ' mr-2';
         document.getElementById('stepText').textContent = step.text;
-
-        if (step.angle === 'kedip') {
-            blinkCount = 0;
-        }
-
-        // Reset stable timer for new step
+        if (step.angle === 'kedip') blinkCount = 0;
         faceStableStart = null;
         hideCountdownRing();
     }
 
     // ============================================
-    // DETECTION LOOP (CONTINUOUS + AUTO-CAPTURE)
+    // DETECTION LOOP
     // ============================================
     function startDetectionLoop() {
         isDetecting = true;
@@ -347,18 +389,14 @@
 
         async function detect() {
             if (!isDetecting || video.paused || currentStep < 0) return;
-
             canvas.width = video.videoWidth || video.clientWidth;
             canvas.height = video.videoHeight || video.clientHeight;
-
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks(true);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (detection) {
                 const dims = faceapi.matchDimensions(canvas, video, true);
                 const resized = faceapi.resizeResults(detection, dims);
-
-                // Draw landmarks
                 resized.landmarks.positions.forEach(pt => {
                     ctx.beginPath();
                     ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI);
@@ -366,28 +404,22 @@
                     ctx.globalAlpha = 0.7;
                     ctx.fill();
                 });
-
-                // Draw box
                 ctx.globalAlpha = 1;
                 const box = resized.detection.box;
                 ctx.strokeStyle = '#00e5ff';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-                const score = detection.detection.score;
-                setFaceStatus(`Wajah terdeteksi (${(score*100).toFixed(0)}%)`, true);
+                setFaceStatus(`Wajah terdeteksi (${(detection.detection.score*100).toFixed(0)}%)`, true);
 
                 if (currentStep < totalSteps && !autoCapturing) {
                     if (STEPS[currentStep].angle === 'kedip') {
-                        // Blink detection for last step
                         detectBlink(detection.landmarks);
                     } else {
-                        // Auto-capture: start stable timer
                         if (!faceStableStart) {
                             faceStableStart = Date.now();
                             showCountdownRing();
                         } else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) {
-                            // Face has been stable long enough → auto capture
                             autoCapturing = true;
                             await doCapture();
                             autoCapturing = false;
@@ -396,67 +428,52 @@
                 }
             } else {
                 setFaceStatus('Arahkan wajah ke kamera', false);
-                // Face lost → reset stable timer
-                if (faceStableStart) {
-                    faceStableStart = null;
-                    hideCountdownRing();
-                }
+                if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
             }
-
             requestAnimationFrame(() => setTimeout(detect, 150));
         }
-
         detect();
     }
 
-    function setFaceStatus(text, detected) {
+    function setFaceStatus(text, ok) {
         const el = document.getElementById('faceStatus');
-        el.style.color = detected ? '#00e676' : '#ff5252';
-        el.innerHTML = `<i class="fas fa-${detected ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
+        el.style.color = ok ? '#00e676' : '#ff5252';
+        el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
     }
 
     // ============================================
-    // COUNTDOWN RING (visual feedback for auto-capture)
+    // COUNTDOWN RING
     // ============================================
     function showCountdownRing() {
         const ring = document.getElementById('autoCaptureIndicator');
         const circle = document.getElementById('countdownCircle');
         ring.style.display = 'block';
-        // Reset then animate
         circle.style.transition = 'none';
         circle.style.strokeDashoffset = '220';
         requestAnimationFrame(() => {
             circle.style.transition = `stroke-dashoffset ${STABLE_DURATION_MS}ms linear`;
             circle.style.strokeDashoffset = '0';
         });
-        // Highlight step as capturing
-        if (currentStep >= 0 && currentStep < totalSteps) {
+        if (currentStep >= 0 && currentStep < totalSteps)
             document.getElementById('step-' + currentStep).classList.add('capturing');
-        }
     }
 
     function hideCountdownRing() {
         document.getElementById('autoCaptureIndicator').style.display = 'none';
-        const circle = document.getElementById('countdownCircle');
-        circle.style.transition = 'none';
-        circle.style.strokeDashoffset = '220';
-        if (currentStep >= 0 && currentStep < totalSteps) {
+        const c = document.getElementById('countdownCircle');
+        c.style.transition = 'none';
+        c.style.strokeDashoffset = '220';
+        if (currentStep >= 0 && currentStep < totalSteps)
             document.getElementById('step-' + currentStep).classList.remove('capturing');
-        }
     }
 
     // ============================================
-    // BLINK DETECTION (Liveness - step 5)
+    // BLINK DETECTION
     // ============================================
     function detectBlink(landmarks) {
-        const leftEye = landmarks.getLeftEye();
-        const rightEye = landmarks.getRightEye();
-        const earLeft = eyeAspectRatio(leftEye);
-        const earRight = eyeAspectRatio(rightEye);
-        const ear = (earLeft + earRight) / 2;
-        const EAR_THRESHOLD = 0.21;
-
-        if (lastEAR > EAR_THRESHOLD && ear < EAR_THRESHOLD) {
+        const leftEye = landmarks.getLeftEye(), rightEye = landmarks.getRightEye();
+        const ear = (eyeAspectRatio(leftEye) + eyeAspectRatio(rightEye)) / 2;
+        if (lastEAR > 0.21 && ear < 0.21) {
             blinkCount++;
             document.getElementById('stepText').textContent = `Kedipkan mata (${blinkCount}/2)`;
             if (blinkCount >= 2 && !autoCapturing) {
@@ -468,114 +485,79 @@
     }
 
     function eyeAspectRatio(eye) {
-        const dist = (a, b) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-        const A = dist(eye[1], eye[5]);
-        const B = dist(eye[2], eye[4]);
-        const C = dist(eye[0], eye[3]);
-        return (A + B) / (2.0 * C);
+        const d = (a, b) => Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+        return (d(eye[1],eye[5]) + d(eye[2],eye[4])) / (2 * d(eye[0],eye[3]));
     }
 
     // ============================================
-    // CAPTURE (shared by auto + blink)
+    // CAPTURE
     // ============================================
     async function doCapture() {
         if (currentStep >= totalSteps) return;
-
         const video = document.getElementById('videoElement');
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+        const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+        const det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
+        if (!det) { faceStableStart = null; hideCountdownRing(); return; }
 
-        const detection = await faceapi
-            .detectSingleFace(video, options)
-            .withFaceLandmarks(true)
-            .withFaceDescriptor();
-
-        if (!detection) {
-            // Failed to extract descriptor → reset stable timer, try again
-            faceStableStart = null;
-            hideCountdownRing();
-            return;
-        }
-
-        // Save descriptor
-        capturedDescriptors.push(Array.from(detection.descriptor));
+        capturedDescriptors.push(Array.from(det.descriptor));
         capturedAngles.push(STEPS[currentStep].angle);
 
-        // Mark step done
         const stepEl = document.getElementById('step-' + currentStep);
         stepEl.classList.remove('active', 'capturing');
         stepEl.classList.add('done');
         stepEl.querySelector('.step-check').style.display = 'block';
         hideCountdownRing();
 
-        // Flash feedback
-        flashGreen();
+        // Flash
+        const video2 = document.getElementById('videoElement');
+        video2.style.outline = '4px solid #00e676';
+        setTimeout(() => { video2.style.outline = ''; }, 400);
 
-        // Advance
         currentStep++;
-        const progress = (currentStep / totalSteps) * 100;
-        document.getElementById('progressBar').style.width = progress + '%';
+        document.getElementById('progressBar').style.width = ((currentStep/totalSteps)*100)+'%';
         document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps} selesai`;
 
         if (currentStep >= totalSteps) {
-            // All done → auto-save
             document.getElementById('stepInstruction').style.display = 'none';
-            setFaceStatus('Semua langkah selesai! Menyimpan...', true);
+            setFaceStatus('Menyimpan...', true);
             await saveRegistration();
         } else {
-            // Brief pause so user can see the checkmark
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 500));
             updateStepUI();
         }
     }
 
-    function flashGreen() {
-        const video = document.getElementById('videoElement');
-        video.style.boxShadow = 'inset 0 0 60px rgba(0,230,118,0.5)';
-        video.style.outline = '4px solid #00e676';
-        setTimeout(() => { video.style.boxShadow = ''; video.style.outline = ''; }, 500);
-    }
-
     // ============================================
-    // SAVE REGISTRATION
+    // SAVE
     // ============================================
     async function saveRegistration() {
-        // Capture thumbnail photo
         const video = document.getElementById('videoElement');
-        const tmpCanvas = document.createElement('canvas');
-        tmpCanvas.width = 320;
-        tmpCanvas.height = 240;
-        tmpCanvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
-        const photoData = tmpCanvas.toDataURL('image/jpeg', 0.8);
+        const c = document.createElement('canvas');
+        c.width = 320; c.height = 240;
+        c.getContext('2d').drawImage(video, 0, 0, 320, 240);
 
         try {
-            const response = await fetch('{{ route("admin.absensi.face-register.store") }}', {
+            const res = await fetch('{{ route("admin.absensi.face-register.store") }}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                 body: JSON.stringify({
                     user_id: selectedUserId,
                     descriptors: capturedDescriptors,
                     angles: capturedAngles,
                     quality_score: capturedDescriptors.length * 20,
-                    photo: photoData,
+                    photo: c.toDataURL('image/jpeg', 0.8),
                 }),
             });
-
-            const result = await response.json();
-
+            const result = await res.json();
             if (result.success) {
-                setFaceStatus('Berhasil disimpan! Menunggu verifikasi admin.', true);
-                document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle text-success mr-2"></i><span class="text-white">Registrasi berhasil!</span>';
+                document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Registrasi berhasil!';
                 document.getElementById('stepInstruction').style.display = 'block';
-                document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.85)';
-
-                // Auto reload after 2s
-                setTimeout(() => window.location.reload(), 2000);
+                document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.9)';
+                document.getElementById('stepInstruction').style.color = '#fff';
+                setFaceStatus('Tersimpan. Menunggu verifikasi admin.', true);
+                setTimeout(() => { closeRegister(); window.location.reload(); }, 1500);
             } else {
-                setFaceStatus('Gagal menyimpan: ' + (result.message || 'Error'), false);
+                setFaceStatus('Gagal: ' + (result.message || 'Error'), false);
             }
         } catch (err) {
             setFaceStatus('Error: ' + err.message, false);
@@ -593,24 +575,8 @@
         currentStep = -1;
         blinkCount = 0;
         faceStableStart = null;
-
-        document.querySelectorAll('.step-item').forEach(el => {
-            el.classList.remove('active', 'done', 'capturing');
-            el.querySelector('.step-check').style.display = 'none';
-        });
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('progressText').textContent = '0 / 5 selesai';
-        document.getElementById('stepInstruction').style.display = 'none';
-        document.getElementById('stepInstruction').style.background = 'rgba(0,0,0,0.7)';
-        document.getElementById('btnReset').classList.add('d-none');
-        hideCountdownRing();
-
-        const canvas = document.getElementById('overlayCanvas');
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-
-        if (cameraReady) {
-            setTimeout(() => beginAutoRegistration(), 300);
-        }
+        resetUI();
+        setTimeout(() => beginAutoRegistration(), 300);
     }
 </script>
 @stop
