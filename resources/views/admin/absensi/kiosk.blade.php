@@ -564,14 +564,14 @@
             }
         }
 
-        // Auto-enter fullscreen on load
+        // Auto-enter fullscreen on first click (requires user gesture)
         document.addEventListener('DOMContentLoaded', () => {
-            // Small delay to allow user interaction first
-            setTimeout(() => {
+            document.addEventListener('click', function enterFS() {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(()=>{});
                 }
-            }, 1000);
+                document.removeEventListener('click', enterFS);
+            }, { once: true });
         });
 
         // ============================================
@@ -600,8 +600,11 @@
                     }
                 });
                 video.srcObject = stream;
+                await new Promise(resolve => { video.onloadedmetadata = resolve; });
+                await video.play();
                 video.style.display = 'block';
                 errorDiv.style.display = 'none';
+                console.log(`Camera ready: ${video.videoWidth}x${video.videoHeight}`);
                 return true;
             } catch (err) {
                 console.error('Camera error:', err);
@@ -697,12 +700,26 @@
             });
 
             async function detect() {
-                if (video.paused || video.ended) return;
+                if (video.paused || video.ended) {
+                    console.warn('Video paused or ended, retrying...');
+                    detectionLoop = requestAnimationFrame(() => setTimeout(detect, 1000));
+                    return;
+                }
 
-                const detections = await faceapi
-                    .detectAllFaces(video, options)
-                    .withFaceLandmarks(true) // use tiny model
-                    .withFaceDescriptors();
+                // Ensure video has dimensions
+                if (video.videoWidth === 0 || video.videoHeight === 0) {
+                    console.warn('Video not ready yet, retrying...');
+                    detectionLoop = requestAnimationFrame(() => setTimeout(detect, 500));
+                    return;
+                }
+
+                resizeCanvas();
+
+                try {
+                    const detections = await faceapi
+                        .detectAllFaces(video, options)
+                        .withFaceLandmarks(true)
+                        .withFaceDescriptors();
 
                 // Clear canvas
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -755,6 +772,11 @@
                 } else {
                     document.getElementById('faceGuide').classList.remove('detected');
                     setCameraStatus('idle', 'Menunggu wajah...');
+                }
+
+                } catch (err) {
+                    console.error('Detection error:', err);
+                    setCameraStatus('error', 'Error deteksi: ' + err.message);
                 }
 
                 detectionLoop = requestAnimationFrame(() => {
