@@ -83,16 +83,22 @@ class FaceRegistrationController extends Controller
     {
         $pending = FaceEncoding::where('is_verified', false)
             ->where('is_active', true)
-            ->with('user:id,name,role')
+            ->with(['user.gtk:id,user_id,nama_lengkap,nip'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         $verified = FaceEncoding::where('is_verified', true)
-            ->with(['user:id,name,role', 'verifier:id,name'])
+            ->with(['user.gtk:id,user_id,nama_lengkap,nip', 'verifier:id,name'])
             ->orderBy('verified_at', 'desc')
             ->paginate(20);
 
-        return view('admin.absensi.face-verification', compact('pending', 'verified'));
+        // Semua face records (untuk tab "Semua Data")
+        $allFaces = FaceEncoding::where('is_active', true)
+            ->with(['user.gtk:id,user_id,nama_lengkap,nip', 'verifier:id,name'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.absensi.face-verification', compact('pending', 'verified', 'allFaces'));
     }
 
     /**
