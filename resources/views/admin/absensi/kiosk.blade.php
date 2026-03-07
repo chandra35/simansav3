@@ -879,6 +879,13 @@
                     }),
                 });
 
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error('Record response error:', response.status, errText);
+                    showNotification(`Error ${response.status}: ${response.statusText}`, 'error');
+                    return;
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
@@ -886,11 +893,11 @@
                     playSuccessSound();
                     refreshAttendanceList();
                 } else {
-                    showNotification(result.message, 'warning');
+                    showNotification(result.message || 'Gagal mencatat', 'warning');
                 }
             } catch (err) {
                 console.error('Record error:', err);
-                showNotification('Gagal mencatat absensi. Periksa koneksi.', 'error');
+                showNotification('Gagal mencatat absensi: ' + err.message, 'error');
             }
         }
 
