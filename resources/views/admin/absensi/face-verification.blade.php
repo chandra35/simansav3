@@ -128,6 +128,7 @@
                                     <th>Status</th>
                                     <th>Diverifikasi</th>
                                     <th>Tgl Registrasi</th>
+                                    <th width="140">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,9 +175,32 @@
                                             @endif
                                         </td>
                                         <td>{{ $face->created_at->format('d/m/Y H:i') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {{-- Re-register: arahkan ke halaman registrasi dengan user terpilih --}}
+                                                <a href="{{ route('admin.absensi.face-register', ['user_id' => $face->user_id]) }}" class="btn btn-info" title="Registrasi Ulang">
+                                                    <i class="fas fa-redo"></i>
+                                                </a>
+                                                @if($face->is_verified)
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.reset', $face) }}" class="d-inline">
+                                                    @csrf
+                                                    <button class="btn btn-warning" title="Reset ke Pending" onclick="return confirm('Reset verifikasi ke pending?')">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.destroy', $face) }}" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-danger" title="Hapus Data Wajah" onclick="return confirm('Hapus data wajah {{ $gtk->nama_lengkap ?? $face->user->name ?? '' }}? Data akan hilang permanen.')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="9" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
+                                    <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

@@ -218,6 +218,13 @@
                 $('#btnStartCamera').prop('disabled', true);
             }
         });
+
+        // Auto-select user jika ada query param ?user_id=xxx
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselect = urlParams.get('user_id');
+        if (preselect && $('#selectGtk option[value="' + preselect + '"]').length) {
+            $('#selectGtk').val(preselect).trigger('change');
+        }
     });
 
     function startCamera() {

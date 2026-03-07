@@ -129,6 +129,33 @@ class FaceRegistrationController extends Controller
     }
 
     /**
+     * Admin: hapus data wajah
+     */
+    public function destroy(FaceEncoding $faceEncoding)
+    {
+        $name = $faceEncoding->user->gtk->nama_lengkap ?? $faceEncoding->user->name ?? 'Unknown';
+        $faceEncoding->delete();
+
+        return redirect()->route('admin.absensi.face-verification')
+            ->with('success', "Data wajah {$name} berhasil dihapus.");
+    }
+
+    /**
+     * Admin: reset verifikasi (set pending kembali)
+     */
+    public function resetVerification(FaceEncoding $faceEncoding)
+    {
+        $faceEncoding->update([
+            'is_verified' => false,
+            'verified_by' => null,
+            'verified_at' => null,
+        ]);
+
+        return redirect()->route('admin.absensi.face-verification')
+            ->with('success', 'Status verifikasi di-reset ke pending.');
+    }
+
+    /**
      * API: Get all active face descriptors (for kiosk matching)
      */
     public function getDescriptors(Request $request)
