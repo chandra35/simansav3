@@ -161,11 +161,16 @@ class FaceRegistrationController extends Controller
     public function getDescriptors(Request $request)
     {
         $userType = $request->get('type', 'gtk');
+        $verifiedOnly = $request->boolean('verified_only', false);
 
-        $faces = FaceEncoding::where('user_type', $userType)
-            ->where('is_active', true)
-            ->where('is_verified', true)
-            ->with('user:id,name')
+        $query = FaceEncoding::where('user_type', $userType)
+            ->where('is_active', true);
+
+        if ($verifiedOnly) {
+            $query->where('is_verified', true);
+        }
+
+        $faces = $query->with('user:id,name')
             ->get()
             ->map(function ($face) {
                 $userName = $face->user->name ?? 'Unknown';

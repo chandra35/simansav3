@@ -662,9 +662,16 @@
                         descriptors: person.descriptors.map(d => new Float32Array(d)),
                     }));
                     console.log(`Loaded ${faceDatabase.length} face profiles`);
+                    if (faceDatabase.length === 0) {
+                        setCameraStatus('error', 'Database wajah kosong! Verifikasi wajah di menu Face Verification.');
+                    }
+                } else {
+                    console.error('Face database response not success:', result);
+                    setCameraStatus('error', 'Gagal memuat database wajah');
                 }
             } catch (err) {
                 console.error('Error loading face database:', err);
+                setCameraStatus('error', 'Error: ' + err.message);
             }
         }
 
@@ -777,7 +784,10 @@
         // FACE MATCHING
         // ============================================
         async function matchFace(descriptor) {
-            if (faceDatabase.length === 0) return;
+            if (faceDatabase.length === 0) {
+                setCameraStatus('error', 'Database wajah kosong!');
+                return;
+            }
 
             let bestMatch = null;
             let bestDistance = Infinity;
@@ -793,6 +803,7 @@
             }
 
             if (bestMatch && bestDistance < CONFIG.faceThreshold) {
+                console.log(`Match: ${bestMatch.name} (distance: ${bestDistance.toFixed(4)}, threshold: ${CONFIG.faceThreshold})`);
                 isProcessing = true;
                 lastMatchTime = Date.now();
 
