@@ -860,7 +860,7 @@
         // RECORD ATTENDANCE (API CALL)
         // ============================================
         async function recordAttendance(person, confidence, photoData) {
-            const locationId = document.getElementById('locationSelect').value;
+            const locationId = document.getElementById('locationSelect')?.value || null;
 
             try {
                 const response = await fetch('{{ route("admin.absensi.record-face") }}', {
@@ -880,9 +880,10 @@
                 });
 
                 if (!response.ok) {
-                    const errText = await response.text();
-                    console.error('Record response error:', response.status, errText);
-                    showNotification(`Error ${response.status}: ${response.statusText}`, 'error');
+                    const errData = await response.json().catch(() => null);
+                    const msg = errData?.message || errData?.errors ? Object.values(errData.errors).flat().join(', ') : `Error ${response.status}`;
+                    console.error('Record error:', response.status, errData);
+                    showNotification(msg, 'error');
                     return;
                 }
 

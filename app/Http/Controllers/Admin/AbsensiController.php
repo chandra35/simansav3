@@ -97,6 +97,11 @@ class AbsensiController extends Controller
      */
     public function recordFace(Request $request)
     {
+        // Normalize empty strings to null
+        $request->merge([
+            'location_id' => $request->location_id ?: null,
+        ]);
+
         $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
             'confidence' => 'required|numeric|min:0|max:1',
