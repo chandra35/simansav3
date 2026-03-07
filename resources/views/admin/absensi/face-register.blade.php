@@ -586,7 +586,11 @@
             document.getElementById('stepText').textContent = `Kedip terdeteksi! (${blinkCount}/1)`;
             if (blinkCount >= 1 && !autoCapturing) {
                 autoCapturing = true;
-                doCapture().then(() => { autoCapturing = false; });
+                // Wait for eyes to reopen before capturing descriptor
+                setTimeout(async () => {
+                    await doCaptureWithRetry();
+                    autoCapturing = false;
+                }, 400);
             }
         }
         lastEAR = ear;
@@ -600,12 +604,24 @@
     // ============================================
     // CAPTURE
     // ============================================
+    async function doCaptureWithRetry(maxRetries = 3) {
+        for (let i = 0; i < maxRetries; i++) {
+            const ok = await doCapture();
+            if (ok) return;
+            await new Promise(r => setTimeout(r, 300));
+        }
+        setFaceStatus('Gagal capture, silakan kedipkan lagi', false);
+        blinkCount = 0;
+        eyeWasClosed = false;
+        earHistory = [];
+    }
+
     async function doCapture() {
         if (currentStep >= totalSteps) return;
         const video = document.getElementById('videoElement');
         const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
         const det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
-        if (!det) { faceStableStart = null; hideCountdownRing(); return; }
+        if (!det) { faceStableStart = null; hideCountdownRing(); return false; }
 
         capturedDescriptors.push(Array.from(det.descriptor));
         capturedAngles.push(STEPS[currentStep].angle);
@@ -633,6 +649,7 @@
             await new Promise(r => setTimeout(r, 500));
             updateStepUI();
         }
+        return true;
     }
 
     // ============================================
