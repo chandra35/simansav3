@@ -50,6 +50,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Siswa Management
     Route::resource('siswa', AdminSiswaController::class);
     Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
+    Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
     Route::put('/siswa/{siswa}/reset-password', [AdminSiswaController::class, 'resetPassword'])->name('siswa.reset-password');
     Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen');
     Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');

@@ -14,7 +14,7 @@
             <span class="info-box-icon"><i class="fas fa-users"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Total Siswa</span>
-                <span class="info-box-number">{{ $stats['total_siswa'] }} Siswa</span>
+                <span class="info-box-number" id="stat-total">{{ $stats['total_siswa'] }} Siswa</span>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
             <span class="info-box-icon"><i class="fas fa-male"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Laki-Laki</span>
-                <span class="info-box-number">{{ $stats['laki_laki'] }} Siswa</span>
+                <span class="info-box-number" id="stat-laki">{{ $stats['laki_laki'] }} Siswa</span>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@
             <span class="info-box-icon"><i class="fas fa-female"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Perempuan</span>
-                <span class="info-box-number">{{ $stats['perempuan'] }} Siswa</span>
+                <span class="info-box-number" id="stat-perempuan">{{ $stats['perempuan'] }} Siswa</span>
             </div>
         </div>
     </div>
@@ -41,7 +41,7 @@
             <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Data Lengkap</span>
-                <span class="info-box-number">{{ $stats['data_lengkap'] }} Siswa</span>
+                <span class="info-box-number" id="stat-lengkap">{{ $stats['data_lengkap'] }} Siswa</span>
             </div>
         </div>
     </div>
@@ -1049,6 +1049,14 @@ $(document).ready(function() {
             return $.extend({}, d, filterParams);
         };
         siswaTable.ajax.reload();
+
+        // Update stats cards
+        $.get('{{ route("admin.siswa.stats") }}', filterParams, function(data) {
+            $('#stat-total').text(data.total_siswa + ' Siswa');
+            $('#stat-laki').text(data.laki_laki + ' Siswa');
+            $('#stat-perempuan').text(data.perempuan + ' Siswa');
+            $('#stat-lengkap').text(data.data_lengkap + ' Siswa');
+        });
     }
 });
 

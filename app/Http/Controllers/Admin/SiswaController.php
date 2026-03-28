@@ -60,6 +60,56 @@ class SiswaController extends Controller
     }
 
     /**
+     * Get filtered stats for cards (AJAX)
+     */
+    public function stats(Request $request)
+    {
+        $this->authorize('view-siswa');
+
+        $user = Auth::user();
+        $query = Siswa::query();
+
+        // Role-based filter
+        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
+            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
+            if ($kelasIds->isNotEmpty()) {
+                $query->whereHas('kelasAktif', fn($q) => $q->whereIn('kelas.id', $kelasIds));
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        // Apply same filters as data()
+        if ($request->filled('jenis_kelamin')) {
+            $query->where('jenis_kelamin', $request->jenis_kelamin);
+        }
+        if ($request->filled('tingkat')) {
+            if ($request->tingkat === 'tanpa_rombel') {
+                $query->whereDoesntHave('kelasAktif');
+            } else {
+                $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
+            }
+        }
+        if ($request->filled('kelas_id')) {
+            $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
+        }
+        if ($request->filled('status')) {
+            if ($request->status == 'lengkap') {
+                $query->where('data_diri_completed', true)->where('data_ortu_completed', true);
+            } elseif ($request->status == 'belum') {
+                $query->where(fn($q) => $q->where('data_diri_completed', false)->orWhere('data_ortu_completed', false));
+            }
+        }
+
+        return response()->json([
+            'total_siswa' => (clone $query)->count(),
+            'laki_laki' => (clone $query)->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => (clone $query)->where('jenis_kelamin', 'P')->count(),
+            'data_lengkap' => (clone $query)->where('data_diri_completed', true)->where('data_ortu_completed', true)->count(),
+        ]);
+    }
+
+    /**
      * Get siswa data for DataTables
      */
     public function data(Request $request)
