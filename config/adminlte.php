@@ -709,6 +709,13 @@ return [
                     'active' => ['admin/referensi-perguruan-tinggi*'],
                 ],
                 [
+                    'text' => 'Referensi Prodi',
+                    'route' => 'admin.referensi-program-studi.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/referensi-program-studi*'],
+                ],
+                [
                     'text' => 'Profile',
                     'route' => 'admin.profile',
                     'icon' => 'fas fa-fw fa-user',

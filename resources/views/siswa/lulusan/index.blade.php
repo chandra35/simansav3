@@ -69,7 +69,12 @@
 
                         <div class="form-group">
                             <label for="program_studi">Program Studi</label>
-                            <input type="text" name="program_studi" id="program_studi" class="form-control @error('program_studi') is-invalid @enderror" value="{{ old('program_studi', $dataLulusan->program_studi) }}" required>
+                            <input type="hidden" name="referensi_program_studi_id" id="referensi_program_studi_id" value="{{ old('referensi_program_studi_id', $dataLulusan->referensi_program_studi_id) }}">
+                            <div class="position-relative">
+                                <input type="text" name="program_studi" id="program_studi" autocomplete="off" class="form-control @error('program_studi') is-invalid @enderror" value="{{ old('program_studi', $dataLulusan->program_studi) }}" required>
+                                <div id="prodiSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1049; display: none;"></div>
+                            </div>
+                            <small class="text-muted">Pilih kampus dari saran terlebih dulu agar saran program studi sesuai kampus tersebut. Jika belum ada, lanjutkan isi manual.</small>
                             @error('program_studi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -131,6 +136,14 @@
         #kampusSuggestions .kampus-jenis {
             font-size: 0.75rem;
         }
+
+        #prodiSuggestions .list-group-item {
+            cursor: pointer;
+        }
+
+        #prodiSuggestions .prodi-meta {
+            font-size: 0.75rem;
+        }
     </style>
 @stop
 
@@ -138,12 +151,21 @@
     <script>
         $(function () {
             let xhr = null;
+            let xhrProdi = null;
             const $input = $('#nama_universitas');
             const $hidden = $('#referensi_perguruan_tinggi_id');
             const $suggestions = $('#kampusSuggestions');
+            const $prodiInput = $('#program_studi');
+            const $prodiHidden = $('#referensi_program_studi_id');
+            const $prodiSuggestions = $('#prodiSuggestions');
+            const $fakultasInput = $('#jurusan_fakultas');
 
             function hideSuggestions() {
                 $suggestions.hide().empty();
+            }
+
+            function hideProdiSuggestions() {
+                $prodiSuggestions.hide().empty();
             }
 
             function renderSuggestions(items) {
@@ -168,9 +190,41 @@
                 $suggestions.show();
             }
 
+            function renderProdiSuggestions(items) {
+                if (!items.length) {
+                    hideProdiSuggestions();
+                    return;
+                }
+
+                $prodiSuggestions.empty();
+
+                items.forEach(item => {
+                    const jenjang = item.jenjang ? `<span class="badge badge-success mr-1">${item.jenjang}</span>` : '';
+                    const fakultas = item.fakultas ? `<span class="text-muted prodi-meta">${item.fakultas}</span>` : '';
+
+                    $prodiSuggestions.append(`
+                        <button type="button" class="list-group-item list-group-item-action prodi-suggestion" data-id="${item.id}" data-nama="${item.nama}" data-jenjang="${item.jenjang ?? ''}" data-fakultas="${item.fakultas ?? ''}">
+                            <div>${jenjang}<span>${item.nama}</span></div>
+                            ${fakultas}
+                        </button>
+                    `);
+                });
+
+                $prodiSuggestions.show();
+            }
+
+            function resetProdiReference(keepInputValue = true) {
+                $prodiHidden.val('');
+                if (!keepInputValue) {
+                    $prodiInput.val('');
+                }
+                hideProdiSuggestions();
+            }
+
             $input.on('input', function () {
                 const query = $(this).val().trim();
                 $hidden.val('');
+                resetProdiReference(false);
 
                 if (query.length < 2) {
                     hideSuggestions();
@@ -196,12 +250,62 @@
             $(document).on('click', '.kampus-suggestion', function () {
                 $input.val($(this).data('nama'));
                 $hidden.val($(this).data('id'));
+                resetProdiReference(false);
                 hideSuggestions();
+            });
+
+            $prodiInput.on('input', function () {
+                const query = $(this).val().trim();
+                const campusId = $hidden.val();
+                $prodiHidden.val('');
+
+                if (query.length < 2 || !campusId) {
+                    hideProdiSuggestions();
+                    return;
+                }
+
+                if (xhrProdi) {
+                    xhrProdi.abort();
+                }
+
+                xhrProdi = $.ajax({
+                    url: '{{ route('siswa.lulusan.prodi.search') }}',
+                    data: {
+                        q: query,
+                        referensi_perguruan_tinggi_id: campusId
+                    },
+                    success: function (response) {
+                        renderProdiSuggestions(response);
+                    },
+                    error: function () {
+                        hideProdiSuggestions();
+                    }
+                });
+            });
+
+            $(document).on('click', '.prodi-suggestion', function () {
+                const jenjang = $(this).data('jenjang');
+                const nama = $(this).data('nama');
+                const fakultas = $(this).data('fakultas');
+                const label = [jenjang, nama].filter(Boolean).join(' ').trim();
+
+                $prodiInput.val(label);
+                $prodiHidden.val($(this).data('id'));
+
+                if (!$fakultasInput.val() && fakultas) {
+                    $fakultasInput.val(fakultas);
+                }
+
+                hideProdiSuggestions();
             });
 
             $(document).on('click', function (event) {
                 if (!$(event.target).closest('#nama_universitas, #kampusSuggestions').length) {
                     hideSuggestions();
+                }
+
+                if (!$(event.target).closest('#program_studi, #prodiSuggestions').length) {
+                    hideProdiSuggestions();
                 }
             });
         });

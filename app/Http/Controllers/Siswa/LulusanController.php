@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\ReferensiPerguruanTinggi;
+use App\Models\ReferensiProgramStudi;
 use App\Models\SiswaKelas;
 use App\Models\SiswaLulusan;
 use App\Models\TahunPelajaran;
@@ -37,7 +38,7 @@ class LulusanController extends Controller
         ]);
 
         if ($dataLulusan->referensi_perguruan_tinggi_id && !$dataLulusan->nama_universitas_manual) {
-            $dataLulusan->loadMissing('referensiPerguruanTinggi');
+            $dataLulusan->loadMissing(['referensiPerguruanTinggi', 'referensiProgramStudi']);
         }
 
         return view('siswa.lulusan.index', [
@@ -67,6 +68,27 @@ class LulusanController extends Controller
         return response()->json($results);
     }
 
+    public function searchStudyPrograms(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+        $campusId = $request->get('referensi_perguruan_tinggi_id');
+
+        if (mb_strlen($query) < 2 || empty($campusId)) {
+            return response()->json([]);
+        }
+
+        $results = ReferensiProgramStudi::query()
+            ->where('is_active', true)
+            ->where('referensi_perguruan_tinggi_id', $campusId)
+            ->where('nama', 'like', '%' . $query . '%')
+            ->orderBy('jenjang')
+            ->orderBy('nama')
+            ->limit(10)
+            ->get(['id', 'nama', 'jenjang', 'fakultas']);
+
+        return response()->json($results);
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -88,6 +110,7 @@ class LulusanController extends Controller
             'jalur_masuk' => ['required', 'string', Rule::in(SiswaLulusan::JALUR_MASUK)],
             'nama_universitas' => 'required|string|max:255',
             'referensi_perguruan_tinggi_id' => 'nullable|exists:referensi_perguruan_tinggi,id',
+            'referensi_program_studi_id' => 'nullable|exists:referensi_program_studi,id',
             'jurusan_fakultas' => 'nullable|string|max:255',
             'program_studi' => 'required|string|max:255',
             'keterangan' => 'nullable|string|max:1000',
@@ -102,13 +125,35 @@ class LulusanController extends Controller
             $referensi = ReferensiPerguruanTinggi::find($validated['referensi_perguruan_tinggi_id']);
         }
 
+        $referensiProgramStudi = null;
+        if (!empty($validated['referensi_program_studi_id'])) {
+            $referensiProgramStudi = ReferensiProgramStudi::with('perguruanTinggi')
+                ->find($validated['referensi_program_studi_id']);
+        }
+
+        if ($referensiProgramStudi && $referensi && $referensiProgramStudi->referensi_perguruan_tinggi_id !== $referensi->id) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'program_studi' => 'Program studi yang dipilih tidak sesuai dengan kampus yang dipilih.',
+                ]);
+        }
+
+        if (!$referensi && $referensiProgramStudi) {
+            $referensi = $referensiProgramStudi->perguruanTinggi;
+        }
+
         $payload = [
             'referensi_perguruan_tinggi_id' => $referensi?->id,
+            'referensi_program_studi_id' => $referensiProgramStudi?->id,
             'jalur_masuk' => $validated['jalur_masuk'],
             'nama_universitas' => $referensi?->nama ?? $validated['nama_universitas'],
             'nama_universitas_manual' => $referensi ? null : $validated['nama_universitas'],
-            'jurusan_fakultas' => $validated['jurusan_fakultas'] ?? null,
-            'program_studi' => $validated['program_studi'],
+            'jurusan_fakultas' => $validated['jurusan_fakultas'] ?: $referensiProgramStudi?->fakultas,
+            'program_studi' => $referensiProgramStudi
+                ? trim($referensiProgramStudi->jenjang . ' ' . $referensiProgramStudi->nama)
+                : $validated['program_studi'],
+            'program_studi_manual' => $referensiProgramStudi ? null : $validated['program_studi'],
             'keterangan' => $validated['keterangan'] ?? null,
         ];
 

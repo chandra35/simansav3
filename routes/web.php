@@ -70,6 +70,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'store'])->name('referensi-perguruan-tinggi.store');
         Route::put('/referensi-perguruan-tinggi/{referensiPerguruanTinggi}', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'update'])->name('referensi-perguruan-tinggi.update');
         Route::delete('/referensi-perguruan-tinggi/{referensiPerguruanTinggi}', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'destroy'])->name('referensi-perguruan-tinggi.destroy');
+        Route::get('/referensi-program-studi', [App\Http\Controllers\Admin\ReferensiProgramStudiController::class, 'index'])->name('referensi-program-studi.index');
+        Route::post('/referensi-program-studi', [App\Http\Controllers\Admin\ReferensiProgramStudiController::class, 'store'])->name('referensi-program-studi.store');
+        Route::put('/referensi-program-studi/{referensiProgramStudi}', [App\Http\Controllers\Admin\ReferensiProgramStudiController::class, 'update'])->name('referensi-program-studi.update');
+        Route::delete('/referensi-program-studi/{referensiProgramStudi}', [App\Http\Controllers\Admin\ReferensiProgramStudiController::class, 'destroy'])->name('referensi-program-studi.destroy');
     });
     
     // Siswa Import
@@ -589,6 +593,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'index'])->name('lulusan.index');
     Route::post('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'store'])->name('lulusan.store');
     Route::get('/lulusan/referensi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchReferences'])->name('lulusan.referensi.search');
+    Route::get('/lulusan/prodi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchStudyPrograms'])->name('lulusan.prodi.search');
     
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

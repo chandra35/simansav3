@@ -25,11 +25,13 @@ class SiswaLulusan extends Model
         'siswa_id',
         'tahun_pelajaran_id',
         'referensi_perguruan_tinggi_id',
+        'referensi_program_studi_id',
         'jalur_masuk',
         'nama_universitas',
         'nama_universitas_manual',
         'jurusan_fakultas',
         'program_studi',
+        'program_studi_manual',
         'keterangan',
     ];
 
@@ -46,5 +48,10 @@ class SiswaLulusan extends Model
     public function referensiPerguruanTinggi()
     {
         return $this->belongsTo(ReferensiPerguruanTinggi::class, 'referensi_perguruan_tinggi_id');
+    }
+
+    public function referensiProgramStudi()
+    {
+        return $this->belongsTo(ReferensiProgramStudi::class, 'referensi_program_studi_id');
     }
 }

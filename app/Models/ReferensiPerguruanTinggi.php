@@ -35,4 +35,9 @@ class ReferensiPerguruanTinggi extends Model
     {
         return $this->hasMany(SiswaLulusan::class, 'referensi_perguruan_tinggi_id');
     }
+
+    public function programStudi()
+    {
+        return $this->hasMany(ReferensiProgramStudi::class, 'referensi_perguruan_tinggi_id');
+    }
 }
