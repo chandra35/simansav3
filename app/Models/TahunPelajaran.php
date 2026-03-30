@@ -80,6 +80,11 @@ class TahunPelajaran extends Model
         return $this->hasMany(MutasiSiswa::class)->where('jenis_mutasi', 'keluar');
     }
 
+    public function dataLulusan(): HasMany
+    {
+        return $this->hasMany(SiswaLulusan::class, 'tahun_pelajaran_id');
+    }
+
     /**
      * Scope: Get tahun pelajaran aktif
      */

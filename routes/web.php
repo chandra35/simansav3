@@ -61,6 +61,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/sekolah-asal', [App\Http\Controllers\Admin\SekolahAsalController::class, 'index'])->name('sekolah-asal.index');
         Route::get('/sekolah-asal/{npsn}', [App\Http\Controllers\Admin\SekolahAsalController::class, 'show'])->name('sekolah-asal.show');
         Route::get('/sekolah-asal/{npsn}/siswa-data', [App\Http\Controllers\Admin\SekolahAsalController::class, 'getSiswaData'])->name('sekolah-asal.siswa-data');
+        Route::get('/lulusan', [App\Http\Controllers\Admin\LulusanController::class, 'index'])->name('lulusan.index');
     });
     
     // Siswa Import
@@ -575,6 +576,10 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     
     // SNBP Menu for Siswa (Kelas 12 only)
     Route::get('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'index'])->name('snbp.index');
+    
+    // Tracking Lulusan untuk siswa kelas 12/alumni
+    Route::get('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'index'])->name('lulusan.index');
+    Route::post('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'store'])->name('lulusan.store');
     
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

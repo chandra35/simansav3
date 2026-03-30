@@ -492,6 +492,13 @@ return [
                     'can' => 'admin-access',
                     'active' => ['admin/catatan-konseling*'],
                 ],
+                [
+                    'text' => 'Lulusan',
+                    'route' => 'admin.lulusan.index',
+                    'icon' => 'fas fa-fw fa-user-graduate',
+                    'can' => 'view-siswa',
+                    'active' => ['admin/lulusan*'],
+                ],
             ],
         ],
         
@@ -871,6 +878,13 @@ return [
             'can' => 'siswa-access',
             'key' => 'siswa-snbp',
         ],
+        [
+            'text' => 'Data Lulusan',
+            'route' => 'siswa.lulusan.index',
+            'icon' => 'fas fa-fw fa-university',
+            'can' => 'siswa-access',
+            'key' => 'siswa-lulusan',
+        ],
     ],
 
     /*
@@ -894,6 +908,7 @@ return [
         JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class,
         App\Menu\Filters\SnbpMenuFilter::class,
+        App\Menu\Filters\LulusanMenuFilter::class,
     ],
 
     /*
