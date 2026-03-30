@@ -387,6 +387,39 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="alert alert-warning mb-3">
+                        <strong><i class="fas fa-tools"></i> Mode Testing / Maintenance</strong>
+                        <div class="mt-2">
+                            Toggle ini hanya untuk analisa device, maintenance, dan uji APK.
+                            Saat ujian berlangsung, pastikan kembali dimatikan agar proteksi penuh tetap aktif.
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="custom-control custom-switch mb-3">
+                                <input type="checkbox" class="custom-control-input" id="testing_allow_developer_options" name="testing_allow_developer_options" value="1"
+                                    {{ old('testing_allow_developer_options', $setting->testing_allow_developer_options) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="testing_allow_developer_options">
+                                    <i class="fas fa-tools text-warning"></i> Izinkan Developer Options Saat Testing
+                                </label>
+                                <br><small class="text-muted">Jika aktif, Developer Options tidak memblokir ujian saat mode testing/maintenance.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="custom-control custom-switch mb-3">
+                                <input type="checkbox" class="custom-control-input" id="testing_allow_usb_debugging" name="testing_allow_usb_debugging" value="1"
+                                    {{ old('testing_allow_usb_debugging', $setting->testing_allow_usb_debugging) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="testing_allow_usb_debugging">
+                                    <i class="fas fa-tools text-warning"></i> Izinkan USB Debugging Saat Testing
+                                </label>
+                                <br><small class="text-muted">Jika aktif, USB Debugging tidak dianggap pelanggaran saat maintenance atau analisa APK.</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -25,6 +25,8 @@ class ExamBrowserController extends Controller
                 'school_name' => 'MAN 1 Metro',
                 'moodle_url' => 'https://elearning.man1metro.sch.id',
                 'user_agent' => 'SEB/3.0 ExamAnmet/1.0',
+                'testing_allow_developer_options' => false,
+                'testing_allow_usb_debugging' => false,
                 'is_active' => true,
                 'created_by' => Auth::id(),
             ]);
@@ -60,6 +62,8 @@ class ExamBrowserController extends Controller
             'allow_navigation' => 'boolean',
             'allow_reload' => 'boolean',
             'show_toolbar' => 'boolean',
+            'testing_allow_developer_options' => 'boolean',
+            'testing_allow_usb_debugging' => 'boolean',
             'is_active' => 'boolean',
             'allowed_urls' => 'nullable|string',
             'blocked_apps' => 'nullable|string',
@@ -86,6 +90,8 @@ class ExamBrowserController extends Controller
         $validated['allow_navigation'] = $request->boolean('allow_navigation');
         $validated['allow_reload'] = $request->boolean('allow_reload');
         $validated['show_toolbar'] = $request->boolean('show_toolbar');
+        $validated['testing_allow_developer_options'] = $request->boolean('testing_allow_developer_options');
+        $validated['testing_allow_usb_debugging'] = $request->boolean('testing_allow_usb_debugging');
         $validated['is_active'] = $request->boolean('is_active');
         $validated['updated_by'] = Auth::id();
 

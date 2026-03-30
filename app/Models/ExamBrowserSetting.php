@@ -33,6 +33,8 @@ class ExamBrowserSetting extends Model
         'allow_navigation',
         'allow_reload',
         'show_toolbar',
+        'testing_allow_developer_options',
+        'testing_allow_usb_debugging',
         'is_active',
         'allowed_urls',
         'blocked_apps',
@@ -50,6 +52,8 @@ class ExamBrowserSetting extends Model
         'allow_navigation' => 'boolean',
         'allow_reload' => 'boolean',
         'show_toolbar' => 'boolean',
+        'testing_allow_developer_options' => 'boolean',
+        'testing_allow_usb_debugging' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -135,6 +139,8 @@ class ExamBrowserSetting extends Model
             'allow_reload' => $this->allow_reload,
             'is_active' => $this->is_active,
             'show_toolbar' => $this->show_toolbar,
+            'testing_allow_developer_options' => $this->testing_allow_developer_options,
+            'testing_allow_usb_debugging' => $this->testing_allow_usb_debugging,
             'allowed_urls' => $this->allowed_urls_array,
             'blocked_apps' => $this->blocked_apps_array,
             'custom_css' => $this->custom_css,
