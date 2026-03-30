@@ -587,13 +587,27 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
 // No authentication required - data is non-sensitive config
 Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () {
     Route::get('/ping', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'ping'])->name('ping');
-    Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])->name('config');
-    Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])->name('verify-password');
-    Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])->name('notifications');
+    Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])
+        ->middleware('throttle:exam-browser-config')
+        ->name('config');
+    Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-password'])
+        ->name('verify-password');
+    Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-notifications'])
+        ->name('notifications');
 
     // Session & Violation reporting (from ExaManmet app)
-    Route::post('/session/start', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionStart'])->name('session.start');
-    Route::post('/session/heartbeat', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionHeartbeat'])->name('session.heartbeat');
-    Route::post('/session/violation', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionViolation'])->name('session.violation');
-    Route::post('/session/end', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionEnd'])->name('session.end');
+    Route::post('/session/start', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionStart'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-session-start'])
+        ->name('session.start');
+    Route::post('/session/heartbeat', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionHeartbeat'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-heartbeat'])
+        ->name('session.heartbeat');
+    Route::post('/session/violation', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionViolation'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-violation'])
+        ->name('session.violation');
+    Route::post('/session/end', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionEnd'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-session-end'])
+        ->name('session.end');
 });

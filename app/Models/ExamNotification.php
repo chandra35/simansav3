@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ExamNotification extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
+
+    public const ACTIVE_API_CACHE_KEY = 'exam_notifications_active_api';
+    public const ACTIVE_API_CACHE_TTL = 60;
 
     protected $fillable = [
         'title',
@@ -27,6 +32,18 @@ class ExamNotification extends Model
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        $clearCache = static function (): void {
+            static::clearActiveApiCache();
+        };
+
+        static::saved($clearCache);
+        static::deleted($clearCache);
+        static::restored($clearCache);
+        static::forceDeleted($clearCache);
+    }
 
     /**
      * Get the user who sent this notification
@@ -58,6 +75,21 @@ class ExamNotification extends Model
     public function scopeNewerThan($query, $timestamp)
     {
         return $query->where('created_at', '>', $timestamp);
+    }
+
+    public static function getActiveForApi(): Collection
+    {
+        return Cache::remember(self::ACTIVE_API_CACHE_KEY, self::ACTIVE_API_CACHE_TTL, function () {
+            return static::active()
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get();
+        });
+    }
+
+    public static function clearActiveApiCache(): void
+    {
+        Cache::forget(self::ACTIVE_API_CACHE_KEY);
     }
 
     /**

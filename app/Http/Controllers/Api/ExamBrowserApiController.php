@@ -9,6 +9,7 @@ use App\Models\ExamBrowserViolation;
 use App\Models\ExamNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
 
 class ExamBrowserApiController extends Controller
 {
@@ -95,19 +96,18 @@ class ExamBrowserApiController extends Controller
      */
     public function notifications(Request $request): JsonResponse
     {
-        $query = ExamNotification::active()->orderBy('created_at', 'desc');
+        $notifications = ExamNotification::getActiveForApi();
 
-        // If 'since' parameter provided, only return newer notifications
-        if ($request->has('since')) {
+        if ($request->filled('since')) {
             try {
-                $since = \Carbon\Carbon::parse($request->input('since'));
-                $query->newerThan($since);
+                $since = Carbon::parse($request->input('since'));
+                $notifications = $notifications
+                    ->filter(fn (ExamNotification $notification) => $notification->created_at?->gt($since))
+                    ->values();
             } catch (\Exception $e) {
                 // Ignore invalid date
             }
         }
-
-        $notifications = $query->limit(20)->get();
 
         return response()->json([
             'success' => true,
@@ -211,8 +211,6 @@ class ExamBrowserApiController extends Controller
 
         $session->update($updateData);
 
-        // Get auto-lock threshold from settings
-        $setting = ExamBrowserSetting::getActive();
         $autoLockThreshold = 3; // default
         // Check if we should auto-lock
         if (!$session->is_locked && $session->violation_count >= $autoLockThreshold) {

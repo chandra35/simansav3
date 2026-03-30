@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
+            'exam.browser.client' => \App\Http\Middleware\EnsureSupportedExamBrowserClient::class,
         ]);
         
         // Exclude ExaManmet API routes from CSRF verification

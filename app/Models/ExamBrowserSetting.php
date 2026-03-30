@@ -5,11 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ExamBrowserSetting extends Model
 {
     use HasUuids, SoftDeletes;
+
+    public const ACTIVE_CACHE_KEY = 'exam_browser_settings_active';
+    public const ACTIVE_CACHE_TTL = 300;
 
     protected $table = 'exam_browser_settings';
 
@@ -49,6 +53,18 @@ class ExamBrowserSetting extends Model
         'is_active' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        $clearCache = static function (): void {
+            static::clearActiveCache();
+        };
+
+        static::saved($clearCache);
+        static::deleted($clearCache);
+        static::restored($clearCache);
+        static::forceDeleted($clearCache);
+    }
+
     /**
      * Get the logo URL
      */
@@ -87,7 +103,14 @@ class ExamBrowserSetting extends Model
      */
     public static function getActive(): ?self
     {
-        return static::where('is_active', true)->latest()->first();
+        return Cache::remember(self::ACTIVE_CACHE_KEY, self::ACTIVE_CACHE_TTL, function () {
+            return static::where('is_active', true)->latest()->first();
+        });
+    }
+
+    public static function clearActiveCache(): void
+    {
+        Cache::forget(self::ACTIVE_CACHE_KEY);
     }
 
     /**
