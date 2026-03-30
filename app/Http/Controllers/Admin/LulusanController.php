@@ -33,7 +33,7 @@ class LulusanController extends Controller
 
         $query = $this->buildBaseQuery($request, $selectedTahun->id);
 
-        return DataTables::queryBuilder($query)
+        return DataTables::query($query)
             ->addColumn('status_badge', function ($row) {
                 if ($row->is_filled) {
                     return '<span class="badge badge-success">Sudah Isi</span>';
