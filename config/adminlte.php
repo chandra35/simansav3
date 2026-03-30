@@ -702,6 +702,13 @@ return [
                     'active' => ['admin/snbp-menu*'],
                 ],
                 [
+                    'text' => 'Referensi Kampus',
+                    'route' => 'admin.referensi-perguruan-tinggi.index',
+                    'icon' => 'fas fa-fw fa-university',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/referensi-perguruan-tinggi*'],
+                ],
+                [
                     'text' => 'Profile',
                     'route' => 'admin.profile',
                     'icon' => 'fas fa-fw fa-user',

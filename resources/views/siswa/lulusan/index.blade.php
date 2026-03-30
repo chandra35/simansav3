@@ -48,7 +48,12 @@
 
                         <div class="form-group">
                             <label for="nama_universitas">Nama Universitas / Kampus</label>
-                            <input type="text" name="nama_universitas" id="nama_universitas" class="form-control @error('nama_universitas') is-invalid @enderror" value="{{ old('nama_universitas', $dataLulusan->nama_universitas) }}" required>
+                            <input type="hidden" name="referensi_perguruan_tinggi_id" id="referensi_perguruan_tinggi_id" value="{{ old('referensi_perguruan_tinggi_id', $dataLulusan->referensi_perguruan_tinggi_id) }}">
+                            <div class="position-relative">
+                                <input type="text" name="nama_universitas" id="nama_universitas" autocomplete="off" class="form-control @error('nama_universitas') is-invalid @enderror" value="{{ old('nama_universitas', $dataLulusan->nama_universitas) }}" required>
+                                <div id="kampusSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; display: none;"></div>
+                            </div>
+                            <small class="text-muted">Ketik minimal 2 huruf untuk melihat saran kampus. Jika kampus belum ada, lanjutkan isi manual.</small>
                             @error('nama_universitas')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -115,4 +120,90 @@
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        #kampusSuggestions .list-group-item {
+            cursor: pointer;
+        }
+
+        #kampusSuggestions .kampus-jenis {
+            font-size: 0.75rem;
+        }
+    </style>
+@stop
+
+@section('js')
+    <script>
+        $(function () {
+            let xhr = null;
+            const $input = $('#nama_universitas');
+            const $hidden = $('#referensi_perguruan_tinggi_id');
+            const $suggestions = $('#kampusSuggestions');
+
+            function hideSuggestions() {
+                $suggestions.hide().empty();
+            }
+
+            function renderSuggestions(items) {
+                if (!items.length) {
+                    hideSuggestions();
+                    return;
+                }
+
+                $suggestions.empty();
+
+                items.forEach(item => {
+                    $suggestions.append(`
+                        <button type="button" class="list-group-item list-group-item-action kampus-suggestion" data-id="${item.id}" data-nama="${item.nama}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>${item.nama}</span>
+                                <span class="badge badge-info kampus-jenis">${item.jenis}</span>
+                            </div>
+                        </button>
+                    `);
+                });
+
+                $suggestions.show();
+            }
+
+            $input.on('input', function () {
+                const query = $(this).val().trim();
+                $hidden.val('');
+
+                if (query.length < 2) {
+                    hideSuggestions();
+                    return;
+                }
+
+                if (xhr) {
+                    xhr.abort();
+                }
+
+                xhr = $.ajax({
+                    url: '{{ route('siswa.lulusan.referensi.search') }}',
+                    data: { q: query },
+                    success: function (response) {
+                        renderSuggestions(response);
+                    },
+                    error: function () {
+                        hideSuggestions();
+                    }
+                });
+            });
+
+            $(document).on('click', '.kampus-suggestion', function () {
+                $input.val($(this).data('nama'));
+                $hidden.val($(this).data('id'));
+                hideSuggestions();
+            });
+
+            $(document).on('click', function (event) {
+                if (!$(event.target).closest('#nama_universitas, #kampusSuggestions').length) {
+                    hideSuggestions();
+                }
+            });
+        });
+    </script>
 @stop

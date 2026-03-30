@@ -65,6 +65,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/lulusan/data', [App\Http\Controllers\Admin\LulusanController::class, 'data'])->name('lulusan.data');
         Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
     });
+    Route::middleware(['permission:manage-settings'])->group(function () {
+        Route::get('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'index'])->name('referensi-perguruan-tinggi.index');
+        Route::post('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'store'])->name('referensi-perguruan-tinggi.store');
+        Route::put('/referensi-perguruan-tinggi/{referensiPerguruanTinggi}', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'update'])->name('referensi-perguruan-tinggi.update');
+        Route::delete('/referensi-perguruan-tinggi/{referensiPerguruanTinggi}', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'destroy'])->name('referensi-perguruan-tinggi.destroy');
+    });
     
     // Siswa Import
     Route::get('/siswa/import/form', [SiswaImportController::class, 'index'])->name('siswa.import');
@@ -582,6 +588,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     // Tracking Lulusan untuk siswa kelas 12/alumni
     Route::get('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'index'])->name('lulusan.index');
     Route::post('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'store'])->name('lulusan.store');
+    Route::get('/lulusan/referensi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchReferences'])->name('lulusan.referensi.search');
     
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

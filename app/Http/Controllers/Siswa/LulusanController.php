@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Models\ReferensiPerguruanTinggi;
 use App\Models\SiswaKelas;
 use App\Models\SiswaLulusan;
 use App\Models\TahunPelajaran;
@@ -35,6 +36,10 @@ class LulusanController extends Controller
             'tahun_pelajaran_id' => $targetSiswaKelas->tahun_pelajaran_id,
         ]);
 
+        if ($dataLulusan->referensi_perguruan_tinggi_id && !$dataLulusan->nama_universitas_manual) {
+            $dataLulusan->loadMissing('referensiPerguruanTinggi');
+        }
+
         return view('siswa.lulusan.index', [
             'siswa' => $siswa,
             'targetSiswaKelas' => $targetSiswaKelas,
@@ -42,6 +47,24 @@ class LulusanController extends Controller
             'dataLulusan' => $dataLulusan,
             'jalurMasukOptions' => SiswaLulusan::JALUR_MASUK,
         ]);
+    }
+
+    public function searchReferences(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $results = ReferensiPerguruanTinggi::query()
+            ->where('is_active', true)
+            ->where('nama', 'like', '%' . $query . '%')
+            ->orderBy('nama')
+            ->limit(10)
+            ->get(['id', 'nama', 'jenis']);
+
+        return response()->json($results);
     }
 
     public function store(Request $request)
@@ -64,6 +87,7 @@ class LulusanController extends Controller
         $validated = $request->validate([
             'jalur_masuk' => ['required', 'string', Rule::in(SiswaLulusan::JALUR_MASUK)],
             'nama_universitas' => 'required|string|max:255',
+            'referensi_perguruan_tinggi_id' => 'nullable|exists:referensi_perguruan_tinggi,id',
             'jurusan_fakultas' => 'nullable|string|max:255',
             'program_studi' => 'required|string|max:255',
             'keterangan' => 'nullable|string|max:1000',
@@ -73,12 +97,27 @@ class LulusanController extends Controller
             'program_studi.required' => 'Program studi wajib diisi.',
         ]);
 
+        $referensi = null;
+        if (!empty($validated['referensi_perguruan_tinggi_id'])) {
+            $referensi = ReferensiPerguruanTinggi::find($validated['referensi_perguruan_tinggi_id']);
+        }
+
+        $payload = [
+            'referensi_perguruan_tinggi_id' => $referensi?->id,
+            'jalur_masuk' => $validated['jalur_masuk'],
+            'nama_universitas' => $referensi?->nama ?? $validated['nama_universitas'],
+            'nama_universitas_manual' => $referensi ? null : $validated['nama_universitas'],
+            'jurusan_fakultas' => $validated['jurusan_fakultas'] ?? null,
+            'program_studi' => $validated['program_studi'],
+            'keterangan' => $validated['keterangan'] ?? null,
+        ];
+
         SiswaLulusan::updateOrCreate(
             [
                 'siswa_id' => $siswa->id,
                 'tahun_pelajaran_id' => $targetSiswaKelas->tahun_pelajaran_id,
             ],
-            $validated
+            $payload
         );
 
         return redirect()->route('siswa.lulusan.index')

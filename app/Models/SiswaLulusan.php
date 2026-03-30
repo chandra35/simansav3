@@ -24,8 +24,10 @@ class SiswaLulusan extends Model
     protected $fillable = [
         'siswa_id',
         'tahun_pelajaran_id',
+        'referensi_perguruan_tinggi_id',
         'jalur_masuk',
         'nama_universitas',
+        'nama_universitas_manual',
         'jurusan_fakultas',
         'program_studi',
         'keterangan',
@@ -39,5 +41,10 @@ class SiswaLulusan extends Model
     public function tahunPelajaran()
     {
         return $this->belongsTo(TahunPelajaran::class, 'tahun_pelajaran_id');
+    }
+
+    public function referensiPerguruanTinggi()
+    {
+        return $this->belongsTo(ReferensiPerguruanTinggi::class, 'referensi_perguruan_tinggi_id');
     }
 }
