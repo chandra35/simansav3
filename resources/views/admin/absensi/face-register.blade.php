@@ -330,6 +330,10 @@
                                 <div class="progress" style="height:6px;"><div class="progress-bar bg-success" id="progressBar" style="width:0%"></div></div>
                                 <small class="text-muted" id="progressText">0 / 5 selesai</small>
                             </div>
+                            <div class="alert alert-danger mt-3 mb-0 d-none" id="duplicateFaceAlert">
+                                <div class="font-weight-bold mb-1"><i class="fas fa-user-shield mr-1"></i> Wajah Sudah Terdaftar</div>
+                                <div class="small mb-0" id="duplicateFaceAlertText"></div>
+                            </div>
                             <button class="btn btn-secondary btn-sm btn-block mt-2 d-none" id="btnReset" onclick="resetRegistration()"><i class="fas fa-redo"></i> Ulangi</button>
                         </div>
                     </div>
@@ -588,6 +592,8 @@ function beginAutoRegistration() { capturedDescriptors = []; capturedAngles = []
 function resetUI() {
     document.querySelectorAll('.step-item').forEach(el => { el.classList.remove('active', 'done', 'capturing'); el.querySelector('.step-check').style.display = 'none'; });
     document.getElementById('progressBar').style.width = '0%'; document.getElementById('progressText').textContent = '0 / 5 selesai'; document.getElementById('stepInstruction').style.display = 'none'; document.getElementById('stepInstruction').style.background = 'rgba(0,0,0,0.7)'; document.getElementById('stepInstruction').style.color = '#00e5ff'; document.getElementById('btnReset').classList.add('d-none'); hideCountdownRing();
+    document.getElementById('duplicateFaceAlert').classList.add('d-none');
+    document.getElementById('duplicateFaceAlertText').textContent = '';
     const canvas = document.getElementById('overlayCanvas'); if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 function updateStepUI() {
@@ -686,6 +692,8 @@ function showDuplicateRegistrationWarning(match) {
     document.getElementById('stepInstruction').style.display = 'block';
     document.getElementById('stepInstruction').style.background = 'rgba(220,53,69,0.92)';
     document.getElementById('stepInstruction').style.color = '#fff';
+    document.getElementById('duplicateFaceAlertText').textContent = `Wajah terdeteksi atas nama ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}. Silakan gunakan akun yang sesuai atau hubungi admin jika terjadi kekeliruan.`;
+    document.getElementById('duplicateFaceAlert').classList.remove('d-none');
     setFaceStatus(`Mirip akun ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}`, false);
 }
 async function saveRegistration() {
