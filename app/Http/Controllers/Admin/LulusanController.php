@@ -182,6 +182,7 @@ class LulusanController extends Controller
                 'checker_status' => $this->emptyCheckerStatus(),
                 'top_ptn_snbp' => [],
                 'top_prodi_snbp' => [],
+                'accepted_students' => [],
                 'rows' => collect(),
                 'eligible_rows' => collect(),
                 'generated_at' => now(),
@@ -246,6 +247,26 @@ class LulusanController extends Controller
             ->values()
             ->all();
 
+        $acceptedStudents = $eligibleRows
+            ->where('check_status', 'lulus')
+            ->sortBy([
+                ['nama_universitas', 'asc'],
+                ['program_studi', 'asc'],
+                ['nama_lengkap', 'asc'],
+            ])
+            ->map(function ($row) {
+                return [
+                    'nama_lengkap' => $row->nama_lengkap,
+                    'nisn' => $row->nisn,
+                    'kelas_nama' => $row->kelas_nama ?: '-',
+                    'nama_universitas' => $row->nama_universitas ?: '-',
+                    'program_studi' => $row->program_studi ?: '-',
+                    'initials' => $this->makeInitials($row->nama_lengkap),
+                ];
+            })
+            ->values()
+            ->all();
+
         return [
             'selectedTahun' => $selectedTahun,
             'filters' => $this->formatFilters($request, $selectedTahun),
@@ -261,6 +282,7 @@ class LulusanController extends Controller
             ],
             'top_ptn_snbp' => $this->buildTopList($eligibleRows->where('check_status', 'lulus'), 'nama_universitas', 10),
             'top_prodi_snbp' => $this->buildTopList($eligibleRows->where('check_status', 'lulus'), 'program_studi', 10),
+            'accepted_students' => $acceptedStudents,
             'rows' => $rows,
             'eligible_rows' => $eligibleRows,
             'generated_at' => now(),
@@ -510,6 +532,16 @@ class LulusanController extends Controller
             ->take($limit)
             ->values()
             ->all();
+    }
+
+    private function makeInitials(?string $name): string
+    {
+        $words = collect(preg_split('/\s+/', trim((string) $name)) ?: [])
+            ->filter()
+            ->take(2)
+            ->map(fn (string $word) => mb_strtoupper(mb_substr($word, 0, 1)));
+
+        return $words->isNotEmpty() ? $words->implode('') : 'S';
     }
 
     private function formatFilters(Request $request, ?TahunPelajaran $selectedTahun): array
