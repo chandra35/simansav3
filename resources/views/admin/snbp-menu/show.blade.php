@@ -180,6 +180,9 @@
                 <i class="fas fa-users"></i> Monitoring Siswa Eligible
             </h3>
             <div class="card-tools text-muted small">
+                <button type="button" class="btn btn-primary btn-sm mr-2" id="bulkCheckSnbpBtn">
+                    <i class="fas fa-sync-alt"></i> Cek Semua Pengumuman
+                </button>
                 Klik judul kolom untuk sorting. Gunakan pencarian untuk nama, NISN, tanggal lahir, nomor SNBP, kampus, atau prodi.
             </div>
         </div>
@@ -195,10 +198,13 @@
                             <th>Tanggal Lahir</th>
                             <th>Status Isi</th>
                             <th>Nomor SNBP</th>
+                            <th>Status Cek</th>
+                            <th>Update Terakhir</th>
                             <th>Status Lulusan</th>
                             <th>Jalur</th>
                             <th>Universitas</th>
                             <th>Program Studi</th>
+                            <th style="width: 140px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -223,8 +229,26 @@
                                     ?? optional($lulusan)->program_studi_manual
                                     ?? optional(optional($lulusan)->referensiProgramStudi)->nama_program_studi
                                     ?? '-';
+                                $checkStatus = $registration?->check_status ?? 'belum_dicek';
+                                $checkLabel = $registration?->check_status_label ?? 'Belum Dicek';
+                                $checkBadge = match ($checkStatus) {
+                                    'lulus' => 'success',
+                                    'tidak_lulus' => 'danger',
+                                    'gagal_cek' => 'warning',
+                                    default => 'secondary',
+                                };
+                                $lastChecked = $registration?->last_checked_at?->format('d-m-Y H:i') ?? '-';
+                                $checkRoute = $registration
+                                    ? route('admin.snbp-menu.check-announcement', [$snbpMenu, $registration])
+                                    : null;
                             @endphp
-                        <tr>
+                        <tr
+                            data-siswa-id="{{ $siswa->id }}"
+                            data-registration-id="{{ $registration?->id }}"
+                            data-check-url="{{ $checkRoute }}"
+                            data-can-check="{{ $registration && $sudahIsi && $siswa->tanggal_lahir ? '1' : '0' }}"
+                            data-siswa-name="{{ $siswa->nama_lengkap }}"
+                        >
                             <td>{{ $index + 1 }}</td>
                             <td><code>{{ $siswa->nisn }}</code></td>
                             <td>{{ $siswa->nama_lengkap }}</td>
@@ -240,10 +264,17 @@
                             </td>
                             <td data-order="{{ optional($registration)->nomor_pendaftaran ?? '' }}">
                                 @if($sudahIsi)
-                                    <code>{{ $registration->nomor_pendaftaran }}</code>
+                                    <code class="js-nomor-pendaftaran">{{ $registration->nomor_pendaftaran }}</code>
                                 @else
                                     <span class="text-muted">Belum isi</span>
                                 @endif
+                            </td>
+                            <td data-order="{{ $checkStatus }}">
+                                <span class="badge badge-{{ $checkBadge }} js-check-status">{{ $checkLabel }}</span>
+                                <div class="small text-muted mt-1 js-check-message">{{ $registration?->last_check_message ?? '-' }}</div>
+                            </td>
+                            <td data-order="{{ $registration?->last_checked_at?->timestamp ?? 0 }}">
+                                <span class="js-last-checked">{{ $lastChecked }}</span>
                             </td>
                             <td data-order="{{ $statusLulusanSort }}">
                                 @if($lulusanTerhubung)
@@ -255,6 +286,17 @@
                             <td>{{ $jalurMasuk }}</td>
                             <td>{{ $namaUniversitas }}</td>
                             <td>{{ $programStudi }}</td>
+                            <td>
+                                @if($registration && $sudahIsi && $siswa->tanggal_lahir)
+                                    <button type="button" class="btn btn-info btn-sm js-check-snbp">
+                                        <i class="fas fa-search"></i> Cek
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-ban"></i> Belum Siap
+                                    </button>
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -331,6 +373,12 @@
         font-size: 0.9rem;
     }
 
+    #bulkCheckLog {
+        max-height: 260px;
+        overflow-y: auto;
+        font-size: 0.9rem;
+    }
+
     .dataTables_wrapper .dataTables_filter input,
     .dataTables_wrapper .dataTables_length select {
         border-radius: 0.35rem;
@@ -343,9 +391,31 @@
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
+<div class="modal fade" id="bulkCheckProgressModal" tabindex="-1" role="dialog" aria-labelledby="bulkCheckProgressLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkCheckProgressLabel"><i class="fas fa-sync-alt"></i> Progress Cek Pengumuman SNBP</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="bulkCheckProgressBar" role="progressbar" style="width: 0%">0%</div>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="small text-muted" id="bulkCheckProgressText">Menyiapkan pengecekan...</span>
+                    <span class="small font-weight-bold" id="bulkCheckProgressCount">0 / 0</span>
+                </div>
+                <div class="border rounded p-2 bg-light" id="bulkCheckLog"></div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     $(function () {
-        $('#eligibleSnbpTable').DataTable({
+        const eligibleTable = $('#eligibleSnbpTable').DataTable({
             responsive: true,
             autoWidth: false,
             pageLength: 25,
@@ -354,11 +424,145 @@
                 [2, 'asc']
             ],
             columnDefs: [
-                { orderable: false, targets: 0 }
+                { orderable: false, targets: [0, 12] }
             ],
             language: {
                 url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
             }
+        });
+
+        const bulkModal = $('#bulkCheckProgressModal');
+        const progressBar = $('#bulkCheckProgressBar');
+        const progressText = $('#bulkCheckProgressText');
+        const progressCount = $('#bulkCheckProgressCount');
+        const progressLog = $('#bulkCheckLog');
+
+        function escapeHtml(text) {
+            return $('<div>').text(text ?? '').html();
+        }
+
+        function appendLog(message, type = 'secondary') {
+            progressLog.append(
+                '<div class="text-' + type + ' mb-1">• ' + escapeHtml(message) + '</div>'
+            );
+            progressLog.scrollTop(progressLog[0].scrollHeight);
+        }
+
+        function updateRow(row, result) {
+            const badgeMap = {
+                lulus: 'success',
+                tidak_lulus: 'danger',
+                gagal_cek: 'warning',
+                belum_dicek: 'secondary',
+            };
+
+            row.find('.js-check-status')
+                .removeClass('badge-success badge-danger badge-warning badge-secondary')
+                .addClass('badge-' + (badgeMap[result.status] || 'secondary'))
+                .text(result.status_label || 'Belum Dicek');
+            row.find('.js-check-message').text(result.message || '-');
+            row.find('.js-last-checked').text(result.checked_at || '-');
+        }
+
+        async function runCheck(row) {
+            const canCheck = row.data('can-check') === 1 || row.data('can-check') === '1';
+            const checkUrl = row.data('check-url');
+            const siswaName = row.data('siswa-name');
+
+            if (!canCheck || !checkUrl) {
+                throw new Error('Data siswa belum siap dicek. Pastikan nomor pendaftaran dan tanggal lahir sudah lengkap.');
+            }
+
+            const button = row.find('.js-check-snbp');
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Cek');
+
+            try {
+                const response = await $.ajax({
+                    url: checkUrl,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    }
+                });
+
+                updateRow(row, response.result);
+                return {
+                    success: true,
+                    message: siswaName + ': ' + response.result.message,
+                    result: response.result,
+                };
+            } catch (xhr) {
+                const result = xhr.responseJSON?.result;
+                const message = xhr.responseJSON?.message || 'Gagal menghubungi checker SNBP.';
+
+                if (result) {
+                    updateRow(row, result);
+                }
+
+                return {
+                    success: false,
+                    message: siswaName + ': ' + message,
+                    result: result || null,
+                };
+            } finally {
+                button.prop('disabled', false).html('<i class="fas fa-search"></i> Cek');
+            }
+        }
+
+        $(document).on('click', '.js-check-snbp', async function () {
+            const row = $(this).closest('tr');
+            const result = await runCheck(row);
+
+            Swal.fire({
+                icon: result.success ? 'success' : 'warning',
+                title: result.success ? 'Pengecekan Selesai' : 'Pengecekan Belum Berhasil',
+                text: result.message,
+            });
+        });
+
+        $('#bulkCheckSnbpBtn').on('click', async function () {
+            const rows = $(eligibleTable.rows().nodes()).filter(function () {
+                const row = $(this);
+                return row.data('can-check') === 1 || row.data('can-check') === '1';
+            });
+
+            if (!rows.length) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Ada Data Siap Cek',
+                    text: 'Lengkapi nomor pendaftaran dan tanggal lahir terlebih dahulu.',
+                });
+                return;
+            }
+
+            progressLog.empty();
+            progressBar.css('width', '0%').text('0%');
+            progressText.text('Memulai pengecekan...');
+            progressCount.text('0 / ' + rows.length);
+            bulkModal.modal('show');
+
+            let successCount = 0;
+
+            for (let index = 0; index < rows.length; index++) {
+                const row = $(rows[index]);
+                const current = index + 1;
+                const percent = Math.round((current / rows.length) * 100);
+
+                progressText.text('Memproses ' + row.data('siswa-name') + '...');
+                progressCount.text(current + ' / ' + rows.length);
+                progressBar.css('width', percent + '%').text(percent + '%');
+
+                const result = await runCheck(row);
+                appendLog(result.message, result.success ? 'success' : 'warning');
+
+                if (result.success) {
+                    successCount++;
+                }
+            }
+
+            progressText.text('Pengecekan selesai.');
+            appendLog('Selesai. Berhasil memeriksa ' + successCount + ' dari ' + rows.length + ' siswa.', 'primary');
+            eligibleTable.rows().invalidate().draw(false);
         });
     });
 </script>

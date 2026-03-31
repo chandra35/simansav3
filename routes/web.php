@@ -407,6 +407,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/snbp-menu/{snbpMenu}/store-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeEligible'])->name('snbp-menu.store-eligible');
     Route::get('/snbp-menu/{snbpMenu}/assign-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'assignNotEligible'])->name('snbp-menu.assign-not-eligible');
     Route::post('/snbp-menu/{snbpMenu}/store-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeNotEligible'])->name('snbp-menu.store-not-eligible');
+    Route::post('/snbp-menu/{snbpMenu}/registrations/{registration}/check-announcement', [App\Http\Controllers\Admin\SnbpMenuController::class, 'checkAnnouncement'])->name('snbp-menu.check-announcement');
     Route::delete('/snbp-menu/{snbpSiswa}/remove-assignment', [App\Http\Controllers\Admin\SnbpMenuController::class, 'removeAssignment'])->name('snbp-menu.remove-assignment');
     
     // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================

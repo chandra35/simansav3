@@ -9,12 +9,18 @@ use App\Models\SnbpSiswa;
 use App\Models\Siswa;
 use App\Models\Kelas;
 use App\Models\TahunPelajaran;
+use App\Services\SnbpAnnouncementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SnbpMenuController extends Controller
 {
+    public function __construct(
+        private readonly SnbpAnnouncementService $announcementService
+    ) {
+    }
+
     /**
      * Display a listing of SNBP menus
      */
@@ -93,7 +99,7 @@ class SnbpMenuController extends Controller
         $snbpMenu->load(['tahunPelajaran', 'eligibleSiswa', 'notEligibleSiswa']);
 
         $registrationMap = SnbpRegistration::query()
-            ->with('lulusan')
+            ->with(['lulusan.referensiPerguruanTinggi', 'lulusan.referensiProgramStudi'])
             ->where('snbp_menu_id', $snbpMenu->id)
             ->get()
             ->keyBy('siswa_id');
@@ -111,6 +117,55 @@ class SnbpMenuController extends Controller
         ];
         
         return view('admin.snbp-menu.show', compact('snbpMenu', 'eligibleSiswa', 'summary'));
+    }
+
+    public function checkAnnouncement(SnbpMenu $snbpMenu, SnbpRegistration $registration)
+    {
+        abort_unless($registration->snbp_menu_id === $snbpMenu->id, 404);
+
+        $registration->load(['siswa', 'lulusan.referensiPerguruanTinggi', 'lulusan.referensiProgramStudi']);
+
+        try {
+            $result = $this->announcementService->checkRegistration($registration);
+
+            return response()->json([
+                'success' => true,
+                'registration_id' => $registration->id,
+                'siswa_id' => $registration->siswa_id,
+                'result' => $result,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('SNBP announcement check failed', [
+                'registration_id' => $registration->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $registration->forceFill([
+                'check_status' => 'gagal_cek',
+                'last_checked_at' => now(),
+                'last_check_message' => $exception->getMessage(),
+                'last_check_payload' => [
+                    '_meta' => [
+                        'checked_at' => now()->toIso8601String(),
+                    ],
+                ],
+            ])->save();
+
+            return response()->json([
+                'success' => false,
+                'registration_id' => $registration->id,
+                'siswa_id' => $registration->siswa_id,
+                'message' => $exception->getMessage(),
+                'result' => [
+                    'status' => 'gagal_cek',
+                    'status_label' => $registration->fresh()->check_status_label,
+                    'message' => $exception->getMessage(),
+                    'checked_at' => $registration->last_checked_at?->format('d-m-Y H:i:s'),
+                    'source_url' => null,
+                    'payload' => $registration->last_check_payload,
+                ],
+            ], 500);
+        }
     }
 
     /**
