@@ -9,6 +9,25 @@
 @stop
 
 @section('content')
+<div class="card border-0 shadow-sm face-register-hero mb-3">
+    <div class="card-body p-3 p-md-4">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+            <div class="pr-lg-4 mb-3 mb-lg-0">
+                <div class="text-uppercase small font-weight-bold text-primary mb-1">Face Registration</div>
+                <h2 class="h4 mb-2">{{ $pageTitle }}</h2>
+                <p class="text-muted mb-0">
+                    Gunakan pencahayaan yang cukup, posisikan wajah di tengah kamera, dan ikuti instruksi sampai semua langkah selesai.
+                </p>
+            </div>
+            <div class="face-register-hero__tips">
+                <span class="badge badge-light">Responsif semua device</span>
+                <span class="badge badge-light">Auto capture</span>
+                <span class="badge badge-light">Verifikasi admin</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-lg-4 col-6">
         <div class="small-box bg-info">
@@ -36,6 +55,39 @@
         Halaman ini hanya untuk registrasi wajah akun Anda sendiri. Persetujuan tetap dilakukan oleh admin.
     </div>
 @endif
+
+<div class="row mb-3">
+    <div class="col-lg-8">
+        <div class="card card-outline card-info h-100">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-start">
+                    <div class="mr-3 text-info" style="font-size:1.5rem;">
+                        <i class="fas fa-camera-retro"></i>
+                    </div>
+                    <div>
+                        <div class="font-weight-bold mb-1">Panduan singkat registrasi</div>
+                        <div class="text-muted small">
+                            Pastikan kamera depan aktif, wajah terlihat penuh, dan jangan berpindah tempat saat countdown berjalan. Sistem akan mengambil beberapa sudut wajah secara otomatis.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mt-3 mt-lg-0">
+        <div class="card card-outline card-secondary h-100">
+            <div class="card-body py-3">
+                <div class="font-weight-bold mb-2">Checklist sebelum mulai</div>
+                <div class="small text-muted face-register-checklist">
+                    <div><i class="fas fa-check text-success mr-1"></i> Cahaya cukup terang</div>
+                    <div><i class="fas fa-check text-success mr-1"></i> Kamera stabil</div>
+                    <div><i class="fas fa-check text-success mr-1"></i> Wajah tanpa terpotong</div>
+                    <div><i class="fas fa-check text-success mr-1"></i> Lepas penutup wajah</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card card-primary card-outline">
     <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
@@ -83,15 +135,15 @@
                     @forelse($registrants as $i => $registrant)
                         @php $face = $faceMap[$registrant['user_id']] ?? null; @endphp
                         <tr>
-                            <td>{{ $i + 1 }}</td>
-                            <td>
+                            <td data-label="No">{{ $i + 1 }}</td>
+                            <td data-label="Nama">
                                 <div class="d-flex align-items-center">
                                     <img src="{{ $registrant['avatar_url'] }}" class="img-circle mr-2" width="34" height="34" style="object-fit:cover;">
                                     <strong>{{ $registrant['name'] }}</strong>
                                 </div>
                             </td>
-                            <td>{{ $registrant['identifier'] ?? '-' }}</td>
-                            <td>
+                            <td data-label="{{ $identifierLabel }}">{{ $registrant['identifier'] ?? '-' }}</td>
+                            <td data-label="Status">
                                 @if($face)
                                     @if($face->is_verified)
                                         <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
@@ -102,8 +154,8 @@
                                     <span class="badge badge-secondary"><i class="fas fa-times"></i> Belum</span>
                                 @endif
                             </td>
-                            <td>@if($face)<span class="badge badge-info">{{ $face->total_captures }}</span>@else - @endif</td>
-                            <td>
+                            <td data-label="Capture">@if($face)<span class="badge badge-info">{{ $face->total_captures }}</span>@else - @endif</td>
+                            <td data-label="Quality">
                                 @if($face)
                                     @php $q = $face->quality_score ?? 0; @endphp
                                     <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span>
@@ -111,7 +163,7 @@
                                     -
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Verifikasi">
                                 @if($face && $face->is_verified)
                                     <small>{{ $face->verified_at?->format('d/m/Y H:i') }}</small>
                                 @elseif($face)
@@ -120,9 +172,9 @@
                                     -
                                 @endif
                             </td>
-                            <td>@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
-                            <td>
-                                <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }}"
+                            <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
+                            <td data-label="Aksi">
+                                <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
                                         onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
                                     <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
                                     {{ $face ? 'Ulang' : 'Daftar' }}
@@ -139,22 +191,29 @@
 </div>
 
 <div class="modal fade" id="modalRegister" tabindex="-1" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable face-register-modal">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-2">
                 <h5 class="modal-title"><i class="fas fa-camera"></i> Registrasi Wajah - <span id="modalUserName"></span></h5>
                 <button type="button" class="close text-white" onclick="closeRegister()"><span>&times;</span></button>
             </div>
             <div class="modal-body p-0">
+                <div class="face-register-modal__info px-3 py-2 border-bottom">
+                    <div class="small text-muted d-flex flex-wrap align-items-center">
+                        <span class="mr-3 mb-1"><i class="fas fa-mobile-alt mr-1"></i> Tampilan menyesuaikan perangkat</span>
+                        <span class="mr-3 mb-1"><i class="fas fa-lightbulb mr-1"></i> Gunakan cahaya dari depan</span>
+                        <span class="mb-1"><i class="fas fa-user-check mr-1"></i> Simpan lalu tunggu verifikasi admin</span>
+                    </div>
+                </div>
                 <div class="row no-gutters">
-                    <div class="col-md-8 position-relative" style="background:#000; min-height:400px;">
+                    <div class="col-md-8 position-relative face-register-camera-panel">
                         <div id="loadingOverlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;">
                             <div class="spinner-border text-info mb-3" role="status"></div>
                             <p class="text-white" id="loadingText">Memuat model face detection...</p>
                         </div>
                         <video id="videoElement" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
                         <canvas id="overlayCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; transform:scaleX(-1);"></canvas>
-                        <div id="stepInstruction" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#00e5ff; padding:10px 25px; border-radius:25px; font-size:1.1rem; font-weight:600; text-align:center; z-index:5; display:none;">
+                        <div id="stepInstruction" class="face-register-step-instruction" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#00e5ff; padding:10px 25px; border-radius:25px; font-size:1.1rem; font-weight:600; text-align:center; z-index:5; display:none;">
                             <i class="fas fa-arrow-right" id="stepIcon"></i>
                             <span id="stepText">Lihat ke kamera</span>
                         </div>
@@ -164,14 +223,17 @@
                                 <circle id="countdownCircle" cx="40" cy="40" r="35" stroke="#00e676" stroke-width="4" fill="none" stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" style="transition: stroke-dashoffset 1.5s linear; transform: rotate(-90deg); transform-origin: center;"/>
                             </svg>
                         </div>
-                        <div id="faceStatus" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#aaa; padding:8px 20px; border-radius:20px; font-size:0.9rem; z-index:5;">
+                        <div id="faceStatus" class="face-register-status" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#aaa; padding:8px 20px; border-radius:20px; font-size:0.9rem; z-index:5;">
                             <i class="fas fa-video"></i> Menunggu...
                         </div>
                     </div>
-                    <div class="col-md-4" style="background:#f8f9fa;">
+                    <div class="col-md-4 face-register-side-panel" style="background:#f8f9fa;">
                         <div class="p-3">
-                            <h6 class="mb-2"><i class="fas fa-list-ol"></i> Langkah Registrasi</h6>
-                            <p class="text-muted small mb-2"><i class="fas fa-magic"></i> Auto-capture saat wajah stabil (~1.5s)</p>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="mb-0"><i class="fas fa-list-ol"></i> Langkah Registrasi</h6>
+                                <span class="badge badge-info">5 tahap</span>
+                            </div>
+                            <p class="text-muted small mb-3"><i class="fas fa-magic"></i> Auto-capture saat wajah stabil (~1.5s)</p>
                             @php
                                 $steps = [
                                     ['Wajah Depan', 'Lihat lurus ke kamera', 'frontal'],
@@ -185,7 +247,7 @@
                                 <div class="step-item" id="step-{{ $i }}" data-angle="{{ $angle }}">
                                     <div class="d-flex align-items-center p-2 mb-1 rounded" style="background:#fff; border:2px solid #ddd;">
                                         <div class="step-number mr-2" style="width:26px; height:26px; border-radius:50%; background:#6c757d; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">{{ $i+1 }}</div>
-                                        <div><strong style="font-size:0.9rem;">{{ $title }}</strong><br><small class="text-muted">{{ $desc }}</small></div>
+                                        <div class="face-register-step-copy"><strong style="font-size:0.9rem;">{{ $title }}</strong><br><small class="text-muted">{{ $desc }}</small></div>
                                         <div class="ml-auto step-check" style="display:none;"><i class="fas fa-check-circle text-success"></i></div>
                                     </div>
                                 </div>
@@ -209,6 +271,43 @@
 
 @section('css')
 <style>
+    .face-register-hero {
+        background: linear-gradient(135deg, #f6fbff 0%, #eef4ff 100%);
+        border-radius: 1rem;
+    }
+    .face-register-hero__tips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .face-register-checklist > div + div {
+        margin-top: 0.35rem;
+    }
+    .btn-face-action {
+        min-width: 92px;
+    }
+    .face-register-modal .modal-content {
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    .face-register-modal__info {
+        background: #f8fbff;
+    }
+    .face-register-camera-panel {
+        background: #000;
+        min-height: 400px;
+    }
+    .face-register-side-panel {
+        border-left: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .face-register-step-instruction,
+    .face-register-status {
+        max-width: calc(100% - 1.5rem);
+        width: max-content;
+    }
+    .face-register-step-copy {
+        min-width: 0;
+    }
     .step-item.active .d-flex { border-color: #007bff !important; background: #e8f4fd !important; }
     .step-item.done .d-flex { border-color: #28a745 !important; }
     .step-item.done .step-number { background: #28a745 !important; }
@@ -216,6 +315,97 @@
     .step-item.capturing .d-flex { border-color: #ffc107 !important; background: #fff8e1 !important; }
     .step-item.capturing .step-number { background: #ffc107 !important; }
     @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+
+    @media (max-width: 991.98px) {
+        .face-register-camera-panel {
+            min-height: 320px;
+        }
+        .face-register-side-panel {
+            border-left: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .face-register-modal {
+            margin: 0;
+            max-width: 100%;
+            height: 100%;
+        }
+        .face-register-modal .modal-content {
+            min-height: 100vh;
+            border-radius: 0;
+        }
+        .face-register-camera-panel {
+            min-height: 45vh;
+        }
+        .face-register-step-instruction {
+            font-size: 0.9rem !important;
+            padding: 0.6rem 0.9rem !important;
+            top: 0.75rem !important;
+        }
+        .face-register-status {
+            font-size: 0.8rem !important;
+            left: 0.75rem !important;
+            right: 0.75rem;
+            bottom: 0.75rem !important;
+            transform: none !important;
+            width: auto;
+            text-align: center;
+        }
+        #tabelFaceRegister thead {
+            display: none;
+        }
+        #tabelFaceRegister,
+        #tabelFaceRegister tbody,
+        #tabelFaceRegister tr,
+        #tabelFaceRegister td {
+            display: block;
+            width: 100%;
+        }
+        #tabelFaceRegister tr {
+            border: 1px solid #e9ecef;
+            border-radius: 0.85rem;
+            background: #fff;
+            padding: 0.85rem;
+            margin-bottom: 0.85rem;
+            box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.05);
+        }
+        #tabelFaceRegister td {
+            border: 0;
+            padding: 0.35rem 0 0.35rem 7.2rem !important;
+            position: relative;
+            min-height: 2rem;
+        }
+        #tabelFaceRegister td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 0;
+            top: 0.35rem;
+            width: 6.4rem;
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        #tabelFaceRegister td[data-label="Nama"] {
+            padding-left: 0 !important;
+            margin-bottom: 0.35rem;
+        }
+        #tabelFaceRegister td[data-label="Nama"]::before {
+            display: none;
+        }
+        #tabelFaceRegister td[data-label="Aksi"] {
+            padding-left: 0 !important;
+            margin-top: 0.35rem;
+        }
+        #tabelFaceRegister td[data-label="Aksi"]::before {
+            display: none;
+        }
+        .btn-face-action {
+            width: 100%;
+        }
+    }
 </style>
 @stop
 
@@ -239,6 +429,8 @@ $(function() {
         pageLength: 25,
         order: [[1, 'asc']],
         columnDefs: [{ orderable: false, targets: [8] }],
+        scrollX: true,
+        autoWidth: false,
     });
     let activeFilter = '';
     $.fn.dataTable.ext.search.push(function(settings, data) {
