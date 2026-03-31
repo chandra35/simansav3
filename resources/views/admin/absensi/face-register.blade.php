@@ -272,6 +272,29 @@
                 <button type="button" class="close text-white" onclick="closeRegister()"><span>&times;</span></button>
             </div>
             <div class="modal-body p-0">
+                <div class="face-register-duplicate-overlay d-none" id="duplicateFaceModal" role="alert" aria-live="assertive">
+                    <div class="face-register-duplicate-card">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div>
+                                <div class="text-danger font-weight-bold mb-2"><i class="fas fa-user-shield mr-2"></i>Wajah Sudah Terdaftar</div>
+                                <h5 class="mb-2">Registrasi dihentikan untuk mencegah duplikasi akun.</h5>
+                                <p class="mb-0 text-muted" id="duplicateFaceModalText"></p>
+                            </div>
+                            <button type="button" class="close ml-3" aria-label="Tutup" onclick="hideDuplicateFaceModal()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="mt-3 d-flex flex-wrap align-items-center">
+                            <span class="badge badge-danger px-3 py-2 mr-2 mb-2">Pemeriksaan wajah aktif</span>
+                            <span class="text-muted small mb-2">Gunakan akun yang sesuai atau hubungi admin bila identitas tidak cocok.</span>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="hideDuplicateFaceModal()">
+                                <i class="fas fa-check mr-1"></i> Saya Mengerti
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="face-register-modal__info px-3 py-2 border-bottom">
                     <div class="small text-muted d-flex flex-wrap align-items-center">
                         <span class="mr-3 mb-1"><i class="fas fa-mobile-alt mr-1"></i> Tampilan menyesuaikan perangkat</span>
@@ -366,6 +389,9 @@
         border-radius: 1rem;
         overflow: hidden;
     }
+    .face-register-modal .modal-body {
+        position: relative;
+    }
     .face-self-card__avatar {
         width: 92px;
         height: 92px;
@@ -384,6 +410,27 @@
     }
     .face-register-modal__info {
         background: #f8fbff;
+    }
+    .face-register-duplicate-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 25;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(17, 24, 39, 0.72);
+    }
+    .face-register-duplicate-card {
+        width: min(100%, 30rem);
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.22);
+        padding: 1.25rem;
+    }
+    .face-register-duplicate-card .close {
+        color: #6c757d;
+        opacity: 1;
     }
     .face-register-camera-panel {
         background: #000;
@@ -430,6 +477,9 @@
         }
         .face-register-camera-panel {
             min-height: 45vh;
+        }
+        .face-register-duplicate-card {
+            padding: 1rem;
         }
         .face-register-step-instruction {
             font-size: 0.9rem !important;
@@ -594,6 +644,7 @@ function resetUI() {
     document.getElementById('progressBar').style.width = '0%'; document.getElementById('progressText').textContent = '0 / 5 selesai'; document.getElementById('stepInstruction').style.display = 'none'; document.getElementById('stepInstruction').style.background = 'rgba(0,0,0,0.7)'; document.getElementById('stepInstruction').style.color = '#00e5ff'; document.getElementById('btnReset').classList.add('d-none'); hideCountdownRing();
     document.getElementById('duplicateFaceAlert').classList.add('d-none');
     document.getElementById('duplicateFaceAlertText').textContent = '';
+    hideDuplicateFaceModal();
     const canvas = document.getElementById('overlayCanvas'); if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 function updateStepUI() {
@@ -688,13 +739,22 @@ function findLiveDuplicateMatch(descriptor) {
 }
 function showDuplicateRegistrationWarning(match) {
     const identifierLabel = match.userType === 'siswa' ? 'NISN' : 'NIP';
+    const duplicateMessage = `Wajah terdeteksi atas nama ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}. Silakan gunakan akun yang sesuai atau hubungi admin jika terjadi kekeliruan.`;
     document.getElementById('stepInstruction').innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>Wajah sudah terdaftar`;
     document.getElementById('stepInstruction').style.display = 'block';
     document.getElementById('stepInstruction').style.background = 'rgba(220,53,69,0.92)';
     document.getElementById('stepInstruction').style.color = '#fff';
-    document.getElementById('duplicateFaceAlertText').textContent = `Wajah terdeteksi atas nama ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}. Silakan gunakan akun yang sesuai atau hubungi admin jika terjadi kekeliruan.`;
+    document.getElementById('duplicateFaceAlertText').textContent = duplicateMessage;
     document.getElementById('duplicateFaceAlert').classList.remove('d-none');
+    document.getElementById('duplicateFaceModalText').textContent = duplicateMessage;
+    document.getElementById('duplicateFaceModal').classList.remove('d-none');
     setFaceStatus(`Mirip akun ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}`, false);
+}
+function hideDuplicateFaceModal() {
+    const duplicateModal = document.getElementById('duplicateFaceModal');
+    const duplicateModalText = document.getElementById('duplicateFaceModalText');
+    if (duplicateModal) duplicateModal.classList.add('d-none');
+    if (duplicateModalText) duplicateModalText.textContent = '';
 }
 async function saveRegistration() {
     const video = document.getElementById('videoElement'), c = document.createElement('canvas'); c.width = 320; c.height = 240; c.getContext('2d').drawImage(video, 0, 0, 320, 240);
