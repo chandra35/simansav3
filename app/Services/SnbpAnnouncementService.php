@@ -99,6 +99,8 @@ class SnbpAnnouncementService
 
         if ($status === 'lulus') {
             $this->syncLulusan($registration, $payload);
+        } elseif ($status === 'tidak_lulus') {
+            $this->unlinkRejectedLulusan($registration);
         }
 
         return $this->persistResult($registration, [
@@ -201,6 +203,18 @@ class SnbpAnnouncementService
             ],
             $payloadLulusan
         );
+    }
+
+    private function unlinkRejectedLulusan(SnbpRegistration $registration): void
+    {
+        SiswaLulusan::query()
+            ->where('siswa_id', $registration->siswa_id)
+            ->where('tahun_pelajaran_id', $registration->tahun_pelajaran_id)
+            ->where(function ($query) use ($registration) {
+                $query->where('snbp_registration_id', $registration->id)
+                    ->orWhere('jalur_masuk', 'SNBP');
+            })
+            ->delete();
     }
 
     private function matchReferences(string $campusName, string $programName): array
