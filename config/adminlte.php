@@ -257,7 +257,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => '',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -334,20 +334,21 @@ return [
             'can' => 'gtk-menu-only',
         ],
         [
-            'key' => 'gtk-face-register',
-            'text' => 'Registrasi Wajah',
-            'route' => 'admin.absensi.face-register',
-            'icon' => 'fas fa-fw fa-user-shield',
+            'key' => 'gtk-presensi',
+            'text' => 'Presensi',
+            'icon' => 'fas fa-fw fa-fingerprint',
             'can' => 'gtk-menu-only',
             'active' => ['admin/absensi/face-register*'],
-        ],
-        [
-            'key' => 'siswa-face-register',
-            'text' => 'Registrasi Wajah',
-            'route' => 'siswa.face-register',
-            'icon' => 'fas fa-fw fa-user-shield',
-            'can' => 'siswa-access',
-            'active' => ['siswa/face-register*'],
+            'submenu' => [
+                [
+                    'key' => 'gtk-face-register',
+                    'text' => 'Registrasi Wajah',
+                    'route' => 'admin.absensi.face-register',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'gtk-menu-only',
+                    'active' => ['admin/absensi/face-register*'],
+                ],
+            ],
         ],
         
         // MANAJEMEN DATA - Collapsible
@@ -510,13 +511,14 @@ return [
             ],
         ],
         
-        // ABSENSI WAJAH - Face Attendance System
+        // PRESENSI
         [
-            'text' => 'Absensi Wajah',
+            'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
+            'active' => ['admin/absensi*'],
             'submenu' => [
                 [
-                    'text' => 'Absensi Hari Ini',
+                    'text' => 'Presensi Hari Ini',
                     'route' => 'admin.absensi.index',
                     'icon' => 'fas fa-fw fa-clipboard-check',
                     'can' => 'view-absensi',
@@ -551,7 +553,7 @@ return [
                     'active' => ['admin/absensi/face-verification*'],
                 ],
                 [
-                    'text' => 'Pengaturan Absensi',
+                    'text' => 'Pengaturan Presensi',
                     'route' => 'admin.absensi.settings',
                     'icon' => 'fas fa-fw fa-cog',
                     'can' => 'manage-settings',
@@ -850,6 +852,24 @@ return [
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
             'can' => 'siswa-access',
+        ],
+
+        [
+            'text' => 'Presensi',
+            'icon' => 'fas fa-fw fa-fingerprint',
+            'can' => 'siswa-access',
+            'key' => 'siswa-presensi',
+            'active' => ['siswa/face-register*'],
+            'submenu' => [
+                [
+                    'key' => 'siswa-face-register',
+                    'text' => 'Registrasi Wajah',
+                    'route' => 'siswa.face-register',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'siswa-access',
+                    'active' => ['siswa/face-register*'],
+                ],
+            ],
         ],
         
         // PROFIL & DATA - Collapsible
