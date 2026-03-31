@@ -180,7 +180,7 @@
                 <i class="fas fa-users"></i> Monitoring Siswa Eligible
             </h3>
             <div class="card-tools text-muted small">
-                Klik judul kolom untuk sorting. Gunakan pencarian untuk nama, NISN, nomor SNBP, kampus, atau prodi.
+                Klik judul kolom untuk sorting. Gunakan pencarian untuk nama, NISN, tanggal lahir, nomor SNBP, kampus, atau prodi.
             </div>
         </div>
         <div class="card-body">
@@ -192,6 +192,7 @@
                             <th style="width: 60px;">#</th>
                             <th>NISN</th>
                             <th>Nama</th>
+                            <th>Tanggal Lahir</th>
                             <th>Status Isi</th>
                             <th>Nomor SNBP</th>
                             <th>Status Lulusan</th>
@@ -211,6 +212,8 @@
                                 $lulusanTerhubung = $lulusan !== null;
                                 $statusLulusanLabel = $lulusanTerhubung ? 'Terhubung' : 'Belum';
                                 $statusLulusanSort = $lulusanTerhubung ? 1 : 0;
+                                $tanggalLahir = $siswa->tanggal_lahir?->format('d-m-Y') ?? '-';
+                                $tanggalLahirSort = $siswa->tanggal_lahir?->format('Y-m-d') ?? '';
                                 $jalurMasuk = optional($lulusan)->jalur_masuk ?? '-';
                                 $namaUniversitas = optional($lulusan)->nama_universitas
                                     ?? optional($lulusan)->nama_universitas_manual
@@ -225,6 +228,9 @@
                             <td>{{ $index + 1 }}</td>
                             <td><code>{{ $siswa->nisn }}</code></td>
                             <td>{{ $siswa->nama_lengkap }}</td>
+                            <td data-order="{{ $tanggalLahirSort }}">
+                                <span class="text-nowrap">{{ $tanggalLahir }}</span>
+                            </td>
                             <td data-order="{{ $statusIsiSort }}">
                                 @if($sudahIsi)
                                     <span class="badge badge-info">Sudah Isi</span>
@@ -344,7 +350,7 @@
             autoWidth: false,
             pageLength: 25,
             order: [
-                [3, 'desc'],
+                [4, 'desc'],
                 [2, 'asc']
             ],
             columnDefs: [
