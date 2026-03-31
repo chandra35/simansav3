@@ -16,6 +16,7 @@ class AbsensiSettingController extends Controller
      */
     public function index()
     {
+        $this->ensureDefaultSettings();
         $settings = AbsensiSetting::orderBy('group')->orderBy('key')->get()->groupBy('group');
         $locations = AbsensiLocation::orderBy('nama')->get();
         $hariLibur = HariLibur::orderBy('tanggal', 'desc')->get();
@@ -28,6 +29,7 @@ class AbsensiSettingController extends Controller
      */
     public function updateSettings(Request $request)
     {
+        $this->ensureDefaultSettings();
         $request->validate([
             'settings' => 'required|array',
             'settings.*' => 'nullable|string|max:500',
@@ -166,5 +168,53 @@ class AbsensiSettingController extends Controller
 
         return redirect()->route('admin.absensi.settings')
             ->with('success', "{$count} hari libur nasional 2026 berhasil ditambahkan.");
+    }
+
+    private function ensureDefaultSettings(): void
+    {
+        foreach ($this->defaultSettings() as $setting) {
+            AbsensiSetting::firstOrCreate(
+                ['key' => $setting['key']],
+                $setting
+            );
+        }
+    }
+
+    private function defaultSettings(): array
+    {
+        return [
+            [
+                'key' => 'jam_masuk_gtk',
+                'value' => '07:00',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Masuk GTK',
+                'description' => 'Jam masuk GTK (format HH:mm)',
+            ],
+            [
+                'key' => 'jam_pulang_gtk',
+                'value' => '16:00',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Pulang GTK',
+                'description' => 'Jam pulang GTK (format HH:mm)',
+            ],
+            [
+                'key' => 'jam_masuk_siswa',
+                'value' => '06:45',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Masuk Siswa',
+                'description' => 'Jam masuk siswa untuk kiosk/pintu gerbang',
+            ],
+            [
+                'key' => 'jam_pulang_siswa',
+                'value' => '15:00',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Pulang Siswa',
+                'description' => 'Jam pulang siswa untuk kiosk/pintu gerbang',
+            ],
+        ];
     }
 }

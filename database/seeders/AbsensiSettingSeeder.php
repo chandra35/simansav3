@@ -29,6 +29,22 @@ class AbsensiSettingSeeder extends Seeder
                 'description' => 'Jam pulang GTK (format HH:mm)',
             ],
             [
+                'key' => 'jam_masuk_siswa',
+                'value' => '06:45',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Masuk Siswa',
+                'description' => 'Jam masuk siswa untuk kiosk/pintu gerbang',
+            ],
+            [
+                'key' => 'jam_pulang_siswa',
+                'value' => '15:00',
+                'type' => 'time',
+                'group' => 'waktu',
+                'label' => 'Jam Pulang Siswa',
+                'description' => 'Jam pulang siswa untuk kiosk/pintu gerbang',
+            ],
+            [
                 'key' => 'toleransi_terlambat',
                 'value' => '15',
                 'type' => 'integer',

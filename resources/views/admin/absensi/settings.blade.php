@@ -7,6 +7,24 @@
 @stop
 
 @section('content')
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+            <div class="pr-lg-4 mb-3 mb-lg-0">
+                <div class="text-uppercase small font-weight-bold text-primary mb-1">Absensi Kamera</div>
+                <h2 class="h4 mb-2">Pengaturan Operasional Registrasi dan Kiosk</h2>
+                <p class="text-muted mb-0">
+                    Gunakan halaman ini untuk mengatur jam GTK dan siswa, ketelitian pengenalan wajah, serta kesiapan kiosk di pintu masuk.
+                </p>
+            </div>
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle mr-1"></i>
+                Mode gerbang sekolah sekarang mendukung GTK dan siswa dengan wajah yang sudah approved.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     {{-- SETTINGS --}}
     <div class="col-lg-6">
@@ -21,6 +39,17 @@
                         <h6 class="text-uppercase text-muted border-bottom pb-2 mb-3">
                             {{ ucfirst($group) }}
                         </h6>
+                        @if($group === 'waktu')
+                            <div class="alert alert-light border mb-3">
+                                <strong>Tips operasional:</strong>
+                                Samakan jam GTK dan siswa dengan aturan sekolah agar status hadir dan terlambat dari kiosk lebih akurat.
+                            </div>
+                        @elseif($group === 'kiosk')
+                            <div class="alert alert-light border mb-3">
+                                <strong>Mode gerbang:</strong>
+                                gunakan detection interval yang stabil dan cooldown yang cukup agar scan tidak ganda saat antrean ramai.
+                            </div>
+                        @endif
                         @foreach($items as $setting)
                             <div class="form-group row">
                                 <label class="col-sm-5 col-form-label">

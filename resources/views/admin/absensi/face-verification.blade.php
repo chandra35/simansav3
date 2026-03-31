@@ -9,6 +9,24 @@
 @stop
 
 @section('content')
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+            <div class="pr-lg-4 mb-3 mb-lg-0">
+                <div class="text-uppercase small font-weight-bold text-primary mb-1">Face Approval</div>
+                <h2 class="h4 mb-2">Verifikasi Data Wajah {{ $subjectLabel }}</h2>
+                <p class="text-muted mb-0">
+                    Setujui hanya hasil registrasi yang jelas dan stabil. Data yang approved akan langsung dipakai di kiosk absensi tanpa login.
+                </p>
+            </div>
+            <div class="alert alert-warning mb-0">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Hanya data berstatus approved yang bisa dipakai untuk absensi kamera otomatis.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h3>{{ $allFaces->count() }}</h3><p>Total Terdaftar</p></div><div class="icon"><i class="fas fa-users"></i></div></div></div>
     <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h3>{{ $verified->total() }}</h3><p>Terverifikasi</p></div><div class="icon"><i class="fas fa-check-circle"></i></div></div></div>
@@ -63,15 +81,20 @@
                                         <h6 class="mb-0">{{ $name }}</h6>
                                         <small class="text-muted d-block">{{ $identifierLabelFace }}: {{ $identifier }}</small>
                                         <small class="text-muted d-block">{{ strtoupper($face->user_type) }}</small>
-                                        <div class="mt-2">
-                                            <span class="badge badge-info">{{ $face->total_captures }} capture</span>
-                                            <span class="badge badge-secondary">Score: {{ number_format($face->quality_score, 0) }}%</span>
+                                    <div class="mt-2">
+                                        <span class="badge badge-info">{{ $face->total_captures }} capture</span>
+                                        <span class="badge badge-secondary">Score: {{ number_format($face->quality_score, 0) }}%</span>
+                                    </div>
+                                    @if(($face->quality_score ?? 0) < 60)
+                                        <div class="alert alert-light border py-2 px-2 mt-2 mb-0 small">
+                                            Quality masih rendah. Pertimbangkan minta user registrasi ulang bila hasil wajah kurang jelas.
                                         </div>
-                                        <div class="mt-1">
-                                            @foreach($face->capture_angles ?? [] as $angle)
-                                                <span class="badge badge-light">{{ $angle }}</span>
-                                            @endforeach
-                                        </div>
+                                    @endif
+                                    <div class="mt-1">
+                                        @foreach($face->capture_angles ?? [] as $angle)
+                                            <span class="badge badge-light">{{ $angle }}</span>
+                                        @endforeach
+                                    </div>
                                         <small class="text-muted d-block mt-1">{{ $face->created_at->format('d/m/Y H:i') }}</small>
                                         <div class="mt-3 btn-group">
                                             <form method="POST" action="{{ route('admin.absensi.face-verify', $face) }}">
@@ -188,6 +211,8 @@ $(function() {
         language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
         pageLength: 25,
         order: [[8, 'desc']],
+        scrollX: true,
+        autoWidth: false,
     });
 });
 </script>
