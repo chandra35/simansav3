@@ -19,6 +19,7 @@ use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
 use Laravolt\Indonesia\Models\Village;
+use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
@@ -410,7 +411,7 @@ class ProfileController extends Controller
             'npsn_asal_sekolah' => ['required', 'size:8', 'regex:/^[A-Za-z0-9]+$/', 'exists:sekolah,npsn'],
             'nik' => 'required|string|max:20',
             'tempat_lahir' => 'required|string|max:255',
-            'tanggal_lahir' => 'required|date',
+            'tanggal_lahir' => 'required|date_format:Y-m-d|before:today',
             'jenis_kelamin' => 'required|in:L,P',
             'agama' => 'required|string',
             'jumlah_saudara' => 'required|integer|min:0',
@@ -437,7 +438,8 @@ class ProfileController extends Controller
             'nik.max' => 'NIK maksimal 20 karakter',
             'tempat_lahir.required' => 'Tempat lahir wajib diisi',
             'tanggal_lahir.required' => 'Tanggal lahir wajib diisi',
-            'tanggal_lahir.date' => 'Format tanggal lahir tidak valid',
+            'tanggal_lahir.date_format' => 'Format tanggal lahir tidak valid',
+            'tanggal_lahir.before' => 'Tanggal lahir harus sebelum hari ini',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih',
             'agama.required' => 'Agama wajib dipilih',
             'jumlah_saudara.required' => 'Jumlah saudara wajib diisi',
@@ -478,9 +480,11 @@ class ProfileController extends Controller
         // Convert tanggal_lahir to proper format if needed
         if (!empty($validated['tanggal_lahir'])) {
             try {
-                $validated['tanggal_lahir'] = \Carbon\Carbon::parse($validated['tanggal_lahir'])->format('Y-m-d');
+                $validated['tanggal_lahir'] = Carbon::createFromFormat('Y-m-d', $validated['tanggal_lahir'])->format('Y-m-d');
             } catch (\Exception $e) {
-                Log::warning('Failed to parse tanggal_lahir', ['value' => $validated['tanggal_lahir']]);
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['tanggal_lahir' => 'Format tanggal lahir tidak valid. Silakan pilih ulang dari kalender.']);
             }
         }
 

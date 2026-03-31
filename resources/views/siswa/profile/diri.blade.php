@@ -79,11 +79,11 @@
     }
     
     /* Input styling */
-    #tanggal_lahir {
+    #tanggal_lahir_picker {
         cursor: pointer;
     }
     
-    #tanggal_lahir:focus {
+    #tanggal_lahir_picker:focus {
         box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
     }
     
@@ -658,17 +658,26 @@
                                 <label for="tanggal_lahir">
                                     Tanggal Lahir <span class="text-danger">*</span>
                                 </label>
+                                @php
+                                    $tanggalLahirValue = old('tanggal_lahir', optional($siswa->tanggal_lahir)->format('Y-m-d'));
+                                    $tanggalLahirDisplay = $tanggalLahirValue
+                                        ? \Carbon\Carbon::parse($tanggalLahirValue)->translatedFormat('j F Y')
+                                        : '';
+                                @endphp
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">
                                             <i class="far fa-calendar-alt"></i>
                                         </span>
                                     </div>
+                                    <input type="hidden"
+                                           name="tanggal_lahir"
+                                           id="tanggal_lahir"
+                                           value="{{ $tanggalLahirValue }}">
                                     <input type="text" 
-                                           name="tanggal_lahir" 
-                                           id="tanggal_lahir" 
+                                           id="tanggal_lahir_picker" 
                                            class="form-control flatpickr @error('tanggal_lahir') is-invalid @enderror" 
-                                           value="{{ old('tanggal_lahir', $siswa->tanggal_lahir ?? '') }}" 
+                                           value="{{ $tanggalLahirDisplay }}" 
                                            placeholder="Pilih Tanggal Lahir"
                                            required
                                            readonly>
@@ -1771,30 +1780,33 @@ $(document).ready(function() {
         }
     });
     
-    // Initialize Flatpickr for tanggal_lahir
-    flatpickr("#tanggal_lahir", {
-        dateFormat: "Y-m-d",
+    const tanggalLahirHidden = document.getElementById('tanggal_lahir');
+    const tanggalLahirDefault = tanggalLahirHidden ? tanggalLahirHidden.value : '';
+
+    // Initialize Flatpickr for tanggal_lahir with dedicated display input.
+    const tanggalLahirPicker = flatpickr("#tanggal_lahir_picker", {
+        dateFormat: "j F Y",
         locale: "id",
         maxDate: "today",
-        defaultDate: "{{ old('tanggal_lahir', $siswa->tanggal_lahir ?? '') }}",
+        defaultDate: tanggalLahirDefault || null,
         allowInput: false,
         clickOpens: true,
-        altInput: true,
-        altFormat: "j F Y",
         yearSelectorType: "dropdown",
         animate: true,
+        disableMobile: true,
         onReady: function(selectedDates, dateStr, instance) {
             instance.calendarContainer.classList.add('flatpickr-custom');
         },
         onChange: function(selectedDates, dateStr, instance) {
-            console.log('Tanggal dipilih:', dateStr);
-            
-            // Remove invalid feedback if exists
-            $('#tanggal_lahir').removeClass('is-invalid');
-            
-            // Show success feedback
-            if (dateStr) {
-                toastr.success('Tanggal lahir: ' + instance.altInput.value, '', {
+            const hiddenValue = selectedDates.length
+                ? instance.formatDate(selectedDates[0], "Y-m-d")
+                : '';
+
+            $('#tanggal_lahir').val(hiddenValue).removeClass('is-invalid');
+            $('#tanggal_lahir_picker').removeClass('is-invalid');
+
+            if (hiddenValue) {
+                toastr.success('Tanggal lahir: ' + dateStr, '', {
                     timeOut: 2000,
                     closeButton: false,
                     progressBar: true
@@ -1969,6 +1981,12 @@ $(document).ready(function() {
     
     // Enable all form fields before submit to ensure data is sent
     $('#formDataDiri').on('submit', function(e) {
+        if (tanggalLahirPicker && tanggalLahirPicker.selectedDates.length) {
+            $('#tanggal_lahir').val(
+                tanggalLahirPicker.formatDate(tanggalLahirPicker.selectedDates[0], 'Y-m-d')
+            );
+        }
+
         // If alamat sama dengan ortu is selected, temporarily enable all fields for submission
         if ($('#alamat_sama').is(':checked')) {
             $('#form-alamat-siswa input, #form-alamat-siswa select, #form-alamat-siswa textarea').prop('disabled', false);
