@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AbsensiSetting;
 use App\Models\FaceEncoding;
 use App\Models\Gtk;
 use App\Models\Siswa;
@@ -104,6 +105,9 @@ class FaceRegistrationController extends Controller
         }
 
         abort_unless($this->userMatchesType($targetUser, $userType), 422, 'Target registrasi tidak sesuai dengan tipe pengguna.');
+
+        $duplicateMatch = $this->findDuplicateFaceMatch($request->descriptors, $targetUser->id);
+        abort_if($duplicateMatch, 422, $this->buildDuplicateMessage($duplicateMatch));
 
         if ($request->photo) {
             $this->saveBase64Photo($request->photo, $targetUser->id, $userType);
@@ -376,5 +380,92 @@ class FaceRegistrationController extends Controller
             'gtk' => 'GTK',
             'siswa' => 'Siswa',
         ];
+    }
+
+    private function findDuplicateFaceMatch(array $submittedDescriptors, string $userId): ?array
+    {
+        $threshold = (float) AbsensiSetting::getValue('face_match_threshold', 0.45);
+
+        $candidateFaces = FaceEncoding::query()
+            ->where('is_active', true)
+            ->where('user_id', '!=', $userId)
+            ->with([
+                'user:id,name',
+                'user.gtk:id,user_id,nama_lengkap,nip',
+                'user.siswa:id,user_id,nama_lengkap,nisn',
+            ])
+            ->get();
+
+        $bestMatch = null;
+
+        foreach ($candidateFaces as $face) {
+            if (empty($face->descriptors) || !is_array($face->descriptors)) {
+                continue;
+            }
+
+            foreach ($submittedDescriptors as $submittedDescriptor) {
+                if (!is_array($submittedDescriptor)) {
+                    continue;
+                }
+
+                foreach ($face->descriptors as $storedDescriptor) {
+                    if (!is_array($storedDescriptor)) {
+                        continue;
+                    }
+
+                    $distance = $this->calculateDescriptorDistance($submittedDescriptor, $storedDescriptor);
+                    if ($distance === null) {
+                        continue;
+                    }
+
+                    if ($distance <= $threshold && (!$bestMatch || $distance < $bestMatch['distance'])) {
+                        $bestMatch = [
+                            'distance' => $distance,
+                            'face' => $face,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $bestMatch;
+    }
+
+    private function calculateDescriptorDistance(array $descriptorA, array $descriptorB): ?float
+    {
+        if (count($descriptorA) !== count($descriptorB) || empty($descriptorA)) {
+            return null;
+        }
+
+        $sum = 0.0;
+        foreach ($descriptorA as $index => $value) {
+            if (!isset($descriptorB[$index]) || !is_numeric($value) || !is_numeric($descriptorB[$index])) {
+                return null;
+            }
+
+            $difference = (float) $value - (float) $descriptorB[$index];
+            $sum += $difference * $difference;
+        }
+
+        return sqrt($sum);
+    }
+
+    private function buildDuplicateMessage(array $duplicateMatch): string
+    {
+        /** @var FaceEncoding $face */
+        $face = $duplicateMatch['face'];
+        $profile = $face->user_type === 'siswa' ? $face->user?->siswa : $face->user?->gtk;
+        $name = $profile?->nama_lengkap ?? $face->user?->name ?? 'akun lain';
+        $identifier = $face->user_type === 'siswa' ? ($profile?->nisn ?? '-') : ($profile?->nip ?? '-');
+        $identifierLabel = $face->user_type === 'siswa' ? 'NISN' : 'NIP';
+        $status = $face->is_verified ? 'approved' : 'pending';
+
+        return sprintf(
+            'Wajah terdeteksi mirip dengan akun %s (%s: %s, status: %s). Registrasi dibatalkan untuk mencegah duplikasi.',
+            $name,
+            $identifierLabel,
+            $identifier,
+            $status
+        );
     }
 }

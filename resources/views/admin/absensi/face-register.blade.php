@@ -637,7 +637,12 @@ async function saveRegistration() {
     const video = document.getElementById('videoElement'), c = document.createElement('canvas'); c.width = 320; c.height = 240; c.getContext('2d').drawImage(video, 0, 0, 320, 240);
     try {
         const res = await fetch(storeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ user_id: selectedUserId, user_type: selectedUserType, descriptors: capturedDescriptors, angles: capturedAngles, quality_score: capturedDescriptors.length * 20, photo: c.toDataURL('image/jpeg', 0.8) }) });
-        const result = await res.json();
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const validationErrors = result.errors ? Object.values(result.errors).flat().join(', ') : '';
+            setFaceStatus(result.message || validationErrors || 'Registrasi gagal diproses.', false);
+            return;
+        }
         if (result.success) { document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Registrasi berhasil!'; document.getElementById('stepInstruction').style.display = 'block'; document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.9)'; document.getElementById('stepInstruction').style.color = '#fff'; setFaceStatus('Tersimpan. Menunggu verifikasi admin.', true); setTimeout(() => { closeRegister(); window.location.reload(); }, 1500); }
         else setFaceStatus('Gagal: ' + (result.message || 'Error'), false);
     } catch (err) { setFaceStatus('Error: ' + err.message, false); }
