@@ -39,59 +39,6 @@
                         </form>
                     </td>
                 </tr>
-
-                <div class="modal fade" id="editProdiModal{{ $studyProgram->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Referensi Prodi</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <form action="{{ route('admin.referensi-program-studi.update', $studyProgram) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label>Kampus</label>
-                                        <select name="referensi_perguruan_tinggi_id" class="form-control" required>
-                                            @foreach($campuses as $campus)
-                                                <option value="{{ $campus->id }}" {{ $studyProgram->referensi_perguruan_tinggi_id === $campus->id ? 'selected' : '' }}>
-                                                    {{ $campus->nama }} ({{ $campus->jenis }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Nama Prodi</label>
-                                        <input type="text" name="nama" class="form-control" value="{{ $studyProgram->nama }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Jenjang</label>
-                                        <input type="text" name="jenjang" class="form-control" value="{{ $studyProgram->jenjang }}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Bidang / Fakultas</label>
-                                        <input type="text" name="fakultas" class="form-control" value="{{ $studyProgram->fakultas }}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Sumber Referensi</label>
-                                        <input type="text" name="sumber_referensi" class="form-control" value="{{ $studyProgram->sumber_referensi }}">
-                                    </div>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" name="is_active" class="custom-control-input" id="prodiSwitch{{ $studyProgram->id }}" value="1" {{ $studyProgram->is_active ? 'checked' : '' }}>
-                                        <label class="custom-control-label" for="prodiSwitch{{ $studyProgram->id }}">Aktif</label>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             @empty
                 <tr>
                     <td colspan="6" class="text-center text-muted py-4">Belum ada referensi program studi.</td>
@@ -105,3 +52,58 @@
         {{ $studyPrograms->links() }}
     </div>
 @endif
+
+@foreach($studyPrograms as $studyProgram)
+    <div class="modal fade" id="editProdiModal{{ $studyProgram->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Referensi Prodi</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('admin.referensi-program-studi.update', $studyProgram) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Kampus</label>
+                            <select name="referensi_perguruan_tinggi_id" class="form-control" required>
+                                @foreach($campuses as $campus)
+                                    <option value="{{ $campus->id }}" {{ $studyProgram->referensi_perguruan_tinggi_id === $campus->id ? 'selected' : '' }}>
+                                        {{ $campus->nama }} ({{ $campus->jenis }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Prodi</label>
+                            <input type="text" name="nama" class="form-control" value="{{ $studyProgram->nama }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jenjang</label>
+                            <input type="text" name="jenjang" class="form-control" value="{{ $studyProgram->jenjang }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Bidang / Fakultas</label>
+                            <input type="text" name="fakultas" class="form-control" value="{{ $studyProgram->fakultas }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Sumber Referensi</label>
+                            <input type="text" name="sumber_referensi" class="form-control" value="{{ $studyProgram->sumber_referensi }}">
+                        </div>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" name="is_active" class="custom-control-input" id="prodiSwitch{{ $studyProgram->id }}" value="1" {{ $studyProgram->is_active ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="prodiSwitch{{ $studyProgram->id }}">Aktif</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
