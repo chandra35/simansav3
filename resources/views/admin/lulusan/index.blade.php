@@ -388,10 +388,11 @@
             }
 
             topUniversitas.forEach(item => {
+                const label = item.label ?? item.nama_universitas ?? '-';
                 tbody.append(`
                     <tr>
-                        <td>${item.nama_universitas}</td>
-                        <td class="text-right font-weight-bold">${item.jumlah}</td>
+                        <td>${label}</td>
+                        <td class="text-right font-weight-bold">${item.jumlah ?? 0}</td>
                     </tr>
                 `);
             });
