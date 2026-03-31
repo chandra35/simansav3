@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
+use App\Models\FaceEncoding;
 use App\Models\AbsensiLog;
 use App\Models\AbsensiSetting;
 use App\Models\AbsensiLocation;
@@ -76,12 +77,13 @@ class AbsensiController extends Controller
     public function kiosk(Request $request)
     {
         $locationId = $request->get('location');
+        $userType = $this->normalizeUserType($request->get('type', 'gtk'));
         $location = $locationId ? AbsensiLocation::find($locationId) : null;
         $locations = AbsensiLocation::where('is_active', true)->get();
 
         $settings = [
-            'jam_masuk' => AbsensiSetting::getValue('jam_masuk_gtk', '07:00'),
-            'jam_pulang' => AbsensiSetting::getValue('jam_pulang_gtk', '16:00'),
+            'jam_masuk' => Absensi::getJamMasukForType($userType),
+            'jam_pulang' => Absensi::getJamPulangForType($userType),
             'toleransi' => AbsensiSetting::getValue('toleransi_terlambat', 15),
             'face_threshold' => AbsensiSetting::getValue('face_match_threshold', 0.45),
             'liveness_enabled' => AbsensiSetting::getValue('liveness_detection', true),
@@ -89,7 +91,7 @@ class AbsensiController extends Controller
             'detection_interval' => AbsensiSetting::getValue('detection_interval_ms', 200),
         ];
 
-        return view('admin.absensi.kiosk', compact('location', 'locations', 'settings'));
+        return view('admin.absensi.kiosk', compact('location', 'locations', 'settings', 'userType'));
     }
 
     /**
@@ -104,6 +106,7 @@ class AbsensiController extends Controller
 
         $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
+            'user_type' => 'nullable|in:gtk,siswa',
             'confidence' => 'required|numeric|min:0|max:1',
             'location_id' => 'nullable|uuid',
             'photo' => 'nullable|string', // base64
@@ -124,6 +127,19 @@ class AbsensiController extends Controller
 
         $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
         $now = now();
+        $userType = $this->normalizeUserType($request->input('user_type', 'gtk'));
+        $approvedFace = FaceEncoding::where('user_id', $request->user_id)
+            ->where('user_type', $userType)
+            ->where('is_active', true)
+            ->where('is_verified', true)
+            ->exists();
+
+        if (!$approvedFace) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data wajah belum approved atau tidak aktif untuk digunakan di kiosk.',
+            ], 422);
+        }
 
         // Simpan foto capture
         $photoPath = null;
@@ -145,12 +161,12 @@ class AbsensiController extends Controller
                 ], 422);
             }
 
-            $status = Absensi::determineStatus($now);
+            $status = Absensi::determineStatusForType($now, $userType);
 
             $absensi = Absensi::updateOrCreate(
                 ['user_id' => $request->user_id, 'tanggal' => $today],
                 [
-                    'user_type' => 'gtk',
+                    'user_type' => $userType,
                     'tahun_pelajaran_id' => $tahunPelajaran?->id,
                     'waktu_masuk' => $now,
                     'status' => $status,
@@ -178,7 +194,7 @@ class AbsensiController extends Controller
                 'data' => [
                     'status' => $status,
                     'waktu' => $now->format('H:i:s'),
-                    'nama' => $absensi->user->gtk?->nama_lengkap ?? $absensi->user->name,
+                    'nama' => $this->resolveDisplayName($absensi, $userType),
                 ],
             ]);
         }
@@ -203,7 +219,7 @@ class AbsensiController extends Controller
         }
 
         // Determine status pulang
-        $jamPulang = AbsensiSetting::getValue('jam_pulang_gtk', '16:00');
+        $jamPulang = Absensi::getJamPulangForType($userType);
         $batasPulang = Carbon::parse($today . ' ' . $jamPulang);
         $statusPulang = $now->lt($batasPulang) ? 'pulang_cepat' : 'tepat_waktu';
 
@@ -233,7 +249,7 @@ class AbsensiController extends Controller
                 'status_pulang' => $statusPulang,
                 'waktu' => $now->format('H:i:s'),
                 'durasi' => $absensi->durasi_kerja,
-                'nama' => $absensi->user->gtk?->nama_lengkap ?? $absensi->user->name,
+                'nama' => $this->resolveDisplayName($absensi, $userType),
             ],
         ]);
     }
@@ -338,21 +354,29 @@ class AbsensiController extends Controller
     /**
      * API: Get today's attendance data for kiosk sidebar
      */
-    public function todayData()
+    public function todayData(Request $request)
     {
         $today = now()->format('Y-m-d');
+        $userType = $this->normalizeUserType($request->get('type', 'gtk'));
 
-        $absensis = Absensi::gtk()
+        $absensis = Absensi::query()
+            ->where('user_type', $userType)
             ->tanggal($today)
-            ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap'])
+            ->with([
+                'user:id,name',
+                'user.gtk:id,user_id,nama_lengkap',
+                'user.siswa:id,user_id,nama_lengkap',
+            ])
             ->orderBy('waktu_masuk', 'desc')
             ->get();
 
-        $totalGtk = \App\Models\Gtk::count();
+        $totalUsers = $userType === 'siswa' ? \App\Models\Siswa::count() : \App\Models\Gtk::count();
 
         $data = $absensis->map(function ($a) {
             return [
-                'nama' => $a->user->gtk?->nama_lengkap ?? $a->user->name,
+                'nama' => $a->user_type === 'siswa'
+                    ? ($a->user->siswa?->nama_lengkap ?? $a->user->name)
+                    : ($a->user->gtk?->nama_lengkap ?? $a->user->name),
                 'waktu' => $a->waktu_masuk ? $a->waktu_masuk->format('H:i') : '-',
                 'status' => $a->status,
             ];
@@ -361,10 +385,22 @@ class AbsensiController extends Controller
         $stats = [
             'hadir' => $absensis->where('status', 'hadir')->count(),
             'terlambat' => $absensis->where('status', 'terlambat')->count(),
-            'belum' => $totalGtk - $absensis->count(),
+            'belum' => max($totalUsers - $absensis->count(), 0),
         ];
 
         return response()->json(['success' => true, 'data' => $data, 'stats' => $stats]);
+    }
+
+    private function normalizeUserType(?string $userType): string
+    {
+        return $userType === 'siswa' ? 'siswa' : 'gtk';
+    }
+
+    private function resolveDisplayName(Absensi $absensi, string $userType): string
+    {
+        return $userType === 'siswa'
+            ? ($absensi->user->siswa?->nama_lengkap ?? $absensi->user->name)
+            : ($absensi->user->gtk?->nama_lengkap ?? $absensi->user->name);
     }
 
     /**

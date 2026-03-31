@@ -4,6 +4,19 @@
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
 
+@php
+    $selfStatus = 'belum';
+    if ($selfFace) {
+        $selfStatus = $selfFace->is_verified ? 'approved' : ($selfFace->is_active ? 'pending' : 'belum');
+    }
+
+    $statusMeta = match ($selfStatus) {
+        'approved' => ['badge' => 'success', 'icon' => 'check-circle', 'title' => 'Registrasi Anda sudah disetujui', 'description' => 'Data wajah aktif dan siap dipakai untuk absensi kamera otomatis.', 'label' => 'Approved'],
+        'pending' => ['badge' => 'warning', 'icon' => 'clock', 'title' => 'Registrasi sedang menunggu verifikasi', 'description' => 'Admin akan meninjau hasil capture sebelum data wajah dipakai untuk absensi.', 'label' => 'Pending'],
+        default => ['badge' => 'secondary', 'icon' => 'camera', 'title' => 'Anda belum melakukan registrasi wajah', 'description' => 'Mulai registrasi agar akun Anda bisa dipakai untuk absensi tanpa login.', 'label' => 'Belum Registrasi'],
+    };
+@endphp
+
 @section('content_header')
     <h1><i class="fas fa-user-shield"></i> {{ $pageTitle }}</h1>
 @stop
@@ -28,71 +41,132 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-4 col-6">
-        <div class="small-box bg-info">
-            <div class="inner"><h3>{{ $registrants->count() }}</h3><p>Total {{ $subjectLabel }}</p></div>
-            <div class="icon"><i class="fas fa-users"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-4 col-6">
-        <div class="small-box bg-success">
-            <div class="inner"><h3>{{ $registeredCount }}</h3><p>Sudah Registrasi</p></div>
-            <div class="icon"><i class="fas fa-check-circle"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-4 col-12">
-        <div class="small-box bg-warning">
-            <div class="inner"><h3>{{ $pendingCount }}</h3><p>Menunggu Verifikasi</p></div>
-            <div class="icon"><i class="fas fa-clock"></i></div>
-        </div>
-    </div>
-</div>
-
 @if($selfOnly)
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle mr-1"></i>
-        Halaman ini hanya untuk registrasi wajah akun Anda sendiri. Persetujuan tetap dilakukan oleh admin.
-    </div>
-@endif
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card card-primary card-outline face-self-card">
+                <div class="card-body p-3 p-md-4">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center">
+                        <img src="{{ $selfRegistrant['avatar_url'] }}" alt="{{ $selfRegistrant['name'] }}" class="img-circle mr-md-3 mb-3 mb-md-0 face-self-card__avatar">
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small mb-1">Identitas Pemilik Akun</div>
+                                    <h3 class="h4 mb-1">{{ $selfRegistrant['name'] }}</h3>
+                                    <div class="text-muted">{{ $identifierLabel }}: {{ $selfRegistrant['identifier'] ?: '-' }}</div>
+                                </div>
+                                <div class="mt-3 mt-lg-0">
+                                    <span class="badge badge-{{ $statusMeta['badge'] }} px-3 py-2">
+                                        <i class="fas fa-{{ $statusMeta['icon'] }} mr-1"></i>{{ $statusMeta['label'] }}
+                                    </span>
+                                </div>
+                            </div>
 
-<div class="row mb-3">
-    <div class="col-lg-8">
-        <div class="card card-outline card-info h-100">
-            <div class="card-body py-3">
-                <div class="d-flex align-items-start">
-                    <div class="mr-3 text-info" style="font-size:1.5rem;">
-                        <i class="fas fa-camera-retro"></i>
-                    </div>
-                    <div>
-                        <div class="font-weight-bold mb-1">Panduan singkat registrasi</div>
-                        <div class="text-muted small">
-                            Pastikan kamera depan aktif, wajah terlihat penuh, dan jangan berpindah tempat saat countdown berjalan. Sistem akan mengambil beberapa sudut wajah secara otomatis.
+                            <div class="face-self-status mt-3">
+                                <div class="font-weight-bold mb-1">{{ $statusMeta['title'] }}</div>
+                                <div class="text-muted">{{ $statusMeta['description'] }}</div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-sm-6 mb-2 mb-sm-0">
+                                    <div class="face-self-metric">
+                                        <small class="text-muted d-block">Capture Tersimpan</small>
+                                        <strong>{{ $selfFace?->total_captures ?? 0 }} frame</strong>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="face-self-metric">
+                                        <small class="text-muted d-block">Update Terakhir</small>
+                                        <strong>{{ $selfFace?->updated_at?->format('d/m/Y H:i') ?? '-' }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column flex-md-row mt-4">
+                                <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
+                                        onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
+                                    <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
+                                    {{ $selfFace ? 'Edit / Registrasi Ulang' : 'Mulai Registrasi' }}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-lg-4 mt-3 mt-lg-0">
-        <div class="card card-outline card-secondary h-100">
-            <div class="card-body py-3">
-                <div class="font-weight-bold mb-2">Checklist sebelum mulai</div>
-                <div class="small text-muted face-register-checklist">
-                    <div><i class="fas fa-check text-success mr-1"></i> Cahaya cukup terang</div>
-                    <div><i class="fas fa-check text-success mr-1"></i> Kamera stabil</div>
-                    <div><i class="fas fa-check text-success mr-1"></i> Wajah tanpa terpotong</div>
-                    <div><i class="fas fa-check text-success mr-1"></i> Lepas penutup wajah</div>
+
+        <div class="col-xl-4 mt-3 mt-xl-0">
+            <div class="card card-outline card-info h-100">
+                <div class="card-body">
+                    <h5 class="font-weight-bold mb-3"><i class="fas fa-list-check mr-1"></i> Alur Registrasi</h5>
+                    <div class="face-register-checklist text-muted small">
+                        <div><i class="fas fa-check text-success mr-1"></i> Ambil wajah dari akun Anda sendiri</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Sistem menyimpan beberapa sudut otomatis</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Admin melakukan approval</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Wajah approved bisa dipakai untuk absensi tanpa login</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+@else
+    <div class="row">
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-info">
+                <div class="inner"><h3>{{ $registrants->count() }}</h3><p>Total {{ $subjectLabel }}</p></div>
+                <div class="icon"><i class="fas fa-users"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-success">
+                <div class="inner"><h3>{{ $registeredCount }}</h3><p>Sudah Registrasi</p></div>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-12">
+            <div class="small-box bg-warning">
+                <div class="inner"><h3>{{ $pendingCount }}</h3><p>Menunggu Verifikasi</p></div>
+                <div class="icon"><i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+    </div>
 
-<div class="card card-primary card-outline">
-    <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
-        <h3 class="card-title mb-0"><i class="fas fa-table"></i> Daftar {{ $subjectLabel }} & Status Registrasi Wajah</h3>
-        @if($canManageAll)
+    <div class="row mb-3">
+        <div class="col-lg-8">
+            <div class="card card-outline card-info h-100">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-start">
+                        <div class="mr-3 text-info" style="font-size:1.5rem;">
+                            <i class="fas fa-camera-retro"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold mb-1">Panduan singkat registrasi</div>
+                            <div class="text-muted small">
+                                Pastikan kamera depan aktif, wajah terlihat penuh, dan jangan berpindah tempat saat countdown berjalan. Sistem akan mengambil beberapa sudut wajah secara otomatis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <div class="card card-outline card-secondary h-100">
+                <div class="card-body py-3">
+                    <div class="font-weight-bold mb-2">Checklist sebelum mulai</div>
+                    <div class="small text-muted face-register-checklist">
+                        <div><i class="fas fa-check text-success mr-1"></i> Cahaya cukup terang</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Kamera stabil</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Wajah tanpa terpotong</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Lepas penutup wajah</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <h3 class="card-title mb-0"><i class="fas fa-table"></i> Daftar {{ $subjectLabel }} & Status Registrasi Wajah</h3>
             <div class="btn-group btn-group-sm mt-2 mt-md-0">
                 @foreach($typeOptions as $typeKey => $typeName)
                     <a href="{{ route('admin.absensi.face-register', ['type' => $typeKey]) }}"
@@ -101,94 +175,94 @@
                     </a>
                 @endforeach
             </div>
-        @endif
-    </div>
-    <div class="card-body">
-        @if($canManageAll && $registrants->count() > 1)
-            <div class="mb-3 d-flex flex-wrap align-items-center">
-                <span class="mr-2 font-weight-bold"><i class="fas fa-filter"></i> Filter:</span>
-                <div class="btn-group" id="statusFilter">
-                    <button class="btn btn-sm btn-outline-primary active" data-filter="">Semua</button>
-                    <button class="btn btn-sm btn-outline-secondary" data-filter="Belum">Belum Daftar</button>
-                    <button class="btn btn-sm btn-outline-warning" data-filter="Pending">Pending</button>
-                    <button class="btn btn-sm btn-outline-success" data-filter="Verified">Verified</button>
+        </div>
+        <div class="card-body">
+            @if($registrants->count() > 1)
+                <div class="mb-3 d-flex flex-wrap align-items-center">
+                    <span class="mr-2 font-weight-bold"><i class="fas fa-filter"></i> Filter:</span>
+                    <div class="btn-group" id="statusFilter">
+                        <button class="btn btn-sm btn-outline-primary active" data-filter="">Semua</button>
+                        <button class="btn btn-sm btn-outline-secondary" data-filter="Belum">Belum Daftar</button>
+                        <button class="btn btn-sm btn-outline-warning" data-filter="Pending">Pending</button>
+                        <button class="btn btn-sm btn-outline-success" data-filter="Verified">Verified</button>
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
 
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-sm" id="tabelFaceRegister">
-                <thead>
-                    <tr>
-                        <th width="40">No</th>
-                        <th>Nama {{ $subjectLabel }}</th>
-                        <th>{{ $identifierLabel }}</th>
-                        <th>Status</th>
-                        <th>Capture</th>
-                        <th>Quality</th>
-                        <th>Verifikasi</th>
-                        <th>Tgl Registrasi</th>
-                        <th width="130">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($registrants as $i => $registrant)
-                        @php $face = $faceMap[$registrant['user_id']] ?? null; @endphp
+            <div class="table-responsive">
+                <table class="table table-hover table-striped table-sm" id="tabelFaceRegister">
+                    <thead>
                         <tr>
-                            <td data-label="No">{{ $i + 1 }}</td>
-                            <td data-label="Nama">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ $registrant['avatar_url'] }}" class="img-circle mr-2" width="34" height="34" style="object-fit:cover;">
-                                    <strong>{{ $registrant['name'] }}</strong>
-                                </div>
-                            </td>
-                            <td data-label="{{ $identifierLabel }}">{{ $registrant['identifier'] ?? '-' }}</td>
-                            <td data-label="Status">
-                                @if($face)
-                                    @if($face->is_verified)
-                                        <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
-                                    @else
-                                        <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
-                                    @endif
-                                @else
-                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> Belum</span>
-                                @endif
-                            </td>
-                            <td data-label="Capture">@if($face)<span class="badge badge-info">{{ $face->total_captures }}</span>@else - @endif</td>
-                            <td data-label="Quality">
-                                @if($face)
-                                    @php $q = $face->quality_score ?? 0; @endphp
-                                    <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td data-label="Verifikasi">
-                                @if($face && $face->is_verified)
-                                    <small>{{ $face->verified_at?->format('d/m/Y H:i') }}</small>
-                                @elseif($face)
-                                    <small class="text-muted">Menunggu</small>
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
-                            <td data-label="Aksi">
-                                <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
-                                        onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
-                                    <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
-                                    {{ $face ? 'Ulang' : 'Daftar' }}
-                                </button>
-                            </td>
+                            <th width="40">No</th>
+                            <th>Nama {{ $subjectLabel }}</th>
+                            <th>{{ $identifierLabel }}</th>
+                            <th>Status</th>
+                            <th>Capture</th>
+                            <th>Quality</th>
+                            <th>Verifikasi</th>
+                            <th>Tgl Registrasi</th>
+                            <th width="130">Aksi</th>
                         </tr>
-                    @empty
-                        <tr><td colspan="9" class="text-center text-muted py-4">Belum ada data {{ strtolower($subjectLabel) }} yang bisa diregistrasi.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($registrants as $i => $registrant)
+                            @php $face = $faceMap[$registrant['user_id']] ?? null; @endphp
+                            <tr>
+                                <td data-label="No">{{ $i + 1 }}</td>
+                                <td data-label="Nama">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $registrant['avatar_url'] }}" class="img-circle mr-2" width="34" height="34" style="object-fit:cover;">
+                                        <strong>{{ $registrant['name'] }}</strong>
+                                    </div>
+                                </td>
+                                <td data-label="{{ $identifierLabel }}">{{ $registrant['identifier'] ?? '-' }}</td>
+                                <td data-label="Status">
+                                    @if($face)
+                                        @if($face->is_verified)
+                                            <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
+                                        @else
+                                            <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                                        @endif
+                                    @else
+                                        <span class="badge badge-secondary"><i class="fas fa-times"></i> Belum</span>
+                                    @endif
+                                </td>
+                                <td data-label="Capture">@if($face)<span class="badge badge-info">{{ $face->total_captures }}</span>@else - @endif</td>
+                                <td data-label="Quality">
+                                    @if($face)
+                                        @php $q = $face->quality_score ?? 0; @endphp
+                                        <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td data-label="Verifikasi">
+                                    @if($face && $face->is_verified)
+                                        <small>{{ $face->verified_at?->format('d/m/Y H:i') }}</small>
+                                    @elseif($face)
+                                        <small class="text-muted">Menunggu</small>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
+                                <td data-label="Aksi">
+                                    <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
+                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
+                                        <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
+                                        {{ $face ? 'Ulang' : 'Daftar' }}
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="9" class="text-center text-muted py-4">Belum ada data {{ strtolower($subjectLabel) }} yang bisa diregistrasi.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
+@endif
 
 <div class="modal fade" id="modalRegister" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable face-register-modal">
@@ -283,12 +357,26 @@
     .face-register-checklist > div + div {
         margin-top: 0.35rem;
     }
-    .btn-face-action {
-        min-width: 92px;
-    }
+    .face-self-card,
     .face-register-modal .modal-content {
         border-radius: 1rem;
         overflow: hidden;
+    }
+    .face-self-card__avatar {
+        width: 92px;
+        height: 92px;
+        object-fit: cover;
+        border: 4px solid rgba(0, 123, 255, 0.08);
+    }
+    .face-self-status,
+    .face-self-metric {
+        background: #f8fbff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 0.85rem;
+        padding: 0.85rem 1rem;
+    }
+    .btn-face-action {
+        min-width: 160px;
     }
     .face-register-modal__info {
         background: #f8fbff;
@@ -353,6 +441,9 @@
             width: auto;
             text-align: center;
         }
+        .btn-face-action {
+            width: 100%;
+        }
         #tabelFaceRegister thead {
             display: none;
         }
@@ -388,22 +479,13 @@
             font-weight: 700;
             text-transform: uppercase;
         }
-        #tabelFaceRegister td[data-label="Nama"] {
-            padding-left: 0 !important;
-            margin-bottom: 0.35rem;
-        }
-        #tabelFaceRegister td[data-label="Nama"]::before {
-            display: none;
-        }
+        #tabelFaceRegister td[data-label="Nama"],
         #tabelFaceRegister td[data-label="Aksi"] {
             padding-left: 0 !important;
-            margin-top: 0.35rem;
         }
+        #tabelFaceRegister td[data-label="Nama"]::before,
         #tabelFaceRegister td[data-label="Aksi"]::before {
             display: none;
-        }
-        .btn-face-action {
-            width: 100%;
         }
     }
 </style>
@@ -413,7 +495,7 @@
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
-const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection);
+const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
 let capturedDescriptors = [], capturedAngles = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
 const STEPS = [
     { angle: 'frontal', text: 'Lihat lurus ke kamera', icon: 'fa-user' },
@@ -424,26 +506,31 @@ const STEPS = [
 ];
 
 $(function() {
-    const table = $('#tabelFaceRegister').DataTable({
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
-        pageLength: 25,
-        order: [[1, 'asc']],
-        columnDefs: [{ orderable: false, targets: [8] }],
-        scrollX: true,
-        autoWidth: false,
-    });
-    let activeFilter = '';
-    $.fn.dataTable.ext.search.push(function(settings, data) {
-        if (settings.nTable.id !== 'tabelFaceRegister' || !activeFilter) return true;
-        return data[3].indexOf(activeFilter) !== -1;
-    });
-    $('#statusFilter').on('click', 'button', function() {
-        $('#statusFilter button').removeClass('active');
-        $(this).addClass('active');
-        activeFilter = $(this).data('filter');
-        table.draw();
-    });
-    if (initialSelection) openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type);
+    if ($('#tabelFaceRegister').length) {
+        const table = $('#tabelFaceRegister').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+            pageLength: 25,
+            order: [[1, 'asc']],
+            columnDefs: [{ orderable: false, targets: [8] }],
+            scrollX: true,
+            autoWidth: false,
+        });
+        let activeFilter = '';
+        $.fn.dataTable.ext.search.push(function(settings, data) {
+            if (settings.nTable.id !== 'tabelFaceRegister' || !activeFilter) return true;
+            return data[3].indexOf(activeFilter) !== -1;
+        });
+        $('#statusFilter').on('click', 'button', function() {
+            $('#statusFilter button').removeClass('active');
+            $(this).addClass('active');
+            activeFilter = $(this).data('filter');
+            table.draw();
+        });
+    }
+
+    if (initialSelection && canManageAll) {
+        openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type);
+    }
 });
 
 function openRegister(userId, userName, userType) {
@@ -454,7 +541,6 @@ function openRegister(userId, userName, userType) {
     $('#modalRegister').modal('show');
     if (!modelsLoaded) loadModels(); else startCameraAndRegister();
 }
-
 function closeRegister() { isDetecting = false; stopCamera(); resetUI(); $('#modalRegister').modal('hide'); }
 function stopCamera() { if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; } const video = document.getElementById('videoElement'); if (video) video.srcObject = null; }
 async function loadModels() {

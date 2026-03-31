@@ -124,7 +124,12 @@ class Absensi extends Model
      */
     public static function determineStatus(Carbon $waktuMasuk): string
     {
-        $jamMasuk = AbsensiSetting::getValue('jam_masuk_gtk', '07:00');
+        return static::determineStatusForType($waktuMasuk, 'gtk');
+    }
+
+    public static function determineStatusForType(Carbon $waktuMasuk, string $userType = 'gtk'): string
+    {
+        $jamMasuk = static::getJamMasukForType($userType);
         $toleransi = (int) AbsensiSetting::getValue('toleransi_terlambat', 15);
 
         $batasTepat = Carbon::parse($waktuMasuk->format('Y-m-d') . ' ' . $jamMasuk);
@@ -135,6 +140,18 @@ class Absensi extends Model
         }
 
         return 'terlambat';
+    }
+
+    public static function getJamMasukForType(string $userType = 'gtk'): string
+    {
+        $key = $userType === 'siswa' ? 'jam_masuk_siswa' : 'jam_masuk_gtk';
+        return AbsensiSetting::getValue($key, '07:00');
+    }
+
+    public static function getJamPulangForType(string $userType = 'gtk'): string
+    {
+        $key = $userType === 'siswa' ? 'jam_pulang_siswa' : 'jam_pulang_gtk';
+        return AbsensiSetting::getValue($key, $userType === 'siswa' ? '15:00' : '16:00');
     }
 
     /**

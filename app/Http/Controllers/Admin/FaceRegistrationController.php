@@ -18,6 +18,7 @@ class FaceRegistrationController extends Controller
     {
         $authUser = $request->user();
         $canManageAll = $this->canManageAllRegistrations($authUser);
+        $selfFace = null;
 
         if ($canManageAll) {
             $selectedType = $this->normalizeUserType($request->get('type', 'gtk'));
@@ -34,6 +35,10 @@ class FaceRegistrationController extends Controller
                 ? route('siswa.face-register.store')
                 : route('admin.absensi.face-register.store');
             $selfOnly = true;
+            $selfFace = FaceEncoding::where('user_id', $authUser->id)
+                ->where('user_type', $selectedType)
+                ->latest('created_at')
+                ->first();
         }
 
         $faceMap = FaceEncoding::where('user_type', $selectedType)
@@ -61,6 +66,8 @@ class FaceRegistrationController extends Controller
             'selectedType' => $selectedType,
             'typeOptions' => $this->typeOptions(),
             'initialSelection' => $initialSelection,
+            'selfRegistrant' => $selfOnly ? $registrants->first() : null,
+            'selfFace' => $selfFace,
             'registeredCount' => $registeredCount,
             'verifiedCount' => $verifiedCount,
             'pendingCount' => max($registeredCount - $verifiedCount, 0),

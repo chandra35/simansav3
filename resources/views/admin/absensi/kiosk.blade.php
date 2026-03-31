@@ -331,10 +331,16 @@
     <!-- HEADER -->
     <div class="kiosk-header">
         <div>
-            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Absensi Wajah</h1>
+            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Absensi Wajah {{ $userType === 'siswa' ? 'Siswa' : 'GTK' }}</h1>
             <div class="date" id="currentDate"></div>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
+            <div>
+                <select id="userTypeSelect" class="form-select form-select-sm" style="background:#1a1a4e; color:#fff; border-color:#2a2a6e; width:160px;">
+                    <option value="gtk" {{ $userType === 'gtk' ? 'selected' : '' }}>Mode GTK</option>
+                    <option value="siswa" {{ $userType === 'siswa' ? 'selected' : '' }}>Mode Siswa</option>
+                </select>
+            </div>
             <div>
                 <select id="locationSelect" class="form-select form-select-sm" style="background:#1a1a4e; color:#fff; border-color:#2a2a6e; width:200px;">
                     <option value="">Pilih Lokasi</option>
@@ -424,7 +430,7 @@
             <div class="result-card" id="resultCard">
                 <img class="avatar" id="resultAvatar" src="" alt="">
                 <div class="name" id="resultName"></div>
-                <div class="nip" id="resultNip"></div>
+                <div class="nip" id="resultIdentifier"></div>
                 <div class="status-badge" id="resultStatus"></div>
                 <div class="mt-2" style="font-size:0.85rem; color:#aaa;" id="resultTime"></div>
             </div>
@@ -534,6 +540,7 @@
         };
 
         let currentTab = 'masuk';
+        let currentUserType = '{{ $userType }}';
         let faceDatabase = [];
         let isProcessing = false;
         let detectionLoop = null;
@@ -572,6 +579,18 @@
                 }
                 document.removeEventListener('click', enterFS);
             }, { once: true });
+
+            document.getElementById('userTypeSelect')?.addEventListener('change', function() {
+                const locationId = document.getElementById('locationSelect')?.value || '';
+                const url = new URL(window.location.href);
+                url.searchParams.set('type', this.value);
+                if (locationId) {
+                    url.searchParams.set('location', locationId);
+                } else {
+                    url.searchParams.delete('location');
+                }
+                window.location.href = url.toString();
+            });
         });
 
         // ============================================
@@ -652,21 +671,22 @@
         // ============================================
         async function loadFaceDatabase() {
             try {
-                const response = await fetch('{{ route("admin.absensi.face-descriptors") }}?type=gtk', {
+                const response = await fetch(`{{ route("admin.absensi.face-descriptors") }}?type=${currentUserType}&verified_only=1`, {
                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                 });
                 const result = await response.json();
                 if (result.success) {
                     faceDatabase = result.data.map(person => ({
                         userId: person.user_id,
+                        userType: person.user_type,
                         name: person.name,
-                        nip: person.nip,
+                        identifier: person.identifier,
                         foto: person.foto,
                         descriptors: person.descriptors.map(d => new Float32Array(d)),
                     }));
                     console.log(`Loaded ${faceDatabase.length} face profiles`);
                     if (faceDatabase.length === 0) {
-                        setCameraStatus('error', 'Database wajah kosong! Verifikasi wajah di menu Face Verification.');
+                        setCameraStatus('error', `Database wajah ${currentUserType === 'siswa' ? 'siswa' : 'GTK'} kosong atau belum approved.`);
                     }
                 } else {
                     console.error('Face database response not success:', result);
@@ -872,6 +892,7 @@
                     },
                     body: JSON.stringify({
                         user_id: person.userId,
+                        user_type: person.userType || currentUserType,
                         confidence: confidence,
                         location_id: locationId || null,
                         photo: photoData,
@@ -915,7 +936,9 @@
             const card = document.getElementById('resultCard');
             document.getElementById('resultAvatar').src = person.foto || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(person.name);
             document.getElementById('resultName').textContent = data.nama || person.name;
-            document.getElementById('resultNip').textContent = person.nip ? `NIP: ${person.nip}` : '';
+            document.getElementById('resultIdentifier').textContent = person.identifier
+                ? `${currentUserType === 'siswa' ? 'NISN' : 'NIP'}: ${person.identifier}`
+                : '';
             
             const status = data.status || data.status_pulang || 'hadir';
             const statusEl = document.getElementById('resultStatus');
@@ -935,7 +958,7 @@
             const card = document.getElementById('resultCard');
             document.getElementById('resultAvatar').src = 'https://ui-avatars.com/api/?name=!&background=' + (type === 'error' ? 'ff5252' : 'ffab00') + '&color=fff';
             document.getElementById('resultName').textContent = message;
-            document.getElementById('resultNip').textContent = '';
+            document.getElementById('resultIdentifier').textContent = '';
             document.getElementById('resultStatus').textContent = '';
             document.getElementById('resultTime').textContent = '';
             card.classList.add('show');
@@ -972,7 +995,7 @@
         // ============================================
         async function refreshAttendanceList() {
             try {
-                const response = await fetch('{{ route("admin.absensi.today-data") }}', {
+                const response = await fetch(`{{ route("admin.absensi.today-data") }}?type=${currentUserType}`, {
                     headers: { 'Accept': 'application/json' }
                 });
                 const result = await response.json();
