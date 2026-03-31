@@ -333,23 +333,6 @@ return [
             'icon' => 'fas fa-fw fa-user-circle',
             'can' => 'gtk-menu-only',
         ],
-        [
-            'key' => 'gtk-presensi',
-            'text' => 'Presensi',
-            'icon' => 'fas fa-fw fa-fingerprint',
-            'can' => 'gtk-menu-only',
-            'active' => ['admin/absensi/face-register*'],
-            'submenu' => [
-                [
-                    'key' => 'gtk-face-register',
-                    'text' => 'Registrasi Wajah',
-                    'route' => 'admin.absensi.face-register',
-                    'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'gtk-menu-only',
-                    'active' => ['admin/absensi/face-register*'],
-                ],
-            ],
-        ],
         
         // MANAJEMEN DATA - Collapsible
         [
@@ -542,7 +525,7 @@ return [
                     'text' => 'Registrasi Wajah',
                     'route' => 'admin.absensi.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'face-registration-admin',
+                    'can' => 'face-registration-access',
                     'active' => ['admin/absensi/face-register*'],
                 ],
                 [

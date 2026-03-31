@@ -45,12 +45,18 @@ class AuthServiceProvider extends ServiceProvider
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {
-            return $user->hasRole(['Super Admin', 'Admin', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Sekolah', 'Wakil Kepala Sekolah']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
 
         Gate::define('face-registration-admin', function ($user) {
             return $user->hasAnyRole(['Super Admin', 'Admin']) ||
                 in_array($user->role, ['super_admin', 'admin']);
+        });
+
+        Gate::define('face-registration-access', function ($user) {
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'GTK']) ||
+                in_array($user->role, ['super_admin', 'admin', 'gtk']);
         });
     }
 }
