@@ -25,6 +25,7 @@ class FaceRegistrationController extends Controller
             $selectedType = $this->normalizeUserType($request->get('type', 'gtk'));
             $registrants = $this->getRegistrantsForType($selectedType);
             $storeUrl = route('admin.absensi.face-register.store');
+            $descriptorUrl = route('admin.absensi.face-descriptors');
             $selfOnly = false;
         } else {
             $context = $this->getSelfRegistrationContext($authUser);
@@ -35,6 +36,9 @@ class FaceRegistrationController extends Controller
             $storeUrl = $authUser->isSiswa()
                 ? route('siswa.face-register.store')
                 : route('admin.absensi.face-register.store');
+            $descriptorUrl = $authUser->isSiswa()
+                ? route('siswa.face-descriptors')
+                : route('admin.absensi.face-descriptors');
             $selfOnly = true;
             $selfFace = FaceEncoding::where('user_id', $authUser->id)
                 ->where('user_type', $selectedType)
@@ -64,6 +68,7 @@ class FaceRegistrationController extends Controller
             'canManageAll' => $canManageAll,
             'selfOnly' => $selfOnly,
             'storeUrl' => $storeUrl,
+            'descriptorUrl' => $descriptorUrl,
             'selectedType' => $selectedType,
             'typeOptions' => $this->typeOptions(),
             'initialSelection' => $initialSelection,

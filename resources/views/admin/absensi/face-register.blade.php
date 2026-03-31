@@ -495,7 +495,7 @@
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
-const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll), duplicateThreshold = @json($duplicateThreshold);
+const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), descriptorUrl = @json($descriptorUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll), duplicateThreshold = @json($duplicateThreshold);
 let capturedDescriptors = [], capturedAngles = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false, duplicateFaceDatabase = [];
 const STEPS = [
     { angle: 'frontal', text: 'Lihat lurus ke kamera', icon: 'fa-user' },
@@ -556,7 +556,7 @@ async function loadModels() {
 }
 async function loadDuplicateFaceDatabase() {
     const requests = ['gtk', 'siswa'].map(async (type) => {
-        const response = await fetch(`{{ route("admin.absensi.face-descriptors") }}?type=${type}`, {
+        const response = await fetch(`${descriptorUrl}?type=${type}`, {
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         });
         const result = await response.json();

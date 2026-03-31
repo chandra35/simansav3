@@ -596,6 +596,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     // Registrasi wajah mandiri siswa
     Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
     Route::post('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('face-register.store');
+    Route::get('/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('face-descriptors');
 
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
