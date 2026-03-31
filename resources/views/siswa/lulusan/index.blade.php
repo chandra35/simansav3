@@ -69,8 +69,9 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="jurusan_fakultas">Jurusan / Fakultas</label>
+                            <label for="jurusan_fakultas">Jurusan / Fakultas <small class="text-muted">(Opsional)</small></label>
                             <input type="text" name="jurusan_fakultas" id="jurusan_fakultas" class="form-control @error('jurusan_fakultas') is-invalid @enderror" value="{{ old('jurusan_fakultas', $dataLulusan->jurusan_fakultas) }}">
+                            <small class="text-muted">Boleh dikosongkan. Kolom ini akan terisi otomatis jika program studi berhasil dicocokkan dengan referensi kampus/prodi.</small>
                             @error('jurusan_fakultas')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -83,7 +84,7 @@
                                 <input type="text" name="program_studi" id="program_studi" autocomplete="off" class="form-control @error('program_studi') is-invalid @enderror" value="{{ old('program_studi', $dataLulusan->program_studi) }}" required>
                                 <div id="prodiSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1049; display: none;"></div>
                             </div>
-                            <small class="text-muted">Pilih kampus dari saran terlebih dulu agar saran program studi sesuai kampus tersebut. Jika belum ada, lanjutkan isi manual.</small>
+                            <small class="text-muted">Program studi tetap wajib diisi. Pilih kampus dari saran terlebih dulu agar saran program studi sesuai kampus tersebut. Jika hasil SNBP belum menemukan fakultas, cukup isi program studi dan biarkan kolom jurusan/fakultas kosong.</small>
                             @error('program_studi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

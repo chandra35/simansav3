@@ -551,6 +551,7 @@ class LulusanController extends Controller
             })
             ->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId)
             ->whereNull('siswa_kelas.deleted_at')
+            ->where('siswa_kelas.status', 'aktif')
             ->where('kelas.tingkat', 12)
             ->select([
                 'siswa.id as siswa_id',
@@ -567,7 +568,8 @@ class LulusanController extends Controller
                 'snbp_registrations.last_checked_at',
                 DB::raw("COALESCE(snbp_registrations.check_status, 'belum_dicek') as snbp_check_status"),
                 DB::raw("CASE WHEN snbp_registrations.nomor_pendaftaran IS NULL OR snbp_registrations.nomor_pendaftaran = '' THEN 0 ELSE 1 END as has_snbp_number"),
-            ]);
+            ])
+            ->distinct();
 
         $this->applyCommonFilters($query, $request);
 
@@ -582,6 +584,7 @@ class LulusanController extends Controller
             ->leftJoin('siswa_kelas', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
                     ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunPelajaranId)
+                    ->where('siswa_kelas.status', '=', 'aktif')
                     ->whereNull('siswa_kelas.deleted_at');
             })
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
