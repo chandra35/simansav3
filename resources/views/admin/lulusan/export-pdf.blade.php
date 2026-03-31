@@ -17,17 +17,18 @@
         th { background: #e5e7eb; text-align: left; }
         .two-col { width: 100%; border-collapse: separate; border-spacing: 10px 0; }
         .two-col td { width: 50%; vertical-align: top; border: none; padding: 0; }
-        .accepted-grid { width: 100%; border-collapse: separate; border-spacing: 12px 12px; margin: 8px -12px 0; }
+        .accepted-grid { width: 100%; border-collapse: separate; border-spacing: 14px 14px; margin: 8px -14px 0; }
         .accepted-grid td { width: 50%; border: none; padding: 0; vertical-align: top; }
-        .accepted-card { border: 1px solid #d1d5db; background: #f8fafc; padding: 12px; min-height: 132px; }
+        .accepted-card { border: 1px solid #d1d5db; background: #f8fafc; padding: 14px; min-height: 166px; }
         .accepted-head { width: 100%; border-collapse: collapse; }
         .accepted-head td { border: none; padding: 0; vertical-align: middle; }
-        .avatar { width: 68px; height: 68px; border-radius: 34px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 22px; font-weight: bold; line-height: 68px; }
-        .avatar-photo { width: 68px; height: 68px; border-radius: 34px; object-fit: cover; display: block; }
-        .student-name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
-        .student-meta { font-size: 10px; color: #6b7280; }
-        .accepted-campus { margin-top: 10px; font-size: 11px; font-weight: bold; }
-        .accepted-program { margin-top: 3px; font-size: 10px; color: #374151; }
+        .avatar { width: 96px; height: 96px; border-radius: 18px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 28px; font-weight: bold; line-height: 96px; }
+        .avatar-photo { width: 96px; height: 96px; border-radius: 18px; object-fit: cover; display: block; border: 1px solid #cbd5e1; }
+        .student-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .student-meta { font-size: 10px; color: #6b7280; margin-bottom: 8px; }
+        .accepted-campus { font-size: 11px; font-weight: bold; }
+        .accepted-program { margin-top: 4px; font-size: 10px; color: #374151; }
+        .accepted-label { font-size: 9px; color: #6b7280; text-transform: uppercase; }
         .note { margin-top: 10px; padding: 8px; border: 1px solid #d1d5db; background: #f9fafb; }
         .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d1d5db; text-align: center; font-size: 9px; color: #4b5563; }
     </style>
@@ -202,21 +203,23 @@
                                 <div class="accepted-card">
                                     <table class="accepted-head">
                                         <tr>
-                                            <td style="width: 82px;">
+                                            <td style="width: 108px; vertical-align: top;">
                                                 @if(!empty($student['photo_path']))
                                                     <img src="{{ $student['photo_path'] }}" alt="{{ $student['nama_lengkap'] }}" class="avatar-photo">
                                                 @else
                                                     <div class="avatar">{{ $student['initials'] }}</div>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td style="padding-left: 12px; vertical-align: top;">
                                                 <div class="student-name">{{ $student['nama_lengkap'] }}</div>
                                                 <div class="student-meta">{{ $student['kelas_nama'] }} | NISN {{ $student['nisn'] }}</div>
+                                                <div class="accepted-label">Perguruan Tinggi</div>
+                                                <div class="accepted-campus">{{ $student['nama_universitas'] }}</div>
+                                                <div class="accepted-label" style="margin-top: 8px;">Program Studi</div>
+                                                <div class="accepted-program">{{ $student['program_studi'] }}</div>
                                             </td>
                                         </tr>
                                     </table>
-                                    <div class="accepted-campus">{{ $student['nama_universitas'] }}</div>
-                                    <div class="accepted-program">{{ $student['program_studi'] }}</div>
                                 </div>
                             </td>
                         @endforeach
