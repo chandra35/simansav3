@@ -71,6 +71,46 @@
     </div>
 </div>
 
+@if($snbpReminder)
+<div class="modal fade" id="modalSnbpReminder" tabindex="-1" role="dialog" aria-labelledby="modalSnbpReminderLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark" id="modalSnbpReminderLabel">
+                    <i class="fas fa-exclamation-circle mr-2"></i>Lengkapi Nomor Pendaftaran SNBP
+                </h5>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-start">
+                    <div class="mr-3 text-warning" style="font-size: 2.4rem; line-height: 1;">
+                        <i class="fas fa-id-card-alt"></i>
+                    </div>
+                    <div>
+                        <p class="mb-2">
+                            Anda terdaftar sebagai siswa <strong>eligible</strong> untuk <strong>{{ $snbpReminder['menu_name'] }}</strong>.
+                        </p>
+                        <p class="mb-2">
+                            Nomor pendaftaran SNBP Anda belum diisi, sehingga sistem belum bisa menyiapkan checker pengumuman dan relasi ke data lulusan.
+                        </p>
+                        @if($snbpReminder['tahun_pelajaran'])
+                            <p class="mb-0 text-muted small">
+                                Tahun pelajaran: <strong>{{ $snbpReminder['tahun_pelajaran'] }}</strong>
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <span class="text-muted small">Silakan lengkapi sekarang agar proses SNBP Anda tercatat dengan benar.</span>
+                <a href="{{ $snbpReminder['route'] }}" class="btn btn-warning font-weight-bold">
+                    <i class="fas fa-arrow-right mr-1"></i> Isi Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Welcome Banner -->
 <div class="row mb-2">
     <div class="col-12">
@@ -783,6 +823,14 @@
     .alert-info {
         border-left-color: #17a2b8;
     }
+    #modalSnbpReminder .modal-content {
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    #modalSnbpReminder .modal-header,
+    #modalSnbpReminder .modal-footer {
+        border: 0;
+    }
 
     /* List Group */
     .list-group-item {
@@ -935,6 +983,10 @@
         
         // Initialize tooltips
         $('[data-toggle="tooltip"]').tooltip();
+
+        @if($snbpReminder)
+        $('#modalSnbpReminder').modal('show');
+        @endif
         
         // Photo click to enlarge
         $('#fotoProfile').on('click', function() {

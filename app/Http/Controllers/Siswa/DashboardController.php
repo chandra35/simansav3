@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Models\SnbpMenu;
+use App\Models\SnbpRegistration;
 use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,6 +57,29 @@ class DashboardController extends Controller
         // Get tahun pelajaran aktif
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
 
-        return view('siswa.dashboard', compact('siswa', 'tahunPelajaranAktif'));
+        $snbpReminder = null;
+        $snbpMenu = SnbpMenu::getActiveMenu();
+
+        if ($snbpMenu) {
+            $snbpStatus = $snbpMenu->getSiswaStatus($siswa->id);
+
+            if ($snbpStatus === true) {
+                $snbpRegistration = SnbpRegistration::query()
+                    ->where('snbp_menu_id', $snbpMenu->id)
+                    ->where('siswa_id', $siswa->id)
+                    ->where('tahun_pelajaran_id', $snbpMenu->tahun_pelajaran_id)
+                    ->first();
+
+                if (!$snbpRegistration || blank($snbpRegistration->nomor_pendaftaran)) {
+                    $snbpReminder = [
+                        'menu_name' => $snbpMenu->nama_menu,
+                        'tahun_pelajaran' => $snbpMenu->tahunPelajaran->nama ?? null,
+                        'route' => route('siswa.snbp.index'),
+                    ];
+                }
+            }
+        }
+
+        return view('siswa.dashboard', compact('siswa', 'tahunPelajaranAktif', 'snbpReminder'));
     }
 }
