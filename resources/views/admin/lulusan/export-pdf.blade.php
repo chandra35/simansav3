@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Laporan Statistik Lulusan</title>
-    @php($kopSurat = function_exists('renderKopSurat') ? renderKopSurat(true) : null)
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1f2937; }
         h1, h2, h3 { margin: 0 0 6px; }
         .muted { color: #6b7280; }
         .section { margin-top: 16px; }
-        .report-header { margin-bottom: 12px; }
-        .report-title { text-align: center; margin-top: 8px; }
-        .report-title h1 { margin-bottom: 4px; font-size: 18px; }
         .cards { width: 100%; border-collapse: separate; border-spacing: 8px; margin: 8px -8px 0; }
         .cards td { width: 25%; border: 1px solid #d1d5db; padding: 8px; vertical-align: top; }
         .label { font-size: 9px; color: #6b7280; }
@@ -26,8 +22,8 @@
         .accepted-card { border: 1px solid #d1d5db; background: #f8fafc; padding: 14px; min-height: 166px; }
         .accepted-head { width: 100%; border-collapse: collapse; }
         .accepted-head td { border: none; padding: 0; vertical-align: middle; }
-        .avatar { width: 96px; height: 96px; border-radius: 18px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 28px; font-weight: bold; line-height: 96px; }
-        .avatar-photo { width: 96px; height: 96px; border-radius: 18px; object-fit: cover; display: block; border: 1px solid #cbd5e1; }
+        .avatar { width: 112px; height: 112px; border-radius: 56px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 32px; font-weight: bold; line-height: 112px; }
+        .avatar-photo { width: 112px; height: 112px; border-radius: 56px; object-fit: cover; display: block; border: 1px solid #cbd5e1; }
         .student-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
         .student-meta { font-size: 10px; color: #6b7280; margin-bottom: 8px; }
         .accepted-campus { font-size: 11px; font-weight: bold; }
@@ -38,18 +34,10 @@
     </style>
 </head>
 <body>
-    <div class="report-header">
-        @if(!empty($kopSurat))
-            {!! $kopSurat !!}
-        @endif
-
-        <div class="report-title">
-            <h1>Laporan Statistik Lulusan</h1>
-            <div class="muted">
-                Tahun Pelajaran: {{ $selectedTahun->nama }} |
-                Diexport: {{ $generated_at->format('d-m-Y H:i:s') }}
-            </div>
-        </div>
+    <h1 style="text-align:center;">Laporan Statistik Lulusan</h1>
+    <div class="muted" style="text-align:center;">
+        Tahun Pelajaran: {{ $selectedTahun->nama }} |
+        Diexport: {{ $generated_at->format('d-m-Y H:i:s') }}
     </div>
 
     <div class="section">
@@ -215,7 +203,7 @@
                                 <div class="accepted-card">
                                     <table class="accepted-head">
                                         <tr>
-                                            <td style="width: 108px; vertical-align: top;">
+                                            <td style="width: 126px; vertical-align: top;">
                                                 @if(!empty($student['photo_path']))
                                                     <img src="{{ $student['photo_path'] }}" alt="{{ $student['nama_lengkap'] }}" class="avatar-photo">
                                                 @else
