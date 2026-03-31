@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Laporan Statistik Lulusan</title>
+    @php($kopSurat = function_exists('renderKopSurat') ? renderKopSurat(true) : null)
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1f2937; }
         h1, h2, h3 { margin: 0 0 6px; }
         .muted { color: #6b7280; }
         .section { margin-top: 16px; }
+        .report-header { margin-bottom: 12px; }
+        .report-title { text-align: center; margin-top: 8px; }
+        .report-title h1 { margin-bottom: 4px; font-size: 18px; }
         .cards { width: 100%; border-collapse: separate; border-spacing: 8px; margin: 8px -8px 0; }
         .cards td { width: 25%; border: 1px solid #d1d5db; padding: 8px; vertical-align: top; }
         .label { font-size: 9px; color: #6b7280; }
@@ -34,10 +38,18 @@
     </style>
 </head>
 <body>
-    <h1>Laporan Statistik Lulusan</h1>
-    <div class="muted">
-        Tahun Pelajaran: {{ $selectedTahun->nama }} |
-        Diexport: {{ $generated_at->format('d-m-Y H:i:s') }}
+    <div class="report-header">
+        @if(!empty($kopSurat))
+            {!! $kopSurat !!}
+        @endif
+
+        <div class="report-title">
+            <h1>Laporan Statistik Lulusan</h1>
+            <div class="muted">
+                Tahun Pelajaran: {{ $selectedTahun->nama }} |
+                Diexport: {{ $generated_at->format('d-m-Y H:i:s') }}
+            </div>
+        </div>
     </div>
 
     <div class="section">
