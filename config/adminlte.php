@@ -498,6 +498,7 @@ return [
         [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
+            'can' => 'staff-presensi-menu',
             'active' => ['admin/absensi*'],
             'submenu' => [
                 [
@@ -841,7 +842,7 @@ return [
         [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-presensi',
             'active' => ['siswa/face-register*'],
             'submenu' => [
@@ -850,7 +851,7 @@ return [
                     'text' => 'Registrasi Wajah',
                     'route' => 'siswa.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'siswa-access',
+                    'can' => 'siswa-menu-only',
                     'active' => ['siswa/face-register*'],
                 ],
             ],

@@ -34,6 +34,12 @@ class AuthServiceProvider extends ServiceProvider
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
+        Gate::define('siswa-menu-only', function ($user) {
+            return ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists()) &&
+                !$user->hasRole('GTK') &&
+                !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+        });
+
         // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
         // Only show to users with GTK role, excluding Super Admin and Admin
         Gate::define('gtk-menu-only', function ($user) {
@@ -59,6 +65,15 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('face-registration-access', function ($user) {
             return $user->hasAnyRole(['Super Admin', 'Admin', 'GTK']) ||
                 in_array($user->role, ['super_admin', 'admin', 'gtk']);
+        });
+
+        Gate::define('staff-presensi-menu', function ($user) {
+            return !$user->hasRole('Siswa') &&
+                !$user->siswa()->exists() &&
+                (
+                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Sekolah', 'Wakil Kepala Sekolah']) ||
+                    in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk'])
+                );
         });
     }
 }
