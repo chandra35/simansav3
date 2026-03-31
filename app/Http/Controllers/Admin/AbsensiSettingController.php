@@ -215,6 +215,14 @@ class AbsensiSettingController extends Controller
                 'label' => 'Jam Pulang Siswa',
                 'description' => 'Jam pulang siswa untuk kiosk/pintu gerbang',
             ],
+            [
+                'key' => 'face_duplicate_threshold',
+                'value' => '0.55',
+                'type' => 'float',
+                'group' => 'face',
+                'label' => 'Face Duplicate Threshold',
+                'description' => 'Batas kemiripan saat registrasi untuk mencegah satu wajah dipakai banyak akun',
+            ],
         ];
     }
 }

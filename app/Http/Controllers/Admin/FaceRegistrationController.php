@@ -384,7 +384,7 @@ class FaceRegistrationController extends Controller
 
     private function findDuplicateFaceMatch(array $submittedDescriptors, string $userId): ?array
     {
-        $threshold = (float) AbsensiSetting::getValue('face_match_threshold', 0.45);
+        $threshold = (float) AbsensiSetting::getValue('face_duplicate_threshold', 0.55);
 
         $candidateFaces = FaceEncoding::query()
             ->where('is_active', true)

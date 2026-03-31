@@ -71,6 +71,14 @@ class AbsensiSettingSeeder extends Seeder
                 'description' => 'Jarak Euclidean maks untuk cocok (semakin kecil = semakin ketat, rekomendasi: 0.4-0.5)',
             ],
             [
+                'key' => 'face_duplicate_threshold',
+                'value' => '0.55',
+                'type' => 'float',
+                'group' => 'face',
+                'label' => 'Face Duplicate Threshold',
+                'description' => 'Batas kemiripan saat registrasi untuk mencegah satu wajah dipakai banyak akun',
+            ],
+            [
                 'key' => 'liveness_detection',
                 'value' => '1',
                 'type' => 'boolean',
