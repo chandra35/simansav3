@@ -174,65 +174,97 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Eligible Students List -->
-        <div class="col-md-6">
-            <div class="card card-success card-outline">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-users"></i> Daftar Siswa Eligible ({{ $summary['eligible_total'] }})
-                    </h3>
-                </div>
-                <div class="card-body p-0">
-                    @if($eligibleSiswa->count() > 0)
-                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                        <table class="table table-sm table-striped mb-0">
-                            <thead class="bg-success text-white" style="position: sticky; top: 0;">
-                                <tr>
-                                    <th>#</th>
-                                    <th>NISN</th>
-                                    <th>Nama</th>
-                                    <th>Nomor SNBP</th>
-                                    <th>Lulusan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($eligibleSiswa as $index => $siswa)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td><code>{{ $siswa->nisn }}</code></td>
-                                    <td>{{ $siswa->nama_lengkap }}</td>
-                                    <td>
-                                        @if(filled(optional($siswa->snbpRegistration)->nomor_pendaftaran))
-                                            <code>{{ $siswa->snbpRegistration->nomor_pendaftaran }}</code>
-                                        @else
-                                            <span class="text-muted">Belum isi</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if(optional($siswa->snbpRegistration)->lulusan)
-                                            <span class="badge badge-success">Terhubung</span>
-                                        @else
-                                            <span class="badge badge-secondary">Belum</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @else
-                    <div class="text-center py-4 text-muted">
-                        <i class="fas fa-inbox fa-2x mb-2"></i>
-                        <p>Belum ada siswa eligible</p>
-                    </div>
-                    @endif
-                </div>
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-users"></i> Monitoring Siswa Eligible
+            </h3>
+            <div class="card-tools text-muted small">
+                Klik judul kolom untuk sorting. Gunakan pencarian untuk nama, NISN, nomor SNBP, kampus, atau prodi.
             </div>
         </div>
+        <div class="card-body">
+            @if($eligibleSiswa->count() > 0)
+            <div class="table-responsive">
+                <table id="eligibleSnbpTable" class="table table-striped table-bordered table-hover mb-0">
+                    <thead class="bg-success text-white">
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th>NISN</th>
+                            <th>Nama</th>
+                            <th>Status Isi</th>
+                            <th>Nomor SNBP</th>
+                            <th>Status Lulusan</th>
+                            <th>Jalur</th>
+                            <th>Universitas</th>
+                            <th>Program Studi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($eligibleSiswa as $index => $siswa)
+                            @php
+                                $registration = $siswa->snbpRegistration;
+                                $lulusan = optional($registration)->lulusan;
+                                $sudahIsi = filled(optional($registration)->nomor_pendaftaran);
+                                $statusIsiLabel = $sudahIsi ? 'Sudah Isi' : 'Belum Isi';
+                                $statusIsiSort = $sudahIsi ? 1 : 0;
+                                $lulusanTerhubung = $lulusan !== null;
+                                $statusLulusanLabel = $lulusanTerhubung ? 'Terhubung' : 'Belum';
+                                $statusLulusanSort = $lulusanTerhubung ? 1 : 0;
+                                $jalurMasuk = optional($lulusan)->jalur_masuk ?? '-';
+                                $namaUniversitas = optional($lulusan)->nama_universitas
+                                    ?? optional($lulusan)->nama_universitas_manual
+                                    ?? optional(optional($lulusan)->referensiPerguruanTinggi)->nama
+                                    ?? '-';
+                                $programStudi = optional($lulusan)->program_studi
+                                    ?? optional($lulusan)->program_studi_manual
+                                    ?? optional(optional($lulusan)->referensiProgramStudi)->nama_program_studi
+                                    ?? '-';
+                            @endphp
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td><code>{{ $siswa->nisn }}</code></td>
+                            <td>{{ $siswa->nama_lengkap }}</td>
+                            <td data-order="{{ $statusIsiSort }}">
+                                @if($sudahIsi)
+                                    <span class="badge badge-info">Sudah Isi</span>
+                                @else
+                                    <span class="badge badge-secondary">Belum Isi</span>
+                                @endif
+                            </td>
+                            <td data-order="{{ optional($registration)->nomor_pendaftaran ?? '' }}">
+                                @if($sudahIsi)
+                                    <code>{{ $registration->nomor_pendaftaran }}</code>
+                                @else
+                                    <span class="text-muted">Belum isi</span>
+                                @endif
+                            </td>
+                            <td data-order="{{ $statusLulusanSort }}">
+                                @if($lulusanTerhubung)
+                                    <span class="badge badge-success">Terhubung</span>
+                                @else
+                                    <span class="badge badge-secondary">Belum</span>
+                                @endif
+                            </td>
+                            <td>{{ $jalurMasuk }}</td>
+                            <td>{{ $namaUniversitas }}</td>
+                            <td>{{ $programStudi }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-inbox fa-2x mb-2"></i>
+                <p>Belum ada siswa eligible</p>
+            </div>
+            @endif
+        </div>
+    </div>
 
-        <!-- Not Eligible Students List -->
-        <div class="col-md-6">
+    <div class="row">
+        <div class="col-12">
             <div class="card card-danger card-outline">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -281,10 +313,47 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
 <style>
     .badge-lg {
         font-size: 1.2rem;
         padding: 0.5em 0.75em;
     }
+
+    #eligibleSnbpTable code {
+        font-size: 0.9rem;
+    }
+
+    .dataTables_wrapper .dataTables_filter input,
+    .dataTables_wrapper .dataTables_length select {
+        border-radius: 0.35rem;
+    }
 </style>
+@stop
+
+@section('js')
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
+<script>
+    $(function () {
+        $('#eligibleSnbpTable').DataTable({
+            responsive: true,
+            autoWidth: false,
+            pageLength: 25,
+            order: [
+                [3, 'desc'],
+                [2, 'asc']
+            ],
+            columnDefs: [
+                { orderable: false, targets: 0 }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            }
+        });
+    });
+</script>
 @stop
