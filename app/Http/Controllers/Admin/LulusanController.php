@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -262,6 +263,7 @@ class LulusanController extends Controller
                     'nama_universitas' => $row->nama_universitas ?: '-',
                     'program_studi' => $row->program_studi ?: '-',
                     'initials' => $this->makeInitials($row->nama_lengkap),
+                    'photo_path' => $this->resolveStudentPhotoPath($row->foto_profile ?? null),
                 ];
             })
             ->values()
@@ -544,6 +546,17 @@ class LulusanController extends Controller
         return $words->isNotEmpty() ? $words->implode('') : 'S';
     }
 
+    private function resolveStudentPhotoPath(?string $photo): ?string
+    {
+        if (blank($photo)) {
+            return null;
+        }
+
+        $path = storage_path('app/public/' . ltrim($photo, '/'));
+
+        return File::exists($path) ? $path : null;
+    }
+
     private function formatFilters(Request $request, ?TahunPelajaran $selectedTahun): array
     {
         return [
@@ -639,6 +652,7 @@ class LulusanController extends Controller
                 'siswa.nisn',
                 'siswa.nama_lengkap',
                 'siswa.tanggal_lahir',
+                'siswa.foto_profile',
                 'kelas.nama_kelas as kelas_nama',
                 'snbp_registrations.nomor_pendaftaran',
                 DB::raw("COALESCE(snbp_registrations.check_status, 'belum_dicek') as check_status"),

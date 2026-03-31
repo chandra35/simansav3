@@ -23,6 +23,7 @@
         .accepted-head { width: 100%; border-collapse: collapse; }
         .accepted-head td { border: none; padding: 0; vertical-align: middle; }
         .avatar { width: 34px; height: 34px; border-radius: 17px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 12px; font-weight: bold; line-height: 34px; }
+        .avatar-photo { width: 34px; height: 34px; border-radius: 17px; object-fit: cover; display: block; }
         .student-name { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
         .student-meta { font-size: 9px; color: #6b7280; }
         .accepted-campus { margin-top: 8px; font-size: 10px; font-weight: bold; }
@@ -201,7 +202,11 @@
                                     <table class="accepted-head">
                                         <tr>
                                             <td style="width: 42px;">
-                                                <div class="avatar">{{ $student['initials'] }}</div>
+                                                @if(!empty($student['photo_path']))
+                                                    <img src="{{ $student['photo_path'] }}" alt="{{ $student['nama_lengkap'] }}" class="avatar-photo">
+                                                @else
+                                                    <div class="avatar">{{ $student['initials'] }}</div>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="student-name">{{ $student['nama_lengkap'] }}</div>
