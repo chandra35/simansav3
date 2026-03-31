@@ -72,9 +72,9 @@
                 <div class="card-header">
                     <h3 class="card-title">Daftar Referensi Prodi</h3>
                     <div class="card-tools">
-                        <form method="GET" action="{{ route('admin.referensi-program-studi.index') }}">
+                        <form method="GET" action="{{ route('admin.referensi-program-studi.index') }}" id="studyProgramFilterForm">
                             <div class="input-group input-group-sm" style="width: 320px;">
-                                <select name="referensi_perguruan_tinggi_id" class="form-control">
+                                <select name="referensi_perguruan_tinggi_id" class="form-control" id="studyProgramCampusFilter">
                                     <option value="">Semua Kampus</option>
                                     @foreach($campuses as $campus)
                                         <option value="{{ $campus->id }}" {{ $selectedCampusId === $campus->id ? 'selected' : '' }}>
@@ -89,114 +89,135 @@
                         </form>
                     </div>
                 </div>
-                <div class="card-body table-responsive p-0">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Prodi</th>
-                                <th>Kampus</th>
-                                <th>Bidang</th>
-                                <th>Sumber</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($studyPrograms as $studyProgram)
-                                <tr>
-                                    <td>
-                                        <strong>{{ trim(($studyProgram->jenjang ? $studyProgram->jenjang . ' ' : '') . $studyProgram->nama) }}</strong>
-                                    </td>
-                                    <td>{{ $studyProgram->perguruanTinggi?->nama ?? '-' }}</td>
-                                    <td>{{ $studyProgram->fakultas ?? '-' }}</td>
-                                    <td>{{ $studyProgram->sumber_referensi ?? '-' }}</td>
-                                    <td>
-                                        @if($studyProgram->is_active)
-                                            <span class="badge badge-success">Aktif</span>
-                                        @else
-                                            <span class="badge badge-secondary">Nonaktif</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#editProdiModal{{ $studyProgram->id }}">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <form action="{{ route('admin.referensi-program-studi.destroy', $studyProgram) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus referensi program studi ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-xs btn-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-
-                                <div class="modal fade" id="editProdiModal{{ $studyProgram->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Edit Referensi Prodi</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <form action="{{ route('admin.referensi-program-studi.update', $studyProgram) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <div class="modal-body">
-                                                    <div class="form-group">
-                                                        <label>Kampus</label>
-                                                        <select name="referensi_perguruan_tinggi_id" class="form-control" required>
-                                                            @foreach($campuses as $campus)
-                                                                <option value="{{ $campus->id }}" {{ $studyProgram->referensi_perguruan_tinggi_id === $campus->id ? 'selected' : '' }}>
-                                                                    {{ $campus->nama }} ({{ $campus->jenis }})
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Nama Prodi</label>
-                                                        <input type="text" name="nama" class="form-control" value="{{ $studyProgram->nama }}" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Jenjang</label>
-                                                        <input type="text" name="jenjang" class="form-control" value="{{ $studyProgram->jenjang }}">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Bidang / Fakultas</label>
-                                                        <input type="text" name="fakultas" class="form-control" value="{{ $studyProgram->fakultas }}">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Sumber Referensi</label>
-                                                        <input type="text" name="sumber_referensi" class="form-control" value="{{ $studyProgram->sumber_referensi }}">
-                                                    </div>
-                                                    <div class="custom-control custom-switch">
-                                                        <input type="checkbox" name="is_active" class="custom-control-input" id="prodiSwitch{{ $studyProgram->id }}" value="1" {{ $studyProgram->is_active ? 'checked' : '' }}>
-                                                        <label class="custom-control-label" for="prodiSwitch{{ $studyProgram->id }}">Aktif</label>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Belum ada referensi program studi.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($studyPrograms->hasPages())
-                    <div class="card-footer clearfix">
-                        {{ $studyPrograms->links() }}
+                <div id="studyProgramListWrapper" class="position-relative">
+                    <div id="studyProgramList">
+                        @include('admin.referensi-program-studi.partials.table')
                     </div>
-                @endif
+                    <div id="studyProgramLoading" class="study-program-loading d-none">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin mr-1"></i> Memuat data...
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .study-program-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(1px);
+            z-index: 10;
+        }
+
+        #studyProgramList.is-loading {
+            opacity: 0.45;
+            transition: opacity 0.2s ease;
+        }
+    </style>
+@stop
+
+@section('js')
+    <script>
+        $(function () {
+            const $filterForm = $('#studyProgramFilterForm');
+            const $campusFilter = $('#studyProgramCampusFilter');
+            const $list = $('#studyProgramList');
+            const $loading = $('#studyProgramLoading');
+
+            let currentRequest = null;
+
+            window.history.replaceState({ url: window.location.href }, '', window.location.href);
+
+            function toggleLoading(isLoading) {
+                $loading.toggleClass('d-none', !isLoading);
+                $list.toggleClass('is-loading', isLoading);
+            }
+
+            function loadStudyPrograms(url, pushState = true) {
+                if (currentRequest) {
+                    currentRequest.abort();
+                }
+
+                toggleLoading(true);
+
+                currentRequest = $.ajax({
+                    url: url,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                currentRequest.done(function (response) {
+                    if (!response.html) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    $('.modal.show').modal('hide');
+                    $('body').removeClass('modal-open');
+                    $('.modal-backdrop').remove();
+
+                    $list.html(response.html);
+
+                    if (pushState) {
+                        window.history.pushState({ url: url }, '', url);
+                    }
+                });
+
+                currentRequest.fail(function (xhr, status) {
+                    if (status !== 'abort') {
+                        window.location.href = url;
+                    }
+                });
+
+                currentRequest.always(function () {
+                    toggleLoading(false);
+                    currentRequest = null;
+                });
+            }
+
+            $filterForm.on('submit', function (event) {
+                event.preventDefault();
+
+                const url = new URL($filterForm.attr('action'), window.location.origin);
+                const campusId = $campusFilter.val();
+
+                if (campusId) {
+                    url.searchParams.set('referensi_perguruan_tinggi_id', campusId);
+                }
+
+                loadStudyPrograms(url.toString());
+            });
+
+            $campusFilter.on('change', function () {
+                $filterForm.trigger('submit');
+            });
+
+            $(document).on('click', '#studyProgramList .pagination a', function (event) {
+                event.preventDefault();
+
+                const url = $(this).attr('href');
+                if (url) {
+                    loadStudyPrograms(url);
+                }
+            });
+
+            window.addEventListener('popstate', function (event) {
+                const url = event.state?.url || window.location.href;
+                const parsedUrl = new URL(url);
+                $campusFilter.val(parsedUrl.searchParams.get('referensi_perguruan_tinggi_id') || '');
+                loadStudyPrograms(url, false);
+            });
+        });
+    </script>
 @stop

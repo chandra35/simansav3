@@ -26,11 +26,19 @@ class ReferensiProgramStudiController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        return view('admin.referensi-program-studi.index', [
+        $viewData = [
             'campuses' => $campuses,
             'selectedCampusId' => $campusId,
             'studyPrograms' => $studyPrograms,
-        ]);
+        ];
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.referensi-program-studi.partials.table', $viewData)->render(),
+            ]);
+        }
+
+        return view('admin.referensi-program-studi.index', $viewData);
     }
 
     public function store(Request $request)
