@@ -20,6 +20,10 @@
                         <td><strong>NIS</strong></td>
                         <td>: {{ $siswa->nis ?? '-' }}</td>
                     </tr>
+                    <tr>
+                        <td><strong>Tanggal Lahir</strong></td>
+                        <td>: {{ $siswa->tanggal_lahir ? $siswa->tanggal_lahir->translatedFormat('j F Y') : '-' }}</td>
+                    </tr>
                 </table>
             </div>
             <div class="col-md-6">
