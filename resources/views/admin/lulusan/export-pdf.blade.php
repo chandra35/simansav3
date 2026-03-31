@@ -29,6 +29,7 @@
         .accepted-campus { margin-top: 8px; font-size: 10px; font-weight: bold; }
         .accepted-program { margin-top: 2px; font-size: 9px; color: #374151; }
         .note { margin-top: 10px; padding: 8px; border: 1px solid #d1d5db; background: #f9fafb; }
+        .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d1d5db; text-align: center; font-size: 9px; color: #4b5563; }
     </style>
 </head>
 <body>
@@ -239,6 +240,11 @@
     <div class="note">
         PDF ini disusun sebagai ringkasan statistik plus daftar siswa yang sudah lulus SNBP agar tetap informatif,
         ringan, dan stabil saat dicetak. Untuk detail lengkap seluruh siswa, gunakan export Excel dari halaman admin lulusan.
+    </div>
+
+    <div class="footer">
+        Dicetak resmi dari aplikasi SIMANSA Sistem Informasi MAN 1 Metro, Copyright 2026<br>
+        TIM IT MAN 1 Metro
     </div>
 </body>
 </html>
