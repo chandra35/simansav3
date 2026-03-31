@@ -48,8 +48,13 @@
     </table>
 </div>
 @if($studyPrograms->hasPages())
-    <div class="card-footer clearfix">
-        {{ $studyPrograms->links() }}
+    <div class="card-footer d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+        <div class="text-muted small mb-2 mb-md-0">
+            Menampilkan {{ $studyPrograms->firstItem() }}-{{ $studyPrograms->lastItem() }} dari {{ $studyPrograms->total() }} data
+        </div>
+        <div class="mb-0">
+            {{ $studyPrograms->onEachSide(1)->links('pagination::bootstrap-4') }}
+        </div>
     </div>
 @endif
 
