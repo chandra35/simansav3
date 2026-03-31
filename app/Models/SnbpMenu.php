@@ -104,6 +104,11 @@ class SnbpMenu extends Model
         return $this->hasMany(SnbpSiswa::class);
     }
 
+    public function registrations()
+    {
+        return $this->hasMany(SnbpRegistration::class);
+    }
+
     /**
      * Get eligible siswa
      */

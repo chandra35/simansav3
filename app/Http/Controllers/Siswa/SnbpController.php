@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\SnbpMenu;
+use App\Models\SnbpRegistration;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class SnbpController extends Controller
@@ -69,11 +71,71 @@ class SnbpController extends Controller
             $content = $snbpMenu->konten_not_eligible;
         }
 
+        $registration = null;
+        $linkedLulusan = null;
+
+        if ($status === true) {
+            $registration = SnbpRegistration::with('lulusan')
+                ->firstOrNew([
+                    'snbp_menu_id' => $snbpMenu->id,
+                    'siswa_id' => $siswa->id,
+                    'tahun_pelajaran_id' => $snbpMenu->tahun_pelajaran_id,
+                ]);
+
+            $linkedLulusan = $registration->lulusan;
+        }
+
         return view('siswa.snbp.index', [
             'snbpMenu' => $snbpMenu,
             'siswa' => $siswa,
             'status' => $status,
-            'content' => $content
+            'content' => $content,
+            'registration' => $registration,
+            'linkedLulusan' => $linkedLulusan,
         ]);
+    }
+
+    public function storeRegistration(Request $request)
+    {
+        $user = Auth::user();
+        $siswa = $user->siswa;
+
+        if (!$siswa) {
+            return redirect()->route('siswa.dashboard')
+                ->with('error', 'Data siswa tidak ditemukan.');
+        }
+
+        $snbpMenu = SnbpMenu::getActiveMenu();
+        if (!$snbpMenu) {
+            return redirect()->route('siswa.snbp.index')
+                ->with('error', 'Menu SNBP belum tersedia untuk tahun pelajaran aktif.');
+        }
+
+        $status = $snbpMenu->getSiswaStatus($siswa->id);
+        if ($status !== true) {
+            return redirect()->route('siswa.snbp.index')
+                ->with('error', 'Nomor pendaftaran SNBP hanya dapat diisi oleh siswa yang berstatus eligible.');
+        }
+
+        $validated = $request->validate([
+            'nomor_pendaftaran' => ['required', 'string', 'min:8', 'max:50', 'regex:/^[0-9A-Za-z\\-\\/]+$/'],
+        ], [
+            'nomor_pendaftaran.required' => 'Nomor pendaftaran SNBP wajib diisi.',
+            'nomor_pendaftaran.regex' => 'Nomor pendaftaran hanya boleh berisi huruf, angka, garis miring, atau tanda hubung.',
+        ]);
+
+        SnbpRegistration::updateOrCreate(
+            [
+                'snbp_menu_id' => $snbpMenu->id,
+                'siswa_id' => $siswa->id,
+                'tahun_pelajaran_id' => $snbpMenu->tahun_pelajaran_id,
+            ],
+            [
+                'nomor_pendaftaran' => trim($validated['nomor_pendaftaran']),
+            ]
+        );
+
+        return redirect()->route('siswa.snbp.index')
+            ->with('success', 'Nomor pendaftaran SNBP berhasil disimpan.');
     }
 }

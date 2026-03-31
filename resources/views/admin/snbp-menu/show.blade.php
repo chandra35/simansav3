@@ -61,7 +61,7 @@
                 </div>
                 <div class="col-md-3">
                     <strong>Siswa Eligible:</strong><br>
-                    <span class="badge badge-success badge-lg">{{ $snbpMenu->eligibleSiswa->count() }}</span>
+                    <span class="badge badge-success badge-lg">{{ $summary['eligible_total'] }}</span>
                 </div>
                 <div class="col-md-3">
                     <strong>Siswa Tidak Eligible:</strong><br>
@@ -150,16 +150,41 @@
     </div>
 
     <div class="row">
+        <div class="col-md-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ $summary['sudah_isi'] }}</h3>
+                    <p>Siswa eligible sudah isi nomor SNBP</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>{{ $summary['terhubung_lulusan'] }}</h3>
+                    <p>Data SNBP sudah terhubung ke lulusan</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-link"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <!-- Eligible Students List -->
         <div class="col-md-6">
             <div class="card card-success card-outline">
                 <div class="card-header">
                     <h3 class="card-title">
-                        <i class="fas fa-users"></i> Daftar Siswa Eligible ({{ $snbpMenu->eligibleSiswa->count() }})
+                        <i class="fas fa-users"></i> Daftar Siswa Eligible ({{ $summary['eligible_total'] }})
                     </h3>
                 </div>
                 <div class="card-body p-0">
-                    @if($snbpMenu->eligibleSiswa->count() > 0)
+                    @if($eligibleSiswa->count() > 0)
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-sm table-striped mb-0">
                             <thead class="bg-success text-white" style="position: sticky; top: 0;">
@@ -167,14 +192,30 @@
                                     <th>#</th>
                                     <th>NISN</th>
                                     <th>Nama</th>
+                                    <th>Nomor SNBP</th>
+                                    <th>Lulusan</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($snbpMenu->eligibleSiswa as $index => $siswa)
+                                @foreach($eligibleSiswa as $index => $siswa)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td><code>{{ $siswa->nisn }}</code></td>
                                     <td>{{ $siswa->nama_lengkap }}</td>
+                                    <td>
+                                        @if(filled(optional($siswa->snbpRegistration)->nomor_pendaftaran))
+                                            <code>{{ $siswa->snbpRegistration->nomor_pendaftaran }}</code>
+                                        @else
+                                            <span class="text-muted">Belum isi</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if(optional($siswa->snbpRegistration)->lulusan)
+                                            <span class="badge badge-success">Terhubung</span>
+                                        @else
+                                            <span class="badge badge-secondary">Belum</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>

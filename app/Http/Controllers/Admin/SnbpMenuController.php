@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SnbpMenu;
+use App\Models\SnbpRegistration;
 use App\Models\SnbpSiswa;
 use App\Models\Siswa;
 use App\Models\Kelas;
@@ -90,8 +91,26 @@ class SnbpMenuController extends Controller
     public function show(SnbpMenu $snbpMenu)
     {
         $snbpMenu->load(['tahunPelajaran', 'eligibleSiswa', 'notEligibleSiswa']);
+
+        $registrationMap = SnbpRegistration::query()
+            ->with('lulusan')
+            ->where('snbp_menu_id', $snbpMenu->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $eligibleSiswa = $snbpMenu->eligibleSiswa->map(function ($siswa) use ($registrationMap) {
+            $siswa->setRelation('snbpRegistration', $registrationMap->get($siswa->id));
+
+            return $siswa;
+        });
+
+        $summary = [
+            'eligible_total' => $eligibleSiswa->count(),
+            'sudah_isi' => $eligibleSiswa->filter(fn ($siswa) => filled(optional($siswa->snbpRegistration)->nomor_pendaftaran))->count(),
+            'terhubung_lulusan' => $eligibleSiswa->filter(fn ($siswa) => optional($siswa->snbpRegistration)->lulusan !== null)->count(),
+        ];
         
-        return view('admin.snbp-menu.show', compact('snbpMenu'));
+        return view('admin.snbp-menu.show', compact('snbpMenu', 'eligibleSiswa', 'summary'));
     }
 
     /**

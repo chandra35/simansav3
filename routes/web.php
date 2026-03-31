@@ -586,6 +586,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     
     // SNBP Menu for Siswa (Kelas 12 only)
     Route::get('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'index'])->name('snbp.index');
+    Route::post('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'storeRegistration'])->name('snbp.store');
     
     // Tracking Lulusan untuk siswa kelas 12/alumni
     Route::get('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'index'])->name('lulusan.index');

@@ -73,6 +73,10 @@
                     </p>
                 </div>
             </div>
+            @if($status === true)
+                @include('siswa.snbp.partials.registration-card')
+            @endif
+            @include('siswa.snbp.partials.student-info-card')
             @elseif($countdownData && $countdownData['type'] === 'ended')
             <!-- Period ended -->
             <div class="card card-secondary">
@@ -92,6 +96,10 @@
                     </p>
                 </div>
             </div>
+            @if($status === true)
+                @include('siswa.snbp.partials.registration-card')
+            @endif
+            @include('siswa.snbp.partials.student-info-card')
             @else
             <!-- Normal content display -->
             @if($status === true)
@@ -118,6 +126,8 @@
                     </div>
                 </div>
             </div>
+
+            @include('siswa.snbp.partials.registration-card')
 
             @elseif($status === false)
             <!-- Not Eligible Status -->
@@ -168,49 +178,7 @@
             @endif
 
             <!-- Student Info Card -->
-            <div class="card card-outline card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-user"></i> Data Siswa
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td width="35%"><strong>Nama</strong></td>
-                                    <td>: {{ $siswa->nama_lengkap }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>NISN</strong></td>
-                                    <td>: {{ $siswa->nisn }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>NIS</strong></td>
-                                    <td>: {{ $siswa->nis ?? '-' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td width="35%"><strong>Kelas</strong></td>
-                                    <td>: {{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Jurusan</strong></td>
-                                    <td>: {{ $siswa->kelasSaatIni->jurusan->nama ?? ($siswa->kelasSaatIni->jurusan->singkatan ?? '-') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Tahun Pelajaran</strong></td>
-                                    <td>: {{ $snbpMenu->tahunPelajaran->nama ?? '-' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @include('siswa.snbp.partials.student-info-card')
             @endif
         </div>
     </div>

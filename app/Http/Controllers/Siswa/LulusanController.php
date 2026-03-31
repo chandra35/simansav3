@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\ReferensiPerguruanTinggi;
 use App\Models\ReferensiProgramStudi;
+use App\Models\SnbpRegistration;
 use App\Models\SiswaKelas;
 use App\Models\SiswaLulusan;
 use App\Models\TahunPelajaran;
@@ -38,8 +39,13 @@ class LulusanController extends Controller
         ]);
 
         if ($dataLulusan->referensi_perguruan_tinggi_id && !$dataLulusan->nama_universitas_manual) {
-            $dataLulusan->loadMissing(['referensiPerguruanTinggi', 'referensiProgramStudi']);
+            $dataLulusan->loadMissing(['referensiPerguruanTinggi', 'referensiProgramStudi', 'snbpRegistration']);
         }
+
+        $snbpRegistration = SnbpRegistration::query()
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_pelajaran_id', $targetSiswaKelas->tahun_pelajaran_id)
+            ->first();
 
         return view('siswa.lulusan.index', [
             'siswa' => $siswa,
@@ -47,6 +53,7 @@ class LulusanController extends Controller
             'targetTahunPelajaran' => $targetSiswaKelas->tahunPelajaran,
             'dataLulusan' => $dataLulusan,
             'jalurMasukOptions' => SiswaLulusan::JALUR_MASUK,
+            'snbpRegistration' => $snbpRegistration,
         ]);
     }
 
@@ -144,6 +151,7 @@ class LulusanController extends Controller
         }
 
         $payload = [
+            'snbp_registration_id' => null,
             'referensi_perguruan_tinggi_id' => $referensi?->id,
             'referensi_program_studi_id' => $referensiProgramStudi?->id,
             'jalur_masuk' => $validated['jalur_masuk'],
@@ -156,6 +164,23 @@ class LulusanController extends Controller
             'program_studi_manual' => $referensiProgramStudi ? null : $validated['program_studi'],
             'keterangan' => $validated['keterangan'] ?? null,
         ];
+
+        if ($validated['jalur_masuk'] === 'SNBP') {
+            $snbpRegistration = SnbpRegistration::query()
+                ->where('siswa_id', $siswa->id)
+                ->where('tahun_pelajaran_id', $targetSiswaKelas->tahun_pelajaran_id)
+                ->first();
+
+            if (!$snbpRegistration) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'jalur_masuk' => 'Isi nomor pendaftaran SNBP terlebih dahulu di menu SNBP sebelum menyimpan data lulusan jalur SNBP.',
+                    ]);
+            }
+
+            $payload['snbp_registration_id'] = $snbpRegistration->id;
+        }
 
         SiswaLulusan::updateOrCreate(
             [

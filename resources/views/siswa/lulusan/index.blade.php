@@ -46,6 +46,15 @@
                             @enderror
                         </div>
 
+                        @if($snbpRegistration)
+                            <div class="alert alert-info {{ old('jalur_masuk', $dataLulusan->jalur_masuk) === 'SNBP' ? '' : 'd-none' }}" id="snbpRegistrationNotice">
+                                <i class="fas fa-link mr-1"></i>
+                                Data nomor pendaftaran SNBP terdeteksi:
+                                <strong>{{ $snbpRegistration->nomor_pendaftaran }}</strong>.
+                                Jika memilih jalur <strong>SNBP</strong>, data lulusan ini akan otomatis ditautkan ke registrasi SNBP Anda.
+                            </div>
+                        @endif
+
                         <div class="form-group">
                             <label for="nama_universitas">Nama Universitas / Kampus</label>
                             <input type="hidden" name="referensi_perguruan_tinggi_id" id="referensi_perguruan_tinggi_id" value="{{ old('referensi_perguruan_tinggi_id', $dataLulusan->referensi_perguruan_tinggi_id) }}">
@@ -118,6 +127,18 @@
                             @endif
                         </dd>
 
+                        <dt>Nomor SNBP</dt>
+                        <dd>{{ $snbpRegistration?->nomor_pendaftaran ?? '-' }}</dd>
+
+                        <dt>Relasi SNBP</dt>
+                        <dd>
+                            @if($dataLulusan->snbp_registration_id)
+                                <span class="badge badge-primary">Terhubung</span>
+                            @else
+                                <span class="badge badge-secondary">Belum Terhubung</span>
+                            @endif
+                        </dd>
+
                         <dt>Terakhir Diperbarui</dt>
                         <dd>{{ $dataLulusan->updated_at?->format('d M Y H:i') ?? '-' }}</dd>
                     </dl>
@@ -159,6 +180,8 @@
             const $prodiHidden = $('#referensi_program_studi_id');
             const $prodiSuggestions = $('#prodiSuggestions');
             const $fakultasInput = $('#jurusan_fakultas');
+            const $jalurMasuk = $('#jalur_masuk');
+            const $snbpNotice = $('#snbpRegistrationNotice');
 
             function hideSuggestions() {
                 $suggestions.hide().empty();
@@ -308,6 +331,21 @@
                     hideProdiSuggestions();
                 }
             });
+
+            function updateSnbpNotice() {
+                if (!$snbpNotice.length) {
+                    return;
+                }
+
+                if ($jalurMasuk.val() === 'SNBP') {
+                    $snbpNotice.removeClass('d-none');
+                } else {
+                    $snbpNotice.addClass('d-none');
+                }
+            }
+
+            updateSnbpNotice();
+            $jalurMasuk.on('change', updateSnbpNotice);
         });
     </script>
 @stop

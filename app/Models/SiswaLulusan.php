@@ -24,6 +24,7 @@ class SiswaLulusan extends Model
     protected $fillable = [
         'siswa_id',
         'tahun_pelajaran_id',
+        'snbp_registration_id',
         'referensi_perguruan_tinggi_id',
         'referensi_program_studi_id',
         'jalur_masuk',
@@ -43,6 +44,11 @@ class SiswaLulusan extends Model
     public function tahunPelajaran()
     {
         return $this->belongsTo(TahunPelajaran::class, 'tahun_pelajaran_id');
+    }
+
+    public function snbpRegistration()
+    {
+        return $this->belongsTo(SnbpRegistration::class, 'snbp_registration_id');
     }
 
     public function referensiPerguruanTinggi()

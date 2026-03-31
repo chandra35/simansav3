@@ -93,6 +93,11 @@ class Siswa extends Model
         return $this->hasMany(SiswaLulusan::class);
     }
 
+    public function snbpRegistrations()
+    {
+        return $this->hasMany(SnbpRegistration::class);
+    }
+
     // Address relations for siswa
     public function provinsiSiswa()
     {
