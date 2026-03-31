@@ -516,14 +516,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/absensi/{absensi}', [App\Http\Controllers\Admin\AbsensiController::class, 'update'])->name('absensi.update');
     });
 
-    // Face Registration (Admin/Operator mendaftarkan wajah GTK)
-    Route::middleware(['permission:view-absensi|view-gtk-dashboard'])->group(function () {
-        Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
-        Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
-    });
+    // Face Registration
+    Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
+    Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
 
     // Face Verification (Admin only)
-    Route::middleware(['permission:edit-absensi'])->group(function () {
+    Route::middleware(['can:face-registration-admin'])->group(function () {
         Route::get('/absensi/face-verification', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'verificationList'])->name('absensi.face-verification');
         Route::post('/absensi/face-verify/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'verify'])->name('absensi.face-verify');
         Route::delete('/absensi/face-encoding/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'destroy'])->name('absensi.face-encoding.destroy');
@@ -594,7 +592,11 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::post('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'store'])->name('lulusan.store');
     Route::get('/lulusan/referensi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchReferences'])->name('lulusan.referensi.search');
     Route::get('/lulusan/prodi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchStudyPrograms'])->name('lulusan.prodi.search');
-    
+
+    // Registrasi wajah mandiri siswa
+    Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
+    Route::post('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('face-register.store');
+
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
     Route::get('/api/districts/{city}', [App\Http\Controllers\Siswa\OrtuController::class, 'getDistricts'])->name('api.districts');

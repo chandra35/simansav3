@@ -22,15 +22,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Define gates for permissions
         Gate::define('admin-access', function ($user) {
-            return in_array($user->role, ['super_admin', 'admin', 'operator']);
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
 
         Gate::define('super-admin-access', function ($user) {
-            return $user->role === 'super_admin';
+            return $user->hasRole('Super Admin') || $user->role === 'super_admin';
         });
 
         Gate::define('siswa-access', function ($user) {
-            return $user->role === 'siswa';
+            return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
         // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
@@ -45,6 +46,11 @@ class AuthServiceProvider extends ServiceProvider
         // Show to Super Admin, Admin, but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {
             return $user->hasRole(['Super Admin', 'Admin', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+        });
+
+        Gate::define('face-registration-admin', function ($user) {
+            return $user->hasAnyRole(['Super Admin', 'Admin']) ||
+                in_array($user->role, ['super_admin', 'admin']);
         });
     }
 }

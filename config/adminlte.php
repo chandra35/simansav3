@@ -341,6 +341,14 @@ return [
             'can' => 'gtk-menu-only',
             'active' => ['admin/absensi/face-register*'],
         ],
+        [
+            'key' => 'siswa-face-register',
+            'text' => 'Registrasi Wajah',
+            'route' => 'siswa.face-register',
+            'icon' => 'fas fa-fw fa-user-shield',
+            'can' => 'siswa-access',
+            'active' => ['siswa/face-register*'],
+        ],
         
         // MANAJEMEN DATA - Collapsible
         [
@@ -532,14 +540,14 @@ return [
                     'text' => 'Registrasi Wajah',
                     'route' => 'admin.absensi.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'view-gtk-dashboard',
+                    'can' => 'face-registration-admin',
                     'active' => ['admin/absensi/face-register*'],
                 ],
                 [
                     'text' => 'Verifikasi Wajah',
                     'route' => 'admin.absensi.face-verification',
                     'icon' => 'fas fa-fw fa-user-check',
-                    'can' => 'edit-absensi',
+                    'can' => 'face-registration-admin',
                     'active' => ['admin/absensi/face-verification*'],
                 ],
                 [
