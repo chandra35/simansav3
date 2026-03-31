@@ -61,6 +61,14 @@
             <button type="button" id="btnResetFilter" class="btn btn-default">
                 Reset
             </button>
+            <div class="float-md-right mt-2 mt-md-0">
+                <a href="#" id="btnExportExcel" class="btn btn-success">
+                    <i class="fas fa-file-excel mr-1"></i> Export XLS
+                </a>
+                <a href="#" id="btnExportPdf" class="btn btn-danger">
+                    <i class="fas fa-file-pdf mr-1"></i> Export PDF
+                </a>
+            </div>
         </div>
     </div>
 
@@ -105,7 +113,46 @@
         </div>
 
         <div class="row">
-            <div class="col-lg-5">
+            <div class="col-md-3 col-sm-6">
+                <div class="info-box bg-teal">
+                    <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Eligible SNBP</span>
+                        <span class="info-box-number" id="summaryEligible">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-box bg-secondary">
+                    <span class="info-box-icon"><i class="fas fa-id-card"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Sudah Isi Nomor SNBP</span>
+                        <span class="info-box-number" id="summaryEligibleIsi">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-box bg-success">
+                    <span class="info-box-icon"><i class="fas fa-award"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Lulus SNBP</span>
+                        <span class="info-box-number" id="summaryEligibleLulus">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="info-box bg-dark">
+                    <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Belum Dicek SNBP</span>
+                        <span class="info-box-number" id="summaryEligibleBelumDicek">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4">
                 <div class="card card-outline card-success h-100">
                     <div class="card-header">
                         <h3 class="card-title">Statistik per Jalur</h3>
@@ -127,7 +174,54 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-7">
+            <div class="col-lg-4">
+                <div class="card card-outline card-secondary h-100">
+                    <div class="card-header">
+                        <h3 class="card-title">Status Checker SNBP</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th class="text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checkerStatusTable">
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-3">Memuat statistik...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card card-outline card-primary h-100">
+                    <div class="card-header">
+                        <h3 class="card-title">Top PTN Diterima SNBP</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Perguruan Tinggi</th>
+                                    <th class="text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topPtnSnbpTable">
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-3">Memuat statistik...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
                 <div class="card card-outline card-info h-100">
                     <div class="card-header">
                         <h3 class="card-title">Top Universitas Tujuan</h3>
@@ -141,6 +235,28 @@
                                 </tr>
                             </thead>
                             <tbody id="topUniversitasTable">
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-3">Memuat statistik...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card card-outline card-warning h-100">
+                    <div class="card-header">
+                        <h3 class="card-title">Top Prodi Diterima SNBP</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Program Studi</th>
+                                    <th class="text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProdiSnbpTable">
                                 <tr>
                                     <td colspan="2" class="text-center text-muted py-3">Memuat statistik...</td>
                                 </tr>
@@ -165,6 +281,7 @@
                                 <th>Kelas</th>
                                 <th>Status</th>
                                 <th>Jalur</th>
+                                <th>Checker SNBP</th>
                                 <th>Universitas</th>
                                 <th>Jurusan/Fakultas</th>
                                 <th>Program Studi</th>
@@ -187,6 +304,8 @@
                             @foreach($jalurMasukOptions as $jalur)
                                 <th class="text-center">{{ $jalur }}</th>
                             @endforeach
+                            <th class="text-center">Eligible</th>
+                            <th class="text-center">Lulus SNBP</th>
                             <th class="text-center">Sudah Isi</th>
                             <th class="text-center">Belum Isi</th>
                             <th class="text-center">Total</th>
@@ -194,7 +313,7 @@
                     </thead>
                     <tbody id="matrixTableBody">
                         <tr>
-                            <td colspan="{{ count($jalurMasukOptions) + 4 }}" class="text-center text-muted py-3">Memuat matriks laporan...</td>
+                            <td colspan="{{ count($jalurMasukOptions) + 6 }}" class="text-center text-muted py-3">Memuat matriks laporan...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -232,6 +351,12 @@
                 jalur_masuk: $('#filterJalurMasuk').val(),
                 q: $('#filterPencarian').val()
             };
+        }
+
+        function updateExportLinks() {
+            const params = new URLSearchParams(getFilters()).toString();
+            $('#btnExportExcel').attr('href', `{{ route('admin.lulusan.export-excel') }}?${params}`);
+            $('#btnExportPdf').attr('href', `{{ route('admin.lulusan.export-pdf') }}?${params}`);
         }
 
         function renderPerJalur(perJalur) {
@@ -272,12 +397,58 @@
             });
         }
 
+        function renderCheckerStatus(checkerStatus) {
+            const tbody = $('#checkerStatusTable');
+            tbody.empty();
+
+            const labels = {
+                belum_dicek: 'Belum Dicek',
+                lulus: 'Lulus',
+                tidak_lulus: 'Tidak Lulus',
+                gagal_cek: 'Gagal Cek'
+            };
+
+            if (!checkerStatus || Object.keys(checkerStatus).length === 0) {
+                tbody.html('<tr><td colspan="2" class="text-center text-muted py-3">Tidak ada data.</td></tr>');
+                return;
+            }
+
+            Object.entries(labels).forEach(([key, label]) => {
+                tbody.append(`
+                    <tr>
+                        <td>${label}</td>
+                        <td class="text-right font-weight-bold">${checkerStatus[key] ?? 0}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function renderTopSimpleTable(selector, rows, emptyText = 'Belum ada data.') {
+            const tbody = $(selector);
+            tbody.empty();
+
+            if (!rows || rows.length === 0) {
+                tbody.html(`<tr><td colspan="2" class="text-center text-muted py-3">${emptyText}</td></tr>`);
+                return;
+            }
+
+            rows.forEach(item => {
+                const label = item.label ?? item.nama_universitas ?? item.program_studi ?? '-';
+                tbody.append(`
+                    <tr>
+                        <td>${label}</td>
+                        <td class="text-right font-weight-bold">${item.jumlah ?? 0}</td>
+                    </tr>
+                `);
+            });
+        }
+
         function renderMatrix(perKelas) {
             const tbody = $('#matrixTableBody');
             tbody.empty();
 
             if (!perKelas || perKelas.length === 0) {
-                tbody.html(`<tr><td colspan="${jalurMasukOptions.length + 4}" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`);
+                tbody.html(`<tr><td colspan="${jalurMasukOptions.length + 6}" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`);
                 return;
             }
 
@@ -288,6 +459,8 @@
                     <tr>
                         <td>${item.kelas_nama}</td>
                         ${jalurCells}
+                        <td class="text-center font-weight-bold text-info">${item.eligible ?? 0}</td>
+                        <td class="text-center font-weight-bold text-primary">${item.eligible_lulus ?? 0}</td>
                         <td class="text-center font-weight-bold text-success">${item.sudah_isi}</td>
                         <td class="text-center font-weight-bold text-warning">${item.belum_isi}</td>
                         <td class="text-center font-weight-bold">${item.total}</td>
@@ -305,15 +478,25 @@
                     $('#summarySudahIsi').text(response.summary.sudah_isi ?? 0);
                     $('#summaryBelumIsi').text(response.summary.belum_isi ?? 0);
                     $('#summaryUniversitas').text(response.summary.total_universitas ?? 0);
+                    $('#summaryEligible').text(response.summary.eligible_total ?? 0);
+                    $('#summaryEligibleIsi').text(response.summary.eligible_sudah_isi_nomor ?? 0);
+                    $('#summaryEligibleLulus').text(response.summary.eligible_lulus ?? 0);
+                    $('#summaryEligibleBelumDicek').text(response.summary.eligible_belum_dicek ?? 0);
 
                     renderPerJalur(response.per_jalur);
                     renderTopUniversitas(response.top_universitas);
+                    renderCheckerStatus(response.checker_status);
+                    renderTopSimpleTable('#topPtnSnbpTable', response.top_ptn_snbp, 'Belum ada siswa diterima via SNBP.');
+                    renderTopSimpleTable('#topProdiSnbpTable', response.top_prodi_snbp, 'Belum ada prodi SNBP.');
                     renderMatrix(response.per_kelas);
                 },
                 error: function() {
-                    $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas').text('0');
+                    $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleBelumDicek').text('0');
                     renderPerJalur({});
                     renderTopUniversitas([]);
+                    renderCheckerStatus({});
+                    renderTopSimpleTable('#topPtnSnbpTable', []);
+                    renderTopSimpleTable('#topProdiSnbpTable', []);
                     renderMatrix([]);
                 }
             });
@@ -336,6 +519,7 @@
                     { data: 'kelas_nama', name: 'kelas.nama_kelas' },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
                     { data: 'jalur_badge', name: 'siswa_lulusan.jalur_masuk', orderable: false, searchable: false },
+                    { data: 'snbp_check_badge', name: 'snbp_check_badge', orderable: false, searchable: false },
                     { data: 'nama_universitas', name: 'siswa_lulusan.nama_universitas' },
                     { data: 'jurusan_fakultas', name: 'siswa_lulusan.jurusan_fakultas' },
                     { data: 'program_studi', name: 'siswa_lulusan.program_studi' }
@@ -348,6 +532,7 @@
 
             $('#btnApplyFilter').on('click', function () {
                 lulusanTable.search($('#filterPencarian').val()).draw();
+                updateExportLinks();
                 loadStats();
             });
 
@@ -356,16 +541,23 @@
                 $('#filterJalurMasuk').val('');
                 $('#filterPencarian').val('');
                 lulusanTable.search('').ajax.reload();
+                updateExportLinks();
                 loadStats();
             });
 
             $('#filterPencarian').on('keyup', function (e) {
                 if (e.key === 'Enter') {
                     lulusanTable.search(this.value).draw();
+                    updateExportLinks();
                     loadStats();
                 }
             });
 
+            $('#filterTahunPelajaran, #filterStatusPengisian, #filterJalurMasuk').on('change', function () {
+                updateExportLinks();
+            });
+
+            updateExportLinks();
             loadStats();
         });
     </script>
