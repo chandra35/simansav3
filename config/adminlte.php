@@ -689,11 +689,28 @@ return [
                     'active' => ['admin/custom-menu*'],
                 ],
                 [
-                    'text' => 'Menu SNBP',
-                    'route' => 'admin.snbp-menu.index',
-                    'icon' => 'fas fa-fw fa-graduation-cap',
+                    'text' => 'Jalur PTN',
+                    'icon' => 'fas fa-fw fa-university',
                     'can' => 'manage-settings',
-                    'active' => ['admin/snbp-menu*'],
+                    'active' => ['admin/snbp-menu*', 'admin/span-ptkin*'],
+                    'submenu' => [
+                        [
+                            'text' => 'SNBP',
+                            'route' => 'admin.snbp-menu.index',
+                            'icon' => 'fas fa-fw fa-graduation-cap',
+                            'can' => 'manage-settings',
+                            'active' => ['admin/snbp-menu*'],
+                        ],
+                        [
+                            'text' => 'SPAN-PTKIN',
+                            'route' => 'admin.under-development',
+                            'icon' => 'fas fa-fw fa-mosque',
+                            'can' => 'manage-settings',
+                            'active' => ['admin/span-ptkin*'],
+                            'label' => 'Soon',
+                            'label_color' => 'warning',
+                        ],
+                    ],
                 ],
                 [
                     'text' => 'Referensi Kampus',
@@ -897,13 +914,32 @@ return [
             ],
         ],
         
-        // SNBP Menu for Siswa (shown via custom blade check for kelas 12)
         [
-            'text' => 'SNBP',
-            'route' => 'siswa.snbp.index',
-            'icon' => 'fas fa-fw fa-graduation-cap',
+            'text' => 'Jalur PTN',
+            'icon' => 'fas fa-fw fa-university',
             'can' => 'siswa-access',
-            'key' => 'siswa-snbp',
+            'key' => 'siswa-jalur-ptn',
+            'active' => ['siswa/snbp*', 'siswa/span-ptkin*'],
+            'submenu' => [
+                [
+                    'text' => 'SNBP',
+                    'route' => 'siswa.snbp.index',
+                    'icon' => 'fas fa-fw fa-graduation-cap',
+                    'can' => 'siswa-access',
+                    'key' => 'siswa-snbp',
+                    'active' => ['siswa/snbp*'],
+                ],
+                [
+                    'text' => 'SPAN-PTKIN',
+                    'route' => 'admin.under-development',
+                    'icon' => 'fas fa-fw fa-mosque',
+                    'can' => 'siswa-access',
+                    'key' => 'siswa-span-ptkin',
+                    'active' => ['siswa/span-ptkin*'],
+                    'label' => 'Soon',
+                    'label_color' => 'warning',
+                ],
+            ],
         ],
         [
             'text' => 'Data Lulusan',
