@@ -31,6 +31,7 @@
         .accepted-label { font-size: 9px; color: #6b7280; text-transform: uppercase; }
         .note { margin-top: 10px; padding: 8px; border: 1px solid #d1d5db; background: #f9fafb; }
         .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d1d5db; text-align: center; font-size: 9px; color: #4b5563; }
+        .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
@@ -192,7 +193,7 @@
         </table>
     </div>
 
-    <div class="section">
+    <div class="section page-break">
         <h3>Daftar Siswa Lolos SNBP</h3>
         @if(!empty($accepted_students))
             <table class="accepted-grid">
