@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\ReferensiPerguruanTinggi;
+use App\Models\ReferensiProgramStudi;
 use App\Models\SnbpRegistration;
+use App\Models\SiswaLulusan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class SnbpAnnouncementService
@@ -93,6 +97,10 @@ class SnbpAnnouncementService
             )
             : 'Tidak lulus seleksi SNBP.';
 
+        if ($status === 'lulus') {
+            $this->syncLulusan($registration, $payload);
+        }
+
         return $this->persistResult($registration, [
             'status' => $status,
             'message' => $message,
@@ -147,5 +155,108 @@ class SnbpAnnouncementService
             'source_url' => $result['source_url'],
             'payload' => $payload,
         ];
+    }
+
+    private function syncLulusan(SnbpRegistration $registration, array $payload): void
+    {
+        $accepted = data_get($payload, 'ac');
+        if (!is_array($accepted)) {
+            return;
+        }
+
+        $campusName = trim((string) data_get($accepted, 'pt', ''));
+        $programName = trim((string) data_get($accepted, 'pr', ''));
+        $reRegistrationUrl = trim((string) data_get($accepted, 'ur', ''));
+
+        if ($campusName === '' || $programName === '') {
+            return;
+        }
+
+        [$referensiPerguruanTinggi, $referensiProgramStudi] = $this->matchReferences($campusName, $programName);
+
+        $existing = SiswaLulusan::query()
+            ->where('siswa_id', $registration->siswa_id)
+            ->where('tahun_pelajaran_id', $registration->tahun_pelajaran_id)
+            ->first();
+
+        $payloadLulusan = [
+            'snbp_registration_id' => $registration->id,
+            'referensi_perguruan_tinggi_id' => $referensiPerguruanTinggi?->id,
+            'referensi_program_studi_id' => $referensiProgramStudi?->id,
+            'jalur_masuk' => 'SNBP',
+            'nama_universitas' => $referensiPerguruanTinggi?->nama ?? $campusName,
+            'nama_universitas_manual' => $referensiPerguruanTinggi ? null : $campusName,
+            'jurusan_fakultas' => $referensiProgramStudi?->fakultas ?? $existing?->jurusan_fakultas,
+            'program_studi' => $referensiProgramStudi
+                ? trim($referensiProgramStudi->jenjang . ' ' . $referensiProgramStudi->nama)
+                : $programName,
+            'program_studi_manual' => $referensiProgramStudi ? null : $programName,
+            'keterangan' => $this->mergeKeterangan($existing?->keterangan, $reRegistrationUrl),
+        ];
+
+        SiswaLulusan::updateOrCreate(
+            [
+                'siswa_id' => $registration->siswa_id,
+                'tahun_pelajaran_id' => $registration->tahun_pelajaran_id,
+            ],
+            $payloadLulusan
+        );
+    }
+
+    private function matchReferences(string $campusName, string $programName): array
+    {
+        $referensiPerguruanTinggi = ReferensiPerguruanTinggi::query()
+            ->where('is_active', true)
+            ->get()
+            ->first(function (ReferensiPerguruanTinggi $campus) use ($campusName) {
+                return $this->normalize($campus->nama) === $this->normalize($campusName);
+            });
+
+        $referensiProgramStudi = null;
+
+        if ($referensiPerguruanTinggi) {
+            $programs = ReferensiProgramStudi::query()
+                ->where('is_active', true)
+                ->where('referensi_perguruan_tinggi_id', $referensiPerguruanTinggi->id)
+                ->get();
+
+            $referensiProgramStudi = $programs->first(function (ReferensiProgramStudi $program) use ($programName) {
+                $fullName = trim($program->jenjang . ' ' . $program->nama);
+
+                return $this->normalize($fullName) === $this->normalize($programName)
+                    || $this->normalize($program->nama) === $this->normalize($programName);
+            });
+        }
+
+        return [$referensiPerguruanTinggi, $referensiProgramStudi];
+    }
+
+    private function mergeKeterangan(?string $existing, string $reRegistrationUrl): ?string
+    {
+        $existing = trim((string) $existing);
+
+        if ($reRegistrationUrl === '') {
+            return $existing !== '' ? $existing : null;
+        }
+
+        $note = 'Link daftar ulang SNBP: ' . $reRegistrationUrl;
+
+        if ($existing === '') {
+            return $note;
+        }
+
+        if (Str::contains($existing, $reRegistrationUrl)) {
+            return $existing;
+        }
+
+        return trim($existing . PHP_EOL . $note);
+    }
+
+    private function normalize(string $value): string
+    {
+        $value = Str::upper(Str::ascii($value));
+        $value = preg_replace('/[^A-Z0-9]+/', '', $value);
+
+        return $value ?? '';
     }
 }
