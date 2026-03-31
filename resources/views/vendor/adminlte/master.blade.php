@@ -128,6 +128,88 @@
         @endif
     @endif
 
+    <script>
+        (function () {
+            const loginUrl = @json(route('login'));
+            const defaultMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
+
+            function redirectExpiredSession(message, redirectUrl) {
+                const targetUrl = redirectUrl || loginUrl;
+
+                try {
+                    sessionStorage.setItem('flash_warning', message || defaultMessage);
+                } catch (error) {
+                    // Ignore storage failures and continue redirecting.
+                }
+
+                window.location.href = targetUrl;
+            }
+
+            if (window.axios && window.axios.interceptors) {
+                window.axios.interceptors.response.use(
+                    function (response) {
+                        return response;
+                    },
+                    function (error) {
+                        const status = error?.response?.status;
+                        const payload = error?.response?.data || {};
+
+                        if (status === 419) {
+                            redirectExpiredSession(payload.message, payload.redirect_url);
+                        }
+
+                        return Promise.reject(error);
+                    }
+                );
+            }
+
+            if (window.jQuery) {
+                window.jQuery(document).ajaxError(function (_event, xhr) {
+                    if (xhr.status !== 419) {
+                        return;
+                    }
+
+                    const response = xhr.responseJSON || {};
+                    redirectExpiredSession(response.message, response.redirect_url);
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                let warning = null;
+
+                try {
+                    warning = sessionStorage.getItem('flash_warning');
+                    sessionStorage.removeItem('flash_warning');
+                } catch (error) {
+                    warning = null;
+                }
+
+                if (!warning) {
+                    return;
+                }
+
+                const container = document.querySelector('.content-wrapper, .login-box, .register-box, main, body');
+
+                if (!container) {
+                    return;
+                }
+
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-warning alert-dismissible fade show mx-3 mt-3';
+                alert.setAttribute('role', 'alert');
+                alert.innerHTML = '<strong>Sesi Berakhir</strong><br>' + warning +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span></button>';
+
+                if (container === document.body) {
+                    document.body.prepend(alert);
+                } else {
+                    container.prepend(alert);
+                }
+            });
+        })();
+    </script>
+
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
 

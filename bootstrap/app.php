@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,26 +36,28 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (TokenMismatchException $exception, Request $request) {
-            $message = 'Sesi halaman telah berakhir. Silakan ulangi dari halaman yang aman.';
+        $redirectExpiredSession = function (Request $request) {
+            $message = 'Sesi Anda telah berakhir. Silakan login kembali.';
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => $message,
-                    'redirect_url' => auth()->check() && function_exists('getDashboardRoute')
-                        ? getDashboardRoute()
-                        : route('login'),
+                    'redirect_url' => route('login'),
                 ], 419);
             }
 
-            if (auth()->check()) {
-                $targetUrl = function_exists('getDashboardRoute')
-                    ? getDashboardRoute()
-                    : route('admin.dashboard');
+            return redirect()->guest(route('login'))->with('warning', $message);
+        };
 
-                return redirect($targetUrl)->with('warning', $message);
+        $exceptions->render(function (TokenMismatchException $exception, Request $request) {
+            return $redirectExpiredSession($request);
+        });
+
+        $exceptions->render(function (HttpExceptionInterface $exception, Request $request) use ($redirectExpiredSession) {
+            if ($exception->getStatusCode() !== 419) {
+                return null;
             }
 
-            return redirect()->guest(route('login'))->with('warning', 'Sesi Anda telah berakhir. Silakan login kembali.');
+            return $redirectExpiredSession($request);
         });
     })->create();
