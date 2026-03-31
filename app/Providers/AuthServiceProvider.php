@@ -38,8 +38,10 @@ class AuthServiceProvider extends ServiceProvider
         // Only show to users with GTK role, excluding Super Admin and Admin
         Gate::define('gtk-menu-only', function ($user) {
             return $user->hasRole('GTK') && 
+                   !$user->hasRole('Siswa') &&
                    !$user->hasRole('Super Admin') && 
-                   !$user->hasRole('Admin');
+                   !$user->hasRole('Admin') &&
+                   !$user->siswa()->exists();
         });
 
         // Gate for Admin Dashboard
