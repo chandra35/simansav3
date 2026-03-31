@@ -495,8 +495,8 @@
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
-const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
-let capturedDescriptors = [], capturedAngles = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
+const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll), duplicateThreshold = @json($duplicateThreshold);
+let capturedDescriptors = [], capturedAngles = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false, duplicateFaceDatabase = [];
 const STEPS = [
     { angle: 'frontal', text: 'Lihat lurus ke kamera', icon: 'fa-user' },
     { angle: 'kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right' },
@@ -549,8 +549,31 @@ async function loadModels() {
         setLoadingText('Memuat model deteksi wajah...'); await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model landmark wajah...'); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model pengenalan wajah...'); await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        setLoadingText('Memuat database validasi wajah...');
+        await loadDuplicateFaceDatabase();
         modelsLoaded = true; startCameraAndRegister();
     } catch (err) { setLoadingText('Error: ' + err.message); }
+}
+async function loadDuplicateFaceDatabase() {
+    const requests = ['gtk', 'siswa'].map(async (type) => {
+        const response = await fetch(`{{ route("admin.absensi.face-descriptors") }}?type=${type}`, {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'Gagal memuat database wajah');
+        }
+        return result.data || [];
+    });
+
+    const datasets = await Promise.all(requests);
+    duplicateFaceDatabase = datasets.flat().map(person => ({
+        userId: person.user_id,
+        userType: person.user_type,
+        name: person.name,
+        identifier: person.identifier,
+        descriptors: (person.descriptors || []).map(d => new Float32Array(d)),
+    }));
 }
 async function startCameraAndRegister() {
     setLoadingText('Menyalakan kamera...'); document.getElementById('loadingOverlay').style.display = 'flex';
@@ -625,6 +648,16 @@ async function doCapture() {
     if (currentStep >= totalSteps) return;
     const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
     if (!det) { faceStableStart = null; hideCountdownRing(); return false; }
+    if (currentStep === 0) {
+        const duplicateMatch = findLiveDuplicateMatch(det.descriptor);
+        if (duplicateMatch) {
+            faceStableStart = null;
+            hideCountdownRing();
+            setFaceStatus(`Wajah terdeteksi sudah terdaftar pada akun ${duplicateMatch.name}.`, false);
+            showDuplicateRegistrationWarning(duplicateMatch);
+            return false;
+        }
+    }
     capturedDescriptors.push(Array.from(det.descriptor)); capturedAngles.push(STEPS[currentStep].angle);
     const stepEl = document.getElementById('step-' + currentStep); stepEl.classList.remove('active', 'capturing'); stepEl.classList.add('done'); stepEl.querySelector('.step-check').style.display = 'block'; hideCountdownRing();
     const video2 = document.getElementById('videoElement'); video2.style.outline = '4px solid #00e676'; setTimeout(() => { video2.style.outline = ''; }, 400);
@@ -632,6 +665,28 @@ async function doCapture() {
     if (currentStep >= totalSteps) { document.getElementById('stepInstruction').style.display = 'none'; setFaceStatus('Menyimpan...', true); await saveRegistration(); }
     else { await new Promise(r => setTimeout(r, 500)); updateStepUI(); }
     return true;
+}
+function findLiveDuplicateMatch(descriptor) {
+    if (!duplicateFaceDatabase.length) return null;
+    let bestMatch = null;
+    for (const person of duplicateFaceDatabase) {
+        if (person.userId === selectedUserId) continue;
+        for (const refDescriptor of person.descriptors) {
+            const distance = faceapi.euclideanDistance(descriptor, refDescriptor);
+            if (distance <= duplicateThreshold && (!bestMatch || distance < bestMatch.distance)) {
+                bestMatch = { ...person, distance };
+            }
+        }
+    }
+    return bestMatch;
+}
+function showDuplicateRegistrationWarning(match) {
+    const identifierLabel = match.userType === 'siswa' ? 'NISN' : 'NIP';
+    document.getElementById('stepInstruction').innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>Wajah sudah terdaftar`;
+    document.getElementById('stepInstruction').style.display = 'block';
+    document.getElementById('stepInstruction').style.background = 'rgba(220,53,69,0.92)';
+    document.getElementById('stepInstruction').style.color = '#fff';
+    setFaceStatus(`Mirip akun ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}`, false);
 }
 async function saveRegistration() {
     const video = document.getElementById('videoElement'), c = document.createElement('canvas'); c.width = 320; c.height = 240; c.getContext('2d').drawImage(video, 0, 0, 320, 240);

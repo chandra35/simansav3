@@ -72,6 +72,7 @@ class FaceRegistrationController extends Controller
             'registeredCount' => $registeredCount,
             'verifiedCount' => $verifiedCount,
             'pendingCount' => max($registeredCount - $verifiedCount, 0),
+            'duplicateThreshold' => (float) AbsensiSetting::getValue('face_duplicate_threshold', 0.55),
         ]);
     }
 
