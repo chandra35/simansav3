@@ -17,17 +17,17 @@
         th { background: #e5e7eb; text-align: left; }
         .two-col { width: 100%; border-collapse: separate; border-spacing: 10px 0; }
         .two-col td { width: 50%; vertical-align: top; border: none; padding: 0; }
-        .accepted-grid { width: 100%; border-collapse: separate; border-spacing: 10px 10px; margin: 6px -10px 0; }
-        .accepted-grid td { width: 33.33%; border: none; padding: 0; vertical-align: top; }
-        .accepted-card { border: 1px solid #d1d5db; background: #f8fafc; padding: 10px; min-height: 88px; }
+        .accepted-grid { width: 100%; border-collapse: separate; border-spacing: 12px 12px; margin: 8px -12px 0; }
+        .accepted-grid td { width: 50%; border: none; padding: 0; vertical-align: top; }
+        .accepted-card { border: 1px solid #d1d5db; background: #f8fafc; padding: 12px; min-height: 132px; }
         .accepted-head { width: 100%; border-collapse: collapse; }
         .accepted-head td { border: none; padding: 0; vertical-align: middle; }
-        .avatar { width: 34px; height: 34px; border-radius: 17px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 12px; font-weight: bold; line-height: 34px; }
-        .avatar-photo { width: 34px; height: 34px; border-radius: 17px; object-fit: cover; display: block; }
-        .student-name { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
-        .student-meta { font-size: 9px; color: #6b7280; }
-        .accepted-campus { margin-top: 8px; font-size: 10px; font-weight: bold; }
-        .accepted-program { margin-top: 2px; font-size: 9px; color: #374151; }
+        .avatar { width: 68px; height: 68px; border-radius: 34px; background: #1d4ed8; color: #ffffff; text-align: center; font-size: 22px; font-weight: bold; line-height: 68px; }
+        .avatar-photo { width: 68px; height: 68px; border-radius: 34px; object-fit: cover; display: block; }
+        .student-name { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+        .student-meta { font-size: 10px; color: #6b7280; }
+        .accepted-campus { margin-top: 10px; font-size: 11px; font-weight: bold; }
+        .accepted-program { margin-top: 3px; font-size: 10px; color: #374151; }
         .note { margin-top: 10px; padding: 8px; border: 1px solid #d1d5db; background: #f9fafb; }
         .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #d1d5db; text-align: center; font-size: 9px; color: #4b5563; }
     </style>
@@ -195,14 +195,14 @@
         <h3>Daftar Siswa Lolos SNBP</h3>
         @if(!empty($accepted_students))
             <table class="accepted-grid">
-                @foreach(array_chunk($accepted_students, 3) as $row)
+                @foreach(array_chunk($accepted_students, 2) as $row)
                     <tr>
                         @foreach($row as $student)
                             <td>
                                 <div class="accepted-card">
                                     <table class="accepted-head">
                                         <tr>
-                                            <td style="width: 42px;">
+                                            <td style="width: 82px;">
                                                 @if(!empty($student['photo_path']))
                                                     <img src="{{ $student['photo_path'] }}" alt="{{ $student['nama_lengkap'] }}" class="avatar-photo">
                                                 @else
@@ -220,7 +220,7 @@
                                 </div>
                             </td>
                         @endforeach
-                        @for($i = count($row); $i < 3; $i++)
+                        @for($i = count($row); $i < 2; $i++)
                             <td></td>
                         @endfor
                     </tr>
