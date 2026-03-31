@@ -848,6 +848,7 @@ return [
         // SISWA MENU
         // ============================================
         [
+            'key' => 'siswa-dashboard',
             'text' => 'Dashboard',
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
