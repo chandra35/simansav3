@@ -634,7 +634,7 @@
                                                     
                                                     <!-- 1. Data Identitas -->
                                                     <div class="card">
-                                                        <div class="card-header bg-primary" id="headingIdentitas">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-primary" id="headingIdentitas">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white" type="button" data-toggle="collapse" data-target="#collapseIdentitas">
                                                                     <i class="fas fa-id-card"></i> Data Identitas
@@ -668,7 +668,7 @@
 
                                                     <!-- 2. Data Pendidikan -->
                                                     <div class="card">
-                                                        <div class="card-header bg-info" id="headingPendidikan">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-info" id="headingPendidikan">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapsePendidikan">
                                                                     <i class="fas fa-graduation-cap"></i> Data Pendidikan
@@ -689,7 +689,7 @@
 
                                                     <!-- 3. Data Kepegawaian -->
                                                     <div class="card">
-                                                        <div class="card-header bg-success" id="headingKepegawaian">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-success" id="headingKepegawaian">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseKepegawaian">
                                                                     <i class="fas fa-briefcase"></i> Data Kepegawaian
@@ -727,7 +727,7 @@
 
                                                     <!-- 4. Data Jabatan -->
                                                     <div class="card">
-                                                        <div class="card-header bg-warning" id="headingJabatan">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-warning" id="headingJabatan">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseJabatan">
                                                                     <i class="fas fa-user-tie"></i> Data Jabatan
@@ -751,7 +751,7 @@
 
                                                     <!-- 5. Data Satuan Kerja -->
                                                     <div class="card">
-                                                        <div class="card-header bg-secondary" id="headingSatker">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-secondary" id="headingSatker">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseSatker">
                                                                     <i class="fas fa-building"></i> Data Satuan Kerja
@@ -794,7 +794,7 @@
 
                                                     <!-- 6. Data Kontak & Alamat -->
                                                     <div class="card">
-                                                        <div class="card-header bg-purple" id="headingKontak">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-purple" id="headingKontak">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseKontak">
                                                                     <i class="fas fa-address-book"></i> Data Kontak & Alamat
@@ -840,7 +840,7 @@
 
                                                     <!-- 7. Data Madrasah/Sekolah -->
                                                     <div class="card">
-                                                        <div class="card-header bg-dark" id="headingMadrasah">
+                                                        <div class="card-header kemenag-accordion-header kemenag-accordion-dark" id="headingMadrasah">
                                                             <h2 class="mb-0">
                                                                 <button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseMadrasah">
                                                                     <i class="fas fa-mosque"></i> Data Madrasah/Sekolah
@@ -876,6 +876,63 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .kemenag-accordion-header {
+            border-bottom: 0;
+            padding: 0;
+        }
+
+        .kemenag-accordion-header h2 {
+            margin: 0;
+        }
+
+        .kemenag-accordion-header .btn.btn-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            color: #fff !important;
+            font-weight: 600;
+            text-decoration: none !important;
+            box-shadow: none !important;
+        }
+
+        .kemenag-accordion-header .btn.btn-link:hover,
+        .kemenag-accordion-header .btn.btn-link:focus {
+            color: #fff !important;
+            text-decoration: none !important;
+            opacity: 0.96;
+        }
+
+        .kemenag-accordion-primary {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        }
+
+        .kemenag-accordion-info {
+            background: linear-gradient(135deg, #0f9fb7, #17a2b8);
+        }
+
+        .kemenag-accordion-success {
+            background: linear-gradient(135deg, #15803d, #28a745);
+        }
+
+        .kemenag-accordion-warning {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+        }
+
+        .kemenag-accordion-secondary {
+            background: linear-gradient(135deg, #4b5563, #6c757d);
+        }
+
+        .kemenag-accordion-purple {
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+        }
+
+        .kemenag-accordion-dark {
+            background: linear-gradient(135deg, #111827, #1f2937);
+        }
+    </style>
 @stop
 
 @section('js')
