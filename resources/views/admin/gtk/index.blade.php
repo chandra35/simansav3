@@ -814,6 +814,9 @@ async function runBulkSyncKemenag(candidates, gtkTable) {
     updateBulkSyncCurrent(null, stats, 'Sinkronisasi selesai. Menyiapkan ringkasan hasil...');
     gtkTable.ajax.reload(null, false);
 
+    await wait(250);
+    hideBulkSyncOverlay();
+
     await Swal.fire({
         icon: stats.failed > 0 ? 'warning' : 'success',
         title: stats.failed > 0 ? 'Sinkronisasi Selesai Dengan Catatan' : 'Sinkronisasi Selesai',
@@ -830,8 +833,6 @@ async function runBulkSyncKemenag(candidates, gtkTable) {
         `,
         confirmButtonText: 'Tutup'
     });
-
-    hideBulkSyncOverlay();
 }
 
 function showBulkSyncOverlay() {
