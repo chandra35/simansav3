@@ -133,6 +133,7 @@
                     <table id="siswa-table" class="table table-bordered table-striped">
                         <thead>
                             <tr>
+                                <th>Foto</th>
                                 <th>NISN</th>
                                 <th>Nama Lengkap</th>
                                 <th>Jenis Kelamin</th>
@@ -145,6 +146,35 @@
                             </tr>
                         </thead>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Preview Foto -->
+<div class="modal fade" id="fotoPreviewModal" tabindex="-1" role="dialog" aria-labelledby="fotoPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white" id="fotoPreviewModalLabel">
+                    <i class="fas fa-camera-retro"></i> Preview Foto Siswa
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="font-weight-bold mb-3" id="fotoPreviewName">-</p>
+                <img id="fotoPreviewImage" src="" alt="Preview foto siswa" class="img-fluid rounded shadow-sm border" style="max-height:65vh; object-fit:contain;">
+            </div>
+            <div class="modal-footer justify-content-between">
+                <small class="text-muted">Klik download untuk mengambil file foto asli siswa.</small>
+                <div>
+                    <a href="#" id="fotoPreviewDownload" class="btn btn-success" download>
+                        <i class="fas fa-download"></i> Download Foto Asli
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -338,6 +368,12 @@
         .btn-group-vertical .btn {
             border-radius: 0.25rem !important;
         }
+        .foto-cell img {
+            transition: transform 0.2s ease;
+        }
+        .foto-cell .js-preview-foto:hover img {
+            transform: scale(1.05);
+        }
     </style>
 @stop
 
@@ -369,6 +405,7 @@ $(document).ready(function() {
             }
         },
         columns: [
+            { data: 'foto', name: 'foto', orderable: false, searchable: false, className: 'foto-cell align-middle' },
             { data: 'nisn', name: 'nisn' },
             { data: 'nama_lengkap', name: 'nama_lengkap' },
             { data: 'jenis_kelamin', name: 'jenis_kelamin' },
@@ -381,7 +418,7 @@ $(document).ready(function() {
         ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
-        order: [[7, 'desc']],
+        order: [[8, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",
@@ -429,6 +466,17 @@ $(document).ready(function() {
     // Clear form when modal is closed
     $('#siswaModal').on('hidden.bs.modal', function() {
         clearForm();
+    });
+
+    $(document).on('click', '.js-preview-foto', function() {
+        const previewUrl = $(this).data('preview-url');
+        const downloadUrl = $(this).data('download-url');
+        const studentName = $(this).data('student-name');
+
+        $('#fotoPreviewName').text(studentName);
+        $('#fotoPreviewImage').attr('src', previewUrl);
+        $('#fotoPreviewDownload').attr('href', downloadUrl);
+        $('#fotoPreviewModal').modal('show');
     });
 });
 

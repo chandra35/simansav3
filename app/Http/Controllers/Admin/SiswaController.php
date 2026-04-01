@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class SiswaController extends Controller
@@ -118,7 +119,7 @@ class SiswaController extends Controller
         
         $user = Auth::user();
         $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
-            ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
+            ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
 
         // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
         if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
@@ -203,12 +204,12 @@ class SiswaController extends Controller
             
             // Map column index to actual column names
             $columns = [
-                0 => 'nisn',
-                1 => 'nama_lengkap', 
-                2 => 'jenis_kelamin',
-                3 => 'kelas_nama', // Kelas column (from join)
-                4 => 'username', // Will handle separately
-                7 => 'siswa.created_at'
+                1 => 'nisn',
+                2 => 'nama_lengkap', 
+                3 => 'jenis_kelamin',
+                4 => 'kelas_nama', // Kelas column (from join)
+                5 => 'username', // Will handle separately
+                8 => 'siswa.created_at'
             ];
             
             // Handle Kelas ordering (needs join)
@@ -248,6 +249,7 @@ class SiswaController extends Controller
             
             return [
                 'id' => $item->id,
+                'foto' => $this->getFotoColumn($item),
                 'nisn' => $item->nisn,
                 'nama_lengkap' => $item->nama_lengkap,
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
@@ -270,6 +272,46 @@ class SiswaController extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
+    }
+
+    private function getFotoColumn(Siswa $siswa): string
+    {
+        if (!$siswa->foto_profile) {
+            return '<span class="badge badge-light border text-muted">Belum ada</span>';
+        }
+
+        $previewUrl = e($siswa->foto_profile_url);
+        $downloadUrl = e(route('admin.siswa.download-foto', $siswa));
+        $studentName = e($siswa->nama_lengkap);
+
+        return '
+            <div class="d-flex align-items-center">
+                <button type="button"
+                    class="btn btn-link p-0 mr-2 js-preview-foto"
+                    data-preview-url="' . $previewUrl . '"
+                    data-download-url="' . $downloadUrl . '"
+                    data-student-name="' . $studentName . '"
+                    title="Preview foto">
+                    <img src="' . $previewUrl . '"
+                        alt="Foto ' . $studentName . '"
+                        class="img-circle border"
+                        style="width:40px;height:40px;object-fit:cover;">
+                </button>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button"
+                        class="btn btn-outline-info js-preview-foto"
+                        data-preview-url="' . $previewUrl . '"
+                        data-download-url="' . $downloadUrl . '"
+                        data-student-name="' . $studentName . '"
+                        title="Preview foto">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <a href="' . $downloadUrl . '" class="btn btn-outline-success" title="Download foto asli">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            </div>
+        ';
     }
 
     private function getActionButtons($item)
@@ -497,6 +539,21 @@ class SiswaController extends Controller
                 'foto_profile_url' => $siswa->foto_profile_url,
             ]
         ]);
+    }
+
+    public function downloadFoto(Siswa $siswa)
+    {
+        $this->authorize('view-siswa');
+
+        if (!$siswa->foto_profile || !Storage::disk('public')->exists($siswa->foto_profile)) {
+            return redirect()->route('admin.siswa.index')
+                ->with('error', 'Foto siswa tidak ditemukan atau belum diunggah.');
+        }
+
+        $extension = pathinfo($siswa->foto_profile, PATHINFO_EXTENSION) ?: 'jpg';
+        $filename = 'foto-siswa-' . $siswa->nisn . '-' . \Illuminate\Support\Str::slug($siswa->nama_lengkap) . '.' . $extension;
+
+        return Storage::disk('public')->download($siswa->foto_profile, $filename);
     }
 
     /**
