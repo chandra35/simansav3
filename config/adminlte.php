@@ -692,7 +692,7 @@ return [
                     'text' => 'Jalur PTN',
                     'icon' => 'fas fa-fw fa-university',
                     'can' => 'manage-settings',
-                    'active' => ['admin/snbp-menu*', 'admin/span-ptkin*'],
+                    'active' => ['admin/snbp-menu*', 'admin/span-ptkin-menu*'],
                     'submenu' => [
                         [
                             'text' => 'SNBP',
@@ -703,12 +703,10 @@ return [
                         ],
                         [
                             'text' => 'SPAN-PTKIN',
-                            'route' => 'admin.under-development',
+                            'route' => 'admin.span-ptkin-menu.index',
                             'icon' => 'fas fa-fw fa-mosque',
                             'can' => 'manage-settings',
-                            'active' => ['admin/span-ptkin*'],
-                            'label' => 'Soon',
-                            'label_color' => 'warning',
+                            'active' => ['admin/span-ptkin-menu*'],
                         ],
                     ],
                 ],
@@ -931,13 +929,11 @@ return [
                 ],
                 [
                     'text' => 'SPAN-PTKIN',
-                    'route' => 'admin.under-development',
+                    'route' => 'siswa.span-ptkin.index',
                     'icon' => 'fas fa-fw fa-mosque',
                     'can' => 'siswa-access',
                     'key' => 'siswa-span-ptkin',
                     'active' => ['siswa/span-ptkin*'],
-                    'label' => 'Soon',
-                    'label_color' => 'warning',
                 ],
             ],
         ],
@@ -971,6 +967,7 @@ return [
         JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class,
         App\Menu\Filters\SnbpMenuFilter::class,
+        App\Menu\Filters\SpanPtkinMenuFilter::class,
         App\Menu\Filters\LulusanMenuFilter::class,
     ],
 

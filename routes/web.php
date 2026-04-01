@@ -411,6 +411,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/snbp-menu/{snbpMenu}/store-not-eligible', [App\Http\Controllers\Admin\SnbpMenuController::class, 'storeNotEligible'])->name('snbp-menu.store-not-eligible');
     Route::post('/snbp-menu/{snbpMenu}/registrations/{registration}/check-announcement', [App\Http\Controllers\Admin\SnbpMenuController::class, 'checkAnnouncement'])->name('snbp-menu.check-announcement');
     Route::delete('/snbp-menu/{snbpSiswa}/remove-assignment', [App\Http\Controllers\Admin\SnbpMenuController::class, 'removeAssignment'])->name('snbp-menu.remove-assignment');
+    Route::resource('span-ptkin-menu', App\Http\Controllers\Admin\SpanPtkinMenuController::class);
+    Route::post('/span-ptkin-menu/{spanPtkinMenu}/import-pdf', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'importPdf'])->name('span-ptkin-menu.import-pdf');
     
     // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================
     Route::get('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'index'])->name('exam-browser.index');
@@ -590,6 +592,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     // SNBP Menu for Siswa (Kelas 12 only)
     Route::get('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'index'])->name('snbp.index');
     Route::post('/snbp', [App\Http\Controllers\Siswa\SnbpController::class, 'storeRegistration'])->name('snbp.store');
+    Route::get('/span-ptkin', [App\Http\Controllers\Siswa\SpanPtkinController::class, 'index'])->name('span-ptkin.index');
     
     // Tracking Lulusan untuk siswa kelas 12/alumni
     Route::get('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'index'])->name('lulusan.index');

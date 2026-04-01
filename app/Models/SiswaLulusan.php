@@ -25,6 +25,7 @@ class SiswaLulusan extends Model
         'siswa_id',
         'tahun_pelajaran_id',
         'snbp_registration_id',
+        'span_ptkin_registration_id',
         'referensi_perguruan_tinggi_id',
         'referensi_program_studi_id',
         'jalur_masuk',
@@ -54,6 +55,11 @@ class SiswaLulusan extends Model
     public function referensiPerguruanTinggi()
     {
         return $this->belongsTo(ReferensiPerguruanTinggi::class, 'referensi_perguruan_tinggi_id');
+    }
+
+    public function spanPtkinRegistration()
+    {
+        return $this->belongsTo(SpanPtkinRegistration::class, 'span_ptkin_registration_id');
     }
 
     public function referensiProgramStudi()

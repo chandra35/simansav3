@@ -98,6 +98,11 @@ class Siswa extends Model
         return $this->hasMany(SnbpRegistration::class);
     }
 
+    public function spanPtkinRegistrations()
+    {
+        return $this->hasMany(SpanPtkinRegistration::class);
+    }
+
     // Address relations for siswa
     public function provinsiSiswa()
     {

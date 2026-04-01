@@ -19,6 +19,7 @@
         "phpmailer/phpmailer": "^7.0",
         "ramsey/uuid": "^4.9",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "smalot/pdfparser": "2.12",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.21",
         "torann/geoip": "^3.0",

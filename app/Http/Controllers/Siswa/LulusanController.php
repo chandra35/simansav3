@@ -8,6 +8,7 @@ use App\Models\ReferensiProgramStudi;
 use App\Models\SnbpRegistration;
 use App\Models\SiswaKelas;
 use App\Models\SiswaLulusan;
+use App\Models\SpanPtkinRegistration;
 use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,11 @@ class LulusanController extends Controller
             ->where('tahun_pelajaran_id', $targetSiswaKelas->tahun_pelajaran_id)
             ->first();
 
+        $spanPtkinRegistration = SpanPtkinRegistration::query()
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_pelajaran_id', $targetSiswaKelas->tahun_pelajaran_id)
+            ->first();
+
         return view('siswa.lulusan.index', [
             'siswa' => $siswa,
             'targetSiswaKelas' => $targetSiswaKelas,
@@ -54,6 +60,7 @@ class LulusanController extends Controller
             'dataLulusan' => $dataLulusan,
             'jalurMasukOptions' => SiswaLulusan::JALUR_MASUK,
             'snbpRegistration' => $snbpRegistration,
+            'spanPtkinRegistration' => $spanPtkinRegistration,
         ]);
     }
 
@@ -152,6 +159,7 @@ class LulusanController extends Controller
 
         $payload = [
             'snbp_registration_id' => null,
+            'span_ptkin_registration_id' => null,
             'referensi_perguruan_tinggi_id' => $referensi?->id,
             'referensi_program_studi_id' => $referensiProgramStudi?->id,
             'jalur_masuk' => $validated['jalur_masuk'],
@@ -180,6 +188,17 @@ class LulusanController extends Controller
             }
 
             $payload['snbp_registration_id'] = $snbpRegistration->id;
+        }
+
+        if ($validated['jalur_masuk'] === 'SPAN-PTKIN') {
+            $spanPtkinRegistration = SpanPtkinRegistration::query()
+                ->where('siswa_id', $siswa->id)
+                ->where('tahun_pelajaran_id', $targetSiswaKelas->tahun_pelajaran_id)
+                ->first();
+
+            if ($spanPtkinRegistration) {
+                $payload['span_ptkin_registration_id'] = $spanPtkinRegistration->id;
+            }
         }
 
         SiswaLulusan::updateOrCreate(
