@@ -10,9 +10,12 @@ use App\Models\SpanPtkinRegistration;
 use App\Models\TahunPelajaran;
 use App\Services\SpanPtkinPdfImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class SpanPtkinMenuController extends Controller
 {
+    private const PREVIEW_SESSION_KEY = 'span_ptkin_import_preview';
+
     public function __construct(
         private readonly SpanPtkinPdfImportService $pdfImportService
     ) {
@@ -90,7 +93,9 @@ class SpanPtkinMenuController extends Controller
             'terhubung_lulusan' => $monitoring->filter(fn ($siswa) => optional($siswa->spanPtkinRegistration)->lulusan !== null)->count(),
         ];
 
-        return view('admin.span-ptkin.show', compact('spanPtkinMenu', 'monitoring', 'summary'));
+        $previewImport = $this->getPreviewImport($spanPtkinMenu);
+
+        return view('admin.span-ptkin.show', compact('spanPtkinMenu', 'monitoring', 'summary', 'previewImport'));
     }
 
     public function edit(SpanPtkinMenu $spanPtkinMenu)
@@ -156,7 +161,33 @@ class SpanPtkinMenuController extends Controller
             'pdf_file.mimetypes' => 'File yang diunggah harus berupa PDF resmi.',
         ]);
 
-        $result = $this->pdfImportService->import($spanPtkinMenu, $validated['pdf_file']);
+        $preview = $this->pdfImportService->previewImport(
+            $spanPtkinMenu,
+            $validated['pdf_file']->getRealPath(),
+            $validated['pdf_file']->getClientOriginalName()
+        );
+
+        Session::put($this->previewSessionKey($spanPtkinMenu), $preview);
+
+        return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
+            ->with('success', 'Preview import berhasil dibuat. Periksa hasil pencocokan sebelum menyimpan ke database.');
+    }
+
+    public function confirmImport(SpanPtkinMenu $spanPtkinMenu)
+    {
+        if (!$spanPtkinMenu->isEditable()) {
+            return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
+                ->with('error', 'Konfirmasi import hanya tersedia pada tahun pelajaran aktif.');
+        }
+
+        $preview = $this->getPreviewImport($spanPtkinMenu);
+        if (!$preview) {
+            return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
+                ->with('error', 'Preview import tidak ditemukan. Upload PDF terlebih dahulu.');
+        }
+
+        $result = $this->pdfImportService->confirmImport($spanPtkinMenu, $preview);
+        Session::forget($this->previewSessionKey($spanPtkinMenu));
 
         $message = sprintf(
             'Import selesai. %d baris dibaca, %d cocok, %d data baru, %d data diperbarui.',
@@ -167,12 +198,12 @@ class SpanPtkinMenuController extends Controller
         );
 
         if ($result['unmatched']->isNotEmpty()) {
-            $preview = $result['unmatched']
+            $previewText = $result['unmatched']
                 ->take(5)
                 ->map(fn (array $row) => $row['nisn'] . ' - ' . $row['nama_siswa'])
                 ->implode(', ');
 
-            $message .= ' Belum cocok: ' . $preview;
+            $message .= ' Belum cocok: ' . $previewText;
 
             if ($result['unmatched']->count() > 5) {
                 $message .= ' dan ' . ($result['unmatched']->count() - 5) . ' lainnya.';
@@ -181,6 +212,14 @@ class SpanPtkinMenuController extends Controller
 
         return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
             ->with($result['unmatched']->isEmpty() ? 'success' : 'warning', $message);
+    }
+
+    public function cancelPreview(SpanPtkinMenu $spanPtkinMenu)
+    {
+        Session::forget($this->previewSessionKey($spanPtkinMenu));
+
+        return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
+            ->with('success', 'Preview import dibatalkan.');
     }
 
     private function kelas12Students(SpanPtkinMenu $menu)
@@ -197,5 +236,17 @@ class SpanPtkinMenuController extends Controller
             })
             ->orderBy('nama_lengkap')
             ->get();
+    }
+
+    private function previewSessionKey(SpanPtkinMenu $menu): string
+    {
+        return self::PREVIEW_SESSION_KEY . '.' . $menu->id;
+    }
+
+    private function getPreviewImport(SpanPtkinMenu $menu): ?array
+    {
+        $preview = Session::get($this->previewSessionKey($menu));
+
+        return is_array($preview) ? $preview : null;
     }
 }

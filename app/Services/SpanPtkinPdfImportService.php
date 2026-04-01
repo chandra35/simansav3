@@ -6,7 +6,6 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\SpanPtkinMenu;
 use App\Models\SpanPtkinRegistration;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -22,36 +21,32 @@ class SpanPtkinPdfImportService
         $this->parser = $parser ?? new Parser();
     }
 
-    public function import(SpanPtkinMenu $menu, UploadedFile $file): array
+    public function previewImport(SpanPtkinMenu $menu, string $path, string $sourceFileName): array
     {
-        $rows = $this->extractRows($file->getRealPath());
+        $rows = $this->extractRows($path);
 
         if ($rows->isEmpty()) {
             throw new RuntimeException('Format PDF SPAN-PTKIN tidak dikenali atau tidak ada data siswa yang berhasil dibaca.');
         }
 
+        return $this->buildPreviewData($menu, $rows, $sourceFileName);
+    }
+
+    public function confirmImport(SpanPtkinMenu $menu, array $previewData): array
+    {
+        $matchedRows = collect($previewData['matched_rows'] ?? []);
+        $sourceFileName = (string) ($previewData['source_file_name'] ?? 'import-span-ptkin.pdf');
         $students = $this->getEligibleStudents($menu)->keyBy('nisn');
-        $nameMap = $this->buildNameMap($students);
         $now = now();
 
         $matched = 0;
         $updated = 0;
         $created = 0;
-        $unmatched = [];
 
-        DB::transaction(function () use ($rows, $students, $nameMap, $menu, $file, $now, &$matched, &$updated, &$created, &$unmatched) {
-            foreach ($rows as $row) {
-                $siswa = $students->get($row['nisn']);
-
+        DB::transaction(function () use ($matchedRows, $students, $menu, $sourceFileName, $now, &$matched, &$updated, &$created) {
+            foreach ($matchedRows as $row) {
+                $siswa = $students->get($row['matched_nisn'] ?? $row['nisn'] ?? '');
                 if (!$siswa) {
-                    $candidate = $nameMap[$this->normalize($row['nama_siswa'])] ?? null;
-                    if ($candidate instanceof Siswa) {
-                        $siswa = $candidate;
-                    }
-                }
-
-                if (!$siswa) {
-                    $unmatched[] = $row;
                     continue;
                 }
 
@@ -67,7 +62,7 @@ class SpanPtkinPdfImportService
                     'nomor_pendaftaran' => $row['nomor_pendaftaran'],
                     'nama_pendaftar' => $row['nama_siswa'],
                     'jurusan_pendaftar' => $row['jurusan'],
-                    'source_file_name' => $file->getClientOriginalName(),
+                    'source_file_name' => $sourceFileName,
                     'imported_at' => $now,
                 ];
 
@@ -87,11 +82,11 @@ class SpanPtkinPdfImportService
         });
 
         return [
-            'total_rows' => $rows->count(),
+            'total_rows' => count($previewData['rows'] ?? []),
             'matched' => $matched,
             'created' => $created,
             'updated' => $updated,
-            'unmatched' => collect($unmatched)->values(),
+            'unmatched' => collect($previewData['unmatched_rows'] ?? [])->values(),
         ];
     }
 
@@ -159,5 +154,79 @@ class SpanPtkinPdfImportService
         $value = preg_replace('/[^A-Z0-9]+/', '', $value);
 
         return $value ?? '';
+    }
+
+    private function buildPreviewData(SpanPtkinMenu $menu, Collection $rows, string $sourceFileName): array
+    {
+        $students = $this->getEligibleStudents($menu)->keyBy('nisn');
+        $nameMap = $this->buildNameMap($students);
+        $existingRegistrations = SpanPtkinRegistration::query()
+            ->where('span_ptkin_menu_id', $menu->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $matchedRows = [];
+        $unmatchedRows = [];
+
+        $previewRows = $rows->map(function (array $row) use ($students, $nameMap, $existingRegistrations, &$matchedRows, &$unmatchedRows) {
+            $matchedBy = null;
+            $siswa = $students->get($row['nisn']);
+
+            if ($siswa) {
+                $matchedBy = 'nisn';
+            } else {
+                $candidate = $nameMap[$this->normalize($row['nama_siswa'])] ?? null;
+                if ($candidate instanceof Siswa) {
+                    $siswa = $candidate;
+                    $matchedBy = 'nama';
+                }
+            }
+
+            if (!$siswa) {
+                $preview = [
+                    ...$row,
+                    'matched' => false,
+                    'matched_by' => null,
+                    'matched_nisn' => null,
+                    'matched_name' => null,
+                    'kelas' => null,
+                    'existing_number' => null,
+                    'will_action' => 'skip',
+                ];
+                $unmatchedRows[] = $preview;
+
+                return $preview;
+            }
+
+            $existing = $existingRegistrations->get($siswa->id);
+            $willAction = $existing ? 'update' : 'create';
+            $preview = [
+                ...$row,
+                'matched' => true,
+                'matched_by' => $matchedBy,
+                'matched_nisn' => $siswa->nisn,
+                'matched_name' => $siswa->nama_lengkap,
+                'kelas' => $siswa->kelasSaatIni?->nama_kelas,
+                'existing_number' => $existing?->nomor_pendaftaran,
+                'will_action' => $willAction,
+            ];
+            $matchedRows[] = $preview;
+
+            return $preview;
+        })->values();
+
+        return [
+            'source_file_name' => $sourceFileName,
+            'rows' => $previewRows->all(),
+            'matched_rows' => $matchedRows,
+            'unmatched_rows' => $unmatchedRows,
+            'summary' => [
+                'total_rows' => $previewRows->count(),
+                'matched' => count($matchedRows),
+                'unmatched' => count($unmatchedRows),
+                'create' => collect($matchedRows)->where('will_action', 'create')->count(),
+                'update' => collect($matchedRows)->where('will_action', 'update')->count(),
+            ],
+        ];
     }
 }

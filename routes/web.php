@@ -414,6 +414,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/snbp-menu/{snbpSiswa}/remove-assignment', [App\Http\Controllers\Admin\SnbpMenuController::class, 'removeAssignment'])->name('snbp-menu.remove-assignment');
     Route::resource('span-ptkin-menu', App\Http\Controllers\Admin\SpanPtkinMenuController::class);
     Route::post('/span-ptkin-menu/{spanPtkinMenu}/import-pdf', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'importPdf'])->name('span-ptkin-menu.import-pdf');
+    Route::post('/span-ptkin-menu/{spanPtkinMenu}/confirm-import', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'confirmImport'])->name('span-ptkin-menu.confirm-import');
+    Route::delete('/span-ptkin-menu/{spanPtkinMenu}/cancel-preview', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'cancelPreview'])->name('span-ptkin-menu.cancel-preview');
     
     // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================
     Route::get('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'index'])->name('exam-browser.index');
