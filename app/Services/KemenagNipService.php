@@ -338,6 +338,12 @@ class KemenagNipService
             $jenisKelamin = $data['JENIS_KELAMIN'] == 1 ? 'L' : 'P';
         }
 
+        $validStatusKawin = ['Kawin', 'Belum Kawin', 'Cerai Hidup', 'Cerai Mati'];
+        $statusKawin = isset($data['STATUS_KAWIN']) ? trim((string) $data['STATUS_KAWIN']) : null;
+        if ($statusKawin === '' || !in_array($statusKawin, $validStatusKawin, true)) {
+            $statusKawin = null;
+        }
+
         // Parse tanggal (format: "1989-09-09 00:00:00" → "1989-09-09")
         $parseDate = function($dateString) {
             if (empty($dateString)) return null;
@@ -360,7 +366,7 @@ class KemenagNipService
             'tempat_lahir' => $data['TEMPAT_LAHIR'] ?? null,
             'tanggal_lahir' => $parseDate($data['TANGGAL_LAHIR'] ?? null),
             'jenis_kelamin' => $jenisKelamin,
-            'status_kawin' => $data['STATUS_KAWIN'] ?? null,
+            'status_kawin' => $statusKawin,
             
             // Data Pendidikan
             'pendidikan' => $data['PENDIDIKAN'] ?? null,
