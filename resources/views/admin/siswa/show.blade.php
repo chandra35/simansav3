@@ -85,8 +85,11 @@
                 <strong><i class="fas fa-key"></i> Password</strong>
                 <p class="text-muted">
                     @if($siswa->user && $siswa->user->readable_password)
-                        <code>{{ $siswa->user->readable_password }}</code>
-                        <button class="btn btn-xs btn-outline-secondary ml-2" onclick="copyPassword('{{ $siswa->user->readable_password }}')">
+                        <code class="js-password-text" data-password="{{ $siswa->user->readable_password }}">••••••••</code>
+                        <button type="button" class="btn btn-xs btn-outline-secondary ml-2 js-toggle-password" aria-label="Tampilkan password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-xs btn-outline-secondary ml-1" onclick="copyPassword('{{ $siswa->user->readable_password }}')">
                             <i class="fas fa-copy"></i>
                         </button>
                     @else
@@ -354,6 +357,21 @@
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.querySelectorAll('.js-toggle-password').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const passwordElement = button.parentElement.querySelector('.js-password-text');
+        if (!passwordElement) {
+            return;
+        }
+
+        const isHidden = passwordElement.textContent === '••••••••';
+        passwordElement.textContent = isHidden
+            ? passwordElement.dataset.password
+            : '••••••••';
+        button.innerHTML = '<i class="fas ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '"></i>';
+    });
+});
+
 function copyPassword(password) {
     navigator.clipboard.writeText(password).then(function() {
         toastr.success('Password berhasil disalin!');

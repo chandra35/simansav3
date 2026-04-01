@@ -553,7 +553,7 @@ function loadSiswaDataTab(siswa) {
                 <table class="table table-detail table-sm table-bordered">
                     <tr><td width="40%" class="bg-light"><strong>Username</strong></td><td><code>${siswa.user.username || '-'}</code></td></tr>
                     <tr><td class="bg-light"><strong>Email</strong></td><td>${siswa.user.email || '<span class="text-muted">Belum diisi</span>'}</td></tr>
-                    <tr><td class="bg-light"><strong>Password</strong></td><td>${siswa.user.readable_password ? '<code class="text-danger">' + siswa.user.readable_password + '</code> <small class="text-muted">(encrypted)</small>' : '<span class="text-muted">Tidak tersedia</span>'}</td></tr>
+                    <tr><td class="bg-light"><strong>Password</strong></td><td>${renderPasswordPreview(siswa.user.readable_password)}</td></tr>
                 </table>
                 
                 <h6 class="text-primary mt-3"><i class="fas fa-history"></i> History</h6>
@@ -946,7 +946,47 @@ function deleteSiswa(id) {
             });
         }
     });
-}
+  }
+
+  function renderPasswordPreview(password) {
+    if (!password) {
+      return '<span class="text-muted">Tidak tersedia</span>';
+    }
+
+    const safePassword = $('<div>').text(password).html();
+
+    return `
+      <code class="text-danger js-password-text" data-password="${safePassword}">••••••••</code>
+      <button type="button" class="btn btn-xs btn-outline-secondary ml-2 js-toggle-password" aria-label="Tampilkan password">
+        <i class="fas fa-eye"></i>
+      </button>
+      <button type="button" class="btn btn-xs btn-outline-secondary ml-1 js-copy-password" data-password="${safePassword}" aria-label="Salin password">
+        <i class="fas fa-copy"></i>
+      </button>
+    `;
+  }
+
+  $(document).on('click', '.js-toggle-password', function () {
+    const button = $(this);
+    const passwordElement = button.siblings('.js-password-text');
+
+    if (!passwordElement.length) {
+      return;
+    }
+
+    const isHidden = passwordElement.text() === '••••••••';
+    passwordElement.text(isHidden ? passwordElement.data('password') : '••••••••');
+    button.html('<i class="fas ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '"></i>');
+  });
+
+  $(document).on('click', '.js-copy-password', function () {
+    const password = $(this).data('password');
+    navigator.clipboard.writeText(password).then(function () {
+      toastr.success('Password berhasil disalin!');
+    }, function () {
+      toastr.error('Gagal menyalin password', 'Error!');
+    });
+  });
 
 function resetPassword(id) {
     if (confirm('Apakah Anda yakin ingin reset password siswa ini?\n\nPassword akan direset ke NISN dan siswa diminta login ulang.')) {
