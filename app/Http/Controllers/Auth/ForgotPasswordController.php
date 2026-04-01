@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\AppSetting;
 use App\Models\User;
 use App\Services\EmailService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class ForgotPasswordController extends Controller
 {
@@ -86,6 +85,7 @@ class ForgotPasswordController extends Controller
 
         // Generate token
         $token = Str::random(64);
+        $createdAt = Carbon::now();
 
         // Delete old tokens
         DB::table('password_reset_tokens')->where('email', $user->email)->delete();
@@ -94,7 +94,7 @@ class ForgotPasswordController extends Controller
         DB::table('password_reset_tokens')->insert([
             'email' => $user->email,
             'token' => Hash::make($token),
-            'created_at' => Carbon::now(),
+            'created_at' => $createdAt,
         ]);
 
         // Send email using EmailService with template
@@ -105,6 +105,8 @@ class ForgotPasswordController extends Controller
             User::logCustomActivity('password_reset_request', 'Request reset password untuk email: ' . $user->email);
             return back()->with('status', 'Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.');
         } else {
+            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+
             return back()->withErrors([
                 'email' => 'Gagal mengirim email: ' . $result['message']
             ])->withInput();
@@ -116,9 +118,22 @@ class ForgotPasswordController extends Controller
      */
     public function showResetForm(Request $request, $token = null)
     {
+        $email = $request->query('email');
+
+        if (blank($token) || blank($email)) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Link reset password tidak lengkap atau tidak valid.']);
+        }
+
+        $tokenRecord = $this->getValidTokenRecord($email, $token);
+        if (!$tokenRecord) {
+            return redirect()->route('password.request')
+                ->withErrors(['email' => 'Link reset password tidak valid atau sudah kedaluwarsa. Silakan minta link baru.']);
+        }
+
         return view('auth.reset-password', [
             'token' => $token,
-            'email' => $request->email,
+            'email' => $email,
         ]);
     }
 
@@ -134,24 +149,9 @@ class ForgotPasswordController extends Controller
         ]);
 
         // Check token
-        $tokenRecord = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->first();
-
+        $tokenRecord = $this->getValidTokenRecord($request->email, $request->token);
         if (!$tokenRecord) {
-            return back()->withErrors(['email' => 'Token tidak valid atau sudah expired.']);
-        }
-
-        // Check if token is expired (60 minutes)
-        $createdAt = Carbon::parse($tokenRecord->created_at);
-        if (Carbon::now()->diffInMinutes($createdAt) > 60) {
-            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-            return back()->withErrors(['email' => 'Token sudah expired. Silakan request ulang.']);
-        }
-
-        // Verify token
-        if (!Hash::check($request->token, $tokenRecord->token)) {
-            return back()->withErrors(['email' => 'Token tidak valid.']);
+            return back()->withErrors(['email' => 'Link reset password tidak valid atau sudah kedaluwarsa. Silakan request ulang.']);
         }
 
         // Find user
@@ -162,10 +162,10 @@ class ForgotPasswordController extends Controller
         }
 
         // Update password
-        $user->readable_password = $request->password; // Store encrypted readable password
         $user->update([
             'password' => Hash::make($request->password),
             'is_first_login' => false, // Mark as already changed password
+            'encrypted_password' => null,
         ]);
 
         // Delete token
@@ -181,5 +181,28 @@ class ForgotPasswordController extends Controller
 
         return redirect()->route('login')
             ->with('status', 'Password Anda berhasil diubah! Silakan login menggunakan password baru Anda.');
+    }
+
+    private function getValidTokenRecord(string $email, string $plainToken): ?object
+    {
+        $tokenRecord = DB::table('password_reset_tokens')
+            ->where('email', $email)
+            ->first();
+
+        if (!$tokenRecord) {
+            return null;
+        }
+
+        $createdAt = Carbon::parse($tokenRecord->created_at);
+        if (Carbon::now()->diffInMinutes($createdAt) > 60) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            return null;
+        }
+
+        if (!Hash::check($plainToken, $tokenRecord->token)) {
+            return null;
+        }
+
+        return $tokenRecord;
     }
 }

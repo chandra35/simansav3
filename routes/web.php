@@ -28,9 +28,13 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Forgot Password Routes
 Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->middleware('throttle:5,1')
+    ->name('password.email');
 Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'reset'])->name('password.update');
+Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'reset'])
+    ->middleware('throttle:10,1')
+    ->name('password.update');
 
 // Admin Routes (Super Admin, Admin, GTK, Operator)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
