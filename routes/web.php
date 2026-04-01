@@ -239,6 +239,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // GTK Kemenag Sync
     Route::middleware(['permission:edit-gtk'])->group(function () {
+        Route::get('/gtk/sync-kemenag/candidates', [App\Http\Controllers\Admin\GtkController::class, 'syncKemenagCandidates'])->name('gtk.sync-kemenag-candidates');
         Route::post('/gtk/{gtk}/sync-kemenag', [App\Http\Controllers\Admin\GtkController::class, 'syncKemenag'])->name('gtk.sync-kemenag');
         Route::post('/gtk/{gtk}/apply-kemenag-data', [App\Http\Controllers\Admin\GtkController::class, 'applyKemenagData'])->name('gtk.apply-kemenag-data');
     });

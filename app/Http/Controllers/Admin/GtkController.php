@@ -24,6 +24,7 @@ class GtkController extends Controller
         // Statistics
         $stats = [
             'total_gtk' => Gtk::count(),
+            'gtk_with_nip' => Gtk::whereNotNull('nip')->where('nip', '!=', '')->count(),
             'laki_laki' => Gtk::where('jenis_kelamin', 'L')->count(),
             'perempuan' => Gtk::where('jenis_kelamin', 'P')->count(),
             'data_lengkap' => Gtk::where('data_diri_completed', true)
@@ -149,6 +150,44 @@ class GtkController extends Controller
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $data
+        ]);
+    }
+
+    /**
+     * Get GTK candidates that can be synced with Kemenag safely.
+     * Only returns GTK that already have a NIP.
+     */
+    public function syncKemenagCandidates()
+    {
+        if (!auth()->user()->can('edit-gtk')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi massal.'
+            ], 403);
+        }
+
+        $candidates = Gtk::query()
+            ->select(['id', 'nama_lengkap', 'nip'])
+            ->whereNotNull('nip')
+            ->where('nip', '!=', '')
+            ->orderBy('nama_lengkap')
+            ->get()
+            ->map(function ($gtk) {
+                return [
+                    'id' => $gtk->id,
+                    'nama_lengkap' => $gtk->nama_lengkap,
+                    'nip' => $gtk->nip,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => $candidates->isEmpty()
+                ? 'Belum ada GTK dengan NIP yang bisa disinkronkan.'
+                : 'Kandidat sinkronisasi berhasil disiapkan.',
+            'total' => $candidates->count(),
+            'candidates' => $candidates,
         ]);
     }
 
