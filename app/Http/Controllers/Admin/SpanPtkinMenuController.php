@@ -150,8 +150,13 @@ class SpanPtkinMenuController extends Controller
     public function importPdf(Request $request, SpanPtkinMenu $spanPtkinMenu)
     {
         if (!$spanPtkinMenu->isEditable()) {
-            return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-                ->with('error', 'Import PDF hanya tersedia pada tahun pelajaran aktif.');
+            return $this->respondAfterAction(
+                $request,
+                $spanPtkinMenu,
+                'error',
+                'Import PDF hanya tersedia pada tahun pelajaran aktif.',
+                422
+            );
         }
 
         $validated = $request->validate([
@@ -169,21 +174,35 @@ class SpanPtkinMenuController extends Controller
 
         Session::put($this->previewSessionKey($spanPtkinMenu), $preview);
 
-        return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-            ->with('success', 'Preview import berhasil dibuat. Periksa hasil pencocokan sebelum menyimpan ke database.');
+        return $this->respondAfterAction(
+            $request,
+            $spanPtkinMenu,
+            'success',
+            'Preview import berhasil dibuat. Periksa hasil pencocokan sebelum menyimpan ke database.'
+        );
     }
 
-    public function confirmImport(SpanPtkinMenu $spanPtkinMenu)
+    public function confirmImport(Request $request, SpanPtkinMenu $spanPtkinMenu)
     {
         if (!$spanPtkinMenu->isEditable()) {
-            return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-                ->with('error', 'Konfirmasi import hanya tersedia pada tahun pelajaran aktif.');
+            return $this->respondAfterAction(
+                $request,
+                $spanPtkinMenu,
+                'error',
+                'Konfirmasi import hanya tersedia pada tahun pelajaran aktif.',
+                422
+            );
         }
 
         $preview = $this->getPreviewImport($spanPtkinMenu);
         if (!$preview) {
-            return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-                ->with('error', 'Preview import tidak ditemukan. Upload PDF terlebih dahulu.');
+            return $this->respondAfterAction(
+                $request,
+                $spanPtkinMenu,
+                'error',
+                'Preview import tidak ditemukan. Upload PDF terlebih dahulu.',
+                422
+            );
         }
 
         $result = $this->pdfImportService->confirmImport($spanPtkinMenu, $preview);
@@ -210,16 +229,24 @@ class SpanPtkinMenuController extends Controller
             }
         }
 
-        return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-            ->with($result['unmatched']->isEmpty() ? 'success' : 'warning', $message);
+        return $this->respondAfterAction(
+            $request,
+            $spanPtkinMenu,
+            $result['unmatched']->isEmpty() ? 'success' : 'warning',
+            $message
+        );
     }
 
-    public function cancelPreview(SpanPtkinMenu $spanPtkinMenu)
+    public function cancelPreview(Request $request, SpanPtkinMenu $spanPtkinMenu)
     {
         Session::forget($this->previewSessionKey($spanPtkinMenu));
 
-        return redirect()->route('admin.span-ptkin-menu.show', $spanPtkinMenu)
-            ->with('success', 'Preview import dibatalkan.');
+        return $this->respondAfterAction(
+            $request,
+            $spanPtkinMenu,
+            'success',
+            'Preview import dibatalkan.'
+        );
     }
 
     private function kelas12Students(SpanPtkinMenu $menu)
@@ -248,5 +275,25 @@ class SpanPtkinMenuController extends Controller
         $preview = Session::get($this->previewSessionKey($menu));
 
         return is_array($preview) ? $preview : null;
+    }
+
+    private function respondAfterAction(
+        Request $request,
+        SpanPtkinMenu $menu,
+        string $status,
+        string $message,
+        int $httpStatus = 200
+    ) {
+        $redirectUrl = route('admin.span-ptkin-menu.show', $menu);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => $status,
+                'message' => $message,
+                'redirect_url' => $redirectUrl,
+            ], $httpStatus);
+        }
+
+        return redirect($redirectUrl)->with($status, $message);
     }
 }

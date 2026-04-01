@@ -47,7 +47,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <form action="{{ route('admin.span-ptkin-menu.import-pdf', $spanPtkinMenu) }}" method="POST" enctype="multipart/form-data" class="card card-success card-outline">
+            <form id="spanPtkinUploadForm" action="{{ route('admin.span-ptkin-menu.import-pdf', $spanPtkinMenu) }}" method="POST" enctype="multipart/form-data" class="card card-success card-outline">
                 @csrf
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-file-pdf"></i> Upload PDF untuk Preview</h3>
@@ -60,11 +60,27 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-success btn-block">
+                    <button type="submit" class="btn btn-success btn-block" data-role="upload-submit">
                         <i class="fas fa-search"></i> Preview Import
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="spanPtkinUploadProgressCard" class="card card-outline card-info d-none">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-upload"></i> Progress Upload PDF</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong id="spanPtkinUploadProgressLabel">Menyiapkan upload...</strong>
+                <span id="spanPtkinUploadProgressValue" class="badge badge-info">0%</span>
+            </div>
+            <div class="progress progress-sm">
+                <div id="spanPtkinUploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
+            </div>
+            <small class="text-muted d-block mt-2">File akan dipreview terlebih dahulu. Data belum masuk database sampai admin menekan konfirmasi simpan.</small>
         </div>
     </div>
 
@@ -112,9 +128,9 @@
             @endif
 
             <div class="d-flex flex-wrap mb-3">
-                <form action="{{ route('admin.span-ptkin-menu.confirm-import', $spanPtkinMenu) }}" method="POST" class="mr-2 mb-2">
+                <form id="spanPtkinConfirmForm" action="{{ route('admin.span-ptkin-menu.confirm-import', $spanPtkinMenu) }}" method="POST" class="mr-2 mb-2">
                     @csrf
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-success" data-role="save-submit">
                         <i class="fas fa-save"></i> Konfirmasi Simpan ke Database
                     </button>
                 </form>
@@ -125,6 +141,17 @@
                         <i class="fas fa-times"></i> Batalkan Preview
                     </button>
                 </form>
+            </div>
+
+            <div id="spanPtkinSaveProgressCard" class="alert alert-info d-none">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong id="spanPtkinSaveProgressLabel">Menyiapkan penyimpanan...</strong>
+                    <span id="spanPtkinSaveProgressValue" class="badge badge-info">0%</span>
+                </div>
+                <div class="progress progress-sm">
+                    <div id="spanPtkinSaveProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
+                </div>
+                <small class="text-muted d-block mt-2">Sistem sedang menyimpan hasil preview ke database dan memperbarui data nomor pendaftaran.</small>
             </div>
 
             <div class="table-responsive">
@@ -277,6 +304,15 @@
     #spanPtkinTable code {
         font-size: 0.9rem;
     }
+
+    .progress-sm {
+        height: 14px;
+        border-radius: 999px;
+    }
+
+    .progress-sm .progress-bar {
+        line-height: 14px;
+    }
 </style>
 @stop
 
@@ -285,6 +321,215 @@
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 <script>
     $(function () {
+        const uploadForm = document.getElementById('spanPtkinUploadForm');
+        const confirmForm = document.getElementById('spanPtkinConfirmForm');
+        const uploadProgressCard = document.getElementById('spanPtkinUploadProgressCard');
+        const uploadProgressBar = document.getElementById('spanPtkinUploadProgressBar');
+        const uploadProgressLabel = document.getElementById('spanPtkinUploadProgressLabel');
+        const uploadProgressValue = document.getElementById('spanPtkinUploadProgressValue');
+        const saveProgressCard = document.getElementById('spanPtkinSaveProgressCard');
+        const saveProgressBar = document.getElementById('spanPtkinSaveProgressBar');
+        const saveProgressLabel = document.getElementById('spanPtkinSaveProgressLabel');
+        const saveProgressValue = document.getElementById('spanPtkinSaveProgressValue');
+        let saveProgressTimer = null;
+
+        function updateProgress(bar, label, value, percent, text) {
+            if (!bar || !label || !value) {
+                return;
+            }
+
+            const safePercent = Math.max(0, Math.min(100, percent));
+            bar.style.width = safePercent + '%';
+            bar.setAttribute('aria-valuenow', safePercent);
+            label.textContent = text;
+            value.textContent = safePercent + '%';
+        }
+
+        function setButtonLoading(button, loadingText) {
+            if (!button) {
+                return;
+            }
+
+            if (!button.dataset.originalHtml) {
+                button.dataset.originalHtml = button.innerHTML;
+            }
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + loadingText;
+        }
+
+        function resetButton(button) {
+            if (!button || !button.dataset.originalHtml) {
+                return;
+            }
+
+            button.disabled = false;
+            button.innerHTML = button.dataset.originalHtml;
+        }
+
+        function redirectWithFlash(response) {
+            if (response && response.redirect_url) {
+                const url = new URL(response.redirect_url, window.location.origin);
+                url.searchParams.set('flash_status', response.status || 'success');
+                url.searchParams.set('flash_message', response.message || '');
+                window.location.href = url.toString();
+                return;
+            }
+
+            window.location.reload();
+        }
+
+        const currentUrl = new URL(window.location.href);
+        const flashStatus = currentUrl.searchParams.get('flash_status');
+        const flashMessage = currentUrl.searchParams.get('flash_message');
+
+        if (flashStatus && flashMessage) {
+            const alertTypeMap = {
+                success: 'success',
+                warning: 'warning',
+                error: 'danger',
+            };
+
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-' + (alertTypeMap[flashStatus] || 'info');
+            alert.textContent = flashMessage;
+            const container = document.querySelector('.container-fluid');
+            if (container) {
+                container.insertBefore(alert, container.firstChild);
+            }
+
+            currentUrl.searchParams.delete('flash_status');
+            currentUrl.searchParams.delete('flash_message');
+            window.history.replaceState({}, document.title, currentUrl.toString());
+        }
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const fileInput = uploadForm.querySelector('input[name="pdf_file"]');
+                const submitButton = uploadForm.querySelector('[data-role="upload-submit"]');
+
+                if (!fileInput || !fileInput.files.length) {
+                    fileInput && fileInput.focus();
+                    return;
+                }
+
+                uploadProgressCard.classList.remove('d-none');
+                updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 0, 'Menyiapkan upload...');
+                setButtonLoading(submitButton, 'Mengunggah PDF...');
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', uploadForm.action, true);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Accept', 'application/json');
+
+                xhr.upload.addEventListener('progress', function (progressEvent) {
+                    if (progressEvent.lengthComputable) {
+                        const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+                        const text = percent >= 100
+                            ? 'Upload selesai, sistem sedang membuat preview...'
+                            : 'Mengunggah file PDF...';
+                        updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, percent, text);
+                    }
+                });
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState !== XMLHttpRequest.DONE) {
+                        return;
+                    }
+
+                    let payload = null;
+                    try {
+                        payload = JSON.parse(xhr.responseText);
+                    } catch (error) {
+                        payload = null;
+                    }
+
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Preview siap, mengarahkan ke hasil import...');
+                        redirectWithFlash(payload);
+                        return;
+                    }
+
+                    const message = payload && payload.message
+                        ? payload.message
+                        : 'Upload PDF gagal diproses. Silakan coba lagi.';
+
+                    updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Upload gagal diproses.');
+                    alert(message);
+                    resetButton(submitButton);
+                };
+
+                xhr.onerror = function () {
+                    updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Terjadi gangguan jaringan saat upload.');
+                    alert('Terjadi gangguan jaringan saat upload PDF.');
+                    resetButton(submitButton);
+                };
+
+                xhr.send(new FormData(uploadForm));
+            });
+        }
+
+        if (confirmForm) {
+            confirmForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const submitButton = confirmForm.querySelector('[data-role="save-submit"]');
+                setButtonLoading(submitButton, 'Menyimpan ke database...');
+                saveProgressCard.classList.remove('d-none');
+                updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 10, 'Menyiapkan penyimpanan ke database...');
+
+                const steps = [
+                    { percent: 25, text: 'Memvalidasi preview import...' },
+                    { percent: 45, text: 'Menyimpan nomor pendaftaran SPAN-PTKIN...' },
+                    { percent: 70, text: 'Memperbarui data siswa yang cocok...' },
+                    { percent: 90, text: 'Merapikan hasil import dan finalisasi...' }
+                ];
+
+                let stepIndex = 0;
+                clearInterval(saveProgressTimer);
+                saveProgressTimer = window.setInterval(function () {
+                    if (stepIndex >= steps.length) {
+                        clearInterval(saveProgressTimer);
+                        return;
+                    }
+
+                    const step = steps[stepIndex];
+                    updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, step.percent, step.text);
+                    stepIndex += 1;
+                }, 500);
+
+                fetch(confirmForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': confirmForm.querySelector('input[name="_token"]').value,
+                    },
+                    credentials: 'same-origin',
+                })
+                .then(async function (response) {
+                    const payload = await response.json().catch(function () {
+                        return null;
+                    });
+
+                    if (!response.ok) {
+                        throw payload || { message: 'Konfirmasi simpan gagal diproses.' };
+                    }
+
+                    updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 100, 'Penyimpanan selesai, mengarahkan ke hasil terbaru...');
+                    redirectWithFlash(payload);
+                })
+                .catch(function (error) {
+                    clearInterval(saveProgressTimer);
+                    updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 100, 'Penyimpanan gagal diproses.');
+                    alert(error && error.message ? error.message : 'Konfirmasi simpan gagal diproses.');
+                    resetButton(submitButton);
+                });
+            });
+        }
+
         $('#spanPtkinTable').DataTable({
             pageLength: 25,
             order: [[5, 'desc'], [2, 'asc']],
