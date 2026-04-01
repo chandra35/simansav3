@@ -60,11 +60,9 @@ class ProfileController extends Controller
             return back()->withErrors(['current_password' => 'Password lama tidak sesuai']);
         }
 
-        // Save plain password for admin view
-        $user->readable_password = $request->password;
-        
         $user->update([
             'password' => Hash::make($request->password),
+            'encrypted_password' => null,
         ]);
 
         User::logCustomActivity('password_change', 'Password berhasil diubah');
@@ -120,13 +118,11 @@ class ProfileController extends Controller
 
         $user = Auth::user();
         
-        // Save plain password for admin view
-        $user->readable_password = $request->password;
-        
         $user->update([
             'password' => Hash::make($request->password),
             'email' => $request->email,
             'is_first_login' => false,
+            'encrypted_password' => null,
         ]);
 
         User::logCustomActivity('first_login_setup', 'Setup awal berhasil: password dan email diperbarui');
@@ -156,12 +152,10 @@ class ProfileController extends Controller
 
         $user = Auth::user();
         
-        // Save plain password for admin view
-        $user->readable_password = $request->password;
-        
         $user->update([
             'password' => Hash::make($request->password),
             'is_first_login' => false,
+            'encrypted_password' => null,
         ]);
 
         User::logCustomActivity('first_login_password_change', 'Password pertama kali berhasil diubah');

@@ -78,6 +78,7 @@ class GtkProfileController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
             'is_first_login' => false,
+            'encrypted_password' => null,
         ]);
 
         return redirect()->route('admin.gtk.dashboard')
