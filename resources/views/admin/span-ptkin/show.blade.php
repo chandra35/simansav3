@@ -19,6 +19,23 @@
         @endif
     @endforeach
 
+    <div id="spanPtkinProgressOverlay" class="span-ptkin-progress-overlay d-none" aria-hidden="true">
+        <div class="span-ptkin-progress-dialog">
+            <div class="span-ptkin-progress-icon">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <h4 id="spanPtkinOverlayTitle" class="mb-2">Memproses Import SPAN-PTKIN</h4>
+            <p id="spanPtkinOverlayText" class="text-muted mb-3">Mohon tunggu, proses sedang berjalan.</p>
+            <div class="progress progress-sm mb-2">
+                <div id="spanPtkinOverlayBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Jangan tutup halaman ini sebelum proses selesai.</small>
+                <span id="spanPtkinOverlayValue" class="badge badge-info">0%</span>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-8">
             <div class="card">
@@ -313,6 +330,44 @@
     .progress-sm .progress-bar {
         line-height: 14px;
     }
+
+    .span-ptkin-progress-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1060;
+        background: rgba(17, 24, 39, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        backdrop-filter: blur(2px);
+    }
+
+    .span-ptkin-progress-dialog {
+        width: min(100%, 460px);
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .span-ptkin-progress-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1rem;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(23, 162, 184, 0.12);
+        color: #17a2b8;
+        font-size: 1.75rem;
+    }
+
+    body.span-ptkin-progress-active {
+        overflow: hidden;
+    }
 </style>
 @stop
 
@@ -331,6 +386,11 @@
         const saveProgressBar = document.getElementById('spanPtkinSaveProgressBar');
         const saveProgressLabel = document.getElementById('spanPtkinSaveProgressLabel');
         const saveProgressValue = document.getElementById('spanPtkinSaveProgressValue');
+        const progressOverlay = document.getElementById('spanPtkinProgressOverlay');
+        const overlayTitle = document.getElementById('spanPtkinOverlayTitle');
+        const overlayText = document.getElementById('spanPtkinOverlayText');
+        const overlayBar = document.getElementById('spanPtkinOverlayBar');
+        const overlayValue = document.getElementById('spanPtkinOverlayValue');
         let saveProgressTimer = null;
 
         function updateProgress(bar, label, value, percent, text) {
@@ -343,6 +403,44 @@
             bar.setAttribute('aria-valuenow', safePercent);
             label.textContent = text;
             value.textContent = safePercent + '%';
+        }
+
+        function showOverlay(title, text, percent) {
+            if (!progressOverlay) {
+                return;
+            }
+
+            document.body.classList.add('span-ptkin-progress-active');
+            progressOverlay.classList.remove('d-none');
+            progressOverlay.setAttribute('aria-hidden', 'false');
+
+            if (overlayTitle) {
+                overlayTitle.textContent = title;
+            }
+
+            if (overlayText) {
+                overlayText.textContent = text;
+            }
+
+            updateProgress(overlayBar, overlayText, overlayValue, percent, text);
+        }
+
+        function updateOverlay(text, percent) {
+            if (!progressOverlay || progressOverlay.classList.contains('d-none')) {
+                return;
+            }
+
+            updateProgress(overlayBar, overlayText, overlayValue, percent, text);
+        }
+
+        function hideOverlay() {
+            if (!progressOverlay) {
+                return;
+            }
+
+            progressOverlay.classList.add('d-none');
+            progressOverlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('span-ptkin-progress-active');
         }
 
         function setButtonLoading(button, loadingText) {
@@ -418,6 +516,7 @@
                 uploadProgressCard.classList.remove('d-none');
                 updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 0, 'Menyiapkan upload...');
                 setButtonLoading(submitButton, 'Mengunggah PDF...');
+                showOverlay('Mengunggah PDF SPAN-PTKIN', 'Menyiapkan upload file PDF...', 0);
 
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', uploadForm.action, true);
@@ -431,6 +530,7 @@
                             ? 'Upload selesai, sistem sedang membuat preview...'
                             : 'Mengunggah file PDF...';
                         updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, percent, text);
+                        updateOverlay(text, percent);
                     }
                 });
 
@@ -448,6 +548,7 @@
 
                     if (xhr.status >= 200 && xhr.status < 300) {
                         updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Preview siap, mengarahkan ke hasil import...');
+                        updateOverlay('Preview siap, mengarahkan ke hasil import...', 100);
                         redirectWithFlash(payload);
                         return;
                     }
@@ -457,13 +558,17 @@
                         : 'Upload PDF gagal diproses. Silakan coba lagi.';
 
                     updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Upload gagal diproses.');
+                    updateOverlay('Upload gagal diproses.', 100);
                     alert(message);
+                    hideOverlay();
                     resetButton(submitButton);
                 };
 
                 xhr.onerror = function () {
                     updateProgress(uploadProgressBar, uploadProgressLabel, uploadProgressValue, 100, 'Terjadi gangguan jaringan saat upload.');
+                    updateOverlay('Terjadi gangguan jaringan saat upload.', 100);
                     alert('Terjadi gangguan jaringan saat upload PDF.');
+                    hideOverlay();
                     resetButton(submitButton);
                 };
 
@@ -479,6 +584,7 @@
                 setButtonLoading(submitButton, 'Menyimpan ke database...');
                 saveProgressCard.classList.remove('d-none');
                 updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 10, 'Menyiapkan penyimpanan ke database...');
+                showOverlay('Menyimpan Hasil Import', 'Menyiapkan penyimpanan ke database...', 10);
 
                 const steps = [
                     { percent: 25, text: 'Memvalidasi preview import...' },
@@ -497,6 +603,7 @@
 
                     const step = steps[stepIndex];
                     updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, step.percent, step.text);
+                    updateOverlay(step.text, step.percent);
                     stepIndex += 1;
                 }, 500);
 
@@ -519,12 +626,15 @@
                     }
 
                     updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 100, 'Penyimpanan selesai, mengarahkan ke hasil terbaru...');
+                    updateOverlay('Penyimpanan selesai, mengarahkan ke hasil terbaru...', 100);
                     redirectWithFlash(payload);
                 })
                 .catch(function (error) {
                     clearInterval(saveProgressTimer);
                     updateProgress(saveProgressBar, saveProgressLabel, saveProgressValue, 100, 'Penyimpanan gagal diproses.');
+                    updateOverlay('Penyimpanan gagal diproses.', 100);
                     alert(error && error.message ? error.message : 'Konfirmasi simpan gagal diproses.');
+                    hideOverlay();
                     resetButton(submitButton);
                 });
             });
