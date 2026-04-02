@@ -248,11 +248,11 @@
 
         .simansa-dashboard-chip {
             min-width: 165px;
-            background: rgba(255, 255, 255, 0.16);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(216, 227, 244, 0.95);
             border-radius: 1rem;
             padding: 0.8rem 0.95rem;
-            backdrop-filter: blur(4px);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
         }
 
         .simansa-dashboard-chip__label {
@@ -260,14 +260,14 @@
             font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 0.07em;
-            opacity: 0.75;
+            color: #64748b;
             margin-bottom: 0.2rem;
         }
 
         .simansa-dashboard-chip__value {
             font-size: 0.98rem;
             font-weight: 700;
-            color: #fff;
+            color: #0f172a;
         }
 
         .simansa-stat-card {
