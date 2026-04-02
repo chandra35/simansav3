@@ -8,8 +8,8 @@
 @endphp
 
 @section('content_header')
-    <div class="simansa-dashboard-hero">
-        <div class="simansa-dashboard-hero__content">
+    <div class="simansa-dashboard-header">
+        <div class="simansa-dashboard-header__content">
             <div class="simansa-dashboard-hero__eyebrow">
                 <i class="fas fa-chart-line mr-2"></i>Ringkasan Operasional SIMANSA
             </div>
@@ -18,18 +18,14 @@
                 Pantau aktivitas pengguna, status aktivasi siswa, dan gambaran umum sistem dari satu halaman yang lebih rapi.
             </p>
         </div>
-        <div class="simansa-dashboard-hero__meta">
+        <div class="simansa-dashboard-header__meta">
             <div class="simansa-dashboard-chip">
                 <span class="simansa-dashboard-chip__label">Tahun Pelajaran Aktif</span>
-                <span class="simansa-dashboard-chip__value">
-                    {{ $tahunPelajaranAktif?->nama ?? 'Belum diatur' }}
-                </span>
+                <span class="simansa-dashboard-chip__value">{{ $tahunPelajaranAktif?->nama ?? 'Belum diatur' }}</span>
             </div>
             <div class="simansa-dashboard-chip">
                 <span class="simansa-dashboard-chip__label">Semester</span>
-                <span class="simansa-dashboard-chip__value">
-                    {{ $tahunPelajaranAktif ? 'Semester '.$tahunPelajaranAktif->semester_aktif : '-' }}
-                </span>
+                <span class="simansa-dashboard-chip__value">{{ $tahunPelajaranAktif ? 'Semester '.$tahunPelajaranAktif->semester_aktif : '-' }}</span>
             </div>
             <div class="simansa-dashboard-chip">
                 <span class="simansa-dashboard-chip__label">Aktivasi Siswa</span>
@@ -213,11 +209,12 @@
 
 @section('css')
     <style>
-        .simansa-dashboard-hero {
-            display: grid;
-            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
-            gap: 1rem;
-            align-items: center;
+        .simansa-dashboard-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem 1.25rem;
         }
 
         .simansa-dashboard-hero__eyebrow {
@@ -238,19 +235,23 @@
         .simansa-dashboard-hero__subtitle {
             font-size: 0.96rem;
             line-height: 1.7;
-            max-width: 760px;
+            max-width: 720px;
         }
 
-        .simansa-dashboard-hero__meta {
-            display: grid;
-            gap: 0.85rem;
+        .simansa-dashboard-header__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            justify-content: flex-end;
+            max-width: 560px;
         }
 
         .simansa-dashboard-chip {
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.22);
+            min-width: 165px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 1rem;
-            padding: 0.9rem 1rem;
+            padding: 0.8rem 0.95rem;
             backdrop-filter: blur(4px);
         }
 
@@ -264,7 +265,7 @@
         }
 
         .simansa-dashboard-chip__value {
-            font-size: 1rem;
+            font-size: 0.98rem;
             font-weight: 700;
             color: #fff;
         }
@@ -467,12 +468,17 @@
         }
 
         @media (max-width: 991.98px) {
-            .simansa-dashboard-hero {
-                grid-template-columns: 1fr;
+            .simansa-dashboard-header {
+                flex-direction: column;
             }
 
             .simansa-dashboard-hero__title {
                 font-size: 1.65rem !important;
+            }
+
+            .simansa-dashboard-header__meta {
+                justify-content: flex-start;
+                max-width: 100%;
             }
         }
 
