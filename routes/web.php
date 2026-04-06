@@ -296,6 +296,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('settings.update');
+        Route::get('/settings/server-info', [App\Http\Controllers\Admin\ServerInfoController::class, 'index'])->name('settings.server-info');
         Route::post('/settings/upload-logo-kemenag', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoKemenag'])->name('settings.upload-logo-kemenag');
         Route::post('/settings/upload-logo-sekolah', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoSekolah'])->name('settings.upload-logo-sekolah');
         Route::post('/settings/upload-kop-surat', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadKopSurat'])->name('settings.upload-kop-surat');

@@ -661,6 +661,13 @@ return [
                     'active' => ['admin/settings/smtp*'],
                 ],
                 [
+                    'text' => 'Detail Server',
+                    'route' => 'admin.settings.server-info',
+                    'icon' => 'fas fa-fw fa-server',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/settings/server-info*'],
+                ],
+                [
                     'text' => 'Log Email',
                     'route' => 'admin.email-logs.index',
                     'icon' => 'fas fa-fw fa-envelope-open-text',

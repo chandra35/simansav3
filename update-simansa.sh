@@ -15,7 +15,35 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Direktori aplikasi
-APP_DIR="/home/manmetr1/simansa.man1metro.sch.id"
+detect_app_dir() {
+    local candidates=(
+        "${APP_DIR}"
+        "/home/simansa/htdocs/simansa.man1metro.sch.id"
+        "/home/manmetr1/simansa.man1metro.sch.id"
+    )
+
+    for candidate in "${candidates[@]}"; do
+        if [[ -n "$candidate" && -d "$candidate" ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+APP_DIR="$(detect_app_dir)" || {
+    echo -e "${RED}[ERROR]${NC} Direktori aplikasi tidak ditemukan. Set APP_DIR terlebih dahulu."
+    exit 1
+}
+
+PHP_BIN="${PHP_BIN:-$(command -v php8.3 || command -v php || true)}"
+COMPOSER_BIN="${COMPOSER_BIN:-$(command -v composer || true)}"
+
+if [[ -z "$PHP_BIN" ]]; then
+    echo -e "${RED}[ERROR]${NC} Binary PHP tidak ditemukan."
+    exit 1
+fi
 
 # Function untuk print dengan warna
 print_status() {
@@ -67,7 +95,7 @@ fi
 
 # Enable maintenance mode
 print_status "Mengaktifkan maintenance mode..."
-php artisan down --message="Sedang dalam proses update, silakan tunggu beberapa saat..." --retry=60 2>/dev/null || true
+"$PHP_BIN" artisan down --retry=60 2>/dev/null || true
 
 # Pull dari GitHub
 print_status "Mengambil update dari GitHub..."
@@ -77,15 +105,24 @@ if [ $? -eq 0 ]; then
     print_success "Pull dari GitHub berhasil"
 else
     print_error "Gagal pull dari GitHub"
-    php artisan up 2>/dev/null || true
+    "$PHP_BIN" artisan up 2>/dev/null || true
     exit 1
 fi
 
 # Update Composer dependencies (jika ada perubahan composer.json)
 print_status "Mengecek dan update dependencies Composer..."
 if [[ -f "composer.lock" ]]; then
-    composer install --no-dev --optimize-autoloader --no-interaction
-    if [ $? -eq 0 ]; then
+    composer_status=0
+
+    if [[ -n "$COMPOSER_BIN" ]]; then
+        "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
+        composer_status=$?
+    else
+        print_warning "Composer tidak ditemukan, melewati composer install"
+        composer_status=2
+    fi
+
+    if [ $composer_status -eq 0 ]; then
         print_success "Composer dependencies updated"
     else
         print_warning "Composer install gagal, melanjutkan..."
@@ -94,7 +131,7 @@ fi
 
 # Jalankan migrasi database
 print_status "Menjalankan migrasi database..."
-php artisan migrate --force
+"$PHP_BIN" artisan migrate --force
 if [ $? -eq 0 ]; then
     print_success "Migrasi database berhasil"
 else
@@ -105,22 +142,22 @@ fi
 print_status "Membersihkan cache..."
 
 echo "  - Clearing application cache..."
-php artisan cache:clear
+"$PHP_BIN" artisan cache:clear
 
 echo "  - Clearing config cache..."
-php artisan config:clear
+"$PHP_BIN" artisan config:clear
 
 echo "  - Clearing route cache..."
-php artisan route:clear
+"$PHP_BIN" artisan route:clear
 
 echo "  - Clearing view cache..."
-php artisan view:clear
+"$PHP_BIN" artisan view:clear
 
 echo "  - Clearing compiled classes..."
-php artisan clear-compiled 2>/dev/null || true
+"$PHP_BIN" artisan clear-compiled 2>/dev/null || true
 
 echo "  - Clearing event cache..."
-php artisan event:clear 2>/dev/null || true
+"$PHP_BIN" artisan event:clear 2>/dev/null || true
 
 print_success "Semua cache telah dibersihkan"
 
@@ -128,24 +165,24 @@ print_success "Semua cache telah dibersihkan"
 print_status "Membangun ulang cache untuk production..."
 
 echo "  - Caching config..."
-php artisan config:cache
+"$PHP_BIN" artisan config:cache
 
 echo "  - Caching routes..."
-php artisan route:cache
+"$PHP_BIN" artisan route:cache
 
 echo "  - Caching views..."
-php artisan view:cache
+"$PHP_BIN" artisan view:cache
 
 print_success "Cache production telah dibangun"
 
 # Optimize
 print_status "Mengoptimasi aplikasi..."
-php artisan optimize 2>/dev/null || true
+"$PHP_BIN" artisan optimize 2>/dev/null || true
 
 # Storage link (jika belum ada)
 print_status "Mengecek storage link..."
 if [ ! -L "public/storage" ]; then
-    php artisan storage:link
+    "$PHP_BIN" artisan storage:link
     print_success "Storage link dibuat"
 else
     print_success "Storage link sudah ada"
@@ -158,7 +195,7 @@ print_success "Permission diatur"
 
 # Disable maintenance mode
 print_status "Menonaktifkan maintenance mode..."
-php artisan up
+"$PHP_BIN" artisan up
 
 # Tampilkan versi dan info
 echo ""
@@ -166,7 +203,7 @@ echo -e "${GREEN}=============================================="
 echo "   UPDATE SELESAI!"
 echo "=============================================="
 echo -e "${NC}"
-print_status "Versi Laravel: $(php artisan --version)"
+print_status "Versi Laravel: $("$PHP_BIN" artisan --version)"
 print_status "Waktu: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
