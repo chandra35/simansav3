@@ -880,14 +880,6 @@
             });
         }
 
-        $('#spanPtkinTable').DataTable({
-            pageLength: 25,
-            order: [[5, 'desc'], [2, 'asc']],
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
-            }
-        });
-
         @if($previewImport)
         $('#spanPtkinPreviewTable').DataTable({
             pageLength: 10,
