@@ -8,8 +8,10 @@ use App\Models\Siswa;
 use App\Models\SpanPtkinMenu;
 use App\Models\SpanPtkinRegistration;
 use App\Models\TahunPelajaran;
+use App\Services\SpanPtkinAnnouncementService;
 use App\Services\SpanPtkinPdfImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class SpanPtkinMenuController extends Controller
@@ -17,7 +19,8 @@ class SpanPtkinMenuController extends Controller
     private const PREVIEW_SESSION_KEY = 'span_ptkin_import_preview';
 
     public function __construct(
-        private readonly SpanPtkinPdfImportService $pdfImportService
+        private readonly SpanPtkinPdfImportService $pdfImportService,
+        private readonly SpanPtkinAnnouncementService $announcementService
     ) {
     }
 
@@ -91,11 +94,64 @@ class SpanPtkinMenuController extends Controller
             'sudah_terimport' => $monitoring->filter(fn ($siswa) => filled(optional($siswa->spanPtkinRegistration)->nomor_pendaftaran))->count(),
             'belum_terimport' => $monitoring->filter(fn ($siswa) => blank(optional($siswa->spanPtkinRegistration)->nomor_pendaftaran))->count(),
             'terhubung_lulusan' => $monitoring->filter(fn ($siswa) => optional($siswa->spanPtkinRegistration)->lulusan !== null)->count(),
+            'lulus' => $monitoring->filter(fn ($siswa) => optional($siswa->spanPtkinRegistration)->check_status === 'lulus')->count(),
+            'tidak_lulus' => $monitoring->filter(fn ($siswa) => optional($siswa->spanPtkinRegistration)->check_status === 'tidak_lulus')->count(),
+            'gagal_cek' => $monitoring->filter(fn ($siswa) => optional($siswa->spanPtkinRegistration)->check_status === 'gagal_cek')->count(),
+            'belum_dicek' => $monitoring->filter(fn ($siswa) => (optional($siswa->spanPtkinRegistration)->check_status ?? 'belum_dicek') === 'belum_dicek')->count(),
         ];
 
         $previewImport = $this->getPreviewImport($spanPtkinMenu);
 
         return view('admin.span-ptkin.show', compact('spanPtkinMenu', 'monitoring', 'summary', 'previewImport'));
+    }
+
+    public function checkAnnouncement(SpanPtkinMenu $spanPtkinMenu, SpanPtkinRegistration $registration)
+    {
+        abort_unless($registration->span_ptkin_menu_id === $spanPtkinMenu->id, 404);
+
+        $registration->load(['siswa', 'lulusan.referensiPerguruanTinggi', 'lulusan.referensiProgramStudi']);
+
+        try {
+            $result = $this->announcementService->checkRegistration($registration);
+
+            return response()->json([
+                'success' => true,
+                'registration_id' => $registration->id,
+                'siswa_id' => $registration->siswa_id,
+                'result' => $result,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('SPAN-PTKIN announcement check failed', [
+                'registration_id' => $registration->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $registration->forceFill([
+                'check_status' => 'gagal_cek',
+                'last_checked_at' => now(),
+                'last_check_message' => $exception->getMessage(),
+                'last_check_payload' => [
+                    '_meta' => [
+                        'checked_at' => now()->toIso8601String(),
+                    ],
+                ],
+            ])->save();
+
+            return response()->json([
+                'success' => false,
+                'registration_id' => $registration->id,
+                'siswa_id' => $registration->siswa_id,
+                'message' => $exception->getMessage(),
+                'result' => [
+                    'status' => 'gagal_cek',
+                    'status_label' => $registration->fresh()->check_status_label,
+                    'message' => $exception->getMessage(),
+                    'checked_at' => $registration->last_checked_at?->format('d-m-Y H:i:s'),
+                    'source_url' => null,
+                    'payload' => $registration->last_check_payload,
+                ],
+            ], 500);
+        }
     }
 
     public function edit(SpanPtkinMenu $spanPtkinMenu)

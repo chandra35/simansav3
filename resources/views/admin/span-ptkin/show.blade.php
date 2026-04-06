@@ -248,11 +248,40 @@
                 <div class="icon"><i class="fas fa-link"></i></div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="small-box bg-success">
+                <div class="inner"><h3>{{ $summary['lulus'] }}</h3><p>Lulus SPAN-PTKIN</p></div>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="small-box bg-danger">
+                <div class="inner"><h3>{{ $summary['tidak_lulus'] }}</h3><p>Tidak lulus</p></div>
+                <div class="icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="small-box bg-warning">
+                <div class="inner"><h3>{{ $summary['gagal_cek'] }}</h3><p>Gagal cek</p></div>
+                <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="small-box bg-secondary">
+                <div class="inner"><h3>{{ $summary['belum_dicek'] }}</h3><p>Belum dicek</p></div>
+                <div class="icon"><i class="fas fa-search"></i></div>
+            </div>
+        </div>
     </div>
 
     <div class="card card-outline card-success">
         <div class="card-header">
             <h3 class="card-title">Monitoring Siswa Kelas 12</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-primary btn-sm" id="bulkCheckSpanPtkinBtn">
+                    <i class="fas fa-sync-alt"></i> Cek Semua Pengumuman
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -265,11 +294,14 @@
                             <th>Kelas</th>
                             <th>Tanggal Lahir</th>
                             <th>No. Pendaftaran</th>
+                            <th>Status Cek</th>
+                            <th>Update Terakhir</th>
                             <th>Import Terakhir</th>
                             <th>Status Lulusan</th>
                             <th>Jalur</th>
                             <th>PTKIN / Universitas</th>
                             <th>Program Studi</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -285,14 +317,38 @@
                                     ?? optional($lulusan)->program_studi_manual
                                     ?? optional(optional($lulusan)->referensiProgramStudi)->nama_program_studi
                                     ?? '-';
+                                $checkStatus = $registration?->check_status ?? 'belum_dicek';
+                                $checkLabel = $registration?->check_status_label ?? 'Belum Dicek';
+                                $checkBadge = match ($checkStatus) {
+                                    'lulus' => 'success',
+                                    'tidak_lulus' => 'danger',
+                                    'gagal_cek' => 'warning',
+                                    default => 'secondary',
+                                };
+                                $checkRoute = $registration
+                                    ? route('admin.span-ptkin-menu.check-announcement', [$spanPtkinMenu, $registration])
+                                    : null;
                             @endphp
-                            <tr>
+                            <tr
+                                data-siswa-id="{{ $siswa->id }}"
+                                data-registration-id="{{ $registration?->id }}"
+                                data-check-url="{{ $checkRoute }}"
+                                data-can-check="{{ $registration && filled($registration->nomor_pendaftaran) ? '1' : '0' }}"
+                                data-siswa-name="{{ $siswa->nama_lengkap }}"
+                            >
                                 <td>{{ $index + 1 }}</td>
                                 <td><code>{{ $siswa->nisn }}</code></td>
                                 <td>{{ $siswa->nama_lengkap }}</td>
                                 <td>{{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}</td>
                                 <td data-order="{{ $siswa->tanggal_lahir?->format('Y-m-d') ?? '' }}">{{ $siswa->tanggal_lahir?->format('d-m-Y') ?? '-' }}</td>
                                 <td>{{ $registration?->nomor_pendaftaran ? $registration->nomor_pendaftaran : 'Belum terimport' }}</td>
+                                <td data-order="{{ $checkStatus }}">
+                                    <span class="badge badge-{{ $checkBadge }} js-check-status">{{ $checkLabel }}</span>
+                                    <div class="small text-muted mt-1 js-check-message">{{ $registration?->last_check_message ?? '-' }}</div>
+                                </td>
+                                <td data-order="{{ $registration?->last_checked_at?->timestamp ?? 0 }}">
+                                    <span class="js-last-checked">{{ $registration?->last_checked_at?->format('d-m-Y H:i') ?? '-' }}</span>
+                                </td>
                                 <td data-order="{{ $registration?->imported_at?->timestamp ?? 0 }}">{{ $registration?->imported_at?->format('d-m-Y H:i') ?? '-' }}</td>
                                 <td>
                                     @if($lulusan)
@@ -304,10 +360,44 @@
                                 <td>{{ $lulusan?->jalur_masuk ?? '-' }}</td>
                                 <td>{{ $universitas }}</td>
                                 <td>{{ $programStudi }}</td>
+                                <td>
+                                    @if($registration && filled($registration->nomor_pendaftaran))
+                                        <button type="button" class="btn btn-info btn-sm js-check-span">
+                                            <i class="fas fa-search"></i> Cek
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-ban"></i> Belum Siap
+                                        </button>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="bulkCheckSpanPtkinModal" tabindex="-1" role="dialog" aria-labelledby="bulkCheckSpanPtkinLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkCheckSpanPtkinLabel"><i class="fas fa-mosque"></i> Progress Cek Pengumuman SPAN-PTKIN</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="bulkCheckSpanPtkinBar" role="progressbar" style="width: 0%">0%</div>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="small text-muted" id="bulkCheckSpanPtkinText">Menyiapkan pengecekan...</span>
+                    <span class="small font-weight-bold" id="bulkCheckSpanPtkinCount">0 / 0</span>
+                </div>
+                <div class="border rounded p-2 bg-light" id="bulkCheckSpanPtkinLog" style="max-height:260px;overflow-y:auto;"></div>
             </div>
         </div>
     </div>
@@ -376,6 +466,22 @@
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 <script>
     $(function () {
+        const spanTable = $('#spanPtkinTable').DataTable({
+            responsive: true,
+            autoWidth: false,
+            pageLength: 25,
+            order: [
+                [6, 'desc'],
+                [2, 'asc']
+            ],
+            columnDefs: [
+                { orderable: false, targets: [0, 13] }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            }
+        });
+
         const uploadForm = document.getElementById('spanPtkinUploadForm');
         const confirmForm = document.getElementById('spanPtkinConfirmForm');
         const uploadProgressCard = document.getElementById('spanPtkinUploadProgressCard');
@@ -391,6 +497,11 @@
         const overlayText = document.getElementById('spanPtkinOverlayText');
         const overlayBar = document.getElementById('spanPtkinOverlayBar');
         const overlayValue = document.getElementById('spanPtkinOverlayValue');
+        const bulkModal = $('#bulkCheckSpanPtkinModal');
+        const bulkProgressBar = $('#bulkCheckSpanPtkinBar');
+        const bulkProgressText = $('#bulkCheckSpanPtkinText');
+        const bulkProgressCount = $('#bulkCheckSpanPtkinCount');
+        const bulkProgressLog = $('#bulkCheckSpanPtkinLog');
         let saveProgressTimer = null;
 
         function updateProgress(bar, label, value, percent, text) {
@@ -475,6 +586,79 @@
             }
 
             window.location.reload();
+        }
+
+        function escapeHtml(text) {
+            return $('<div>').text(text ?? '').html();
+        }
+
+        function appendBulkLog(message, type = 'secondary') {
+            bulkProgressLog.append(
+                '<div class="text-' + type + ' mb-1">• ' + escapeHtml(message) + '</div>'
+            );
+            bulkProgressLog.scrollTop(bulkProgressLog[0].scrollHeight);
+        }
+
+        function updateRow(row, result) {
+            const badgeMap = {
+                lulus: 'success',
+                tidak_lulus: 'danger',
+                gagal_cek: 'warning',
+                belum_dicek: 'secondary',
+            };
+
+            row.find('.js-check-status')
+                .removeClass('badge-success badge-danger badge-warning badge-secondary')
+                .addClass('badge-' + (badgeMap[result.status] || 'secondary'))
+                .text(result.status_label || 'Belum Dicek');
+            row.find('.js-check-message').text(result.message || '-');
+            row.find('.js-last-checked').text(result.checked_at || '-');
+        }
+
+        async function runCheck(row) {
+            const canCheck = row.data('can-check') === 1 || row.data('can-check') === '1';
+            const checkUrl = row.data('check-url');
+            const siswaName = row.data('siswa-name');
+
+            if (!canCheck || !checkUrl) {
+                throw new Error('Data siswa belum siap dicek. Pastikan nomor SPAN-PTKIN sudah terimport.');
+            }
+
+            const button = row.find('.js-check-span');
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Cek');
+
+            try {
+                const response = await $.ajax({
+                    url: checkUrl,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    }
+                });
+
+                updateRow(row, response.result);
+
+                return {
+                    success: true,
+                    message: siswaName + ': ' + response.result.message,
+                    result: response.result,
+                };
+            } catch (xhr) {
+                const result = xhr.responseJSON?.result;
+                const message = xhr.responseJSON?.message || 'Gagal menghubungi checker SPAN-PTKIN.';
+
+                if (result) {
+                    updateRow(row, result);
+                }
+
+                return {
+                    success: false,
+                    message: siswaName + ': ' + message,
+                    result: result || null,
+                };
+            } finally {
+                button.prop('disabled', false).html('<i class="fas fa-search"></i> Cek');
+            }
         }
 
         const currentUrl = new URL(window.location.href);
@@ -575,6 +759,62 @@
                 xhr.send(new FormData(uploadForm));
             });
         }
+
+        $(document).on('click', '.js-check-span', async function () {
+            const row = $(this).closest('tr');
+            const result = await runCheck(row);
+
+            Swal.fire({
+                icon: result.success ? 'success' : 'warning',
+                title: result.success ? 'Pengecekan Selesai' : 'Pengecekan Belum Berhasil',
+                text: result.message,
+            });
+        });
+
+        $('#bulkCheckSpanPtkinBtn').on('click', async function () {
+            const rows = $(spanTable.rows().nodes()).filter(function () {
+                const row = $(this);
+                return row.data('can-check') === 1 || row.data('can-check') === '1';
+            });
+
+            if (!rows.length) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Ada Data Siap Cek',
+                    text: 'Import data PDF SPAN-PTKIN terlebih dahulu.',
+                });
+                return;
+            }
+
+            bulkProgressLog.empty();
+            bulkProgressBar.css('width', '0%').text('0%');
+            bulkProgressText.text('Memulai pengecekan...');
+            bulkProgressCount.text('0 / ' + rows.length);
+            bulkModal.modal('show');
+
+            let successCount = 0;
+
+            for (let index = 0; index < rows.length; index++) {
+                const row = $(rows[index]);
+                const current = index + 1;
+                const percent = Math.round((current / rows.length) * 100);
+
+                bulkProgressText.text('Memproses ' + row.data('siswa-name') + '...');
+                bulkProgressCount.text(current + ' / ' + rows.length);
+                bulkProgressBar.css('width', percent + '%').text(percent + '%');
+
+                const result = await runCheck(row);
+                appendBulkLog(result.message, result.success ? 'success' : 'warning');
+
+                if (result.success) {
+                    successCount++;
+                }
+            }
+
+            bulkProgressText.text('Pengecekan selesai.');
+            appendBulkLog('Selesai. Berhasil memeriksa ' + successCount + ' dari ' + rows.length + ' siswa.', 'primary');
+            spanTable.rows().invalidate().draw(false);
+        });
 
         if (confirmForm) {
             confirmForm.addEventListener('submit', function (event) {

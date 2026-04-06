@@ -49,6 +49,14 @@
                                         {{ $registration->check_status_label }}
                                     </span>
                                 </dd>
+                                <dt class="col-sm-5">Update Terakhir</dt>
+                                <dd class="col-sm-7">{{ $registration->last_checked_at?->format('d-m-Y H:i') ?? '-' }}</dd>
+                                <dt class="col-sm-5">Catatan Checker</dt>
+                                <dd class="col-sm-7">{{ $registration->last_check_message ?? '-' }}</dd>
+                                <dt class="col-sm-5">PTKIN</dt>
+                                <dd class="col-sm-7">{{ data_get($registration->last_check_payload, 'nm_ptain', '-') }}</dd>
+                                <dt class="col-sm-5">Program Studi</dt>
+                                <dd class="col-sm-7">{{ data_get($registration->last_check_payload, 'nm_prodi', '-') }}</dd>
                             </dl>
                         </div>
                     </div>
