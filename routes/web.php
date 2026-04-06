@@ -435,12 +435,42 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
 
     // ==================== FITUR BARU: MONITORING UJIAN (ExamAnmet) ====================
-    Route::get('/exam-monitoring', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'index'])->name('exam-monitoring.index');
-    Route::get('/exam-monitoring/api/sessions', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'apiSessions'])->name('exam-monitoring.api.sessions');
-    Route::post('/exam-monitoring/{session}/lock', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'lock'])->name('exam-monitoring.lock');
-    Route::post('/exam-monitoring/{session}/unlock', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'unlock'])->name('exam-monitoring.unlock');
-    Route::post('/exam-monitoring/{session}/end', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'endSession'])->name('exam-monitoring.end');
-    Route::get('/exam-monitoring/{session}/violations', [App\Http\Controllers\Admin\ExamMonitoringController::class, 'violations'])->name('exam-monitoring.violations');
+    // Monitoring admin dinonaktifkan sementara untuk mengurangi beban saat ujian.
+    Route::get('/exam-monitoring', function () {
+        return redirect()
+            ->route('admin.exam-browser.index')
+            ->with('warning', 'Monitoring ujian dinonaktifkan sementara untuk menjaga kestabilan server saat sesi ujian.');
+    })->name('exam-monitoring.index');
+    Route::get('/exam-monitoring/api/sessions', function () {
+        return response()->json([
+            'success' => false,
+            'message' => 'Monitoring ujian dinonaktifkan sementara untuk menjaga kestabilan server.',
+        ], 503);
+    })->name('exam-monitoring.api.sessions');
+    Route::post('/exam-monitoring/{session}/lock', function () {
+        return response()->json([
+            'success' => false,
+            'message' => 'Aksi monitoring ujian dinonaktifkan sementara.',
+        ], 503);
+    })->name('exam-monitoring.lock');
+    Route::post('/exam-monitoring/{session}/unlock', function () {
+        return response()->json([
+            'success' => false,
+            'message' => 'Aksi monitoring ujian dinonaktifkan sementara.',
+        ], 503);
+    })->name('exam-monitoring.unlock');
+    Route::post('/exam-monitoring/{session}/end', function () {
+        return response()->json([
+            'success' => false,
+            'message' => 'Aksi monitoring ujian dinonaktifkan sementara.',
+        ], 503);
+    })->name('exam-monitoring.end');
+    Route::get('/exam-monitoring/{session}/violations', function () {
+        return response()->json([
+            'success' => false,
+            'message' => 'Monitoring ujian dinonaktifkan sementara.',
+        ], 503);
+    })->name('exam-monitoring.violations');
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)

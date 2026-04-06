@@ -787,14 +787,6 @@ return [
                     'active' => ['admin/exam-browser*'],
                 ],
                 [
-                    'text' => 'Monitoring Ujian',
-                    'route' => 'admin.exam-monitoring.index',
-                    'icon' => 'fas fa-fw fa-tv',
-                    'icon_color' => 'success',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/exam-monitoring*'],
-                ],
-                [
                     'text' => 'Notifikasi Exam',
                     'route' => 'admin.exam-notifications.index',
                     'icon' => 'fas fa-fw fa-bell',
