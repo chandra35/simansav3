@@ -8,6 +8,7 @@ use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Models\Kurikulum;
 use App\Models\Jurusan;
+use App\Models\SiswaKelas;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -937,6 +938,7 @@ class KelasController extends Controller
             ], 422);
         }
 
+        DB::beginTransaction();
         try {
             $siswaName = $siswa->user->name ?? $siswa->nisn;
             
@@ -946,6 +948,8 @@ class KelasController extends Controller
                 'status' => $request->status,
                 'catatan_perpindahan' => $request->catatan,
             ]);
+
+            $this->syncSiswaCurrentClassFromPivot($siswa, $kelas->tahun_pelajaran_id);
 
             // Log activity
             activity()
@@ -962,11 +966,14 @@ class KelasController extends Controller
                 ])
                 ->log('Mengeluarkan siswa ' . $siswaName . ' dari kelas: ' . $kelas->nama_lengkap . ' - Status: ' . $request->status);
 
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Siswa berhasil dikeluarkan dari kelas.'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengeluarkan siswa: ' . $e->getMessage()
@@ -1121,6 +1128,8 @@ class KelasController extends Controller
                     'tanggal_keluar' => $tanggalKeluar,
                     'catatan_perpindahan' => 'Pengosongan Kelas: ' . $alasan,
                 ]);
+
+                $this->syncSiswaCurrentClassFromPivot($siswa, $kelas->tahun_pelajaran_id);
             }
 
             // Log activity
@@ -1247,5 +1256,22 @@ class KelasController extends Controller
         $pdf->setPaper('legal', 'portrait'); // Legal Portrait: 8.5" x 14" (216mm x 356mm)
         
         return $pdf->stream('Absensi_' . $kelas->nama_lengkap . '.pdf');
+    }
+
+    private function syncSiswaCurrentClassFromPivot(Siswa $siswa, ?string $tahunPelajaranId = null): void
+    {
+        $nextKelasId = SiswaKelas::query()
+            ->where('siswa_id', $siswa->id)
+            ->whereNull('deleted_at')
+            ->where('status', 'aktif')
+            ->when($tahunPelajaranId, function ($query) use ($tahunPelajaranId) {
+                $query->where('tahun_pelajaran_id', $tahunPelajaranId);
+            })
+            ->latest('created_at')
+            ->value('kelas_id');
+
+        $siswa->update([
+            'kelas_saat_ini_id' => $nextKelasId,
+        ]);
     }
 }
