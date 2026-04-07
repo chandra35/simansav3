@@ -35,6 +35,20 @@
     </style>
 </head>
 <body>
+    @php
+        $trackerMeta = $tracker_meta ?? [
+            'summary_total_label' => 'Eligible SNBP',
+            'summary_number_label' => 'Sudah Isi Nomor SNBP',
+            'summary_passed_label' => 'Lulus SNBP',
+            'checker_title' => 'Status Checker SNBP',
+            'top_university_title' => 'Top PTN Diterima SNBP',
+            'top_program_title' => 'Top Prodi Diterima SNBP',
+            'matrix_tracker_label' => 'Lulus SNBP',
+            'empty_university_text' => 'Belum ada siswa diterima via SNBP.',
+            'empty_program_text' => 'Belum ada prodi SNBP.',
+            'type' => 'SNBP',
+        ];
+    @endphp
     <h1 style="text-align:center;">Laporan Statistik Lulusan</h1>
     <div class="muted" style="text-align:center;">
         Tahun Pelajaran: {{ $selectedTahun->nama }} |
@@ -65,10 +79,10 @@
                 <td><div class="label">Universitas Tujuan</div><div class="value">{{ $summary['total_universitas'] }}</div></td>
             </tr>
             <tr>
-                <td><div class="label">Eligible SNBP</div><div class="value">{{ $summary['eligible_total'] }}</div></td>
-                <td><div class="label">Sudah Isi Nomor SNBP</div><div class="value">{{ $summary['eligible_sudah_isi_nomor'] }}</div></td>
-                <td><div class="label">Lulus SNBP</div><div class="value">{{ $summary['eligible_lulus'] }}</div></td>
-                <td><div class="label">PTN Diterima dari SNBP</div><div class="value">{{ $summary['total_ptn_diterima'] }}</div></td>
+                <td><div class="label">{{ $trackerMeta['summary_total_label'] }}</div><div class="value">{{ $summary['eligible_total'] }}</div></td>
+                <td><div class="label">{{ $trackerMeta['summary_number_label'] }}</div><div class="value">{{ $summary['eligible_sudah_isi_nomor'] }}</div></td>
+                <td><div class="label">{{ $trackerMeta['summary_passed_label'] }}</div><div class="value">{{ $summary['eligible_lulus'] }}</div></td>
+                <td><div class="label">{{ $trackerMeta['top_university_title'] }}</div><div class="value">{{ $summary['total_ptn_diterima'] }}</div></td>
             </tr>
         </table>
     </div>
@@ -90,7 +104,7 @@
                     </table>
                 </td>
                 <td>
-                    <h3>Status Checker SNBP</h3>
+                    <h3>{{ $trackerMeta['checker_title'] }}</h3>
                     <table>
                         <thead>
                             <tr><th>Status</th><th style="width: 80px;">Jumlah</th></tr>
@@ -126,16 +140,16 @@
                     </table>
                 </td>
                 <td>
-                    <h3>Top PTN Diterima SNBP</h3>
+                    <h3>{{ $trackerMeta['top_university_title'] }}</h3>
                     <table>
                         <thead>
                             <tr><th>Perguruan Tinggi</th><th style="width: 80px;">Jumlah</th></tr>
                         </thead>
                         <tbody>
-                            @forelse($top_ptn_snbp as $item)
+                            @forelse($top_tracker_universitas as $item)
                                 <tr><td>{{ $item['label'] }}</td><td>{{ $item['jumlah'] }}</td></tr>
                             @empty
-                                <tr><td colspan="2">Belum ada data.</td></tr>
+                                <tr><td colspan="2">{{ $trackerMeta['empty_university_text'] }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -148,16 +162,16 @@
         <table class="two-col">
             <tr>
                 <td>
-                    <h3>Top Program Studi Diterima SNBP</h3>
+                    <h3>{{ $trackerMeta['top_program_title'] }}</h3>
                     <table>
                         <thead>
                             <tr><th>Program Studi</th><th style="width: 80px;">Jumlah</th></tr>
                         </thead>
                         <tbody>
-                            @forelse($top_prodi_snbp as $item)
+                            @forelse($top_tracker_prodi as $item)
                                 <tr><td>{{ $item['label'] }}</td><td>{{ $item['jumlah'] }}</td></tr>
                             @empty
-                                <tr><td colspan="2">Belum ada data.</td></tr>
+                                <tr><td colspan="2">{{ $trackerMeta['empty_program_text'] }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -169,7 +183,7 @@
                             <tr>
                                 <th>Kelas</th>
                                 <th>Eligible</th>
-                                <th>Lulus</th>
+                                <th>{{ $trackerMeta['matrix_tracker_label'] }}</th>
                                 <th>Sudah Isi</th>
                                 <th>Total</th>
                             </tr>
@@ -194,7 +208,7 @@
     </div>
 
     <div class="section page-break">
-        <h3>Daftar Siswa Lolos SNBP</h3>
+        <h3>Daftar Siswa Lolos {{ $trackerMeta['type'] }}</h3>
         @if(!empty($accepted_students))
             <table class="accepted-grid">
                 @foreach(array_chunk($accepted_students, 2) as $row)
@@ -234,7 +248,7 @@
             <table>
                 <tbody>
                     <tr>
-                        <td>Belum ada siswa dengan status lulus SNBP pada filter yang dipilih.</td>
+                        <td>Belum ada siswa dengan status lulus {{ $trackerMeta['type'] }} pada filter yang dipilih.</td>
                     </tr>
                 </tbody>
             </table>
@@ -242,7 +256,7 @@
     </div>
 
     <div class="note">
-        PDF ini disusun sebagai ringkasan statistik plus daftar siswa yang sudah lulus SNBP agar tetap informatif,
+        PDF ini disusun sebagai ringkasan statistik plus daftar siswa yang sudah lulus {{ $trackerMeta['type'] }} agar tetap informatif,
         ringan, dan stabil saat dicetak. Untuk detail lengkap seluruh siswa, gunakan export Excel dari halaman admin lulusan.
     </div>
 
