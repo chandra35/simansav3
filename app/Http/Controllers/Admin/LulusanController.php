@@ -43,6 +43,7 @@ class LulusanController extends Controller
         }
 
         $query = $this->buildBaseQuery($request, $selectedTahun->id);
+        $trackerType = $this->resolveTrackerType($request);
 
         return DataTables::query($query)
             ->addColumn('status_badge', function ($row) {
@@ -69,33 +70,38 @@ class LulusanController extends Controller
 
                 return '<span class="badge badge-' . $color . '">' . e($row->jalur_masuk) . '</span>';
             })
-            ->addColumn('snbp_check_badge', function ($row) {
+            ->addColumn('checker_badge', function ($row) use ($trackerType) {
+                $resolvedTracker = $trackerType;
+
+                if (!$resolvedTracker) {
+                    $resolvedTracker = match ($row->jalur_masuk) {
+                        'SNBP' => 'SNBP',
+                        'SPAN-PTKIN' => 'SPAN-PTKIN',
+                        default => null,
+                    };
+                }
+
+                if ($resolvedTracker === 'SPAN-PTKIN') {
+                    if (!$row->has_span_ptkin_number) {
+                        return '<span class="text-muted">-</span>';
+                    }
+
+                    $status = $row->span_ptkin_check_status ?: 'belum_dicek';
+
+                    return '<span class="badge badge-' . $this->statusBadgeColor($status) . '">' . e($this->formatTrackerStatusLabel($status, 'SPAN-PTKIN')) . '</span>';
+                }
+
                 if (!$row->has_snbp_number) {
                     return '<span class="text-muted">-</span>';
                 }
 
-                $badges = [
-                    'lulus' => 'success',
-                    'tidak_lulus' => 'danger',
-                    'gagal_cek' => 'warning',
-                    'belum_dicek' => 'secondary',
-                ];
-
-                $labels = [
-                    'lulus' => 'Lulus SNBP',
-                    'tidak_lulus' => 'Tidak Lulus',
-                    'gagal_cek' => 'Gagal Cek',
-                    'belum_dicek' => 'Belum Dicek',
-                ];
-
                 $status = $row->snbp_check_status ?: 'belum_dicek';
-
-                return '<span class="badge badge-' . ($badges[$status] ?? 'secondary') . '">' . e($labels[$status] ?? 'Belum Dicek') . '</span>';
+                return '<span class="badge badge-' . $this->statusBadgeColor($status) . '">' . e($this->formatTrackerStatusLabel($status, 'SNBP')) . '</span>';
             })
             ->editColumn('nama_universitas', fn ($row) => $row->nama_universitas ?: '-')
             ->editColumn('jurusan_fakultas', fn ($row) => $row->jurusan_fakultas ?: '-')
             ->editColumn('program_studi', fn ($row) => $row->program_studi ?: '-')
-            ->rawColumns(['status_badge', 'jalur_badge', 'snbp_check_badge'])
+            ->rawColumns(['status_badge', 'jalur_badge', 'checker_badge'])
             ->make(true);
     }
 
@@ -110,8 +116,9 @@ class LulusanController extends Controller
                 'per_kelas' => [],
                 'top_universitas' => [],
                 'checker_status' => $this->emptyCheckerStatus(),
-                'top_ptn_snbp' => [],
-                'top_prodi_snbp' => [],
+                'top_tracker_universitas' => [],
+                'top_tracker_prodi' => [],
+                'tracker_meta' => $this->defaultTrackerMeta(),
             ]);
         }
 
@@ -121,8 +128,9 @@ class LulusanController extends Controller
             'per_kelas' => $report['per_kelas'],
             'top_universitas' => $report['top_universitas'],
             'checker_status' => $report['checker_status'],
-            'top_ptn_snbp' => $report['top_ptn_snbp'],
-            'top_prodi_snbp' => $report['top_prodi_snbp'],
+            'top_tracker_universitas' => $report['top_tracker_universitas'],
+            'top_tracker_prodi' => $report['top_tracker_prodi'],
+            'tracker_meta' => $report['tracker_meta'],
         ]);
     }
 
@@ -291,8 +299,9 @@ class LulusanController extends Controller
                 'per_kelas' => [],
                 'top_universitas' => [],
                 'checker_status' => $this->emptyCheckerStatus(),
-                'top_ptn_snbp' => [],
-                'top_prodi_snbp' => [],
+                'top_tracker_universitas' => [],
+                'top_tracker_prodi' => [],
+                'tracker_meta' => $this->defaultTrackerMeta(),
                 'accepted_students' => [],
                 'rows' => collect(),
                 'eligible_rows' => collect(),
@@ -307,8 +316,9 @@ class LulusanController extends Controller
                 ->get()
         );
 
-        $eligibleRows = collect(
-            $this->buildEligibleQuery($request, $selectedTahun->id)
+        $trackerType = $this->resolveTrackerType($request);
+        $trackerRows = collect(
+            $this->buildTrackerQuery($request, $selectedTahun->id, $trackerType)
                 ->orderBy('kelas_nama')
                 ->orderBy('nama_lengkap')
                 ->get()
@@ -319,31 +329,31 @@ class LulusanController extends Controller
             'sudah_isi' => $rows->where('is_filled', 1)->count(),
             'belum_isi' => $rows->where('is_filled', 0)->count(),
             'total_universitas' => $rows->pluck('nama_universitas')->filter()->unique()->count(),
-            'eligible_total' => $eligibleRows->count(),
-            'eligible_sudah_isi_nomor' => $eligibleRows->filter(fn ($row) => filled($row->nomor_pendaftaran))->count(),
-            'eligible_belum_isi_nomor' => $eligibleRows->filter(fn ($row) => blank($row->nomor_pendaftaran))->count(),
-            'eligible_lulus' => $eligibleRows->where('check_status', 'lulus')->count(),
-            'eligible_tidak_lulus' => $eligibleRows->where('check_status', 'tidak_lulus')->count(),
-            'eligible_gagal_cek' => $eligibleRows->where('check_status', 'gagal_cek')->count(),
-            'eligible_belum_dicek' => $eligibleRows->where('check_status', 'belum_dicek')->count(),
-            'total_ptn_diterima' => $eligibleRows->where('check_status', 'lulus')->pluck('nama_universitas')->filter()->unique()->count(),
+            'eligible_total' => $trackerRows->count(),
+            'eligible_sudah_isi_nomor' => $trackerRows->filter(fn ($row) => filled($row->nomor_pendaftaran))->count(),
+            'eligible_belum_isi_nomor' => $trackerRows->filter(fn ($row) => blank($row->nomor_pendaftaran))->count(),
+            'eligible_lulus' => $trackerRows->where('check_status', 'lulus')->count(),
+            'eligible_tidak_lulus' => $trackerRows->where('check_status', 'tidak_lulus')->count(),
+            'eligible_gagal_cek' => $trackerRows->where('check_status', 'gagal_cek')->count(),
+            'eligible_belum_dicek' => $trackerRows->where('check_status', 'belum_dicek')->count(),
+            'total_ptn_diterima' => $trackerRows->where('check_status', 'lulus')->pluck('nama_universitas')->filter()->unique()->count(),
         ];
 
         $perJalur = collect(SiswaLulusan::JALUR_MASUK)
             ->mapWithKeys(fn (string $jalur) => [$jalur => $rows->where('jalur_masuk', $jalur)->count()])
             ->all();
 
-        $eligibleByClass = $eligibleRows->groupBy(fn ($row) => $row->kelas_nama ?: 'Tanpa Kelas');
+        $trackerByClass = $trackerRows->groupBy(fn ($row) => $row->kelas_nama ?: 'Tanpa Kelas');
 
         $perKelas = $rows
             ->groupBy(fn ($row) => $row->kelas_nama ?: 'Tanpa Kelas')
-            ->map(function (Collection $kelasRows, string $kelasNama) use ($perJalur, $eligibleByClass) {
+            ->map(function (Collection $kelasRows, string $kelasNama) use ($perJalur, $trackerByClass) {
                 $jalur = [];
                 foreach (array_keys($perJalur) as $jalurMasuk) {
                     $jalur[$jalurMasuk] = $kelasRows->where('jalur_masuk', $jalurMasuk)->count();
                 }
 
-                $kelasEligibleRows = $eligibleByClass->get($kelasNama, collect());
+                $kelasEligibleRows = $trackerByClass->get($kelasNama, collect());
 
                 return [
                     'kelas_nama' => $kelasNama,
@@ -358,7 +368,7 @@ class LulusanController extends Controller
             ->values()
             ->all();
 
-        $acceptedStudents = $eligibleRows
+        $acceptedStudents = $trackerRows
             ->where('check_status', 'lulus')
             ->sortBy([
                 ['nama_universitas', 'asc'],
@@ -387,16 +397,17 @@ class LulusanController extends Controller
             'per_kelas' => $perKelas,
             'top_universitas' => $this->buildTopList($rows, 'nama_universitas', 10),
             'checker_status' => [
-                'belum_dicek' => $eligibleRows->where('check_status', 'belum_dicek')->count(),
-                'lulus' => $eligibleRows->where('check_status', 'lulus')->count(),
-                'tidak_lulus' => $eligibleRows->where('check_status', 'tidak_lulus')->count(),
-                'gagal_cek' => $eligibleRows->where('check_status', 'gagal_cek')->count(),
+                'belum_dicek' => $trackerRows->where('check_status', 'belum_dicek')->count(),
+                'lulus' => $trackerRows->where('check_status', 'lulus')->count(),
+                'tidak_lulus' => $trackerRows->where('check_status', 'tidak_lulus')->count(),
+                'gagal_cek' => $trackerRows->where('check_status', 'gagal_cek')->count(),
             ],
-            'top_ptn_snbp' => $this->buildTopList($eligibleRows->where('check_status', 'lulus'), 'nama_universitas', 10),
-            'top_prodi_snbp' => $this->buildTopList($eligibleRows->where('check_status', 'lulus'), 'program_studi', 10),
+            'top_tracker_universitas' => $this->buildTopList($trackerRows->where('check_status', 'lulus'), 'nama_universitas', 10),
+            'top_tracker_prodi' => $this->buildTopList($trackerRows->where('check_status', 'lulus'), 'program_studi', 10),
+            'tracker_meta' => $this->buildTrackerMeta($trackerType),
             'accepted_students' => $acceptedStudents,
             'rows' => $rows,
-            'eligible_rows' => $eligibleRows,
+            'eligible_rows' => $trackerRows,
             'generated_at' => now(),
         ];
     }
@@ -708,6 +719,10 @@ class LulusanController extends Controller
                 $join->on('snbp_registrations.siswa_id', '=', 'siswa.id')
                     ->where('snbp_registrations.tahun_pelajaran_id', '=', $tahunPelajaranId);
             })
+            ->leftJoin('span_ptkin_registrations', function ($join) use ($tahunPelajaranId) {
+                $join->on('span_ptkin_registrations.siswa_id', '=', 'siswa.id')
+                    ->where('span_ptkin_registrations.tahun_pelajaran_id', '=', $tahunPelajaranId);
+            })
             ->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId)
             ->whereNull('siswa_kelas.deleted_at')
             ->where('siswa_kelas.status', 'aktif')
@@ -728,6 +743,10 @@ class LulusanController extends Controller
                 'snbp_registrations.last_checked_at',
                 DB::raw("COALESCE(snbp_registrations.check_status, 'belum_dicek') as snbp_check_status"),
                 DB::raw("CASE WHEN snbp_registrations.nomor_pendaftaran IS NULL OR snbp_registrations.nomor_pendaftaran = '' THEN 0 ELSE 1 END as has_snbp_number"),
+                'span_ptkin_registrations.nomor_pendaftaran as span_ptkin_nomor_pendaftaran',
+                'span_ptkin_registrations.last_checked_at as span_ptkin_last_checked_at',
+                DB::raw("COALESCE(span_ptkin_registrations.check_status, 'belum_dicek') as span_ptkin_check_status"),
+                DB::raw("CASE WHEN span_ptkin_registrations.nomor_pendaftaran IS NULL OR span_ptkin_registrations.nomor_pendaftaran = '' THEN 0 ELSE 1 END as has_span_ptkin_number"),
             ])
             ->distinct();
 
@@ -751,6 +770,10 @@ class LulusanController extends Controller
             ->leftJoin('snbp_registrations', function ($join) use ($tahunPelajaranId) {
                 $join->on('snbp_registrations.siswa_id', '=', 'siswa.id')
                     ->where('snbp_registrations.tahun_pelajaran_id', '=', $tahunPelajaranId);
+            })
+            ->leftJoin('span_ptkin_registrations', function ($join) use ($tahunPelajaranId) {
+                $join->on('span_ptkin_registrations.siswa_id', '=', 'siswa.id')
+                    ->where('span_ptkin_registrations.tahun_pelajaran_id', '=', $tahunPelajaranId);
             })
             ->leftJoin('siswa_lulusan', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_lulusan.siswa_id', '=', 'siswa.id')
@@ -781,6 +804,54 @@ class LulusanController extends Controller
         return $query;
     }
 
+    private function buildSpanPtkinQuery(Request $request, string $tahunPelajaranId)
+    {
+        $query = DB::table('span_ptkin_registrations')
+            ->join('siswa', 'siswa.id', '=', 'span_ptkin_registrations.siswa_id')
+            ->leftJoin('siswa_kelas', function ($join) use ($tahunPelajaranId) {
+                $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
+                    ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunPelajaranId)
+                    ->where('siswa_kelas.status', '=', 'aktif')
+                    ->whereNull('siswa_kelas.deleted_at');
+            })
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
+            ->leftJoin('siswa_lulusan', function ($join) use ($tahunPelajaranId) {
+                $join->on('siswa_lulusan.siswa_id', '=', 'siswa.id')
+                    ->where('siswa_lulusan.tahun_pelajaran_id', '=', $tahunPelajaranId)
+                    ->whereNull('siswa_lulusan.deleted_at');
+            })
+            ->where('span_ptkin_registrations.tahun_pelajaran_id', $tahunPelajaranId)
+            ->select([
+                'siswa.id as siswa_id',
+                'siswa.nisn',
+                'siswa.nama_lengkap',
+                'siswa.tanggal_lahir',
+                'siswa.foto_profile',
+                'kelas.nama_kelas as kelas_nama',
+                'span_ptkin_registrations.nomor_pendaftaran',
+                DB::raw("COALESCE(span_ptkin_registrations.check_status, 'belum_dicek') as check_status"),
+                'span_ptkin_registrations.last_checked_at',
+                'siswa_lulusan.jalur_masuk',
+                DB::raw("COALESCE(NULLIF(siswa_lulusan.nama_universitas_manual, ''), siswa_lulusan.nama_universitas) as nama_universitas"),
+                DB::raw("COALESCE(NULLIF(siswa_lulusan.program_studi_manual, ''), siswa_lulusan.program_studi) as program_studi"),
+                DB::raw('CASE WHEN siswa_lulusan.id IS NULL THEN 0 ELSE 1 END as is_filled'),
+            ])
+            ->distinct();
+
+        $this->applyCommonFilters($query, $request);
+
+        return $query;
+    }
+
+    private function buildTrackerQuery(Request $request, string $tahunPelajaranId, ?string $trackerType)
+    {
+        if ($trackerType === 'SPAN-PTKIN') {
+            return $this->buildSpanPtkinQuery($request, $tahunPelajaranId);
+        }
+
+        return $this->buildEligibleQuery($request, $tahunPelajaranId);
+    }
+
     private function applyCommonFilters($query, Request $request): void
     {
         if ($request->filled('status_pengisian')) {
@@ -809,6 +880,7 @@ class LulusanController extends Controller
                     ->orWhere('siswa.nama_lengkap', 'like', "%{$search}%")
                     ->orWhere('kelas.nama_kelas', 'like', "%{$search}%")
                     ->orWhere('snbp_registrations.nomor_pendaftaran', 'like', "%{$search}%")
+                    ->orWhere('span_ptkin_registrations.nomor_pendaftaran', 'like', "%{$search}%")
                     ->orWhere('siswa_lulusan.nama_universitas', 'like', "%{$search}%")
                     ->orWhere('siswa_lulusan.nama_universitas_manual', 'like', "%{$search}%")
                     ->orWhere('siswa_lulusan.jurusan_fakultas', 'like', "%{$search}%")
@@ -844,6 +916,77 @@ class LulusanController extends Controller
             'tidak_lulus' => 0,
             'gagal_cek' => 0,
         ];
+    }
+
+    private function defaultTrackerMeta(): array
+    {
+        return $this->buildTrackerMeta(null);
+    }
+
+    private function buildTrackerMeta(?string $trackerType): array
+    {
+        if ($trackerType === 'SPAN-PTKIN') {
+            return [
+                'type' => 'SPAN-PTKIN',
+                'summary_total_label' => 'Peserta SPAN-PTKIN',
+                'summary_number_label' => 'Sudah Import Nomor',
+                'summary_passed_label' => 'Lulus SPAN-PTKIN',
+                'summary_pending_label' => 'Belum Dicek SPAN-PTKIN',
+                'checker_title' => 'Status Checker SPAN-PTKIN',
+                'top_university_title' => 'Top PTKIN Diterima SPAN-PTKIN',
+                'top_program_title' => 'Top Prodi Diterima SPAN-PTKIN',
+                'checker_column_label' => 'Checker SPAN-PTKIN',
+                'matrix_tracker_label' => 'Lulus SPAN-PTKIN',
+                'empty_university_text' => 'Belum ada siswa diterima via SPAN-PTKIN.',
+                'empty_program_text' => 'Belum ada prodi SPAN-PTKIN.',
+                'status_passed_label' => 'Lulus SPAN-PTKIN',
+            ];
+        }
+
+        return [
+            'type' => 'SNBP',
+            'summary_total_label' => 'Eligible SNBP',
+            'summary_number_label' => 'Sudah Isi Nomor SNBP',
+            'summary_passed_label' => 'Lulus SNBP',
+            'summary_pending_label' => 'Belum Dicek SNBP',
+            'checker_title' => 'Status Checker SNBP',
+            'top_university_title' => 'Top PTN Diterima SNBP',
+            'top_program_title' => 'Top Prodi Diterima SNBP',
+            'checker_column_label' => 'Checker SNBP',
+            'matrix_tracker_label' => 'Lulus SNBP',
+            'empty_university_text' => 'Belum ada siswa diterima via SNBP.',
+            'empty_program_text' => 'Belum ada prodi SNBP.',
+            'status_passed_label' => 'Lulus SNBP',
+        ];
+    }
+
+    private function resolveTrackerType(Request $request): ?string
+    {
+        return match ($request->input('jalur_masuk')) {
+            'SPAN-PTKIN' => 'SPAN-PTKIN',
+            'SNBP' => 'SNBP',
+            default => null,
+        };
+    }
+
+    private function statusBadgeColor(?string $status): string
+    {
+        return match ($status) {
+            'lulus' => 'success',
+            'tidak_lulus' => 'danger',
+            'gagal_cek' => 'warning',
+            default => 'secondary',
+        };
+    }
+
+    private function formatTrackerStatusLabel(?string $status, string $trackerType): string
+    {
+        return match ($status) {
+            'lulus' => 'Lulus ' . $trackerType,
+            'tidak_lulus' => 'Tidak Lulus',
+            'gagal_cek' => 'Gagal Cek',
+            default => 'Belum Dicek',
+        };
     }
 
     private function formatDateValue($value): string

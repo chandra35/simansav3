@@ -118,36 +118,36 @@
         <div class="row">
             <div class="col-md-3 col-sm-6">
                 <div class="info-box bg-teal">
-                    <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
+                        <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Eligible SNBP</span>
+                        <span class="info-box-text" id="summaryEligibleLabel">Eligible SNBP</span>
                         <span class="info-box-number" id="summaryEligible">0</span>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="info-box bg-secondary">
-                    <span class="info-box-icon"><i class="fas fa-id-card"></i></span>
+                        <span class="info-box-icon"><i class="fas fa-id-card"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Sudah Isi Nomor SNBP</span>
+                        <span class="info-box-text" id="summaryEligibleIsiLabel">Sudah Isi Nomor SNBP</span>
                         <span class="info-box-number" id="summaryEligibleIsi">0</span>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="info-box bg-success">
-                    <span class="info-box-icon"><i class="fas fa-award"></i></span>
+                        <span class="info-box-icon"><i class="fas fa-award"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Lulus SNBP</span>
+                        <span class="info-box-text" id="summaryEligibleLulusLabel">Lulus SNBP</span>
                         <span class="info-box-number" id="summaryEligibleLulus">0</span>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="info-box bg-dark">
-                    <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
+                        <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Belum Dicek SNBP</span>
+                        <span class="info-box-text" id="summaryEligibleBelumDicekLabel">Belum Dicek SNBP</span>
                         <span class="info-box-number" id="summaryEligibleBelumDicek">0</span>
                     </div>
                 </div>
@@ -180,7 +180,7 @@
             <div class="col-lg-4">
                 <div class="card card-outline card-secondary h-100">
                     <div class="card-header">
-                        <h3 class="card-title">Status Checker SNBP</h3>
+                        <h3 class="card-title" id="checkerStatusTitle">Status Checker SNBP</h3>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-sm table-striped mb-0">
@@ -202,7 +202,7 @@
             <div class="col-lg-4">
                 <div class="card card-outline card-primary h-100">
                     <div class="card-header">
-                        <h3 class="card-title">Top PTN Diterima SNBP</h3>
+                        <h3 class="card-title" id="topTrackerUniversityTitle">Top PTN Diterima SNBP</h3>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-sm table-striped mb-0">
@@ -249,7 +249,7 @@
             <div class="col-lg-6">
                 <div class="card card-outline card-warning h-100">
                     <div class="card-header">
-                        <h3 class="card-title">Top Prodi Diterima SNBP</h3>
+                        <h3 class="card-title" id="topTrackerProgramTitle">Top Prodi Diterima SNBP</h3>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-sm table-striped mb-0">
@@ -284,7 +284,7 @@
                                 <th>Kelas</th>
                                 <th>Status</th>
                                 <th>Jalur</th>
-                                <th>Checker SNBP</th>
+                                <th id="checkerColumnLabel">Checker SNBP</th>
                                 <th>Universitas</th>
                                 <th>Jurusan/Fakultas</th>
                                 <th>Program Studi</th>
@@ -308,7 +308,7 @@
                                 <th class="text-center">{{ $jalur }}</th>
                             @endforeach
                             <th class="text-center">Eligible</th>
-                            <th class="text-center">Lulus SNBP</th>
+                            <th class="text-center" id="matrixTrackerLabel">Lulus SNBP</th>
                             <th class="text-center">Sudah Isi</th>
                             <th class="text-center">Belum Isi</th>
                             <th class="text-center">Total</th>
@@ -381,6 +381,19 @@
     <script>
         let lulusanTable;
         const jalurMasukOptions = @json($jalurMasukOptions);
+        const defaultTrackerMeta = {
+            summary_total_label: 'Eligible SNBP',
+            summary_number_label: 'Sudah Isi Nomor SNBP',
+            summary_passed_label: 'Lulus SNBP',
+            summary_pending_label: 'Belum Dicek SNBP',
+            checker_title: 'Status Checker SNBP',
+            top_university_title: 'Top PTN Diterima SNBP',
+            top_program_title: 'Top Prodi Diterima SNBP',
+            checker_column_label: 'Checker SNBP',
+            matrix_tracker_label: 'Lulus SNBP',
+            empty_university_text: 'Belum ada siswa diterima via SNBP.',
+            empty_program_text: 'Belum ada prodi SNBP.'
+        };
 
         function getFilters() {
             return {
@@ -494,6 +507,19 @@
             });
         }
 
+        function applyTrackerMeta(meta) {
+            const trackerMeta = Object.assign({}, defaultTrackerMeta, meta || {});
+            $('#summaryEligibleLabel').text(trackerMeta.summary_total_label);
+            $('#summaryEligibleIsiLabel').text(trackerMeta.summary_number_label);
+            $('#summaryEligibleLulusLabel').text(trackerMeta.summary_passed_label);
+            $('#summaryEligibleBelumDicekLabel').text(trackerMeta.summary_pending_label);
+            $('#checkerStatusTitle').text(trackerMeta.checker_title);
+            $('#topTrackerUniversityTitle').text(trackerMeta.top_university_title);
+            $('#topTrackerProgramTitle').text(trackerMeta.top_program_title);
+            $('#checkerColumnLabel').text(trackerMeta.checker_column_label);
+            $('#matrixTrackerLabel').text(trackerMeta.matrix_tracker_label);
+        }
+
         function renderMatrix(perKelas) {
             const tbody = $('#matrixTableBody');
             tbody.empty();
@@ -525,6 +551,8 @@
                 url: '{{ route('admin.lulusan.stats') }}',
                 data: getFilters(),
                 success: function(response) {
+                    const trackerMeta = response.tracker_meta || defaultTrackerMeta;
+                    applyTrackerMeta(trackerMeta);
                     $('#summaryTotal').text(response.summary.total ?? 0);
                     $('#summarySudahIsi').text(response.summary.sudah_isi ?? 0);
                     $('#summaryBelumIsi').text(response.summary.belum_isi ?? 0);
@@ -537,11 +565,12 @@
                     renderPerJalur(response.per_jalur);
                     renderTopUniversitas(response.top_universitas);
                     renderCheckerStatus(response.checker_status);
-                    renderTopSimpleTable('#topPtnSnbpTable', response.top_ptn_snbp, 'Belum ada siswa diterima via SNBP.');
-                    renderTopSimpleTable('#topProdiSnbpTable', response.top_prodi_snbp, 'Belum ada prodi SNBP.');
+                    renderTopSimpleTable('#topPtnSnbpTable', response.top_tracker_universitas, trackerMeta.empty_university_text || defaultTrackerMeta.empty_university_text);
+                    renderTopSimpleTable('#topProdiSnbpTable', response.top_tracker_prodi, trackerMeta.empty_program_text || defaultTrackerMeta.empty_program_text);
                     renderMatrix(response.per_kelas);
                 },
                 error: function() {
+                    applyTrackerMeta(defaultTrackerMeta);
                     $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleBelumDicek').text('0');
                     renderPerJalur({});
                     renderTopUniversitas([]);
@@ -570,7 +599,7 @@
                     { data: 'kelas_nama', name: 'kelas.nama_kelas' },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
                     { data: 'jalur_badge', name: 'siswa_lulusan.jalur_masuk', orderable: false, searchable: false },
-                    { data: 'snbp_check_badge', name: 'snbp_check_badge', orderable: false, searchable: false },
+                    { data: 'checker_badge', name: 'checker_badge', orderable: false, searchable: false },
                     { data: 'nama_universitas', name: 'siswa_lulusan.nama_universitas' },
                     { data: 'jurusan_fakultas', name: 'siswa_lulusan.jurusan_fakultas' },
                     { data: 'program_studi', name: 'siswa_lulusan.program_studi' }
