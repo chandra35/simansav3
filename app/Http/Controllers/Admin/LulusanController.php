@@ -71,37 +71,27 @@ class LulusanController extends Controller
                 return '<span class="badge badge-' . $color . '">' . e($row->jalur_masuk) . '</span>';
             })
             ->addColumn('checker_badge', function ($row) use ($trackerType) {
-                $resolvedTracker = $trackerType;
+                $trackerData = $this->extractRowTrackerData($row, $trackerType);
 
-                if (!$resolvedTracker) {
-                    $resolvedTracker = match ($row->jalur_masuk) {
-                        'SNBP' => 'SNBP',
-                        'SPAN-PTKIN' => 'SPAN-PTKIN',
-                        default => null,
-                    };
-                }
-
-                if ($resolvedTracker === 'SPAN-PTKIN') {
-                    if (!$row->has_span_ptkin_number) {
-                        return '<span class="text-muted">-</span>';
-                    }
-
-                    $status = $row->span_ptkin_check_status ?: 'belum_dicek';
-
-                    return '<span class="badge badge-' . $this->statusBadgeColor($status) . '">' . e($this->formatTrackerStatusLabel($status, 'SPAN-PTKIN')) . '</span>';
-                }
-
-                if (!$row->has_snbp_number) {
+                if (!$trackerData['has_number']) {
                     return '<span class="text-muted">-</span>';
                 }
 
-                $status = $row->snbp_check_status ?: 'belum_dicek';
-                return '<span class="badge badge-' . $this->statusBadgeColor($status) . '">' . e($this->formatTrackerStatusLabel($status, 'SNBP')) . '</span>';
+                return '<span class="badge badge-' . $this->statusBadgeColor($trackerData['status']) . '">' . e($this->formatTrackerStatusLabel($trackerData['status'], $trackerData['type'])) . '</span>';
+            })
+            ->addColumn('result_badge', function ($row) use ($trackerType) {
+                $trackerData = $this->extractRowTrackerData($row, $trackerType);
+
+                if (!$trackerData['has_number']) {
+                    return '<span class="text-muted">-</span>';
+                }
+
+                return '<span class="badge badge-' . $this->resultBadgeColor($trackerData['status']) . '">' . e($this->formatTrackerResultLabel($trackerData['status'])) . '</span>';
             })
             ->editColumn('nama_universitas', fn ($row) => $row->nama_universitas ?: '-')
             ->editColumn('jurusan_fakultas', fn ($row) => $row->jurusan_fakultas ?: '-')
             ->editColumn('program_studi', fn ($row) => $row->program_studi ?: '-')
-            ->rawColumns(['status_badge', 'jalur_badge', 'checker_badge'])
+            ->rawColumns(['status_badge', 'jalur_badge', 'checker_badge', 'result_badge'])
             ->make(true);
     }
 
@@ -362,6 +352,7 @@ class LulusanController extends Controller
                     'belum_isi' => $kelasRows->where('is_filled', 0)->count(),
                     'eligible' => $kelasEligibleRows->count(),
                     'eligible_lulus' => $kelasEligibleRows->where('check_status', 'lulus')->count(),
+                    'eligible_tidak_lulus' => $kelasEligibleRows->where('check_status', 'tidak_lulus')->count(),
                     'jalur' => $jalur,
                 ];
             })
@@ -420,6 +411,7 @@ class LulusanController extends Controller
         $filters = $report['filters'];
         $perJalur = $report['per_jalur'];
         $checkerStatus = $report['checker_status'];
+        $trackerMeta = $report['tracker_meta'];
 
         $sheet->setCellValue('A1', 'Laporan Statistik Lulusan');
         $sheet->mergeCells('A1:F1');
@@ -451,12 +443,14 @@ class LulusanController extends Controller
             'Sudah Mengisi Lulusan' => $summary['sudah_isi'],
             'Belum Mengisi Lulusan' => $summary['belum_isi'],
             'Total Universitas Tujuan' => $summary['total_universitas'],
-            'Total Eligible SNBP' => $summary['eligible_total'],
-            'Eligible Sudah Isi Nomor' => $summary['eligible_sudah_isi_nomor'],
-            'Eligible Belum Isi Nomor' => $summary['eligible_belum_isi_nomor'],
-            'Eligible Lulus SNBP' => $summary['eligible_lulus'],
-            'Eligible Belum Dicek' => $summary['eligible_belum_dicek'],
-            'PTN Diterima dari SNBP' => $summary['total_ptn_diterima'],
+            $trackerMeta['summary_total_label'] => $summary['eligible_total'],
+            $trackerMeta['summary_number_label'] => $summary['eligible_sudah_isi_nomor'],
+            $trackerMeta['summary_missing_number_label'] => $summary['eligible_belum_isi_nomor'],
+            $trackerMeta['summary_passed_label'] => $summary['eligible_lulus'],
+            $trackerMeta['summary_failed_label'] => $summary['eligible_tidak_lulus'],
+            $trackerMeta['summary_error_label'] => $summary['eligible_gagal_cek'],
+            $trackerMeta['summary_pending_label'] => $summary['eligible_belum_dicek'],
+            $trackerMeta['accepted_university_summary_label'] => $summary['total_ptn_diterima'],
         ] as $label => $value) {
             $sheet->setCellValue("A{$row}", $label);
             $sheet->setCellValue("B{$row}", $value);
@@ -479,7 +473,7 @@ class LulusanController extends Controller
         }
 
         $row++;
-        $sheet->setCellValue("A{$row}", 'Status Checker SNBP');
+        $sheet->setCellValue("A{$row}", $trackerMeta['checker_title']);
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
         $sheet->setCellValue("A{$row}", 'Status');
@@ -499,9 +493,9 @@ class LulusanController extends Controller
         }
 
         $this->writeTopTable($sheet, 'D4', 'Top Universitas Tujuan', 'Universitas', $report['top_universitas']);
-        $this->writeTopTable($sheet, 'G4', 'Top PTN Diterima SNBP', 'PTN', $report['top_ptn_snbp']);
-        $this->writeTopTable($sheet, 'J4', 'Top Prodi Diterima SNBP', 'Program Studi', $report['top_prodi_snbp']);
-        $this->writeMatrixTable($sheet, 'D20', $report['per_kelas']);
+        $this->writeTopTable($sheet, 'G4', $trackerMeta['top_university_title'], $trackerMeta['accepted_university_short_label'], $report['top_tracker_universitas']);
+        $this->writeTopTable($sheet, 'J4', $trackerMeta['top_program_title'], 'Program Studi', $report['top_tracker_prodi']);
+        $this->writeMatrixTable($sheet, 'D20', $report['per_kelas'], $trackerMeta['matrix_tracker_label']);
 
         foreach (range(1, 12) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
@@ -512,18 +506,21 @@ class LulusanController extends Controller
     {
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('Daftar Lulusan');
+        $trackerType = $report['tracker_meta']['type'] ?? null;
+        $trackerMeta = $report['tracker_meta'];
 
-        $headers = ['NISN', 'Nama Siswa', 'Kelas', 'Tanggal Lahir', 'Status Pengisian', 'Jalur Masuk', 'Universitas', 'Jurusan/Fakultas', 'Program Studi', 'Nomor SNBP', 'Status Checker SNBP', 'Terakhir Dicek'];
+        $headers = ['NISN', 'Nama Siswa', 'Kelas', 'Tanggal Lahir', 'Status Pengisian', 'Jalur Masuk', 'Universitas', 'Jurusan/Fakultas', 'Program Studi', $trackerMeta['number_column_label'], $trackerMeta['checker_title'], 'Hasil Checker', 'Terakhir Dicek'];
 
         foreach ($headers as $index => $header) {
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($index + 1) . '1', $header);
         }
 
-        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9EAD3');
+        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:M1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9EAD3');
 
         $rowNumber = 2;
         foreach ($report['rows'] as $row) {
+            $trackerData = $this->extractRowTrackerData($row, $trackerType);
             $sheet->setCellValue("A{$rowNumber}", $row->nisn);
             $sheet->setCellValue("B{$rowNumber}", $row->nama_lengkap);
             $sheet->setCellValue("C{$rowNumber}", $row->kelas_nama);
@@ -533,15 +530,16 @@ class LulusanController extends Controller
             $sheet->setCellValue("G{$rowNumber}", $row->nama_universitas ?: '-');
             $sheet->setCellValue("H{$rowNumber}", $row->jurusan_fakultas ?: '-');
             $sheet->setCellValue("I{$rowNumber}", $row->program_studi ?: '-');
-            $sheet->setCellValue("J{$rowNumber}", $row->nomor_pendaftaran ?: '-');
-            $sheet->setCellValue("K{$rowNumber}", $this->formatCheckStatusLabel($row->snbp_check_status, $row->has_snbp_number));
-            $sheet->setCellValue("L{$rowNumber}", $this->formatDateTimeValue($row->last_checked_at));
+            $sheet->setCellValue("J{$rowNumber}", $trackerData['number'] ?: '-');
+            $sheet->setCellValue("K{$rowNumber}", $this->formatCheckStatusLabel($trackerData['status'], $trackerData['has_number'], $trackerData['type']));
+            $sheet->setCellValue("L{$rowNumber}", $this->formatTrackerResultLabel($trackerData['status'], $trackerData['has_number']));
+            $sheet->setCellValue("M{$rowNumber}", $this->formatDateTimeValue($trackerData['last_checked_at']));
             $rowNumber++;
         }
 
-        $sheet->getStyle('A1:L' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:M' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        foreach (range(1, 12) as $index) {
+        foreach (range(1, 13) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
         }
     }
@@ -549,16 +547,17 @@ class LulusanController extends Controller
     private function buildEligibleSheet(Spreadsheet $spreadsheet, array $report): void
     {
         $sheet = $spreadsheet->createSheet();
-        $sheet->setTitle('Monitoring Eligible');
+        $trackerMeta = $report['tracker_meta'];
+        $sheet->setTitle($trackerMeta['monitoring_sheet_title']);
 
-        $headers = ['NISN', 'Nama Siswa', 'Kelas', 'Tanggal Lahir', 'Nomor Pendaftaran SNBP', 'Status Checker', 'Terakhir Dicek', 'Status Lulusan', 'Jalur Masuk', 'PTN', 'Program Studi'];
+        $headers = ['NISN', 'Nama Siswa', 'Kelas', 'Tanggal Lahir', $trackerMeta['number_column_label'], $trackerMeta['checker_title'], 'Hasil Checker', 'Terakhir Dicek', 'Status Lulusan', 'Jalur Masuk', $trackerMeta['accepted_university_short_label'], 'Program Studi'];
 
         foreach ($headers as $index => $header) {
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($index + 1) . '1', $header);
         }
 
-        $sheet->getStyle('A1:K1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:K1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('CFE2F3');
+        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('CFE2F3');
 
         $rowNumber = 2;
         foreach ($report['eligible_rows'] as $row) {
@@ -567,18 +566,19 @@ class LulusanController extends Controller
             $sheet->setCellValue("C{$rowNumber}", $row->kelas_nama ?: '-');
             $sheet->setCellValue("D{$rowNumber}", $this->formatDateValue($row->tanggal_lahir));
             $sheet->setCellValue("E{$rowNumber}", $row->nomor_pendaftaran ?: '-');
-            $sheet->setCellValue("F{$rowNumber}", $this->formatCheckStatusLabel($row->check_status, true));
-            $sheet->setCellValue("G{$rowNumber}", $this->formatDateTimeValue($row->last_checked_at));
-            $sheet->setCellValue("H{$rowNumber}", $row->is_filled ? 'Sudah Isi' : 'Belum Isi');
-            $sheet->setCellValue("I{$rowNumber}", $row->jalur_masuk ?: '-');
-            $sheet->setCellValue("J{$rowNumber}", $row->nama_universitas ?: '-');
-            $sheet->setCellValue("K{$rowNumber}", $row->program_studi ?: '-');
+            $sheet->setCellValue("F{$rowNumber}", $this->formatCheckStatusLabel($row->check_status, true, $trackerMeta['type']));
+            $sheet->setCellValue("G{$rowNumber}", $this->formatTrackerResultLabel($row->check_status, true));
+            $sheet->setCellValue("H{$rowNumber}", $this->formatDateTimeValue($row->last_checked_at));
+            $sheet->setCellValue("I{$rowNumber}", $row->is_filled ? 'Sudah Isi' : 'Belum Isi');
+            $sheet->setCellValue("J{$rowNumber}", $row->jalur_masuk ?: '-');
+            $sheet->setCellValue("K{$rowNumber}", $row->nama_universitas ?: '-');
+            $sheet->setCellValue("L{$rowNumber}", $row->program_studi ?: '-');
             $rowNumber++;
         }
 
-        $sheet->getStyle('A1:K' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:L' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        foreach (range(1, 11) as $index) {
+        foreach (range(1, 12) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
         }
     }
@@ -610,7 +610,7 @@ class LulusanController extends Controller
         }
     }
 
-    private function writeMatrixTable($sheet, string $startCell, array $perKelas): void
+    private function writeMatrixTable($sheet, string $startCell, array $perKelas, string $trackerLabel = 'Lulus SNBP'): void
     {
         [$column, $row] = Coordinate::coordinateFromString($startCell);
         $startIndex = Coordinate::columnIndexFromString($column);
@@ -619,10 +619,10 @@ class LulusanController extends Controller
         $sheet->getStyleByColumnAndRow($startIndex, $row)->getFont()->setBold(true);
         $row++;
 
-        foreach (['Kelas', 'Eligible', 'Lulus SNBP', 'Sudah Isi', 'Belum Isi', 'Total'] as $offset => $header) {
+        foreach (['Kelas', 'Eligible', $trackerLabel, 'Tidak Lulus', 'Sudah Isi', 'Belum Isi', 'Total'] as $offset => $header) {
             $sheet->setCellValueByColumnAndRow($startIndex + $offset, $row, $header);
         }
-        $sheet->getStyleByColumnAndRow($startIndex, $row, $startIndex + 5, $row)->getFont()->setBold(true);
+        $sheet->getStyleByColumnAndRow($startIndex, $row, $startIndex + 6, $row)->getFont()->setBold(true);
         $row++;
 
         if (empty($perKelas)) {
@@ -634,9 +634,10 @@ class LulusanController extends Controller
             $sheet->setCellValueByColumnAndRow($startIndex, $row, $item['kelas_nama']);
             $sheet->setCellValueByColumnAndRow($startIndex + 1, $row, $item['eligible']);
             $sheet->setCellValueByColumnAndRow($startIndex + 2, $row, $item['eligible_lulus']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 3, $row, $item['sudah_isi']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 4, $row, $item['belum_isi']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 5, $row, $item['total']);
+            $sheet->setCellValueByColumnAndRow($startIndex + 3, $row, $item['eligible_tidak_lulus'] ?? 0);
+            $sheet->setCellValueByColumnAndRow($startIndex + 4, $row, $item['sudah_isi']);
+            $sheet->setCellValueByColumnAndRow($startIndex + 5, $row, $item['belum_isi']);
+            $sheet->setCellValueByColumnAndRow($startIndex + 6, $row, $item['total']);
             $row++;
         }
     }
@@ -930,16 +931,24 @@ class LulusanController extends Controller
                 'type' => 'SPAN-PTKIN',
                 'summary_total_label' => 'Peserta SPAN-PTKIN',
                 'summary_number_label' => 'Sudah Import Nomor',
+                'summary_missing_number_label' => 'Belum Import Nomor',
                 'summary_passed_label' => 'Lulus SPAN-PTKIN',
+                'summary_failed_label' => 'Tidak Lulus SPAN-PTKIN',
+                'summary_error_label' => 'Gagal Cek SPAN-PTKIN',
                 'summary_pending_label' => 'Belum Dicek SPAN-PTKIN',
                 'checker_title' => 'Status Checker SPAN-PTKIN',
                 'top_university_title' => 'Top PTKIN Diterima SPAN-PTKIN',
                 'top_program_title' => 'Top Prodi Diterima SPAN-PTKIN',
                 'checker_column_label' => 'Checker SPAN-PTKIN',
+                'result_column_label' => 'Hasil SPAN-PTKIN',
                 'matrix_tracker_label' => 'Lulus SPAN-PTKIN',
                 'empty_university_text' => 'Belum ada siswa diterima via SPAN-PTKIN.',
                 'empty_program_text' => 'Belum ada prodi SPAN-PTKIN.',
                 'status_passed_label' => 'Lulus SPAN-PTKIN',
+                'number_column_label' => 'Nomor Pendaftaran SPAN-PTKIN',
+                'accepted_university_short_label' => 'PTKIN',
+                'accepted_university_summary_label' => 'PTKIN Diterima dari SPAN-PTKIN',
+                'monitoring_sheet_title' => 'Monitoring SPAN-PTKIN',
             ];
         }
 
@@ -947,16 +956,24 @@ class LulusanController extends Controller
             'type' => 'SNBP',
             'summary_total_label' => 'Eligible SNBP',
             'summary_number_label' => 'Sudah Isi Nomor SNBP',
+            'summary_missing_number_label' => 'Belum Isi Nomor SNBP',
             'summary_passed_label' => 'Lulus SNBP',
+            'summary_failed_label' => 'Tidak Lulus SNBP',
+            'summary_error_label' => 'Gagal Cek SNBP',
             'summary_pending_label' => 'Belum Dicek SNBP',
             'checker_title' => 'Status Checker SNBP',
             'top_university_title' => 'Top PTN Diterima SNBP',
             'top_program_title' => 'Top Prodi Diterima SNBP',
             'checker_column_label' => 'Checker SNBP',
+            'result_column_label' => 'Hasil SNBP',
             'matrix_tracker_label' => 'Lulus SNBP',
             'empty_university_text' => 'Belum ada siswa diterima via SNBP.',
             'empty_program_text' => 'Belum ada prodi SNBP.',
             'status_passed_label' => 'Lulus SNBP',
+            'number_column_label' => 'Nomor Pendaftaran SNBP',
+            'accepted_university_short_label' => 'PTN',
+            'accepted_university_summary_label' => 'PTN Diterima dari SNBP',
+            'monitoring_sheet_title' => 'Monitoring Eligible',
         ];
     }
 
@@ -979,10 +996,34 @@ class LulusanController extends Controller
         };
     }
 
+    private function resultBadgeColor(?string $status): string
+    {
+        return match ($status) {
+            'lulus' => 'success',
+            'tidak_lulus' => 'danger',
+            'gagal_cek' => 'warning',
+            default => 'secondary',
+        };
+    }
+
     private function formatTrackerStatusLabel(?string $status, string $trackerType): string
     {
         return match ($status) {
             'lulus' => 'Lulus ' . $trackerType,
+            'tidak_lulus' => 'Tidak Lulus',
+            'gagal_cek' => 'Gagal Cek',
+            default => 'Belum Dicek',
+        };
+    }
+
+    private function formatTrackerResultLabel(?string $status, bool $hasNumber = true): string
+    {
+        if (!$hasNumber) {
+            return '-';
+        }
+
+        return match ($status) {
+            'lulus' => 'Lulus',
             'tidak_lulus' => 'Tidak Lulus',
             'gagal_cek' => 'Gagal Cek',
             default => 'Belum Dicek',
@@ -1007,18 +1048,49 @@ class LulusanController extends Controller
         return Carbon::parse($value)->format('d-m-Y H:i');
     }
 
-    private function formatCheckStatusLabel(?string $status, bool $hasSnbpNumber): string
+    private function formatCheckStatusLabel(?string $status, bool $hasTrackerNumber, ?string $trackerType = 'SNBP'): string
     {
-        if (!$hasSnbpNumber) {
+        if (!$hasTrackerNumber) {
             return '-';
         }
 
         return match ($status) {
-            'lulus' => 'Lulus',
+            'lulus' => 'Lulus ' . $trackerType,
             'tidak_lulus' => 'Tidak Lulus',
             'gagal_cek' => 'Gagal Cek',
             default => 'Belum Dicek',
         };
+    }
+
+    private function extractRowTrackerData(object $row, ?string $trackerType): array
+    {
+        $resolvedTracker = $trackerType;
+
+        if (!$resolvedTracker) {
+            $resolvedTracker = match ($row->jalur_masuk) {
+                'SPAN-PTKIN' => 'SPAN-PTKIN',
+                'SNBP' => 'SNBP',
+                default => 'SNBP',
+            };
+        }
+
+        if ($resolvedTracker === 'SPAN-PTKIN') {
+            return [
+                'type' => 'SPAN-PTKIN',
+                'number' => $row->span_ptkin_nomor_pendaftaran ?? null,
+                'has_number' => (bool) ($row->has_span_ptkin_number ?? false),
+                'status' => $row->span_ptkin_check_status ?: 'belum_dicek',
+                'last_checked_at' => $row->span_ptkin_last_checked_at ?? null,
+            ];
+        }
+
+        return [
+            'type' => 'SNBP',
+            'number' => $row->nomor_pendaftaran ?? null,
+            'has_number' => (bool) ($row->has_snbp_number ?? false),
+            'status' => $row->snbp_check_status ?: 'belum_dicek',
+            'last_checked_at' => $row->last_checked_at ?? null,
+        ];
     }
 
     private function sanitizeFilenameSegment(string $value): string

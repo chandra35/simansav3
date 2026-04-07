@@ -116,7 +116,7 @@
         </div>
 
         <div class="row">
-            <div class="col-md-3 col-sm-6">
+            <div class="col-lg-2 col-md-4 col-sm-6">
                 <div class="info-box bg-teal">
                         <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
                     <div class="info-box-content">
@@ -125,7 +125,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-lg-2 col-md-4 col-sm-6">
                 <div class="info-box bg-secondary">
                         <span class="info-box-icon"><i class="fas fa-id-card"></i></span>
                     <div class="info-box-content">
@@ -134,7 +134,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-lg-2 col-md-4 col-sm-6">
                 <div class="info-box bg-success">
                         <span class="info-box-icon"><i class="fas fa-award"></i></span>
                     <div class="info-box-content">
@@ -143,7 +143,25 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="info-box bg-danger">
+                        <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text" id="summaryEligibleTidakLulusLabel">Tidak Lulus SNBP</span>
+                        <span class="info-box-number" id="summaryEligibleTidakLulus">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="info-box bg-warning">
+                        <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text" id="summaryEligibleGagalLabel">Gagal Cek SNBP</span>
+                        <span class="info-box-number" id="summaryEligibleGagal">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
                 <div class="info-box bg-dark">
                         <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
                     <div class="info-box-content">
@@ -284,6 +302,7 @@
                                 <th>Kelas</th>
                                 <th>Status</th>
                                 <th>Jalur</th>
+                                <th id="checkerResultLabel">Hasil SNBP</th>
                                 <th id="checkerColumnLabel">Checker SNBP</th>
                                 <th>Universitas</th>
                                 <th>Jurusan/Fakultas</th>
@@ -309,6 +328,7 @@
                             @endforeach
                             <th class="text-center">Eligible</th>
                             <th class="text-center" id="matrixTrackerLabel">Lulus SNBP</th>
+                            <th class="text-center">Tidak Lulus</th>
                             <th class="text-center">Sudah Isi</th>
                             <th class="text-center">Belum Isi</th>
                             <th class="text-center">Total</th>
@@ -385,11 +405,14 @@
             summary_total_label: 'Eligible SNBP',
             summary_number_label: 'Sudah Isi Nomor SNBP',
             summary_passed_label: 'Lulus SNBP',
+            summary_failed_label: 'Tidak Lulus SNBP',
+            summary_error_label: 'Gagal Cek SNBP',
             summary_pending_label: 'Belum Dicek SNBP',
             checker_title: 'Status Checker SNBP',
             top_university_title: 'Top PTN Diterima SNBP',
             top_program_title: 'Top Prodi Diterima SNBP',
             checker_column_label: 'Checker SNBP',
+            result_column_label: 'Hasil SNBP',
             matrix_tracker_label: 'Lulus SNBP',
             empty_university_text: 'Belum ada siswa diterima via SNBP.',
             empty_program_text: 'Belum ada prodi SNBP.'
@@ -512,11 +535,14 @@
             $('#summaryEligibleLabel').text(trackerMeta.summary_total_label);
             $('#summaryEligibleIsiLabel').text(trackerMeta.summary_number_label);
             $('#summaryEligibleLulusLabel').text(trackerMeta.summary_passed_label);
+            $('#summaryEligibleTidakLulusLabel').text(trackerMeta.summary_failed_label);
+            $('#summaryEligibleGagalLabel').text(trackerMeta.summary_error_label);
             $('#summaryEligibleBelumDicekLabel').text(trackerMeta.summary_pending_label);
             $('#checkerStatusTitle').text(trackerMeta.checker_title);
             $('#topTrackerUniversityTitle').text(trackerMeta.top_university_title);
             $('#topTrackerProgramTitle').text(trackerMeta.top_program_title);
             $('#checkerColumnLabel').text(trackerMeta.checker_column_label);
+            $('#checkerResultLabel').text(trackerMeta.result_column_label);
             $('#matrixTrackerLabel').text(trackerMeta.matrix_tracker_label);
         }
 
@@ -525,7 +551,7 @@
             tbody.empty();
 
             if (!perKelas || perKelas.length === 0) {
-                tbody.html(`<tr><td colspan="${jalurMasukOptions.length + 6}" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`);
+                tbody.html(`<tr><td colspan="${jalurMasukOptions.length + 7}" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`);
                 return;
             }
 
@@ -538,6 +564,7 @@
                         ${jalurCells}
                         <td class="text-center font-weight-bold text-info">${item.eligible ?? 0}</td>
                         <td class="text-center font-weight-bold text-primary">${item.eligible_lulus ?? 0}</td>
+                        <td class="text-center font-weight-bold text-danger">${item.eligible_tidak_lulus ?? 0}</td>
                         <td class="text-center font-weight-bold text-success">${item.sudah_isi}</td>
                         <td class="text-center font-weight-bold text-warning">${item.belum_isi}</td>
                         <td class="text-center font-weight-bold">${item.total}</td>
@@ -560,6 +587,8 @@
                     $('#summaryEligible').text(response.summary.eligible_total ?? 0);
                     $('#summaryEligibleIsi').text(response.summary.eligible_sudah_isi_nomor ?? 0);
                     $('#summaryEligibleLulus').text(response.summary.eligible_lulus ?? 0);
+                    $('#summaryEligibleTidakLulus').text(response.summary.eligible_tidak_lulus ?? 0);
+                    $('#summaryEligibleGagal').text(response.summary.eligible_gagal_cek ?? 0);
                     $('#summaryEligibleBelumDicek').text(response.summary.eligible_belum_dicek ?? 0);
 
                     renderPerJalur(response.per_jalur);
@@ -571,7 +600,7 @@
                 },
                 error: function() {
                     applyTrackerMeta(defaultTrackerMeta);
-                    $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleBelumDicek').text('0');
+                    $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleTidakLulus, #summaryEligibleGagal, #summaryEligibleBelumDicek').text('0');
                     renderPerJalur({});
                     renderTopUniversitas([]);
                     renderCheckerStatus({});
@@ -599,6 +628,7 @@
                     { data: 'kelas_nama', name: 'kelas.nama_kelas' },
                     { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
                     { data: 'jalur_badge', name: 'siswa_lulusan.jalur_masuk', orderable: false, searchable: false },
+                    { data: 'result_badge', name: 'result_badge', orderable: false, searchable: false },
                     { data: 'checker_badge', name: 'checker_badge', orderable: false, searchable: false },
                     { data: 'nama_universitas', name: 'siswa_lulusan.nama_universitas' },
                     { data: 'jurusan_fakultas', name: 'siswa_lulusan.jurusan_fakultas' },
