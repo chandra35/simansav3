@@ -71,6 +71,7 @@ class EmailLog extends Model
     {
         return match($this->type) {
             'password_reset' => 'Reset Password',
+            'graduation_announcement' => 'Pengumuman Kelulusan',
             'notification' => 'Notifikasi',
             'test' => 'Test Email',
             'general' => 'Umum',

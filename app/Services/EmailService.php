@@ -212,6 +212,23 @@ class EmailService
     }
 
     /**
+     * Send graduation announcement email
+     */
+    public function sendGraduationAnnouncement(string $to, array $data): array
+    {
+        $template = EmailTemplate::getByCode('graduation_announcement');
+
+        if ($template) {
+            return $this->sendUsingTemplate('graduation_announcement', $to, $data, 'graduation_announcement');
+        }
+
+        $subject = 'Pengumuman Kelulusan - ' . ($this->settings->nama_sekolah ?? 'SIMANSA');
+        $body = '<p>Pengumuman kelulusan tersedia.</p>';
+
+        return $this->send($to, $subject, $body, 'graduation_announcement');
+    }
+
+    /**
      * Get test email HTML body
      */
     protected function getTestEmailBody(): string

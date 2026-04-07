@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailTemplate;
 use App\Models\SiswaLulusan;
 use App\Models\TahunPelajaran;
+use App\Services\EmailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -166,6 +169,113 @@ class LulusanController extends Controller
         $filename = 'laporan_lulusan_' . $this->sanitizeFilenameSegment($report['selectedTahun']->nama) . '_' . now()->format('Ymd_His') . '.pdf';
 
         return $pdf->stream($filename);
+    }
+
+    public function sendGraduationEmails(Request $request, EmailService $emailService)
+    {
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'nullable|string',
+            'status_pengisian' => 'nullable|in:sudah_isi,belum_isi',
+            'jalur_masuk' => 'nullable|string',
+            'q' => 'nullable|string|max:255',
+            'catatan_admin' => 'nullable|string|max:5000',
+        ]);
+
+        $selectedTahun = $this->resolveSelectedTahun($request);
+
+        if (!$selectedTahun) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tahun pelajaran tidak ditemukan.',
+            ], 422);
+        }
+
+        if (!$emailService->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SMTP belum dikonfigurasi atau belum aktif.',
+            ], 422);
+        }
+
+        if (!EmailTemplate::getByCode('graduation_announcement')) {
+            EmailTemplate::seedDefaults();
+        }
+
+        $rows = collect(
+            $this->buildBaseQuery($request, $selectedTahun->id)
+                ->whereNotNull('users.email')
+                ->where('users.email', '<>', '')
+                ->orderBy('kelas_nama')
+                ->orderBy('nama_lengkap')
+                ->get()
+        );
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada siswa yang sesuai filter dan memiliki email tujuan.',
+            ], 422);
+        }
+
+        $note = trim((string) ($validated['catatan_admin'] ?? ''));
+        $defaultNote = 'Silakan periksa kembali data Anda di aplikasi SIMANSA dan hubungi admin/operator jika ada informasi yang perlu diperbaiki.';
+
+        $stats = [
+            'total' => $rows->count(),
+            'sent' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+        ];
+
+        $failures = [];
+
+        foreach ($rows as $row) {
+            if (blank($row->email)) {
+                $stats['skipped']++;
+                continue;
+            }
+
+            $payload = [
+                '[nama_siswa]' => $row->nama_lengkap,
+                '[nisn]' => $row->nisn,
+                '[kelas]' => $row->kelas_nama ?: '-',
+                '[email_siswa]' => $row->email,
+                '[status_kelulusan]' => (int) $row->is_filled === 1 ? 'Data lulusan sudah tercatat' : 'Menunggu kelengkapan data lulusan',
+                '[jalur_masuk]' => $row->jalur_masuk ?: '-',
+                '[nama_universitas]' => $row->nama_universitas ?: '-',
+                '[jurusan_fakultas]' => $row->jurusan_fakultas ?: '-',
+                '[program_studi]' => $row->program_studi ?: '-',
+                '[catatan_admin]' => $note !== '' ? nl2br(e($note)) : $defaultNote,
+                '[tahun_pelajaran_lulusan]' => $selectedTahun->nama,
+            ];
+
+            $result = $emailService->sendGraduationAnnouncement($row->email, $payload);
+
+            if ($result['success']) {
+                $stats['sent']++;
+                continue;
+            }
+
+            $stats['failed']++;
+            $failures[] = [
+                'nama' => $row->nama_lengkap,
+                'email' => $row->email,
+                'message' => $result['message'] ?? 'Gagal mengirim email.',
+            ];
+
+            Log::warning('Graduation announcement email failed', [
+                'siswa_id' => $row->siswa_id,
+                'email' => $row->email,
+                'message' => $result['message'] ?? null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proses kirim email pengumuman kelulusan selesai.',
+            'stats' => $stats,
+            'failures' => array_slice($failures, 0, 10),
+        ]);
     }
 
     private function buildReportData(Request $request): array
@@ -587,6 +697,7 @@ class LulusanController extends Controller
     {
         $query = DB::table('siswa_kelas')
             ->join('siswa', 'siswa.id', '=', 'siswa_kelas.siswa_id')
+            ->leftJoin('users', 'users.id', '=', 'siswa.user_id')
             ->join('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
             ->leftJoin('siswa_lulusan', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_lulusan.siswa_id', '=', 'siswa.id')
@@ -606,6 +717,7 @@ class LulusanController extends Controller
                 'siswa.nisn',
                 'siswa.nama_lengkap',
                 'siswa.tanggal_lahir',
+                'users.email',
                 'kelas.nama_kelas as kelas_nama',
                 'siswa_lulusan.jalur_masuk',
                 DB::raw("COALESCE(NULLIF(siswa_lulusan.nama_universitas_manual, ''), siswa_lulusan.nama_universitas) as nama_universitas"),

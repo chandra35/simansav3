@@ -61,6 +61,9 @@
             <button type="button" id="btnResetFilter" class="btn btn-default">
                 Reset
             </button>
+            <button type="button" id="btnSendGraduationEmail" class="btn btn-info">
+                <i class="fas fa-envelope mr-1"></i> Kirim Email Pengumuman
+            </button>
             <div class="float-md-right mt-2 mt-md-0">
                 <a href="#" id="btnExportExcel" class="btn btn-success">
                     <i class="fas fa-file-excel mr-1"></i> Export XLS
@@ -324,6 +327,41 @@
             Belum ada tahun pelajaran yang tersedia.
         </div>
     @endif
+
+    <div class="modal fade" id="graduationEmailModal" tabindex="-1" role="dialog" aria-labelledby="graduationEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info">
+                    <h5 class="modal-title" id="graduationEmailModalLabel">
+                        <i class="fas fa-envelope mr-1"></i> Kirim Email Pengumuman Kelulusan
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light border">
+                        Email akan dikirim ke siswa kelas 12 sesuai filter aktif dan memakai template email <code>graduation_announcement</code>.
+                        Jika admin mengubah template di menu <strong>Template Email</strong>, isi email berikutnya akan ikut berubah.
+                    </div>
+                    <div class="form-group">
+                        <label for="graduationEmailNote">Catatan Admin Tambahan</label>
+                        <textarea id="graduationEmailNote" class="form-control" rows="5" placeholder="Tambahkan informasi tambahan untuk disisipkan ke placeholder [catatan_admin]."></textarea>
+                        <small class="form-text text-muted">
+                            Catatan ini opsional. Jika kosong, sistem akan memakai catatan default yang sopan dan informatif.
+                        </small>
+                    </div>
+                    <div class="small text-muted" id="graduationEmailFilterSummary"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-info" id="btnSubmitGraduationEmail">
+                        <i class="fas fa-paper-plane mr-1"></i> Kirim Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -357,6 +395,18 @@
             const params = new URLSearchParams(getFilters()).toString();
             $('#btnExportExcel').attr('href', `{{ route('admin.lulusan.export-excel') }}?${params}`);
             $('#btnExportPdf').attr('href', `{{ route('admin.lulusan.export-pdf') }}?${params}`);
+        }
+
+        function updateGraduationEmailSummary() {
+            const filters = getFilters();
+            const summary = [
+                `Tahun: ${$('#filterTahunPelajaran option:selected').text() || '-'}`,
+                `Status: ${$('#filterStatusPengisian option:selected').text() || 'Semua Status'}`,
+                `Jalur: ${$('#filterJalurMasuk option:selected').text() || 'Semua Jalur'}`,
+                `Pencarian: ${filters.q || '-'}`
+            ];
+
+            $('#graduationEmailFilterSummary').text(summary.join(' | '));
         }
 
         function renderPerJalur(perJalur) {
@@ -556,6 +606,70 @@
 
             $('#filterTahunPelajaran, #filterStatusPengisian, #filterJalurMasuk').on('change', function () {
                 updateExportLinks();
+            });
+
+            $('#btnSendGraduationEmail').on('click', function () {
+                updateGraduationEmailSummary();
+                $('#graduationEmailModal').modal('show');
+            });
+
+            $('#btnSubmitGraduationEmail').on('click', function () {
+                const filters = getFilters();
+                const note = $('#graduationEmailNote').val();
+                const $btn = $(this);
+
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Mengirim...');
+
+                $.ajax({
+                    url: '{{ route('admin.lulusan.send-graduation-emails') }}',
+                    method: 'POST',
+                    data: {
+                        ...filters,
+                        catatan_admin: note,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        $('#graduationEmailModal').modal('hide');
+
+                        const stats = response.stats || {};
+                        let html = `
+                            <div class="text-left">
+                                <p class="mb-2">Proses kirim email selesai.</p>
+                                <ul class="mb-0 pl-3">
+                                    <li>Total target: ${stats.total ?? 0}</li>
+                                    <li>Berhasil: ${stats.sent ?? 0}</li>
+                                    <li>Gagal: ${stats.failed ?? 0}</li>
+                                    <li>Dilewati: ${stats.skipped ?? 0}</li>
+                                </ul>
+                            </div>
+                        `;
+
+                        if (response.failures && response.failures.length) {
+                            html += '<hr><div class="text-left"><strong>Contoh kegagalan:</strong><ul class="mb-0 pl-3">';
+                            response.failures.forEach(item => {
+                                html += `<li>${item.nama} (${item.email}): ${item.message}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Email Diproses',
+                            html: html
+                        });
+                    },
+                    error: function (xhr) {
+                        const message = xhr.responseJSON?.message || 'Gagal memproses pengiriman email pengumuman kelulusan.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: message
+                        });
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Kirim Sekarang');
+                    }
+                });
             });
 
             updateExportLinks();

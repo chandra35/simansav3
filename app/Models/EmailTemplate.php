@@ -90,6 +90,16 @@ class EmailTemplate extends Model
                 '[action_url]' => 'URL aksi khusus',
                 '[waktu]' => 'Waktu aksi dilakukan',
             ],
+            // Graduation / lulusan placeholders
+            'lulusan' => [
+                '[status_kelulusan]' => 'Status kelulusan / status pengumuman',
+                '[jalur_masuk]' => 'Jalur masuk perguruan tinggi',
+                '[nama_universitas]' => 'Nama universitas/PTKIN tujuan',
+                '[jurusan_fakultas]' => 'Jurusan atau fakultas',
+                '[program_studi]' => 'Program studi',
+                '[catatan_admin]' => 'Catatan tambahan dari admin',
+                '[tahun_pelajaran_lulusan]' => 'Tahun pelajaran lulusan',
+            ],
         ];
     }
 
@@ -196,6 +206,14 @@ class EmailTemplate extends Model
             '[reset_link]' => url('/reset-password/sample-token'),
             '[verification_link]' => url('/verify/sample-token'),
             '[action_url]' => url('/action/sample'),
+            // Lulusan
+            '[status_kelulusan]' => 'Data lulusan sudah tercatat',
+            '[jalur_masuk]' => 'SNBP',
+            '[nama_universitas]' => 'Universitas Lampung',
+            '[jurusan_fakultas]' => 'Fakultas Keguruan dan Ilmu Pendidikan',
+            '[program_studi]' => 'Pendidikan Matematika',
+            '[catatan_admin]' => 'Silakan simpan email ini sebagai arsip dan hubungi admin jika terdapat kekeliruan data.',
+            '[tahun_pelajaran_lulusan]' => '2025/2026',
         ];
 
         return $this->render($sampleData);
@@ -266,6 +284,15 @@ class EmailTemplate extends Model
                 'body' => self::getDefaultPasswordChangedBody(),
                 'description' => 'Template notifikasi saat password berhasil diubah',
                 'available_placeholders' => ['user', 'system'],
+                'is_system' => true,
+            ],
+            [
+                'code' => 'graduation_announcement',
+                'name' => 'Pengumuman Kelulusan',
+                'subject' => 'Pengumuman Kelulusan - [nama_sekolah] - [nama_siswa]',
+                'body' => self::getDefaultGraduationAnnouncementBody(),
+                'description' => 'Template email pengumuman kelulusan / data lulusan untuk siswa',
+                'available_placeholders' => ['siswa', 'user', 'system', 'lulusan'],
                 'is_system' => true,
             ],
         ];
@@ -551,6 +578,94 @@ HTML;
         <div class="footer">
             <p>Email ini dikirim otomatis oleh sistem [nama_sekolah]</p>
             <p>[alamat_sekolah] | [telepon_sekolah]</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    private static function getDefaultGraduationAnnouncementBody(): string
+    {
+        return <<<'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f6fb; }
+        .wrapper { padding: 24px; }
+        .container { max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08); }
+        .header { background: linear-gradient(135deg, #3056d3 0%, #1d8f8a 100%); color: white; padding: 32px 28px; text-align: center; }
+        .header .logo { margin-bottom: 12px; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+        .header p { margin: 8px 0 0; opacity: 0.92; font-size: 14px; }
+        .content { padding: 32px 28px; }
+        .greeting { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #0f172a; }
+        .lead { color: #475569; margin-bottom: 24px; }
+        .summary { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin: 22px 0; }
+        .summary table { width: 100%; border-collapse: collapse; }
+        .summary td { padding: 8px 0; vertical-align: top; }
+        .summary .label { width: 42%; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+        .summary .value { color: #0f172a; font-weight: 600; }
+        .note { background: #eff6ff; border-left: 4px solid #3056d3; padding: 18px; border-radius: 0 12px 12px 0; margin: 22px 0; color: #1e3a8a; }
+        .footer { background: #0f172a; color: #cbd5e1; padding: 20px 24px; text-align: center; font-size: 12px; }
+        .footer p { margin: 4px 0; }
+        .school-name { color: #ffffff; font-weight: 700; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="logo">[logo_sekolah]</div>
+                <h1>Pengumuman Kelulusan</h1>
+                <p>[nama_sekolah] • [tahun_pelajaran_lulusan]</p>
+            </div>
+            <div class="content">
+                <div class="greeting">Halo, [nama_siswa]</div>
+                <p class="lead">
+                    Berikut kami sampaikan informasi pengumuman kelulusan/data lulusan Anda dari <strong>[nama_sekolah]</strong>.
+                </p>
+
+                <div class="summary">
+                    <table>
+                        <tr>
+                            <td class="label">Status</td>
+                            <td class="value">[status_kelulusan]</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Jalur Masuk</td>
+                            <td class="value">[jalur_masuk]</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Universitas/PTKIN</td>
+                            <td class="value">[nama_universitas]</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Jurusan/Fakultas</td>
+                            <td class="value">[jurusan_fakultas]</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Program Studi</td>
+                            <td class="value">[program_studi]</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="note">
+                    <strong>Catatan Admin</strong><br>
+                    [catatan_admin]
+                </div>
+
+                <p>Jika ada data yang perlu diperbaiki, silakan segera menghubungi admin/operator madrasah.</p>
+            </div>
+            <div class="footer">
+                <p class="school-name">[nama_sekolah]</p>
+                <p>[alamat_sekolah]</p>
+                <p>Email ini dikirim otomatis oleh sistem SIMANSA.</p>
+            </div>
         </div>
     </div>
 </body>

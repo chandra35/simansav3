@@ -22,6 +22,10 @@ class EmailTemplateController extends Controller
      */
     public function index(Request $request)
     {
+        if (!EmailTemplate::where('code', 'graduation_announcement')->exists()) {
+            EmailTemplate::seedDefaults();
+        }
+
         // Debug logging
         Log::info('EmailTemplate index called', [
             'has_draw' => $request->has('draw'),
