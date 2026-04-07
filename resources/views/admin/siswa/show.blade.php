@@ -402,7 +402,9 @@ function resetPassword(siswaId) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
-                        text: response.message || 'Password berhasil direset'
+                        text: response.default_password
+                            ? `${response.message || 'Password berhasil direset'} (Password: ${response.default_password})`
+                            : (response.message || 'Password berhasil direset')
                     }).then(() => {
                         location.reload();
                     });

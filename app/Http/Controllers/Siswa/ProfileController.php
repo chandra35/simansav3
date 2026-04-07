@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Siswa;
@@ -297,8 +298,9 @@ class ProfileController extends Controller
             // Get old path before update
             $oldFoto = $siswa->foto_profile;
             
-            // Update siswa record
+            // Update siswa record and refresh relation-backed accessors
             $siswa->update(['foto_profile' => $path]);
+            $siswa->refresh();
 
             // Enhanced activity log
             ActivityLogService::log([
@@ -336,8 +338,9 @@ class ProfileController extends Controller
     protected function handleCroppedImageUpload($base64Image, $siswa)
     {
         // Delete old foto if exists
-        if ($siswa->foto_profile) {
-            Storage::disk('public')->delete($siswa->foto_profile);
+        $oldFotoPath = StorageHelper::normalizePublicPath($siswa->foto_profile);
+        if ($oldFotoPath) {
+            Storage::disk('public')->delete($oldFotoPath);
         }
 
         // Decode base64 image
@@ -558,8 +561,9 @@ class ProfileController extends Controller
     protected function handleFotoUpload($file, $siswa)
     {
         // Delete old foto if exists
-        if ($siswa->foto_profile) {
-            Storage::disk('public')->delete($siswa->foto_profile);
+        $oldFotoPath = StorageHelper::normalizePublicPath($siswa->foto_profile);
+        if ($oldFotoPath) {
+            Storage::disk('public')->delete($oldFotoPath);
         }
 
         // Generate unique filename

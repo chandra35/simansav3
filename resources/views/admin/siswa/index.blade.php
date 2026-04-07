@@ -999,7 +999,10 @@ function resetPassword(id) {
         })
         .done(function(response) {
             if (response.success) {
-                toastr.success(response.message, 'Berhasil!');
+                const info = response.default_password
+                    ? `${response.message}\nPassword default baru: ${response.default_password}`
+                    : response.message;
+                toastr.success(info, 'Berhasil!');
             } else {
                 toastr.error(response.message, 'Gagal!');
             }

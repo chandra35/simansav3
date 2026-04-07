@@ -675,10 +675,13 @@ class SiswaController extends Controller
         $this->authorize('edit-siswa');
 
         try {
-            $siswa->user->update([
-                'password' => Hash::make($siswa->nisn),
-                'is_first_login' => true,
-            ]);
+            $user = $siswa->user;
+            $defaultPassword = $siswa->nisn;
+
+            $user->password = Hash::make($defaultPassword);
+            $user->is_first_login = true;
+            $user->readable_password = $defaultPassword;
+            $user->save();
 
             // Log activity
             \App\Models\ActivityLog::create([
@@ -693,7 +696,8 @@ class SiswaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password siswa berhasil direset ke NISN'
+                'message' => 'Password siswa berhasil direset ke NISN',
+                'default_password' => $defaultPassword,
             ]);
 
         } catch (\Exception $e) {
