@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasUuid;
@@ -233,7 +234,10 @@ class Siswa extends Model
     public function getFotoProfileUrlAttribute()
     {
         if ($this->foto_profile) {
-            return asset('storage/' . $this->foto_profile);
+            $url = StorageHelper::publicFileUrl($this->foto_profile);
+            if ($url) {
+                return $url;
+            }
         }
         
         // Generate avatar animasi dari nama siswa menggunakan UI Avatars
@@ -259,6 +263,11 @@ class Siswa extends Model
         $rounded = false; // Gunakan square untuk konsistensi dengan foto upload
         
         return "https://ui-avatars.com/api/?name={$name}&size={$size}&background={$background}&color={$color}&font-size={$fontSize}&bold=" . ($bold ? 'true' : 'false') . "&rounded=" . ($rounded ? 'true' : 'false');
+    }
+
+    public function getFotoProfilePathAttribute()
+    {
+        return StorageHelper::normalizePublicPath($this->foto_profile);
     }
 
     // Original helper methods

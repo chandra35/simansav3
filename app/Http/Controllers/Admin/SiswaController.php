@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Siswa;
@@ -283,6 +284,7 @@ class SiswaController extends Controller
         $previewUrl = e($siswa->foto_profile_url);
         $downloadUrl = e(route('admin.siswa.download-foto', $siswa));
         $studentName = e($siswa->nama_lengkap);
+        $fallbackUrl = e($this->buildFallbackAvatar($siswa));
 
         return '
             <div class="d-flex align-items-center">
@@ -295,6 +297,7 @@ class SiswaController extends Controller
                     <img src="' . $previewUrl . '"
                         alt="Foto ' . $studentName . '"
                         class="img-circle border"
+                        onerror="this.onerror=null;this.src=\'' . $fallbackUrl . '\';"
                         style="width:40px;height:40px;object-fit:cover;">
                 </button>
                 <div class="btn-group btn-group-sm" role="group">
@@ -545,15 +548,25 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
 
-        if (!$siswa->foto_profile || !Storage::disk('public')->exists($siswa->foto_profile)) {
+        $normalizedPath = StorageHelper::normalizePublicPath($siswa->foto_profile);
+
+        if (!$normalizedPath || !Storage::disk('public')->exists($normalizedPath)) {
             return redirect()->route('admin.siswa.index')
                 ->with('error', 'Foto siswa tidak ditemukan atau belum diunggah.');
         }
 
-        $extension = pathinfo($siswa->foto_profile, PATHINFO_EXTENSION) ?: 'jpg';
+        $extension = pathinfo($normalizedPath, PATHINFO_EXTENSION) ?: 'jpg';
         $filename = 'foto-siswa-' . $siswa->nisn . '-' . \Illuminate\Support\Str::slug($siswa->nama_lengkap) . '.' . $extension;
 
-        return Storage::disk('public')->download($siswa->foto_profile, $filename);
+        return Storage::disk('public')->download($normalizedPath, $filename);
+    }
+
+    private function buildFallbackAvatar(Siswa $siswa): string
+    {
+        $name = urlencode($siswa->nama_lengkap ?? 'Siswa');
+        $background = $siswa->jenis_kelamin === 'L' ? '3498db' : 'e83e8c';
+
+        return "https://ui-avatars.com/api/?name={$name}&size=100&background={$background}&color=FFFFFF&font-size=0.45&bold=true";
     }
 
     /**

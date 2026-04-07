@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -107,11 +108,19 @@ class Gtk extends Model
     public function getFotoProfileUrlAttribute()
     {
         if ($this->foto_profile) {
-            return asset('storage/' . $this->foto_profile);
+            $url = StorageHelper::publicFileUrl($this->foto_profile);
+            if ($url) {
+                return $url;
+            }
         }
         $name = urlencode($this->nama_lengkap ?? 'GTK');
         $bg = $this->jenis_kelamin === 'P' ? 'f06292' : '42a5f5';
         return "https://ui-avatars.com/api/?name={$name}&size=150&background={$bg}&color=ffffff";
+    }
+
+    public function getFotoProfilePathAttribute()
+    {
+        return StorageHelper::normalizePublicPath($this->foto_profile);
     }
 
     /**

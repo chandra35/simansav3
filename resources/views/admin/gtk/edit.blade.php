@@ -83,7 +83,7 @@
                                                 @endphp
                                                 {{-- Foto Image (hidden if no foto) --}}
                                                 <img id="fotoPreview" 
-                                                     src="{{ $hasFoto ? asset('storage/' . $gtk->foto_profile) : '' }}" 
+                                                     src="{{ $hasFoto ? $gtk->foto_profile_url : '' }}" 
                                                      alt=""
                                                      style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #dee2e6; {{ $hasFoto ? '' : 'display:none;' }}">
                                                 {{-- Avatar Inisial (shown if no foto) --}}

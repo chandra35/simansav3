@@ -646,9 +646,9 @@ class CetakController extends Controller
             return null;
         }
 
-        $fullPath = storage_path('app/public/' . $fotoPath);
+        $fullPath = \App\Helpers\StorageHelper::publicFilePath($fotoPath);
 
-        if (!file_exists($fullPath)) {
+        if (!$fullPath || !file_exists($fullPath)) {
             return null;
         }
 

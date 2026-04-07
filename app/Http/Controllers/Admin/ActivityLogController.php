@@ -88,7 +88,7 @@ class ActivityLogController extends Controller
                         $jenisKelamin = $siswa->jenis_kelamin ?? 'L';
                         
                         if ($siswa->foto_profile) {
-                            $fotoUrl = asset('storage/' . $siswa->foto_profile);
+                            $fotoUrl = $siswa->foto_profile_url;
                         }
                     }
                     

@@ -7,6 +7,63 @@ use Illuminate\Support\Facades\Storage;
 
 class StorageHelper
 {
+    public static function normalizePublicPath(?string $path): ?string
+    {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return null;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+
+        $path = str_replace('\\', '/', $path);
+        $path = preg_replace('#^/?storage/#', '', $path);
+        $path = preg_replace('#^/?public/#', '', $path);
+        $path = ltrim($path, '/');
+
+        return $path !== '' ? $path : null;
+    }
+
+    public static function publicFileExists(?string $path): bool
+    {
+        $normalized = self::normalizePublicPath($path);
+
+        if (!$normalized || filter_var($normalized, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        return Storage::disk('public')->exists($normalized);
+    }
+
+    public static function publicFilePath(?string $path): ?string
+    {
+        $normalized = self::normalizePublicPath($path);
+
+        if (!$normalized || filter_var($normalized, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return storage_path('app/public/' . $normalized);
+    }
+
+    public static function publicFileUrl(?string $path): ?string
+    {
+        $normalized = self::normalizePublicPath($path);
+
+        if (!$normalized) {
+            return null;
+        }
+
+        if (filter_var($normalized, FILTER_VALIDATE_URL)) {
+            return $normalized;
+        }
+
+        return asset('storage/' . $normalized);
+    }
+
     /**
      * Get writable disk for dokumen siswa
      * 

@@ -236,7 +236,7 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 @if($s->siswa?->foto_profile)
-                                    <img src="{{ asset('storage/' . $s->siswa->foto_profile) }}" class="av mr-2">
+                                    <img src="{{ $s->siswa->foto_profile_url }}" class="av mr-2">
                                 @else
                                     <div class="av-ph mr-2">{{ strtoupper(substr($s->siswa?->nama_lengkap ?? $s->moodle_fullname ?? '?', 0, 1)) }}</div>
                                 @endif
