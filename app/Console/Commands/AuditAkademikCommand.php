@@ -76,6 +76,8 @@ class AuditAkademikCommand extends Command
 
     private function buildAudit(string $tahunAktifId, string $tahunAktifNama): array
     {
+        $missingMapelBySemester = $this->findMissingConfiguredMapelBySemester();
+
         $duplicateCurrentYear = DB::table('siswa_kelas')
             ->select('siswa_id', DB::raw('COUNT(*) as total'))
             ->where('tahun_pelajaran_id', $tahunAktifId)
@@ -178,6 +180,70 @@ class AuditAkademikCommand extends Command
                 'label' => 'Siswa dengan >1 kelas aktif lintas tahun',
                 'count' => (clone $duplicateAllYears)->count(),
             ],
+            [
+                'key' => 'nilai_out_of_range_semester',
+                'label' => 'Data nilai dengan semester di luar rentang 1-5',
+                'count' => DB::table('nilai_siswa')
+                    ->whereNull('deleted_at')
+                    ->where(function ($query) {
+                        $query->where('semester', '<', 1)
+                            ->orWhere('semester', '>', 5);
+                    })
+                    ->count(),
+            ],
+            [
+                'key' => 'nilai_missing_tahun_pelajaran',
+                'label' => 'Data nilai tanpa tahun pelajaran',
+                'count' => DB::table('nilai_siswa')
+                    ->whereNull('deleted_at')
+                    ->whereNull('tahun_pelajaran_id')
+                    ->count(),
+            ],
+            [
+                'key' => 'nilai_duplicate_keys',
+                'label' => 'Duplikasi nilai per siswa-mapel-tahun-semester',
+                'count' => DB::table('nilai_siswa')
+                    ->select(
+                        'siswa_id',
+                        'mata_pelajaran_id',
+                        'tahun_pelajaran_id',
+                        'semester',
+                        DB::raw('COUNT(*) as total')
+                    )
+                    ->whereNull('deleted_at')
+                    ->groupBy('siswa_id', 'mata_pelajaran_id', 'tahun_pelajaran_id', 'semester')
+                    ->havingRaw('COUNT(*) > 1')
+                    ->get()
+                    ->count(),
+            ],
+            [
+                'key' => 'kelas12_without_sem5',
+                'label' => 'Siswa aktif kelas 12 tanpa nilai semester 5',
+                'count' => DB::table('siswa')
+                    ->join('siswa_kelas', function ($join) use ($tahunAktifId) {
+                        $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
+                            ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunAktifId)
+                            ->where('siswa_kelas.status', '=', 'aktif')
+                            ->whereNull('siswa_kelas.deleted_at');
+                    })
+                    ->join('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
+                    ->whereNull('siswa.deleted_at')
+                    ->where('siswa.status_siswa', 'aktif')
+                    ->where('kelas.tingkat', 12)
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('nilai_siswa')
+                            ->whereColumn('nilai_siswa.siswa_id', 'siswa.id')
+                            ->where('nilai_siswa.semester', 5)
+                            ->whereNull('nilai_siswa.deleted_at');
+                    })
+                    ->count(),
+            ],
+            [
+                'key' => 'nilai_missing_configured_mapel',
+                'label' => 'Kode mapel di config semester yang belum muncul di data nilai',
+                'count' => collect($missingMapelBySemester)->sum(fn (array $codes) => count($codes)),
+            ],
         ];
 
         return [
@@ -190,6 +256,8 @@ class AuditAkademikCommand extends Command
                 'Siswa nonaktif dengan kelas aktif' => $this->sampleInactiveWithActiveClass(),
                 'Mutasi keluar approved tapi status belum sinkron' => $this->sampleApprovedMutasiStatusMismatch(),
                 'Mutasi keluar tapi user masih aktif' => $this->sampleMutasiKeluarUserActive(),
+                'Siswa aktif kelas 12 tanpa nilai semester 5' => $this->sampleKelas12WithoutSemester5($tahunAktifId),
+                'Kode mapel config yang belum muncul di data nilai' => $this->sampleMissingConfiguredMapel($missingMapelBySemester),
             ],
         ];
     }
@@ -315,6 +383,77 @@ class AuditAkademikCommand extends Command
             ->get()
             ->map(fn ($row) => (array) $row)
             ->all();
+    }
+
+    private function sampleKelas12WithoutSemester5(string $tahunAktifId): array
+    {
+        return DB::table('siswa')
+            ->join('siswa_kelas', function ($join) use ($tahunAktifId) {
+                $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
+                    ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunAktifId)
+                    ->where('siswa_kelas.status', '=', 'aktif')
+                    ->whereNull('siswa_kelas.deleted_at');
+            })
+            ->join('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
+            ->whereNull('siswa.deleted_at')
+            ->where('siswa.status_siswa', 'aktif')
+            ->where('kelas.tingkat', 12)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('nilai_siswa')
+                    ->whereColumn('nilai_siswa.siswa_id', 'siswa.id')
+                    ->where('nilai_siswa.semester', 5)
+                    ->whereNull('nilai_siswa.deleted_at');
+            })
+            ->select('siswa.nisn', 'siswa.nama_lengkap', 'kelas.nama_kelas')
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => (array) $row)
+            ->all();
+    }
+
+    private function sampleMissingConfiguredMapel(array $missingMapelBySemester): array
+    {
+        return collect($missingMapelBySemester)
+            ->flatMap(function (array $codes, int $semester) {
+                return collect($codes)->map(fn (string $code) => [
+                    'semester' => $semester,
+                    'kode_mapel' => $code,
+                ]);
+            })
+            ->values()
+            ->all();
+    }
+
+    private function findMissingConfiguredMapelBySemester(): array
+    {
+        $semesterConfigs = [
+            1 => config('nilai.urutan_mapel_sem_1_2', []),
+            2 => config('nilai.urutan_mapel_sem_1_2', []),
+            3 => config('nilai.urutan_mapel_sem_3', []),
+            4 => config('nilai.urutan_mapel_sem_4', []),
+            5 => config('nilai.urutan_mapel_sem_5', []),
+        ];
+
+        $missing = [];
+
+        foreach ($semesterConfigs as $semester => $configuredCodes) {
+            $usedCodes = DB::table('nilai_siswa')
+                ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai_siswa.mata_pelajaran_id')
+                ->where('nilai_siswa.semester', $semester)
+                ->whereNull('nilai_siswa.deleted_at')
+                ->distinct()
+                ->pluck('mata_pelajaran.kode_mapel')
+                ->all();
+
+            $diff = array_values(array_diff($configuredCodes, $usedCodes));
+
+            if (!empty($diff)) {
+                $missing[$semester] = $diff;
+            }
+        }
+
+        return $missing;
     }
 
     private function resolveExitCode(array $audit): int
