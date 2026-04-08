@@ -18,12 +18,30 @@
 @stop
 
 @section('content')
-    {{-- Info Siswa --}}
-    <div class="card card-primary card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user"></i> Informasi Siswa</h3>
+    <section class="simansa-nilai-siswa-hero">
+        <div class="simansa-nilai-siswa-hero__content">
+            <div>
+                <div class="simansa-nilai-siswa-hero__eyebrow">
+                    <i class="fas fa-user-graduate"></i> Ringkasan Nilai Siswa
+                </div>
+                <h2>{{ $siswa->nama_lengkap }}</h2>
+                <p>Halaman ini merangkum seluruh semester nilai siswa yang tersimpan, lengkap dengan rata-rata, predikat, dan sumber data.</p>
+            </div>
+            <div class="simansa-nilai-siswa-chip">
+                <span class="simansa-nilai-siswa-chip__label">NISN</span>
+                <strong>{{ $siswa->nisn }}</strong>
+            </div>
         </div>
-        <div class="card-body">
+    </section>
+
+    <div class="simansa-nilai-siswa-panel">
+        <div class="simansa-nilai-siswa-panel__header">
+            <div>
+                <h3><i class="fas fa-user"></i> Informasi Siswa</h3>
+                <p>Data identitas ini membantu operator memastikan nilai yang dibuka sesuai siswa yang dimaksud.</p>
+            </div>
+        </div>
+        <div class="simansa-nilai-siswa-panel__body">
             <div class="row">
                 <div class="col-md-6">
                     <table class="table table-sm table-borderless">
@@ -59,17 +77,18 @@
 
     {{-- Nilai per Semester --}}
     @forelse($nilaiList as $sem => $nilaiSemester)
-    <div class="card card-info card-outline">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-book"></i> 
-                {{ \App\Models\NilaiSiswa::SEMESTER_LABELS[$sem] ?? "Semester {$sem}" }}
-            </h3>
-            <div class="card-tools">
-                <span class="badge badge-primary">{{ $nilaiSemester->count() }} Mapel</span>
+    <div class="simansa-nilai-siswa-panel">
+        <div class="simansa-nilai-siswa-panel__header simansa-nilai-siswa-panel__header--inline">
+            <div>
+                <h3>
+                    <i class="fas fa-book"></i> 
+                    {{ \App\Models\NilaiSiswa::SEMESTER_LABELS[$sem] ?? "Semester {$sem}" }}
+                </h3>
+                <p>Rincian mata pelajaran dan sumber nilai pada semester ini.</p>
             </div>
+            <span class="badge badge-primary">{{ $nilaiSemester->count() }} Mapel</span>
         </div>
-        <div class="card-body">
+        <div class="simansa-nilai-siswa-panel__body">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-sm">
                     <thead class="bg-light">
@@ -138,4 +157,23 @@
             </a>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-nilai-siswa-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-nilai-siswa-hero__content{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+        .simansa-nilai-siswa-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-nilai-siswa-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-nilai-siswa-hero p{margin:0;max-width:760px;color:rgba(255,255,255,.92)}
+        .simansa-nilai-siswa-chip{padding:1rem 1.1rem;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);min-width:220px}
+        .simansa-nilai-siswa-chip__label{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
+        .simansa-nilai-siswa-panel{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);margin-bottom:1.5rem;overflow:hidden}
+        .simansa-nilai-siswa-panel__header{padding:1.35rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
+        .simansa-nilai-siswa-panel__header--inline{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+        .simansa-nilai-siswa-panel__header h3{margin:0 0 .25rem;font-size:1.1rem;font-weight:700;color:#1f2a44}
+        .simansa-nilai-siswa-panel__header p{margin:0;color:#60708b;font-size:.92rem}
+        .simansa-nilai-siswa-panel__body{padding:1.5rem}
+        @media (max-width:992px){.simansa-nilai-siswa-hero__content,.simansa-nilai-siswa-panel__header--inline{flex-direction:column;align-items:stretch}.simansa-nilai-siswa-chip{min-width:0}}
+    </style>
 @stop

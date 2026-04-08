@@ -26,6 +26,14 @@
         </div>
     @endif
 
+    <section class="simansa-export-hero">
+        <div class="simansa-export-hero__eyebrow">
+            <i class="fas fa-file-export"></i> Export Legger Kustom
+        </div>
+        <h2>Export Custom Kelas {{ $tingkat }}</h2>
+        <p>Pilih kelas dan mata pelajaran yang ingin diexport. SIMANSA akan menyusun data per semester sesuai konfigurasi tingkat kelas yang sedang aktif.</p>
+    </section>
+
     <div class="row">
         <div class="col-md-8">
             <form action="{{ route('admin.nilai.export-legger') }}" method="GET" id="exportForm">
@@ -266,6 +274,15 @@
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-export-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-export-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-export-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-export-hero p{margin:0;max-width:840px;color:rgba(255,255,255,.92)}
+    </style>
 @stop
 
 @section('js')

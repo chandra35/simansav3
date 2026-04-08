@@ -40,11 +40,11 @@ class NilaiSiswa extends Model
      * Semester labels untuk display
      */
     public const SEMESTER_LABELS = [
-        1 => 'Kelas X - Semester 1',
-        2 => 'Kelas X - Semester 2',
-        3 => 'Kelas XI - Semester 1',
-        4 => 'Kelas XI - Semester 2',
-        5 => 'Kelas XII - Semester 1',
+        1 => 'Semester 1 - Kelas X',
+        2 => 'Semester 2 - Kelas X',
+        3 => 'Semester 3 - Kelas XI',
+        4 => 'Semester 4 - Kelas XI',
+        5 => 'Semester 5 - Kelas XII',
     ];
 
     /**

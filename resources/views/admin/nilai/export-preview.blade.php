@@ -19,7 +19,14 @@
 @stop
 
 @section('content')
-    {{-- Info Summary --}}
+    <section class="simansa-export-preview-hero">
+        <div class="simansa-export-preview-hero__eyebrow">
+            <i class="fas fa-file-export"></i> Validasi Export Nilai
+        </div>
+        <h2>Preview Export {{ $semesterLabel }}</h2>
+        <p>Periksa dulu daftar siswa, jumlah mapel, dan NISN yang tidak cocok sebelum file Excel diunduh atau data nilai disalin.</p>
+    </section>
+
     <div class="row">
         <div class="col-md-3">
             <div class="info-box bg-info">
@@ -151,6 +158,10 @@
 
 @section('css')
     <style>
+        .simansa-export-preview-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-export-preview-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-export-preview-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-export-preview-hero p{margin:0;max-width:820px;color:rgba(255,255,255,.92)}
         #export-table th, #export-table td {
             vertical-align: middle;
             font-size: 12px;
