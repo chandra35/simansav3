@@ -661,6 +661,13 @@ return [
                     'active' => ['admin/settings/smtp*'],
                 ],
                 [
+                    'text' => 'Kesehatan Akademik',
+                    'route' => 'admin.settings.academic-health',
+                    'icon' => 'fas fa-fw fa-shield-alt',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/settings/academic-health*'],
+                ],
+                [
                     'text' => 'Detail Server',
                     'route' => 'admin.settings.server-info',
                     'icon' => 'fas fa-fw fa-server',
