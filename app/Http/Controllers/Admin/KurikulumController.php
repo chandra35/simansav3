@@ -78,7 +78,16 @@ class KurikulumController extends Controller
                 ->make(true);
         }
 
-        return view('admin.kurikulum.index');
+        $stats = [
+            'total' => Kurikulum::count(),
+            'aktif' => Kurikulum::where('is_active', true)->count(),
+            'dengan_jurusan' => Kurikulum::where('has_jurusan', true)->count(),
+            'dipakai' => Kurikulum::has('tahunPelajarans')->count(),
+        ];
+
+        $kurikulumAktif = Kurikulum::where('is_active', true)->first();
+
+        return view('admin.kurikulum.index', compact('stats', 'kurikulumAktif'));
     }
 
     /**

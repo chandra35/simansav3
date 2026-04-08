@@ -36,7 +36,9 @@
                         <li class="nav-item">
                             <span class="nav-link">
                                 <strong>Status:</strong> 
-                                <span class="float-right">{!! $kurikulum->status_badge !!}</span>
+                                <span class="float-right">
+                                    <span class="badge badge-{{ $kurikulum->badge_color }}">{{ $kurikulum->status_text }}</span>
+                                </span>
                             </span>
                         </li>
                         <li class="nav-item">

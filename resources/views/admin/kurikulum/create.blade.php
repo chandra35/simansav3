@@ -20,6 +20,14 @@
 @section('content')
     <form action="{{ route('admin.kurikulum.store') }}" method="POST">
         @csrf
+
+        <div class="simansa-form-hero mb-4">
+            <div class="simansa-form-hero__eyebrow">
+                <i class="fas fa-seedling"></i> Persiapan Kurikulum
+            </div>
+            <h2>Tambah Kurikulum Baru</h2>
+            <p>Gunakan halaman ini untuk menyiapkan kurikulum sebelum dipakai di tahun pelajaran. Kurikulum baru akan disimpan sebagai nonaktif sampai kamu mengaktifkannya.</p>
+        </div>
         
         <div class="card card-primary card-outline">
             <div class="card-header">
@@ -117,4 +125,13 @@
             </div>
         </div>
     </form>
+@stop
+
+@section('css')
+    <style>
+        .simansa-form-hero{padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-form-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-form-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-form-hero p{margin:0;max-width:780px;color:rgba(255,255,255,.92)}
+    </style>
 @stop

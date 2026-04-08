@@ -144,8 +144,28 @@ class KelasController extends Controller
         $kurikulums = Kurikulum::where('is_active', true)->get();
         $jurusans = Jurusan::where('is_active', true)->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
 
-        return view('admin.kelas.index', compact('tahunPelajarans', 'kurikulums', 'jurusans', 'tingkatOptions'));
+        $stats = [
+            'total' => Kelas::count(),
+            'aktif' => Kelas::where('is_active', true)->count(),
+            'tahun_aktif' => $tahunAktif
+                ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)->count()
+                : 0,
+            'kapasitas_penuh' => Kelas::withCount('siswaAktif')
+                ->get()
+                ->filter(fn ($kelas) => $kelas->siswa_aktif_count >= $kelas->kapasitas)
+                ->count(),
+        ];
+
+        return view('admin.kelas.index', compact(
+            'tahunPelajarans',
+            'kurikulums',
+            'jurusans',
+            'tingkatOptions',
+            'tahunAktif',
+            'stats'
+        ));
     }
 
     /**

@@ -202,6 +202,39 @@
             color: #856404;
             font-size: 0.9rem;
         }
+
+        .simansa-form-hero {
+            padding: 1.35rem 1.5rem;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #2147cf 0%, #2f8d9c 100%);
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(33, 71, 207, 0.16);
+            margin-bottom: 1.5rem;
+        }
+
+        .simansa-form-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.82);
+            margin-bottom: .75rem;
+        }
+
+        .simansa-form-hero h2 {
+            margin: 0 0 .35rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .simansa-form-hero p {
+            margin: 0;
+            max-width: 820px;
+            color: rgba(255,255,255,.92);
+        }
     </style>
 @stop
 
@@ -256,6 +289,14 @@
 
     <form action="{{ route('admin.kelas.store') }}" method="POST" id="kelasForm">
         @csrf
+
+        <div class="simansa-form-hero">
+            <div class="simansa-form-hero__eyebrow">
+                <i class="fas fa-school"></i> Persiapan Rombel
+            </div>
+            <h2>Tambah Kelas Baru</h2>
+            <p>Siapkan kelas baru dengan kombinasi tahun pelajaran, kurikulum, wali kelas, dan kapasitas yang tepat. Kode kelas akan dibentuk otomatis agar tetap konsisten setiap tahun.</p>
+        </div>
         
         <div class="row">
             <div class="col-md-8">
