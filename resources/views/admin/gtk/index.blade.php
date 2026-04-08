@@ -137,6 +137,9 @@
         padding: 1.35rem 1.35rem 1.15rem;
         color: #fff;
         box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
     }
 
     .gtk-stat-card::after {
@@ -164,14 +167,24 @@
         justify-content: center;
         background: rgba(255, 255, 255, .16);
         font-size: 1.3rem;
-        margin-bottom: 1rem;
         position: relative;
         z-index: 1;
+        flex: 0 0 58px;
+    }
+
+    .gtk-stat-card__body {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        min-width: 0;
     }
 
     .gtk-stat-card__label {
         position: relative;
-        z-index: 1;
         font-size: .78rem;
         font-weight: 700;
         letter-spacing: .08em;
@@ -182,7 +195,6 @@
 
     .gtk-stat-card__value {
         position: relative;
-        z-index: 1;
         font-size: 2.15rem;
         font-weight: 800;
         line-height: 1;
@@ -191,10 +203,20 @@
 
     .gtk-stat-card__desc {
         position: relative;
-        z-index: 1;
         opacity: .92;
         line-height: 1.55;
         font-size: .96rem;
+    }
+
+    @media (max-width: 575.98px) {
+        .gtk-stat-card {
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+        .gtk-stat-card__body {
+            width: 100%;
+        }
     }
 
     .gtk-management-card {
@@ -239,33 +261,41 @@
     <div class="col-md-3 col-sm-6">
         <div class="gtk-stat-card gtk-stat-card--blue">
             <div class="gtk-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="gtk-stat-card__label">Total GTK</div>
-            <div class="gtk-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
-            <div class="gtk-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+            <div class="gtk-stat-card__body">
+                <div class="gtk-stat-card__label">Total GTK</div>
+                <div class="gtk-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
+                <div class="gtk-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
         <div class="gtk-stat-card gtk-stat-card--cyan">
             <div class="gtk-stat-card__icon"><i class="fas fa-male"></i></div>
-            <div class="gtk-stat-card__label">Laki-Laki</div>
-            <div class="gtk-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
-            <div class="gtk-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
+            <div class="gtk-stat-card__body">
+                <div class="gtk-stat-card__label">Laki-Laki</div>
+                <div class="gtk-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
+                <div class="gtk-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
         <div class="gtk-stat-card gtk-stat-card--rose">
             <div class="gtk-stat-card__icon"><i class="fas fa-female"></i></div>
-            <div class="gtk-stat-card__label">Perempuan</div>
-            <div class="gtk-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
-            <div class="gtk-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
+            <div class="gtk-stat-card__body">
+                <div class="gtk-stat-card__label">Perempuan</div>
+                <div class="gtk-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
+                <div class="gtk-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
         <div class="gtk-stat-card gtk-stat-card--green">
             <div class="gtk-stat-card__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="gtk-stat-card__label">Data Lengkap</div>
-            <div class="gtk-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
-            <div class="gtk-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
+            <div class="gtk-stat-card__body">
+                <div class="gtk-stat-card__label">Data Lengkap</div>
+                <div class="gtk-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
+                <div class="gtk-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
+            </div>
         </div>
     </div>
 </div>
