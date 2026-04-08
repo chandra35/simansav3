@@ -25,7 +25,6 @@ class TahunPelajaran extends Model
         'tanggal_selesai',
         'is_active',
         'status',
-        'kuota_ppdb',
         'keterangan',
     ];
 
@@ -35,7 +34,6 @@ class TahunPelajaran extends Model
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'is_active' => 'boolean',
-        'kuota_ppdb' => 'integer',
     ];
 
     /**
@@ -123,15 +121,6 @@ class TahunPelajaran extends Model
     public function getFormattedNameAttribute(): string
     {
         return "{$this->nama} - Semester {$this->semester_aktif}";
-    }
-
-    /**
-     * Helper: Get kuota tersedia (kuota - jumlah siswa aktif)
-     */
-    public function getKuotaTersediaAttribute(): int
-    {
-        $jumlahSiswa = $this->siswas()->wherePivot('status', 'aktif')->count();
-        return max(0, $this->kuota_ppdb - $jumlahSiswa);
     }
 
     /**

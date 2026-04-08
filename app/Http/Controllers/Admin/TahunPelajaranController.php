@@ -38,24 +38,6 @@ class TahunPelajaranController extends Controller
                 ->addColumn('semester_badge', function ($row) {
                     return $row->semester_badge;
                 })
-                ->addColumn('kuota_info', function ($row) {
-                    $tersedia = $row->kuota_tersedia;
-                    $total = $row->kuota_ppdb;
-                    $percentage = $total > 0 ? round(($total - $tersedia) / $total * 100) : 0;
-                    
-                    $color = 'success';
-                    if ($percentage >= 90) $color = 'danger';
-                    elseif ($percentage >= 70) $color = 'warning';
-                    
-                    return "
-                        <div class='text-center'>
-                            <small class='text-muted'>Tersedia: <strong>{$tersedia}</strong> / {$total}</small>
-                            <div class='progress progress-xs mt-1'>
-                                <div class='progress-bar bg-{$color}' style='width: {$percentage}%'></div>
-                            </div>
-                        </div>
-                    ";
-                })
                 ->addColumn('action', function ($row) {
                     $buttons = '';
                     
@@ -88,7 +70,7 @@ class TahunPelajaranController extends Controller
                     
                     return $buttons;
                 })
-                ->rawColumns(['status_badge', 'semester_badge', 'kuota_info', 'action'])
+                ->rawColumns(['status_badge', 'semester_badge', 'action'])
                 ->make(true);
         }
 
@@ -118,7 +100,6 @@ class TahunPelajaranController extends Controller
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'semester_aktif' => 'required|in:Ganjil,Genap',
             'status' => 'required|in:aktif,non-aktif,selesai',
-            'kuota_ppdb' => 'required|integer|min:0',
         ], [
             'kurikulum_id.required' => 'Kurikulum harus dipilih',
             'kurikulum_id.exists' => 'Kurikulum tidak valid',
@@ -132,8 +113,6 @@ class TahunPelajaranController extends Controller
             'tanggal_selesai.after' => 'Tanggal selesai harus setelah tanggal mulai',
             'semester_aktif.required' => 'Semester aktif harus dipilih',
             'status.required' => 'Status harus dipilih',
-            'kuota_ppdb.required' => 'Kuota PPDB harus diisi',
-            'kuota_ppdb.min' => 'Kuota PPDB minimal 0',
         ]);
 
         if ($validator->fails()) {
@@ -154,7 +133,6 @@ class TahunPelajaranController extends Controller
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'semester_aktif' => $request->semester_aktif,
                 'status' => $request->status,
-                'kuota_ppdb' => $request->kuota_ppdb,
                 'is_active' => false, // Default tidak aktif, harus di-set manual
             ]);
 
@@ -184,7 +162,6 @@ class TahunPelajaranController extends Controller
             'total_siswa' => $tahunPelajaran->siswas()->wherePivot('status', 'aktif')->count(),
             'mutasi_masuk' => $tahunPelajaran->mutasiMasuk()->count(),
             'mutasi_keluar' => $tahunPelajaran->mutasiKeluar()->count(),
-            'kuota_tersedia' => $tahunPelajaran->kuota_tersedia,
         ];
 
         return view('admin.tahun-pelajaran.show', compact('tahunPelajaran', 'stats'));
@@ -213,7 +190,6 @@ class TahunPelajaranController extends Controller
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'semester_aktif' => 'required|in:Ganjil,Genap',
             'status' => 'required|in:aktif,non-aktif,selesai',
-            'kuota_ppdb' => 'required|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -234,7 +210,6 @@ class TahunPelajaranController extends Controller
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'semester_aktif' => $request->semester_aktif,
                 'status' => $request->status,
-                'kuota_ppdb' => $request->kuota_ppdb,
             ]);
 
             DB::commit();

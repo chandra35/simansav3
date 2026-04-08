@@ -126,7 +126,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="semester_aktif">Semester Aktif <span class="text-danger">*</span></label>
                                     <select name="semester_aktif" id="semester_aktif" class="form-control @error('semester_aktif') is-invalid @enderror" required>
@@ -144,7 +144,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="status">Status <span class="text-danger">*</span></label>
                                     <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
@@ -155,20 +155,6 @@
                                     @error('status')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="kuota_ppdb">Kuota PPDB <span class="text-danger">*</span></label>
-                                    <input type="number" name="kuota_ppdb" id="kuota_ppdb" class="form-control @error('kuota_ppdb') is-invalid @enderror" 
-                                           value="{{ old('kuota_ppdb', $tahunPelajaran->kuota_ppdb) }}" min="0" required>
-                                    @error('kuota_ppdb')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="form-text text-muted">
-                                        Tersedia: <strong>{{ $tahunPelajaran->kuota_tersedia }}</strong> dari {{ $tahunPelajaran->kuota_ppdb }}
-                                    </small>
                                 </div>
                             </div>
                         </div>

@@ -58,7 +58,6 @@
                             <th>Periode</th>
                             <th width="10%">Semester</th>
                             <th width="10%">Status</th>
-                            <th width="15%">Kuota PPDB</th>
                             <th width="15%">Aksi</th>
                         </tr>
                     </thead>
@@ -75,10 +74,6 @@
         .badge {
             font-size: 0.85rem;
             padding: 0.35em 0.65em;
-        }
-        .progress {
-            height: 8px;
-            margin-bottom: 0;
         }
         .btn-group-sm .btn {
             padding: 0.25rem 0.5rem;
@@ -109,7 +104,6 @@
                     {data: 'periode', name: 'periode', orderable: false},
                     {data: 'semester_badge', name: 'semester_aktif', orderable: false},
                     {data: 'status_badge', name: 'status', orderable: false},
-                    {data: 'kuota_info', name: 'kuota_ppdb', orderable: false},
                     {data: 'action', name: 'action', orderable: false, searchable: false}
                 ],
                 order: [[1, 'desc']],

@@ -198,7 +198,6 @@
                                 <th>Tahun Pelajaran</th>
                                 <th>Semester</th>
                                 <th>Status</th>
-                                <th>Kuota PPDB</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -213,7 +212,6 @@
                                     </td>
                                     <td>{!! $tp->semester_badge !!}</td>
                                     <td>{!! $tp->status_badge !!}</td>
-                                    <td>{{ $tp->kuota_ppdb }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

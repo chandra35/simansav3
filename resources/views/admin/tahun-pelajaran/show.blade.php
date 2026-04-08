@@ -90,18 +90,6 @@
         </div>
 
         <div class="col-lg-3 col-6">
-            <div class="small-box bg-warning">
-                <div class="inner">
-                    <h3>{{ $stats['kuota_tersedia'] }}</h3>
-                    <p>Kuota Tersedia</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
             <div class="small-box bg-danger">
                 <div class="inner">
                     <h3>{{ $stats['mutasi_masuk'] + $stats['mutasi_keluar'] }}</h3>
@@ -116,44 +104,7 @@
 
     {{-- Detailed Info --}}
     <div class="row">
-        <div class="col-md-6">
-            <div class="card card-primary card-outline">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Kuota PPDB</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="description-block">
-                                <h5 class="description-header">{{ $tahunPelajaran->kuota_ppdb }}</h5>
-                                <span class="description-text">Total Kuota</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="description-block">
-                                <h5 class="description-header text-success">{{ $stats['kuota_tersedia'] }}</h5>
-                                <span class="description-text">Tersedia</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="progress-group mt-3">
-                        Penggunaan Kuota
-                        @php
-                            $used = $tahunPelajaran->kuota_ppdb - $stats['kuota_tersedia'];
-                            $percentage = $tahunPelajaran->kuota_ppdb > 0 ? round(($used / $tahunPelajaran->kuota_ppdb) * 100) : 0;
-                        @endphp
-                        <span class="float-right"><b>{{ $used }}</b>/{{ $tahunPelajaran->kuota_ppdb }}</span>
-                        <div class="progress progress-sm">
-                            <div class="progress-bar bg-{{ $percentage >= 90 ? 'danger' : ($percentage >= 70 ? 'warning' : 'success') }}" 
-                                 style="width: {{ $percentage }}%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card card-info card-outline">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-exchange-alt"></i> Informasi Mutasi</h3>
