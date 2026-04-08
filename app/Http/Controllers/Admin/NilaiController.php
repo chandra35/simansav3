@@ -237,8 +237,16 @@ class NilaiController extends Controller
                 $nilaiList = $siswa->nilaiSiswa->pluck('nilai')->filter();
                 return $nilaiList->count() > 0 ? round($nilaiList->avg(), 2) : '-';
             })
-            ->addColumn('action', function ($siswa) use ($semester) {
-                return '<a href="' . route('admin.nilai.siswa', [$siswa->id, 'semester' => $semester]) . '" 
+            ->addColumn('action', function ($siswa) use ($semester, $request, $selectedTahun) {
+                $params = ['semester' => $semester];
+                if ($request->filled('tingkat')) {
+                    $params['tingkat'] = $request->tingkat;
+                }
+                if ($selectedTahun) {
+                    $params['tahun_pelajaran_id'] = $selectedTahun->id;
+                }
+
+                return '<a href="' . route('admin.nilai.siswa', array_merge([$siswa->id], $params)) . '" 
                     class="btn btn-sm btn-info" title="Detail">
                     <i class="fas fa-eye"></i>
                 </a>';

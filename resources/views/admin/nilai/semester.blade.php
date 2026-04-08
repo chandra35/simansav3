@@ -10,7 +10,7 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.nilai.index') }}">Nilai Siswa</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.nilai.index') }}">Nilai Legger</a></li>
                 <li class="breadcrumb-item active">{{ $semesterLabel }}</li>
             </ol>
         </div>
@@ -86,7 +86,7 @@
             </div>
         </div>
         <div class="simansa-semester-panel__body">
-            <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}" class="btn btn-success">
+            <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}@if(request('tingkat'))&tingkat={{ request('tingkat') }}@endif" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Upload Nilai Semester {{ $semester }}
             </a>
             @if($selectedTahun && $mapelList->count() > 0)
@@ -94,7 +94,7 @@
                 <i class="fas fa-download"></i> Export Nilai
             </button>
             @endif
-            <a href="{{ route('admin.nilai.index') }}" class="btn btn-secondary">
+            <a href="{{ request('tingkat') ? route('admin.nilai.index', ['tingkat' => request('tingkat')]) : route('admin.nilai.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
             @if($mapelList->count() > 0)
@@ -133,7 +133,7 @@
             @else
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> Belum ada data nilai untuk semester ini. 
-                <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}">Upload nilai dari Excel</a>
+                <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}@if(request('tingkat'))&tingkat={{ request('tingkat') }}@endif">Upload nilai dari Excel</a>
             </div>
             @endif
         </div>
