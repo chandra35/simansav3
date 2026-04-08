@@ -18,8 +18,8 @@ return [
     | Semester 4 (20 mapel):
     | QH | AA | FIK | SKI | BAR | PP | BINDO | MTK | BING | PJOK | SEJ | SB | ULOK PRK | THF | BIO | KIM | FIS | INFOP | EKO | GEO
     |
-    | Semester 5 (21 mapel):
-    | QH | AA | FIK | SKI | BAR | PP | BINDO | MTK | BING | PJOK | SEJ | SB | ULOK PRK | THF | BIO | KIM | FIS | INFOP | MTL | EKO | GEO
+    | Semester 5 (20 mapel):
+    | QH | AA | FIK | SKI | BAR | PP | BINDO | MTK | BING | PJOK | SEJ | SB | ULOK PRK | THF | BIO | KIM | FIS | INFOP | MTL | EKO
     |
     */
 
@@ -91,7 +91,7 @@ return [
         'GEO',          // 20. Geografi
     ],
 
-    // Mapel untuk semester 5 (21 mapel) - ada tambahan MTL
+    // Mapel untuk semester 5 (20 mapel) - ada tambahan MTL, tanpa GEO
     'urutan_mapel_sem_5' => [
         'QH',           // 1. Al-Quran Hadits
         'AA',           // 2. Akidah Akhlak
@@ -113,7 +113,6 @@ return [
         'INFOP',        // 18. Informatika Peminatan
         'MTL',          // 19. Matematika Lanjut
         'EKO',          // 20. Ekonomi
-        'GEO',          // 21. Geografi
     ],
 
     // Helper: urutan_mapel untuk backward compatibility (semester 1-3)
