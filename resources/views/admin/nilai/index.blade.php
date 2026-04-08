@@ -32,12 +32,36 @@
         </div>
     @endif
 
-    {{-- Filter Tingkat Kelas --}}
-    <div class="card card-primary card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-filter"></i> Pilih Tingkat Kelas</h3>
+    <section class="simansa-nilai-hero">
+        <div class="simansa-nilai-hero__content">
+            <div>
+                <div class="simansa-nilai-hero__eyebrow">
+                    <i class="fas fa-chart-line"></i> Legger dan Rekap Akademik
+                </div>
+                <h2>Nilai Legger</h2>
+                <p>Kelola data nilai per tingkat, cek kelengkapan semester, lalu masuk ke upload atau detail rekap tanpa mengubah alur kerja yang sudah dipakai operator.</p>
+            </div>
+            <div class="simansa-nilai-hero__meta">
+                <div class="simansa-nilai-chip">
+                    <span class="simansa-nilai-chip__label">Tahun Aktif</span>
+                    <strong>{{ $tahunAktif?->nama ?? 'Belum diatur' }}</strong>
+                </div>
+                <div class="simansa-nilai-chip">
+                    <span class="simansa-nilai-chip__label">Semester Aktif</span>
+                    <strong>{{ $tahunAktif?->semester_label ?? '-' }}</strong>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+    </section>
+
+    <div class="simansa-nilai-panel">
+        <div class="simansa-nilai-panel__header">
+            <div>
+                <h3><i class="fas fa-filter"></i> Pilih Tingkat Kelas</h3>
+                <p>Pilih tingkat untuk melihat distribusi semester yang tersedia dan aksi pengelolaan nilai.</p>
+            </div>
+        </div>
+        <div class="simansa-nilai-panel__body">
             <div class="row">
                 <div class="col-md-4">
                     <a href="{{ route('admin.nilai.index', ['tingkat' => 12]) }}" 
@@ -64,11 +88,14 @@
 
     @if(request('tingkat'))
     {{-- Actions --}}
-    <div class="card card-success card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-cog"></i> Aksi untuk Kelas {{ request('tingkat') }}</h3>
+    <div class="simansa-nilai-panel">
+        <div class="simansa-nilai-panel__header">
+            <div>
+                <h3><i class="fas fa-cog"></i> Aksi untuk Kelas {{ request('tingkat') }}</h3>
+                <p>Masuk ke upload, template, dan export sesuai kebutuhan legger untuk tingkat yang sedang dipilih.</p>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="simansa-nilai-panel__body">
             <a href="{{ route('admin.nilai.upload-form') }}?tingkat={{ request('tingkat') }}" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Upload Nilai Legger
             </a>
@@ -87,14 +114,17 @@
     </div>
 
     {{-- Summary per Semester untuk tingkat terpilih --}}
-    <div class="card card-primary card-outline">
-        <div class="card-header">
-            <h3 class="card-title">
+    <div class="simansa-nilai-panel">
+        <div class="simansa-nilai-panel__header">
+            <div>
+                <h3>
                 <i class="fas fa-list"></i> 
                 Data Nilai Kelas {{ request('tingkat') }} - Tahun Aktif: {{ $tahunAktif->nama ?? '-' }}
-            </h3>
+                </h3>
+                <p>Ringkasan semester membantu operator tahu semester mana yang sudah terisi dan mana yang masih perlu dilengkapi.</p>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="simansa-nilai-panel__body">
             <div class="row">
                 @foreach($semesterList as $sem => $data)
                 <div class="col-md-4 col-lg">
@@ -162,11 +192,14 @@
     </div>
 
     {{-- Overview Semua Tingkat --}}
-    <div class="card card-info card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Overview Data Nilai</h3>
+    <div class="simansa-nilai-panel">
+        <div class="simansa-nilai-panel__header">
+            <div>
+                <h3><i class="fas fa-chart-bar"></i> Overview Data Nilai</h3>
+                <p>Lihat distribusi data nilai per tingkat sebelum masuk ke semester dan upload nilai.</p>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="simansa-nilai-panel__body">
             <table class="table table-bordered">
                 <thead class="bg-light">
                     <tr>
@@ -236,4 +269,24 @@
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-nilai-hero{margin-bottom:1.5rem;padding:1.75rem 1.8rem;border-radius:24px;background:linear-gradient(135deg,#1f4fd1 0%,#2f8ca3 100%);color:#fff;box-shadow:0 20px 45px rgba(31,79,209,.18)}
+        .simansa-nilai-hero__content{display:flex;justify-content:space-between;gap:1.5rem;align-items:flex-start}
+        .simansa-nilai-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.84);margin-bottom:.7rem}
+        .simansa-nilai-hero h2{margin:0 0 .4rem;font-size:2rem;font-weight:700}
+        .simansa-nilai-hero p{margin:0;max-width:760px;color:rgba(255,255,255,.9)}
+        .simansa-nilai-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(170px,1fr));gap:.9rem;min-width:360px}
+        .simansa-nilai-chip{padding:1rem 1.1rem;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+        .simansa-nilai-chip__label{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
+        .simansa-nilai-chip strong{color:#fff}
+        .simansa-nilai-panel{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);margin-bottom:1.5rem;overflow:hidden}
+        .simansa-nilai-panel__header{padding:1.35rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
+        .simansa-nilai-panel__header h3{margin:0 0 .25rem;font-size:1.1rem;font-weight:700;color:#1f2a44}
+        .simansa-nilai-panel__header p{margin:0;color:#60708b;font-size:.92rem}
+        .simansa-nilai-panel__body{padding:1.5rem}
+        @media (max-width:992px){.simansa-nilai-hero__content{flex-direction:column;align-items:stretch}.simansa-nilai-hero__meta{grid-template-columns:1fr;min-width:0}}
+    </style>
 @stop

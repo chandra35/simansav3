@@ -33,6 +33,14 @@
         </div>
     @endif
 
+    <section class="simansa-upload-hero">
+        <div class="simansa-upload-hero__eyebrow">
+            <i class="fas fa-file-upload"></i> Impor Nilai Legger
+        </div>
+        <h2>Upload Nilai</h2>
+        <p>Pilih tingkat, tentukan semester, biarkan tahun pelajaran terhitung otomatis, lalu unggah file Excel untuk dipreview sebelum disimpan ke database.</p>
+    </section>
+
     <div class="row">
         <div class="col-md-8">
             {{-- Upload Form --}}
@@ -129,7 +137,7 @@
                                     <i class="fas fa-file-excel text-info"></i> Template Semester 4
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <h6 class="dropdown-header">Semester 5 (21 Mapel)</h6>
+                                <h6 class="dropdown-header">Semester 5 (20 Mapel)</h6>
                                 <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 5]) }}">
                                     <i class="fas fa-file-excel text-warning"></i> Template Semester 5
                                 </a>
@@ -253,13 +261,22 @@
                             <i class="fas fa-download"></i> Template Semester 4 (20 Mapel)
                         </a>
                         <a href="{{ route('admin.nilai.template', ['semester' => 5]) }}" class="btn btn-warning">
-                            <i class="fas fa-download"></i> Template Semester 5 (21 Mapel)
+                            <i class="fas fa-download"></i> Template Semester 5 (20 Mapel)
                         </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-upload-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-upload-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-upload-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-upload-hero p{margin:0;max-width:840px;color:rgba(255,255,255,.92)}
+    </style>
 @stop
 
 @section('js')

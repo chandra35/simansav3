@@ -33,12 +33,30 @@
         </div>
     @endif
 
-    {{-- Filter --}}
-    <div class="card card-primary card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-filter"></i> Filter</h3>
+    <section class="simansa-semester-hero">
+        <div class="simansa-semester-hero__content">
+            <div>
+                <div class="simansa-semester-hero__eyebrow">
+                    <i class="fas fa-table"></i> Rekap Semester
+                </div>
+                <h2>Nilai {{ $semesterLabel }}</h2>
+                <p>Lihat data nilai per semester, sesuaikan tahun pelajaran bila perlu, lalu masuk ke detail siswa atau export sesuai urutan mapel.</p>
+            </div>
+            <div class="simansa-semester-chip">
+                <span class="simansa-semester-chip__label">Tahun Pelajaran</span>
+                <strong>{{ $selectedTahun?->nama ?? 'Semua Tahun' }}</strong>
+            </div>
         </div>
-        <div class="card-body">
+    </section>
+
+    <div class="simansa-semester-panel">
+        <div class="simansa-semester-panel__header">
+            <div>
+                <h3><i class="fas fa-filter"></i> Filter</h3>
+                <p>Gunakan filter untuk menampilkan semester yang sama pada tahun pelajaran tertentu.</p>
+            </div>
+        </div>
+        <div class="simansa-semester-panel__body">
             <form method="GET" action="{{ route('admin.nilai.semester', $semester) }}" class="form-inline">
                 <div class="form-group mr-3">
                     <label class="mr-2">Tahun Pelajaran:</label>
@@ -60,9 +78,14 @@
         </div>
     </div>
 
-    {{-- Actions --}}
-    <div class="card">
-        <div class="card-body">
+    <div class="simansa-semester-panel">
+        <div class="simansa-semester-panel__header">
+            <div>
+                <h3><i class="fas fa-cog"></i> Aksi Semester</h3>
+                <p>Akses cepat ke upload nilai, export, atau pembersihan data semester yang sedang ditampilkan.</p>
+            </div>
+        </div>
+        <div class="simansa-semester-panel__body">
             <a href="{{ route('admin.nilai.upload-form') }}?semester={{ $semester }}" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Upload Nilai Semester {{ $semester }}
             </a>
@@ -82,12 +105,14 @@
         </div>
     </div>
 
-    {{-- Data Table --}}
-    <div class="card card-primary card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-table"></i> Data Nilai</h3>
+    <div class="simansa-semester-panel">
+        <div class="simansa-semester-panel__header">
+            <div>
+                <h3><i class="fas fa-table"></i> Data Nilai</h3>
+                <p>Nilai disusun menurut urutan mapel semester agar konsisten dengan template upload dan export.</p>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="simansa-semester-panel__body">
             @if($mapelList->count() > 0)
             <div class="table-responsive">
                 <table id="nilai-table" class="table table-bordered table-striped table-sm">
@@ -203,6 +228,18 @@
 @section('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
     <style>
+        .simansa-semester-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+        .simansa-semester-hero__content{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+        .simansa-semester-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+        .simansa-semester-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+        .simansa-semester-hero p{margin:0;max-width:760px;color:rgba(255,255,255,.92)}
+        .simansa-semester-chip{padding:1rem 1.1rem;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);min-width:220px}
+        .simansa-semester-chip__label{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
+        .simansa-semester-panel{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);margin-bottom:1.5rem;overflow:hidden}
+        .simansa-semester-panel__header{padding:1.35rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
+        .simansa-semester-panel__header h3{margin:0 0 .25rem;font-size:1.1rem;font-weight:700;color:#1f2a44}
+        .simansa-semester-panel__header p{margin:0;color:#60708b;font-size:.92rem}
+        .simansa-semester-panel__body{padding:1.5rem}
         #nilai-table th, #nilai-table td {
             text-align: center;
             vertical-align: middle;
@@ -227,6 +264,7 @@
             resize: vertical;
             min-height: 200px;
         }
+        @media (max-width:992px){.simansa-semester-hero__content{flex-direction:column;align-items:stretch}.simansa-semester-chip{min-width:0}}
     </style>
 @stop
 

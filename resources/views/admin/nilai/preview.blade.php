@@ -34,7 +34,14 @@
     </div>
     @endif
 
-    {{-- Summary --}}
+    <section class="simansa-preview-hero">
+        <div class="simansa-preview-hero__eyebrow">
+            <i class="fas fa-eye"></i> Validasi Sebelum Simpan
+        </div>
+        <h2>Preview Upload Nilai</h2>
+        <p>Periksa jumlah siswa yang cocok, NISN yang tidak ditemukan, dan ringkasan nilai sebelum data benar-benar disimpan ke database.</p>
+    </section>
+
     <div class="row">
         <div class="col-md-3">
             <div class="info-box bg-info">
@@ -222,6 +229,10 @@
 
 @section('css')
 <style>
+    .simansa-preview-hero{margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:22px;background:linear-gradient(135deg,#2147cf 0%,#2f8d9c 100%);color:#fff;box-shadow:0 18px 40px rgba(33,71,207,.16)}
+    .simansa-preview-hero__eyebrow{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.82);margin-bottom:.75rem}
+    .simansa-preview-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:700}
+    .simansa-preview-hero p{margin:0;max-width:820px;color:rgba(255,255,255,.92)}
     .table th, .table td {
         vertical-align: middle;
         font-size: 11px;
