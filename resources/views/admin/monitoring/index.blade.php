@@ -3,61 +3,69 @@
 @section('title', 'Monitoring Users')
 
 @section('content_header')
-    <div class="row">
-        <div class="col-sm-6">
-            <h1 class="m-0">Monitoring Users</h1>
+    <div class="monitoring-hero">
+        <div class="monitoring-hero__main">
+            <div class="monitoring-hero__eyebrow">
+                <i class="fas fa-desktop"></i>
+                Laporan & Monitoring
+            </div>
+            <h1 class="monitoring-hero__title">Monitoring Users</h1>
+            <p class="monitoring-hero__subtitle">
+                Pantau sesi aktif, perangkat yang digunakan, dan aktivitas pengguna dari satu halaman pengawasan yang lebih jelas dan modern.
+            </p>
         </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Monitoring Users</li>
-            </ol>
+        <div class="monitoring-hero__side">
+            <div class="monitoring-hero-chip">
+                <span class="monitoring-hero-chip__label">Users Online</span>
+                <span class="monitoring-hero-chip__value" id="hero-online-count">{{ $onlineUsers }}</span>
+            </div>
+            <div class="monitoring-hero-chip">
+                <span class="monitoring-hero-chip__label">Auto Refresh</span>
+                <span class="monitoring-hero-chip__value"><span id="countdown">30</span> detik</span>
+            </div>
         </div>
     </div>
 @stop
 
 @section('content')
     {{-- Statistics Cards --}}
-    <div class="row">
-        <div class="col-lg-4 col-6">
-            <div class="small-box bg-info">
-                <div class="inner">
-                    <h3 id="online-count">{{ $onlineUsers }}</h3>
-                    <p>Users Online</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-6">
-            <div class="small-box bg-success">
-                <div class="inner">
-                    <h3>{{ $totalUsers }}</h3>
-                    <p>Total Users</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-user-check"></i>
+    <div class="row mb-4">
+        <div class="col-md-6 col-xl-4 mb-4">
+            <div class="monitoring-stat-card monitoring-stat-card--info">
+                <div class="monitoring-stat-card__icon"><i class="fas fa-users"></i></div>
+                <div class="monitoring-stat-card__body">
+                    <div class="monitoring-stat-card__label">Users Online</div>
+                    <div class="monitoring-stat-card__value" id="online-count">{{ $onlineUsers }}</div>
+                    <div class="monitoring-stat-card__desc">Pengguna yang terdeteksi aktif dalam jendela sesi terbaru.</div>
                 </div>
             </div>
         </div>
         
-        <div class="col-lg-4 col-6">
-            <div class="small-box bg-warning">
-                <div class="inner">
-                    <h3>{{ $totalSessions }}</h3>
-                    <p>Total Sessions</p>
+        <div class="col-md-6 col-xl-4 mb-4">
+            <div class="monitoring-stat-card monitoring-stat-card--success">
+                <div class="monitoring-stat-card__icon"><i class="fas fa-user-check"></i></div>
+                <div class="monitoring-stat-card__body">
+                    <div class="monitoring-stat-card__label">Total Users</div>
+                    <div class="monitoring-stat-card__value">{{ $totalUsers }}</div>
+                    <div class="monitoring-stat-card__desc">Seluruh akun yang tercatat di SIMANSA dan dapat dimonitor.</div>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-network-wired"></i>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-xl-4 mb-4">
+            <div class="monitoring-stat-card monitoring-stat-card--warning">
+                <div class="monitoring-stat-card__icon"><i class="fas fa-network-wired"></i></div>
+                <div class="monitoring-stat-card__body">
+                    <div class="monitoring-stat-card__label">Total Sessions</div>
+                    <div class="monitoring-stat-card__value">{{ $totalSessions }}</div>
+                    <div class="monitoring-stat-card__desc">Akumulasi sesi yang masih tersimpan dan bisa ditinjau operator.</div>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Main Table --}}
-    <div class="card">
+    <div class="card monitoring-management-card">
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-desktop mr-1"></i>
@@ -68,11 +76,14 @@
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
                 <span class="badge badge-info ml-2">
-                    <i class="fas fa-clock"></i> Auto-refresh: <span id="countdown">30</span>s
+                    <i class="fas fa-clock"></i> Auto-refresh: <span id="countdown-inline">30</span>s
                 </span>
             </div>
         </div>
         <div class="card-body">
+            <p class="monitoring-table-note">
+                Daftar ini membantu memantau perangkat, IP, lokasi, dan aktivitas terakhir pengguna. Gunakan tombol refresh bila ingin menarik data terbaru di luar interval otomatis.
+            </p>
             <div class="table-responsive">
                 <table id="monitoring-table" class="table table-bordered table-striped table-hover">
                     <thead>
@@ -126,6 +137,174 @@
 
 @section('css')
 <style>
+    .monitoring-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr);
+        gap: 1.1rem;
+        align-items: stretch;
+        margin-bottom: 1.1rem;
+    }
+
+    .monitoring-hero__main {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
+        border: 1px solid rgba(148, 163, 184, .16);
+        border-radius: 26px;
+        padding: 1.35rem 1.45rem;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
+    }
+
+    .monitoring-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: #334155;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        margin-bottom: .65rem;
+    }
+
+    .monitoring-hero__title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        margin: 0 0 .55rem 0;
+    }
+
+    .monitoring-hero__subtitle {
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0;
+        max-width: 760px;
+    }
+
+    .monitoring-hero__side {
+        display: grid;
+        gap: .9rem;
+    }
+
+    .monitoring-hero-chip {
+        background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 20px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
+    }
+
+    .monitoring-hero-chip__label {
+        display: block;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+
+    .monitoring-hero-chip__value {
+        display: block;
+        color: #0f172a;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .monitoring-stat-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 176px;
+        border: 0;
+        border-radius: 22px;
+        padding: 1.25rem 1.2rem 1rem;
+        color: #fff;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .monitoring-stat-card::after {
+        content: "";
+        position: absolute;
+        right: -32px;
+        bottom: -40px;
+        width: 132px;
+        height: 132px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .monitoring-stat-card--info { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+    .monitoring-stat-card--success { background: linear-gradient(135deg, #10b981, #34d399); }
+    .monitoring-stat-card--warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+
+    .monitoring-stat-card__icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, .16);
+        font-size: 1.25rem;
+        position: relative;
+        z-index: 1;
+        flex: 0 0 56px;
+    }
+
+    .monitoring-stat-card__body {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .monitoring-stat-card__label {
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .9;
+        margin-bottom: .55rem;
+    }
+
+    .monitoring-stat-card__value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: .7rem;
+    }
+
+    .monitoring-stat-card__desc {
+        opacity: .92;
+        line-height: 1.5;
+        font-size: .92rem;
+    }
+
+    .monitoring-management-card {
+        border: 0;
+        border-radius: 24px;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .monitoring-management-card .card-header {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
+        color: #fff;
+        border-bottom: 0;
+        padding: 1rem 1.25rem;
+    }
+
+    .monitoring-table-note {
+        color: #64748b;
+        font-size: .92rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
     .badge {
         font-size: 0.85rem;
     }
@@ -152,6 +331,31 @@
     .session-item.offline {
         border-left-color: #6c757d;
         opacity: 0.7;
+    }
+
+    @media (max-width: 991.98px) {
+        .monitoring-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .monitoring-hero__side {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .monitoring-hero__title {
+            font-size: 1.7rem;
+        }
+
+        .monitoring-hero__side {
+            grid-template-columns: 1fr;
+        }
+
+        .monitoring-stat-card {
+            flex-direction: column;
+            gap: .9rem;
+        }
     }
 </style>
 @stop
@@ -253,6 +457,7 @@ $(document).ready(function() {
         countdownInterval = setInterval(function() {
             countdown--;
             $('#countdown').text(countdown);
+            $('#countdown-inline').text(countdown);
             
             if (countdown <= 0) {
                 refreshTable();
@@ -264,6 +469,7 @@ $(document).ready(function() {
     function resetCountdown() {
         countdown = 30;
         $('#countdown').text(countdown);
+        $('#countdown-inline').text(countdown);
     }
     
     startCountdown();
