@@ -18,6 +18,17 @@
 @stop
 
 @section('content')
+    <section class="simansa-form-hero simansa-form-hero--primary">
+        <div>
+            <span class="simansa-form-hero__eyebrow">Periode Baru</span>
+            <h2 class="simansa-form-hero__title">Siapkan tahun pelajaran berikutnya dengan format yang rapi</h2>
+            <p class="simansa-form-hero__desc">
+                Isi periode, kurikulum, dan semester awal. Status `Belum Aktif` cocok dipakai untuk menyiapkan tahun ajaran baru
+                tanpa langsung mengubah periode aktif sistem.
+            </p>
+        </div>
+    </section>
+
     <div class="row">
         <div class="col-md-12">
             <form action="{{ route('admin.tahun-pelajaran.store') }}" method="POST" id="formTahunPelajaran">
@@ -137,9 +148,9 @@
                                 <div class="form-group">
                                     <label for="status">Status <span class="text-danger">*</span></label>
                                     <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
-                                        <option value="non-aktif" {{ old('status') == 'non-aktif' ? 'selected' : '' }}>Non Aktif</option>
-                                        <option value="aktif" {{ old('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                                        <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                        <option value="non-aktif" {{ old('status') == 'non-aktif' ? 'selected' : '' }}>Belum Aktif</option>
+                                        <option value="aktif" {{ old('status') == 'aktif' ? 'selected' : '' }}>Sedang Digunakan</option>
+                                        <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>Arsip</option>
                                     </select>
                                     @error('status')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -175,6 +186,41 @@
             </form>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-form-hero {
+            padding: 1.6rem 1.8rem;
+            margin-bottom: 1.2rem;
+            border-radius: 22px;
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(38, 71, 208, 0.14);
+        }
+        .simansa-form-hero--primary {
+            background: linear-gradient(135deg, #3050d4 0%, #2f7c90 100%);
+        }
+        .simansa-form-hero__eyebrow {
+            display: inline-block;
+            margin-bottom: 0.65rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.82;
+        }
+        .simansa-form-hero__title {
+            margin: 0 0 0.45rem;
+            font-size: 1.7rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        .simansa-form-hero__desc {
+            margin: 0;
+            max-width: 780px;
+            color: rgba(255, 255, 255, 0.92);
+        }
+    </style>
 @stop
 
 @section('js')

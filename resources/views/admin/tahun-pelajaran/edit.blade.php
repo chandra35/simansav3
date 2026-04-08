@@ -18,6 +18,17 @@
 @stop
 
 @section('content')
+    <section class="simansa-form-hero simansa-form-hero--info">
+        <div>
+            <span class="simansa-form-hero__eyebrow">Pembaruan Periode</span>
+            <h2 class="simansa-form-hero__title">Rapikan informasi tahun pelajaran tanpa mengubah struktur akademik inti</h2>
+            <p class="simansa-form-hero__desc">
+                Form ini dipakai untuk memperbarui nama periode, tanggal, kurikulum, dan status administrasi. Untuk periode aktif,
+                perpindahan semester sebaiknya tetap memakai tombol khusus agar lebih aman.
+            </p>
+        </div>
+    </section>
+
     <div class="row">
         <div class="col-md-12">
             <form action="{{ route('admin.tahun-pelajaran.update', $tahunPelajaran->id) }}" method="POST" id="formTahunPelajaran">
@@ -148,9 +159,9 @@
                                 <div class="form-group">
                                     <label for="status">Status <span class="text-danger">*</span></label>
                                     <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
-                                        <option value="non-aktif" {{ old('status', $tahunPelajaran->status) == 'non-aktif' ? 'selected' : '' }}>Non Aktif</option>
-                                        <option value="aktif" {{ old('status', $tahunPelajaran->status) == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                                        <option value="selesai" {{ old('status', $tahunPelajaran->status) == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                        <option value="non-aktif" {{ old('status', $tahunPelajaran->status) == 'non-aktif' ? 'selected' : '' }}>Belum Aktif</option>
+                                        <option value="aktif" {{ old('status', $tahunPelajaran->status) == 'aktif' ? 'selected' : '' }}>Sedang Digunakan</option>
+                                        <option value="selesai" {{ old('status', $tahunPelajaran->status) == 'selesai' ? 'selected' : '' }}>Arsip</option>
                                     </select>
                                     @error('status')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -183,6 +194,41 @@
             </form>
         </div>
     </div>
+@stop
+
+@section('css')
+    <style>
+        .simansa-form-hero {
+            padding: 1.6rem 1.8rem;
+            margin-bottom: 1.2rem;
+            border-radius: 22px;
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        }
+        .simansa-form-hero--info {
+            background: linear-gradient(135deg, #3558d9 0%, #456cb3 100%);
+        }
+        .simansa-form-hero__eyebrow {
+            display: inline-block;
+            margin-bottom: 0.65rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.82;
+        }
+        .simansa-form-hero__title {
+            margin: 0 0 0.45rem;
+            font-size: 1.7rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+        .simansa-form-hero__desc {
+            margin: 0;
+            max-width: 780px;
+            color: rgba(255, 255, 255, 0.92);
+        }
+    </style>
 @stop
 
 @section('js')

@@ -31,7 +31,11 @@ class TahunPelajaranController extends Controller
                 })
                 ->addColumn('status_badge', function ($row) {
                     $badge = $row->badge_color;
-                    $text = ucfirst($row->status);
+                    $text = match ($row->status) {
+                        'aktif' => 'Sedang Digunakan',
+                        'selesai' => 'Arsip',
+                        default => 'Belum Aktif',
+                    };
                     $icon = $row->is_active ? '<i class="fas fa-check-circle"></i>' : '';
                     return "<span class='badge badge-{$badge}'>{$icon} {$text}</span>";
                 })
@@ -57,6 +61,11 @@ class TahunPelajaranController extends Controller
                     }
                     
                     // Button Edit
+                    $buttons .= '<a href="' . route('admin.tahun-pelajaran.show', $row->id) . '" class="btn btn-sm btn-outline-info" title="Detail">
+                        <i class="fas fa-eye"></i>
+                    </a> ';
+
+                    // Button Edit
                     $buttons .= '<a href="' . route('admin.tahun-pelajaran.edit', $row->id) . '" class="btn btn-sm btn-primary" title="Edit">
                         <i class="fas fa-edit"></i>
                     </a> ';
@@ -74,7 +83,16 @@ class TahunPelajaranController extends Controller
                 ->make(true);
         }
 
-        return view('admin.tahun-pelajaran.index');
+        $stats = [
+            'total' => TahunPelajaran::count(),
+            'aktif' => TahunPelajaran::where('is_active', true)->count(),
+            'nonaktif' => TahunPelajaran::where('status', 'non-aktif')->count(),
+            'selesai' => TahunPelajaran::where('status', 'selesai')->count(),
+        ];
+
+        $tahunAktif = TahunPelajaran::with('kurikulum')->where('is_active', true)->first();
+
+        return view('admin.tahun-pelajaran.index', compact('stats', 'tahunAktif'));
     }
 
     /**
@@ -164,7 +182,13 @@ class TahunPelajaranController extends Controller
             'mutasi_keluar' => $tahunPelajaran->mutasiKeluar()->count(),
         ];
 
-        return view('admin.tahun-pelajaran.show', compact('tahunPelajaran', 'stats'));
+        $statusLabel = match ($tahunPelajaran->status) {
+            'aktif' => 'Sedang Digunakan',
+            'selesai' => 'Arsip',
+            default => 'Belum Aktif',
+        };
+
+        return view('admin.tahun-pelajaran.show', compact('tahunPelajaran', 'stats', 'statusLabel'));
     }
 
     /**
