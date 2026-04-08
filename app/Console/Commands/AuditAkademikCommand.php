@@ -146,6 +146,25 @@ class AuditAkademikCommand extends Command
                     ->count(),
             ],
             [
+                'key' => 'approved_mutasi_out_status_mismatch',
+                'label' => 'Mutasi keluar approved tapi status siswa belum mutasi_keluar',
+                'count' => DB::table('mutasi_siswa')
+                    ->join('siswa', 'siswa.id', '=', 'mutasi_siswa.siswa_id')
+                    ->where('mutasi_siswa.jenis_mutasi', 'keluar')
+                    ->where('mutasi_siswa.status_verifikasi', 'approved')
+                    ->where('siswa.status_siswa', '!=', 'mutasi_keluar')
+                    ->count(),
+            ],
+            [
+                'key' => 'mutasi_keluar_user_still_active',
+                'label' => 'Siswa mutasi_keluar tapi user masih aktif',
+                'count' => DB::table('siswa')
+                    ->join('users', 'users.id', '=', 'siswa.user_id')
+                    ->where('siswa.status_siswa', 'mutasi_keluar')
+                    ->where('users.is_active', true)
+                    ->count(),
+            ],
+            [
                 'key' => 'active_class_outside_year',
                 'label' => 'Kelas aktif siswa di luar tahun pelajaran aktif',
                 'count' => DB::table('siswa_kelas')
@@ -169,6 +188,8 @@ class AuditAkademikCommand extends Command
                 'Siswa aktif tanpa kelas tahun berjalan' => $this->sampleActiveWithoutCurrentClass($tahunAktifId),
                 'Mismatch kelas_saat_ini_id' => $this->sampleCacheMismatch($tahunAktifId),
                 'Siswa nonaktif dengan kelas aktif' => $this->sampleInactiveWithActiveClass(),
+                'Mutasi keluar approved tapi status belum sinkron' => $this->sampleApprovedMutasiStatusMismatch(),
+                'Mutasi keluar tapi user masih aktif' => $this->sampleMutasiKeluarUserActive(),
             ],
         ];
     }
@@ -253,6 +274,43 @@ class AuditAkademikCommand extends Command
             ->whereNull('siswa.deleted_at')
             ->whereIn('siswa.status_siswa', ['lulus', 'mutasi_keluar', 'keluar', 'alumni'])
             ->select('siswa.nisn', 'siswa.nama_lengkap', 'siswa.status_siswa', 'kelas.nama_kelas')
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => (array) $row)
+            ->all();
+    }
+
+    private function sampleApprovedMutasiStatusMismatch(): array
+    {
+        return DB::table('mutasi_siswa')
+            ->join('siswa', 'siswa.id', '=', 'mutasi_siswa.siswa_id')
+            ->where('mutasi_siswa.jenis_mutasi', 'keluar')
+            ->where('mutasi_siswa.status_verifikasi', 'approved')
+            ->where('siswa.status_siswa', '!=', 'mutasi_keluar')
+            ->select(
+                'siswa.nisn',
+                'siswa.nama_lengkap',
+                'siswa.status_siswa',
+                'mutasi_siswa.tanggal_mutasi'
+            )
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => (array) $row)
+            ->all();
+    }
+
+    private function sampleMutasiKeluarUserActive(): array
+    {
+        return DB::table('siswa')
+            ->join('users', 'users.id', '=', 'siswa.user_id')
+            ->where('siswa.status_siswa', 'mutasi_keluar')
+            ->where('users.is_active', true)
+            ->select(
+                'siswa.nisn',
+                'siswa.nama_lengkap',
+                'users.username',
+                'users.is_active'
+            )
             ->limit(10)
             ->get()
             ->map(fn ($row) => (array) $row)
