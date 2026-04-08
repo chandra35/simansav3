@@ -2,26 +2,125 @@
 
 @section('title', 'Data GTK - SIMANSA')
 
+@section('css')
+<style>
+    .gtk-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
+        gap: 1.1rem;
+        align-items: stretch;
+        margin-bottom: 1.1rem;
+    }
+
+    .gtk-hero__main {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
+        border: 1px solid rgba(148, 163, 184, .16);
+        border-radius: 26px;
+        padding: 1.35rem 1.45rem;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
+    }
+
+    .gtk-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: #334155;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        margin-bottom: .65rem;
+    }
+
+    .gtk-hero__title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        margin: 0 0 .55rem 0;
+    }
+
+    .gtk-hero__subtitle {
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0;
+        max-width: 780px;
+    }
+
+    .gtk-hero__side {
+        display: grid;
+        gap: .9rem;
+    }
+
+    .gtk-hero-chip {
+        background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 20px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
+    }
+
+    .gtk-hero-chip__label {
+        display: block;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+
+    .gtk-hero-chip__value {
+        display: block;
+        color: #0f172a;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 991.98px) {
+        .gtk-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .gtk-hero__side {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .gtk-hero__title {
+            font-size: 1.7rem;
+        }
+
+        .gtk-hero__side {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@stop
+
 @section('content_header')
-    <div class="simansa-page-hero">
-        <div class="simansa-page-hero__content">
-            <div class="simansa-page-hero__eyebrow">
+    <div class="gtk-hero">
+        <div class="gtk-hero__main">
+            <div class="gtk-hero__eyebrow">
                 <i class="fas fa-chalkboard-teacher"></i>
                 Master GTK
             </div>
-            <h1 class="simansa-page-hero__title">Data GTK</h1>
-            <p class="simansa-page-hero__subtitle">
+            <h1 class="gtk-hero__title">Data GTK</h1>
+            <p class="gtk-hero__subtitle">
                 Kelola guru dan tenaga kependidikan, pantau kelengkapan data, dan jalankan sinkronisasi Kemenag dari satu halaman operasional.
             </p>
         </div>
-        <div class="simansa-page-hero__meta">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total GTK</span>
-                <span class="simansa-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
+        <div class="gtk-hero__side">
+            <div class="gtk-hero-chip">
+                <span class="gtk-hero-chip__label">Total GTK</span>
+                <span class="gtk-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
             </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Siap Sinkron</span>
-                <span class="simansa-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
+            <div class="gtk-hero-chip">
+                <span class="gtk-hero-chip__label">Siap Sinkron</span>
+                <span class="gtk-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
             </div>
         </div>
     </div>
