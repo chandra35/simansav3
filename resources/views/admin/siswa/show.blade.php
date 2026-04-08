@@ -3,32 +3,77 @@
 @section('title', 'Detail Siswa - ' . $siswa->nama_lengkap)
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-sm-6">
-            <h1><i class="fas fa-user-graduate"></i> Detail Siswa</h1>
+    <div class="simansa-page-hero">
+        <div class="simansa-page-hero__content">
+            <div class="simansa-page-hero__eyebrow">
+                <i class="fas fa-user-graduate"></i>
+                Profil Peserta Didik
+            </div>
+            <h1 class="simansa-page-hero__title">Detail Siswa</h1>
+            <p class="simansa-page-hero__subtitle">
+                Tinjau identitas, akun, asal sekolah, data orang tua, dan jejak administrasi siswa dalam satu tampilan ringkas.
+            </p>
         </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.siswa.index') }}">Siswa</a></li>
-                <li class="breadcrumb-item active">Detail</li>
-            </ol>
+        <div class="simansa-page-hero__meta">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">NISN</span>
+                <span class="simansa-hero-chip__value">{{ $siswa->nisn ?? '-' }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Kelas</span>
+                <span class="simansa-hero-chip__value">{{ $siswa->kelasAktif->nama_kelas ?? 'Tanpa Rombel' }}</span>
+            </div>
         </div>
     </div>
 @stop
 
 @section('content')
+<style>
+    .student-show-card {
+        border: 0;
+        border-radius: 22px;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .student-show-card .card-header {
+        border-bottom: 0;
+        padding: 1rem 1.25rem;
+    }
+
+    .student-show-card .card-title {
+        font-weight: 700;
+    }
+
+    .student-profile-card .profile-user-img {
+        width: 160px;
+        height: 160px;
+        object-fit: cover;
+        border: 5px solid rgba(99, 102, 241, .14);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, .14);
+    }
+
+    .student-show-card .list-group-item {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .student-show-card .table th {
+        color: #475569;
+        font-weight: 700;
+    }
+</style>
+
 <div class="row">
     <!-- Left Column: Profile Card -->
     <div class="col-md-4">
         <!-- Profile Card -->
-        <div class="card card-primary card-outline">
+        <div class="card student-show-card student-profile-card">
             <div class="card-body box-profile">
                 <div class="text-center">
                     <img class="profile-user-img img-fluid img-circle elevation-2" 
                          src="{{ $siswa->foto_profile_url }}" 
-                         alt="{{ $siswa->nama_lengkap }}"
-                         style="width: 150px; height: 150px; object-fit: cover;">
+                         alt="{{ $siswa->nama_lengkap }}">
                 </div>
 
                 <h3 class="profile-username text-center">{{ $siswa->nama_lengkap }}</h3>
@@ -72,8 +117,8 @@
         </div>
 
         <!-- Account Info -->
-        <div class="card card-secondary">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-secondary text-white">
                 <h3 class="card-title"><i class="fas fa-user-lock"></i> Informasi Akun</h3>
             </div>
             <div class="card-body">
@@ -114,8 +159,8 @@
     <!-- Right Column: Details -->
     <div class="col-md-8">
         <!-- Data Pribadi -->
-        <div class="card card-info">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-info text-white">
                 <h3 class="card-title"><i class="fas fa-user"></i> Data Pribadi</h3>
             </div>
             <div class="card-body">
@@ -173,8 +218,8 @@
         </div>
 
         <!-- Alamat -->
-        <div class="card card-success">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-success text-white">
                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Alamat</h3>
             </div>
             <div class="card-body">
@@ -206,8 +251,8 @@
         </div>
 
         <!-- Asal Sekolah -->
-        <div class="card card-warning">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-warning">
                 <h3 class="card-title"><i class="fas fa-school"></i> Asal Sekolah</h3>
             </div>
             <div class="card-body">
@@ -250,8 +295,8 @@
 
         <!-- Data Orang Tua -->
         @if($siswa->ortu)
-        <div class="card card-danger">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-danger text-white">
                 <h3 class="card-title"><i class="fas fa-users"></i> Data Orang Tua</h3>
             </div>
             <div class="card-body">
@@ -304,8 +349,8 @@
         @endif
 
         <!-- Metadata -->
-        <div class="card card-secondary">
-            <div class="card-header">
+        <div class="card student-show-card">
+            <div class="card-header bg-dark text-white">
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Sistem</h3>
             </div>
             <div class="card-body">
@@ -329,7 +374,7 @@
 </div>
 
 <!-- Action Buttons -->
-<div class="card">
+<div class="card student-show-card">
     <div class="card-footer">
         <div class="row">
             <div class="col-md-6">

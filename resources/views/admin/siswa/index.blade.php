@@ -3,132 +3,273 @@
 @section('title', 'Data Siswa - SIMANSA')
 
 @section('content_header')
-    <h1>Data Siswa</h1>
+    <div class="simansa-page-hero">
+        <div class="simansa-page-hero__content">
+            <div class="simansa-page-hero__eyebrow">
+                <i class="fas fa-user-graduate"></i>
+                Manajemen Peserta Didik
+            </div>
+            <h1 class="simansa-page-hero__title">Data Siswa</h1>
+            <p class="simansa-page-hero__subtitle">
+                Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional yang lebih rapi.
+            </p>
+        </div>
+        <div class="simansa-page-hero__meta">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total Siswa</span>
+                <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Data Lengkap</span>
+                <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('content')
-{{-- Card Informasi Siswa --}}
-<div class="row mb-3">
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-info">
-            <span class="info-box-icon"><i class="fas fa-users"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total Siswa</span>
-                <span class="info-box-number" id="stat-total">{{ $stats['total_siswa'] }} Siswa</span>
-            </div>
+<style>
+    .student-stat-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 182px;
+        border: 0;
+        border-radius: 22px;
+        padding: 1.35rem 1.35rem 1.15rem;
+        color: #fff;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+    }
+
+    .student-stat-card::after {
+        content: "";
+        position: absolute;
+        right: -30px;
+        bottom: -36px;
+        width: 144px;
+        height: 144px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .student-stat-card--blue { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+    .student-stat-card--cyan { background: linear-gradient(135deg, #0ea5e9, #22d3ee); }
+    .student-stat-card--rose { background: linear-gradient(135deg, #fb7185, #f43f5e); }
+    .student-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
+
+    .student-stat-card__icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, .16);
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .student-stat-card__label {
+        position: relative;
+        z-index: 1;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .9;
+        margin-bottom: .55rem;
+    }
+
+    .student-stat-card__value {
+        position: relative;
+        z-index: 1;
+        font-size: 2.15rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: .75rem;
+    }
+
+    .student-stat-card__desc {
+        position: relative;
+        z-index: 1;
+        opacity: .92;
+        line-height: 1.55;
+        font-size: .96rem;
+    }
+
+    .student-management-card {
+        border: 0;
+        border-radius: 24px;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .student-management-card .card-header {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
+        color: #fff;
+        border-bottom: 0;
+        padding: 1rem 1.25rem;
+    }
+
+    .student-filter-panel {
+        background: linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(255, 255, 255, .98));
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 20px;
+        padding: 1rem 1rem .35rem;
+        margin-bottom: 1rem;
+    }
+
+    .student-filter-label {
+        display: block;
+        font-size: .82rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: .4rem;
+    }
+
+    .student-table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .student-table-note {
+        color: #64748b;
+        font-size: .92rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        .student-table-toolbar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="row mb-4">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="student-stat-card student-stat-card--blue">
+            <div class="student-stat-card__icon"><i class="fas fa-users"></i></div>
+            <div class="student-stat-card__label">Total Siswa</div>
+            <div class="student-stat-card__value" id="stat-total">{{ number_format($stats['total_siswa']) }}</div>
+            <div class="student-stat-card__desc">Semua siswa yang saat ini tercatat di SIMANSA.</div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-primary">
-            <span class="info-box-icon"><i class="fas fa-male"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Laki-Laki</span>
-                <span class="info-box-number" id="stat-laki">{{ $stats['laki_laki'] }} Siswa</span>
-            </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="student-stat-card student-stat-card--cyan">
+            <div class="student-stat-card__icon"><i class="fas fa-male"></i></div>
+            <div class="student-stat-card__label">Laki-Laki</div>
+            <div class="student-stat-card__value" id="stat-laki">{{ number_format($stats['laki_laki']) }}</div>
+            <div class="student-stat-card__desc">Jumlah siswa laki-laki sesuai filter yang sedang aktif.</div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-danger">
-            <span class="info-box-icon"><i class="fas fa-female"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Perempuan</span>
-                <span class="info-box-number" id="stat-perempuan">{{ $stats['perempuan'] }} Siswa</span>
-            </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="student-stat-card student-stat-card--rose">
+            <div class="student-stat-card__icon"><i class="fas fa-female"></i></div>
+            <div class="student-stat-card__label">Perempuan</div>
+            <div class="student-stat-card__value" id="stat-perempuan">{{ number_format($stats['perempuan']) }}</div>
+            <div class="student-stat-card__desc">Jumlah siswa perempuan sesuai filter yang sedang aktif.</div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-success">
-            <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Data Lengkap</span>
-                <span class="info-box-number" id="stat-lengkap">{{ $stats['data_lengkap'] }} Siswa</span>
-            </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="student-stat-card student-stat-card--green">
+            <div class="student-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+            <div class="student-stat-card__label">Data Lengkap</div>
+            <div class="student-stat-card__value" id="stat-lengkap">{{ number_format($stats['data_lengkap']) }}</div>
+            <div class="student-stat-card__desc">Siswa dengan data diri dan orang tua yang sudah lengkap.</div>
         </div>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12">
-        <div class="card">
+        <div class="card student-management-card">
             <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-users mr-1"></i>
-                    Manajemen Data Siswa
-                </h3>
-                <div class="card-tools">
-                    @can('create-siswa')
-                        <a href="{{ route('admin.siswa.import') }}" class="btn btn-success mr-2">
-                            <i class="fas fa-file-excel"></i> Import Data Siswa
-                        </a>
-                        <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-info mr-2">
-                            <i class="fas fa-school"></i> Import NPSN
-                        </a>
-                        <button type="button" class="btn btn-primary" onclick="addSiswa()">
-                            <i class="fas fa-plus"></i> Tambah Siswa
-                        </button>
-                    @endcan
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                    <h3 class="card-title mb-3 mb-lg-0">
+                        <i class="fas fa-user-graduate mr-2"></i>
+                        Manajemen Data Siswa
+                    </h3>
+                    <div class="card-tools ml-0">
+                        @can('create-siswa')
+                            <a href="{{ route('admin.siswa.import') }}" class="btn btn-light mr-2">
+                                <i class="fas fa-file-excel"></i> Import Data Siswa
+                            </a>
+                            <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-outline-light mr-2">
+                                <i class="fas fa-school"></i> Import NPSN
+                            </a>
+                            <button type="button" class="btn btn-warning" onclick="addSiswa()">
+                                <i class="fas fa-plus"></i> Tambah Siswa
+                            </button>
+                        @endcan
+                    </div>
                 </div>
             </div>
             <div class="card-body">
-                {{-- Filter Section --}}
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <div class="card bg-light">
-                            <div class="card-body p-3">
-                                <form id="filterForm" class="form-inline">
-                                    <div class="form-group mr-2 mb-2">
-                                        <label for="filterJenisKelamin" class="mr-2">
-                                            <i class="fas fa-venus-mars"></i> Jenis Kelamin:
-                                        </label>
-                                        <select id="filterJenisKelamin" class="form-control form-control-sm" style="width: 150px;">
-                                            <option value="">Semua</option>
-                                            <option value="L">Laki-Laki</option>
-                                            <option value="P">Perempuan</option>
-                                        </select>
-                                    </div>
-                                    
-                                    {{-- Hide Tingkat & Kelas filters for Wali Kelas (they only see their own class) --}}
-                                    @if(!auth()->user()->hasRole('Wali Kelas') || auth()->user()->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah']))
-                                    <div class="form-group mr-2 mb-2">
-                                        <label for="filterTingkat" class="mr-2">
-                                            <i class="fas fa-layer-group"></i> Tingkat:
-                                        </label>
-                                        <select id="filterTingkat" class="form-control form-control-sm" style="width: 150px;">
-                                            <option value="">Semua</option>
-                                            @foreach($tingkatOptions as $value => $label)
-                                                <option value="{{ $value }}">{{ $label }}</option>
-                                            @endforeach
-                                            <option value="tanpa_rombel">Tanpa Rombel</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mr-2 mb-2">
-                                        <label for="filterKelas" class="mr-2">
-                                            <i class="fas fa-door-open"></i> Kelas:
-                                        </label>
-                                        <select id="filterKelas" class="form-control form-control-sm" style="width: 200px;" disabled>
-                                            <option value="">Pilih Tingkat Dulu</option>
-                                        </select>
-                                    </div>
-                                    @endif
-                                    
-                                    <div class="form-group mr-2 mb-2">
-                                        <label for="filterStatus" class="mr-2">
-                                            <i class="fas fa-check-circle"></i> Status Data:
-                                        </label>
-                                        <select id="filterStatus" class="form-control form-control-sm" style="width: 150px;">
-                                            <option value="">Semua</option>
-                                            <option value="lengkap">Data Lengkap</option>
-                                            <option value="belum">Belum Lengkap</option>
-                                        </select>
-                                    </div>
-                                    <button type="button" id="btnResetFilter" class="btn btn-sm btn-secondary mb-2">
-                                        <i class="fas fa-redo"></i> Reset
-                                    </button>
-                                </form>
+                <div class="student-filter-panel">
+                    <div class="row">
+                        <div class="col-md-6 col-xl-3 mb-3">
+                            <label for="filterJenisKelamin" class="student-filter-label">
+                                <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
+                            </label>
+                            <select id="filterJenisKelamin" class="form-control form-control-sm">
+                                <option value="">Semua</option>
+                                <option value="L">Laki-Laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                        @if(!auth()->user()->hasRole('Wali Kelas') || auth()->user()->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah']))
+                            <div class="col-md-6 col-xl-3 mb-3">
+                                <label for="filterTingkat" class="student-filter-label">
+                                    <i class="fas fa-layer-group mr-1"></i> Tingkat
+                                </label>
+                                <select id="filterTingkat" class="form-control form-control-sm">
+                                    <option value="">Semua</option>
+                                    @foreach($tingkatOptions as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                    <option value="tanpa_rombel">Tanpa Rombel</option>
+                                </select>
                             </div>
+                            <div class="col-md-6 col-xl-3 mb-3">
+                                <label for="filterKelas" class="student-filter-label">
+                                    <i class="fas fa-door-open mr-1"></i> Kelas
+                                </label>
+                                <select id="filterKelas" class="form-control form-control-sm" disabled>
+                                    <option value="">Pilih Tingkat Dulu</option>
+                                </select>
+                            </div>
+                        @endif
+                        <div class="col-md-6 col-xl-3 mb-3">
+                            <label for="filterStatus" class="student-filter-label">
+                                <i class="fas fa-check-circle mr-1"></i> Status Data
+                            </label>
+                            <select id="filterStatus" class="form-control form-control-sm">
+                                <option value="">Semua</option>
+                                <option value="lengkap">Data Lengkap</option>
+                                <option value="belum">Belum Lengkap</option>
+                            </select>
                         </div>
                     </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-redo"></i> Reset Filter
+                        </button>
+                    </div>
                 </div>
+
+                <div class="student-table-toolbar">
+                    <p class="student-table-note">
+                        Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, dan rombel. Klik foto untuk preview dan unduh cepat.
+                    </p>
+                </div>
+
                 <div class="table-responsive">
                     <table id="siswa-table" class="table table-bordered table-striped">
                         <thead>
@@ -1143,10 +1284,12 @@ $(document).ready(function() {
 
         // Update stats cards
         $.get('{{ route("admin.siswa.stats") }}', filterParams, function(data) {
-            $('#stat-total').text(data.total_siswa + ' Siswa');
-            $('#stat-laki').text(data.laki_laki + ' Siswa');
-            $('#stat-perempuan').text(data.perempuan + ' Siswa');
-            $('#stat-lengkap').text(data.data_lengkap + ' Siswa');
+            $('#stat-total').text(new Intl.NumberFormat('id-ID').format(data.total_siswa));
+            $('#stat-laki').text(new Intl.NumberFormat('id-ID').format(data.laki_laki));
+            $('#stat-perempuan').text(new Intl.NumberFormat('id-ID').format(data.perempuan));
+            $('#stat-lengkap').text(new Intl.NumberFormat('id-ID').format(data.data_lengkap));
+            $('#hero-stat-total').text(new Intl.NumberFormat('id-ID').format(data.total_siswa));
+            $('#hero-stat-lengkap').text(new Intl.NumberFormat('id-ID').format(data.data_lengkap));
         });
     }
 });
