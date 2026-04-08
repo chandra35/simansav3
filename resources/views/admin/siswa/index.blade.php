@@ -2,26 +2,125 @@
 
 @section('title', 'Data Siswa - SIMANSA')
 
+@section('css')
+<style>
+    .student-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
+        gap: 1.1rem;
+        align-items: stretch;
+        margin-bottom: 1.1rem;
+    }
+
+    .student-hero__main {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
+        border: 1px solid rgba(148, 163, 184, .16);
+        border-radius: 26px;
+        padding: 1.35rem 1.45rem;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
+    }
+
+    .student-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: #334155;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        margin-bottom: .65rem;
+    }
+
+    .student-hero__title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        margin: 0 0 .55rem 0;
+    }
+
+    .student-hero__subtitle {
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0;
+        max-width: 780px;
+    }
+
+    .student-hero__side {
+        display: grid;
+        gap: .9rem;
+    }
+
+    .student-hero-chip {
+        background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 20px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
+    }
+
+    .student-hero-chip__label {
+        display: block;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+
+    .student-hero-chip__value {
+        display: block;
+        color: #0f172a;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 991.98px) {
+        .student-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .student-hero__side {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .student-hero__title {
+            font-size: 1.7rem;
+        }
+
+        .student-hero__side {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@stop
+
 @section('content_header')
-    <div class="simansa-page-hero">
-        <div class="simansa-page-hero__content">
-            <div class="simansa-page-hero__eyebrow">
+    <div class="student-hero">
+        <div class="student-hero__main">
+            <div class="student-hero__eyebrow">
                 <i class="fas fa-user-graduate"></i>
                 Manajemen Peserta Didik
             </div>
-            <h1 class="simansa-page-hero__title">Data Siswa</h1>
-            <p class="simansa-page-hero__subtitle">
+            <h1 class="student-hero__title">Data Siswa</h1>
+            <p class="student-hero__subtitle">
                 Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional yang lebih rapi.
             </p>
         </div>
-        <div class="simansa-page-hero__meta">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total Siswa</span>
-                <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
+        <div class="student-hero__side">
+            <div class="student-hero-chip">
+                <span class="student-hero-chip__label">Total Siswa</span>
+                <span class="student-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
             </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Data Lengkap</span>
-                <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
+            <div class="student-hero-chip">
+                <span class="student-hero-chip__label">Data Lengkap</span>
+                <span class="student-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
             </div>
         </div>
     </div>
@@ -38,6 +137,9 @@
         padding: 1.35rem 1.35rem 1.15rem;
         color: #fff;
         box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
     }
 
     .student-stat-card::after {
@@ -65,14 +167,24 @@
         justify-content: center;
         background: rgba(255, 255, 255, .16);
         font-size: 1.3rem;
-        margin-bottom: 1rem;
         position: relative;
         z-index: 1;
+        flex: 0 0 58px;
+    }
+
+    .student-stat-card__body {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        min-width: 0;
     }
 
     .student-stat-card__label {
         position: relative;
-        z-index: 1;
         font-size: .78rem;
         font-weight: 700;
         letter-spacing: .08em;
@@ -83,7 +195,6 @@
 
     .student-stat-card__value {
         position: relative;
-        z-index: 1;
         font-size: 2.15rem;
         font-weight: 800;
         line-height: 1;
@@ -92,7 +203,6 @@
 
     .student-stat-card__desc {
         position: relative;
-        z-index: 1;
         opacity: .92;
         line-height: 1.55;
         font-size: .96rem;
@@ -150,39 +260,58 @@
             align-items: flex-start;
         }
     }
+
+    @media (max-width: 575.98px) {
+        .student-stat-card {
+            flex-direction: column;
+            gap: .9rem;
+        }
+
+        .student-stat-card__body {
+            width: 100%;
+        }
+    }
 </style>
 
 <div class="row mb-4">
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="student-stat-card student-stat-card--blue">
             <div class="student-stat-card__icon"><i class="fas fa-users"></i></div>
-            <div class="student-stat-card__label">Total Siswa</div>
-            <div class="student-stat-card__value" id="stat-total">{{ number_format($stats['total_siswa']) }}</div>
-            <div class="student-stat-card__desc">Semua siswa yang saat ini tercatat di SIMANSA.</div>
+            <div class="student-stat-card__body">
+                <div class="student-stat-card__label">Total Siswa</div>
+                <div class="student-stat-card__value" id="stat-total">{{ number_format($stats['total_siswa']) }}</div>
+                <div class="student-stat-card__desc">Semua siswa yang saat ini tercatat di SIMANSA.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="student-stat-card student-stat-card--cyan">
             <div class="student-stat-card__icon"><i class="fas fa-male"></i></div>
-            <div class="student-stat-card__label">Laki-Laki</div>
-            <div class="student-stat-card__value" id="stat-laki">{{ number_format($stats['laki_laki']) }}</div>
-            <div class="student-stat-card__desc">Jumlah siswa laki-laki sesuai filter yang sedang aktif.</div>
+            <div class="student-stat-card__body">
+                <div class="student-stat-card__label">Laki-Laki</div>
+                <div class="student-stat-card__value" id="stat-laki">{{ number_format($stats['laki_laki']) }}</div>
+                <div class="student-stat-card__desc">Jumlah siswa laki-laki sesuai filter yang sedang aktif.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="student-stat-card student-stat-card--rose">
             <div class="student-stat-card__icon"><i class="fas fa-female"></i></div>
-            <div class="student-stat-card__label">Perempuan</div>
-            <div class="student-stat-card__value" id="stat-perempuan">{{ number_format($stats['perempuan']) }}</div>
-            <div class="student-stat-card__desc">Jumlah siswa perempuan sesuai filter yang sedang aktif.</div>
+            <div class="student-stat-card__body">
+                <div class="student-stat-card__label">Perempuan</div>
+                <div class="student-stat-card__value" id="stat-perempuan">{{ number_format($stats['perempuan']) }}</div>
+                <div class="student-stat-card__desc">Jumlah siswa perempuan sesuai filter yang sedang aktif.</div>
+            </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="student-stat-card student-stat-card--green">
             <div class="student-stat-card__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="student-stat-card__label">Data Lengkap</div>
-            <div class="student-stat-card__value" id="stat-lengkap">{{ number_format($stats['data_lengkap']) }}</div>
-            <div class="student-stat-card__desc">Siswa dengan data diri dan orang tua yang sudah lengkap.</div>
+            <div class="student-stat-card__body">
+                <div class="student-stat-card__label">Data Lengkap</div>
+                <div class="student-stat-card__value" id="stat-lengkap">{{ number_format($stats['data_lengkap']) }}</div>
+                <div class="student-stat-card__desc">Siswa dengan data diri dan orang tua yang sudah lengkap.</div>
+            </div>
         </div>
     </div>
 </div>
