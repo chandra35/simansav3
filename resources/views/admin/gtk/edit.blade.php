@@ -3,30 +3,68 @@
 @section('title', 'Edit Data GTK')
 
 @section('content_header')
-    <div class="row">
-        <div class="col-sm-6">
-            <h1 class="m-0">Edit Data GTK</h1>
+    <div class="simansa-page-hero">
+        <div class="simansa-page-hero__content">
+            <div class="simansa-page-hero__eyebrow">
+                <i class="fas fa-user-edit"></i>
+                Edit Profil GTK
+            </div>
+            <h1 class="simansa-page-hero__title">Edit Data GTK</h1>
+            <p class="simansa-page-hero__subtitle">
+                Perbarui data pribadi, kepegawaian, akun, dan integrasi Kemenag untuk {{ $gtk->nama_lengkap }} dari satu layar kerja yang lebih jelas.
+            </p>
         </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.index') }}">Data GTK</a></li>
-                <li class="breadcrumb-item active">Edit</li>
-            </ol>
+        <div class="simansa-page-hero__meta">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">NIK</span>
+                <span class="simansa-hero-chip__value">{{ $gtk->nik ?? '-' }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Jenis PTK</span>
+                <span class="simansa-hero-chip__value">{{ $gtk->jenis_ptk ?? '-' }}</span>
+            </div>
         </div>
     </div>
 @stop
 
 @section('content')
+    <style>
+        .gtk-edit-shell {
+            border: 0;
+            border-radius: 24px;
+            box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+            overflow: hidden;
+        }
+
+        .gtk-edit-shell .card-header {
+            background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
+            color: #fff;
+            border-bottom: 0;
+            padding: 1rem 1.25rem;
+        }
+
+        .gtk-edit-shell .nav-tabs .nav-link {
+            border-radius: 14px;
+            margin-right: .45rem;
+            border: 0;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .gtk-edit-shell .nav-tabs .nav-link.active {
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+        }
+    </style>
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card gtk-edit-shell">
                 <div class="card-header">
                     <h3 class="card-title">
-                        <i class="fas fa-user-edit"></i> {{ $gtk->nama_lengkap }}
+                        <i class="fas fa-user-edit mr-1"></i> {{ $gtk->nama_lengkap }}
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-sm btn-default">
+                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
                     </div>

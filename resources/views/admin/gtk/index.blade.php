@@ -3,57 +3,182 @@
 @section('title', 'Data GTK - SIMANSA')
 
 @section('content_header')
-    <h1>Data GTK (Guru dan Tenaga Kependidikan)</h1>
+    <div class="simansa-page-hero">
+        <div class="simansa-page-hero__content">
+            <div class="simansa-page-hero__eyebrow">
+                <i class="fas fa-chalkboard-teacher"></i>
+                Master GTK
+            </div>
+            <h1 class="simansa-page-hero__title">Data GTK</h1>
+            <p class="simansa-page-hero__subtitle">
+                Kelola guru dan tenaga kependidikan, pantau kelengkapan data, dan jalankan sinkronisasi Kemenag dari satu halaman operasional.
+            </p>
+        </div>
+        <div class="simansa-page-hero__meta">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total GTK</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Siap Sinkron</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('content')
-{{-- Card Informasi GTK --}}
-<div class="row mb-3">
+<style>
+    .gtk-stat-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 182px;
+        border: 0;
+        border-radius: 22px;
+        padding: 1.35rem 1.35rem 1.15rem;
+        color: #fff;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+    }
+
+    .gtk-stat-card::after {
+        content: "";
+        position: absolute;
+        right: -30px;
+        bottom: -36px;
+        width: 144px;
+        height: 144px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .gtk-stat-card--blue { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+    .gtk-stat-card--cyan { background: linear-gradient(135deg, #0ea5e9, #22d3ee); }
+    .gtk-stat-card--rose { background: linear-gradient(135deg, #fb7185, #f43f5e); }
+    .gtk-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
+
+    .gtk-stat-card__icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, .16);
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .gtk-stat-card__label {
+        position: relative;
+        z-index: 1;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        opacity: .9;
+        margin-bottom: .55rem;
+    }
+
+    .gtk-stat-card__value {
+        position: relative;
+        z-index: 1;
+        font-size: 2.15rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: .75rem;
+    }
+
+    .gtk-stat-card__desc {
+        position: relative;
+        z-index: 1;
+        opacity: .92;
+        line-height: 1.55;
+        font-size: .96rem;
+    }
+
+    .gtk-management-card {
+        border: 0;
+        border-radius: 24px;
+        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .gtk-management-card .card-header {
+        background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
+        color: #fff;
+        border-bottom: 0;
+        padding: 1rem 1.25rem;
+    }
+
+    .gtk-filter-panel {
+        background: linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(255, 255, 255, .98));
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 20px;
+        padding: 1rem 1rem .35rem;
+        margin-bottom: 1rem;
+    }
+
+    .gtk-filter-label {
+        display: block;
+        font-size: .82rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: .4rem;
+    }
+
+    .gtk-table-note {
+        color: #64748b;
+        font-size: .92rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="row mb-4">
     <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-info">
-            <span class="info-box-icon"><i class="fas fa-chalkboard-teacher"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total GTK</span>
-                <span class="info-box-number">{{ $stats['total_gtk'] }} Orang</span>
-            </div>
+        <div class="gtk-stat-card gtk-stat-card--blue">
+            <div class="gtk-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="gtk-stat-card__label">Total GTK</div>
+            <div class="gtk-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
+            <div class="gtk-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-primary">
-            <span class="info-box-icon"><i class="fas fa-male"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Laki-laki</span>
-                <span class="info-box-number">{{ $stats['laki_laki'] }} Orang</span>
-            </div>
+        <div class="gtk-stat-card gtk-stat-card--cyan">
+            <div class="gtk-stat-card__icon"><i class="fas fa-male"></i></div>
+            <div class="gtk-stat-card__label">Laki-Laki</div>
+            <div class="gtk-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
+            <div class="gtk-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-danger">
-            <span class="info-box-icon"><i class="fas fa-female"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Perempuan</span>
-                <span class="info-box-number">{{ $stats['perempuan'] }} Orang</span>
-            </div>
+        <div class="gtk-stat-card gtk-stat-card--rose">
+            <div class="gtk-stat-card__icon"><i class="fas fa-female"></i></div>
+            <div class="gtk-stat-card__label">Perempuan</div>
+            <div class="gtk-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
+            <div class="gtk-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-success">
-            <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Data Lengkap</span>
-                <span class="info-box-number">{{ $stats['data_lengkap'] }} Orang</span>
-            </div>
+        <div class="gtk-stat-card gtk-stat-card--green">
+            <div class="gtk-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+            <div class="gtk-stat-card__label">Data Lengkap</div>
+            <div class="gtk-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
+            <div class="gtk-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
         </div>
     </div>
 </div>
 
-<div class="card">
+<div class="card gtk-management-card">
     <div class="card-header">
-        <h3 class="card-title">
-            <i class="fas fa-list"></i>
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+        <h3 class="card-title mb-3 mb-lg-0">
+            <i class="fas fa-list mr-2"></i>
             Daftar GTK
         </h3>
-        <div class="card-tools">
+        <div class="card-tools ml-0">
             @can('edit-gtk')
                 <button type="button" class="btn btn-warning btn-sm mr-1" id="btnBulkSyncKemenag">
                     <i class="fas fa-sync-alt"></i> Sinkron Semua GTK Ber-NIP
@@ -69,29 +194,28 @@
                 </button>
             @endcan
         </div>
+        </div>
     </div>
     <div class="card-body">
         {{-- Filter Section --}}
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="card bg-light">
-                    <div class="card-body p-3">
-                        <form id="filterForm" class="form-inline">
-                            <div class="form-group mr-2 mb-2">
-                                <label for="filterKategoriPtk" class="mr-2">
-                                    <i class="fas fa-users"></i> Kategori PTK:
+        <div class="gtk-filter-panel">
+                        <form id="filterForm">
+                        <div class="row">
+                            <div class="col-md-6 col-xl-3 mb-3">
+                                <label for="filterKategoriPtk" class="gtk-filter-label">
+                                    <i class="fas fa-users mr-1"></i> Kategori PTK
                                 </label>
-                                <select id="filterKategoriPtk" class="form-control form-control-sm" style="width: 180px;">
+                                <select id="filterKategoriPtk" class="form-control form-control-sm">
                                     <option value="">Semua</option>
                                     <option value="Pendidik">Pendidik (Guru)</option>
                                     <option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
                                 </select>
                             </div>
-                            <div class="form-group mr-2 mb-2">
-                                <label for="filterJenisPtk" class="mr-2">
-                                    <i class="fas fa-user-tag"></i> Jenis PTK:
+                            <div class="col-md-6 col-xl-3 mb-3">
+                                <label for="filterJenisPtk" class="gtk-filter-label">
+                                    <i class="fas fa-user-tag mr-1"></i> Jenis PTK
                                 </label>
-                                <select id="filterJenisPtk" class="form-control form-control-sm" style="width: 180px;">
+                                <select id="filterJenisPtk" class="form-control form-control-sm">
                                     <option value="">Semua</option>
                                     <option value="Guru Mapel">Guru Mapel</option>
                                     <option value="Guru BK">Guru BK</option>
@@ -105,45 +229,49 @@
                                     <option value="Lainnya">Lainnya</option>
                                 </select>
                             </div>
-                            <div class="form-group mr-2 mb-2">
-                                <label for="filterJenisKelamin" class="mr-2">
-                                    <i class="fas fa-venus-mars"></i> Jenis Kelamin:
+                            <div class="col-md-6 col-xl-2 mb-3">
+                                <label for="filterJenisKelamin" class="gtk-filter-label">
+                                    <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
                                 </label>
-                                <select id="filterJenisKelamin" class="form-control form-control-sm" style="width: 150px;">
+                                <select id="filterJenisKelamin" class="form-control form-control-sm">
                                     <option value="">Semua</option>
                                     <option value="L">Laki-laki</option>
                                     <option value="P">Perempuan</option>
                                 </select>
                             </div>
-                            <div class="form-group mr-2 mb-2">
-                                <label for="filterStatusKepegawaian" class="mr-2">
-                                    <i class="fas fa-briefcase"></i> Status Kepeg:
+                            <div class="col-md-6 col-xl-2 mb-3">
+                                <label for="filterStatusKepegawaian" class="gtk-filter-label">
+                                    <i class="fas fa-briefcase mr-1"></i> Status Kepeg
                                 </label>
-                                <select id="filterStatusKepegawaian" class="form-control form-control-sm" style="width: 150px;">
+                                <select id="filterStatusKepegawaian" class="form-control form-control-sm">
                                     <option value="">Semua</option>
                                     @foreach($statusKepegawaianOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-group mr-2 mb-2">
-                                <label for="filterStatus" class="mr-2">
-                                    <i class="fas fa-database"></i> Status Data:
+                            <div class="col-md-6 col-xl-2 mb-3">
+                                <label for="filterStatus" class="gtk-filter-label">
+                                    <i class="fas fa-database mr-1"></i> Status Data
                                 </label>
-                                <select id="filterStatus" class="form-control form-control-sm" style="width: 150px;">
+                                <select id="filterStatus" class="form-control form-control-sm">
                                     <option value="">Semua</option>
                                     <option value="lengkap">Data Lengkap</option>
                                     <option value="belum">Belum Lengkap</option>
                                 </select>
                             </div>
-                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-secondary mb-2">
+                            </div>
+                            <div class="d-flex justify-content-end">
+                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary mb-2">
                                 <i class="fas fa-redo"></i> Reset
                             </button>
+                            </div>
                         </form>
-                    </div>
-                </div>
-            </div>
         </div>
+
+        <p class="gtk-table-note">
+            Gunakan filter untuk memantau komposisi GTK, kelengkapan data, dan kesiapan sinkronisasi Kemenag tanpa meninggalkan halaman ini.
+        </p>
 
         <div class="table-responsive">
             <table id="gtk-table" class="table table-bordered table-striped table-hover">
