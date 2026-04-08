@@ -603,6 +603,59 @@
     .dataTables_length {
         margin-bottom: 1rem;
     }
+
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 0.35rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        gap: 0.22rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item {
+        margin: 0 !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link {
+        min-width: 2.45rem;
+        min-height: 2.45rem;
+        padding: 0.48rem 0.9rem !important;
+        border-radius: 0.95rem !important;
+        border: 1px solid rgba(203, 213, 225, 0.95) !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link:hover,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link:focus {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.1)) !important;
+        border-color: rgba(99, 102, 241, 0.35) !important;
+        color: #312e81 !important;
+        box-shadow: 0 14px 28px rgba(79, 70, 229, 0.12) !important;
+        transform: translateY(-1px);
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.active .page-link {
+        background: linear-gradient(135deg, #312e81, #4f46e5) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        box-shadow: 0 16px 32px rgba(49, 46, 129, 0.22) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.disabled .page-link {
+        background: rgba(241, 245, 249, 0.82) !important;
+        color: #94a3b8 !important;
+        border-color: rgba(226, 232, 240, 0.95) !important;
+        box-shadow: none !important;
+    }
     
     #gtk-table {
         font-size: 0.9rem;
@@ -742,6 +795,18 @@
     @media (max-width: 767.98px) {
         .bulk-sync-meta {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dataTables_wrapper .dataTables_paginate .pagination {
+            justify-content: center;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link {
+            min-width: 2.1rem;
+            min-height: 2.1rem;
+            padding: 0.34rem 0.62rem !important;
+            border-radius: 0.8rem !important;
+            font-size: 0.8125rem !important;
         }
 
         .bulk-sync-header {
