@@ -294,6 +294,8 @@
         .timeline-item { padding-left: 30px; border-left: 2px solid #007bff; position: relative; margin-bottom: 15px; }
         .timeline-item::before { content: ''; position: absolute; left: -8px; top: 0; width: 14px; height: 14px; background: #007bff; border-radius: 50%; }
         .stat-icon { font-size: 2rem; opacity: 0.3; }
+        #logsTable td { position: relative; }
+        #logsTable .btn { position: relative; z-index: 2; }
     </style>
 @stop
 
@@ -359,6 +361,18 @@ $(document).ready(function() {
 
     // Load statistics
     loadStatistics();
+
+    $('#logsTable').on('click', '.js-show-detail', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        showDetail($(this).data('id'));
+    });
+
+    $('#logsTable').on('click', '.js-show-changes', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        showChanges($(this).data('id'));
+    });
 });
 
 function applyFilter() {

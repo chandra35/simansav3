@@ -183,7 +183,7 @@ class ActivityLogController extends Controller
             })
             ->addColumn('changes', function ($log) {
                 if ($log->changed_fields && !empty($log->changed_fields)) {
-                    $changes = '<button class="btn btn-sm btn-info" onclick="showChanges(' . $log->id . ')">
+                    $changes = '<button type="button" class="btn btn-sm btn-info js-show-changes" data-id="' . $log->id . '">
                         <i class="fas fa-eye"></i> Lihat Perubahan (' . count($log->changed_fields) . ')
                     </button>';
                     return $changes;
@@ -201,7 +201,7 @@ class ActivityLogController extends Controller
             })
             ->addColumn('action', function ($log) {
                 return '
-                    <button class="btn btn-sm btn-primary" onclick="showDetail(' . $log->id . ')">
+                    <button type="button" class="btn btn-sm btn-primary js-show-detail" data-id="' . $log->id . '">
                         <i class="fas fa-info-circle"></i> Detail
                     </button>
                 ';
