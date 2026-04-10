@@ -24,7 +24,7 @@
         </ul>
     </div>
 
-    <form action="{{ route('password.email') }}" method="POST">
+    <form action="{{ route('password.email') }}" method="POST" id="forgotPasswordForm">
         @csrf
 
         <div class="input-group mb-3">
@@ -44,7 +44,7 @@
 
         <div class="row">
             <div class="col-12">
-                <button type="submit" class="btn btn-primary btn-block">
+                <button type="submit" class="btn btn-primary btn-block" id="forgotPasswordSubmit">
                     <i class="fas fa-paper-plane"></i> Kirim Link Reset Password
                 </button>
             </div>
@@ -67,4 +67,20 @@
             <i class="fas fa-arrow-left"></i> Kembali ke Login
         </a>
     </p>
+@stop
+
+@section('js')
+<script>
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotPasswordSubmit = document.getElementById('forgotPasswordSubmit');
+
+    forgotPasswordForm?.addEventListener('submit', function () {
+        if (!forgotPasswordSubmit) {
+            return;
+        }
+
+        forgotPasswordSubmit.disabled = true;
+        forgotPasswordSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim Link Reset...';
+    });
+</script>
 @stop

@@ -67,19 +67,20 @@ class GtkProfileController extends Controller
                     $fail('Password lama tidak sesuai.');
                 }
             }],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', Password::min(8)],
+            'password_confirmation' => ['required', 'same:password'],
         ], [
             'password.required' => 'Password baru wajib diisi.',
-            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
             'password.min' => 'Password minimal 8 karakter.',
+            'password_confirmation.required' => 'Konfirmasi password wajib diisi.',
+            'password_confirmation.same' => 'Konfirmasi password tidak sesuai.',
         ]);
 
         // Update password
-        $user->update([
-            'password' => Hash::make($request->password),
-            'is_first_login' => false,
-            'encrypted_password' => null,
-        ]);
+        $user->password = Hash::make($request->password);
+        $user->is_first_login = false;
+        $user->readable_password = $request->password;
+        $user->save();
 
         return redirect()->route('admin.gtk.dashboard')
             ->with('success', 'Password berhasil diubah. Silakan gunakan password baru untuk login berikutnya.');

@@ -69,8 +69,9 @@ class ProfileController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
-            'encrypted_password' => null,
         ]);
+        $user->readable_password = $request->password;
+        $user->save();
 
         User::logCustomActivity('password_change', 'Password berhasil diubah');
 

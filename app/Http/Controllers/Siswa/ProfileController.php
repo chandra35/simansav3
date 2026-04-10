@@ -51,7 +51,13 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|same:password',
+        ], [
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal 8 karakter.',
+            'password_confirmation.required' => 'Konfirmasi password baru wajib diisi.',
+            'password_confirmation.same' => 'Konfirmasi password baru tidak sesuai.',
         ]);
 
         $user = Auth::user();
@@ -61,10 +67,9 @@ class ProfileController extends Controller
             return back()->withErrors(['current_password' => 'Password lama tidak sesuai']);
         }
 
-        $user->update([
-            'password' => Hash::make($request->password),
-            'encrypted_password' => null,
-        ]);
+        $user->password = Hash::make($request->password);
+        $user->readable_password = $request->password;
+        $user->save();
 
         User::logCustomActivity('password_change', 'Password berhasil diubah');
 
@@ -106,25 +111,26 @@ class ProfileController extends Controller
     public function updateForceSetup(Request $request)
     {
         $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|same:password',
             'email' => 'required|email|unique:users,email,' . Auth::id(),
         ], [
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 8 karakter.',
-            'password.confirmed' => 'Konfirmasi password tidak sesuai.',
+            'password_confirmation.required' => 'Konfirmasi password wajib diisi.',
+            'password_confirmation.same' => 'Konfirmasi password tidak sesuai.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan.',
         ]);
 
         $user = Auth::user();
-        
-        $user->update([
-            'password' => Hash::make($request->password),
-            'email' => $request->email,
-            'is_first_login' => false,
-            'encrypted_password' => null,
-        ]);
+
+        $user->password = Hash::make($request->password);
+        $user->email = $request->email;
+        $user->is_first_login = false;
+        $user->readable_password = $request->password;
+        $user->save();
 
         User::logCustomActivity('first_login_setup', 'Setup awal berhasil: password dan email diperbarui');
 
@@ -148,16 +154,21 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|same:password',
+        ], [
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password_confirmation.required' => 'Konfirmasi password wajib diisi.',
+            'password_confirmation.same' => 'Konfirmasi password tidak sesuai.',
         ]);
 
         $user = Auth::user();
-        
-        $user->update([
-            'password' => Hash::make($request->password),
-            'is_first_login' => false,
-            'encrypted_password' => null,
-        ]);
+
+        $user->password = Hash::make($request->password);
+        $user->is_first_login = false;
+        $user->readable_password = $request->password;
+        $user->save();
 
         User::logCustomActivity('first_login_password_change', 'Password pertama kali berhasil diubah');
 

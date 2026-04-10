@@ -87,15 +87,14 @@ class ForgotPasswordController extends Controller
         $token = Str::random(64);
         $createdAt = Carbon::now();
 
-        // Delete old tokens
-        DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-
-        // Insert new token
-        DB::table('password_reset_tokens')->insert([
-            'email' => $user->email,
-            'token' => Hash::make($token),
-            'created_at' => $createdAt,
-        ]);
+        // Upsert token to avoid duplicate-key race when users click repeatedly.
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => Hash::make($token),
+                'created_at' => $createdAt,
+            ]
+        );
 
         // Send email using EmailService with template
         $resetLink = route('password.reset', ['token' => $token, 'email' => $user->email]);
@@ -145,7 +144,13 @@ class ForgotPasswordController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|string|same:password',
+        ], [
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal 8 karakter.',
+            'password_confirmation.required' => 'Konfirmasi password baru wajib diisi.',
+            'password_confirmation.same' => 'Konfirmasi password baru tidak sesuai.',
         ]);
 
         // Check token
@@ -161,12 +166,11 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => 'Email tidak ditemukan.']);
         }
 
-        // Update password
-        $user->update([
-            'password' => Hash::make($request->password),
-            'is_first_login' => false, // Mark as already changed password
-            'encrypted_password' => null,
-        ]);
+        // Update password and keep readable string in sync for admin support flows.
+        $user->password = Hash::make($request->password);
+        $user->is_first_login = false;
+        $user->readable_password = $request->password;
+        $user->save();
 
         // Delete token
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();

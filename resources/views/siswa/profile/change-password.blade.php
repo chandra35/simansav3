@@ -16,6 +16,14 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <i class="icon fas fa-exclamation-circle"></i>
+                Periksa kembali password lama, password baru, dan konfirmasi password Anda.
+            </div>
+        @endif
+
         <div class="card card-primary">
             <div class="card-header">
                 <h3 class="card-title">
@@ -78,12 +86,17 @@
                         <label for="password_confirmation">Konfirmasi Password Baru</label>
                         <div class="input-group">
                             <input type="password" name="password_confirmation" id="password_confirmation" 
-                                   class="form-control" placeholder="Ketik ulang password baru" required>
+                                   class="form-control @error('password_confirmation') is-invalid @enderror" placeholder="Ketik ulang password baru" required>
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password_confirmation">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
+                            @error('password_confirmation')
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
                         </div>
                     </div>
 
