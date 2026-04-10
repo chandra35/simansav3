@@ -79,12 +79,28 @@
     }
     
     /* Input styling */
-    #tanggal_lahir_picker {
+    #tanggal_lahir_picker,
+    #tanggal_lahir_mobile {
         cursor: pointer;
     }
     
-    #tanggal_lahir_picker:focus {
+    #tanggal_lahir_picker:focus,
+    #tanggal_lahir_mobile:focus {
         box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .tanggal-lahir-mobile {
+        display: none;
+    }
+
+    @media (max-width: 767.98px) {
+        .tanggal-lahir-desktop {
+            display: none;
+        }
+
+        .tanggal-lahir-mobile {
+            display: block;
+        }
     }
     
     /* Foto Container */
@@ -664,7 +680,7 @@
                                         ? \Carbon\Carbon::parse($tanggalLahirValue)->translatedFormat('j F Y')
                                         : '';
                                 @endphp
-                                <div class="input-group">
+                                <div class="input-group tanggal-lahir-desktop">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">
                                             <i class="far fa-calendar-alt"></i>
@@ -681,14 +697,22 @@
                                            placeholder="Pilih Tanggal Lahir"
                                            required
                                            readonly>
-                                    @error('tanggal_lahir')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
                                 </div>
+                                <div class="tanggal-lahir-mobile">
+                                    <input type="date"
+                                           id="tanggal_lahir_mobile"
+                                           class="form-control @error('tanggal_lahir') is-invalid @enderror"
+                                           value="{{ $tanggalLahirValue }}"
+                                           max="{{ now()->subDay()->format('Y-m-d') }}"
+                                           required>
+                                </div>
+                                @error('tanggal_lahir')
+                                    <span class="invalid-feedback d-block" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                                 <small class="form-text text-muted">
-                                    <i class="fas fa-info-circle"></i> Klik untuk membuka kalender
+                                    <i class="fas fa-info-circle"></i> Desktop memakai kalender, sedangkan di ponsel memakai input tanggal bawaan perangkat agar lebih responsif.
                                 </small>
                             </div>
                         </div>
@@ -1781,39 +1805,85 @@ $(document).ready(function() {
     });
     
     const tanggalLahirHidden = document.getElementById('tanggal_lahir');
+    const tanggalLahirDesktopInput = document.getElementById('tanggal_lahir_picker');
+    const tanggalLahirMobileInput = document.getElementById('tanggal_lahir_mobile');
     const tanggalLahirDefault = tanggalLahirHidden ? tanggalLahirHidden.value : '';
+    const isMobileViewport = window.matchMedia('(max-width: 767.98px)').matches;
+    let tanggalLahirPicker = null;
 
-    // Initialize Flatpickr for tanggal_lahir with dedicated display input.
-    const tanggalLahirPicker = flatpickr("#tanggal_lahir_picker", {
-        dateFormat: "j F Y",
-        locale: "id",
-        maxDate: "today",
-        defaultDate: tanggalLahirDefault || null,
-        allowInput: false,
-        clickOpens: true,
-        yearSelectorType: "dropdown",
-        animate: true,
-        disableMobile: true,
-        onReady: function(selectedDates, dateStr, instance) {
-            instance.calendarContainer.classList.add('flatpickr-custom');
-        },
-        onChange: function(selectedDates, dateStr, instance) {
-            const hiddenValue = selectedDates.length
-                ? instance.formatDate(selectedDates[0], "Y-m-d")
-                : '';
+    function syncTanggalLahirInputs(value, displayText = null) {
+        const normalizedValue = value || '';
+        $('#tanggal_lahir').val(normalizedValue).removeClass('is-invalid');
+        $('#tanggal_lahir_picker, #tanggal_lahir_mobile').removeClass('is-invalid');
 
-            $('#tanggal_lahir').val(hiddenValue).removeClass('is-invalid');
-            $('#tanggal_lahir_picker').removeClass('is-invalid');
+        if (tanggalLahirMobileInput) {
+            tanggalLahirMobileInput.value = normalizedValue;
+        }
 
-            if (hiddenValue) {
-                toastr.success('Tanggal lahir: ' + dateStr, '', {
-                    timeOut: 2000,
-                    closeButton: false,
-                    progressBar: true
-                });
+        if (tanggalLahirDesktopInput) {
+            if (displayText !== null) {
+                tanggalLahirDesktopInput.value = displayText;
+            } else if (!normalizedValue) {
+                tanggalLahirDesktopInput.value = '';
             }
         }
-    });
+    }
+
+    if (!isMobileViewport && tanggalLahirDesktopInput) {
+        tanggalLahirPicker = flatpickr("#tanggal_lahir_picker", {
+            dateFormat: "j F Y",
+            locale: "id",
+            maxDate: "today",
+            defaultDate: tanggalLahirDefault || null,
+            allowInput: false,
+            clickOpens: true,
+            yearSelectorType: "dropdown",
+            animate: true,
+            disableMobile: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.calendarContainer.classList.add('flatpickr-custom');
+                if (selectedDates.length) {
+                    syncTanggalLahirInputs(
+                        instance.formatDate(selectedDates[0], "Y-m-d"),
+                        dateStr
+                    );
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const hiddenValue = selectedDates.length
+                    ? instance.formatDate(selectedDates[0], "Y-m-d")
+                    : '';
+
+                syncTanggalLahirInputs(hiddenValue, dateStr);
+
+                if (hiddenValue) {
+                    toastr.success('Tanggal lahir: ' + dateStr, '', {
+                        timeOut: 2000,
+                        closeButton: false,
+                        progressBar: true
+                    });
+                }
+            }
+        });
+    } else if (tanggalLahirMobileInput) {
+        tanggalLahirMobileInput.addEventListener('change', function() {
+            const selectedValue = this.value || '';
+            let displayText = '';
+
+            if (selectedValue) {
+                const parsedDate = new Date(selectedValue + 'T00:00:00');
+                displayText = parsedDate.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+
+            syncTanggalLahirInputs(selectedValue, displayText);
+        });
+
+        syncTanggalLahirInputs(tanggalLahirDefault);
+    }
     
     // Toggle alamat siswa form
     function toggleAlamatSiswa() {
@@ -1985,6 +2055,8 @@ $(document).ready(function() {
             $('#tanggal_lahir').val(
                 tanggalLahirPicker.formatDate(tanggalLahirPicker.selectedDates[0], 'Y-m-d')
             );
+        } else if (tanggalLahirMobileInput && tanggalLahirMobileInput.value) {
+            $('#tanggal_lahir').val(tanggalLahirMobileInput.value);
         }
 
         // If alamat sama dengan ortu is selected, temporarily enable all fields for submission
