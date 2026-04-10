@@ -103,53 +103,50 @@ class SekolahAsalController extends Controller
         if ($isWaliKelas) {
             // GTK Wali Kelas: only show students from their class
             $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
-            
-            $sekolah = Sekolah::with(['siswa' => function ($query) use ($siswaKelasIds) {
-                $query->whereIn('id', $siswaKelasIds)
-                      ->with(['kelasSaatIni.tahunPelajaran', 'user'])
-                      ->orderBy('nama_lengkap', 'asc');
-            }])
-            ->withCount(['siswa' => function ($query) use ($siswaKelasIds) {
+
+            $sekolah = Sekolah::withCount(['siswa' => function ($query) use ($siswaKelasIds) {
                 $query->whereIn('id', $siswaKelasIds);
-            }])
-            ->findOrFail($npsn);
-            
+            }])->findOrFail($npsn);
+
+            $siswaBaseQuery = Siswa::query()
+                ->where('npsn_asal_sekolah', $npsn)
+                ->whereIn('id', $siswaKelasIds);
+
             // Get statistics only for their class
             $stats = [
                 'total' => $sekolah->siswa_count,
-                'aktif' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('status_siswa', 'aktif')->count(),
-                'lulus' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('status_siswa', 'lulus')->count(),
-                'keluar' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
-                'laki' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('jenis_kelamin', 'L')->count(),
-                'perempuan' => $sekolah->siswa()->whereIn('id', $siswaKelasIds)->where('jenis_kelamin', 'P')->count(),
+                'aktif' => (clone $siswaBaseQuery)->where('status_siswa', 'aktif')->count(),
+                'lulus' => (clone $siswaBaseQuery)->where('status_siswa', 'lulus')->count(),
+                'keluar' => (clone $siswaBaseQuery)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
+                'laki' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'L')->count(),
+                'perempuan' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'P')->count(),
             ];
         } else {
-            // Admin: show all students
-            $sekolah = Sekolah::with(['siswa' => function ($query) {
-                $query->with(['kelasSaatIni.tahunPelajaran', 'user'])
-                      ->orderBy('nama_lengkap', 'asc');
-            }])
-            ->withCount('siswa')
-            ->findOrFail($npsn);
-            
+            // Admin: show all students, but keep detail page lightweight.
+            $sekolah = Sekolah::withCount('siswa')->findOrFail($npsn);
+
+            $siswaBaseQuery = Siswa::query()
+                ->where('npsn_asal_sekolah', $npsn);
+
             // Get statistics for all students
             $stats = [
                 'total' => $sekolah->siswa_count,
-                'aktif' => $sekolah->siswa()->where('status_siswa', 'aktif')->count(),
-                'lulus' => $sekolah->siswa()->where('status_siswa', 'lulus')->count(),
-                'keluar' => $sekolah->siswa()->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
-                'laki' => $sekolah->siswa()->where('jenis_kelamin', 'L')->count(),
-                'perempuan' => $sekolah->siswa()->where('jenis_kelamin', 'P')->count(),
+                'aktif' => (clone $siswaBaseQuery)->where('status_siswa', 'aktif')->count(),
+                'lulus' => (clone $siswaBaseQuery)->where('status_siswa', 'lulus')->count(),
+                'keluar' => (clone $siswaBaseQuery)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
+                'laki' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'L')->count(),
+                'perempuan' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'P')->count(),
             ];
         }
 
-        // Group siswa by current kelas
-        $siswaPerKelas = $sekolah->siswa()
-            ->with('kelasSaatIni')
+        // Build class distribution with aggregation instead of loading all siswa into memory.
+        $siswaPerKelas = (clone $siswaBaseQuery)
+            ->leftJoin('kelas', 'siswa.kelas_saat_ini_id', '=', 'kelas.id')
+            ->selectRaw("COALESCE(kelas.nama_kelas, 'Belum Ada Kelas') as nama_kelas, COUNT(*) as total_siswa")
+            ->groupBy('nama_kelas')
+            ->orderBy('nama_kelas')
             ->get()
-            ->groupBy(function ($siswa) {
-                return $siswa->kelasSaatIni ? $siswa->kelasSaatIni->nama_kelas : 'Belum Ada Kelas';
-            })
+            ->keyBy('nama_kelas')
             ->sortKeys();
 
         return view('admin.sekolah-asal.show', compact('sekolah', 'stats', 'siswaPerKelas'));
@@ -184,7 +181,10 @@ class SekolahAsalController extends Controller
             ->addIndexColumn()
             ->addColumn('kelas_saat_ini', function ($row) {
                 if ($row->kelasSaatIni) {
-                    return $row->kelasSaatIni->nama_kelas . ' (' . $row->kelasSaatIni->tahunPelajaran->nama . ')';
+                    $tahunPelajaran = $row->kelasSaatIni->tahunPelajaran->nama ?? null;
+                    return $tahunPelajaran
+                        ? $row->kelasSaatIni->nama_kelas . ' (' . $tahunPelajaran . ')'
+                        : $row->kelasSaatIni->nama_kelas;
                 }
                 return '<span class="text-muted">-</span>';
             })

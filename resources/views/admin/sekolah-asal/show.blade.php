@@ -157,7 +157,7 @@
                         <span class="info-box-icon"><i class="fas fa-door-open"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text">{{ $namaKelas }}</span>
-                            <span class="info-box-number">{{ $siswaGroup->count() }} siswa</span>
+                            <span class="info-box-number">{{ $siswaGroup->total_siswa }} siswa</span>
                         </div>
                     </div>
                 </div>
