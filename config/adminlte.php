@@ -457,6 +457,14 @@ return [
                 ],
             ],
         ],
+
+        // SMART-Q KELAS UNGGULAN
+        [
+            'text' => 'SMART-Q Unggulan',
+            'icon' => 'fas fa-fw fa-star text-warning',
+            'route' => 'admin.smartq.index',
+            'active' => ['admin/smartq*'],
+        ],
         
         // KESISWAAN - Collapsible
         [

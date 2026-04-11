@@ -590,6 +590,37 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/absensi/hari-libur/{hariLibur}', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'destroyHariLibur'])->name('absensi.hari-libur.destroy');
         Route::post('/absensi/hari-libur/seed', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'seedHariLibur'])->name('absensi.hari-libur.seed');
     });
+
+    // ==================== SMART-Q KELAS UNGGULAN ====================
+    Route::prefix('smartq')->name('smartq.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\SmartqController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\SmartqController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\SmartqController::class, 'store'])->name('store');
+        Route::get('/{smartq}', [App\Http\Controllers\Admin\SmartqController::class, 'show'])->name('show');
+        Route::get('/{smartq}/edit', [App\Http\Controllers\Admin\SmartqController::class, 'edit'])->name('edit');
+        Route::put('/{smartq}', [App\Http\Controllers\Admin\SmartqController::class, 'update'])->name('update');
+        Route::put('/{smartq}/komponen', [App\Http\Controllers\Admin\SmartqController::class, 'updateKomponen'])->name('komponen.update');
+
+        // Peserta
+        Route::get('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'peserta'])->name('peserta');
+        Route::post('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'tambahPeserta'])->name('peserta.tambah');
+        Route::delete('/{smartq}/peserta/{peserta}', [App\Http\Controllers\Admin\SmartqController::class, 'hapusPeserta'])->name('peserta.hapus');
+
+        // Nilai
+        Route::get('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'inputNilai'])->name('nilai');
+        Route::post('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'simpanNilai'])->name('nilai.simpan');
+
+        // Moodle Integration
+        Route::get('/{smartq}/moodle', [App\Http\Controllers\Admin\SmartqController::class, 'moodleConfig'])->name('moodle.config');
+        Route::get('/{smartq}/moodle/courses', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCourses'])->name('moodle.courses');
+        Route::get('/{smartq}/moodle/quizzes', [App\Http\Controllers\Admin\SmartqController::class, 'moodleQuizzes'])->name('moodle.quizzes');
+        Route::post('/{smartq}/moodle/save', [App\Http\Controllers\Admin\SmartqController::class, 'moodleSaveCourseQuiz'])->name('moodle.save');
+        Route::post('/{smartq}/moodle/sync', [App\Http\Controllers\Admin\SmartqController::class, 'syncMoodle'])->name('moodle.sync');
+
+        // Kelulusan & Export
+        Route::post('/{smartq}/kelulusan', [App\Http\Controllers\Admin\SmartqController::class, 'prosesKelulusan'])->name('kelulusan');
+        Route::get('/{smartq}/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportExcel'])->name('export');
+    });
 });
 
 // Siswa Routes
