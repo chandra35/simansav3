@@ -14,13 +14,10 @@
 
 @section('css')
 <style>
-/* ── Background ── */
+/* ── Reset AdminLTE defaults ── */
 body.login-page {
-    background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%);
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%) !important;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* ── Login Box ── */
@@ -28,23 +25,32 @@ body.login-page {
     width: 400px;
     animation: cardEntry .5s cubic-bezier(.22,1,.36,1);
 }
-.login-logo { display: none; }
+.login-logo { display: none !important; }
 
 /* ── Card ── */
 .login-box .card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06);
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06) !important;
     overflow: hidden;
     background: #fff;
+    border-top: none !important;
 }
-.login-box .card-outline.card-primary { border-top: none; }
+.login-box .card.card-outline.card-primary {
+    border-top: none !important;
+}
 
-/* ── Header ── */
+/* ── Card Header ── */
 .login-box .card-header {
-    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
-    border: none;
-    padding: 28px 24px 24px;
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%) !important;
+    border: none !important;
+    border-bottom: none !important;
+    padding: 28px 24px 24px !important;
+}
+.login-box .card-header .card-title {
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    margin: 0 !important;
 }
 .simansa-header { text-align: center; }
 .simansa-icon {
@@ -55,7 +61,6 @@ body.login-page {
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
     animation: iconFloat 3s ease-in-out infinite;
 }
 .simansa-icon i {
@@ -76,51 +81,52 @@ body.login-page {
     letter-spacing: .3px;
 }
 
-/* ── Body ── */
+/* ── Card Body ── */
 .login-box .card-body {
-    padding: 28px 28px 20px;
+    padding: 28px 28px 20px !important;
 }
 
 /* ── Form controls ── */
 .login-box .form-control {
-    border-radius: 10px;
-    border: 1.5px solid #e0e0e0;
-    padding: 10px 14px;
+    border-radius: 10px !important;
+    border: 1.5px solid #e0e0e0 !important;
+    padding: 10px 14px !important;
     font-size: .9rem;
     transition: border-color .2s, box-shadow .2s;
-    height: auto;
+    height: auto !important;
 }
 .login-box .form-control:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+    border-color: #1a73e8 !important;
+    box-shadow: 0 0 0 3px rgba(26,115,232,.12) !important;
 }
 .login-box .input-group {
     margin-bottom: 16px !important;
 }
 .login-box .input-group-text {
-    border-radius: 0 10px 10px 0;
-    border: 1.5px solid #e0e0e0;
-    border-left: none;
-    background: #f8f9fa;
+    border-radius: 0 10px 10px 0 !important;
+    border: 1.5px solid #e0e0e0 !important;
+    border-left: none !important;
+    background: #f8f9fa !important;
     color: #90a4ae;
     transition: border-color .2s, color .2s;
 }
 .login-box .form-control:focus + .input-group-append .input-group-text {
-    border-color: #1a73e8;
+    border-color: #1a73e8 !important;
     color: #1a73e8;
 }
 
 /* ── Submit button ── */
 #btnLogin {
-    border-radius: 10px;
-    padding: 10px 0;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
     font-weight: 600;
     font-size: .88rem;
     letter-spacing: .3px;
-    background: linear-gradient(135deg, #1a73e8, #0d47a1);
-    border: none;
+    background: linear-gradient(135deg, #1a73e8, #0d47a1) !important;
+    border: none !important;
     box-shadow: 0 4px 14px rgba(26,115,232,.35);
     transition: transform .15s, box-shadow .15s;
+    color: #fff !important;
 }
 #btnLogin:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -145,28 +151,27 @@ body.login-page {
     padding: 4px 10px;
     border-radius: 20px;
     background: #f5f5f5;
-    color: #78909c;
+    color: #78909c !important;
     transition: all .3s ease;
 }
 #locationStatus.detected {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: #e8f5e9 !important;
+    color: #2e7d32 !important;
 }
 
-/* ── Footer ── */
+/* ── Card Footer ── */
 .login-box .card-footer {
-    background: #fafbfc;
-    border-top: 1px solid #f0f0f0;
-    padding: 16px 28px;
+    background: #fafbfc !important;
+    border-top: 1px solid #f0f0f0 !important;
+    padding: 16px 28px !important;
 }
 .login-box .card-footer a {
-    color: #1a73e8;
+    color: #1a73e8 !important;
     font-weight: 500;
     font-size: .88rem;
     text-decoration: none;
-    transition: color .2s;
 }
-.login-box .card-footer a:hover { color: #0d47a1; }
+.login-box .card-footer a:hover { color: #0d47a1 !important; }
 .login-box .card-footer .text-muted {
     font-size: .78rem;
     color: #90a4ae !important;
@@ -178,7 +183,6 @@ body.login-page {
     border-radius: 10px;
     font-size: .85rem;
     border: none;
-    margin-bottom: 18px;
 }
 
 /* ── Overlay ── */
@@ -255,9 +259,9 @@ body.login-page {
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
-    .login-box { width: 92%; }
-    .login-box .card-body { padding: 22px 20px 16px; }
-    .login-box .card-header { padding: 22px 20px 18px; }
+    .login-box { width: 92% !important; }
+    .login-box .card-body { padding: 22px 20px 16px !important; }
+    .login-box .card-header { padding: 22px 20px 18px !important; }
 }
 </style>
 @stop
