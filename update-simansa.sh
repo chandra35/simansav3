@@ -18,6 +18,7 @@ NC='\033[0m' # No Color
 detect_app_dir() {
     local candidates=(
         "${APP_DIR}"
+        "/www/wwwroot/simansa.man1metro.sch.id"
         "/home/simansa/htdocs/simansa.man1metro.sch.id"
         "/home/manmetr1/simansa.man1metro.sch.id"
     )
@@ -37,7 +38,7 @@ APP_DIR="$(detect_app_dir)" || {
     exit 1
 }
 
-PHP_BIN="${PHP_BIN:-$(command -v php8.3 || command -v php || true)}"
+PHP_BIN="${PHP_BIN:-$(command -v /www/server/php/83/bin/php || command -v php8.3 || command -v php || true)}"
 COMPOSER_BIN="${COMPOSER_BIN:-$(command -v composer || true)}"
 
 if [[ -z "$PHP_BIN" ]]; then
