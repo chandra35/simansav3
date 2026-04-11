@@ -7,6 +7,82 @@
 @section('auth_body')
 @include('adminlte::partials.common.flash-messages')
 
+{{-- Login Overlay --}}
+<div id="loginOverlay" style="display:none;">
+    <div class="login-overlay-backdrop"></div>
+    <div class="login-overlay-content">
+        <div class="login-overlay-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring spinner-ring-2"></div>
+        </div>
+        <div class="login-overlay-text">Memverifikasi akun...</div>
+        <div class="login-overlay-subtext">Mohon tunggu sebentar</div>
+    </div>
+</div>
+
+<style>
+.login-overlay-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998;
+    animation: overlayFadeIn .3s ease;
+}
+.login-overlay-content {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    text-align: center;
+    animation: overlaySlideUp .4s ease;
+}
+.login-overlay-spinner {
+    width: 64px; height: 64px;
+    margin: 0 auto 20px;
+    position: relative;
+}
+.spinner-ring {
+    width: 64px; height: 64px;
+    border: 3px solid transparent;
+    border-top-color: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 0; left: 0;
+    animation: spinnerRotate .9s linear infinite;
+}
+.spinner-ring-2 {
+    width: 48px; height: 48px;
+    top: 8px; left: 8px;
+    border-top-color: rgba(255,255,255,.4);
+    animation-direction: reverse;
+    animation-duration: 1.2s;
+}
+.login-overlay-text {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.login-overlay-subtext {
+    color: rgba(255,255,255,.7);
+    font-size: .82rem;
+}
+@keyframes overlayFadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes overlaySlideUp {
+    from { opacity: 0; transform: translate(-50%, -45%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes spinnerRotate {
+    to { transform: rotate(360deg); }
+}
+</style>
+
 <form action="{{ route('login') }}" method="post" id="loginForm">
     @csrf
     
@@ -75,10 +151,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Prevent double submit
     const form = document.getElementById('loginForm');
     const btn = document.getElementById('btnLogin');
-    const icon = document.getElementById('btnIcon');
+    const overlay = document.getElementById('loginOverlay');
     let submitted = false;
 
     form.addEventListener('submit', function(e) {
@@ -88,29 +163,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         submitted = true;
         btn.disabled = true;
-        icon.className = 'fas fa-spinner fa-spin';
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        overlay.style.display = 'block';
     });
 
     // Re-enable if browser back button is used
     window.addEventListener('pageshow', function() {
         submitted = false;
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+        overlay.style.display = 'none';
     });
 
     // Try to get device location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             function(position) {
-                // Success - got GPS coordinates
                 document.getElementById('latitude').value = position.coords.latitude;
                 document.getElementById('longitude').value = position.coords.longitude;
                 document.getElementById('locationStatus').innerHTML = 
                     '<i class="fas fa-check-circle text-success"></i> Lokasi terdeteksi';
             },
             function(error) {
-                // Failed or denied
                 console.log('Geolocation error:', error);
                 document.getElementById('locationStatus').innerHTML = 
                     '<i class="fas fa-info-circle text-info"></i> Lokasi dari IP akan digunakan';
