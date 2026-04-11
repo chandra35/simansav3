@@ -57,7 +57,9 @@
             </div>
         </div>
         <div class="col-4">
-            <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+            <button type="submit" class="btn btn-primary btn-block" id="btnLogin">
+                <i class="fas fa-sign-in-alt" id="btnIcon"></i> Masuk
+            </button>
         </div>
     </div>
     
@@ -73,6 +75,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevent double submit
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('btnLogin');
+    const icon = document.getElementById('btnIcon');
+    let submitted = false;
+
+    form.addEventListener('submit', function(e) {
+        if (submitted) {
+            e.preventDefault();
+            return false;
+        }
+        submitted = true;
+        btn.disabled = true;
+        icon.className = 'fas fa-spinner fa-spin';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    });
+
+    // Re-enable if browser back button is used
+    window.addEventListener('pageshow', function() {
+        submitted = false;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+    });
+
     // Try to get device location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
