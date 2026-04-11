@@ -21,7 +21,10 @@ class SmartqPeriode extends Model
         'tanggal_selesai',
         'status',
         'moodle_base_url',
+        'moodle_category_id',
+        'moodle_category_name',
         'moodle_course_id',
+        'moodle_course_name',
         'moodle_quiz_id',
         'moodle_quiz_name',
     ];
@@ -30,6 +33,7 @@ class SmartqPeriode extends Model
         'kuota' => 'integer',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
+        'moodle_category_id' => 'integer',
         'moodle_course_id' => 'integer',
         'moodle_quiz_id' => 'integer',
     ];

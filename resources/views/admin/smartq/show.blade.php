@@ -48,6 +48,8 @@
                         <div class="col-md-6">
                             <table class="table table-sm table-borderless">
                                 <tr><td class="text-muted" width="150">Moodle URL</td><td>{{ $smartq->moodle_base_url ?? '-' }}</td></tr>
+                                <tr><td class="text-muted">Kategori</td><td>{{ $smartq->moodle_category_name ?? '-' }}</td></tr>
+                                <tr><td class="text-muted">Course</td><td>{{ $smartq->moodle_course_name ?? '-' }}</td></tr>
                                 <tr><td class="text-muted">Quiz Moodle</td><td>{{ $smartq->moodle_quiz_name ?? 'Belum dikonfigurasi' }}</td></tr>
                                 <tr><td class="text-muted">Deskripsi</td><td>{{ $smartq->deskripsi ?? '-' }}</td></tr>
                             </table>

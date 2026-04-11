@@ -612,6 +612,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         // Moodle Integration
         Route::get('/{smartq}/moodle', [App\Http\Controllers\Admin\SmartqController::class, 'moodleConfig'])->name('moodle.config');
+        Route::get('/{smartq}/moodle/categories', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCategories'])->name('moodle.categories');
         Route::get('/{smartq}/moodle/courses', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCourses'])->name('moodle.courses');
         Route::get('/{smartq}/moodle/quizzes', [App\Http\Controllers\Admin\SmartqController::class, 'moodleQuizzes'])->name('moodle.quizzes');
         Route::post('/{smartq}/moodle/save', [App\Http\Controllers\Admin\SmartqController::class, 'moodleSaveCourseQuiz'])->name('moodle.save');

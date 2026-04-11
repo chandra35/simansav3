@@ -310,7 +310,7 @@ class SmartqController extends Controller
         return view('admin.smartq.moodle-config', compact('smartq'));
     }
 
-    public function moodleCourses(Request $request, SmartqPeriode $smartq)
+    public function moodleCategories(Request $request, SmartqPeriode $smartq)
     {
         $baseUrl = $smartq->moodle_base_url ?? $request->input('moodle_base_url');
         if (!$baseUrl) {
@@ -319,7 +319,37 @@ class SmartqController extends Controller
 
         try {
             $response = Http::timeout(15)
-                ->get(rtrim($baseUrl, '/') . '/converter/smartq/?action=quizzes');
+                ->get(rtrim($baseUrl, '/') . '/converter/smartq/?action=categories');
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json(['success' => false, 'error' => 'Gagal mengakses Moodle API: ' . $response->status()]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => 'Koneksi gagal: ' . $e->getMessage()]);
+        }
+    }
+
+    public function moodleCourses(Request $request, SmartqPeriode $smartq)
+    {
+        $baseUrl = $smartq->moodle_base_url ?? $request->input('moodle_base_url');
+        $categoryId = $request->input('category_id');
+
+        if (!$baseUrl) {
+            return response()->json(['success' => false, 'error' => 'URL Moodle belum dikonfigurasi']);
+        }
+
+        try {
+            if ($categoryId) {
+                // Courses by category
+                $response = Http::timeout(15)
+                    ->get(rtrim($baseUrl, '/') . "/converter/smartq/?action=courses&category={$categoryId}");
+            } else {
+                // All courses with quizzes (fallback)
+                $response = Http::timeout(15)
+                    ->get(rtrim($baseUrl, '/') . '/converter/smartq/?action=quizzes');
+            }
 
             if ($response->successful()) {
                 return response()->json($response->json());
@@ -353,12 +383,19 @@ class SmartqController extends Controller
     public function moodleSaveCourseQuiz(Request $request, SmartqPeriode $smartq)
     {
         $request->validate([
+            'moodle_category_id' => 'nullable|integer',
+            'moodle_category_name' => 'nullable|string',
             'moodle_course_id' => 'required|integer',
+            'moodle_course_name' => 'nullable|string',
             'moodle_quiz_id' => 'required|integer',
             'moodle_quiz_name' => 'required|string',
         ]);
 
-        $smartq->update($request->only(['moodle_course_id', 'moodle_quiz_id', 'moodle_quiz_name']));
+        $smartq->update($request->only([
+            'moodle_category_id', 'moodle_category_name',
+            'moodle_course_id', 'moodle_course_name',
+            'moodle_quiz_id', 'moodle_quiz_name',
+        ]));
 
         return response()->json(['success' => true, 'message' => 'Konfigurasi Moodle disimpan']);
     }
