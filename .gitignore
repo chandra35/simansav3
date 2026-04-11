@@ -30,3 +30,9 @@ yarn-error.log
 /backup/
 *.backup
 *.tmp
+*.sql
+*.sql.gz
+*.tar.gz
+*.dump
+*.zip
+database/backups/
