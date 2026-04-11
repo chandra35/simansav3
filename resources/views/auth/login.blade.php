@@ -2,31 +2,192 @@
 
 @section('title', 'Login - SIMANSA')
 
-@section('auth_header', 'Sistem Informasi MAN 1 Metro')
-
-@section('auth_body')
-@include('adminlte::partials.common.flash-messages')
-
-{{-- Login Overlay --}}
-<div id="loginOverlay" style="display:none;">
-    <div class="login-overlay-backdrop"></div>
-    <div class="login-overlay-content">
-        <div class="login-overlay-spinner">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring spinner-ring-2"></div>
-        </div>
-        <div class="login-overlay-text">Memverifikasi akun...</div>
-        <div class="login-overlay-subtext">Mohon tunggu sebentar</div>
+@section('auth_header')
+<div class="simansa-header">
+    <div class="simansa-icon">
+        <i class="fas fa-graduation-cap"></i>
     </div>
+    <div class="simansa-title">SIMANSA</div>
+    <div class="simansa-subtitle">Sistem Informasi MAN 1 Metro</div>
 </div>
+@stop
 
+@section('css')
 <style>
+/* ── Background ── */
+body.login-page {
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Login Box ── */
+.login-box {
+    width: 400px;
+    animation: cardEntry .5s cubic-bezier(.22,1,.36,1);
+}
+.login-logo { display: none; }
+
+/* ── Card ── */
+.login-box .card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3), 0 0 0 1px rgba(255,255,255,.06);
+    overflow: hidden;
+    background: #fff;
+}
+.login-box .card-outline.card-primary { border-top: none; }
+
+/* ── Header ── */
+.login-box .card-header {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    border: none;
+    padding: 28px 24px 24px;
+}
+.simansa-header { text-align: center; }
+.simansa-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 12px;
+    background: rgba(255,255,255,.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    animation: iconFloat 3s ease-in-out infinite;
+}
+.simansa-icon i {
+    font-size: 24px;
+    color: #fff;
+}
+.simansa-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+}
+.simansa-subtitle {
+    font-size: .82rem;
+    color: rgba(255,255,255,.75);
+    font-weight: 400;
+    letter-spacing: .3px;
+}
+
+/* ── Body ── */
+.login-box .card-body {
+    padding: 28px 28px 20px;
+}
+
+/* ── Form controls ── */
+.login-box .form-control {
+    border-radius: 10px;
+    border: 1.5px solid #e0e0e0;
+    padding: 10px 14px;
+    font-size: .9rem;
+    transition: border-color .2s, box-shadow .2s;
+    height: auto;
+}
+.login-box .form-control:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+}
+.login-box .input-group {
+    margin-bottom: 16px !important;
+}
+.login-box .input-group-text {
+    border-radius: 0 10px 10px 0;
+    border: 1.5px solid #e0e0e0;
+    border-left: none;
+    background: #f8f9fa;
+    color: #90a4ae;
+    transition: border-color .2s, color .2s;
+}
+.login-box .form-control:focus + .input-group-append .input-group-text {
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+/* ── Submit button ── */
+#btnLogin {
+    border-radius: 10px;
+    padding: 10px 0;
+    font-weight: 600;
+    font-size: .88rem;
+    letter-spacing: .3px;
+    background: linear-gradient(135deg, #1a73e8, #0d47a1);
+    border: none;
+    box-shadow: 0 4px 14px rgba(26,115,232,.35);
+    transition: transform .15s, box-shadow .15s;
+}
+#btnLogin:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(26,115,232,.45);
+}
+#btnLogin:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ── Remember me ── */
+.icheck-primary label {
+    font-size: .85rem;
+    color: #546e7a;
+}
+
+/* ── Location badge ── */
+#locationStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .78rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f5f5f5;
+    color: #78909c;
+    transition: all .3s ease;
+}
+#locationStatus.detected {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* ── Footer ── */
+.login-box .card-footer {
+    background: #fafbfc;
+    border-top: 1px solid #f0f0f0;
+    padding: 16px 28px;
+}
+.login-box .card-footer a {
+    color: #1a73e8;
+    font-weight: 500;
+    font-size: .88rem;
+    text-decoration: none;
+    transition: color .2s;
+}
+.login-box .card-footer a:hover { color: #0d47a1; }
+.login-box .card-footer .text-muted {
+    font-size: .78rem;
+    color: #90a4ae !important;
+    line-height: 1.5;
+}
+
+/* ── Flash messages ── */
+.login-box .alert {
+    border-radius: 10px;
+    font-size: .85rem;
+    border: none;
+    margin-bottom: 18px;
+}
+
+/* ── Overlay ── */
 .login-overlay-backdrop {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,.45);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(15,32,39,.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 9998;
     animation: overlayFadeIn .3s ease;
 }
@@ -71,6 +232,16 @@
     color: rgba(255,255,255,.7);
     font-size: .82rem;
 }
+
+/* ── Keyframes ── */
+@keyframes cardEntry {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
 @keyframes overlayFadeIn {
     from { opacity: 0; } to { opacity: 1; }
 }
@@ -81,17 +252,41 @@
 @keyframes spinnerRotate {
     to { transform: rotate(360deg); }
 }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .login-box { width: 92%; }
+    .login-box .card-body { padding: 22px 20px 16px; }
+    .login-box .card-header { padding: 22px 20px 18px; }
+}
 </style>
+@stop
+
+@section('auth_body')
+@include('adminlte::partials.common.flash-messages')
+
+{{-- Login Overlay --}}
+<div id="loginOverlay" style="display:none;">
+    <div class="login-overlay-backdrop"></div>
+    <div class="login-overlay-content">
+        <div class="login-overlay-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring spinner-ring-2"></div>
+        </div>
+        <div class="login-overlay-text">Memverifikasi akun...</div>
+        <div class="login-overlay-subtext">Mohon tunggu sebentar</div>
+    </div>
+</div>
 
 <form action="{{ route('login') }}" method="post" id="loginForm">
     @csrf
-    
+
     {{-- Hidden fields for GPS location --}}
     <input type="hidden" name="latitude" id="latitude">
     <input type="hidden" name="longitude" id="longitude">
-    
+
     {{-- Username field --}}
-    <div class="input-group mb-3">
+    <div class="input-group">
         <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
                value="{{ old('username') }}" placeholder="Username / NISN" autofocus>
         <div class="input-group-append">
@@ -107,7 +302,7 @@
     </div>
 
     {{-- Password field --}}
-    <div class="input-group mb-3">
+    <div class="input-group">
         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
                placeholder="Password">
         <div class="input-group-append">
@@ -122,30 +317,22 @@
         @enderror
     </div>
 
-    {{-- Remember me checkbox --}}
-    <div class="row">
-        <div class="col-8">
-            <div class="icheck-primary">
-                <input type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                <label for="remember">
-                    Ingat Saya
-                </label>
-            </div>
+    {{-- Remember & Submit --}}
+    <div class="d-flex align-items-center justify-content-between mt-1 mb-2">
+        <div class="icheck-primary">
+            <input type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
+            <label for="remember">Ingat Saya</label>
         </div>
-        <div class="col-4">
-            <button type="submit" class="btn btn-primary btn-block" id="btnLogin">
-                <i class="fas fa-sign-in-alt" id="btnIcon"></i> Masuk
-            </button>
-        </div>
+        <button type="submit" class="btn btn-primary px-4" id="btnLogin">
+            <i class="fas fa-sign-in-alt mr-1"></i> Masuk
+        </button>
     </div>
-    
+
     {{-- Location status --}}
-    <div class="row mt-2">
-        <div class="col-12">
-            <small id="locationStatus" class="text-muted">
-                <i class="fas fa-map-marker-alt"></i> Mendeteksi lokasi...
-            </small>
-        </div>
+    <div class="text-center mt-2">
+        <small id="locationStatus">
+            <i class="fas fa-map-marker-alt"></i> Mendeteksi lokasi...
+        </small>
     </div>
 </form>
 
@@ -154,60 +341,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
     const btn = document.getElementById('btnLogin');
     const overlay = document.getElementById('loginOverlay');
+    const locStatus = document.getElementById('locationStatus');
     let submitted = false;
 
     form.addEventListener('submit', function(e) {
-        if (submitted) {
-            e.preventDefault();
-            return false;
-        }
+        if (submitted) { e.preventDefault(); return false; }
         submitted = true;
         btn.disabled = true;
         overlay.style.display = 'block';
     });
 
-    // Re-enable if browser back button is used
     window.addEventListener('pageshow', function() {
         submitted = false;
         btn.disabled = false;
         overlay.style.display = 'none';
     });
 
-    // Try to get device location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 document.getElementById('latitude').value = position.coords.latitude;
                 document.getElementById('longitude').value = position.coords.longitude;
-                document.getElementById('locationStatus').innerHTML = 
-                    '<i class="fas fa-check-circle text-success"></i> Lokasi terdeteksi';
+                locStatus.innerHTML = '<i class="fas fa-check-circle"></i> Lokasi terdeteksi';
+                locStatus.classList.add('detected');
             },
-            function(error) {
-                console.log('Geolocation error:', error);
-                document.getElementById('locationStatus').innerHTML = 
-                    '<i class="fas fa-info-circle text-info"></i> Lokasi dari IP akan digunakan';
+            function() {
+                locStatus.innerHTML = '<i class="fas fa-info-circle"></i> Lokasi dari IP akan digunakan';
             },
-            {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            }
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     } else {
-        document.getElementById('locationStatus').innerHTML = 
-            '<i class="fas fa-info-circle text-info"></i> Browser tidak support GPS';
+        locStatus.innerHTML = '<i class="fas fa-info-circle"></i> Browser tidak support GPS';
     }
 });
 </script>
 @stop
 
 @section('auth_footer')
-<p class="mb-1">
-    <a href="{{ route('password.request') }}" class="text-primary">
-        <i class="fas fa-key"></i> Lupa Password?
+<p class="mb-2">
+    <a href="{{ route('password.request') }}">
+        <i class="fas fa-key mr-1"></i>Lupa Password?
     </a>
 </p>
-<p class="mb-1">
+<p class="mb-0">
     <small class="text-muted">
         Gunakan username/NISN dan password yang telah diberikan.<br>
         Untuk siswa, NISN adalah username default Anda.
