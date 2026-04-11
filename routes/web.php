@@ -616,6 +616,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{smartq}/moodle/quizzes', [App\Http\Controllers\Admin\SmartqController::class, 'moodleQuizzes'])->name('moodle.quizzes');
         Route::post('/{smartq}/moodle/save', [App\Http\Controllers\Admin\SmartqController::class, 'moodleSaveCourseQuiz'])->name('moodle.save');
         Route::post('/{smartq}/moodle/sync', [App\Http\Controllers\Admin\SmartqController::class, 'syncMoodle'])->name('moodle.sync');
+        Route::get('/{smartq}/moodle/scan', [App\Http\Controllers\Admin\SmartqController::class, 'moodleScan'])->name('moodle.scan');
+        Route::post('/{smartq}/moodle/scan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'confirmMoodleScan'])->name('moodle.scan.confirm');
 
         // Kelulusan & Export
         Route::post('/{smartq}/kelulusan', [App\Http\Controllers\Admin\SmartqController::class, 'prosesKelulusan'])->name('kelulusan');

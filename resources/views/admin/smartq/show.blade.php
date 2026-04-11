@@ -82,6 +82,11 @@
                                     </button>
                                 </form>
                             @endif
+                            @if($smartq->moodle_course_id)
+                                <a href="{{ route('admin.smartq.moodle.scan', $smartq) }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-cloud-download-alt text-success"></i> Scan Peserta dari Moodle
+                                </a>
+                            @endif
                         @endif
                         <a href="{{ route('admin.smartq.export', $smartq) }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-file-excel text-success"></i> Export Excel

@@ -26,7 +26,34 @@
         </div>
     @endif
 
-    {{-- Tambah Peserta --}}
+    {{-- Scan dari Moodle --}}
+    @if($smartq->moodle_base_url && $smartq->moodle_course_id)
+        <div class="card card-success">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-cloud-download-alt"></i> Tambah Peserta dari Moodle</h3>
+            </div>
+            <div class="card-body">
+                <p>
+                    Scan user yang terdaftar di course Moodle dan import sebagai peserta SMART-Q.
+                    NISN siswa akan dicocokkan dengan username Moodle.
+                    @if($smartq->moodle_quiz_id)
+                        Nilai CBT juga akan otomatis terisi jika ada.
+                    @endif
+                </p>
+                <a href="{{ route('admin.smartq.moodle.scan', $smartq) }}" class="btn btn-success">
+                    <i class="fas fa-search"></i> Scan dari Moodle
+                </a>
+            </div>
+        </div>
+    @else
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            Untuk import peserta dari Moodle, konfigurasi URL dan Course terlebih dahulu di
+            <a href="{{ route('admin.smartq.moodle.config', $smartq) }}"><strong>Moodle Config</strong></a>.
+        </div>
+    @endif
+
+    {{-- Tambah Peserta Manual --}}
     <div class="card card-primary">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-user-plus"></i> Tambah Peserta dari Kelas 10 & 11</h3>
