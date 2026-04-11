@@ -28,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\URL::forceScheme('https');
+
         RateLimiter::for('exam-browser-config', function (Request $request) {
             return [
                 Limit::perMinute(1200)->by($request->ip())->response(fn () => response()->json([
