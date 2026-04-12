@@ -1,4 +1,5 @@
 {{-- SMART-Q Progress Overlay (reusable partial) --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 .smartq-overlay {
     position: fixed;
@@ -157,4 +158,49 @@ function smartqOverlayMessages(messages, interval) {
 window.addEventListener('pageshow', function(e) {
     if (e.persisted) hideSmartqOverlay();
 });
+
+/**
+ * Professional SweetAlert2 confirmation for SMART-Q forms.
+ * Usage: smartqConfirm(formElement, { title, text, icon, confirmText, cancelText, confirmColor })
+ *   or:  smartqConfirm(formElement, { ... }).then(fn) for custom post-confirm logic
+ */
+function smartqConfirm(form, opts) {
+    opts = opts || {};
+    return Swal.fire({
+        title: opts.title || 'Konfirmasi',
+        html: opts.text || opts.html || 'Apakah Anda yakin?',
+        icon: opts.icon || 'warning',
+        showCancelButton: true,
+        confirmButtonText: opts.confirmText || '<i class="fas fa-check"></i> Ya, Lanjutkan',
+        cancelButtonText: opts.cancelText || '<i class="fas fa-times"></i> Batal',
+        confirmButtonColor: opts.confirmColor || '#3085d6',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+        focusCancel: true,
+        customClass: {
+            popup: 'shadow-lg',
+            confirmButton: 'btn btn-md mr-2',
+            cancelButton: 'btn btn-md',
+        },
+        buttonsStyling: true,
+    }).then(function(result) {
+        if (result.isConfirmed && form) {
+            form.submit();
+        }
+        return result;
+    });
+}
+
+/**
+ * Attach SweetAlert2 confirm to a form with onsubmit interception.
+ * Usage: smartqConfirmForm('#myForm', { title, text, icon, confirmText })
+ */
+function smartqConfirmForm(selector, opts) {
+    var form = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        smartqConfirm(form, opts);
+    });
+}
 </script>

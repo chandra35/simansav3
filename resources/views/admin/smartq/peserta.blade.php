@@ -147,8 +147,7 @@
                             <td>{{ $p->kelasAsal->nama_lengkap ?? '-' }}</td>
                             <td>{!! $p->status_badge !!}</td>
                             <td>
-                                <form action="{{ route('admin.smartq.peserta.hapus', [$smartq, $p]) }}" method="POST"
-                                      onsubmit="return confirm('Hapus peserta ini beserta semua nilainya?')">
+                                <form action="{{ route('admin.smartq.peserta.hapus', [$smartq, $p]) }}" method="POST" class="form-hapus-peserta">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i></button>
                                 </form>
@@ -213,14 +212,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Hapus Peserta forms
-    document.querySelectorAll('form[action*="peserta/hapus"], form[method="POST"] button.btn-danger').forEach(function(el) {
-        var form = el.closest('form');
-        if (form && form.querySelector('input[name="_method"][value="DELETE"]')) {
-            form.addEventListener('submit', function() {
-                showSmartqOverlay('Menghapus peserta...', 'Menghapus data peserta beserta nilainya', 'trash');
+    // Hapus Peserta forms — SweetAlert confirm
+    document.querySelectorAll('.form-hapus-peserta').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var nama = form.closest('tr').querySelector('td:nth-child(3)').textContent.trim();
+            smartqConfirm(null, {
+                title: 'Hapus Peserta?',
+                text: '<p>Peserta <b>' + nama + '</b> akan dihapus beserta <b>semua nilainya</b>.</p><p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Tindakan ini tidak dapat dibatalkan!</small></p>',
+                icon: 'error',
+                confirmText: '<i class="fas fa-trash"></i> Ya, Hapus',
+                confirmColor: '#dc3545',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    showSmartqOverlay('Menghapus peserta...', 'Menghapus data peserta beserta nilainya', 'trash');
+                    form.submit();
+                }
             });
-        }
+        });
     });
 });
 </script>

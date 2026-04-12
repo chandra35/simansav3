@@ -110,9 +110,9 @@
                         </table>
                     </div>
                     <div class="card-footer">
-                        <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline">
+                        <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline" id="formSyncMoodleConfig">
                             @csrf
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Sync nilai CBT dari semua quiz yang dikonfigurasi?')">
+                            <button type="submit" class="btn btn-success">
                                 <i class="fas fa-cloud-download-alt"></i> Sync Nilai CBT
                             </button>
                         </form>
@@ -420,18 +420,31 @@ function saveConfig() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Sync Nilai CBT form in config footer
-    document.querySelectorAll('form[action*="moodle/sync"]').forEach(function(form) {
-        form.addEventListener('submit', function() {
-            showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses skor dari semua quiz', 'cloud-download-alt');
-            smartqOverlayMessages([
-                'Menarik nilai CBT dari Moodle...',
-                'Mengambil skor dari setiap quiz...',
-                'Menghitung rata-rata per siswa...',
-                'Menyimpan ke database...',
-            ], 2500);
+    // Sync Nilai CBT form — SweetAlert confirm + overlay
+    var formSync = document.getElementById('formSyncMoodleConfig');
+    if (formSync) {
+        formSync.addEventListener('submit', function(e) {
+            e.preventDefault();
+            smartqConfirm(null, {
+                title: 'Sync Nilai CBT?',
+                text: '<p>Nilai CBT akan ditarik dari <b>semua quiz</b> yang dikonfigurasi.</p><p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Nilai yang sudah ada akan di-<b>overwrite</b>!</small></p>',
+                icon: 'warning',
+                confirmText: '<i class="fas fa-cloud-download-alt"></i> Ya, Sync Sekarang',
+                confirmColor: '#28a745',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses skor dari semua quiz', 'cloud-download-alt');
+                    smartqOverlayMessages([
+                        'Menarik nilai CBT dari Moodle...',
+                        'Mengambil skor dari setiap quiz...',
+                        'Menghitung rata-rata per siswa...',
+                        'Menyimpan ke database...',
+                    ], 2500);
+                    formSync.submit();
+                }
+            });
         });
-    });
+    }
 
     // Scan link in config footer
     document.querySelectorAll('a[href*="moodle/scan"]').forEach(function(link) {

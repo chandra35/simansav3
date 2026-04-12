@@ -95,10 +95,9 @@
                                 <i class="fas fa-cloud text-primary"></i> Konfigurasi Moodle
                             </a>
                             @if(!empty($smartq->moodle_quizzes) || $smartq->moodle_quiz_id)
-                                <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline">
+                                <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline" id="formSyncMoodle">
                                     @csrf
-                                    <button type="submit" class="list-group-item list-group-item-action text-left border-0"
-                                            onclick="return confirm('Tarik nilai CBT dari Moodle? Nilai yang sudah ada akan di-overwrite.')">
+                                    <button type="submit" class="list-group-item list-group-item-action text-left border-0">
                                         <i class="fas fa-sync text-warning"></i> Sync Nilai CBT Moodle
                                     </button>
                                 </form>
@@ -216,8 +215,7 @@
                 <h3 class="card-title"><i class="fas fa-gavel"></i> Proses Kelulusan</h3>
             </div>
             <div class="card-body">
-                <form action="{{ route('admin.smartq.kelulusan', $smartq) }}" method="POST"
-                      onsubmit="return confirm('Proses kelulusan akan mengubah status semua peserta. Lanjutkan?')">
+                <form action="{{ route('admin.smartq.kelulusan', $smartq) }}" method="POST" id="formKelulusan">
                     @csrf
                     <div class="row align-items-end">
                         <div class="col-md-3">
@@ -334,19 +332,32 @@ function togglePassingGrade() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Sync Nilai CBT form
-    document.querySelectorAll('form[action*="moodle/sync"]').forEach(function(form) {
-        form.addEventListener('submit', function() {
-            showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses data dari semua quiz yang dikonfigurasi', 'cloud-download-alt');
-            smartqOverlayMessages([
-                'Menarik nilai CBT dari Moodle...',
-                'Mengambil skor dari setiap quiz...',
-                'Menghitung rata-rata per siswa...',
-                'Menyimpan nilai ke database...',
-                'Hampir selesai...',
-            ], 2500);
+    // Sync Nilai CBT form — SweetAlert confirm + overlay
+    var formSync = document.getElementById('formSyncMoodle');
+    if (formSync) {
+        formSync.addEventListener('submit', function(e) {
+            e.preventDefault();
+            smartqConfirm(null, {
+                title: 'Sync Nilai CBT?',
+                text: '<p>Nilai CBT akan ditarik dari Moodle.</p><p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Nilai yang sudah ada akan di-<b>overwrite</b>!</small></p>',
+                icon: 'warning',
+                confirmText: '<i class="fas fa-sync"></i> Ya, Sync Sekarang',
+                confirmColor: '#e6a817',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses data dari semua quiz yang dikonfigurasi', 'cloud-download-alt');
+                    smartqOverlayMessages([
+                        'Menarik nilai CBT dari Moodle...',
+                        'Mengambil skor dari setiap quiz...',
+                        'Menghitung rata-rata per siswa...',
+                        'Menyimpan nilai ke database...',
+                        'Hampir selesai...',
+                    ], 2500);
+                    formSync.submit();
+                }
+            });
         });
-    });
+    }
 
     // Scan Peserta link
     document.querySelectorAll('a[href*="moodle/scan"]').forEach(function(link) {
@@ -361,18 +372,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Proses Kelulusan form
-    var formKelulusan = document.querySelector('form[action*="kelulusan"]');
+    // Proses Kelulusan form — SweetAlert confirm + overlay
+    var formKelulusan = document.getElementById('formKelulusan');
     if (formKelulusan) {
-        formKelulusan.addEventListener('submit', function() {
-            showSmartqOverlay('Memproses kelulusan...', 'Menghitung ranking dan menentukan status peserta', 'gavel');
-            smartqOverlayMessages([
-                'Memproses kelulusan...',
-                'Menghitung total nilai tertimbang...',
-                'Menentukan ranking peserta...',
-                'Mengupdate status kelulusan...',
-                'Hampir selesai...',
-            ], 1500);
+        formKelulusan.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var metode = document.getElementById('metodeKelulusan').value;
+            var metodeLabel = metode === 'kuota' ? 'Berdasarkan Kuota' : 'Berdasarkan Passing Grade';
+            smartqConfirm(null, {
+                title: 'Proses Kelulusan?',
+                text: '<p>Status <b>semua peserta</b> akan diubah berdasarkan metode:</p><p class="text-center"><span class="badge badge-warning px-3 py-2" style="font-size:1rem">' + metodeLabel + '</span></p><p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Tindakan ini akan mengubah status kelulusan!</small></p>',
+                icon: 'warning',
+                confirmText: '<i class="fas fa-gavel"></i> Ya, Proses Kelulusan',
+                confirmColor: '#e6a817',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    showSmartqOverlay('Memproses kelulusan...', 'Menghitung ranking dan menentukan status peserta', 'gavel');
+                    smartqOverlayMessages([
+                        'Memproses kelulusan...',
+                        'Menghitung total nilai tertimbang...',
+                        'Menentukan ranking peserta...',
+                        'Mengupdate status kelulusan...',
+                        'Hampir selesai...',
+                    ], 1500);
+                    formKelulusan.submit();
+                }
+            });
         });
     }
 

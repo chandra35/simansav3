@@ -449,17 +449,33 @@ document.addEventListener('DOMContentLoaded', function() {
         link.click();
     };
 
-    // Submit overlay — import SMART-Q
+    // Submit overlay — import SMART-Q — SweetAlert confirm
     document.getElementById('formConfirm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = this;
         var count = document.querySelectorAll('.row-check:checked').length;
-        showSmartqOverlay('Mengimport ' + count + ' peserta dari Moodle...', 'Mohon tunggu, jangan tutup halaman ini', 'cloud-download-alt');
-        smartqOverlayMessages([
-            'Mengimport ' + count + ' peserta dari Moodle...',
-            'Membuat data peserta SMART-Q...',
-            'Mengisi nilai CBT otomatis...',
-            'Menghitung ranking...',
-            'Hampir selesai...',
-        ], 2000);
+        smartqConfirm(null, {
+            title: 'Import Peserta?',
+            text: '<p>Import <b>' + count + ' peserta</b> ke SMART-Q dari data scan Moodle.</p>'
+                + (document.getElementById('importScores').checked
+                    ? '<p><i class="fas fa-check-circle text-success"></i> Nilai CBT akan otomatis terisi dari Moodle.</p>'
+                    : '<p><i class="fas fa-times-circle text-muted"></i> Nilai CBT <b>tidak</b> akan diisi.</p>'),
+            icon: 'question',
+            confirmText: '<i class="fas fa-save"></i> Ya, Import ' + count + ' Peserta',
+            confirmColor: '#28a745',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                showSmartqOverlay('Mengimport ' + count + ' peserta dari Moodle...', 'Mohon tunggu, jangan tutup halaman ini', 'cloud-download-alt');
+                smartqOverlayMessages([
+                    'Mengimport ' + count + ' peserta dari Moodle...',
+                    'Membuat data peserta SMART-Q...',
+                    'Mengisi nilai CBT otomatis...',
+                    'Menghitung ranking...',
+                    'Hampir selesai...',
+                ], 2000);
+                form.submit();
+            }
+        });
     });
 
     // === Unmatched users: Add to SIMANSA ===
@@ -498,21 +514,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Confirmation + overlay
+        // Confirmation + overlay — SweetAlert
         document.getElementById('formAddSimansa').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var form = this;
             var count = document.querySelectorAll('.unmatched-check:checked').length;
-            if (!confirm('Tambahkan ' + count + ' siswa ke SIMANSA?\n\nUsername & Password = NISN\nRole = Siswa\n\nLanjutkan?')) {
-                e.preventDefault();
-                return;
-            }
-            showSmartqOverlay('Menambahkan ' + count + ' siswa ke SIMANSA...', 'Membuat user, data siswa, dan assign kelas...', 'user-plus');
-            smartqOverlayMessages([
-                'Menambahkan ' + count + ' siswa ke SIMANSA...',
-                'Membuat akun user...',
-                'Membuat data siswa...',
-                'Mengassign kelas...',
-                'Hampir selesai...',
-            ], 2000);
+            smartqConfirm(null, {
+                title: 'Tambahkan ke SIMANSA?',
+                text: '<div class="text-left">'
+                    + '<p><b>' + count + ' siswa</b> akan ditambahkan ke SIMANSA dengan data:</p>'
+                    + '<ul class="mb-2"><li>Username & Password = <b>NISN</b></li><li>Role = <b>Siswa</b></li><li>Kelas sesuai pemetaan di atas</li></ul>'
+                    + '<p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Akun user baru akan dibuat secara otomatis!</small></p>'
+                    + '</div>',
+                icon: 'question',
+                confirmText: '<i class="fas fa-user-plus"></i> Ya, Tambahkan ' + count + ' Siswa',
+                confirmColor: '#dc3545',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    showSmartqOverlay('Menambahkan ' + count + ' siswa ke SIMANSA...', 'Membuat user, data siswa, dan assign kelas...', 'user-plus');
+                    smartqOverlayMessages([
+                        'Menambahkan ' + count + ' siswa ke SIMANSA...',
+                        'Membuat akun user...',
+                        'Membuat data siswa...',
+                        'Mengassign kelas...',
+                        'Hampir selesai...',
+                    ], 2000);
+                    form.submit();
+                }
+            });
         });
     }
 });
