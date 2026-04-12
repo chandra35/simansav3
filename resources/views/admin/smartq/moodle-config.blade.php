@@ -184,7 +184,7 @@ let quizzesLoaded = {}; // courseId -> quizzes[]
 function loadCategories() {
     const btn = document.getElementById('btnLoadCategories');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+    btn.innerHTML = '<i class="fas fa-sync"></i> Memuat...';
     showSmartqOverlay('Mengambil daftar kategori...', 'Menghubungi server Moodle', 'cloud');
 
     fetch(`{{ route('admin.smartq.moodle.categories', $smartq) }}`)
@@ -229,7 +229,8 @@ function onCategoryChange() {
 
     section.style.display = '';
     const container = document.getElementById('courseListContainer');
-    container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat course...</p>';
+    container.innerHTML = '<p class="text-muted">Memuat course...</p>';
+    showSmartqOverlay('Memuat daftar course...', 'Mengambil course dari kategori terpilih', 'folder-open');
 
     // Load courses for all checked categories
     const promises = [];
@@ -282,6 +283,11 @@ function onCategoryChange() {
 
         container.innerHTML = html;
         updateCounts();
+        hideSmartqOverlay();
+    }).catch(e => {
+        hideSmartqOverlay();
+        alert('Error memuat course: ' + e.message);
+        container.innerHTML = '<p class="text-danger">Gagal memuat course.</p>';
     });
 }
 
@@ -299,7 +305,8 @@ function onCourseChange() {
 
     section.style.display = '';
     const container = document.getElementById('quizListContainer');
-    container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat quiz...</p>';
+    container.innerHTML = '<p class="text-muted">Memuat quiz...</p>';
+    showSmartqOverlay('Memuat daftar quiz...', 'Mengambil quiz dari course terpilih', 'book');
 
     const promises = [];
     checked.forEach(cb => {
@@ -355,6 +362,11 @@ function onCourseChange() {
 
         container.innerHTML = html;
         updateCounts();
+        hideSmartqOverlay();
+    }).catch(e => {
+        hideSmartqOverlay();
+        alert('Error memuat quiz: ' + e.message);
+        container.innerHTML = '<p class="text-danger">Gagal memuat quiz.</p>';
     });
 }
 
@@ -394,7 +406,7 @@ function saveConfig() {
 
     const btn = document.getElementById('btnSave');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+    btn.innerHTML = '<i class="fas fa-save"></i> Menyimpan...';
     showSmartqOverlay('Menyimpan konfigurasi quiz...', quizzes.length + ' quiz akan disimpan', 'save');
 
     fetch(`{{ route('admin.smartq.moodle.save', $smartq) }}`, {
