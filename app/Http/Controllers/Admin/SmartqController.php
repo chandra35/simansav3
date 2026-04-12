@@ -1170,7 +1170,7 @@ class SmartqController extends Controller
 
             foreach ($rows as $i => $row) {
                 $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-                $statusLabel = match($row['status']) {
+                $statusLabel = match($row['status'] ?? null) {
                     'ready' => 'Siap Import',
                     'ready_no_score' => 'Tanpa Nilai',
                     'already_registered' => 'Sudah Terdaftar',
@@ -1180,8 +1180,8 @@ class SmartqController extends Controller
 
                 $r = [
                     $i + 1,
-                    $row['moodle_firstname'] ?: $row['moodle_fullname'],
-                    $row['moodle_username'],
+                    ($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'),
+                    $row['moodle_username'] ?? '-',
                     $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-'),
                     $statusLabel,
                     $row['match_method'] ?? '-',
@@ -1267,13 +1267,13 @@ class SmartqController extends Controller
 
         foreach ($rows as $i => $row) {
             $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-            $statusLabel = match($row['status']) {
+            $statusLabel = match($row['status'] ?? null) {
                 'ready' => 'Siap', 'ready_no_score' => 'Tanpa Nilai',
                 'already_registered' => 'Terdaftar', 'no_match' => 'Tidak Ada', default => '-',
             };
             $html .= '<tr><td class="text-center">' . ($i + 1) . '</td>';
-            $html .= '<td>' . e($row['moodle_firstname'] ?: $row['moodle_fullname']) . '</td>';
-            $html .= '<td>' . e($row['moodle_username']) . '</td>';
+            $html .= '<td>' . e(($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')) . '</td>';
+            $html .= '<td>' . e($row['moodle_username'] ?? '-') . '</td>';
             $html .= '<td>' . e($row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-')) . '</td>';
             foreach ($allMapel as $m) {
                 $score = $rowScores->get($m['quiz_id']);
