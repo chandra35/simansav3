@@ -222,19 +222,22 @@
             text-transform: uppercase;
             letter-spacing: 0.08em;
             font-weight: 700;
-            opacity: 0.88;
+            color: rgba(255, 255, 255, 0.86);
+            opacity: 1;
             margin-bottom: 0.55rem;
         }
 
         .simansa-dashboard-hero__title {
             font-size: 2rem !important;
             font-weight: 800 !important;
+            color: #ffffff;
             margin-bottom: 0.4rem;
         }
 
         .simansa-dashboard-hero__subtitle {
             font-size: 0.96rem;
             line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
             max-width: 720px;
         }
 

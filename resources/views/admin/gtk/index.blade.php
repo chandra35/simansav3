@@ -7,43 +7,43 @@
     .gtk-hero {
         display: grid;
         grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
-        gap: 1.1rem;
+        gap: .7rem;
         align-items: stretch;
-        margin-bottom: 1.1rem;
+        margin-bottom: .65rem;
     }
 
     .gtk-hero__main {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
-        border: 1px solid rgba(148, 163, 184, .16);
-        border-radius: 26px;
-        padding: 1.35rem 1.45rem;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
+        background: linear-gradient(135deg, rgba(37, 99, 235, .92), rgba(13, 148, 136, .84));
+        border: 1px solid rgba(255, 255, 255, .15);
+        border-radius: 20px;
+        padding: .95rem 1.05rem;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
     }
 
     .gtk-hero__eyebrow {
         display: inline-flex;
         align-items: center;
         gap: .45rem;
-        color: #334155;
-        font-size: .82rem;
+        color: rgba(255, 255, 255, .86);
+        font-size: .76rem;
         font-weight: 700;
         letter-spacing: .05em;
         text-transform: uppercase;
-        margin-bottom: .65rem;
+        margin-bottom: .35rem;
     }
 
     .gtk-hero__title {
-        font-size: 2rem;
+        font-size: 1.4rem;
         font-weight: 800;
-        color: #0f172a;
+        color: #fff;
         line-height: 1.1;
-        margin: 0 0 .55rem 0;
+        margin: 0 0 .25rem 0;
     }
 
     .gtk-hero__subtitle {
-        color: #475569;
-        font-size: 1rem;
-        line-height: 1.7;
+        color: rgba(255, 255, 255, .9);
+        font-size: .84rem;
+        line-height: 1.45;
         margin: 0;
         max-width: 780px;
     }
@@ -56,15 +56,15 @@
     .gtk-hero-chip {
         background: rgba(255, 255, 255, .92);
         border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 20px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
+        border-radius: 14px;
+        padding: .62rem .82rem;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
     }
 
     .gtk-hero-chip__label {
         display: block;
         color: #64748b;
-        font-size: .78rem;
+        font-size: .72rem;
         font-weight: 700;
         letter-spacing: .06em;
         text-transform: uppercase;
@@ -74,7 +74,7 @@
     .gtk-hero-chip__value {
         display: block;
         color: #0f172a;
-        font-size: 1.45rem;
+        font-size: 1.06rem;
         font-weight: 800;
         line-height: 1.2;
     }
@@ -131,15 +131,15 @@
     .gtk-stat-card {
         position: relative;
         overflow: hidden;
-        min-height: 182px;
+        min-height: 132px;
         border: 0;
-        border-radius: 22px;
-        padding: 1.35rem 1.35rem 1.15rem;
+        border-radius: 16px;
+        padding: .86rem .86rem .8rem;
         color: #fff;
-        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, .10);
         display: flex;
         align-items: flex-start;
-        gap: 1rem;
+        gap: .75rem;
     }
 
     .gtk-stat-card::after {
@@ -159,17 +159,17 @@
     .gtk-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
 
     .gtk-stat-card__icon {
-        width: 58px;
-        height: 58px;
-        border-radius: 18px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: rgba(255, 255, 255, .16);
-        font-size: 1.3rem;
+        font-size: .92rem;
         position: relative;
         z-index: 1;
-        flex: 0 0 58px;
+        flex: 0 0 42px;
     }
 
     .gtk-stat-card__body {
@@ -185,27 +185,27 @@
 
     .gtk-stat-card__label {
         position: relative;
-        font-size: .78rem;
+        font-size: .68rem;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
         opacity: .9;
-        margin-bottom: .55rem;
+        margin-bottom: .25rem;
     }
 
     .gtk-stat-card__value {
         position: relative;
-        font-size: 2.15rem;
+        font-size: 1.48rem;
         font-weight: 800;
         line-height: 1;
-        margin-bottom: .75rem;
+        margin-bottom: .35rem;
     }
 
     .gtk-stat-card__desc {
         position: relative;
         opacity: .92;
-        line-height: 1.55;
-        font-size: .96rem;
+        line-height: 1.28;
+        font-size: .78rem;
     }
 
     @media (max-width: 575.98px) {
@@ -221,8 +221,8 @@
 
     .gtk-management-card {
         border: 0;
-        border-radius: 24px;
-        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .08);
         overflow: hidden;
     }
 
@@ -230,7 +230,7 @@
         background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
         color: #fff;
         border-bottom: 0;
-        padding: 1rem 1.25rem;
+        padding: .8rem 1rem;
     }
 
     .gtk-filter-panel {

@@ -7,43 +7,43 @@
     .student-hero {
         display: grid;
         grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
-        gap: .85rem;
+        gap: .7rem;
         align-items: stretch;
-        margin-bottom: .8rem;
+        margin-bottom: .65rem;
     }
 
     .student-hero__main {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
-        border: 1px solid rgba(148, 163, 184, .16);
+        background: linear-gradient(135deg, rgba(37, 99, 235, .92), rgba(13, 148, 136, .84));
+        border: 1px solid rgba(255, 255, 255, .15);
         border-radius: 20px;
-        padding: 1.05rem 1.15rem;
-        box-shadow: 0 14px 30px rgba(15, 23, 42, .06);
+        padding: .95rem 1.05rem;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
     }
 
     .student-hero__eyebrow {
         display: inline-flex;
         align-items: center;
         gap: .45rem;
-        color: #334155;
-        font-size: .82rem;
+        color: rgba(255, 255, 255, .86);
+        font-size: .76rem;
         font-weight: 700;
         letter-spacing: .05em;
         text-transform: uppercase;
-        margin-bottom: .45rem;
+        margin-bottom: .35rem;
     }
 
     .student-hero__title {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         font-weight: 800;
-        color: #0f172a;
+        color: #fff;
         line-height: 1.1;
-        margin: 0 0 .35rem 0;
+        margin: 0 0 .25rem 0;
     }
 
     .student-hero__subtitle {
-        color: #475569;
-        font-size: .92rem;
-        line-height: 1.55;
+        color: rgba(255, 255, 255, .9);
+        font-size: .84rem;
+        line-height: 1.45;
         margin: 0;
         max-width: 780px;
     }
@@ -56,15 +56,15 @@
     .student-hero-chip {
         background: rgba(255, 255, 255, .92);
         border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 16px;
-        padding: .75rem .9rem;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+        border-radius: 14px;
+        padding: .62rem .82rem;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
     }
 
     .student-hero-chip__label {
         display: block;
         color: #64748b;
-        font-size: .78rem;
+        font-size: .72rem;
         font-weight: 700;
         letter-spacing: .06em;
         text-transform: uppercase;
@@ -74,7 +74,7 @@
     .student-hero-chip__value {
         display: block;
         color: #0f172a;
-        font-size: 1.2rem;
+        font-size: 1.06rem;
         font-weight: 800;
         line-height: 1.2;
     }
@@ -131,12 +131,12 @@
     .student-stat-card {
         position: relative;
         overflow: hidden;
-        min-height: 148px;
+        min-height: 132px;
         border: 0;
-        border-radius: 18px;
-        padding: 1rem 1rem .9rem;
+        border-radius: 16px;
+        padding: .86rem .86rem .8rem;
         color: #fff;
-        box-shadow: 0 14px 30px rgba(15, 23, 42, .10);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, .10);
         display: flex;
         align-items: flex-start;
         gap: .75rem;
@@ -159,17 +159,17 @@
     .student-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
 
     .student-stat-card__icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: rgba(255, 255, 255, .16);
-        font-size: 1.05rem;
+        font-size: .92rem;
         position: relative;
         z-index: 1;
-        flex: 0 0 48px;
+        flex: 0 0 42px;
     }
 
     .student-stat-card__body {
@@ -185,27 +185,27 @@
 
     .student-stat-card__label {
         position: relative;
-        font-size: .72rem;
+        font-size: .68rem;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
         opacity: .9;
-        margin-bottom: .35rem;
+        margin-bottom: .25rem;
     }
 
     .student-stat-card__value {
         position: relative;
-        font-size: 1.75rem;
+        font-size: 1.48rem;
         font-weight: 800;
         line-height: 1;
-        margin-bottom: .45rem;
+        margin-bottom: .35rem;
     }
 
     .student-stat-card__desc {
         position: relative;
         opacity: .92;
-        line-height: 1.35;
-        font-size: .84rem;
+        line-height: 1.28;
+        font-size: .78rem;
     }
 
     .student-management-card {
