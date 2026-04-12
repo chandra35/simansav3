@@ -133,6 +133,7 @@
                             <th style="width: 50px;" class="text-center">#</th>
                             <th style="width: 80px;">ID RDM</th>
                             <th>Mapel RDM</th>
+                            <th style="width: 90px;">Kurikulum</th>
                             <th style="width: 50px;" class="text-center"><i class="fas fa-arrows-alt-h"></i></th>
                             <th>Mapel SIMANSA</th>
                             <th style="width: 100px;">Kelompok</th>
@@ -147,13 +148,28 @@
                                 $suggestion = $suggestions[$rdm->mapel_id] ?? null;
                                 $isMapped = $mapping !== null;
                             @endphp
-                            <tr class="mapping-row {{ $isMapped ? 'row-mapped' : 'row-unmapped' }}" data-search="{{ strtolower($rdm->mapel_nama . ' ' . ($mapping?->mataPelajaran?->nama_mapel ?? '')) }}">
+                            <tr class="mapping-row {{ $isMapped ? 'row-mapped' : 'row-unmapped' }}" data-search="{{ strtolower($rdm->mapel_nama . ' ' . ($mapping?->mataPelajaran?->nama_mapel ?? '') . ' ' . ($rdm->kurikulum_nama ?? '')) }}">
                                 <td class="text-center text-muted">{{ $idx + 1 }}</td>
                                 <td><code>{{ $rdm->mapel_id }}</code></td>
                                 <td>
                                     <strong>{{ $rdm->mapel_nama }}</strong>
                                     @if($suggestion && !$isMapped)
-                                        <br><small class="text-success"><i class="fas fa-lightbulb"></i> Saran: {{ $suggestion['simansa_nama'] }}</small>
+                                        <br><small class="text-success"><i class="fas fa-lightbulb"></i> Saran: {{ $suggestion['simansa_nama'] }}
+                                            @if(($suggestion['confidence'] ?? '') === 'exact')
+                                                <span class="badge badge-success badge-sm">kurikulum match</span>
+                                            @elseif(($suggestion['confidence'] ?? '') === 'name_only')
+                                                <span class="badge badge-warning badge-sm">nama saja</span>
+                                            @endif
+                                        </small>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(($rdm->kurikulum_id ?? 0) == 2)
+                                        <span class="badge badge-info">Merdeka</span>
+                                    @elseif(($rdm->kurikulum_id ?? 0) == 1)
+                                        <span class="badge badge-secondary">K13</span>
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -187,6 +203,7 @@
                                             <button type="button" class="btn btn-outline-primary btn-edit"
                                                 data-rdm-id="{{ $rdm->mapel_id }}"
                                                 data-rdm-nama="{{ $rdm->mapel_nama }}"
+                                                data-rdm-kurikulum="{{ $rdm->kurikulum_id ?? '' }}"
                                                 data-simansa-id="{{ $mapping->mata_pelajaran_id }}"
                                                 title="Ubah mapping">
                                                 <i class="fas fa-edit"></i>
@@ -203,6 +220,7 @@
                                         <button type="button" class="btn btn-sm btn-success btn-map"
                                             data-rdm-id="{{ $rdm->mapel_id }}"
                                             data-rdm-nama="{{ $rdm->mapel_nama }}"
+                                            data-rdm-kurikulum="{{ $rdm->kurikulum_id ?? '' }}"
                                             data-suggestion-id="{{ $suggestion['simansa_id'] ?? '' }}">
                                             <i class="fas fa-plus"></i> Map
                                         </button>
@@ -226,6 +244,7 @@
                 @csrf
                 <input type="hidden" name="rdm_mapel_id" id="modalRdmId">
                 <input type="hidden" name="rdm_mapel_nama" id="modalRdmNama">
+                <input type="hidden" name="rdm_kurikulum_id" id="modalRdmKurikulum">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title"><i class="fas fa-exchange-alt"></i> Petakan Mapel</h5>
@@ -276,6 +295,7 @@
                                 <tr>
                                     <th style="width: 40px;"><input type="checkbox" id="bulkCheckAll"></th>
                                     <th>Mapel RDM</th>
+                                    <th style="width: 90px;">Kurikulum</th>
                                     <th>Mapel SIMANSA</th>
                                 </tr>
                             </thead>
@@ -291,6 +311,14 @@
                                                 <strong>{{ $rdm->mapel_nama }}</strong>
                                                 <input type="hidden" class="bulk-rdm-id" value="{{ $rdm->mapel_id }}" disabled>
                                                 <input type="hidden" class="bulk-rdm-nama" value="{{ $rdm->mapel_nama }}" disabled>
+                                                <input type="hidden" class="bulk-rdm-kurikulum" value="{{ $rdm->kurikulum_id ?? '' }}" disabled>
+                                            </td>
+                                            <td>
+                                                @if(($rdm->kurikulum_id ?? 0) == 2)
+                                                    <span class="badge badge-info">Merdeka</span>
+                                                @elseif(($rdm->kurikulum_id ?? 0) == 1)
+                                                    <span class="badge badge-secondary">K13</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <select class="form-control form-control-sm bulk-simansa-select" disabled>
@@ -374,11 +402,13 @@ $(function() {
     $(document).on('click', '.btn-map, .btn-edit', function() {
         var rdmId = $(this).data('rdm-id');
         var rdmNama = $(this).data('rdm-nama');
+        var rdmKurikulum = $(this).data('rdm-kurikulum') || '';
         var simansaId = $(this).data('simansa-id') || $(this).data('suggestion-id') || '';
 
         $('#modalRdmId').val(rdmId);
         $('#modalRdmNama').val(rdmNama);
-        $('#modalRdmLabel').text(rdmNama);
+        $('#modalRdmKurikulum').val(rdmKurikulum);
+        $('#modalRdmLabel').text(rdmNama + (rdmKurikulum == 2 ? ' (Merdeka)' : rdmKurikulum == 1 ? ' (K13)' : ''));
 
         if ($('.select2-modal').data('select2')) {
             $('.select2-modal').val(simansaId).trigger('change');
@@ -410,15 +440,16 @@ $(function() {
     $(document).on('change', '.bulk-check', function() {
         var $row = $(this).closest('.bulk-row');
         var checked = $(this).prop('checked');
-        $row.find('.bulk-simansa-select, .bulk-rdm-id, .bulk-rdm-nama').prop('disabled', !checked);
+        $row.find('.bulk-simansa-select, .bulk-rdm-id, .bulk-rdm-nama, .bulk-rdm-kurikulum').prop('disabled', !checked);
 
         if (checked) {
             var idx = $(this).data('idx');
             $row.find('.bulk-rdm-id').attr('name', 'mappings[' + idx + '][rdm_mapel_id]');
             $row.find('.bulk-rdm-nama').attr('name', 'mappings[' + idx + '][rdm_mapel_nama]');
+            $row.find('.bulk-rdm-kurikulum').attr('name', 'mappings[' + idx + '][rdm_kurikulum_id]');
             $row.find('.bulk-simansa-select').attr('name', 'mappings[' + idx + '][mata_pelajaran_id]');
         } else {
-            $row.find('.bulk-rdm-id, .bulk-rdm-nama, .bulk-simansa-select').removeAttr('name');
+            $row.find('.bulk-rdm-id, .bulk-rdm-nama, .bulk-rdm-kurikulum, .bulk-simansa-select').removeAttr('name');
         }
 
         var count = $('.bulk-check:checked').length;

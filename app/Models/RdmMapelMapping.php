@@ -15,6 +15,7 @@ class RdmMapelMapping extends Model
     protected $fillable = [
         'rdm_mapel_id',
         'rdm_mapel_nama',
+        'rdm_kurikulum_id',
         'mata_pelajaran_id',
         'mapped_by',
     ];

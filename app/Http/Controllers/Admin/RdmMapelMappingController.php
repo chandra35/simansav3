@@ -13,6 +13,14 @@ use Illuminate\View\View;
 
 class RdmMapelMappingController extends Controller
 {
+    /**
+     * RDM kurikulum_id to SIMANSA kurikulum kode mapping.
+     */
+    private const RDM_KURIKULUM_MAP = [
+        1 => 'K13',
+        2 => 'MERDEKA',
+    ];
+
     public function index(Request $request): View
     {
         $rdmMapels = $this->getRdmMapels();
@@ -20,9 +28,12 @@ class RdmMapelMappingController extends Controller
         $simansaMapels = MataPelajaran::query()
             ->where('is_active', true)
             ->orderBy('nama_mapel')
-            ->get(['id', 'nama_mapel', 'kelompok', 'kode_mapel']);
+            ->get(['id', 'nama_mapel', 'kelompok', 'kode_mapel', 'kurikulum_id']);
 
-        $mappings = RdmMapelMapping::with(['mataPelajaran:id,nama_mapel,kelompok', 'mappedByUser:id,name'])
+        // Preload kurikulum names for display
+        $kurikulumMap = \App\Models\Kurikulum::pluck('kode', 'id');
+
+        $mappings = RdmMapelMapping::with(['mataPelajaran:id,nama_mapel,kelompok,kurikulum_id', 'mappedByUser:id,name'])
             ->get()
             ->keyBy('rdm_mapel_id');
 
@@ -33,8 +44,8 @@ class RdmMapelMappingController extends Controller
             'simansa_total' => $simansaMapels->count(),
         ];
 
-        // Auto-suggest matches based on normalizeText
-        $suggestions = $this->generateSuggestions($rdmMapels, $simansaMapels, $mappings);
+        // Auto-suggest matches based on normalizeText + kurikulum
+        $suggestions = $this->generateSuggestions($rdmMapels, $simansaMapels, $mappings, $kurikulumMap);
 
         return view('admin.rdm-mapel-mapping.index', compact(
             'rdmMapels',
@@ -42,6 +53,7 @@ class RdmMapelMappingController extends Controller
             'mappings',
             'stats',
             'suggestions',
+            'kurikulumMap',
         ));
     }
 
@@ -50,6 +62,7 @@ class RdmMapelMappingController extends Controller
         $data = $request->validate([
             'rdm_mapel_id' => ['required', 'integer'],
             'rdm_mapel_nama' => ['required', 'string', 'max:255'],
+            'rdm_kurikulum_id' => ['nullable', 'integer'],
             'mata_pelajaran_id' => ['required', 'uuid', 'exists:mata_pelajaran,id'],
         ]);
 
@@ -57,6 +70,7 @@ class RdmMapelMappingController extends Controller
             ['rdm_mapel_id' => $data['rdm_mapel_id']],
             [
                 'rdm_mapel_nama' => $data['rdm_mapel_nama'],
+                'rdm_kurikulum_id' => $data['rdm_kurikulum_id'] ?? null,
                 'mata_pelajaran_id' => $data['mata_pelajaran_id'],
                 'mapped_by' => Auth::id(),
             ]
@@ -80,14 +94,24 @@ class RdmMapelMappingController extends Controller
     public function autoMap(Request $request): RedirectResponse
     {
         $rdmMapels = $this->getRdmMapels();
-        $simansaMapels = MataPelajaran::where('is_active', true)->get(['id', 'nama_mapel']);
+        $simansaMapels = MataPelajaran::where('is_active', true)
+            ->with('kurikulum:id,kode')
+            ->get(['id', 'nama_mapel', 'kurikulum_id']);
         $existingMappings = RdmMapelMapping::pluck('rdm_mapel_id')->toArray();
 
-        $simansaIndex = [];
+        // Build kurikulum-scoped indexes
+        $kurikulumIndex = [];
+        $genericIndex = [];
         foreach ($simansaMapels as $mp) {
             $key = $this->normalizeText($mp->nama_mapel);
-            if ($key !== '' && !isset($simansaIndex[$key])) {
-                $simansaIndex[$key] = $mp->id;
+            if ($key === '') continue;
+
+            $kode = strtoupper($mp->kurikulum?->kode ?? 'UNKNOWN');
+            if (!isset($kurikulumIndex[$kode][$key])) {
+                $kurikulumIndex[$kode][$key] = $mp->id;
+            }
+            if (!isset($genericIndex[$key])) {
+                $genericIndex[$key] = $mp->id;
             }
         }
 
@@ -98,11 +122,22 @@ class RdmMapelMappingController extends Controller
             }
 
             $key = $this->normalizeText($rdm->mapel_nama);
-            if (isset($simansaIndex[$key])) {
+            $rdmKurikulumKode = self::RDM_KURIKULUM_MAP[$rdm->kurikulum_id ?? 0] ?? null;
+
+            // Try kurikulum-scoped match first, then generic
+            $simansaId = null;
+            if ($rdmKurikulumKode && isset($kurikulumIndex[$rdmKurikulumKode][$key])) {
+                $simansaId = $kurikulumIndex[$rdmKurikulumKode][$key];
+            } elseif (isset($genericIndex[$key])) {
+                $simansaId = $genericIndex[$key];
+            }
+
+            if ($simansaId) {
                 RdmMapelMapping::create([
                     'rdm_mapel_id' => $rdm->mapel_id,
                     'rdm_mapel_nama' => $rdm->mapel_nama,
-                    'mata_pelajaran_id' => $simansaIndex[$key],
+                    'rdm_kurikulum_id' => $rdm->kurikulum_id ?? null,
+                    'mata_pelajaran_id' => $simansaId,
                     'mapped_by' => Auth::id(),
                 ]);
                 $autoMapped++;
@@ -111,7 +146,7 @@ class RdmMapelMappingController extends Controller
 
         return redirect()
             ->route('admin.rdm-mapel-mapping.index')
-            ->with('success', "Auto-mapping selesai: {$autoMapped} mapel berhasil dipetakan otomatis.");
+            ->with('success', "Auto-mapping selesai: {$autoMapped} mapel berhasil dipetakan otomatis (kurikulum-aware).");
     }
 
     public function bulkStore(Request $request): RedirectResponse
@@ -120,6 +155,7 @@ class RdmMapelMappingController extends Controller
             'mappings' => ['required', 'array', 'min:1'],
             'mappings.*.rdm_mapel_id' => ['required', 'integer'],
             'mappings.*.rdm_mapel_nama' => ['required', 'string', 'max:255'],
+            'mappings.*.rdm_kurikulum_id' => ['nullable', 'integer'],
             'mappings.*.mata_pelajaran_id' => ['required', 'uuid', 'exists:mata_pelajaran,id'],
         ]);
 
@@ -130,6 +166,7 @@ class RdmMapelMappingController extends Controller
                     ['rdm_mapel_id' => $mapping['rdm_mapel_id']],
                     [
                         'rdm_mapel_nama' => $mapping['rdm_mapel_nama'],
+                        'rdm_kurikulum_id' => $mapping['rdm_kurikulum_id'] ?? null,
                         'mata_pelajaran_id' => $mapping['mata_pelajaran_id'],
                         'mapped_by' => Auth::id(),
                     ]
@@ -146,21 +183,31 @@ class RdmMapelMappingController extends Controller
     private function getRdmMapels()
     {
         return DB::connection('mysql_rdm')
-            ->table('e_mapel')
-            ->select('mapel_id', 'mapel_nama')
-            ->orderBy('mapel_nama')
+            ->table('e_mapel as m')
+            ->leftJoin('e_kurikulum as k', 'k.kurikulum_id', '=', 'm.kurikulum_id')
+            ->select('m.mapel_id', 'm.mapel_nama', 'm.kurikulum_id', 'k.kurikulum_nama')
+            ->orderBy('m.kurikulum_id')
+            ->orderBy('m.mapel_nama')
             ->get()
             ->filter(fn ($item) => !str_starts_with($item->mapel_nama, 'Kelompok'))
             ->values();
     }
 
-    private function generateSuggestions($rdmMapels, $simansaMapels, $existingMappings): array
+    private function generateSuggestions($rdmMapels, $simansaMapels, $existingMappings, $kurikulumMap = null): array
     {
-        $simansaIndex = [];
+        // Build kurikulum-scoped indexes
+        $kurikulumIndex = [];
+        $genericIndex = [];
         foreach ($simansaMapels as $mp) {
             $key = $this->normalizeText($mp->nama_mapel);
-            if ($key !== '') {
-                $simansaIndex[$key] = $mp;
+            if ($key === '') continue;
+
+            $kode = $kurikulumMap ? strtoupper($kurikulumMap[$mp->kurikulum_id] ?? 'UNKNOWN') : 'UNKNOWN';
+            if (!isset($kurikulumIndex[$kode][$key])) {
+                $kurikulumIndex[$kode][$key] = $mp;
+            }
+            if (!isset($genericIndex[$key])) {
+                $genericIndex[$key] = $mp;
             }
         }
 
@@ -171,11 +218,24 @@ class RdmMapelMappingController extends Controller
             }
 
             $key = $this->normalizeText($rdm->mapel_nama);
-            if (isset($simansaIndex[$key])) {
+            $rdmKurikulumKode = self::RDM_KURIKULUM_MAP[$rdm->kurikulum_id ?? 0] ?? null;
+
+            // Try kurikulum-scoped match first
+            $match = null;
+            $confidence = 'generic';
+            if ($rdmKurikulumKode && isset($kurikulumIndex[$rdmKurikulumKode][$key])) {
+                $match = $kurikulumIndex[$rdmKurikulumKode][$key];
+                $confidence = 'exact';
+            } elseif (isset($genericIndex[$key])) {
+                $match = $genericIndex[$key];
+                $confidence = 'name_only';
+            }
+
+            if ($match) {
                 $suggestions[$rdm->mapel_id] = [
-                    'simansa_id' => $simansaIndex[$key]->id,
-                    'simansa_nama' => $simansaIndex[$key]->nama_mapel,
-                    'confidence' => 'exact',
+                    'simansa_id' => $match->id,
+                    'simansa_nama' => $match->nama_mapel,
+                    'confidence' => $confidence,
                 ];
             }
         }

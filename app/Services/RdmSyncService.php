@@ -106,7 +106,18 @@ class RdmSyncService
             $normNis = trim((string) ($row->rdm_nis ?? ''));
 
             $simansaSiswaId = $siswaMap[$normNisn] ?? ($normNis ? ($siswaMap['NIS:' . $normNis] ?? null) : null);
-            $simansaMapelId = $mapelMap['RDM_ID:' . $row->rdm_mapel_id] ?? $mapelMap[$normMapel] ?? null;
+
+            // Kurikulum-scoped mapel matching:
+            // 1. Manual mapping by RDM_ID (highest priority)
+            // 2. Kurikulum-scoped name match (RDM kurikulum_id: 1=K13, 2=Merdeka)
+            // 3. Generic name fallback
+            $simansaMapelId = $mapelMap['RDM_ID:' . $row->rdm_mapel_id] ?? null;
+            if (!$simansaMapelId) {
+                $kurikulumIndex = $mapelMap['__kurikulum_index'] ?? [];
+                $rdmKurikulumKode = ((int) ($row->rdm_kurikulum_id ?? 0)) === 2 ? 'MERDEKA' : 'K13';
+                $simansaMapelId = $kurikulumIndex[$rdmKurikulumKode][$normMapel] ?? $mapelMap[$normMapel] ?? null;
+            }
+
             $simansaSemester = $this->mapSemester((int) ($row->rdm_tingkat_id ?? 0), (int) ($row->rdm_semester_id ?? 0));
 
             $status = 'matched';
@@ -194,10 +205,20 @@ class RdmSyncService
             return $run;
         }
 
+        // Preload kurikulum kode for all mata_pelajaran used in this batch
+        $mapelIds = $rows->pluck('simansa_mata_pelajaran_id')->unique()->values()->toArray();
+        $mapelKurikulumMap = MataPelajaran::query()
+            ->whereIn('id', $mapelIds)
+            ->with('kurikulum:id,kode')
+            ->get()
+            ->keyBy('id')
+            ->map(fn ($mp) => strtoupper($mp->kurikulum?->kode ?? ''));
+
         $applied = 0;
-        DB::transaction(function () use ($rows, &$applied) {
+        DB::transaction(function () use ($rows, $mapelKurikulumMap, &$applied) {
             foreach ($rows as $row) {
                 $nilai = is_numeric($row->rdm_nilai) ? (float) $row->rdm_nilai : null;
+                $kurikulumKode = $mapelKurikulumMap[$row->simansa_mata_pelajaran_id] ?? '';
 
                 $nilaiSiswa = NilaiSiswa::withTrashed()->firstOrNew([
                     'siswa_id' => $row->simansa_siswa_id,
@@ -206,14 +227,28 @@ class RdmSyncService
                     'semester' => $row->simansa_semester,
                 ]);
 
-                $nilaiSiswa->fill([
-                    'nilai' => $nilai,
-                    'nilai_pengetahuan' => $nilai,
-                    'nilai_keterampilan' => $nilai,
-                    'predikat' => NilaiSiswa::hitungPredikat($nilai),
-                    'sumber_data' => 'rdm_sync',
-                    'imported_at' => now(),
-                ]);
+                // Kurikulum-aware: Merdeka hanya menggunakan kolom nilai,
+                // K13 menggunakan nilai_pengetahuan dan nilai_keterampilan
+                if ($kurikulumKode === 'MERDEKA') {
+                    $nilaiSiswa->fill([
+                        'nilai' => $nilai,
+                        'nilai_pengetahuan' => null,
+                        'nilai_keterampilan' => null,
+                        'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                        'sumber_data' => 'rdm_sync',
+                        'imported_at' => now(),
+                    ]);
+                } else {
+                    // K13: nilai pengetahuan & keterampilan
+                    $nilaiSiswa->fill([
+                        'nilai' => $nilai,
+                        'nilai_pengetahuan' => $nilai,
+                        'nilai_keterampilan' => $nilai,
+                        'predikat' => NilaiSiswa::hitungPredikat($nilai),
+                        'sumber_data' => 'rdm_sync',
+                        'imported_at' => now(),
+                    ]);
+                }
 
                 if ($nilaiSiswa->trashed()) {
                     $nilaiSiswa->restore();
@@ -251,6 +286,7 @@ class RdmSyncService
                 'k.tingkat_id as rdm_tingkat_id',
                 'r.mapel_id as rdm_mapel_id',
                 'm.mapel_nama as rdm_mapel_nama',
+                'm.kurikulum_id as rdm_kurikulum_id',
                 'r.rapor_nilai as rdm_nilai',
                 'r.tahunajaran_id as rdm_tahunajaran_id',
                 'r.semester_id as rdm_semester_id',
@@ -326,7 +362,23 @@ class RdmSyncService
                 $map['RDM_ID:' . $item->rdm_mapel_id] = $item->mata_pelajaran_id;
             });
 
-        // Priority 2: Fallback normalized name matching
+        // Priority 2: Kurikulum-scoped normalized name matching
+        // Build separate indexes per kurikulum to avoid cross-kurikulum mismatches
+        $kurikulumIndex = [];
+        MataPelajaran::query()
+            ->select('id', 'nama_mapel', 'kurikulum_id')
+            ->with('kurikulum:id,kode')
+            ->where('is_active', true)
+            ->get()
+            ->each(function ($item) use (&$kurikulumIndex) {
+                $key = $this->normalizeText($item->nama_mapel ?? '');
+                $kode = strtoupper($item->kurikulum?->kode ?? 'UNKNOWN');
+                if ($key !== '') {
+                    $kurikulumIndex[$kode][$key] = $item->id;
+                }
+            });
+
+        // Priority 3: Generic fallback (first match across all kurikulum)
         MataPelajaran::query()
             ->select('id', 'nama_mapel')
             ->where('is_active', true)
@@ -337,6 +389,9 @@ class RdmSyncService
                     $map[$key] = $item->id;
                 }
             });
+
+        // Store kurikulum index in map for scoped lookup
+        $map['__kurikulum_index'] = $kurikulumIndex;
 
         return $map;
     }
