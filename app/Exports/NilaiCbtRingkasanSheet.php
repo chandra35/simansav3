@@ -10,7 +10,6 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, ShouldAutoSize
 {
@@ -37,7 +36,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
         $rows[] = [$this->smartq->nama];
         $rows[] = ['Discan: ' . ($this->smartq->last_scan_at?->format('d M Y H:i') ?? '-')];
         $rows[] = ['Total: ' . $totalAll . ' siswa | Hadir: ' . $hadirAll . ' | Tidak Hadir: ' . ($totalAll - $hadirAll)];
-        $rows[] = [];
+        $rows[] = [''];
 
         // ── Overview per Tingkat ──
         $rows[] = ['RINGKASAN PER TINGKAT'];
@@ -66,8 +65,8 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
             $this->tableRows++;
         }
 
-        $rows[] = [];
-        $rows[] = [];
+        $rows[] = [''];
+        $rows[] = [''];
 
         // ── Detail per Tingkat per Mapel ──
         foreach ($this->byTingkat as $tkt => $tktRows) {
@@ -115,7 +114,112 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                 ];
             }
 
-            $rows[] = [];
+            $rows[] = [''];
+
+            // Tabel pengambil mapel pilihan (agar mudah seleksi per mapel pilihan)
+            $rows[] = ['PENGAMBIL MAPEL PILIHAN — ' . strtoupper($tktLabel)];
+            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Mapel Pilihan', 'Nilai', 'Status Nilai', 'Tingkat', 'Catatan'];
+
+            $pilihanQuizIds = array_values(array_diff($tktMapel->pluck('quiz_id')->all(), $tktMapelWajib));
+            $pilihanMap = $tktMapel->keyBy('quiz_id');
+            $pilihanRows = [];
+
+            foreach ($tktRows as $row) {
+                $nama = ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'));
+                $nisn = $row['siswa_nisn'] ?? $row['moodle_username'] ?? '-';
+                $kelas = $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-');
+                $scores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+
+                foreach ($pilihanQuizIds as $qid) {
+                    $score = $scores->get($qid);
+                    if (!$score) {
+                        continue;
+                    }
+
+                    $mapelItem = $pilihanMap->get($qid);
+
+                    $nilai = $score['normalized_100'] ?? 0;
+                    if (!is_numeric($nilai) || $nilai <= 0) {
+                        continue;
+                    }
+
+                    $pilihanRows[] = [
+                        'nama' => $nama,
+                        'nisn' => $nisn,
+                        'kelas' => $kelas,
+                        'mapel' => $mapelItem['quiz_name'] ?? ('Quiz ' . $qid),
+                        'nilai' => round($nilai, 1),
+                    ];
+                }
+            }
+
+            usort($pilihanRows, function ($a, $b) {
+                $cmpMapel = strcmp(strtolower($a['mapel']), strtolower($b['mapel']));
+                if ($cmpMapel !== 0) return $cmpMapel;
+
+                if ($a['nilai'] !== $b['nilai']) return $b['nilai'] <=> $a['nilai'];
+
+                return strcmp(strtolower($a['nama']), strtolower($b['nama']));
+            });
+
+            if (count($pilihanRows) === 0) {
+                $rows[] = ['-', '-', '-', '-', 'Tidak ada siswa yang mengerjakan mapel pilihan', '-', '-', $tktLabel, '-'];
+            } else {
+                $numPilihan = 0;
+                foreach ($pilihanRows as $pr) {
+                    $numPilihan++;
+                    $status = $pr['nilai'] >= 10 ? 'Normal' : 'Rendah';
+                    $rows[] = [
+                        $numPilihan,
+                        $pr['nama'],
+                        "'" . $pr['nisn'],
+                        $pr['kelas'],
+                        $pr['mapel'],
+                        $pr['nilai'],
+                        $status,
+                        $tktLabel,
+                        $pr['nilai'] < 10 ? 'Perlu verifikasi minat/kuis' : '-',
+                    ];
+                }
+            }
+
+            $rows[] = [''];
+
+            // Tabel indikasi siswa salah masuk / ragu mapel pilihan
+            $rows[] = ['SISWA YANG SALAH MASUK/RAGU MAPEL PILIHAN — ' . strtoupper($tktLabel)];
+            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Mapel Pilihan', 'Nilai', 'Status Nilai', 'Tingkat', 'Catatan'];
+
+            $raguRows = array_values(array_filter($pilihanRows, fn($pr) => $pr['nilai'] > 0 && $pr['nilai'] < 10));
+            usort($raguRows, function ($a, $b) {
+                if ($a['nilai'] !== $b['nilai']) return $a['nilai'] <=> $b['nilai'];
+
+                $cmpMapel = strcmp(strtolower($a['mapel']), strtolower($b['mapel']));
+                if ($cmpMapel !== 0) return $cmpMapel;
+
+                return strcmp(strtolower($a['nama']), strtolower($b['nama']));
+            });
+
+            if (count($raguRows) === 0) {
+                $rows[] = ['-', '-', '-', '-', 'Tidak ditemukan indikasi nilai < 10 pada mapel pilihan', '-', '-', $tktLabel, '-'];
+            } else {
+                $numRagu = 0;
+                foreach ($raguRows as $rr) {
+                    $numRagu++;
+                    $rows[] = [
+                        $numRagu,
+                        $rr['nama'],
+                        "'" . $rr['nisn'],
+                        $rr['kelas'],
+                        $rr['mapel'],
+                        $rr['nilai'],
+                        'Indikasi Ragu/Salah Kuis',
+                        $tktLabel,
+                        'Nilai sangat rendah pada mapel pilihan',
+                    ];
+                }
+            }
+
+            $rows[] = [''];
         }
 
         // ── Per-Kelas Summary ──
@@ -188,7 +292,12 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                 $lastRow = $sheet->getHighestRow();
                 for ($row = 1; $row <= $lastRow; $row++) {
                     $val = $sheet->getCell("A{$row}")->getValue();
-                    if (is_string($val) && (str_starts_with($val, 'ANALISIS MAPEL') || str_starts_with($val, 'RINGKASAN PER KELAS'))) {
+                    if (is_string($val) && (
+                        str_starts_with($val, 'ANALISIS MAPEL') ||
+                        str_starts_with($val, 'PENGAMBIL MAPEL PILIHAN') ||
+                        str_starts_with($val, 'SISWA YANG SALAH MASUK/RAGU MAPEL PILIHAN') ||
+                        str_starts_with($val, 'RINGKASAN PER KELAS')
+                    )) {
                         $sheet->getStyle("A{$row}:I{$row}")->applyFromArray([
                             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
