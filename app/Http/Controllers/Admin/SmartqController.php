@@ -1111,7 +1111,8 @@ class SmartqController extends Controller
             ->orderBy('ranking')
             ->get();
 
-        $filename = 'SMARTQ_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.csv';
+        $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
+        $filename = 'SMARTQ_' . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -1223,7 +1224,8 @@ class SmartqController extends Controller
 
         // Excel (.xlsx) with Maatwebsite/Excel — multi-sheet per tingkat
         ini_set('memory_limit', '512M');
-        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.xlsx';
+        $safeName = preg_replace('/[\/\\\\:*?"<>|]/', '-', $smartq->nama);
+        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.xlsx';
         return Excel::download(
             new NilaiCbtExport($byTingkat, $mapelByTingkat, $quizTingkat, $smartq),
             $filename
@@ -1337,7 +1339,8 @@ class SmartqController extends Controller
             ->setPaper('a4', 'landscape')
             ->setOptions(['isRemoteEnabled' => false, 'defaultFont' => 'sans-serif']);
 
-        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.pdf';
+        $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
+        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.pdf';
         return $pdf->download($filename);
     }
 }
