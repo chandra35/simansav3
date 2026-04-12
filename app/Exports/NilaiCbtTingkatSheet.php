@@ -5,13 +5,11 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColumnWidths
@@ -25,7 +23,6 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
     protected $totalCols;
     protected $dataStartRow;
     protected $totalDataRows = 0;
-    protected $kelasRanges = []; // track kelas header rows for styling
     protected $tidakHadirRows = []; // track absent student rows
 
     public function __construct($tingkat, $tktRows, $tktMapel, $smartq)
@@ -123,74 +120,46 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
 
         $this->dataStartRow = count($rows) + 1; // 1-indexed for Excel
 
-        // ── Student data grouped by kelas ──
-        $byKelas = $this->tktRows->groupBy(fn($r) => $r['siswa_kelas'] ?? $r['moodle_lastname'] ?? 'Tanpa Kelas')->sortKeys();
+        // ── Student data (flat per tingkat; no per-kelas grouping) ──
+        $sortedRows = $this->tktRows
+            ->sortByDesc('normalized_100')
+            ->values();
         $globalNum = 0;
 
-        foreach ($byKelas as $kelasName => $kelasRowsRaw) {
-            $kelasRows = collect($kelasRowsRaw);
-            $kelasHadir = $kelasRows->filter(fn($r) => ($r['has_attempt'] ?? false))->count();
-            $kelasAvg = $kelasRows->where('has_attempt', true)->avg('normalized_100');
+        foreach ($sortedRows as $row) {
+            $globalNum++;
+            $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+            $isHadir = $row['has_attempt'] ?? false;
 
-            // Kelas sub-header
-            $kelasHeaderRow = [
-                '',
-                $kelasName . ' (' . $kelasRows->count() . ' siswa, ' . $kelasHadir . ' hadir' .
-                    ($kelasAvg ? ', rata²: ' . round($kelasAvg, 1) : '') . ')',
+            $r = [
+                $globalNum,
+                ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')),
+                "'" . ($row['siswa_nisn'] ?? $row['moodle_username'] ?? '-'), // prefix ' to keep as text
+                $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-'),
             ];
-            $rows[] = $kelasHeaderRow;
-            $this->kelasRanges[] = count($rows); // 1-indexed row number
-            $this->totalDataRows++;
 
-            foreach ($kelasRows->sortByDesc('normalized_100') as $row) {
-                $globalNum++;
-                $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-                $isHadir = $row['has_attempt'] ?? false;
-
-                $r = [
-                    $globalNum,
-                    ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')),
-                    "'" . ($row['siswa_nisn'] ?? $row['moodle_username'] ?? '-'), // prefix ' to keep as text
-                    $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-'),
-                ];
-
-                $scoreValues = [];
-                foreach ($this->tktMapel as $m) {
-                    $score = $rowScores->get($m['quiz_id']);
-                    if ($score) {
-                        $r[] = $score['normalized_100'];
-                        $scoreValues[] = $score['normalized_100'];
-                    } else {
-                        $r[] = null; // empty cell
-                    }
-                }
-
-                if ($this->mapelCount > 1) {
-                    $r[] = count($scoreValues) > 0 ? round(array_sum($scoreValues) / count($scoreValues), 1) : null;
-                }
-                $r[] = $isHadir ? 'HADIR' : 'TIDAK HADIR';
-
-                $rows[] = $r;
-                $this->totalDataRows++;
-
-                if (!$isHadir) {
-                    $this->tidakHadirRows[] = count($rows);
-                }
-            }
-
-            // Kelas footer row — averages
-            $footerRow = ['', 'Rata-rata ' . $kelasName, '', ''];
+            $scoreValues = [];
             foreach ($this->tktMapel as $m) {
-                $kelasMapelScores = $kelasRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0);
-                $footerRow[] = $kelasMapelScores->count() > 0 ? round($kelasMapelScores->avg('normalized_100'), 1) : '';
+                $score = $rowScores->get($m['quiz_id']);
+                if ($score) {
+                    $r[] = $score['normalized_100'];
+                    $scoreValues[] = $score['normalized_100'];
+                } else {
+                    $r[] = null; // empty cell
+                }
             }
+
             if ($this->mapelCount > 1) {
-                $footerRow[] = $kelasAvg ? round($kelasAvg, 1) : '';
+                $r[] = count($scoreValues) > 0 ? round(array_sum($scoreValues) / count($scoreValues), 1) : null;
             }
-            $footerRow[] = $kelasHadir . '/' . $kelasRows->count();
-            $rows[] = $footerRow;
-            $this->kelasRanges[] = count($rows); // also style footer
+            $r[] = $isHadir ? 'HADIR' : 'TIDAK HADIR';
+
+            $rows[] = $r;
             $this->totalDataRows++;
+
+            if (!$isHadir) {
+                $this->tidakHadirRows[] = count($rows);
+            }
         }
 
         // ── Legend ──
@@ -286,9 +255,6 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
 
                 // ── Color-code each score cell ──
                 for ($row = $headerRow + 1; $row <= $dataEndRow; $row++) {
-                    // Skip kelas header/footer rows
-                    if (in_array($row, $this->kelasRanges)) continue;
-
                     for ($col = 5; $col <= 4 + $this->mapelCount; $col++) {
                         $colLetter = Coordinate::stringFromColumnIndex($col);
                         $val = $sheet->getCell("{$colLetter}{$row}")->getValue();
@@ -317,15 +283,6 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
                             $sheet->getStyle("{$avgCol}{$row}")->getFont()->setBold(true);
                         }
                     }
-                }
-
-                // ── Kelas sub-header styling ──
-                foreach ($this->kelasRanges as $kelasRow) {
-                    $sheet->getStyle("A{$kelasRow}:{$lastCol}{$kelasRow}")->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 9],
-                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E2EFDA']],
-                    ]);
-                    $sheet->mergeCells("B{$kelasRow}:D{$kelasRow}");
                 }
 
                 // ── Tidak hadir rows — red background ──
