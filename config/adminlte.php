@@ -404,6 +404,13 @@ return [
                     'active' => ['admin/rdm-sync*'],
                 ],
                 [
+                    'text' => 'Mapping Mapel RDM',
+                    'route' => 'admin.rdm-mapel-mapping.index',
+                    'icon' => 'fas fa-fw fa-exchange-alt',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/rdm-mapel-mapping*'],
+                ],
+                [
                     'text' => 'Manajemen Kelas',
                     'route' => 'admin.kelas.index',
                     'icon' => 'fas fa-fw fa-school',

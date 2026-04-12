@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MataPelajaran;
 use App\Models\NilaiSiswa;
+use App\Models\RdmMapelMapping;
 use App\Models\RdmSyncRun;
 use App\Models\RdmSyncStaging;
 use App\Models\Siswa;
@@ -105,7 +106,7 @@ class RdmSyncService
             $normNis = trim((string) ($row->rdm_nis ?? ''));
 
             $simansaSiswaId = $siswaMap[$normNisn] ?? ($normNis ? ($siswaMap['NIS:' . $normNis] ?? null) : null);
-            $simansaMapelId = $mapelMap[$normMapel] ?? null;
+            $simansaMapelId = $mapelMap['RDM_ID:' . $row->rdm_mapel_id] ?? $mapelMap[$normMapel] ?? null;
             $simansaSemester = $this->mapSemester((int) ($row->rdm_tingkat_id ?? 0), (int) ($row->rdm_semester_id ?? 0));
 
             $status = 'matched';
@@ -317,6 +318,15 @@ class RdmSyncService
     {
         $map = [];
 
+        // Priority 1: Manual mapping table (rdm_mapel_id → simansa mata_pelajaran_id)
+        RdmMapelMapping::query()
+            ->select('rdm_mapel_id', 'mata_pelajaran_id')
+            ->get()
+            ->each(function ($item) use (&$map) {
+                $map['RDM_ID:' . $item->rdm_mapel_id] = $item->mata_pelajaran_id;
+            });
+
+        // Priority 2: Fallback normalized name matching
         MataPelajaran::query()
             ->select('id', 'nama_mapel')
             ->where('is_active', true)

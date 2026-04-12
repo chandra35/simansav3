@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TahunPelajaranController;
 use App\Http\Controllers\Admin\KurikulumController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RdmSyncController;
+use App\Http\Controllers\Admin\RdmMapelMappingController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
@@ -181,6 +182,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/rdm-sync', [RdmSyncController::class, 'index'])->name('rdm-sync.index');
         Route::post('/rdm-sync/preview', [RdmSyncController::class, 'preview'])->name('rdm-sync.preview');
         Route::post('/rdm-sync/{run}/apply', [RdmSyncController::class, 'apply'])->name('rdm-sync.apply');
+
+        // Mapping Mapel RDM
+        Route::get('/rdm-mapel-mapping', [RdmMapelMappingController::class, 'index'])->name('rdm-mapel-mapping.index');
+        Route::post('/rdm-mapel-mapping', [RdmMapelMappingController::class, 'store'])->name('rdm-mapel-mapping.store');
+        Route::post('/rdm-mapel-mapping/auto-map', [RdmMapelMappingController::class, 'autoMap'])->name('rdm-mapel-mapping.auto-map');
+        Route::post('/rdm-mapel-mapping/bulk', [RdmMapelMappingController::class, 'bulkStore'])->name('rdm-mapel-mapping.bulk-store');
+        Route::delete('/rdm-mapel-mapping/{mapping}', [RdmMapelMappingController::class, 'destroy'])->name('rdm-mapel-mapping.destroy');
     });
     
     // Kelas Management
