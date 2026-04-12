@@ -92,9 +92,9 @@
     <div class="row mb-3">
         <div class="col-12 d-flex flex-wrap gap-2">
             @if($stats['unmapped'] > 0 && count($suggestions) > 0)
-                <form method="POST" action="{{ route('admin.rdm-mapel-mapping.auto-map') }}" class="mr-2" onsubmit="return confirm('Auto-map akan mencocokkan {{ count($suggestions) }} mapel yang namanya identik. Lanjutkan?');">
+                <form method="POST" action="{{ route('admin.rdm-mapel-mapping.auto-map') }}" class="mr-2" id="autoMapForm">
                     @csrf
-                    <button type="submit" class="btn btn-info">
+                    <button type="button" class="btn btn-info" id="btnAutoMap">
                         <i class="fas fa-magic"></i> Auto-Map ({{ count($suggestions) }} cocok)
                     </button>
                 </form>
@@ -208,10 +208,10 @@
                                                 title="Ubah mapping">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <form method="POST" action="{{ route('admin.rdm-mapel-mapping.destroy', $mapping) }}" class="d-inline" onsubmit="return confirm('Hapus mapping mapel ini?');">
+                                            <form method="POST" action="{{ route('admin.rdm-mapel-mapping.destroy', $mapping) }}" class="d-inline form-delete">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-outline-danger" title="Hapus mapping">
+                                                <button type="button" class="btn btn-outline-danger btn-delete" title="Hapus mapping" data-nama="{{ $rdm->mapel_nama }}">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             </form>
@@ -353,6 +353,7 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     .row-mapped { background-color: rgba(40, 167, 69, 0.04) !important; }
     .row-unmapped { background-color: rgba(255, 193, 7, 0.04) !important; }
@@ -368,6 +369,7 @@
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
     // Search filter
@@ -471,8 +473,53 @@ $(function() {
         });
         if (!valid) {
             e.preventDefault();
-            alert('Pilih mapel SIMANSA untuk semua baris yang dicentang, atau hapus centang baris yang tidak ingin dipetakan.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Data Belum Lengkap',
+                text: 'Pilih mapel SIMANSA untuk semua baris yang dicentang, atau hapus centang baris yang tidak ingin dipetakan.',
+                confirmButtonColor: '#3085d6',
+            });
         }
+    });
+
+    // Auto-map confirmation
+    $('#btnAutoMap').on('click', function() {
+        Swal.fire({
+            title: 'Auto-Map Mapel?',
+            html: '<p>Auto-map akan mencocokkan <strong>{{ count($suggestions) }}</strong> mapel yang namanya identik secara otomatis berdasarkan kurikulum.</p><p class="text-muted small mb-0">Mapping yang sudah ada tidak akan ditimpa.</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#17a2b8',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-magic"></i> Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $('#autoMapForm').submit();
+            }
+        });
+    });
+
+    // Delete mapping confirmation
+    $(document).on('click', '.btn-delete', function() {
+        var $form = $(this).closest('.form-delete');
+        var nama = $(this).data('nama');
+        Swal.fire({
+            title: 'Hapus Mapping?',
+            html: 'Mapping untuk mapel <strong>"' + nama + '"</strong> akan dihapus.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash-alt"></i> Ya, Hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $form.submit();
+            }
+        });
     });
 });
 </script>

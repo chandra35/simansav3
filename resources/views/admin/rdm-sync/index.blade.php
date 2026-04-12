@@ -151,9 +151,9 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0"><i class="fas fa-clipboard-list"></i> Detail Run</h3>
                     @if($selectedRun)
-                        <form method="POST" action="{{ route('admin.rdm-sync.apply', $selectedRun) }}" onsubmit="return confirm('Apply sync ini ke nilai_siswa? Pastikan mismatch sudah aman.');">
+                        <form method="POST" action="{{ route('admin.rdm-sync.apply', $selectedRun) }}" id="applySyncForm">
                             @csrf
-                            <button type="submit" class="btn btn-success btn-sm" {{ $selectedRun->status === 'applied' ? 'disabled' : '' }}>
+                            <button type="button" class="btn btn-success btn-sm" id="btnApplySync" {{ $selectedRun->status === 'applied' ? 'disabled' : '' }}>
                                 <i class="fas fa-check"></i> Apply ke Nilai Siswa
                             </button>
                         </form>
@@ -228,4 +228,38 @@
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function() {
+    $('#btnApplySync').on('click', function() {
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+
+        Swal.fire({
+            title: 'Apply Sync ke Nilai Siswa?',
+            html: '<p>Data matched akan ditulis ke tabel <strong>nilai_siswa</strong>.</p>' +
+                  '<p class="text-danger small mb-0"><i class="fas fa-exclamation-triangle"></i> Pastikan hasil preview dan mismatch sudah diperiksa sebelum apply.</p>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check"></i> Ya, Apply Sekarang',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+                $('#applySyncForm').submit();
+            }
+        });
+    });
+});
+</script>
 @stop
