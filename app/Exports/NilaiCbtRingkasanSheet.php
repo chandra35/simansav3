@@ -128,15 +128,28 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                 $nama = ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'));
                 $nisn = $row['siswa_nisn'] ?? $row['moodle_username'] ?? '-';
                 $kelas = $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-');
-                $scores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+                $rawScores = collect($row['scores'] ?? []);
+                $scores = $rawScores->keyBy('quiz_id');
 
-                $findScoreByKeyword = function ($keyword) use ($scores, $pilihanMap) {
-                    foreach ($scores as $qid => $score) {
-                        $mapelName = strtolower($pilihanMap->get($qid)['quiz_name'] ?? '');
-                        if (!str_contains($mapelName, $keyword)) {
-                            continue;
-                        }
+                $findScoreByPatterns = function (array $patterns) use ($rawScores, $tktMapel) {
+                    $candidateQuizIds = collect($tktMapel)
+                        ->filter(function ($mapel) use ($patterns) {
+                            $name = strtolower($mapel['quiz_name'] ?? '');
+                            $compact = preg_replace('/[^a-z0-9]/', '', $name);
 
+                            foreach ($patterns as $pattern) {
+                                if (preg_match($pattern, $name) || preg_match($pattern, $compact)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        })
+                        ->pluck('quiz_id')
+                        ->values();
+
+                    foreach ($candidateQuizIds as $qid) {
+                        $score = $rawScores->first(fn($s) => (string) ($s['quiz_id'] ?? '') === (string) $qid);
                         $nilai = $score['normalized_100'] ?? null;
                         if (is_numeric($nilai) && $nilai > 0) {
                             return round($nilai, 1);
@@ -146,9 +159,9 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                     return null;
                 };
 
-                $nilaiMatWajib = $findScoreByKeyword('matematika wajib');
-                $nilaiBing = $findScoreByKeyword('bahasa inggris');
-                $nilaiBind = $findScoreByKeyword('bahasa indonesia');
+                $nilaiMatWajib = $findScoreByPatterns(['/matematikawajib/', '/matwajib/', '/mtkwajib/']);
+                $nilaiBing = $findScoreByPatterns(['/bahasainggris/', '/binggris/', '/english/']);
+                $nilaiBind = $findScoreByPatterns(['/bahasaindonesia/', '/bindonesia/']);
 
                 foreach ($pilihanQuizIds as $qid) {
                     $score = $scores->get($qid);
