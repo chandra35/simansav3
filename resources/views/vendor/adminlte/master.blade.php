@@ -93,6 +93,46 @@
 <body class="@yield('classes_body')" @yield('body_data')>
 
     <style>
+        /* Global consistency: header and menu title style */
+        .main-sidebar .brand-text,
+        .main-header .navbar-nav .nav-link,
+        .nav-sidebar .nav-link > p,
+        .nav-sidebar .nav-treeview .nav-link > p,
+        .card-header .card-title {
+            font-weight: 700;
+        }
+
+        .nav-sidebar .nav-header {
+            color: rgba(255, 255, 255, 0.92) !important;
+            font-weight: 700;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+
+        .card > .card-header {
+            background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .88));
+            color: #fff;
+            border-bottom: 0;
+        }
+
+        .card > .card-header .card-title,
+        .card > .card-header .card-tools,
+        .card > .card-header .btn-tool,
+        .card > .card-header .btn-tool i,
+        .card > .card-header .btn,
+        .card > .card-header .nav-link {
+            color: #fff !important;
+        }
+
+        .card > .card-header .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.65);
+        }
+
+        .card > .card-header .btn-light {
+            color: #1e3a8a !important;
+            font-weight: 700;
+        }
+
         .app-global-overlay {
             position: fixed;
             inset: 0;
