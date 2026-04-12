@@ -124,6 +124,43 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
             $pilihanMap = $tktMapel->keyBy('quiz_id');
             $pilihanRows = [];
 
+            // Resolve quiz_id mapel wajib once per tingkat (robust: pattern + fallback by wajib order)
+            $findQuizIdByPatterns = function (array $patterns) use ($tktMapel) {
+                $match = collect($tktMapel)->first(function ($mapel) use ($patterns) {
+                    $name = strtolower($mapel['quiz_name'] ?? '');
+                    $compact = preg_replace('/[^a-z0-9]/', '', $name);
+                    foreach ($patterns as $pattern) {
+                        if (preg_match($pattern, $name) || preg_match($pattern, $compact)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                return $match['quiz_id'] ?? null;
+            };
+
+            $mandatoryOrdered = collect($tktMapel)
+                ->filter(fn($m) => in_array($m['quiz_id'], $tktMapelWajib))
+                ->values();
+
+            $quizIdMatWajib = $findQuizIdByPatterns(['/matematikawajib/', '/matwajib/', '/mtkwajib/'])
+                ?? ($mandatoryOrdered[0]['quiz_id'] ?? null);
+            $quizIdBing = $findQuizIdByPatterns(['/bahasainggris/', '/bhsinggris/', '/binggris/', '/inggris/', '/english/'])
+                ?? ($mandatoryOrdered[1]['quiz_id'] ?? null);
+            $quizIdBind = $findQuizIdByPatterns(['/bahasaindonesia/', '/bhsindonesia/', '/bindonesia/', '/indonesia/'])
+                ?? ($mandatoryOrdered[2]['quiz_id'] ?? null);
+
+            $getScoreByQuizId = function ($quizId, $rawScores) {
+                if (!$quizId) {
+                    return null;
+                }
+
+                $score = $rawScores->first(fn($s) => (string) ($s['quiz_id'] ?? '') === (string) $quizId);
+                $nilai = $score['normalized_100'] ?? null;
+                return (is_numeric($nilai) && $nilai > 0) ? round($nilai, 1) : null;
+            };
+
             foreach ($tktRows as $row) {
                 $nama = ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'));
                 $nisn = $row['siswa_nisn'] ?? $row['moodle_username'] ?? '-';
@@ -131,37 +168,9 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                 $rawScores = collect($row['scores'] ?? []);
                 $scores = $rawScores->keyBy('quiz_id');
 
-                $findScoreByPatterns = function (array $patterns) use ($rawScores, $tktMapel) {
-                    $candidateQuizIds = collect($tktMapel)
-                        ->filter(function ($mapel) use ($patterns) {
-                            $name = strtolower($mapel['quiz_name'] ?? '');
-                            $compact = preg_replace('/[^a-z0-9]/', '', $name);
-
-                            foreach ($patterns as $pattern) {
-                                if (preg_match($pattern, $name) || preg_match($pattern, $compact)) {
-                                    return true;
-                                }
-                            }
-
-                            return false;
-                        })
-                        ->pluck('quiz_id')
-                        ->values();
-
-                    foreach ($candidateQuizIds as $qid) {
-                        $score = $rawScores->first(fn($s) => (string) ($s['quiz_id'] ?? '') === (string) $qid);
-                        $nilai = $score['normalized_100'] ?? null;
-                        if (is_numeric($nilai) && $nilai > 0) {
-                            return round($nilai, 1);
-                        }
-                    }
-
-                    return null;
-                };
-
-                $nilaiMatWajib = $findScoreByPatterns(['/matematikawajib/', '/matwajib/', '/mtkwajib/']);
-                $nilaiBing = $findScoreByPatterns(['/bahasainggris/', '/binggris/', '/english/']);
-                $nilaiBind = $findScoreByPatterns(['/bahasaindonesia/', '/bindonesia/']);
+                $nilaiMatWajib = $getScoreByQuizId($quizIdMatWajib, $rawScores);
+                $nilaiBing = $getScoreByQuizId($quizIdBing, $rawScores);
+                $nilaiBind = $getScoreByQuizId($quizIdBind, $rawScores);
 
                 foreach ($pilihanQuizIds as $qid) {
                     $score = $scores->get($qid);
