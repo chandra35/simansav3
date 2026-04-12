@@ -1163,6 +1163,7 @@ class SmartqController extends Controller
     {
         $cacheKey = $request->query('cache_key');
         $format = $request->query('format', 'excel');
+        $onlyHadir = $format === 'excel_hadir';
 
         // Try cache first, fallback to DB
         $rows = null;
@@ -1210,12 +1211,43 @@ class SmartqController extends Controller
 
         $byTingkat = $rowsWithTingkat->groupBy('_tingkat')->sortKeys();
 
+        if ($onlyHadir) {
+            $byTingkat = $byTingkat
+                ->map(fn($tktRows) => collect($tktRows)->filter(fn($r) => ($r['has_attempt'] ?? false))->values())
+                ->filter(fn($tktRows) => $tktRows->count() > 0);
+        }
+
         // Build mapel per tingkat
         $allMapel = $rowsCollection->flatMap(fn($r) => $r['scores'] ?? [])->unique('quiz_id')->sortBy('quiz_name')->values();
         $mapelByTingkat = [];
         foreach ($allMapel as $m) {
             $tkt = $quizTingkat[$m['quiz_id']] ?? 0;
             $mapelByTingkat[$tkt][] = $m;
+        }
+
+        // Prioritas urutan mapel: Matematika Wajib, Bahasa Inggris, Bahasa Indonesia, sisanya
+        foreach ($mapelByTingkat as $tkt => $mapels) {
+            $mapelByTingkat[$tkt] = collect($mapels)
+                ->sort(function ($a, $b) {
+                    $nameA = strtolower($a['quiz_name'] ?? '');
+                    $nameB = strtolower($b['quiz_name'] ?? '');
+
+                    $priorityA = str_contains($nameA, 'matematika wajib') ? 1
+                        : (str_contains($nameA, 'bahasa inggris') ? 2
+                        : (str_contains($nameA, 'bahasa indonesia') ? 3 : 4));
+
+                    $priorityB = str_contains($nameB, 'matematika wajib') ? 1
+                        : (str_contains($nameB, 'bahasa inggris') ? 2
+                        : (str_contains($nameB, 'bahasa indonesia') ? 3 : 4));
+
+                    if ($priorityA !== $priorityB) {
+                        return $priorityA <=> $priorityB;
+                    }
+
+                    return strcmp($nameA, $nameB);
+                })
+                ->values()
+                ->all();
         }
 
         if ($format === 'pdf') {
@@ -1225,7 +1257,7 @@ class SmartqController extends Controller
         // Excel (.xlsx) with Maatwebsite/Excel — multi-sheet per tingkat
         ini_set('memory_limit', '512M');
         $safeName = preg_replace('/[\/\\\\:*?"<>|]/', '-', $smartq->nama);
-        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.xlsx';
+        $filename = ($onlyHadir ? 'SMARTQ_NilaiCBT_HADIR_' : 'SMARTQ_NilaiCBT_') . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.xlsx';
         return Excel::download(
             new NilaiCbtExport($byTingkat, $mapelByTingkat, $quizTingkat, $smartq),
             $filename

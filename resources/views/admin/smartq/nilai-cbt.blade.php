@@ -94,6 +94,7 @@
             <div class="mt-2 mt-md-0">
                 <a href="{{ route('admin.smartq.moodle.scan', $smartq) }}" class="btn btn-sm btn-outline-primary mr-1"><i class="fas fa-sync"></i> Rescan</a>
                 <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'excel']) }}" class="btn btn-sm btn-success mr-1" id="btnExportExcel"><i class="fas fa-file-excel"></i> Excel</a>
+                <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'excel_hadir']) }}" class="btn btn-sm btn-outline-success mr-1" id="btnExportExcelHadir"><i class="fas fa-user-check"></i> Excel Hadir</a>
                 <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'pdf']) }}" class="btn btn-sm btn-danger" id="btnExportPdf"><i class="fas fa-file-pdf"></i> PDF</a>
             </div>
         </div>
@@ -417,4 +418,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@stop
+@stop

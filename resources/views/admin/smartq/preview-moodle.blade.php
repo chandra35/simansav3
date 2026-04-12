@@ -77,6 +77,10 @@
                    class="btn btn-sm btn-success mr-1" id="btnExportExcel">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </a>
+                <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'cache_key' => $cacheKey, 'format' => 'excel_hadir']) }}"
+                   class="btn btn-sm btn-outline-success mr-1" id="btnExportExcelHadir">
+                    <i class="fas fa-user-check"></i> Export Excel Hadir
+                </a>
                 <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'cache_key' => $cacheKey, 'format' => 'pdf']) }}"
                    class="btn btn-sm btn-danger" id="btnExportPdf">
                     <i class="fas fa-file-pdf"></i> Export PDF

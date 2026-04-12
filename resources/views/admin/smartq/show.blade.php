@@ -115,6 +115,9 @@
                                 <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'excel']) }}" class="list-group-item list-group-item-action">
                                     <i class="fas fa-file-excel text-success"></i> Export Nilai CBT (Excel)
                                 </a>
+                                <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'excel_hadir']) }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-file-excel text-success"></i> Export Nilai CBT Hadir Saja (Excel)
+                                </a>
                                 <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'format' => 'pdf']) }}" class="list-group-item list-group-item-action">
                                     <i class="fas fa-file-pdf text-danger"></i> Export Nilai CBT (PDF)
                                 </a>
