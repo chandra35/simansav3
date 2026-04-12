@@ -23,10 +23,14 @@
     <div class="alert alert-info">
         <i class="fas fa-info-circle"></i>
         <strong>Periode:</strong> {{ $smartq->nama }} |
-        <strong>Moodle:</strong> {{ $smartq->moodle_base_url }} |
-        <strong>Course ID:</strong> {{ $smartq->moodle_course_id }}
-        @if($smartq->moodle_quiz_id)
-            | <strong>Quiz:</strong> {{ $smartq->moodle_quiz_name ?? 'ID ' . $smartq->moodle_quiz_id }}
+        <strong>Moodle:</strong> {{ $smartq->moodle_base_url }}
+        @if(!empty($smartq->moodle_quizzes))
+            | <strong>{{ count($smartq->moodle_course_ids) }} course</strong>, <strong>{{ count($smartq->moodle_quizzes) }} kuis</strong> di-scan
+        @elseif($smartq->moodle_course_id)
+            | <strong>Course ID:</strong> {{ $smartq->moodle_course_id }}
+            @if($smartq->moodle_quiz_id)
+                | <strong>Quiz:</strong> {{ $smartq->moodle_quiz_name ?? 'ID ' . $smartq->moodle_quiz_id }}
+            @endif
         @endif
     </div>
 
@@ -146,9 +150,12 @@
                                 <td>{{ $row['siswa_kelas'] ?? '-' }}</td>
                                 <td class="text-center">
                                     @if($row['has_attempt'])
-                                        <span class="badge badge-primary" title="Raw: {{ $row['raw_score'] }}/{{ $row['max_score'] }}">
+                                        <span class="badge badge-primary" title="{{ count($row['scores'] ?? []) }} kuis dijawab">
                                             {{ $row['normalized_100'] }}
                                         </span>
+                                        @if(count($row['scores'] ?? []) > 1)
+                                            <br><small class="text-muted">{{ count($row['scores']) }} kuis</small>
+                                        @endif
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif

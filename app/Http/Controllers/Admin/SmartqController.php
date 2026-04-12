@@ -383,76 +383,113 @@ class SmartqController extends Controller
     public function moodleSaveCourseQuiz(Request $request, SmartqPeriode $smartq)
     {
         $request->validate([
-            'moodle_category_id' => 'nullable|integer',
-            'moodle_category_name' => 'nullable|string',
-            'moodle_course_id' => 'required|integer',
-            'moodle_course_name' => 'nullable|string',
-            'moodle_quiz_id' => 'required|integer',
-            'moodle_quiz_name' => 'required|string',
+            'moodle_quizzes' => 'required|array|min:1',
+            'moodle_quizzes.*.category_id' => 'nullable|integer',
+            'moodle_quizzes.*.category_name' => 'nullable|string',
+            'moodle_quizzes.*.course_id' => 'required|integer',
+            'moodle_quizzes.*.course_name' => 'nullable|string',
+            'moodle_quizzes.*.quiz_id' => 'required|integer',
+            'moodle_quizzes.*.quiz_name' => 'required|string',
         ]);
 
-        $smartq->update($request->only([
-            'moodle_category_id', 'moodle_category_name',
-            'moodle_course_id', 'moodle_course_name',
-            'moodle_quiz_id', 'moodle_quiz_name',
-        ]));
+        $quizzes = $request->input('moodle_quizzes');
 
-        return response()->json(['success' => true, 'message' => 'Konfigurasi Moodle disimpan']);
+        // Also update legacy single fields with first quiz for backward compatibility
+        $first = $quizzes[0] ?? [];
+        $smartq->update([
+            'moodle_quizzes' => $quizzes,
+            'moodle_category_id' => $first['category_id'] ?? null,
+            'moodle_category_name' => $first['category_name'] ?? null,
+            'moodle_course_id' => $first['course_id'] ?? null,
+            'moodle_course_name' => $first['course_name'] ?? null,
+            'moodle_quiz_id' => $first['quiz_id'] ?? null,
+            'moodle_quiz_name' => $first['quiz_name'] ?? null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => count($quizzes) . ' quiz berhasil disimpan']);
     }
 
     public function syncMoodle(SmartqPeriode $smartq)
     {
-        if (!$smartq->moodle_base_url || !$smartq->moodle_quiz_id) {
-            return redirect()->route('admin.smartq.show', $smartq)
-                ->with('error', 'Konfigurasi Moodle belum lengkap. Set URL dan Quiz ID terlebih dahulu.');
+        $quizConfigs = $smartq->moodle_quizzes ?? [];
+
+        // Fallback to legacy single quiz
+        if (empty($quizConfigs) && $smartq->moodle_quiz_id) {
+            $quizConfigs = [[
+                'quiz_id' => $smartq->moodle_quiz_id,
+                'quiz_name' => $smartq->moodle_quiz_name,
+            ]];
         }
 
-        // Get all peserta with their siswa NISN (used as Moodle username)
+        if (!$smartq->moodle_base_url || empty($quizConfigs)) {
+            return redirect()->route('admin.smartq.show', $smartq)
+                ->with('error', 'Konfigurasi Moodle belum lengkap. Set URL dan Quiz terlebih dahulu.');
+        }
+
         $pesertas = $smartq->pesertas()->with('siswa')->get();
         $nisns = $pesertas->pluck('siswa.nisn')->filter()->implode(',');
 
+        $komponenCbt = $smartq->komponenNilais()->where('sumber', 'moodle')->first();
+        if (!$komponenCbt) {
+            return redirect()->route('admin.smartq.show', $smartq)
+                ->with('error', 'Tidak ada komponen nilai dengan sumber "moodle".');
+        }
+
         try {
             $url = rtrim($smartq->moodle_base_url, '/') . '/converter/smartq/';
-            $response = Http::timeout(30)->get($url, [
-                'action' => 'scores',
-                'quiz' => $smartq->moodle_quiz_id,
-                'usernames' => $nisns,
-            ]);
 
-            if (!$response->successful()) {
-                return redirect()->route('admin.smartq.show', $smartq)
-                    ->with('error', 'Gagal mengakses Moodle API: HTTP ' . $response->status());
+            // Collect scores from all quizzes
+            $allScores = []; // username => [scores...]
+            $quizNames = [];
+
+            foreach ($quizConfigs as $qc) {
+                $response = Http::timeout(30)->get($url, [
+                    'action' => 'scores',
+                    'quiz' => $qc['quiz_id'],
+                    'usernames' => $nisns,
+                ]);
+
+                if (!$response->successful()) continue;
+                $result = $response->json();
+                if (!($result['success'] ?? false)) continue;
+
+                $quizNames[] = $qc['quiz_name'] ?? 'Quiz ' . $qc['quiz_id'];
+
+                foreach ($result['data'] ?? [] as $score) {
+                    $username = $score['username'];
+                    if (!isset($allScores[$username])) {
+                        $allScores[$username] = [];
+                    }
+                    $allScores[$username][] = [
+                        'normalized_100' => $score['normalized_100'],
+                        'attempt_id' => $score['attempt_id'],
+                        'raw_score' => $score['raw_score'],
+                        'max_score' => $score['max_score'],
+                        'quiz_name' => $qc['quiz_name'] ?? '',
+                    ];
+                }
             }
 
-            $result = $response->json();
-            if (!($result['success'] ?? false)) {
-                return redirect()->route('admin.smartq.show', $smartq)
-                    ->with('error', 'Moodle API error: ' . ($result['error'] ?? 'Unknown'));
-            }
-
-            // Find the CBT komponen (sumber = moodle)
-            $komponenCbt = $smartq->komponenNilais()->where('sumber', 'moodle')->first();
-            if (!$komponenCbt) {
-                return redirect()->route('admin.smartq.show', $smartq)
-                    ->with('error', 'Tidak ada komponen nilai dengan sumber "moodle".');
-            }
-
-            $scores = collect($result['data'] ?? []);
             $matched = 0;
             $notFound = 0;
 
-            DB::transaction(function () use ($pesertas, $scores, $komponenCbt, &$matched, &$notFound) {
+            DB::transaction(function () use ($pesertas, $allScores, $komponenCbt, $quizNames, &$matched, &$notFound) {
                 foreach ($pesertas as $peserta) {
                     $nisn = $peserta->siswa->nisn ?? '';
-                    $scoreData = $scores->firstWhere('username', $nisn);
+                    $scores = $allScores[$nisn] ?? null;
 
-                    if (!$scoreData) {
+                    if (!$scores || empty($scores)) {
                         $notFound++;
                         continue;
                     }
 
-                    $nilaiRaw = $scoreData['normalized_100'];
+                    // Average normalized score across all quizzes
+                    $avgScore = collect($scores)->avg('normalized_100');
+                    $nilaiRaw = round($avgScore, 2);
                     $nilaiKonversi = round(($nilaiRaw / $komponenCbt->nilai_maksimal) * 100, 2);
+                    $bestAttempt = collect($scores)->sortByDesc('normalized_100')->first();
+
+                    $quizDetail = collect($scores)->map(fn($s) => "{$s['quiz_name']}: {$s['normalized_100']}")->implode(', ');
 
                     SmartqNilai::updateOrCreate(
                         [
@@ -462,11 +499,11 @@ class SmartqController extends Controller
                         [
                             'nilai' => $nilaiRaw,
                             'nilai_konversi' => min(100, $nilaiKonversi),
-                            'moodle_attempt_id' => $scoreData['attempt_id'],
-                            'moodle_username' => $scoreData['username'],
+                            'moodle_attempt_id' => $bestAttempt['attempt_id'],
+                            'moodle_username' => $nisn,
                             'dinilai_oleh' => Auth::id(),
                             'dinilai_pada' => now(),
-                            'catatan' => "Sync Moodle: Quiz \"{$scoreData['fullname']}\" - Raw: {$scoreData['raw_score']}/{$scoreData['max_score']}",
+                            'catatan' => "Sync " . count($scores) . " quiz (avg): {$quizDetail}",
                         ]
                     );
 
@@ -474,12 +511,11 @@ class SmartqController extends Controller
                 }
             });
 
-            // Recalculate ranking
             $smartq->hitungRanking();
 
-            $msg = "Sync Moodle selesai: {$matched} siswa ter-match";
+            $msg = "Sync selesai dari " . count($quizConfigs) . " quiz: {$matched} siswa ter-match";
             if ($notFound > 0) {
-                $msg .= ", {$notFound} siswa tidak ditemukan di Moodle (NISN tidak cocok)";
+                $msg .= ", {$notFound} tidak ditemukan di Moodle";
             }
 
             return redirect()->route('admin.smartq.show', $smartq)->with('success', $msg);
@@ -495,65 +531,112 @@ class SmartqController extends Controller
 
     public function moodleScan(SmartqPeriode $smartq)
     {
-        if (!$smartq->moodle_base_url || !$smartq->moodle_course_id) {
+        $quizConfigs = $smartq->moodle_quizzes ?? [];
+        $courseIds = $smartq->moodle_course_ids; // from accessor
+
+        // Fallback to legacy
+        if (empty($quizConfigs) && $smartq->moodle_course_id) {
+            $courseIds = [$smartq->moodle_course_id];
+            if ($smartq->moodle_quiz_id) {
+                $quizConfigs = [[
+                    'course_id' => $smartq->moodle_course_id,
+                    'quiz_id' => $smartq->moodle_quiz_id,
+                    'quiz_name' => $smartq->moodle_quiz_name,
+                ]];
+            }
+        }
+
+        if (!$smartq->moodle_base_url || empty($courseIds)) {
             return redirect()->route('admin.smartq.peserta', $smartq)
-                ->with('error', 'Konfigurasi Moodle belum lengkap. Set URL dan Course terlebih dahulu di halaman Moodle Config.');
+                ->with('error', 'Konfigurasi Moodle belum lengkap. Set URL dan Course/Quiz terlebih dahulu di Moodle Config.');
         }
 
         try {
             $url = rtrim($smartq->moodle_base_url, '/') . '/converter/smartq/';
-            $params = ['action' => 'enrolled', 'course' => $smartq->moodle_course_id];
-            if ($smartq->moodle_quiz_id) {
-                $params['quiz'] = $smartq->moodle_quiz_id;
+
+            // 1. Collect enrolled users from all courses
+            $moodleUsersMap = []; // username => user data
+            foreach ($courseIds as $courseId) {
+                $response = Http::timeout(30)->get($url, [
+                    'action' => 'enrolled',
+                    'course' => $courseId,
+                ]);
+
+                if (!$response->successful()) continue;
+                $result = $response->json();
+                if (!($result['success'] ?? false)) continue;
+
+                foreach ($result['data'] ?? [] as $mu) {
+                    $username = $mu['username'];
+                    if (!isset($moodleUsersMap[$username])) {
+                        $moodleUsersMap[$username] = [
+                            'userid' => $mu['userid'],
+                            'username' => $username,
+                            'fullname' => $mu['fullname'],
+                            'email' => $mu['email'],
+                            'courses' => [],
+                            'scores' => [],
+                        ];
+                    }
+                    $moodleUsersMap[$username]['courses'][] = $courseId;
+                }
             }
 
-            $response = Http::timeout(30)->get($url, $params);
-
-            if (!$response->successful()) {
-                return redirect()->route('admin.smartq.peserta', $smartq)
-                    ->with('error', 'Gagal mengakses Moodle API: HTTP ' . $response->status());
+            // 2. Collect scores from all configured quizzes
+            $quizIdToCourse = [];
+            foreach ($quizConfigs as $qc) {
+                $quizIdToCourse[$qc['quiz_id']] = $qc;
             }
 
-            $result = $response->json();
-            if (!($result['success'] ?? false)) {
-                return redirect()->route('admin.smartq.peserta', $smartq)
-                    ->with('error', 'Moodle API error: ' . ($result['error'] ?? 'Unknown'));
+            foreach ($quizConfigs as $qc) {
+                $response = Http::timeout(30)->get($url, [
+                    'action' => 'scores',
+                    'quiz' => $qc['quiz_id'],
+                ]);
+
+                if (!$response->successful()) continue;
+                $result = $response->json();
+                if (!($result['success'] ?? false)) continue;
+
+                foreach ($result['data'] ?? [] as $score) {
+                    $username = $score['username'];
+                    if (isset($moodleUsersMap[$username])) {
+                        $moodleUsersMap[$username]['scores'][] = [
+                            'quiz_id' => $qc['quiz_id'],
+                            'quiz_name' => $qc['quiz_name'] ?? '',
+                            'normalized_100' => $score['normalized_100'],
+                            'attempt_id' => $score['attempt_id'],
+                            'raw_score' => $score['raw_score'],
+                            'max_score' => $score['max_score'],
+                        ];
+                    }
+                }
             }
 
-            $moodleUsers = collect($result['data'] ?? []);
-
-            // Get all SIMANSA students (kelas 10 & 11, aktif)
+            // 3. Match with SIMANSA students
             $siswaAll = Siswa::whereHas('kelasAktif', function ($q) {
                     $q->whereIn('kelas.tingkat', [10, 11]);
                 })
                 ->where('status_siswa', 'aktif')
                 ->get();
 
-            // Already registered peserta
             $pesertaExisting = $smartq->pesertas()->with('siswa')->get();
             $registeredSiswaIds = $pesertaExisting->pluck('siswa_id')->toArray();
-            $registeredNisns = $pesertaExisting->map(fn($p) => $p->siswa->nisn ?? '')->filter()->values()->toArray();
 
-            // Match Moodle users with SIMANSA students by NISN = Moodle username
             $rows = [];
-            foreach ($moodleUsers as $mu) {
+            foreach ($moodleUsersMap as $mu) {
                 $username = $mu['username'];
+                $matchedSiswa = $siswaAll->first(fn($s) => $s->nisn && $s->nisn === $username);
+                $isRegistered = $matchedSiswa && in_array($matchedSiswa->id, $registeredSiswaIds);
 
-                // Try to find matching SIMANSA student by NISN
-                $matchedSiswa = $siswaAll->first(function ($s) use ($username) {
-                    return $s->nisn && $s->nisn === $username;
-                });
-
-                $isRegistered = false;
-                if ($matchedSiswa && in_array($matchedSiswa->id, $registeredSiswaIds)) {
-                    $isRegistered = true;
-                }
+                $hasScores = !empty($mu['scores']);
+                $avgScore = $hasScores ? round(collect($mu['scores'])->avg('normalized_100'), 2) : null;
 
                 $status = 'no_match';
                 if ($matchedSiswa && $isRegistered) {
                     $status = 'already_registered';
                 } elseif ($matchedSiswa && !$isRegistered) {
-                    $status = $mu['has_attempt'] ? 'ready' : 'ready_no_score';
+                    $status = $hasScores ? 'ready' : 'ready_no_score';
                 }
 
                 $rows[] = [
@@ -561,12 +644,11 @@ class SmartqController extends Controller
                     'moodle_username' => $username,
                     'moodle_fullname' => $mu['fullname'],
                     'moodle_email' => $mu['email'],
-                    'has_attempt' => $mu['has_attempt'],
-                    'normalized_100' => $mu['normalized_100'],
-                    'attempt_id' => $mu['attempt_id'],
-                    'raw_score' => $mu['raw_score'],
-                    'max_score' => $mu['max_score'],
-                    'finished_at' => $mu['finished_at'],
+                    'has_attempt' => $hasScores,
+                    'normalized_100' => $avgScore,
+                    'scores' => $mu['scores'],
+                    'attempt_id' => $hasScores ? $mu['scores'][0]['attempt_id'] : null,
+                    'courses_count' => count(array_unique($mu['courses'])),
                     'siswa_id' => $matchedSiswa?->id,
                     'siswa_nama' => $matchedSiswa?->nama_lengkap,
                     'siswa_nisn' => $matchedSiswa?->nisn,
@@ -575,16 +657,24 @@ class SmartqController extends Controller
                 ];
             }
 
-            // Summary
+            // Sort: ready first, then by score
+            usort($rows, function ($a, $b) {
+                $order = ['ready' => 0, 'ready_no_score' => 1, 'already_registered' => 2, 'no_match' => 3];
+                $cmp = ($order[$a['status']] ?? 9) <=> ($order[$b['status']] ?? 9);
+                if ($cmp !== 0) return $cmp;
+                return ($b['normalized_100'] ?? 0) <=> ($a['normalized_100'] ?? 0);
+            });
+
             $summary = [
                 'total_moodle' => count($rows),
                 'matched' => collect($rows)->whereIn('status', ['ready', 'ready_no_score'])->count(),
                 'already_registered' => collect($rows)->where('status', 'already_registered')->count(),
                 'no_match' => collect($rows)->where('status', 'no_match')->count(),
                 'with_scores' => collect($rows)->where('has_attempt', true)->whereIn('status', ['ready', 'ready_no_score'])->count(),
+                'courses_scanned' => count($courseIds),
+                'quizzes_scanned' => count($quizConfigs),
             ];
 
-            // Cache for confirm
             $cacheKey = 'smartq_scan_' . $smartq->id . '_' . Auth::id();
             Cache::put($cacheKey, [
                 'rows' => $rows,

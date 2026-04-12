@@ -27,7 +27,7 @@
     @endif
 
     {{-- Scan dari Moodle --}}
-    @if($smartq->moodle_base_url && $smartq->moodle_course_id)
+    @if($smartq->moodle_base_url && (!empty($smartq->moodle_quizzes) || $smartq->moodle_course_id))
         <div class="card card-success">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-cloud-download-alt"></i> Tambah Peserta dari Moodle</h3>
@@ -36,7 +36,10 @@
                 <p>
                     Scan user yang terdaftar di course Moodle dan import sebagai peserta SMART-Q.
                     NISN siswa akan dicocokkan dengan username Moodle.
-                    @if($smartq->moodle_quiz_id)
+                    @if(!empty($smartq->moodle_quizzes))
+                        <strong>{{ count($smartq->moodle_quizzes) }} kuis</strong> dari <strong>{{ count($smartq->moodle_course_ids) }} course</strong> akan di-scan.
+                        Nilai CBT akan dihitung rata-rata dari semua kuis.
+                    @elseif($smartq->moodle_quiz_id)
                         Nilai CBT juga akan otomatis terisi jika ada.
                     @endif
                 </p>

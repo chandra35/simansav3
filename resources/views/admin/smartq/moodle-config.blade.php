@@ -19,9 +19,18 @@
 @stop
 
 @section('content')
+    @foreach (['success', 'error'] as $msg)
+        @if(session($msg))
+            <div class="alert alert-{{ $msg === 'error' ? 'danger' : $msg }} alert-dismissible fade show">
+                {{ session($msg) }}
+                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        @endif
+    @endforeach
+
     <div class="row">
         <div class="col-md-8">
-            {{-- Step 1: Pilih Kategori --}}
+            {{-- Step 1: Muat & Pilih Kategori --}}
             <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-folder"></i> Step 1: Pilih Kategori</h3>
@@ -31,63 +40,104 @@
                     <button class="btn btn-primary" onclick="loadCategories()" id="btnLoadCategories">
                         <i class="fas fa-sync"></i> Muat Daftar Kategori
                     </button>
-                    <div id="categoryList" class="mt-3" style="display:none">
-                        <select class="form-control" id="categorySelect" onchange="loadCourses()">
-                            <option value="">-- Pilih Kategori --</option>
-                        </select>
+                    <div id="categoryList" class="mt-3" style="display:none"></div>
+                </div>
+            </div>
+
+            {{-- Step 2: Course per Kategori --}}
+            <div id="courseSection" style="display:none">
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-book"></i> Step 2: Pilih Course</h3>
+                        <div class="card-tools">
+                            <span class="badge badge-info" id="courseCount">0</span> course dipilih
+                        </div>
+                    </div>
+                    <div class="card-body" id="courseListContainer">
+                        <p class="text-muted">Pilih kategori di atas untuk memuat course.</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Step 2: Pilih Course --}}
-            <div class="card card-outline card-info" id="courseCard" style="display:none">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-book"></i> Step 2: Pilih Course</h3>
-                </div>
-                <div class="card-body">
-                    <div id="courseListContainer">
-                        <select class="form-control" id="courseSelect" onchange="loadQuizzes()">
-                            <option value="">-- Pilih Course --</option>
-                        </select>
+            {{-- Step 3: Quiz per Course (checkboxes) --}}
+            <div id="quizSection" style="display:none">
+                <div class="card card-outline card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-question-circle"></i> Step 3: Pilih Quiz</h3>
+                        <div class="card-tools">
+                            <span class="badge badge-warning" id="quizCount">0</span> quiz dipilih
+                        </div>
+                    </div>
+                    <div class="card-body" id="quizListContainer">
+                        <p class="text-muted">Pilih course di atas untuk memuat quiz.</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Step 3: Pilih Quiz --}}
-            <div class="card card-outline card-warning" id="quizCard" style="display:none">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-question-circle"></i> Step 3: Pilih Quiz</h3>
-                </div>
-                <div class="card-body">
-                    <div id="quizList"></div>
-                </div>
+            {{-- Save Button --}}
+            <div id="saveSection" style="display:none">
+                <button class="btn btn-success btn-lg btn-block mb-3" onclick="saveConfig()" id="btnSave">
+                    <i class="fas fa-save"></i> Simpan Konfigurasi (<span id="saveQuizCount">0</span> quiz)
+                </button>
             </div>
 
             {{-- Current Config --}}
-            @if($smartq->moodle_quiz_id)
+            @if(!empty($smartq->moodle_quizzes))
                 <div class="card card-success">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-check-circle"></i> Konfigurasi Aktif</h3>
+                        <h3 class="card-title"><i class="fas fa-check-circle"></i> Konfigurasi Aktif ({{ count($smartq->moodle_quizzes) }} quiz)</h3>
                     </div>
-                    <div class="card-body">
-                        <table class="table table-sm">
-                            @if($smartq->moodle_category_id)
-                                <tr><td class="text-muted" width="150">Kategori</td><td><strong>{{ $smartq->moodle_category_name ?? 'ID ' . $smartq->moodle_category_id }}</strong> <small class="text-muted">(ID: {{ $smartq->moodle_category_id }})</small></td></tr>
-                            @endif
-                            <tr><td class="text-muted" width="150">Course</td><td><strong>{{ $smartq->moodle_course_name ?? 'ID ' . $smartq->moodle_course_id }}</strong> <small class="text-muted">(ID: {{ $smartq->moodle_course_id }})</small></td></tr>
-                            <tr><td class="text-muted">Quiz</td><td><strong>{{ $smartq->moodle_quiz_name }}</strong> <small class="text-muted">(ID: {{ $smartq->moodle_quiz_id }})</small></td></tr>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="30">#</th>
+                                    <th>Kategori</th>
+                                    <th>Course</th>
+                                    <th>Quiz</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($smartq->moodle_quizzes as $i => $q)
+                                    <tr>
+                                        <td>{{ $i + 1 }}</td>
+                                        <td>{{ $q['category_name'] ?? '-' }}</td>
+                                        <td>{{ $q['course_name'] ?? '-' }}</td>
+                                        <td><strong>{{ $q['quiz_name'] ?? '-' }}</strong></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
-                        <div class="mt-3">
-                            <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-success" onclick="return confirm('Sync nilai CBT dari Moodle?')">
-                                    <i class="fas fa-cloud-download-alt"></i> Sync Nilai CBT
-                                </button>
-                            </form>
+                    </div>
+                    <div class="card-footer">
+                        <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Sync nilai CBT dari semua quiz yang dikonfigurasi?')">
+                                <i class="fas fa-cloud-download-alt"></i> Sync Nilai CBT
+                            </button>
+                        </form>
+                        @if(count($smartq->moodle_course_ids) > 0)
                             <a href="{{ route('admin.smartq.moodle.scan', $smartq) }}" class="btn btn-info ml-2">
                                 <i class="fas fa-search"></i> Scan Peserta dari Moodle
                             </a>
-                        </div>
+                        @endif
+                    </div>
+                </div>
+            @elseif($smartq->moodle_quiz_id)
+                {{-- Legacy single config --}}
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-check-circle"></i> Konfigurasi Aktif (Legacy)</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            @if($smartq->moodle_category_name)
+                                <tr><td class="text-muted" width="100">Kategori</td><td>{{ $smartq->moodle_category_name }}</td></tr>
+                            @endif
+                            <tr><td class="text-muted">Course</td><td>{{ $smartq->moodle_course_name ?? 'ID ' . $smartq->moodle_course_id }}</td></tr>
+                            <tr><td class="text-muted">Quiz</td><td>{{ $smartq->moodle_quiz_name }}</td></tr>
+                        </table>
+                        <p class="text-muted small mt-2"><i class="fas fa-info-circle"></i> Pilih ulang quiz di atas untuk migrasi ke format baru (multi-quiz).</p>
                     </div>
                 </div>
             @endif
@@ -100,15 +150,15 @@
                 </div>
                 <div class="card-body">
                     <ol class="pl-3">
-                        <li class="mb-2">Pilih <strong>Kategori</strong> yang berisi course SMART-Q</li>
-                        <li class="mb-2">Pilih <strong>Course</strong> tempat test dilaksanakan</li>
-                        <li class="mb-2">Pilih <strong>Quiz</strong> yang digunakan untuk CBT</li>
-                        <li class="mb-2">Klik <strong>Sync</strong> untuk menarik nilai, atau <strong>Scan</strong> untuk import peserta</li>
+                        <li class="mb-2">Klik <strong>Muat Kategori</strong> untuk mengambil data dari Moodle</li>
+                        <li class="mb-2">Centang <strong>Kategori</strong> → course otomatis dimuat</li>
+                        <li class="mb-2">Centang <strong>Course</strong> → quiz otomatis dimuat</li>
+                        <li class="mb-2">Centang <strong>Quiz</strong> yang digunakan untuk CBT</li>
+                        <li class="mb-2">Klik <strong>Simpan</strong></li>
                     </ol>
                     <div class="alert alert-info mb-2">
                         <i class="fas fa-sitemap"></i>
-                        <strong>Hierarki:</strong> Kategori → Course → Quiz<br>
-                        Setiap periode SMART-Q bisa dikonfigurasi ke quiz yang berbeda.
+                        <strong>Multi-quiz:</strong> Bisa pilih quiz dari beberapa kategori & course sekaligus. Nilai akan di-rata-rata per siswa.
                     </div>
                     <div class="alert alert-warning mb-0">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -125,8 +175,10 @@
 
 @section('js')
 <script>
-let selectedCategoryName = '';
-let selectedCourseName = '';
+// State
+let categoriesData = [];
+let coursesLoaded = {}; // categoryId -> courses[]
+let quizzesLoaded = {}; // courseId -> quizzes[]
 
 function loadCategories() {
     const btn = document.getElementById('btnLoadCategories');
@@ -136,20 +188,23 @@ function loadCategories() {
     fetch(`{{ route('admin.smartq.moodle.categories', $smartq) }}`)
         .then(r => r.json())
         .then(data => {
-            if (!data.success) { alert(data.error); return; }
-            const sel = document.getElementById('categorySelect');
-            sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
-            data.data.forEach(c => {
-                const indent = '—'.repeat(Math.max(0, c.depth - 1));
-                const label = indent + (indent ? ' ' : '') + c.name + ` (${c.coursecount} course)`;
-                sel.innerHTML += `<option value="${c.id}" data-name="${c.name}">${label}</option>`;
-            });
-            document.getElementById('categoryList').style.display = '';
+            if (!data.success) { alert(data.error || 'Gagal memuat'); return; }
+            categoriesData = data.data;
 
-            @if($smartq->moodle_category_id)
-                sel.value = '{{ $smartq->moodle_category_id }}';
-                if (sel.value) loadCourses();
-            @endif
+            let html = '<div class="list-group">';
+            data.data.forEach(c => {
+                const indent = c.depth > 1 ? 'pl-' + Math.min(c.depth * 2, 5) : '';
+                html += `<label class="list-group-item list-group-item-action ${indent} mb-0 py-2" style="cursor:pointer">
+                    <input type="checkbox" class="mr-2 cat-check" value="${c.id}"
+                           data-name="${c.name}" onchange="onCategoryChange()">
+                    <strong>${c.name}</strong>
+                    <span class="badge badge-light float-right">${c.coursecount} course</span>
+                </label>`;
+            });
+            html += '</div>';
+
+            document.getElementById('categoryList').innerHTML = html;
+            document.getElementById('categoryList').style.display = '';
         })
         .catch(e => alert('Error: ' + e.message))
         .finally(() => {
@@ -158,110 +213,196 @@ function loadCategories() {
         });
 }
 
-function loadCourses() {
-    const catSel = document.getElementById('categorySelect');
-    const categoryId = catSel.value;
-    if (!categoryId) {
-        document.getElementById('courseCard').style.display = 'none';
-        document.getElementById('quizCard').style.display = 'none';
+function onCategoryChange() {
+    const checked = document.querySelectorAll('.cat-check:checked');
+    const section = document.getElementById('courseSection');
+
+    if (checked.length === 0) {
+        section.style.display = 'none';
+        document.getElementById('quizSection').style.display = 'none';
+        document.getElementById('saveSection').style.display = 'none';
         return;
     }
 
-    selectedCategoryName = catSel.options[catSel.selectedIndex].dataset.name || '';
-
-    const card = document.getElementById('courseCard');
+    section.style.display = '';
     const container = document.getElementById('courseListContainer');
-    card.style.display = '';
     container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat course...</p>';
 
-    fetch(`{{ route('admin.smartq.moodle.courses', $smartq) }}?category_id=${categoryId}`)
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) { container.innerHTML = `<div class="alert alert-danger">${data.error}</div>`; return; }
-            if (!data.data.length) { container.innerHTML = '<p class="text-muted">Tidak ada course di kategori ini.</p>'; return; }
+    // Load courses for all checked categories
+    const promises = [];
+    checked.forEach(cb => {
+        const catId = cb.value;
+        if (coursesLoaded[catId]) {
+            promises.push(Promise.resolve({ catId, data: coursesLoaded[catId] }));
+        } else {
+            promises.push(
+                fetch(`{{ route('admin.smartq.moodle.courses', $smartq) }}?category_id=${catId}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) coursesLoaded[catId] = data.data;
+                        return { catId, data: data.data || [] };
+                    })
+            );
+        }
+    });
 
-            let html = '<select class="form-control" id="courseSelect" onchange="loadQuizzes()">';
-            html += '<option value="">-- Pilih Course --</option>';
-            data.data.forEach(c => {
-                html += `<option value="${c.id}" data-name="${c.fullname}">${c.fullname} (${c.shortname}) — ${c.quiz_count} quiz, ${c.enrolled_count} enrolled</option>`;
+    Promise.all(promises).then(results => {
+        let html = '';
+        results.forEach(({ catId, data }) => {
+            const catName = document.querySelector(`.cat-check[value="${catId}"]`)?.dataset.name || catId;
+            html += `<h6 class="text-muted mt-2 mb-1"><i class="fas fa-folder-open"></i> ${catName}</h6>`;
+
+            if (!data || data.length === 0) {
+                html += '<p class="text-muted small ml-3">Tidak ada course.</p>';
+                return;
+            }
+
+            html += '<div class="list-group mb-2">';
+            data.forEach(c => {
+                html += `<label class="list-group-item list-group-item-action mb-0 py-2" style="cursor:pointer">
+                    <input type="checkbox" class="mr-2 course-check" value="${c.id}"
+                           data-name="${c.fullname}" data-cat-id="${catId}" data-cat-name="${catName}"
+                           onchange="onCourseChange()">
+                    <strong>${c.fullname}</strong> <small class="text-muted">(${c.shortname})</small>
+                    <span class="float-right">
+                        <span class="badge badge-primary">${c.quiz_count} quiz</span>
+                        <span class="badge badge-secondary">${c.enrolled_count} siswa</span>
+                    </span>
+                </label>`;
             });
-            html += '</select>';
-            container.innerHTML = html;
+            html += '</div>';
+        });
 
-            @if($smartq->moodle_course_id)
-                document.getElementById('courseSelect').value = '{{ $smartq->moodle_course_id }}';
-                if (document.getElementById('courseSelect').value) loadQuizzes();
-            @endif
-        })
-        .catch(e => container.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`);
+        container.innerHTML = html;
+        updateCounts();
+    });
 }
 
-function loadQuizzes() {
-    const courseSel = document.getElementById('courseSelect');
-    const courseId = courseSel.value;
-    if (!courseId) {
-        document.getElementById('quizCard').style.display = 'none';
+function onCourseChange() {
+    const checked = document.querySelectorAll('.course-check:checked');
+    const section = document.getElementById('quizSection');
+
+    document.getElementById('courseCount').textContent = checked.length;
+
+    if (checked.length === 0) {
+        section.style.display = 'none';
+        document.getElementById('saveSection').style.display = 'none';
         return;
     }
 
-    selectedCourseName = courseSel.options[courseSel.selectedIndex].dataset.name || '';
+    section.style.display = '';
+    const container = document.getElementById('quizListContainer');
+    container.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat quiz...</p>';
 
-    const card = document.getElementById('quizCard');
-    const list = document.getElementById('quizList');
-    card.style.display = '';
-    list.innerHTML = '<p class="text-muted"><i class="fas fa-spinner fa-spin"></i> Memuat quiz...</p>';
+    const promises = [];
+    checked.forEach(cb => {
+        const courseId = cb.value;
+        if (quizzesLoaded[courseId]) {
+            promises.push(Promise.resolve({ courseId, data: quizzesLoaded[courseId], el: cb }));
+        } else {
+            promises.push(
+                fetch(`{{ route('admin.smartq.moodle.quizzes', $smartq) }}?course_id=${courseId}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) quizzesLoaded[courseId] = data.data;
+                        return { courseId, data: data.data || [], el: cb };
+                    })
+            );
+        }
+    });
 
-    fetch(`{{ route('admin.smartq.moodle.quizzes', $smartq) }}?course_id=${courseId}`)
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) { list.innerHTML = `<div class="alert alert-danger">${data.error}</div>`; return; }
-            if (!data.data.length) { list.innerHTML = '<p class="text-muted">Tidak ada quiz di course ini.</p>'; return; }
+    Promise.all(promises).then(results => {
+        let html = '';
+        results.forEach(({ courseId, data, el }) => {
+            const courseName = el.dataset.name;
+            const catName = el.dataset.catName;
 
-            let html = '<div class="list-group">';
-            data.data.forEach(q => {
-                const active = q.id == '{{ $smartq->moodle_quiz_id }}' ? 'list-group-item-success' : '';
-                html += `<div class="list-group-item ${active} d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${q.name}</strong><br>
-                        <small class="text-muted">Max Grade: ${q.maxgrade} | ${q.attempt_count} attempts</small>
-                    </div>
-                    <button class="btn btn-sm btn-primary" onclick="selectQuiz(${q.id}, '${q.name.replace(/'/g, "\\'")}')">
-                        <i class="fas fa-check"></i> Pilih
-                    </button>
-                </div>`;
+            html += `<h6 class="text-muted mt-2 mb-1"><i class="fas fa-book"></i> ${courseName} <small>(${catName})</small></h6>`;
+
+            if (!data || data.length === 0) {
+                html += '<p class="text-muted small ml-3">Tidak ada quiz.</p>';
+                return;
+            }
+
+            html += `<div class="ml-3 mb-2">
+                <button type="button" class="btn btn-xs btn-outline-primary mb-1" onclick="toggleQuizzes('${courseId}', true)">Centang Semua</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary mb-1" onclick="toggleQuizzes('${courseId}', false)">Hapus Semua</button>
+            </div>`;
+            html += '<div class="list-group mb-2">';
+            data.forEach(q => {
+                html += `<label class="list-group-item list-group-item-action mb-0 py-2" style="cursor:pointer">
+                    <input type="checkbox" class="mr-2 quiz-check" value="${q.id}"
+                           data-course-id="${courseId}" data-course-name="${courseName}"
+                           data-cat-id="${el.dataset.catId}" data-cat-name="${catName}"
+                           data-name="${q.name}" data-maxgrade="${q.maxgrade}"
+                           onchange="updateCounts()" checked>
+                    <strong>${q.name}</strong>
+                    <span class="float-right">
+                        <span class="badge badge-info">Max: ${q.maxgrade}</span>
+                        <span class="badge badge-secondary">${q.attempt_count} attempt</span>
+                    </span>
+                </label>`;
             });
             html += '</div>';
-            list.innerHTML = html;
-        })
-        .catch(e => list.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`);
+        });
+
+        container.innerHTML = html;
+        updateCounts();
+    });
 }
 
-function selectQuiz(quizId, quizName) {
-    const categoryId = document.getElementById('categorySelect').value;
-    const courseId = document.getElementById('courseSelect').value;
+function toggleQuizzes(courseId, checked) {
+    document.querySelectorAll(`.quiz-check[data-course-id="${courseId}"]`).forEach(cb => cb.checked = checked);
+    updateCounts();
+}
+
+function updateCounts() {
+    const quizChecked = document.querySelectorAll('.quiz-check:checked').length;
+    document.getElementById('quizCount').textContent = quizChecked;
+    document.getElementById('saveQuizCount').textContent = quizChecked;
+    document.getElementById('saveSection').style.display = quizChecked > 0 ? '' : 'none';
+}
+
+function saveConfig() {
+    const quizChecks = document.querySelectorAll('.quiz-check:checked');
+    if (quizChecks.length === 0) { alert('Pilih minimal 1 quiz.'); return; }
+
+    const quizzes = [];
+    quizChecks.forEach(cb => {
+        quizzes.push({
+            category_id: parseInt(cb.dataset.catId) || null,
+            category_name: cb.dataset.catName || '',
+            course_id: parseInt(cb.dataset.courseId),
+            course_name: cb.dataset.courseName || '',
+            quiz_id: parseInt(cb.value),
+            quiz_name: cb.dataset.name || '',
+            maxgrade: parseFloat(cb.dataset.maxgrade) || 100,
+        });
+    });
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
     fetch(`{{ route('admin.smartq.moodle.save', $smartq) }}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-        body: JSON.stringify({
-            moodle_category_id: parseInt(categoryId) || null,
-            moodle_category_name: selectedCategoryName,
-            moodle_course_id: parseInt(courseId),
-            moodle_course_name: selectedCourseName,
-            moodle_quiz_id: quizId,
-            moodle_quiz_name: quizName,
-        })
+        body: JSON.stringify({ moodle_quizzes: quizzes })
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert('Konfigurasi Kategori → Course → Quiz berhasil disimpan!');
+            alert(`${quizzes.length} quiz berhasil disimpan!`);
             location.reload();
         } else {
             alert(data.error || 'Gagal menyimpan');
         }
     })
-    .catch(e => alert('Error: ' + e.message));
+    .catch(e => alert('Error: ' + e.message))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-save"></i> Simpan Konfigurasi (<span id="saveQuizCount">${quizzes.length}</span> quiz)`;
+    });
 }
 </script>
 @stop

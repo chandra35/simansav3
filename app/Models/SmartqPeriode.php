@@ -27,6 +27,7 @@ class SmartqPeriode extends Model
         'moodle_course_name',
         'moodle_quiz_id',
         'moodle_quiz_name',
+        'moodle_quizzes',
     ];
 
     protected $casts = [
@@ -36,7 +37,32 @@ class SmartqPeriode extends Model
         'moodle_category_id' => 'integer',
         'moodle_course_id' => 'integer',
         'moodle_quiz_id' => 'integer',
+        'moodle_quizzes' => 'array',
     ];
+
+    /**
+     * Get all unique course IDs from moodle_quizzes config.
+     */
+    public function getMoodleCourseIdsAttribute(): array
+    {
+        return collect($this->moodle_quizzes ?? [])
+            ->pluck('course_id')
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Get all quiz IDs from moodle_quizzes config.
+     */
+    public function getMoodleQuizIdsAttribute(): array
+    {
+        return collect($this->moodle_quizzes ?? [])
+            ->pluck('quiz_id')
+            ->unique()
+            ->values()
+            ->toArray();
+    }
 
     public function tahunPelajaran()
     {

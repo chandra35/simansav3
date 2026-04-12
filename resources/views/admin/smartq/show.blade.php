@@ -48,9 +48,28 @@
                         <div class="col-md-6">
                             <table class="table table-sm table-borderless">
                                 <tr><td class="text-muted" width="150">Moodle URL</td><td>{{ $smartq->moodle_base_url ?? '-' }}</td></tr>
-                                <tr><td class="text-muted">Kategori</td><td>{{ $smartq->moodle_category_name ?? '-' }}</td></tr>
-                                <tr><td class="text-muted">Course</td><td>{{ $smartq->moodle_course_name ?? '-' }}</td></tr>
-                                <tr><td class="text-muted">Quiz Moodle</td><td>{{ $smartq->moodle_quiz_name ?? 'Belum dikonfigurasi' }}</td></tr>
+                                @if(!empty($smartq->moodle_quizzes))
+                                    <tr>
+                                        <td class="text-muted">Kuis Terkonfigurasi</td>
+                                        <td>
+                                            <span class="badge badge-success">{{ count($smartq->moodle_quizzes) }} kuis</span>
+                                            dari <span class="badge badge-info">{{ count($smartq->moodle_course_ids) }} course</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted" colspan="2">
+                                            <small>
+                                            @foreach($smartq->moodle_quizzes as $qz)
+                                                <span class="badge badge-light">{{ $qz['course_name'] ?? '' }} &raquo; {{ $qz['quiz_name'] ?? '' }}</span>
+                                            @endforeach
+                                            </small>
+                                        </td>
+                                    </tr>
+                                @else
+                                    <tr><td class="text-muted">Kategori</td><td>{{ $smartq->moodle_category_name ?? '-' }}</td></tr>
+                                    <tr><td class="text-muted">Course</td><td>{{ $smartq->moodle_course_name ?? '-' }}</td></tr>
+                                    <tr><td class="text-muted">Quiz Moodle</td><td>{{ $smartq->moodle_quiz_name ?? 'Belum dikonfigurasi' }}</td></tr>
+                                @endif
                                 <tr><td class="text-muted">Deskripsi</td><td>{{ $smartq->deskripsi ?? '-' }}</td></tr>
                             </table>
                         </div>
@@ -75,7 +94,7 @@
                             <a href="{{ route('admin.smartq.moodle.config', $smartq) }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-cloud text-primary"></i> Konfigurasi Moodle
                             </a>
-                            @if($smartq->moodle_quiz_id)
+                            @if(!empty($smartq->moodle_quizzes) || $smartq->moodle_quiz_id)
                                 <form action="{{ route('admin.smartq.moodle.sync', $smartq) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="list-group-item list-group-item-action text-left border-0"
@@ -84,7 +103,7 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($smartq->moodle_course_id)
+                            @if(!empty($smartq->moodle_quizzes) || $smartq->moodle_course_id)
                                 <a href="{{ route('admin.smartq.moodle.scan', $smartq) }}" class="list-group-item list-group-item-action">
                                     <i class="fas fa-cloud-download-alt text-success"></i> Scan Peserta dari Moodle
                                 </a>
