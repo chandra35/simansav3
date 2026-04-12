@@ -28,6 +28,8 @@ class SmartqPeriode extends Model
         'moodle_quiz_id',
         'moodle_quiz_name',
         'moodle_quizzes',
+        'last_scan_data',
+        'last_scan_at',
     ];
 
     protected $casts = [
@@ -38,6 +40,8 @@ class SmartqPeriode extends Model
         'moodle_course_id' => 'integer',
         'moodle_quiz_id' => 'integer',
         'moodle_quizzes' => 'array',
+        'last_scan_data' => 'array',
+        'last_scan_at' => 'datetime',
     ];
 
     /**

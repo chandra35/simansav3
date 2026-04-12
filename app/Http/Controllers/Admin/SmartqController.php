@@ -95,17 +95,23 @@ class SmartqController extends Controller
             'terendah' => $pesertas->where('total_nilai', '>', 0)->min('total_nilai') ?? 0,
         ];
 
-        // Check if scan cache exists
-        $scanCacheKey = 'smartq_scan_' . $smartq->id . '_' . Auth::id();
-        $scanCached = Cache::get($scanCacheKey);
-        $hasScanCache = !empty($scanCached);
-        $scanCacheInfo = $hasScanCache ? [
-            'scanned_at' => $scanCached['scanned_at'] ?? null,
-            'total' => count($scanCached['rows'] ?? []),
-            'cache_key' => $scanCacheKey,
-        ] : null;
+        // Check if scan data exists (persisted in DB)
+        $hasScanData = !empty($smartq->last_scan_data) && $smartq->last_scan_at;
 
-        return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats', 'hasScanCache', 'scanCacheInfo'));
+        return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats', 'hasScanData'));
+    }
+
+    public function nilaiCbt(SmartqPeriode $smartq)
+    {
+        if (empty($smartq->last_scan_data)) {
+            return redirect()->route('admin.smartq.show', $smartq)
+                ->with('warning', 'Belum ada data scan Moodle. Lakukan Scan Peserta dari Moodle terlebih dahulu.');
+        }
+
+        $rows = $smartq->last_scan_data['rows'] ?? [];
+        $summary = $smartq->last_scan_data['summary'] ?? [];
+
+        return view('admin.smartq.nilai-cbt', compact('smartq', 'rows', 'summary'));
     }
 
     public function viewScanCache(SmartqPeriode $smartq)
@@ -814,6 +820,12 @@ class SmartqController extends Controller
                 'scanned_at' => now()->toDateTimeString(),
             ], now()->addMinutes(30));
 
+            // Persist scan data to DB for Nilai CBT feature
+            $smartq->update([
+                'last_scan_data' => ['rows' => $rows, 'summary' => $summary],
+                'last_scan_at' => now(),
+            ]);
+
             // Get available kelas for unmatched users assignment
             $tahunAktif = TahunPelajaran::where('is_active', true)->first();
             $kelasAvailable = $tahunAktif
@@ -1151,11 +1163,20 @@ class SmartqController extends Controller
     {
         $cacheKey = $request->query('cache_key');
         $format = $request->query('format', 'excel');
-        $rows = Cache::get($cacheKey);
+
+        // Try cache first, fallback to DB
+        $rows = null;
+        if ($cacheKey) {
+            $cached = Cache::get($cacheKey);
+            $rows = $cached['rows'] ?? ($cached ? $cached : null);
+        }
+        if (!$rows && !empty($smartq->last_scan_data)) {
+            $rows = $smartq->last_scan_data['rows'] ?? [];
+        }
 
         if (!$rows) {
             return redirect()->route('admin.smartq.show', $smartq)
-                ->with('error', 'Data scan sudah expired. Silakan scan ulang.');
+                ->with('error', 'Belum ada data scan. Lakukan scan dari Moodle terlebih dahulu.');
         }
 
         // Collect all unique quizzes
