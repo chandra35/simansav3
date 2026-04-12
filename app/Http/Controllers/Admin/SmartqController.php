@@ -9,8 +9,12 @@ use App\Models\SmartqPeserta;
 use App\Models\SmartqNilai;
 use App\Models\Siswa;
 use App\Models\Kelas;
+use App\Models\Ortu;
 use App\Models\TahunPelajaran;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -774,7 +778,18 @@ class SmartqController extends Controller
                 'scanned_at' => now()->toDateTimeString(),
             ], now()->addMinutes(30));
 
-            return view('admin.smartq.preview-moodle', compact('smartq', 'rows', 'summary', 'cacheKey'));
+            // Get available kelas for unmatched users assignment
+            $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+            $kelasAvailable = $tahunAktif
+                ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)
+                    ->where('is_active', true)
+                    ->with('jurusan')
+                    ->orderBy('tingkat')
+                    ->orderBy('nama_kelas')
+                    ->get()
+                : collect();
+
+            return view('admin.smartq.preview-moodle', compact('smartq', 'rows', 'summary', 'cacheKey', 'kelasAvailable'));
 
         } catch (\Exception $e) {
             Log::error('SMART-Q Moodle scan error', ['error' => $e->getMessage()]);
@@ -883,6 +898,126 @@ class SmartqController extends Controller
         }
 
         return redirect()->route('admin.smartq.show', $smartq)->with('success', $msg);
+    }
+
+    /**
+     * Add unmatched Moodle users to SIMANSA as new students.
+     * Parse lastname for kelas/tingkat, create User + Siswa + Ortu + assign to kelas.
+     */
+    public function addUnmatchedToSimansa(Request $request, SmartqPeriode $smartq)
+    {
+        $request->validate([
+            'cache_key' => 'required|string',
+            'selected_unmatched' => 'required|array|min:1',
+            'kelas_mapping' => 'required|array',
+            'kelas_mapping.*' => 'nullable|string', // kelas_id or empty
+        ]);
+
+        $cached = Cache::get($request->cache_key);
+        if (!$cached) {
+            return redirect()->route('admin.smartq.peserta', $smartq)
+                ->with('error', 'Data preview sudah kadaluarsa (30 menit). Silakan scan ulang.');
+        }
+
+        $selectedUsernames = $request->selected_unmatched;
+        $kelasMapping = $request->kelas_mapping; // moodle_lastname => kelas_id
+        $rows = collect($cached['rows']);
+
+        $toAdd = $rows->filter(function ($row) use ($selectedUsernames) {
+            return in_array($row['moodle_username'], $selectedUsernames)
+                && $row['status'] === 'no_match';
+        });
+
+        if ($toAdd->isEmpty()) {
+            return redirect()->route('admin.smartq.peserta', $smartq)
+                ->with('error', 'Tidak ada siswa yang valid untuk ditambahkan.');
+        }
+
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        $added = 0;
+        $skipped = 0;
+        $errors = [];
+
+        DB::transaction(function () use ($toAdd, $kelasMapping, $tahunAktif, &$added, &$skipped, &$errors) {
+            foreach ($toAdd as $row) {
+                $nisn = $row['moodle_username'];
+                $namaLengkap = $row['moodle_firstname'] ?: $row['moodle_fullname'];
+                $moodleLastname = $row['moodle_lastname'] ?? '';
+
+                // Skip if NISN already exists in Siswa
+                if (Siswa::where('nisn', $nisn)->exists()) {
+                    $skipped++;
+                    $errors[] = "{$namaLengkap} ({$nisn}): NISN sudah ada di SIMANSA";
+                    continue;
+                }
+
+                // Skip if username already exists in User
+                if (User::where('username', $nisn)->exists()) {
+                    $skipped++;
+                    $errors[] = "{$namaLengkap} ({$nisn}): Username sudah ada";
+                    continue;
+                }
+
+                // 1. Create User
+                $user = User::create([
+                    'name' => $namaLengkap,
+                    'username' => $nisn,
+                    'email' => $nisn . '@student.man1metro.sch.id',
+                    'password' => Hash::make($nisn),
+                    'role' => 'siswa',
+                    'is_first_login' => true,
+                ]);
+                $user->readable_password = $nisn;
+                $user->save();
+                $user->assignRole('Siswa');
+
+                // 2. Create Siswa
+                $siswa = Siswa::create([
+                    'user_id' => $user->id,
+                    'nisn' => $nisn,
+                    'nama_lengkap' => $namaLengkap,
+                    'status_siswa' => 'aktif',
+                    'tahun_masuk' => $tahunAktif?->tahun_mulai ?? date('Y'),
+                ]);
+
+                // 3. Create empty Ortu
+                Ortu::create(['siswa_id' => $siswa->id]);
+
+                // 4. Assign to Kelas if mapping exists
+                $kelasId = $kelasMapping[$moodleLastname] ?? null;
+                if ($kelasId && $tahunAktif) {
+                    $kelas = Kelas::find($kelasId);
+                    if ($kelas) {
+                        $lastAbsen = $kelas->siswas()
+                            ->wherePivot('tahun_pelajaran_id', $tahunAktif->id)
+                            ->max('siswa_kelas.nomor_urut_absen') ?? 0;
+
+                        $kelas->siswas()->attach($siswa->id, [
+                            'id' => Str::uuid(),
+                            'tahun_pelajaran_id' => $tahunAktif->id,
+                            'tanggal_masuk' => now()->format('Y-m-d'),
+                            'status' => 'aktif',
+                            'nomor_urut_absen' => $lastAbsen + 1,
+                        ]);
+
+                        $siswa->update(['kelas_saat_ini_id' => $kelas->id]);
+                    }
+                }
+
+                $added++;
+            }
+        });
+
+        // Don't clear cache — admin might still want to import to SMART-Q
+        $msg = "{$added} siswa berhasil ditambahkan ke SIMANSA.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} dilewati (sudah ada).";
+        }
+        if (!empty($errors)) {
+            $msg .= ' Detail: ' . implode('; ', array_slice($errors, 0, 5));
+        }
+
+        return redirect()->route('admin.smartq.peserta', $smartq)->with('success', $msg);
     }
 
     // ==================== RANKING & KEPUTUSAN ====================

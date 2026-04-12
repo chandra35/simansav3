@@ -234,85 +234,166 @@
         </div>
     </form>
 
-    {{-- Unmatched Moodle Users (Data Checking) --}}
+    {{-- Unmatched Moodle Users (Data Checking + Add to SIMANSA) --}}
     @php
         $unmatchedRows = collect($rows)->where('status', 'no_match')->values();
+        // Group by moodle lastname (kelas) for mapping
+        $unmatchedByKelas = $unmatchedRows->groupBy(fn($r) => $r['moodle_lastname'] ?? '-');
+        // Parse tingkat from Moodle lastname: "Kelas X-1" → 10, "Kelas XI-A3" → 11, "Kelas XII IPA 1" → 12
+        $parseTingkat = function($lastname) {
+            if (preg_match('/\bXII\b/i', $lastname)) return 12;
+            if (preg_match('/\bXI\b/i', $lastname)) return 11;
+            if (preg_match('/\bX\b/i', $lastname)) return 10;
+            return null;
+        };
+        $kelasGrouped = ($kelasAvailable ?? collect())->groupBy('tingkat');
     @endphp
     @if($unmatchedRows->isNotEmpty())
-        <div class="card card-danger card-outline" id="cardUnmatched">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-exclamation-triangle text-danger"></i>
-                    Siswa Moodle yang Tidak Ditemukan di SIMANSA
-                    <span class="badge badge-danger ml-1">{{ $unmatchedRows->count() }}</span>
-                </h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-sm btn-outline-success" onclick="downloadUnmatchedCSV()">
-                        <i class="fas fa-file-csv"></i> Download CSV
-                    </button>
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
+        <form action="{{ route('admin.smartq.moodle.scan.addToSimansa', $smartq) }}" method="POST" id="formAddSimansa">
+            @csrf
+            <input type="hidden" name="cache_key" value="{{ $cacheKey }}">
+
+            <div class="card card-danger card-outline" id="cardUnmatched">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        Siswa Moodle yang Tidak Ditemukan di SIMANSA
+                        <span class="badge badge-danger ml-1">{{ $unmatchedRows->count() }}</span>
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="downloadUnmatchedCSV()">
+                            <i class="fas fa-file-csv"></i> Download CSV
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body p-0">
-                <div class="alert alert-warning m-3 mb-0">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Perhatian:</strong> {{ $unmatchedRows->count() }} siswa berikut terdaftar di Moodle (CBT) tetapi <strong>tidak ditemukan di SIMANSA</strong>.
-                    Kemungkinan data siswa belum diinput ke SIMANSA. Silakan cek dan tambahkan data siswa yang belum ada.
-                    Download CSV untuk mempermudah pengecekan.
-                </div>
-                <table class="table table-bordered table-striped table-sm mb-0 mt-2" id="tableUnmatched">
-                    <thead class="thead-light">
-                        <tr>
-                            <th width="30">#</th>
-                            <th>NISN <small class="text-muted">(username)</small></th>
-                            <th>Nama Lengkap <small class="text-muted">(firstname)</small></th>
-                            <th>Kelas <small class="text-muted">(lastname)</small></th>
-                            <th>Email</th>
-                            @foreach($allMapel as $mapel)
-                                <th class="text-center" style="min-width:70px;max-width:120px;white-space:normal;font-size:0.8rem">
-                                    {{ $mapel['quiz_name'] }}
-                                </th>
-                            @endforeach
-                            @if($mapelCount > 1)
-                                <th width="70" class="text-center">Rata-rata</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($unmatchedRows as $j => $urow)
-                            @php $uScores = collect($urow['scores'] ?? [])->keyBy('quiz_id'); @endphp
-                            <tr>
-                                <td>{{ $j + 1 }}</td>
-                                <td><strong>{{ $urow['moodle_username'] }}</strong></td>
-                                <td>{{ $urow['moodle_firstname'] ?: $urow['moodle_fullname'] }}</td>
-                                <td>{{ $urow['moodle_lastname'] ?? '-' }}</td>
-                                <td><small>{{ $urow['moodle_email'] }}</small></td>
-                                @foreach($allMapel as $mapel)
-                                    <td class="text-center">
-                                        @if($uScores->has($mapel['quiz_id']))
-                                            <span class="badge badge-primary">{{ $uScores[$mapel['quiz_id']]['normalized_100'] }}</span>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
+                <div class="card-body p-0">
+                    <div class="alert alert-warning m-3 mb-2">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Perhatian:</strong> {{ $unmatchedRows->count() }} siswa berikut terdaftar di Moodle (CBT) tetapi <strong>tidak ditemukan di SIMANSA</strong>.
+                        Anda bisa menambahkan mereka ke SIMANSA secara otomatis. Petakan kelas Moodle ke kelas SIMANSA terlebih dahulu.
+                    </div>
+
+                    {{-- Kelas Mapping Section --}}
+                    <div class="mx-3 mb-2">
+                        <h6><i class="fas fa-exchange-alt"></i> Pemetaan Kelas Moodle → SIMANSA</h6>
+                        <table class="table table-sm table-bordered mb-2" style="max-width:700px">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Kelas Moodle</th>
+                                    <th width="50" class="text-center">Jml</th>
+                                    <th>Kelas SIMANSA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($unmatchedByKelas as $moodleKelas => $kelasRows)
+                                    @php $tingkat = $parseTingkat($moodleKelas); @endphp
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $moodleKelas }}</strong>
+                                            @if($tingkat)
+                                                <span class="badge badge-info">Tingkat {{ $tingkat }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">{{ $kelasRows->count() }}</td>
+                                        <td>
+                                            <select name="kelas_mapping[{{ $moodleKelas }}]" class="form-control form-control-sm kelas-mapping-select">
+                                                <option value="">-- Tanpa Kelas --</option>
+                                                @foreach($kelasGrouped as $tkt => $kelasList)
+                                                    <optgroup label="Tingkat {{ $tkt }}">
+                                                        @foreach($kelasList as $kls)
+                                                            <option value="{{ $kls->id }}" {{ $tingkat == $tkt ? 'data-auto' : '' }}>
+                                                                {{ $kls->nama_lengkap ?? $kls->nama_kelas }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </tr>
                                 @endforeach
-                                @if($mapelCount > 1)
-                                    <td class="text-center">
-                                        @if($urow['has_attempt'])
-                                            <strong>{{ $urow['normalized_100'] }}</strong>
-                                        @else
-                                            <span class="text-muted">-</span>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Unmatched Users Table --}}
+                    <div style="overflow-x:auto">
+                        <table class="table table-bordered table-striped table-sm mb-0" id="tableUnmatched" style="white-space:nowrap">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th width="40" class="text-center">
+                                        <input type="checkbox" id="checkAllUnmatched" title="Pilih Semua">
+                                    </th>
+                                    <th width="30">#</th>
+                                    <th>NISN <small class="text-muted">(username)</small></th>
+                                    <th>Nama Lengkap <small class="text-muted">(firstname)</small></th>
+                                    <th>Kelas Moodle <small class="text-muted">(lastname)</small></th>
+                                    <th>Email</th>
+                                    @foreach($allMapel as $mapel)
+                                        <th class="text-center" style="min-width:70px;max-width:120px;white-space:normal;font-size:0.8rem">
+                                            {{ $mapel['quiz_name'] }}
+                                        </th>
+                                    @endforeach
+                                    @if($mapelCount > 1)
+                                        <th width="70" class="text-center">Rata-rata</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($unmatchedRows as $j => $urow)
+                                    @php $uScores = collect($urow['scores'] ?? [])->keyBy('quiz_id'); @endphp
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="selected_unmatched[]" value="{{ $urow['moodle_username'] }}" class="unmatched-check">
+                                        </td>
+                                        <td>{{ $j + 1 }}</td>
+                                        <td><strong>{{ $urow['moodle_username'] }}</strong></td>
+                                        <td>{{ $urow['moodle_firstname'] ?: $urow['moodle_fullname'] }}</td>
+                                        <td>{{ $urow['moodle_lastname'] ?? '-' }}</td>
+                                        <td><small>{{ $urow['moodle_email'] }}</small></td>
+                                        @foreach($allMapel as $mapel)
+                                            <td class="text-center">
+                                                @if($uScores->has($mapel['quiz_id']))
+                                                    <span class="badge badge-primary">{{ $uScores[$mapel['quiz_id']]['normalized_100'] }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                        @if($mapelCount > 1)
+                                            <td class="text-center">
+                                                @if($urow['has_attempt'])
+                                                    <strong>{{ $urow['normalized_100'] }}</strong>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
                                         @endif
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> Siswa akan ditambahkan dengan: Username & Password = NISN, Role = Siswa
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <span class="badge badge-info mr-2" id="unmatchedSelectedCount">0</span> dipilih
+                            <button type="submit" class="btn btn-danger" id="btnAddSimansa" disabled>
+                                <i class="fas fa-user-plus"></i> Tambahkan ke SIMANSA
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     @endif
 
 @stop
@@ -368,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
         link.click();
     };
 
-    // Submit overlay
+    // Submit overlay — import SMART-Q
     document.getElementById('formConfirm').addEventListener('submit', function(e) {
         var count = document.querySelectorAll('.row-check:checked').length;
         showSmartqOverlay('Mengimport ' + count + ' peserta dari Moodle...', 'Mohon tunggu, jangan tutup halaman ini', 'cloud-download-alt');
@@ -380,6 +461,60 @@ document.addEventListener('DOMContentLoaded', function() {
             'Hampir selesai...',
         ], 2000);
     });
+
+    // === Unmatched users: Add to SIMANSA ===
+    var checkAllUnmatched = document.getElementById('checkAllUnmatched');
+    var unmatchedChecks = document.querySelectorAll('.unmatched-check');
+    var unmatchedCount = document.getElementById('unmatchedSelectedCount');
+    var btnAddSimansa = document.getElementById('btnAddSimansa');
+
+    if (checkAllUnmatched) {
+        function updateUnmatchedCount() {
+            var count = document.querySelectorAll('.unmatched-check:checked').length;
+            unmatchedCount.textContent = count;
+            btnAddSimansa.disabled = count === 0;
+        }
+
+        checkAllUnmatched.addEventListener('change', function() {
+            unmatchedChecks.forEach(function(cb) { cb.checked = checkAllUnmatched.checked; });
+            updateUnmatchedCount();
+        });
+
+        unmatchedChecks.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                checkAllUnmatched.checked = document.querySelectorAll('.unmatched-check:checked').length === unmatchedChecks.length;
+                updateUnmatchedCount();
+            });
+        });
+
+        updateUnmatchedCount();
+
+        // Auto-select best matching kelas per mapping row
+        document.querySelectorAll('.kelas-mapping-select').forEach(function(select) {
+            // Find options with data-auto attribute (matching tingkat)
+            var autoOptions = select.querySelectorAll('option[data-auto]');
+            if (autoOptions.length === 1) {
+                autoOptions[0].selected = true;
+            }
+        });
+
+        // Confirmation + overlay
+        document.getElementById('formAddSimansa').addEventListener('submit', function(e) {
+            var count = document.querySelectorAll('.unmatched-check:checked').length;
+            if (!confirm('Tambahkan ' + count + ' siswa ke SIMANSA?\n\nUsername & Password = NISN\nRole = Siswa\n\nLanjutkan?')) {
+                e.preventDefault();
+                return;
+            }
+            showSmartqOverlay('Menambahkan ' + count + ' siswa ke SIMANSA...', 'Membuat user, data siswa, dan assign kelas...', 'user-plus');
+            smartqOverlayMessages([
+                'Menambahkan ' + count + ' siswa ke SIMANSA...',
+                'Membuat akun user...',
+                'Membuat data siswa...',
+                'Mengassign kelas...',
+                'Hampir selesai...',
+            ], 2000);
+        });
+    }
 });
 </script>
 @stop

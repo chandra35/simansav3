@@ -619,6 +619,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{smartq}/moodle/sync', [App\Http\Controllers\Admin\SmartqController::class, 'syncMoodle'])->name('moodle.sync');
         Route::get('/{smartq}/moodle/scan', [App\Http\Controllers\Admin\SmartqController::class, 'moodleScan'])->name('moodle.scan');
         Route::post('/{smartq}/moodle/scan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'confirmMoodleScan'])->name('moodle.scan.confirm');
+        Route::post('/{smartq}/moodle/scan/add-to-simansa', [App\Http\Controllers\Admin\SmartqController::class, 'addUnmatchedToSimansa'])->name('moodle.scan.addToSimansa');
 
         // Kelulusan & Export
         Route::post('/{smartq}/kelulusan', [App\Http\Controllers\Admin\SmartqController::class, 'prosesKelulusan'])->name('kelulusan');
