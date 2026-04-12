@@ -733,6 +733,7 @@ class SmartqController extends Controller
                     'moodle_username' => $username,
                     'moodle_fullname' => $mu['fullname'],
                     'moodle_firstname' => $mu['firstname'] ?? '',
+                    'moodle_lastname' => $mu['lastname'] ?? '',
                     'moodle_email' => $mu['email'],
                     'has_attempt' => $hasScores,
                     'normalized_100' => $avgScore,

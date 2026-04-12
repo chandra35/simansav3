@@ -67,9 +67,14 @@
             <div class="small-box bg-secondary">
                 <div class="inner">
                     <h3>{{ $summary['no_match'] }}</h3>
-                    <p>Tidak Cocok (NISN)</p>
+                    <p>Tidak Ada di SIMANSA</p>
                 </div>
                 <div class="icon"><i class="fas fa-user-times"></i></div>
+                @if($summary['no_match'] > 0)
+                    <a href="#cardUnmatched" class="small-box-footer">
+                        Lihat Detail <i class="fas fa-arrow-circle-down"></i>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -119,7 +124,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($rows as $i => $row)
+                        @php $matchedRows = collect($rows)->where('status', '!=', 'no_match')->values(); @endphp
+                        @forelse($matchedRows as $i => $row)
                             @php
                                 $canImport = in_array($row['status'], ['ready', 'ready_no_score']);
                                 $badgeClass = match($row['status']) {
@@ -228,6 +234,87 @@
         </div>
     </form>
 
+    {{-- Unmatched Moodle Users (Data Checking) --}}
+    @php
+        $unmatchedRows = collect($rows)->where('status', 'no_match')->values();
+    @endphp
+    @if($unmatchedRows->isNotEmpty())
+        <div class="card card-danger card-outline" id="cardUnmatched">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    Siswa Moodle yang Tidak Ditemukan di SIMANSA
+                    <span class="badge badge-danger ml-1">{{ $unmatchedRows->count() }}</span>
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="downloadUnmatchedCSV()">
+                        <i class="fas fa-file-csv"></i> Download CSV
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="alert alert-warning m-3 mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Perhatian:</strong> {{ $unmatchedRows->count() }} siswa berikut terdaftar di Moodle (CBT) tetapi <strong>tidak ditemukan di SIMANSA</strong>.
+                    Kemungkinan data siswa belum diinput ke SIMANSA. Silakan cek dan tambahkan data siswa yang belum ada.
+                    Download CSV untuk mempermudah pengecekan.
+                </div>
+                <table class="table table-bordered table-striped table-sm mb-0 mt-2" id="tableUnmatched">
+                    <thead class="thead-light">
+                        <tr>
+                            <th width="30">#</th>
+                            <th>NISN <small class="text-muted">(username)</small></th>
+                            <th>Nama Lengkap <small class="text-muted">(firstname)</small></th>
+                            <th>Kelas <small class="text-muted">(lastname)</small></th>
+                            <th>Email</th>
+                            @foreach($allMapel as $mapel)
+                                <th class="text-center" style="min-width:70px;max-width:120px;white-space:normal;font-size:0.8rem">
+                                    {{ $mapel['quiz_name'] }}
+                                </th>
+                            @endforeach
+                            @if($mapelCount > 1)
+                                <th width="70" class="text-center">Rata-rata</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($unmatchedRows as $j => $urow)
+                            @php $uScores = collect($urow['scores'] ?? [])->keyBy('quiz_id'); @endphp
+                            <tr>
+                                <td>{{ $j + 1 }}</td>
+                                <td><strong>{{ $urow['moodle_username'] }}</strong></td>
+                                <td>{{ $urow['moodle_firstname'] ?: $urow['moodle_fullname'] }}</td>
+                                <td>{{ $urow['moodle_lastname'] ?? '-' }}</td>
+                                <td><small>{{ $urow['moodle_email'] }}</small></td>
+                                @foreach($allMapel as $mapel)
+                                    <td class="text-center">
+                                        @if($uScores->has($mapel['quiz_id']))
+                                            <span class="badge badge-primary">{{ $uScores[$mapel['quiz_id']]['normalized_100'] }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                @endforeach
+                                @if($mapelCount > 1)
+                                    <td class="text-center">
+                                        @if($urow['has_attempt'])
+                                            <strong>{{ $urow['normalized_100'] }}</strong>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                @endif
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
 @stop
 
 @section('js')
@@ -258,6 +345,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }));
 
     updateCounts();
+
+    // CSV download for unmatched users
+    window.downloadUnmatchedCSV = function() {
+        var table = document.getElementById('tableUnmatched');
+        if (!table) return;
+        var rows = table.querySelectorAll('tr');
+        var csv = [];
+        rows.forEach(function(row) {
+            var cols = row.querySelectorAll('th, td');
+            var rowData = [];
+            cols.forEach(function(col) {
+                var text = col.innerText.replace(/[\r\n]+/g, ' ').trim();
+                rowData.push('"' + text.replace(/"/g, '""') + '"');
+            });
+            csv.push(rowData.join(','));
+        });
+        var blob = new Blob([csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'siswa_moodle_tidak_ditemukan_{{ $smartq->id }}.csv';
+        link.click();
+    };
 
     // Submit overlay
     document.getElementById('formConfirm').addEventListener('submit', function(e) {
