@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # ==============================================
+
+set -o pipefail
 # SIMANSA V3 UPDATE SCRIPT
 # ==============================================
 # Jalankan script ini dengan: ./update-simansa.sh
@@ -38,6 +40,20 @@ APP_DIR="$(detect_app_dir)" || {
     exit 1
 }
 
+AUTO_STASH="${AUTO_STASH:-1}"
+GIT_REMOTE="${GIT_REMOTE:-origin}"
+GIT_BRANCH="${GIT_BRANCH:-master}"
+
+MAINTENANCE_ON=0
+
+cleanup_on_exit() {
+    if [[ $MAINTENANCE_ON -eq 1 ]]; then
+        "$PHP_BIN" artisan up 2>/dev/null || true
+    fi
+}
+
+trap cleanup_on_exit EXIT
+
 PHP_BIN="${PHP_BIN:-$(command -v /www/server/php/83/bin/php || command -v php8.3 || command -v php || true)}"
 COMPOSER_BIN="${COMPOSER_BIN:-$(command -v composer || true)}"
 
@@ -72,41 +88,41 @@ echo -e "${NC}"
 
 # Pindah ke direktori aplikasi
 print_status "Pindah ke direktori aplikasi..."
-cd $APP_DIR || { print_error "Gagal masuk ke direktori $APP_DIR"; exit 1; }
+cd "$APP_DIR" || { print_error "Gagal masuk ke direktori $APP_DIR"; exit 1; }
 print_success "Direktori: $(pwd)"
 
 # Cek apakah ada perubahan lokal yang belum di-commit
 print_status "Mengecek status git..."
 if [[ -n $(git status --porcelain) ]]; then
-    print_warning "Ada perubahan lokal yang belum di-commit!"
-    echo "Pilihan:"
-    echo "  1) Simpan perubahan lokal (stash) dan lanjutkan update"
-    echo "  2) Batalkan update"
-    read -p "Pilih (1/2): " choice
-    
-    if [[ $choice == "1" ]]; then
-        print_status "Menyimpan perubahan lokal..."
-        git stash
-        print_success "Perubahan lokal disimpan ke stash"
+    if [[ "$AUTO_STASH" == "1" ]]; then
+        print_warning "Ada perubahan lokal yang belum di-commit. Auto-stash aktif, perubahan akan disimpan otomatis."
+        STASH_MSG="auto-stash update-simansa $(date '+%Y-%m-%d %H:%M:%S')"
+        git stash push -u -m "$STASH_MSG"
+        if [ $? -eq 0 ]; then
+            print_success "Perubahan lokal disimpan ke stash: $STASH_MSG"
+        else
+            print_error "Gagal melakukan stash otomatis"
+            exit 1
+        fi
     else
-        print_warning "Update dibatalkan"
-        exit 0
+        print_error "Ditemukan perubahan lokal dan AUTO_STASH=0. Update dihentikan."
+        exit 1
     fi
 fi
 
 # Enable maintenance mode
 print_status "Mengaktifkan maintenance mode..."
 "$PHP_BIN" artisan down --retry=60 2>/dev/null || true
+MAINTENANCE_ON=1
 
 # Pull dari GitHub
 print_status "Mengambil update dari GitHub..."
-git fetch origin
-git pull origin master
+git fetch "$GIT_REMOTE"
+git pull --ff-only "$GIT_REMOTE" "$GIT_BRANCH"
 if [ $? -eq 0 ]; then
     print_success "Pull dari GitHub berhasil"
 else
     print_error "Gagal pull dari GitHub"
-    "$PHP_BIN" artisan up 2>/dev/null || true
     exit 1
 fi
 
@@ -197,6 +213,7 @@ print_success "Permission diatur"
 # Disable maintenance mode
 print_status "Menonaktifkan maintenance mode..."
 "$PHP_BIN" artisan up
+MAINTENANCE_ON=0
 
 # Tampilkan versi dan info
 echo ""
