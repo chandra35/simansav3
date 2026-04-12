@@ -95,8 +95,8 @@ class SmartqController extends Controller
             'terendah' => $pesertas->where('total_nilai', '>', 0)->min('total_nilai') ?? 0,
         ];
 
-        // Check if scan data exists (persisted in DB)
-        $hasScanData = !empty($smartq->last_scan_data) && $smartq->last_scan_at;
+        // Check if scan data exists (persisted in DB) — avoid loading the huge JSON blob
+        $hasScanData = $smartq->last_scan_at !== null;
 
         return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats', 'hasScanData'));
     }
@@ -1287,6 +1287,7 @@ class SmartqController extends Controller
 
     private function exportScanPdf($rows, $allMapel, $mapelStats, $mapelWajib, $smartq)
     {
+        ini_set('memory_limit', '512M');
         $totalStudents = count($rows);
         $html = '<style>
             body { font-family: sans-serif; font-size: 10px; }
