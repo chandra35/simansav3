@@ -118,3 +118,7 @@
         </div>
     @endforelse
 @stop
+
+    @section('js')
+    @include('admin.smartq._overlay')
+    @stop

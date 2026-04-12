@@ -161,6 +161,7 @@
 @stop
 
 @section('js')
+@include('admin.smartq._overlay')
 <script>
 let kompIdx = {{ $smartq->komponenNilais->count() }};
 

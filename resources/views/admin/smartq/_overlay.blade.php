@@ -203,4 +203,41 @@ function smartqConfirmForm(selector, opts) {
         smartqConfirm(form, opts);
     });
 }
+
+// Global auto-overlay for page navigation/refresh inside SMART-Q pages
+(function smartqAutoOverlayInit() {
+    var isSubmitting = false;
+
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href]');
+        if (!link) return;
+        if (e.defaultPrevented) return;
+        if (link.hasAttribute('data-no-overlay')) return;
+
+        var href = (link.getAttribute('href') || '').trim();
+        if (!href || href === '#' || href.startsWith('javascript:')) return;
+        if (href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+        showSmartqOverlay('Memuat halaman...', 'Mohon tunggu sebentar', 'spinner');
+    }, true);
+
+    document.addEventListener('submit', function(e) {
+        if (e.defaultPrevented) return;
+        var form = e.target;
+        if (!form || form.hasAttribute('data-no-overlay')) return;
+        isSubmitting = true;
+        showSmartqOverlay('Memproses data...', 'Mohon tunggu, jangan tutup halaman ini', 'save');
+    }, true);
+
+    window.addEventListener('beforeunload', function() {
+        // Show overlay on refresh/direct navigation as browser starts unloading page
+        showSmartqOverlay(
+            isSubmitting ? 'Menyelesaikan proses...' : 'Memuat ulang halaman...',
+            'Mohon tunggu sebentar',
+            isSubmitting ? 'save' : 'sync-alt'
+        );
+    });
+})();
 </script>
