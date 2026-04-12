@@ -168,7 +168,7 @@ return new class extends Migration
                 'nama_mapel' => $mapel['nama_mapel'],
                 'kelompok' => $mapel['kelompok'],
                 'kategori' => $mapel['kategori'],
-                'kkm' => null, // Merdeka tidak pakai KKM
+                'kkm' => 0, // Merdeka tidak pakai KKM
                 'is_mapel_agama' => $mapel['is_mapel_agama'] ?? false,
                 'jenis_agama' => $mapel['jenis_agama'] ?? null,
                 'is_rumpun_pai' => false,
@@ -176,7 +176,7 @@ return new class extends Migration
                 'is_mapel_pilihan' => $mapel['is_mapel_pilihan'] ?? false,
                 'is_projek_p5' => false,
                 'is_muatan_lokal' => $mapel['is_muatan_lokal'] ?? false,
-                'jam_pelajaran' => null,
+                'jam_pelajaran' => 0,
                 'tingkat' => json_encode([10, 11, 12]),
                 'semester' => json_encode([1, 2]),
                 'is_active' => true,
