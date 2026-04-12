@@ -427,7 +427,6 @@ class SmartqController extends Controller
         }
 
         $pesertas = $smartq->pesertas()->with('siswa')->get();
-        $nisns = $pesertas->pluck('siswa.nisn')->filter()->implode(',');
 
         $komponenCbt = $smartq->komponenNilais()->where('sumber', 'moodle')->first();
         if (!$komponenCbt) {
@@ -438,15 +437,15 @@ class SmartqController extends Controller
         try {
             $url = rtrim($smartq->moodle_base_url, '/') . '/converter/smartq/';
 
-            // Collect scores from all quizzes
+            // Collect scores from all quizzes (NO username filter — fetch all, match locally)
             $allScores = []; // username => [scores...]
+            $allScoresByName = []; // lowercase firstname => [scores...]
             $quizNames = [];
 
             foreach ($quizConfigs as $qc) {
                 $response = Http::timeout(30)->get($url, [
                     'action' => 'scores',
                     'quiz' => $qc['quiz_id'],
-                    'usernames' => $nisns,
                 ]);
 
                 if (!$response->successful()) continue;
@@ -456,27 +455,44 @@ class SmartqController extends Controller
                 $quizNames[] = $qc['quiz_name'] ?? 'Quiz ' . $qc['quiz_id'];
 
                 foreach ($result['data'] ?? [] as $score) {
+                    // Skip zero scores — likely wrong elective quiz
+                    if (($score['normalized_100'] ?? 0) <= 0) continue;
+
                     $username = $score['username'];
-                    if (!isset($allScores[$username])) {
-                        $allScores[$username] = [];
-                    }
-                    $allScores[$username][] = [
+                    $firstname = strtolower(trim($score['firstname'] ?? ''));
+
+                    $entry = [
                         'normalized_100' => $score['normalized_100'],
                         'attempt_id' => $score['attempt_id'],
                         'raw_score' => $score['raw_score'],
                         'max_score' => $score['max_score'],
                         'quiz_name' => $qc['quiz_name'] ?? '',
                     ];
+
+                    $allScores[$username][] = $entry;
+
+                    if (!empty($firstname)) {
+                        $allScoresByName[$firstname][] = $entry;
+                    }
                 }
             }
 
             $matched = 0;
             $notFound = 0;
 
-            DB::transaction(function () use ($pesertas, $allScores, $komponenCbt, $quizNames, &$matched, &$notFound) {
+            DB::transaction(function () use ($pesertas, $allScores, $allScoresByName, $komponenCbt, $quizNames, &$matched, &$notFound) {
                 foreach ($pesertas as $peserta) {
                     $nisn = $peserta->siswa->nisn ?? '';
+                    $namaKey = strtolower(trim($peserta->siswa->nama_lengkap ?? ''));
+
+                    // Match by NISN=username first, then by nama=firstname
                     $scores = $allScores[$nisn] ?? null;
+                    $matchBy = 'nisn';
+
+                    if (empty($scores) && !empty($namaKey)) {
+                        $scores = $allScoresByName[$namaKey] ?? null;
+                        $matchBy = 'nama';
+                    }
 
                     if (!$scores || empty($scores)) {
                         $notFound++;
@@ -503,7 +519,7 @@ class SmartqController extends Controller
                             'moodle_username' => $nisn,
                             'dinilai_oleh' => Auth::id(),
                             'dinilai_pada' => now(),
-                            'catatan' => "Sync " . count($scores) . " quiz (avg): {$quizDetail}",
+                            'catatan' => "Sync {$matchBy}: " . count($scores) . " quiz (avg): {$quizDetail}",
                         ]
                     );
 
@@ -562,9 +578,15 @@ class SmartqController extends Controller
                     'course' => $courseId,
                 ]);
 
-                if (!$response->successful()) continue;
+                if (!$response->successful()) {
+                    Log::warning('SMART-Q Moodle enrolled failed', ['course' => $courseId, 'status' => $response->status()]);
+                    continue;
+                }
                 $result = $response->json();
-                if (!($result['success'] ?? false)) continue;
+                if (!($result['success'] ?? false)) {
+                    Log::warning('SMART-Q Moodle enrolled error', ['course' => $courseId, 'result' => $result]);
+                    continue;
+                }
 
                 foreach ($result['data'] ?? [] as $mu) {
                     $username = $mu['username'];
@@ -572,6 +594,8 @@ class SmartqController extends Controller
                         $moodleUsersMap[$username] = [
                             'userid' => $mu['userid'],
                             'username' => $username,
+                            'firstname' => $mu['firstname'] ?? '',
+                            'lastname' => $mu['lastname'] ?? '',
                             'fullname' => $mu['fullname'],
                             'email' => $mu['email'],
                             'courses' => [],
@@ -600,6 +624,10 @@ class SmartqController extends Controller
 
                 foreach ($result['data'] ?? [] as $score) {
                     $username = $score['username'];
+
+                    // Skip zero scores — likely entered wrong quiz (elective mismatch)
+                    if (($score['normalized_100'] ?? 0) <= 0) continue;
+
                     if (isset($moodleUsersMap[$username])) {
                         $moodleUsersMap[$username]['scores'][] = [
                             'quiz_id' => $qc['quiz_id'],
@@ -609,24 +637,85 @@ class SmartqController extends Controller
                             'raw_score' => $score['raw_score'],
                             'max_score' => $score['max_score'],
                         ];
+                    } else {
+                        // User has score but not found in enrolled list — add them
+                        $moodleUsersMap[$username] = [
+                            'userid' => $score['userid'],
+                            'username' => $username,
+                            'firstname' => $score['firstname'] ?? '',
+                            'lastname' => $score['lastname'] ?? '',
+                            'fullname' => $score['fullname'] ?? $username,
+                            'email' => $score['email'] ?? '',
+                            'courses' => [],
+                            'scores' => [[
+                                'quiz_id' => $qc['quiz_id'],
+                                'quiz_name' => $qc['quiz_name'] ?? '',
+                                'normalized_100' => $score['normalized_100'],
+                                'attempt_id' => $score['attempt_id'],
+                                'raw_score' => $score['raw_score'],
+                                'max_score' => $score['max_score'],
+                            ]],
+                        ];
                     }
                 }
             }
 
-            // 3. Match with SIMANSA students
+            // 3. Match with SIMANSA students by NISN=username OR nama_lengkap=firstname
             $siswaAll = Siswa::whereHas('kelasAktif', function ($q) {
                     $q->whereIn('kelas.tingkat', [10, 11]);
                 })
                 ->where('status_siswa', 'aktif')
                 ->get();
 
+            // Build lookup indexes for faster matching
+            $siswaByNisn = $siswaAll->filter(fn($s) => !empty($s->nisn))->keyBy('nisn');
+            $siswaByNama = [];
+            foreach ($siswaAll as $s) {
+                $namaKey = strtolower(trim($s->nama_lengkap));
+                if (!empty($namaKey)) {
+                    $siswaByNama[$namaKey] = $s;
+                }
+            }
+
             $pesertaExisting = $smartq->pesertas()->with('siswa')->get();
             $registeredSiswaIds = $pesertaExisting->pluck('siswa_id')->toArray();
 
             $rows = [];
+            $matchedSiswaIds = []; // Prevent duplicate matches
             foreach ($moodleUsersMap as $mu) {
                 $username = $mu['username'];
-                $matchedSiswa = $siswaAll->first(fn($s) => $s->nisn && $s->nisn === $username);
+                $firstname = strtolower(trim($mu['firstname'] ?? ''));
+                $fullname = strtolower(trim($mu['fullname'] ?? ''));
+
+                // Try match: 1) NISN = username, 2) nama_lengkap = firstname, 3) nama_lengkap = fullname
+                $matchedSiswa = null;
+                $matchMethod = null;
+
+                if (isset($siswaByNisn[$username])) {
+                    $matchedSiswa = $siswaByNisn[$username];
+                    $matchMethod = 'nisn';
+                }
+
+                if (!$matchedSiswa && !empty($firstname) && isset($siswaByNama[$firstname])) {
+                    $candidate = $siswaByNama[$firstname];
+                    if (!in_array($candidate->id, $matchedSiswaIds)) {
+                        $matchedSiswa = $candidate;
+                        $matchMethod = 'nama';
+                    }
+                }
+
+                if (!$matchedSiswa && !empty($fullname) && $fullname !== $firstname && isset($siswaByNama[$fullname])) {
+                    $candidate = $siswaByNama[$fullname];
+                    if (!in_array($candidate->id, $matchedSiswaIds)) {
+                        $matchedSiswa = $candidate;
+                        $matchMethod = 'nama';
+                    }
+                }
+
+                if ($matchedSiswa) {
+                    $matchedSiswaIds[] = $matchedSiswa->id;
+                }
+
                 $isRegistered = $matchedSiswa && in_array($matchedSiswa->id, $registeredSiswaIds);
 
                 $hasScores = !empty($mu['scores']);
@@ -643,16 +732,18 @@ class SmartqController extends Controller
                     'moodle_userid' => $mu['userid'],
                     'moodle_username' => $username,
                     'moodle_fullname' => $mu['fullname'],
+                    'moodle_firstname' => $mu['firstname'] ?? '',
                     'moodle_email' => $mu['email'],
                     'has_attempt' => $hasScores,
                     'normalized_100' => $avgScore,
                     'scores' => $mu['scores'],
                     'attempt_id' => $hasScores ? $mu['scores'][0]['attempt_id'] : null,
-                    'courses_count' => count(array_unique($mu['courses'])),
+                    'courses_count' => count(array_unique($mu['courses'] ?? [])),
                     'siswa_id' => $matchedSiswa?->id,
                     'siswa_nama' => $matchedSiswa?->nama_lengkap,
                     'siswa_nisn' => $matchedSiswa?->nisn,
                     'siswa_kelas' => $matchedSiswa?->getKelasSekarang()?->nama_lengkap,
+                    'match_method' => $matchMethod,
                     'status' => $status,
                 ];
             }

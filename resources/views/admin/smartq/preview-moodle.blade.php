@@ -134,6 +134,9 @@
                                     <strong>{{ $row['moodle_fullname'] }}</strong><br>
                                     <small class="text-muted">
                                         <i class="fas fa-at"></i> {{ $row['moodle_username'] }}
+                                        @if(!empty($row['moodle_firstname']) && $row['moodle_firstname'] !== $row['moodle_fullname'])
+                                            · <i class="fas fa-user"></i> {{ $row['moodle_firstname'] }}
+                                        @endif
                                         @if($row['moodle_email'])
                                             · {{ $row['moodle_email'] }}
                                         @endif
@@ -143,6 +146,11 @@
                                     @if($row['siswa_id'])
                                         <strong>{{ $row['siswa_nama'] }}</strong><br>
                                         <small class="text-muted">NISN: {{ $row['siswa_nisn'] }}</small>
+                                        @if(($row['match_method'] ?? '') === 'nama')
+                                            <span class="badge badge-warning" title="Dicocokkan berdasarkan nama">via Nama</span>
+                                        @elseif(($row['match_method'] ?? '') === 'nisn')
+                                            <span class="badge badge-success" title="Dicocokkan berdasarkan NISN=Username">via NISN</span>
+                                        @endif
                                     @else
                                         <span class="text-muted"><i class="fas fa-times-circle"></i> Tidak ditemukan</span>
                                     @endif
