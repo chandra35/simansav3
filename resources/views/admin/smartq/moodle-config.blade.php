@@ -174,6 +174,7 @@
 @stop
 
 @section('js')
+@include('admin.smartq._overlay')
 <script>
 // State
 let categoriesData = [];
@@ -184,10 +185,12 @@ function loadCategories() {
     const btn = document.getElementById('btnLoadCategories');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+    showSmartqOverlay('Mengambil daftar kategori...', 'Menghubungi server Moodle', 'cloud');
 
     fetch(`{{ route('admin.smartq.moodle.categories', $smartq) }}`)
         .then(r => r.json())
         .then(data => {
+            hideSmartqOverlay();
             if (!data.success) { alert(data.error || 'Gagal memuat'); return; }
             categoriesData = data.data;
 
@@ -206,7 +209,7 @@ function loadCategories() {
             document.getElementById('categoryList').innerHTML = html;
             document.getElementById('categoryList').style.display = '';
         })
-        .catch(e => alert('Error: ' + e.message))
+        .catch(e => { hideSmartqOverlay(); alert('Error: ' + e.message); })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-sync"></i> Muat Daftar Kategori';
@@ -392,6 +395,7 @@ function saveConfig() {
     const btn = document.getElementById('btnSave');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+    showSmartqOverlay('Menyimpan konfigurasi quiz...', quizzes.length + ' quiz akan disimpan', 'save');
 
     fetch(`{{ route('admin.smartq.moodle.save', $smartq) }}`, {
         method: 'POST',
@@ -400,6 +404,7 @@ function saveConfig() {
     })
     .then(r => r.json())
     .then(data => {
+        hideSmartqOverlay();
         if (data.success) {
             alert(`${quizzes.length} quiz berhasil disimpan!`);
             location.reload();
@@ -407,11 +412,33 @@ function saveConfig() {
             alert(data.error || 'Gagal menyimpan');
         }
     })
-    .catch(e => alert('Error: ' + e.message))
+    .catch(e => { hideSmartqOverlay(); alert('Error: ' + e.message); })
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = `<i class="fas fa-save"></i> Simpan Konfigurasi (<span id="saveQuizCount">${quizzes.length}</span> quiz)`;
     });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Sync Nilai CBT form in config footer
+    document.querySelectorAll('form[action*="moodle/sync"]').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses skor dari semua quiz', 'cloud-download-alt');
+            smartqOverlayMessages([
+                'Menarik nilai CBT dari Moodle...',
+                'Mengambil skor dari setiap quiz...',
+                'Menghitung rata-rata per siswa...',
+                'Menyimpan ke database...',
+            ], 2500);
+        });
+    });
+
+    // Scan link in config footer
+    document.querySelectorAll('a[href*="moodle/scan"]').forEach(function(link) {
+        link.addEventListener('click', function() {
+            showSmartqOverlay('Scanning peserta dari Moodle...', 'Mengambil data enrolled users', 'search');
+        });
+    });
+});
 </script>
 @stop

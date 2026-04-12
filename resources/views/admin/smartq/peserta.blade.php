@@ -164,6 +164,7 @@
 @stop
 
 @section('js')
+@include('admin.smartq._overlay')
 <script>
 function filterSiswa() {
     const kelasId = document.getElementById('filterKelas').value;
@@ -188,5 +189,39 @@ function updateCount() {
 }
 
 document.querySelectorAll('.siswa-check').forEach(cb => cb.addEventListener('change', updateCount));
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Scan dari Moodle link
+    document.querySelectorAll('a[href*="moodle/scan"]').forEach(function(link) {
+        link.addEventListener('click', function() {
+            showSmartqOverlay('Scanning peserta dari Moodle...', 'Mengambil data enrolled users & skor quiz', 'cloud-download-alt');
+            smartqOverlayMessages([
+                'Scanning peserta dari Moodle...',
+                'Mengakses API Moodle...',
+                'Mencocokkan NISN siswa...',
+                'Menyusun preview data...',
+            ], 2500);
+        });
+    });
+
+    // Tambah Peserta Manual form
+    var formTambah = document.querySelector('form[action*="peserta/tambah"]');
+    if (formTambah) {
+        formTambah.addEventListener('submit', function() {
+            var count = document.querySelectorAll('.siswa-check:checked').length;
+            showSmartqOverlay('Menambahkan ' + count + ' peserta...', 'Membuat data peserta dan nomor peserta otomatis', 'user-plus');
+        });
+    }
+
+    // Hapus Peserta forms
+    document.querySelectorAll('form[action*="peserta/hapus"], form[method="POST"] button.btn-danger').forEach(function(el) {
+        var form = el.closest('form');
+        if (form && form.querySelector('input[name="_method"][value="DELETE"]')) {
+            form.addEventListener('submit', function() {
+                showSmartqOverlay('Menghapus peserta...', 'Menghapus data peserta beserta nilainya', 'trash');
+            });
+        }
+    });
+});
 </script>
 @stop

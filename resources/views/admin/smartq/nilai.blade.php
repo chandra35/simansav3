@@ -97,3 +97,21 @@
         </div>
     </form>
 @stop
+
+@section('js')
+@include('admin.smartq._overlay')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('form[action*="nilai/simpan"]').addEventListener('submit', function() {
+        showSmartqOverlay('Menyimpan nilai & menghitung ranking...', 'Memproses semua nilai peserta', 'pencil-alt');
+        smartqOverlayMessages([
+            'Menyimpan nilai & menghitung ranking...',
+            'Memvalidasi nilai tiap komponen...',
+            'Menghitung total nilai tertimbang...',
+            'Mengupdate ranking peserta...',
+            'Hampir selesai...',
+        ], 1500);
+    });
+});
+</script>
+@stop

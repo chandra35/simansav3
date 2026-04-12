@@ -196,17 +196,10 @@
         </div>
     </form>
 
-    {{-- Loading Overlay --}}
-    <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
-        <div class="text-center text-white">
-            <div class="spinner-border spinner-border-lg mb-3" role="status"></div>
-            <h4 id="loadingText">Mengimport peserta dari Moodle...</h4>
-            <p class="text-white-50">Mohon tunggu, jangan tutup halaman ini.</p>
-        </div>
-    </div>
 @stop
 
 @section('js')
+@include('admin.smartq._overlay')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const checkAll = document.getElementById('checkAll');
@@ -236,21 +229,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Submit overlay
     document.getElementById('formConfirm').addEventListener('submit', function(e) {
-        const overlay = document.getElementById('loadingOverlay');
-        overlay.style.display = 'flex';
-
-        const messages = [
-            'Mengimport peserta dari Moodle...',
+        var count = document.querySelectorAll('.row-check:checked').length;
+        showSmartqOverlay('Mengimport ' + count + ' peserta dari Moodle...', 'Mohon tunggu, jangan tutup halaman ini', 'cloud-download-alt');
+        smartqOverlayMessages([
+            'Mengimport ' + count + ' peserta dari Moodle...',
             'Membuat data peserta SMART-Q...',
             'Mengisi nilai CBT otomatis...',
             'Menghitung ranking...',
             'Hampir selesai...',
-        ];
-        let idx = 0;
-        setInterval(function() {
-            idx = Math.min(idx + 1, messages.length - 1);
-            document.getElementById('loadingText').textContent = messages[idx];
-        }, 1500);
+        ], 2000);
     });
 });
 </script>

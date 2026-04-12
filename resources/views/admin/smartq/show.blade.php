@@ -326,10 +326,63 @@
 @stop
 
 @section('js')
+@include('admin.smartq._overlay')
 <script>
 function togglePassingGrade() {
     const metode = document.getElementById('metodeKelulusan').value;
     document.getElementById('passingGradeGroup').style.display = metode === 'passing_grade' ? '' : 'none';
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Sync Nilai CBT form
+    document.querySelectorAll('form[action*="moodle/sync"]').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            showSmartqOverlay('Menarik nilai CBT dari Moodle...', 'Memproses data dari semua quiz yang dikonfigurasi', 'cloud-download-alt');
+            smartqOverlayMessages([
+                'Menarik nilai CBT dari Moodle...',
+                'Mengambil skor dari setiap quiz...',
+                'Menghitung rata-rata per siswa...',
+                'Menyimpan nilai ke database...',
+                'Hampir selesai...',
+            ], 2500);
+        });
+    });
+
+    // Scan Peserta link
+    document.querySelectorAll('a[href*="moodle/scan"]').forEach(function(link) {
+        link.addEventListener('click', function() {
+            showSmartqOverlay('Scanning peserta dari Moodle...', 'Mengambil data enrolled users dari semua course', 'search');
+            smartqOverlayMessages([
+                'Scanning peserta dari Moodle...',
+                'Mencocokkan NISN dengan database siswa...',
+                'Mengumpulkan data skor quiz...',
+                'Menyusun hasil scan...',
+            ], 2500);
+        });
+    });
+
+    // Proses Kelulusan form
+    var formKelulusan = document.querySelector('form[action*="kelulusan"]');
+    if (formKelulusan) {
+        formKelulusan.addEventListener('submit', function() {
+            showSmartqOverlay('Memproses kelulusan...', 'Menghitung ranking dan menentukan status peserta', 'gavel');
+            smartqOverlayMessages([
+                'Memproses kelulusan...',
+                'Menghitung total nilai tertimbang...',
+                'Menentukan ranking peserta...',
+                'Mengupdate status kelulusan...',
+                'Hampir selesai...',
+            ], 1500);
+        });
+    }
+
+    // Export Excel link
+    document.querySelectorAll('a[href*="export"]').forEach(function(link) {
+        link.addEventListener('click', function() {
+            showSmartqOverlay('Membuat file Excel...', 'Menyiapkan data ranking dan nilai peserta', 'file-excel');
+            setTimeout(hideSmartqOverlay, 8000);
+        });
+    });
+});
 </script>
 @stop
