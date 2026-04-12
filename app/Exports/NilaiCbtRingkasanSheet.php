@@ -118,7 +118,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
 
             // Tabel pengambil mapel pilihan (agar mudah seleksi per mapel pilihan)
             $rows[] = ['PENGAMBIL MAPEL PILIHAN — ' . strtoupper($tktLabel)];
-            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Mapel Pilihan', 'Nilai', 'Status Nilai', 'Tingkat', 'Catatan'];
+            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Matematika Wajib', 'Bahasa Inggris', 'Bahasa Indonesia', 'Mapel Pilihan', 'Nilai Pilihan', 'Status Nilai', 'Tingkat', 'Catatan'];
 
             $pilihanQuizIds = array_values(array_diff($tktMapel->pluck('quiz_id')->all(), $tktMapelWajib));
             $pilihanMap = $tktMapel->keyBy('quiz_id');
@@ -129,6 +129,26 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                 $nisn = $row['siswa_nisn'] ?? $row['moodle_username'] ?? '-';
                 $kelas = $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-');
                 $scores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+
+                $findScoreByKeyword = function ($keyword) use ($scores, $pilihanMap) {
+                    foreach ($scores as $qid => $score) {
+                        $mapelName = strtolower($pilihanMap->get($qid)['quiz_name'] ?? '');
+                        if (!str_contains($mapelName, $keyword)) {
+                            continue;
+                        }
+
+                        $nilai = $score['normalized_100'] ?? null;
+                        if (is_numeric($nilai) && $nilai > 0) {
+                            return round($nilai, 1);
+                        }
+                    }
+
+                    return null;
+                };
+
+                $nilaiMatWajib = $findScoreByKeyword('matematika wajib');
+                $nilaiBing = $findScoreByKeyword('bahasa inggris');
+                $nilaiBind = $findScoreByKeyword('bahasa indonesia');
 
                 foreach ($pilihanQuizIds as $qid) {
                     $score = $scores->get($qid);
@@ -147,6 +167,9 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                         'nama' => $nama,
                         'nisn' => $nisn,
                         'kelas' => $kelas,
+                        'mat_wajib' => $nilaiMatWajib,
+                        'bing' => $nilaiBing,
+                        'bind' => $nilaiBind,
                         'mapel' => $mapelItem['quiz_name'] ?? ('Quiz ' . $qid),
                         'nilai' => round($nilai, 1),
                     ];
@@ -163,7 +186,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
             });
 
             if (count($pilihanRows) === 0) {
-                $rows[] = ['-', '-', '-', '-', 'Tidak ada siswa yang mengerjakan mapel pilihan', '-', '-', $tktLabel, '-'];
+                $rows[] = ['-', '-', '-', '-', '-', '-', '-', 'Tidak ada siswa yang mengerjakan mapel pilihan', '-', '-', $tktLabel, '-'];
             } else {
                 $numPilihan = 0;
                 foreach ($pilihanRows as $pr) {
@@ -174,6 +197,9 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                         $pr['nama'],
                         "'" . $pr['nisn'],
                         $pr['kelas'],
+                        $pr['mat_wajib'] ?? '-',
+                        $pr['bing'] ?? '-',
+                        $pr['bind'] ?? '-',
                         $pr['mapel'],
                         $pr['nilai'],
                         $status,
@@ -187,7 +213,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
 
             // Tabel indikasi siswa salah masuk / ragu mapel pilihan
             $rows[] = ['SISWA YANG SALAH MASUK/RAGU MAPEL PILIHAN — ' . strtoupper($tktLabel)];
-            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Mapel Pilihan', 'Nilai', 'Status Nilai', 'Tingkat', 'Catatan'];
+            $rows[] = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Matematika Wajib', 'Bahasa Inggris', 'Bahasa Indonesia', 'Mapel Pilihan', 'Nilai Pilihan', 'Status Nilai', 'Tingkat', 'Catatan'];
 
             $raguRows = array_values(array_filter($pilihanRows, fn($pr) => $pr['nilai'] > 0 && $pr['nilai'] < 10));
             usort($raguRows, function ($a, $b) {
@@ -200,7 +226,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
             });
 
             if (count($raguRows) === 0) {
-                $rows[] = ['-', '-', '-', '-', 'Tidak ditemukan indikasi nilai < 10 pada mapel pilihan', '-', '-', $tktLabel, '-'];
+                $rows[] = ['-', '-', '-', '-', '-', '-', '-', 'Tidak ditemukan indikasi nilai < 10 pada mapel pilihan', '-', '-', $tktLabel, '-'];
             } else {
                 $numRagu = 0;
                 foreach ($raguRows as $rr) {
@@ -210,6 +236,9 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                         $rr['nama'],
                         "'" . $rr['nisn'],
                         $rr['kelas'],
+                        $rr['mat_wajib'] ?? '-',
+                        $rr['bing'] ?? '-',
+                        $rr['bind'] ?? '-',
                         $rr['mapel'],
                         $rr['nilai'],
                         'Indikasi Ragu/Salah Kuis',
@@ -298,7 +327,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                         str_starts_with($val, 'SISWA YANG SALAH MASUK/RAGU MAPEL PILIHAN') ||
                         str_starts_with($val, 'RINGKASAN PER KELAS')
                     )) {
-                        $sheet->getStyle("A{$row}:I{$row}")->applyFromArray([
+                        $sheet->getStyle("A{$row}:L{$row}")->applyFromArray([
                             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
                         ]);
@@ -306,7 +335,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                         // Style the sub-header row below
                         $subRow = $row + 1;
                         if ($subRow <= $lastRow) {
-                            $sheet->getStyle("A{$subRow}:I{$subRow}")->applyFromArray([
+                            $sheet->getStyle("A{$subRow}:L{$subRow}")->applyFromArray([
                                 'font' => ['bold' => true],
                                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D6E4F0']],
                                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
@@ -317,7 +346,7 @@ class NilaiCbtRingkasanSheet implements FromArray, WithTitle, WithEvents, Should
                             for ($dr = $subRow + 1; $dr <= $lastRow; $dr++) {
                                 $cellVal = $sheet->getCell("A{$dr}")->getValue();
                                 if ($cellVal === null || $cellVal === '') break;
-                                $sheet->getStyle("A{$dr}:I{$dr}")->applyFromArray([
+                                $sheet->getStyle("A{$dr}:L{$dr}")->applyFromArray([
                                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                                 ]);
 
