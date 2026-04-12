@@ -92,6 +92,74 @@
 
 <body class="@yield('classes_body')" @yield('body_data')>
 
+    <style>
+        .app-global-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 110000;
+            display: none;
+        }
+
+        .app-global-overlay.active {
+            display: block;
+        }
+
+        .app-global-overlay__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.54);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .app-global-overlay__content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            min-width: 240px;
+        }
+
+        .app-global-overlay__spinner {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 14px;
+            border-radius: 999px;
+            border: 3px solid rgba(255, 255, 255, 0.18);
+            border-top-color: rgba(255, 255, 255, 0.92);
+            animation: appGlobalSpin .8s linear infinite;
+        }
+
+        .app-global-overlay__title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            margin-bottom: 4px;
+        }
+
+        .app-global-overlay__subtitle {
+            font-size: .83rem;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        @keyframes appGlobalSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <div id="appGlobalOverlay" class="app-global-overlay" aria-hidden="true">
+        <div class="app-global-overlay__backdrop"></div>
+        <div class="app-global-overlay__content">
+            <div class="app-global-overlay__spinner"></div>
+            <div class="app-global-overlay__title" id="appGlobalOverlayTitle">Memuat halaman...</div>
+            <div class="app-global-overlay__subtitle" id="appGlobalOverlaySubtitle">Mohon tunggu sebentar</div>
+        </div>
+    </div>
+
     {{-- Body Content --}}
     @yield('body')
 
@@ -130,6 +198,40 @@
 
     <script>
         (function () {
+            function appShowGlobalOverlay(title, subtitle) {
+                const overlay = document.getElementById('appGlobalOverlay');
+                if (!overlay) {
+                    return;
+                }
+
+                const titleEl = document.getElementById('appGlobalOverlayTitle');
+                const subtitleEl = document.getElementById('appGlobalOverlaySubtitle');
+
+                if (titleEl) {
+                    titleEl.textContent = title || 'Memuat halaman...';
+                }
+
+                if (subtitleEl) {
+                    subtitleEl.textContent = subtitle || 'Mohon tunggu sebentar';
+                }
+
+                overlay.classList.add('active');
+                overlay.setAttribute('aria-hidden', 'false');
+            }
+
+            function appHideGlobalOverlay() {
+                const overlay = document.getElementById('appGlobalOverlay');
+                if (!overlay) {
+                    return;
+                }
+
+                overlay.classList.remove('active');
+                overlay.setAttribute('aria-hidden', 'true');
+            }
+
+            window.showAppGlobalOverlay = appShowGlobalOverlay;
+            window.hideAppGlobalOverlay = appHideGlobalOverlay;
+
             const loginUrl = @json(route('login'));
             const defaultMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
 
@@ -175,6 +277,59 @@
             }
 
             document.addEventListener('DOMContentLoaded', function () {
+                let formSubmitting = false;
+
+                document.addEventListener('click', function (event) {
+                    const link = event.target.closest('a[href]');
+                    if (!link) {
+                        return;
+                    }
+
+                    if (event.defaultPrevented || link.hasAttribute('data-no-overlay')) {
+                        return;
+                    }
+
+                    const href = (link.getAttribute('href') || '').trim();
+                    if (!href || href === '#' || href.startsWith('javascript:')) {
+                        return;
+                    }
+
+                    if (href.startsWith('mailto:') || href.startsWith('tel:')) {
+                        return;
+                    }
+
+                    if (link.target === '_blank' || link.hasAttribute('download')) {
+                        return;
+                    }
+
+                    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
+                        return;
+                    }
+
+                    appShowGlobalOverlay('Membuka halaman...', 'Sedang mengalihkan tampilan');
+                }, true);
+
+                document.addEventListener('submit', function (event) {
+                    const form = event.target;
+                    if (!form || event.defaultPrevented || form.hasAttribute('data-no-overlay')) {
+                        return;
+                    }
+
+                    formSubmitting = true;
+                    appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan');
+                }, true);
+
+                window.addEventListener('beforeunload', function () {
+                    appShowGlobalOverlay(
+                        formSubmitting ? 'Menyelesaikan proses...' : 'Memuat ulang halaman...',
+                        'Mohon tunggu sebentar'
+                    );
+                });
+
+                window.addEventListener('pageshow', function () {
+                    appHideGlobalOverlay();
+                });
+
                 let warning = null;
 
                 try {

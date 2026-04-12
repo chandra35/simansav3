@@ -7,17 +7,17 @@
     .student-hero {
         display: grid;
         grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
-        gap: 1.1rem;
+        gap: .85rem;
         align-items: stretch;
-        margin-bottom: 1.1rem;
+        margin-bottom: .8rem;
     }
 
     .student-hero__main {
         background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
         border: 1px solid rgba(148, 163, 184, .16);
-        border-radius: 26px;
-        padding: 1.35rem 1.45rem;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
+        border-radius: 20px;
+        padding: 1.05rem 1.15rem;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .06);
     }
 
     .student-hero__eyebrow {
@@ -29,21 +29,21 @@
         font-weight: 700;
         letter-spacing: .05em;
         text-transform: uppercase;
-        margin-bottom: .65rem;
+        margin-bottom: .45rem;
     }
 
     .student-hero__title {
-        font-size: 2rem;
+        font-size: 1.6rem;
         font-weight: 800;
         color: #0f172a;
         line-height: 1.1;
-        margin: 0 0 .55rem 0;
+        margin: 0 0 .35rem 0;
     }
 
     .student-hero__subtitle {
         color: #475569;
-        font-size: 1rem;
-        line-height: 1.7;
+        font-size: .92rem;
+        line-height: 1.55;
         margin: 0;
         max-width: 780px;
     }
@@ -56,9 +56,9 @@
     .student-hero-chip {
         background: rgba(255, 255, 255, .92);
         border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 20px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
+        border-radius: 16px;
+        padding: .75rem .9rem;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
     }
 
     .student-hero-chip__label {
@@ -68,13 +68,13 @@
         font-weight: 700;
         letter-spacing: .06em;
         text-transform: uppercase;
-        margin-bottom: .35rem;
+        margin-bottom: .2rem;
     }
 
     .student-hero-chip__value {
         display: block;
         color: #0f172a;
-        font-size: 1.45rem;
+        font-size: 1.2rem;
         font-weight: 800;
         line-height: 1.2;
     }
@@ -131,15 +131,15 @@
     .student-stat-card {
         position: relative;
         overflow: hidden;
-        min-height: 182px;
+        min-height: 148px;
         border: 0;
-        border-radius: 22px;
-        padding: 1.35rem 1.35rem 1.15rem;
+        border-radius: 18px;
+        padding: 1rem 1rem .9rem;
         color: #fff;
-        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .10);
         display: flex;
         align-items: flex-start;
-        gap: 1rem;
+        gap: .75rem;
     }
 
     .student-stat-card::after {
@@ -159,17 +159,17 @@
     .student-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
 
     .student-stat-card__icon {
-        width: 58px;
-        height: 58px;
-        border-radius: 18px;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: rgba(255, 255, 255, .16);
-        font-size: 1.3rem;
+        font-size: 1.05rem;
         position: relative;
         z-index: 1;
-        flex: 0 0 58px;
+        flex: 0 0 48px;
     }
 
     .student-stat-card__body {
@@ -185,33 +185,33 @@
 
     .student-stat-card__label {
         position: relative;
-        font-size: .78rem;
+        font-size: .72rem;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
         opacity: .9;
-        margin-bottom: .55rem;
+        margin-bottom: .35rem;
     }
 
     .student-stat-card__value {
         position: relative;
-        font-size: 2.15rem;
+        font-size: 1.75rem;
         font-weight: 800;
         line-height: 1;
-        margin-bottom: .75rem;
+        margin-bottom: .45rem;
     }
 
     .student-stat-card__desc {
         position: relative;
         opacity: .92;
-        line-height: 1.55;
-        font-size: .96rem;
+        line-height: 1.35;
+        font-size: .84rem;
     }
 
     .student-management-card {
         border: 0;
-        border-radius: 24px;
-        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .08);
         overflow: hidden;
     }
 
@@ -219,7 +219,7 @@
         background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
         color: #fff;
         border-bottom: 0;
-        padding: 1rem 1.25rem;
+        padding: .8rem 1rem;
     }
 
     .student-filter-panel {
