@@ -873,7 +873,8 @@ class SmartqController extends Controller
                         $nilaiData['moodle_username'] = $row['moodle_username'];
                         $nilaiData['dinilai_oleh'] = Auth::id();
                         $nilaiData['dinilai_pada'] = now();
-                        $nilaiData['catatan'] = "Import Moodle Scan: Score {$row['raw_score']}/{$row['max_score']}";
+                        $scoresDetail = collect($row['scores'] ?? [])->map(fn($s) => ($s['quiz_name'] ?? '') . ':' . ($s['normalized_100'] ?? 0))->implode(', ');
+                        $nilaiData['catatan'] = "Import Moodle Scan: Avg {$nilaiRaw} ({$scoresDetail})";
                         $scored++;
                     }
 
