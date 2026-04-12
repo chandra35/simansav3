@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\SiswaImportController;
 use App\Http\Controllers\Admin\TahunPelajaranController;
 use App\Http\Controllers\Admin\KurikulumController;
 use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\RdmSyncController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
@@ -174,6 +175,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester');
     Route::post('/nilai/semester/{semester}/export-preview', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterPreview'])->name('nilai.export-semester-preview');
     Route::get('/nilai/semester/{semester}/export-download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterDownload'])->name('nilai.export-semester-download');
+
+    // Integrasi RDM
+    Route::middleware(['permission:view-kurikulum'])->group(function () {
+        Route::get('/rdm-sync', [RdmSyncController::class, 'index'])->name('rdm-sync.index');
+        Route::post('/rdm-sync/preview', [RdmSyncController::class, 'preview'])->name('rdm-sync.preview');
+        Route::post('/rdm-sync/{run}/apply', [RdmSyncController::class, 'apply'])->name('rdm-sync.apply');
+    });
     
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);

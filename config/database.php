@@ -82,6 +82,25 @@ return [
             ]) : [],
         ],
 
+        'mysql_rdm' => [
+            'driver' => 'mysql',
+            'host' => env('RDM_DB_HOST', '172.16.251.2'),
+            'port' => env('RDM_DB_PORT', '3306'),
+            'database' => env('RDM_DB_DATABASE', 'man1metrosch_rdm'),
+            'username' => env('RDM_DB_USERNAME', 'root'),
+            'password' => env('RDM_DB_PASSWORD', ''),
+            'unix_socket' => env('RDM_DB_SOCKET', ''),
+            'charset' => env('RDM_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('RDM_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => false,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('RDM_MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),

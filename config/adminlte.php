@@ -397,6 +397,13 @@ return [
                     'active' => ['admin/nilai*'],
                 ],
                 [
+                    'text' => 'Integrasi RDM',
+                    'route' => 'admin.rdm-sync.index',
+                    'icon' => 'fas fa-fw fa-sync-alt',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/rdm-sync*'],
+                ],
+                [
                     'text' => 'Manajemen Kelas',
                     'route' => 'admin.kelas.index',
                     'icon' => 'fas fa-fw fa-school',
