@@ -257,6 +257,10 @@ function onCategoryChange() {
                 return;
             }
 
+            html += `<div class="ml-3 mb-1">
+                <button type="button" class="btn btn-xs btn-outline-primary" onclick="toggleCourses('${catId}', true)">Centang Semua</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="toggleCourses('${catId}', false)">Hapus Semua</button>
+            </div>`;
             html += '<div class="list-group mb-2">';
             data.forEach(c => {
                 html += `<label class="list-group-item list-group-item-action mb-0 py-2" style="cursor:pointer">
@@ -349,6 +353,11 @@ function onCourseChange() {
         container.innerHTML = html;
         updateCounts();
     });
+}
+
+function toggleCourses(catId, checked) {
+    document.querySelectorAll(`.course-check[data-cat-id="${catId}"]`).forEach(cb => cb.checked = checked);
+    onCourseChange();
 }
 
 function toggleQuizzes(courseId, checked) {
