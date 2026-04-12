@@ -71,7 +71,7 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
         $rows[] = ['Laporan Nilai CBT Moodle — ' . $this->smartq->nama];
         $rows[] = [$tktLabel . ' | ' . $tktTotal . ' siswa | ' . $tktHadir . ' hadir | ' . ($tktTotal - $tktHadir) . ' tidak hadir | Rata²: ' . round($tktAvg ?? 0, 1)];
         $rows[] = ['Discan: ' . ($this->smartq->last_scan_at?->format('d M Y H:i') ?? '-') . ' | ' . $this->smartq->moodle_base_url];
-        $rows[] = []; // empty row
+        $rows[] = ['']; // empty row
 
         // ── Ringkasan Mapel ──
         $rows[] = ['RINGKASAN MAPEL ' . strtoupper($tktLabel)];
@@ -107,8 +107,8 @@ class NilaiCbtTingkatSheet implements FromArray, WithTitle, WithEvents, WithColu
             ];
         }
 
-        $rows[] = []; // separator
-        $rows[] = []; // separator
+        $rows[] = ['']; // separator
+        $rows[] = ['']; // separator
 
         // ── Data header ──
         $dataHeader = ['No', 'Nama Siswa', 'NISN', 'Kelas'];
