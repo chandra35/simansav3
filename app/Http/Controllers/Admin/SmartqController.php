@@ -674,15 +674,19 @@ class SmartqController extends Controller
                     // Skip zero scores — likely entered wrong quiz (elective mismatch)
                     if (($score['normalized_100'] ?? 0) <= 0) continue;
 
+                    $scoreEntry = [
+                        'quiz_id' => $qc['quiz_id'],
+                        'quiz_name' => $qc['quiz_name'] ?? '',
+                        'course_id' => $qc['course_id'] ?? null,
+                        'category_name' => $qc['category_name'] ?? null,
+                        'normalized_100' => $score['normalized_100'],
+                        'attempt_id' => $score['attempt_id'],
+                        'raw_score' => $score['raw_score'],
+                        'max_score' => $score['max_score'],
+                    ];
+
                     if (isset($moodleUsersMap[$username])) {
-                        $moodleUsersMap[$username]['scores'][] = [
-                            'quiz_id' => $qc['quiz_id'],
-                            'quiz_name' => $qc['quiz_name'] ?? '',
-                            'normalized_100' => $score['normalized_100'],
-                            'attempt_id' => $score['attempt_id'],
-                            'raw_score' => $score['raw_score'],
-                            'max_score' => $score['max_score'],
-                        ];
+                        $moodleUsersMap[$username]['scores'][] = $scoreEntry;
                     } else {
                         // User has score but not found in enrolled list — add them
                         $moodleUsersMap[$username] = [
@@ -693,14 +697,7 @@ class SmartqController extends Controller
                             'fullname' => $score['fullname'] ?? $username,
                             'email' => $score['email'] ?? '',
                             'courses' => [],
-                            'scores' => [[
-                                'quiz_id' => $qc['quiz_id'],
-                                'quiz_name' => $qc['quiz_name'] ?? '',
-                                'normalized_100' => $score['normalized_100'],
-                                'attempt_id' => $score['attempt_id'],
-                                'raw_score' => $score['raw_score'],
-                                'max_score' => $score['max_score'],
-                            ]],
+                            'scores' => [$scoreEntry],
                         ];
                     }
                 }
@@ -1179,104 +1176,136 @@ class SmartqController extends Controller
                 ->with('error', 'Belum ada data scan. Lakukan scan dari Moodle terlebih dahulu.');
         }
 
-        // Collect all unique quizzes
-        $allMapel = collect($rows)->flatMap(fn($r) => $r['scores'] ?? [])->unique('quiz_id')->sortBy('quiz_name')->values();
-        $totalStudents = count($rows);
-
-        // Wajib vs Pilihan detection
-        $mapelStats = [];
-        foreach ($allMapel as $m) {
-            $qid = $m['quiz_id'];
-            $scores = collect($rows)->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $qid);
-            $nonZero = $scores->where('normalized_100', '>', 0);
-            $mapelStats[$qid] = [
-                'name' => $m['quiz_name'],
-                'total_attempts' => $nonZero->count(),
-                'avg' => $nonZero->count() > 0 ? round($nonZero->avg('normalized_100'), 1) : 0,
-                'max' => $nonZero->count() > 0 ? round($nonZero->max('normalized_100'), 1) : 0,
-                'min' => $nonZero->count() > 0 ? round($nonZero->min('normalized_100'), 1) : 0,
-            ];
+        // Build quiz→tingkat mapping from category_name
+        $quizConfigs = collect($smartq->moodle_quizzes ?? []);
+        $quizTingkat = [];
+        foreach ($quizConfigs as $qc) {
+            $cat = $qc['category_name'] ?? '';
+            if (preg_match('/(\d{2})\s*$/', $cat, $m)) {
+                $quizTingkat[$qc['quiz_id']] = (int) $m[1];
+            }
         }
-        $mapelWajib = collect($mapelStats)->filter(fn($s) => $s['total_attempts'] > ($totalStudents * 0.5))->keys()->toArray();
+
+        // Assign tingkat to each student
+        $rowsCollection = collect($rows);
+        $parseTingkat = function($kelas) {
+            if (preg_match('/\bXII\b|tingkat\s*12|kelas\s*12/i', $kelas)) return 12;
+            if (preg_match('/\bXI\b|tingkat\s*11|kelas\s*11/i', $kelas)) return 11;
+            if (preg_match('/\bX\b|tingkat\s*10|kelas\s*10/i', $kelas)) return 10;
+            return 0;
+        };
+
+        $rowsWithTingkat = $rowsCollection->map(function($r) use ($quizTingkat, $parseTingkat) {
+            $kelas = $r['siswa_kelas'] ?? $r['moodle_lastname'] ?? '';
+            $tkt = $parseTingkat($kelas);
+            if (!$tkt && !empty($r['scores'])) {
+                $tkt = collect($r['scores'])->map(fn($s) => $quizTingkat[$s['quiz_id']] ?? 0)->filter()->countBy()->sortDesc()->keys()->first() ?? 0;
+            }
+            $r['_tingkat'] = $tkt;
+            return $r;
+        });
+
+        $byTingkat = $rowsWithTingkat->groupBy('_tingkat')->sortKeys();
+
+        // Build mapel per tingkat
+        $allMapel = $rowsCollection->flatMap(fn($r) => $r['scores'] ?? [])->unique('quiz_id')->sortBy('quiz_name')->values();
+        $mapelByTingkat = [];
+        foreach ($allMapel as $m) {
+            $tkt = $quizTingkat[$m['quiz_id']] ?? 0;
+            $mapelByTingkat[$tkt][] = $m;
+        }
 
         if ($format === 'pdf') {
-            return $this->exportScanPdf($rows, $allMapel, $mapelStats, $mapelWajib, $smartq);
+            return $this->exportScanPdf($byTingkat, $mapelByTingkat, $quizTingkat, $smartq);
         }
 
-        // Excel (CSV with UTF-8 BOM)
-        $filename = 'SMARTQ_Scan_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.csv';
+        // Excel (CSV with UTF-8 BOM) — one sheet per tingkat
+        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($rows, $allMapel, $mapelWajib, $mapelStats) {
+        $callback = function () use ($byTingkat, $mapelByTingkat, $smartq) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            // Header
-            $header = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Status', 'Match'];
-            foreach ($allMapel as $m) {
-                $label = $m['quiz_name'];
-                if (!in_array($m['quiz_id'], $mapelWajib)) $label .= ' (Pilihan)';
-                $header[] = $label;
-            }
-            if ($allMapel->count() > 1) $header[] = 'Rata-rata';
-            $header[] = 'Keterangan';
-            fputcsv($file, $header);
+            foreach ($byTingkat as $tkt => $tktRows) {
+                $tktLabel = $tkt ? 'Tingkat ' . $tkt : 'Lainnya';
+                $tktMapel = collect($mapelByTingkat[$tkt] ?? []);
+                $tktTotal = $tktRows->count();
 
-            foreach ($rows as $i => $row) {
-                $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-                $statusLabel = match($row['status'] ?? null) {
-                    'ready' => 'Siap Import',
-                    'ready_no_score' => 'Tanpa Nilai',
-                    'already_registered' => 'Sudah Terdaftar',
-                    'no_match' => 'Tidak Ada di SIMANSA',
-                    default => '-',
-                };
+                // Wajib detection per tingkat
+                $tktMapelWajib = [];
+                foreach ($tktMapel as $m) {
+                    $attempts = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0)->count();
+                    if ($attempts > ($tktTotal * 0.5)) $tktMapelWajib[] = $m['quiz_id'];
+                }
 
-                $r = [
-                    $i + 1,
-                    ($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'),
-                    $row['moodle_username'] ?? '-',
-                    $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-'),
-                    $statusLabel,
-                    $row['match_method'] ?? '-',
-                ];
+                fputcsv($file, []);
+                fputcsv($file, ['=== ' . strtoupper($tktLabel) . ' === (' . $tktTotal . ' siswa, ' . $tktMapel->count() . ' mapel)']);
 
-                $ket = [];
-                foreach ($allMapel as $m) {
-                    $score = $rowScores->get($m['quiz_id']);
-                    if ($score) {
-                        $r[] = $score['normalized_100'];
-                    } else {
-                        $r[] = '-';
-                        if (in_array($m['quiz_id'], $mapelWajib)) {
-                            $ket[] = $m['quiz_name'] . ': Belum mengerjakan';
+                // Header
+                $header = ['No', 'Nama Siswa', 'NISN', 'Kelas'];
+                foreach ($tktMapel as $m) {
+                    $label = $m['quiz_name'];
+                    if (!in_array($m['quiz_id'], $tktMapelWajib)) $label .= ' (Pilihan)';
+                    $header[] = $label;
+                }
+                if ($tktMapel->count() > 1) $header[] = 'Rata-rata';
+                $header[] = 'Kehadiran';
+                fputcsv($file, $header);
+
+                // Group by kelas within tingkat
+                $byKelas = $tktRows->groupBy(fn($r) => $r['siswa_kelas'] ?? $r['moodle_lastname'] ?? 'Tanpa Kelas')->sortKeys();
+                $num = 0;
+                foreach ($byKelas as $kelasName => $kelasRows) {
+                    foreach (collect($kelasRows)->sortByDesc('normalized_100') as $row) {
+                        $num++;
+                        $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+                        $isHadir = $row['has_attempt'] ?? false;
+
+                        $r = [
+                            $num,
+                            ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')),
+                            $row['moodle_username'] ?? '-',
+                            $kelasName,
+                        ];
+
+                        $tktScores = [];
+                        foreach ($tktMapel as $m) {
+                            $score = $rowScores->get($m['quiz_id']);
+                            if ($score) {
+                                $r[] = $score['normalized_100'];
+                                $tktScores[] = $score['normalized_100'];
+                            } else {
+                                $r[] = '-';
+                            }
                         }
+
+                        if ($tktMapel->count() > 1) {
+                            $r[] = count($tktScores) > 0 ? round(array_sum($tktScores) / count($tktScores), 1) : '-';
+                        }
+                        $r[] = $isHadir ? 'Hadir' : 'TIDAK HADIR';
+                        fputcsv($file, $r);
                     }
                 }
 
-                if ($allMapel->count() > 1) {
-                    $r[] = $row['has_attempt'] ? $row['normalized_100'] : '-';
+                // Summary for this tingkat
+                fputcsv($file, []);
+                fputcsv($file, ['--- Ringkasan Mapel ' . $tktLabel . ' ---']);
+                fputcsv($file, ['Mapel', 'Tipe', 'Mengerjakan', 'Rata-rata', 'Tertinggi', 'Terendah']);
+                foreach ($tktMapel as $m) {
+                    $scores = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0);
+                    fputcsv($file, [
+                        $m['quiz_name'],
+                        in_array($m['quiz_id'], $tktMapelWajib) ? 'Wajib' : 'Pilihan',
+                        $scores->count() . '/' . $tktTotal,
+                        $scores->count() > 0 ? round($scores->avg('normalized_100'), 1) : 0,
+                        $scores->count() > 0 ? round($scores->max('normalized_100'), 1) : 0,
+                        $scores->count() > 0 ? round($scores->min('normalized_100'), 1) : 0,
+                    ]);
                 }
-                $r[] = implode('; ', $ket);
-                fputcsv($file, $r);
-            }
-
-            // Summary section
-            fputcsv($file, []);
-            fputcsv($file, ['=== RINGKASAN PER MAPEL ===']);
-            fputcsv($file, ['Mapel', 'Tipe', 'Peserta', 'Rata-rata', 'Tertinggi', 'Terendah']);
-            foreach ($mapelStats as $qid => $s) {
-                fputcsv($file, [
-                    $s['name'],
-                    in_array($qid, $mapelWajib) ? 'Wajib' : 'Pilihan',
-                    $s['total_attempts'],
-                    $s['avg'],
-                    $s['max'],
-                    $s['min'],
-                ]);
             }
 
             fclose($file);
@@ -1285,76 +1314,114 @@ class SmartqController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    private function exportScanPdf($rows, $allMapel, $mapelStats, $mapelWajib, $smartq)
+    private function exportScanPdf($byTingkat, $mapelByTingkat, $quizTingkat, $smartq)
     {
         ini_set('memory_limit', '512M');
-        $totalStudents = count($rows);
-        $html = '<style>
-            body { font-family: sans-serif; font-size: 10px; }
-            table { border-collapse: collapse; width: 100%; margin-bottom: 15px; }
-            th, td { border: 1px solid #333; padding: 3px 5px; }
-            th { background: #333; color: #fff; text-align: center; }
-            .badge-s { background: #28a745; color:#fff; padding: 1px 5px; border-radius: 3px; }
-            .badge-p { background: #007bff; color:#fff; padding: 1px 5px; border-radius: 3px; }
-            .badge-w { background: #ffc107; color:#000; padding: 1px 5px; border-radius: 3px; }
-            .badge-d { background: #dc3545; color:#fff; padding: 1px 5px; border-radius: 3px; }
-            .text-center { text-align: center; }
-            h2, h3 { margin: 5px 0; }
+
+        $style = '<style>
+            body { font-family: sans-serif; font-size: 9px; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+            th, td { border: 1px solid #555; padding: 2px 4px; }
+            th { background: #333; color: #fff; text-align: center; font-size: 8px; }
+            .bs { background: #28a745; color:#fff; padding: 1px 4px; border-radius: 2px; }
+            .bp { background: #007bff; color:#fff; padding: 1px 4px; border-radius: 2px; }
+            .bw { background: #ffc107; color:#000; padding: 1px 4px; border-radius: 2px; }
+            .bd { background: #dc3545; color:#fff; padding: 1px 4px; border-radius: 2px; }
+            .tc { text-align: center; }
+            .th { color: #dc3545; font-weight: bold; }
+            h2 { margin: 5px 0; font-size: 14px; }
+            h3 { margin: 8px 0 4px; font-size: 12px; background: #f0f0f0; padding: 4px; }
+            .page-break { page-break-before: always; }
         </style>';
-        $html .= '<h2>Laporan Scan Moodle - ' . e($smartq->nama) . '</h2>';
-        $html .= '<p>Tanggal: ' . now()->format('d/m/Y H:i') . ' | Total: ' . $totalStudents . ' siswa</p>';
 
-        // Summary table
-        $html .= '<h3>Ringkasan per Mapel</h3><table><tr><th>Mapel</th><th>Tipe</th><th>Peserta</th><th>Rata-rata</th><th>Tertinggi</th><th>Terendah</th></tr>';
-        foreach ($mapelStats as $qid => $s) {
-            $html .= '<tr><td>' . e($s['name']) . '</td><td class="text-center">' . (in_array($qid, $mapelWajib) ? 'Wajib' : 'Pilihan') . '</td>';
-            $html .= '<td class="text-center">' . $s['total_attempts'] . '/' . $totalStudents . '</td>';
-            $html .= '<td class="text-center">' . $s['avg'] . '</td>';
-            $html .= '<td class="text-center">' . $s['max'] . '</td>';
-            $html .= '<td class="text-center">' . $s['min'] . '</td></tr>';
-        }
-        $html .= '</table>';
+        $totalAll = $byTingkat->flatten(1)->count();
+        $html = $style;
+        $html .= '<h2>Laporan Nilai CBT Moodle — ' . e($smartq->nama) . '</h2>';
+        $html .= '<p>Tanggal: ' . now()->format('d/m/Y H:i') . ' | Total: ' . $totalAll . ' siswa | ' . $byTingkat->count() . ' tingkat</p>';
 
-        // Score table
-        $html .= '<h3>Rekap Nilai Seluruh Siswa</h3><table><tr><th>#</th><th>Nama</th><th>NISN</th><th>Kelas</th>';
-        foreach ($allMapel as $m) {
-            $html .= '<th style="font-size:8px">' . e($m['quiz_name']) . '</th>';
-        }
-        if ($allMapel->count() > 1) $html .= '<th>Rata²</th>';
-        $html .= '<th>Status</th></tr>';
+        $isFirstTingkat = true;
+        foreach ($byTingkat as $tkt => $tktRows) {
+            $tktLabel = $tkt ? 'Tingkat ' . $tkt : 'Lainnya';
+            $tktMapel = collect($mapelByTingkat[$tkt] ?? []);
+            $tktTotal = $tktRows->count();
+            $tktHadir = $tktRows->filter(fn($r) => ($r['has_attempt'] ?? false))->count();
 
-        foreach ($rows as $i => $row) {
-            $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-            $statusLabel = match($row['status'] ?? null) {
-                'ready' => 'Siap', 'ready_no_score' => 'Tanpa Nilai',
-                'already_registered' => 'Terdaftar', 'no_match' => 'Tidak Ada', default => '-',
-            };
-            $html .= '<tr><td class="text-center">' . ($i + 1) . '</td>';
-            $html .= '<td>' . e(($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')) . '</td>';
-            $html .= '<td>' . e($row['moodle_username'] ?? '-') . '</td>';
-            $html .= '<td>' . e($row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-')) . '</td>';
-            foreach ($allMapel as $m) {
-                $score = $rowScores->get($m['quiz_id']);
-                if ($score) {
-                    $v = $score['normalized_100'];
-                    $cls = $v >= 80 ? 'badge-s' : ($v >= 60 ? 'badge-p' : ($v >= 40 ? 'badge-w' : 'badge-d'));
-                    $html .= '<td class="text-center"><span class="' . $cls . '">' . $v . '</span></td>';
-                } else {
-                    $html .= '<td class="text-center">-</td>';
+            // Wajib detection per tingkat
+            $tktMapelWajib = [];
+            foreach ($tktMapel as $m) {
+                $attempts = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0)->count();
+                if ($attempts > ($tktTotal * 0.5)) $tktMapelWajib[] = $m['quiz_id'];
+            }
+
+            if (!$isFirstTingkat) $html .= '<div class="page-break"></div>';
+            $isFirstTingkat = false;
+
+            $html .= '<h3>' . e($tktLabel) . ' — ' . $tktTotal . ' siswa (' . $tktHadir . ' hadir, ' . ($tktTotal - $tktHadir) . ' tidak hadir) — ' . $tktMapel->count() . ' mapel</h3>';
+
+            // Ringkasan mapel tingkat ini
+            $html .= '<table><tr><th>Mapel</th><th>Tipe</th><th>Mengerjakan</th><th>Rata-rata</th><th>Tertinggi</th><th>Terendah</th></tr>';
+            foreach ($tktMapel as $m) {
+                $scores = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0);
+                $isW = in_array($m['quiz_id'], $tktMapelWajib);
+                $html .= '<tr><td>' . e($m['quiz_name']) . '</td>';
+                $html .= '<td class="tc">' . ($isW ? 'Wajib' : 'Pilihan') . '</td>';
+                $html .= '<td class="tc">' . $scores->count() . '/' . $tktTotal . '</td>';
+                $html .= '<td class="tc">' . ($scores->count() > 0 ? round($scores->avg('normalized_100'), 1) : 0) . '</td>';
+                $html .= '<td class="tc">' . ($scores->count() > 0 ? round($scores->max('normalized_100'), 1) : 0) . '</td>';
+                $html .= '<td class="tc">' . ($scores->count() > 0 ? round($scores->min('normalized_100'), 1) : 0) . '</td></tr>';
+            }
+            $html .= '</table>';
+
+            // Rekap nilai per kelas
+            $byKelas = $tktRows->groupBy(fn($r) => $r['siswa_kelas'] ?? $r['moodle_lastname'] ?? 'Tanpa Kelas')->sortKeys();
+            foreach ($byKelas as $kelasName => $kelasRows) {
+                $html .= '<p style="margin:6px 0 2px;font-weight:bold">' . e($kelasName) . ' (' . count($kelasRows) . ' siswa)</p>';
+                $html .= '<table><tr><th>#</th><th>Nama</th><th>NISN</th>';
+                foreach ($tktMapel as $m) {
+                    $html .= '<th>' . e($m['quiz_name']) . '</th>';
                 }
+                if ($tktMapel->count() > 1) $html .= '<th>Rata²</th>';
+                $html .= '<th>Hadir</th></tr>';
+
+                $num = 0;
+                foreach (collect($kelasRows)->sortByDesc('normalized_100') as $row) {
+                    $num++;
+                    $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+                    $isHadir = $row['has_attempt'] ?? false;
+
+                    $html .= '<tr' . (!$isHadir ? ' style="background:#ffe0e0"' : '') . '>';
+                    $html .= '<td class="tc">' . $num . '</td>';
+                    $html .= '<td>' . e(($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-'))) . '</td>';
+                    $html .= '<td>' . e($row['moodle_username'] ?? '-') . '</td>';
+
+                    $scoreValues = [];
+                    foreach ($tktMapel as $m) {
+                        $score = $rowScores->get($m['quiz_id']);
+                        if ($score) {
+                            $v = $score['normalized_100'];
+                            $cls = $v >= 80 ? 'bs' : ($v >= 60 ? 'bp' : ($v >= 40 ? 'bw' : 'bd'));
+                            $html .= '<td class="tc"><span class="' . $cls . '">' . $v . '</span></td>';
+                            $scoreValues[] = $v;
+                        } else {
+                            $html .= '<td class="tc">-</td>';
+                        }
+                    }
+
+                    if ($tktMapel->count() > 1) {
+                        $avg = count($scoreValues) > 0 ? round(array_sum($scoreValues) / count($scoreValues), 1) : '-';
+                        $html .= '<td class="tc"><strong>' . $avg . '</strong></td>';
+                    }
+                    $html .= '<td class="tc">' . ($isHadir ? '✓' : '<span class="th">✗</span>') . '</td></tr>';
+                }
+                $html .= '</table>';
             }
-            if ($allMapel->count() > 1) {
-                $html .= '<td class="text-center">' . ($row['has_attempt'] ? $row['normalized_100'] : '-') . '</td>';
-            }
-            $html .= '<td class="text-center">' . $statusLabel . '</td></tr>';
         }
-        $html .= '</table>';
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)
             ->setPaper('a4', 'landscape')
             ->setOptions(['isRemoteEnabled' => false, 'defaultFont' => 'sans-serif']);
 
-        $filename = 'SMARTQ_Scan_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.pdf';
+        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.pdf';
         return $pdf->download($filename);
     }
 }
