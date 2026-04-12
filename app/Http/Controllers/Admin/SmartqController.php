@@ -95,7 +95,43 @@ class SmartqController extends Controller
             'terendah' => $pesertas->where('total_nilai', '>', 0)->min('total_nilai') ?? 0,
         ];
 
-        return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats'));
+        // Check if scan cache exists
+        $scanCacheKey = 'smartq_scan_' . $smartq->id . '_' . Auth::id();
+        $scanCached = Cache::get($scanCacheKey);
+        $hasScanCache = !empty($scanCached);
+        $scanCacheInfo = $hasScanCache ? [
+            'scanned_at' => $scanCached['scanned_at'] ?? null,
+            'total' => count($scanCached['rows'] ?? []),
+            'cache_key' => $scanCacheKey,
+        ] : null;
+
+        return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats', 'hasScanCache', 'scanCacheInfo'));
+    }
+
+    public function viewScanCache(SmartqPeriode $smartq)
+    {
+        $cacheKey = 'smartq_scan_' . $smartq->id . '_' . Auth::id();
+        $cached = Cache::get($cacheKey);
+
+        if (!$cached) {
+            return redirect()->route('admin.smartq.show', $smartq)
+                ->with('warning', 'Data scan sudah expired. Silakan scan ulang dari Moodle.');
+        }
+
+        $rows = $cached['rows'];
+        $summary = $cached['summary'];
+
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        $kelasAvailable = $tahunAktif
+            ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)
+                ->where('is_active', true)
+                ->with('jurusan')
+                ->orderBy('tingkat')
+                ->orderBy('nama_kelas')
+                ->get()
+            : collect();
+
+        return view('admin.smartq.preview-moodle', compact('smartq', 'rows', 'summary', 'cacheKey', 'kelasAvailable'));
     }
 
     public function edit(SmartqPeriode $smartq)

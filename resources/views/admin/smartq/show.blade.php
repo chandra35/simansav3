@@ -107,6 +107,18 @@
                                     <i class="fas fa-cloud-download-alt text-success"></i> Scan Peserta dari Moodle
                                 </a>
                             @endif
+                            @if($hasScanCache ?? false)
+                                <a href="{{ route('admin.smartq.moodle.scan.view', $smartq) }}" class="list-group-item list-group-item-action list-group-item-info">
+                                    <i class="fas fa-chart-bar text-primary"></i> Lihat Nilai Scan Moodle
+                                    <span class="badge badge-primary float-right">{{ $scanCacheInfo['total'] ?? 0 }} siswa</span>
+                                </a>
+                                <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'cache_key' => $scanCacheInfo['cache_key'], 'format' => 'excel']) }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-file-excel text-success"></i> Export Nilai Scan (Excel)
+                                </a>
+                                <a href="{{ route('admin.smartq.moodle.scan.export', ['smartq' => $smartq, 'cache_key' => $scanCacheInfo['cache_key'], 'format' => 'pdf']) }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-file-pdf text-danger"></i> Export Nilai Scan (PDF)
+                                </a>
+                            @endif
                         @endif
                         <a href="{{ route('admin.smartq.export', $smartq) }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-file-excel text-success"></i> Export Excel
