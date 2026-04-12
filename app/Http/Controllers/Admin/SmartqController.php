@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\NilaiCbtExport;
 use Yajra\DataTables\Facades\DataTables;
 
 class SmartqController extends Controller
@@ -1219,99 +1221,13 @@ class SmartqController extends Controller
             return $this->exportScanPdf($byTingkat, $mapelByTingkat, $quizTingkat, $smartq);
         }
 
-        // Excel (CSV with UTF-8 BOM) — one sheet per tingkat
-        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ];
-
-        $callback = function () use ($byTingkat, $mapelByTingkat, $smartq) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            foreach ($byTingkat as $tkt => $tktRows) {
-                $tktLabel = $tkt ? 'Tingkat ' . $tkt : 'Lainnya';
-                $tktMapel = collect($mapelByTingkat[$tkt] ?? []);
-                $tktTotal = $tktRows->count();
-
-                // Wajib detection per tingkat
-                $tktMapelWajib = [];
-                foreach ($tktMapel as $m) {
-                    $attempts = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0)->count();
-                    if ($attempts > ($tktTotal * 0.5)) $tktMapelWajib[] = $m['quiz_id'];
-                }
-
-                fputcsv($file, []);
-                fputcsv($file, ['=== ' . strtoupper($tktLabel) . ' === (' . $tktTotal . ' siswa, ' . $tktMapel->count() . ' mapel)']);
-
-                // Header
-                $header = ['No', 'Nama Siswa', 'NISN', 'Kelas'];
-                foreach ($tktMapel as $m) {
-                    $label = $m['quiz_name'];
-                    if (!in_array($m['quiz_id'], $tktMapelWajib)) $label .= ' (Pilihan)';
-                    $header[] = $label;
-                }
-                if ($tktMapel->count() > 1) $header[] = 'Rata-rata';
-                $header[] = 'Kehadiran';
-                fputcsv($file, $header);
-
-                // Group by kelas within tingkat
-                $byKelas = $tktRows->groupBy(fn($r) => $r['siswa_kelas'] ?? $r['moodle_lastname'] ?? 'Tanpa Kelas')->sortKeys();
-                $num = 0;
-                foreach ($byKelas as $kelasName => $kelasRows) {
-                    foreach (collect($kelasRows)->sortByDesc('normalized_100') as $row) {
-                        $num++;
-                        $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
-                        $isHadir = $row['has_attempt'] ?? false;
-
-                        $r = [
-                            $num,
-                            ($row['siswa_nama'] ?? '') ?: (($row['moodle_firstname'] ?? '') ?: ($row['moodle_fullname'] ?? '-')),
-                            $row['moodle_username'] ?? '-',
-                            $kelasName,
-                        ];
-
-                        $tktScores = [];
-                        foreach ($tktMapel as $m) {
-                            $score = $rowScores->get($m['quiz_id']);
-                            if ($score) {
-                                $r[] = $score['normalized_100'];
-                                $tktScores[] = $score['normalized_100'];
-                            } else {
-                                $r[] = '-';
-                            }
-                        }
-
-                        if ($tktMapel->count() > 1) {
-                            $r[] = count($tktScores) > 0 ? round(array_sum($tktScores) / count($tktScores), 1) : '-';
-                        }
-                        $r[] = $isHadir ? 'Hadir' : 'TIDAK HADIR';
-                        fputcsv($file, $r);
-                    }
-                }
-
-                // Summary for this tingkat
-                fputcsv($file, []);
-                fputcsv($file, ['--- Ringkasan Mapel ' . $tktLabel . ' ---']);
-                fputcsv($file, ['Mapel', 'Tipe', 'Mengerjakan', 'Rata-rata', 'Tertinggi', 'Terendah']);
-                foreach ($tktMapel as $m) {
-                    $scores = $tktRows->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $m['quiz_id'])->where('normalized_100', '>', 0);
-                    fputcsv($file, [
-                        $m['quiz_name'],
-                        in_array($m['quiz_id'], $tktMapelWajib) ? 'Wajib' : 'Pilihan',
-                        $scores->count() . '/' . $tktTotal,
-                        $scores->count() > 0 ? round($scores->avg('normalized_100'), 1) : 0,
-                        $scores->count() > 0 ? round($scores->max('normalized_100'), 1) : 0,
-                        $scores->count() > 0 ? round($scores->min('normalized_100'), 1) : 0,
-                    ]);
-                }
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        // Excel (.xlsx) with Maatwebsite/Excel — multi-sheet per tingkat
+        ini_set('memory_limit', '512M');
+        $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.xlsx';
+        return Excel::download(
+            new NilaiCbtExport($byTingkat, $mapelByTingkat, $quizTingkat, $smartq),
+            $filename
+        );
     }
 
     private function exportScanPdf($byTingkat, $mapelByTingkat, $quizTingkat, $smartq)
