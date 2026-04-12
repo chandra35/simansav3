@@ -75,6 +75,16 @@
     </div>
 
     {{-- Preview Table --}}
+    @php
+        // Collect all unique quizzes (mapel) from scores across all rows
+        $allMapel = collect($rows)
+            ->flatMap(fn($r) => $r['scores'] ?? [])
+            ->unique('quiz_id')
+            ->sortBy('quiz_name')
+            ->values();
+        $mapelCount = $allMapel->count();
+        $totalCols = 6 + $mapelCount + ($mapelCount > 1 ? 1 : 0); // checkbox, #, moodle user, siswa, kelas, [mapel cols], [rata-rata if >1], status
+    @endphp
     <form action="{{ route('admin.smartq.moodle.scan.confirm', $smartq) }}" method="POST" id="formConfirm">
         @csrf
         <input type="hidden" name="cache_key" value="{{ $cacheKey }}">
@@ -86,8 +96,8 @@
                     <span class="badge badge-success" id="selectedCount">0</span> dipilih
                 </div>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-bordered table-striped table-sm mb-0">
+            <div class="card-body p-0" style="overflow-x:auto">
+                <table class="table table-bordered table-striped table-sm mb-0" style="white-space:nowrap">
                     <thead class="thead-dark">
                         <tr>
                             <th width="40" class="text-center">
@@ -96,9 +106,16 @@
                             <th width="30">#</th>
                             <th>User Moodle</th>
                             <th>Siswa SIMANSA</th>
-                            <th width="120">Kelas</th>
-                            <th width="90" class="text-center">Nilai CBT</th>
-                            <th width="130" class="text-center">Status</th>
+                            <th width="100">Kelas</th>
+                            @foreach($allMapel as $mapel)
+                                <th class="text-center" style="min-width:70px;max-width:120px;white-space:normal;font-size:0.8rem">
+                                    {{ $mapel['quiz_name'] }}
+                                </th>
+                            @endforeach
+                            @if($mapelCount > 1)
+                                <th width="70" class="text-center">Rata-rata</th>
+                            @endif
+                            <th width="120" class="text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,6 +136,7 @@
                                     'no_match' => 'TIDAK COCOK',
                                     default => '-',
                                 };
+                                $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
                             @endphp
                             <tr class="{{ $canImport ? '' : 'text-muted' }}">
                                 <td class="text-center">
@@ -156,25 +174,31 @@
                                     @endif
                                 </td>
                                 <td>{{ $row['siswa_kelas'] ?? '-' }}</td>
-                                <td class="text-center">
-                                    @if($row['has_attempt'])
-                                        <span class="badge badge-primary" title="{{ count($row['scores'] ?? []) }} kuis dijawab">
-                                            {{ $row['normalized_100'] }}
-                                        </span>
-                                        @if(count($row['scores'] ?? []) > 1)
-                                            <br><small class="text-muted">{{ count($row['scores']) }} kuis</small>
+                                @foreach($allMapel as $mapel)
+                                    <td class="text-center">
+                                        @if($rowScores->has($mapel['quiz_id']))
+                                            <span class="badge badge-primary">{{ $rowScores[$mapel['quiz_id']]['normalized_100'] }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
                                         @endif
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
+                                    </td>
+                                @endforeach
+                                @if($mapelCount > 1)
+                                    <td class="text-center">
+                                        @if($row['has_attempt'])
+                                            <strong>{{ $row['normalized_100'] }}</strong>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                @endif
                                 <td class="text-center">
                                     <span class="badge {{ $badgeClass }}">{{ $statusLabel }}</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-3 text-muted">Tidak ada data dari Moodle.</td>
+                                <td colspan="{{ $totalCols }}" class="text-center py-3 text-muted">Tidak ada data dari Moodle.</td>
                             </tr>
                         @endforelse
                     </tbody>
