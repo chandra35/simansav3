@@ -1108,4 +1108,195 @@ class SmartqController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    // ==================== EXPORT SCAN REPORT ====================
+
+    public function exportScanReport(Request $request, SmartqPeriode $smartq)
+    {
+        $cacheKey = $request->query('cache_key');
+        $format = $request->query('format', 'excel');
+        $rows = Cache::get($cacheKey);
+
+        if (!$rows) {
+            return redirect()->route('admin.smartq.show', $smartq)
+                ->with('error', 'Data scan sudah expired. Silakan scan ulang.');
+        }
+
+        // Collect all unique quizzes
+        $allMapel = collect($rows)->flatMap(fn($r) => $r['scores'] ?? [])->unique('quiz_id')->sortBy('quiz_name')->values();
+        $totalStudents = count($rows);
+
+        // Wajib vs Pilihan detection
+        $mapelStats = [];
+        foreach ($allMapel as $m) {
+            $qid = $m['quiz_id'];
+            $scores = collect($rows)->flatMap(fn($r) => $r['scores'] ?? [])->where('quiz_id', $qid);
+            $nonZero = $scores->where('normalized_100', '>', 0);
+            $mapelStats[$qid] = [
+                'name' => $m['quiz_name'],
+                'total_attempts' => $nonZero->count(),
+                'avg' => $nonZero->count() > 0 ? round($nonZero->avg('normalized_100'), 1) : 0,
+                'max' => $nonZero->count() > 0 ? round($nonZero->max('normalized_100'), 1) : 0,
+                'min' => $nonZero->count() > 0 ? round($nonZero->min('normalized_100'), 1) : 0,
+            ];
+        }
+        $mapelWajib = collect($mapelStats)->filter(fn($s) => $s['total_attempts'] > ($totalStudents * 0.5))->keys()->toArray();
+
+        if ($format === 'pdf') {
+            return $this->exportScanPdf($rows, $allMapel, $mapelStats, $mapelWajib, $smartq);
+        }
+
+        // Excel (CSV with UTF-8 BOM)
+        $filename = 'SMARTQ_Scan_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($rows, $allMapel, $mapelWajib, $mapelStats) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header
+            $header = ['No', 'Nama Siswa', 'NISN', 'Kelas', 'Status', 'Match'];
+            foreach ($allMapel as $m) {
+                $label = $m['quiz_name'];
+                if (!in_array($m['quiz_id'], $mapelWajib)) $label .= ' (Pilihan)';
+                $header[] = $label;
+            }
+            if ($allMapel->count() > 1) $header[] = 'Rata-rata';
+            $header[] = 'Keterangan';
+            fputcsv($file, $header);
+
+            foreach ($rows as $i => $row) {
+                $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+                $statusLabel = match($row['status']) {
+                    'ready' => 'Siap Import',
+                    'ready_no_score' => 'Tanpa Nilai',
+                    'already_registered' => 'Sudah Terdaftar',
+                    'no_match' => 'Tidak Ada di SIMANSA',
+                    default => '-',
+                };
+
+                $r = [
+                    $i + 1,
+                    $row['moodle_firstname'] ?: $row['moodle_fullname'],
+                    $row['moodle_username'],
+                    $row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-'),
+                    $statusLabel,
+                    $row['match_method'] ?? '-',
+                ];
+
+                $ket = [];
+                foreach ($allMapel as $m) {
+                    $score = $rowScores->get($m['quiz_id']);
+                    if ($score) {
+                        $r[] = $score['normalized_100'];
+                    } else {
+                        $r[] = '-';
+                        if (in_array($m['quiz_id'], $mapelWajib)) {
+                            $ket[] = $m['quiz_name'] . ': Belum mengerjakan';
+                        }
+                    }
+                }
+
+                if ($allMapel->count() > 1) {
+                    $r[] = $row['has_attempt'] ? $row['normalized_100'] : '-';
+                }
+                $r[] = implode('; ', $ket);
+                fputcsv($file, $r);
+            }
+
+            // Summary section
+            fputcsv($file, []);
+            fputcsv($file, ['=== RINGKASAN PER MAPEL ===']);
+            fputcsv($file, ['Mapel', 'Tipe', 'Peserta', 'Rata-rata', 'Tertinggi', 'Terendah']);
+            foreach ($mapelStats as $qid => $s) {
+                fputcsv($file, [
+                    $s['name'],
+                    in_array($qid, $mapelWajib) ? 'Wajib' : 'Pilihan',
+                    $s['total_attempts'],
+                    $s['avg'],
+                    $s['max'],
+                    $s['min'],
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function exportScanPdf($rows, $allMapel, $mapelStats, $mapelWajib, $smartq)
+    {
+        $totalStudents = count($rows);
+        $html = '<style>
+            body { font-family: sans-serif; font-size: 10px; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 15px; }
+            th, td { border: 1px solid #333; padding: 3px 5px; }
+            th { background: #333; color: #fff; text-align: center; }
+            .badge-s { background: #28a745; color:#fff; padding: 1px 5px; border-radius: 3px; }
+            .badge-p { background: #007bff; color:#fff; padding: 1px 5px; border-radius: 3px; }
+            .badge-w { background: #ffc107; color:#000; padding: 1px 5px; border-radius: 3px; }
+            .badge-d { background: #dc3545; color:#fff; padding: 1px 5px; border-radius: 3px; }
+            .text-center { text-align: center; }
+            h2, h3 { margin: 5px 0; }
+        </style>';
+        $html .= '<h2>Laporan Scan Moodle - ' . e($smartq->nama) . '</h2>';
+        $html .= '<p>Tanggal: ' . now()->format('d/m/Y H:i') . ' | Total: ' . $totalStudents . ' siswa</p>';
+
+        // Summary table
+        $html .= '<h3>Ringkasan per Mapel</h3><table><tr><th>Mapel</th><th>Tipe</th><th>Peserta</th><th>Rata-rata</th><th>Tertinggi</th><th>Terendah</th></tr>';
+        foreach ($mapelStats as $qid => $s) {
+            $html .= '<tr><td>' . e($s['name']) . '</td><td class="text-center">' . (in_array($qid, $mapelWajib) ? 'Wajib' : 'Pilihan') . '</td>';
+            $html .= '<td class="text-center">' . $s['total_attempts'] . '/' . $totalStudents . '</td>';
+            $html .= '<td class="text-center">' . $s['avg'] . '</td>';
+            $html .= '<td class="text-center">' . $s['max'] . '</td>';
+            $html .= '<td class="text-center">' . $s['min'] . '</td></tr>';
+        }
+        $html .= '</table>';
+
+        // Score table
+        $html .= '<h3>Rekap Nilai Seluruh Siswa</h3><table><tr><th>#</th><th>Nama</th><th>NISN</th><th>Kelas</th>';
+        foreach ($allMapel as $m) {
+            $html .= '<th style="font-size:8px">' . e($m['quiz_name']) . '</th>';
+        }
+        if ($allMapel->count() > 1) $html .= '<th>Rata²</th>';
+        $html .= '<th>Status</th></tr>';
+
+        foreach ($rows as $i => $row) {
+            $rowScores = collect($row['scores'] ?? [])->keyBy('quiz_id');
+            $statusLabel = match($row['status']) {
+                'ready' => 'Siap', 'ready_no_score' => 'Tanpa Nilai',
+                'already_registered' => 'Terdaftar', 'no_match' => 'Tidak Ada', default => '-',
+            };
+            $html .= '<tr><td class="text-center">' . ($i + 1) . '</td>';
+            $html .= '<td>' . e($row['moodle_firstname'] ?: $row['moodle_fullname']) . '</td>';
+            $html .= '<td>' . e($row['moodle_username']) . '</td>';
+            $html .= '<td>' . e($row['siswa_kelas'] ?? ($row['moodle_lastname'] ?? '-')) . '</td>';
+            foreach ($allMapel as $m) {
+                $score = $rowScores->get($m['quiz_id']);
+                if ($score) {
+                    $v = $score['normalized_100'];
+                    $cls = $v >= 80 ? 'badge-s' : ($v >= 60 ? 'badge-p' : ($v >= 40 ? 'badge-w' : 'badge-d'));
+                    $html .= '<td class="text-center"><span class="' . $cls . '">' . $v . '</span></td>';
+                } else {
+                    $html .= '<td class="text-center">-</td>';
+                }
+            }
+            if ($allMapel->count() > 1) {
+                $html .= '<td class="text-center">' . ($row['has_attempt'] ? $row['normalized_100'] : '-') . '</td>';
+            }
+            $html .= '<td class="text-center">' . $statusLabel . '</td></tr>';
+        }
+        $html .= '</table>';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)
+            ->setPaper('a4', 'landscape')
+            ->setOptions(['isRemoteEnabled' => false, 'defaultFont' => 'sans-serif']);
+
+        $filename = 'SMARTQ_Scan_' . str_replace(' ', '_', $smartq->nama) . '_' . date('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
 }
