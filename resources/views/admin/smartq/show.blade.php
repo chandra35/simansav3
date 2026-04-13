@@ -228,6 +228,11 @@
         <div class="card card-outline card-warning">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-gavel"></i> Proses Kelulusan</h3>
+                <div class="card-tools">
+                    <a href="{{ route('admin.smartq.kelulusan.import', $smartq) }}" class="btn btn-sm btn-info">
+                        <i class="fas fa-file-import"></i> Import Kelulusan & Bidang
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <form action="{{ route('admin.smartq.kelulusan', $smartq) }}" method="POST" id="formKelulusan">
@@ -284,11 +289,12 @@
                             @endforeach
                             <th width="90" class="text-center bg-gradient-primary">Total</th>
                             <th width="110" class="text-center">Status</th>
+                            <th width="130" class="text-center">Bidang</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($pesertas as $p)
-                            <tr class="{{ $p->status === 'lulus' ? 'table-success' : ($p->status === 'tidak_lulus' ? 'table-danger' : '') }}">
+                            <tr class="{{ $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : '')) }}">
                                 <td class="text-center">
                                     @if($p->ranking && $p->ranking <= 3)
                                         <span class="badge badge-{{ $p->ranking === 1 ? 'warning' : ($p->ranking === 2 ? 'secondary' : 'info') }}">
@@ -322,10 +328,17 @@
                                     <strong class="text-primary">{{ $p->total_nilai !== null ? number_format($p->total_nilai, 2) : '-' }}</strong>
                                 </td>
                                 <td class="text-center">{!! $p->status_badge !!}</td>
+                                <td class="text-center">
+                                    @if($p->bidangMapel)
+                                        <span class="badge badge-info" title="{{ $p->bidangMapel->nama_mapel }}">{{ $p->bidangMapel->kode_mapel }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ 6 + $smartq->komponenNilais->count() }}" class="text-center py-4 text-muted">
+                                <td colspan="{{ 7 + $smartq->komponenNilais->count() }}" class="text-center py-4 text-muted">
                                     <i class="fas fa-users fa-2x mb-2"></i><br>
                                     Belum ada peserta. <a href="{{ route('admin.smartq.peserta', $smartq) }}">Tambah peserta</a>
                                 </td>

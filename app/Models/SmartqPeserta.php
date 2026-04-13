@@ -17,6 +17,7 @@ class SmartqPeserta extends Model
         'siswa_id',
         'nomor_peserta',
         'kelas_asal_id',
+        'bidang_mapel_id',
         'status',
         'total_nilai',
         'ranking',
@@ -43,6 +44,11 @@ class SmartqPeserta extends Model
         return $this->belongsTo(Kelas::class, 'kelas_asal_id');
     }
 
+    public function bidangMapel()
+    {
+        return $this->belongsTo(MataPelajaran::class, 'bidang_mapel_id');
+    }
+
     public function nilais()
     {
         return $this->hasMany(SmartqNilai::class, 'smartq_peserta_id');
@@ -57,7 +63,8 @@ class SmartqPeserta extends Model
     {
         return match($this->status) {
             'terdaftar' => '<span class="badge badge-info"><i class="fas fa-user-clock"></i> Terdaftar</span>',
-            'lulus' => '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Lulus</span>',
+            'lulus' => '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Diterima</span>',
+            'cadangan' => '<span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> Cadangan</span>',
             'tidak_lulus' => '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Tidak Lulus</span>',
             'mengundurkan_diri' => '<span class="badge badge-warning"><i class="fas fa-user-minus"></i> Mengundurkan Diri</span>',
             default => '<span class="badge badge-secondary">-</span>',

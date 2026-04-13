@@ -34,6 +34,13 @@ class AuthServiceProvider extends ServiceProvider
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
+        Gate::define('siswa-smartq-access', function ($user) {
+            if (!$user->siswa) return false;
+            return \App\Models\SmartqPeserta::where('siswa_id', $user->siswa->id)
+                ->whereIn('status', ['lulus', 'cadangan'])
+                ->exists();
+        });
+
         Gate::define('siswa-menu-only', function ($user) {
             return ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists()) &&
                 !$user->hasRole('GTK') &&

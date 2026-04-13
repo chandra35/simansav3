@@ -12,6 +12,7 @@ use App\Models\Kelas;
 use App\Models\Ortu;
 use App\Models\TahunPelajaran;
 use App\Models\User;
+use App\Models\MataPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -81,7 +82,7 @@ class SmartqController extends Controller
     {
         $smartq->load(['tahunPelajaran', 'komponenNilais']);
 
-        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'nilais.komponenNilai'])
+        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'bidangMapel', 'nilais.komponenNilai'])
             ->where('smartq_periode_id', $smartq->id)
             ->orderBy('ranking')
             ->orderByDesc('total_nilai')
@@ -90,6 +91,7 @@ class SmartqController extends Controller
         $stats = [
             'total' => $pesertas->count(),
             'lulus' => $pesertas->where('status', 'lulus')->count(),
+            'cadangan' => $pesertas->where('status', 'cadangan')->count(),
             'tidak_lulus' => $pesertas->where('status', 'tidak_lulus')->count(),
             'terdaftar' => $pesertas->where('status', 'terdaftar')->count(),
             'rata_rata' => $pesertas->avg('total_nilai') ?? 0,
@@ -1374,5 +1376,186 @@ class SmartqController extends Controller
         $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
         $filename = 'SMARTQ_NilaiCBT_' . str_replace(' ', '_', $safeName) . '_' . date('Ymd') . '.pdf';
         return $pdf->download($filename);
+    }
+
+    // ==================== IMPORT KELULUSAN ====================
+
+    public function importKelulusanForm(SmartqPeriode $smartq)
+    {
+        $mapelPilihan = MataPelajaran::where('is_mapel_pilihan', true)
+            ->orderBy('nama_mapel')
+            ->get(['id', 'kode_mapel', 'nama_mapel']);
+
+        return view('admin.smartq.import-kelulusan', compact('smartq', 'mapelPilihan'));
+    }
+
+    public function importKelulusanTemplate(SmartqPeriode $smartq)
+    {
+        $headers = ['NISN', 'Status (diterima/cadangan)', 'Kode Bidang'];
+
+        $mapelPilihan = MataPelajaran::where('is_mapel_pilihan', true)
+            ->orderBy('kode_mapel')
+            ->get(['kode_mapel', 'nama_mapel']);
+
+        $callback = function () use ($headers, $mapelPilihan) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, $headers);
+            // Example rows
+            fputcsv($file, ['0012345678', 'diterima', $mapelPilihan->first()?->kode_mapel ?? 'M-QH']);
+            fputcsv($file, ['0087654321', 'cadangan', $mapelPilihan->last()?->kode_mapel ?? 'M-PP-F']);
+
+            // Blank separator
+            fputcsv($file, []);
+            fputcsv($file, ['--- DAFTAR KODE BIDANG ---']);
+            foreach ($mapelPilihan as $m) {
+                fputcsv($file, [$m->kode_mapel, $m->nama_mapel]);
+            }
+
+            fclose($file);
+        };
+
+        $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"Template_Kelulusan_{$safeName}.csv\"",
+        ]);
+    }
+
+    public function importKelulusanProcess(Request $request, SmartqPeriode $smartq)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:2048',
+        ]);
+
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        // Parse rows
+        $rows = [];
+        if (in_array($ext, ['csv', 'txt'])) {
+            $handle = fopen($file->getRealPath(), 'r');
+            // Skip BOM
+            $bom = fread($handle, 3);
+            if ($bom !== chr(0xEF) . chr(0xBB) . chr(0xBF)) {
+                rewind($handle);
+            }
+            $header = fgetcsv($handle);
+            while (($line = fgetcsv($handle)) !== false) {
+                if (empty(array_filter($line))) continue;
+                if (str_starts_with($line[0] ?? '', '---')) break;
+                $rows[] = [
+                    'nisn' => trim($line[0] ?? ''),
+                    'status' => strtolower(trim($line[1] ?? '')),
+                    'kode_bidang' => strtoupper(trim($line[2] ?? '')),
+                ];
+            }
+            fclose($handle);
+        } else {
+            // Excel
+            $data = Excel::toArray(null, $file);
+            $sheet = $data[0] ?? [];
+            $headerSkipped = false;
+            foreach ($sheet as $line) {
+                if (!$headerSkipped) { $headerSkipped = true; continue; }
+                if (empty(array_filter($line))) continue;
+                if (str_starts_with($line[0] ?? '', '---')) break;
+                $rows[] = [
+                    'nisn' => trim($line[0] ?? ''),
+                    'status' => strtolower(trim($line[1] ?? '')),
+                    'kode_bidang' => strtoupper(trim($line[2] ?? '')),
+                ];
+            }
+        }
+
+        if (empty($rows)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak berisi data. Pastikan format sesuai template.',
+            ], 422);
+        }
+
+        // Preload lookup maps
+        $mapelMap = MataPelajaran::where('is_mapel_pilihan', true)
+            ->pluck('id', 'kode_mapel')
+            ->mapWithKeys(fn($id, $kode) => [strtoupper($kode) => $id]);
+
+        $pesertaMap = SmartqPeserta::where('smartq_periode_id', $smartq->id)
+            ->with('siswa.user')
+            ->get()
+            ->keyBy(fn($p) => $p->siswa?->user?->username);
+
+        $results = ['success' => [], 'errors' => []];
+        $rowNum = 1;
+
+        DB::transaction(function () use ($rows, $pesertaMap, $mapelMap, &$results, &$rowNum) {
+            foreach ($rows as $row) {
+                $rowNum++;
+                $nisn = $row['nisn'];
+                $status = $row['status'];
+                $kodeBidang = $row['kode_bidang'];
+
+                // Validate status
+                if (!in_array($status, ['diterima', 'cadangan'])) {
+                    $results['errors'][] = [
+                        'row' => $rowNum,
+                        'nisn' => $nisn,
+                        'error' => "Status '{$status}' tidak valid. Gunakan 'diterima' atau 'cadangan'.",
+                    ];
+                    continue;
+                }
+
+                // Validate bidang
+                if (!$mapelMap->has($kodeBidang)) {
+                    $results['errors'][] = [
+                        'row' => $rowNum,
+                        'nisn' => $nisn,
+                        'error' => "Kode bidang '{$kodeBidang}' tidak ditemukan di daftar mapel pilihan.",
+                    ];
+                    continue;
+                }
+
+                // Find peserta by NISN
+                $peserta = $pesertaMap->get($nisn);
+                if (!$peserta) {
+                    $results['errors'][] = [
+                        'row' => $rowNum,
+                        'nisn' => $nisn,
+                        'error' => 'NISN tidak ditemukan sebagai peserta SMART-Q periode ini.',
+                    ];
+                    continue;
+                }
+
+                // Map status
+                $dbStatus = $status === 'diterima' ? 'lulus' : 'cadangan';
+
+                $peserta->update([
+                    'status' => $dbStatus,
+                    'bidang_mapel_id' => $mapelMap->get($kodeBidang),
+                ]);
+
+                $nama = $peserta->siswa?->nama_lengkap ?? '-';
+                $results['success'][] = [
+                    'row' => $rowNum,
+                    'nisn' => $nisn,
+                    'nama' => $nama,
+                    'status' => $status,
+                    'bidang' => $kodeBidang,
+                ];
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import kelulusan selesai.',
+            'data' => [
+                'success_count' => count($results['success']),
+                'failed_count' => count($results['errors']),
+                'total' => count($rows),
+                'success_rows' => $results['success'],
+                'errors' => $results['errors'],
+            ],
+        ]);
     }
 }

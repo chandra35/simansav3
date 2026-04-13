@@ -966,6 +966,14 @@ return [
             ],
         ],
         [
+            'text' => 'SMART-Q Unggulan',
+            'route' => 'siswa.smartq.index',
+            'icon' => 'fas fa-fw fa-star text-warning',
+            'can' => 'siswa-smartq-access',
+            'key' => 'siswa-smartq',
+            'active' => ['siswa/smartq*'],
+        ],
+        [
             'text' => 'Data Lulusan',
             'route' => 'siswa.lulusan.index',
             'icon' => 'fas fa-fw fa-university',
