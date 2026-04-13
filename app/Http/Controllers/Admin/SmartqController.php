@@ -1672,8 +1672,9 @@ class SmartqController extends Controller
     private function parseKelulusanExcel(string $filePath): array
     {
         $rows = [];
-        $data = Excel::toArray(null, $filePath);
-        $sheet = $data[0] ?? [];
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet()->toArray();
+
         $headerSkipped = false;
 
         foreach ($sheet as $line) {
