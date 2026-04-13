@@ -33,7 +33,7 @@
             </div>
             <div class="card-body">
                 <ol class="pl-3">
-                    <li class="mb-2"><strong>Download template CSV/Excel</strong> dengan klik tombol di bawah</li>
+                    <li class="mb-2"><strong>Download template Excel</strong> dengan klik tombol di bawah</li>
                     <li class="mb-2"><strong>Isi NISN, Status, dan Kode Bidang</strong> sesuai kolom</li>
                     <li class="mb-2"><strong>Upload file</strong> — sistem akan memproses dan menampilkan hasil</li>
                 </ol>
@@ -55,8 +55,8 @@
                 <h3 class="card-title"><i class="fas fa-download"></i> Download Template</h3>
             </div>
             <div class="card-body text-center">
-                <p class="text-muted">Template sudah dilengkapi daftar kode bidang di bagian bawah.</p>
-                <a href="{{ route('admin.smartq.kelulusan.template', $smartq) }}" class="btn btn-success btn-lg">
+                <p class="text-muted">Template berisi 2 sheet: Data Kelulusan dan Daftar Kode Bidang.</p>
+                <a href="{{ route('admin.smartq.kelulusan.template', $smartq) }}" class="btn btn-success btn-lg" download>
                     <i class="fas fa-download"></i> Download Template
                 </a>
             </div>
@@ -108,14 +108,14 @@
                         <div class="input-group">
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="file" name="file"
-                                       accept=".csv,.xlsx,.xls" required>
+                                       accept=".xlsx,.xls" required>
                                 <label class="custom-file-label" for="file">
-                                    <i class="fas fa-file-upload text-muted"></i> Pilih file CSV/Excel...
+                                    <i class="fas fa-file-upload text-muted"></i> Pilih file Excel (.xlsx)...
                                 </label>
                             </div>
                         </div>
                         <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Format: .csv, .xlsx, .xls &bull; Maks: 2MB
+                            <i class="fas fa-info-circle"></i> Format: .xlsx, .xls &bull; Maks: 2MB
                         </small>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnImport">
@@ -230,7 +230,7 @@ $(function() {
     $('.custom-file-input').on('change', function() {
         var name = $(this).val().split('\\').pop();
         var ext = name.split('.').pop().toLowerCase();
-        var icon = ['csv','xlsx','xls'].includes(ext) ? 'fa-file-csv text-success' : 'fa-file text-muted';
+        var icon = ['xlsx','xls'].includes(ext) ? 'fa-file-excel text-success' : 'fa-file text-muted';
         $(this).siblings('.custom-file-label').html('<i class="fas ' + icon + '"></i> ' + name);
     });
 
@@ -240,14 +240,14 @@ $(function() {
 
         var fileInput = $('#file')[0];
         if (!fileInput.files.length) {
-            Swal.fire({ icon: 'error', title: 'File belum dipilih', text: 'Pilih file CSV/Excel terlebih dahulu.' });
+            Swal.fire({ icon: 'error', title: 'File belum dipilih', text: 'Pilih file Excel (.xlsx) terlebih dahulu.' });
             return;
         }
 
         var file = fileInput.files[0];
         var ext = file.name.split('.').pop().toLowerCase();
-        if (!['csv','xlsx','xls'].includes(ext)) {
-            Swal.fire({ icon: 'error', title: 'Format Salah', text: 'Gunakan file .csv, .xlsx, atau .xls' });
+        if (!['xlsx','xls'].includes(ext)) {
+            Swal.fire({ icon: 'error', title: 'Format Salah', text: 'Gunakan file .xlsx atau .xls' });
             return;
         }
         if (file.size > 2 * 1024 * 1024) {

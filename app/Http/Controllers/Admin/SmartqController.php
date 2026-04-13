@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SmartqKelulusanTemplateExport;
 use App\Exports\NilaiCbtExport;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -1391,82 +1392,39 @@ class SmartqController extends Controller
 
     public function importKelulusanTemplate(SmartqPeriode $smartq)
     {
-        $headers = ['NISN', 'Status (diterima/cadangan)', 'Kode Bidang'];
-
         $mapelPilihan = MataPelajaran::where('is_mapel_pilihan', true)
             ->orderBy('kode_mapel')
-            ->get(['kode_mapel', 'nama_mapel']);
-
-        $callback = function () use ($headers, $mapelPilihan) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            fputcsv($file, $headers);
-            // Example rows
-            fputcsv($file, ['0012345678', 'diterima', $mapelPilihan->first()?->kode_mapel ?? 'M-QH']);
-            fputcsv($file, ['0087654321', 'cadangan', $mapelPilihan->last()?->kode_mapel ?? 'M-PP-F']);
-
-            // Blank separator
-            fputcsv($file, []);
-            fputcsv($file, ['--- DAFTAR KODE BIDANG ---']);
-            foreach ($mapelPilihan as $m) {
-                fputcsv($file, [$m->kode_mapel, $m->nama_mapel]);
-            }
-
-            fclose($file);
-        };
+            ->get(['id', 'kode_mapel', 'nama_mapel']);
 
         $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
-        return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"Template_Kelulusan_{$safeName}.csv\"",
-        ]);
+
+        return Excel::download(
+            new SmartqKelulusanTemplateExport($mapelPilihan),
+            "Template_Kelulusan_{$safeName}.xlsx"
+        );
     }
 
     public function importKelulusanProcess(Request $request, SmartqPeriode $smartq)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:2048',
+            'file' => 'required|file|mimes:xlsx,xls|max:2048',
         ]);
 
         $file = $request->file('file');
-        $ext = strtolower($file->getClientOriginalExtension());
 
-        // Parse rows
+        // Parse rows from Excel
         $rows = [];
-        if (in_array($ext, ['csv', 'txt'])) {
-            $handle = fopen($file->getRealPath(), 'r');
-            // Skip BOM
-            $bom = fread($handle, 3);
-            if ($bom !== chr(0xEF) . chr(0xBB) . chr(0xBF)) {
-                rewind($handle);
-            }
-            $header = fgetcsv($handle);
-            while (($line = fgetcsv($handle)) !== false) {
-                if (empty(array_filter($line))) continue;
-                if (str_starts_with($line[0] ?? '', '---')) break;
-                $rows[] = [
-                    'nisn' => trim($line[0] ?? ''),
-                    'status' => strtolower(trim($line[1] ?? '')),
-                    'kode_bidang' => strtoupper(trim($line[2] ?? '')),
-                ];
-            }
-            fclose($handle);
-        } else {
-            // Excel
-            $data = Excel::toArray(null, $file);
-            $sheet = $data[0] ?? [];
-            $headerSkipped = false;
-            foreach ($sheet as $line) {
-                if (!$headerSkipped) { $headerSkipped = true; continue; }
-                if (empty(array_filter($line))) continue;
-                if (str_starts_with($line[0] ?? '', '---')) break;
-                $rows[] = [
-                    'nisn' => trim($line[0] ?? ''),
-                    'status' => strtolower(trim($line[1] ?? '')),
-                    'kode_bidang' => strtoupper(trim($line[2] ?? '')),
-                ];
-            }
+        $data = Excel::toArray(null, $file);
+        $sheet = $data[0] ?? [];
+        $headerSkipped = false;
+        foreach ($sheet as $line) {
+            if (!$headerSkipped) { $headerSkipped = true; continue; }
+            if (empty(array_filter($line))) continue;
+            $rows[] = [
+                'nisn' => trim($line[0] ?? ''),
+                'status' => strtolower(trim($line[1] ?? '')),
+                'kode_bidang' => strtoupper(trim($line[2] ?? '')),
+            ];
         }
 
         if (empty($rows)) {
