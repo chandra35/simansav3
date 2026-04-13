@@ -221,7 +221,7 @@ function smartqConfirmForm(selector, opts) {
         if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
         showSmartqOverlay('Memuat halaman...', 'Mohon tunggu sebentar', 'spinner');
-    }, true);
+    });
 
     document.addEventListener('submit', function(e) {
         if (e.defaultPrevented) return;
@@ -229,7 +229,7 @@ function smartqConfirmForm(selector, opts) {
         if (!form || form.hasAttribute('data-no-overlay')) return;
         isSubmitting = true;
         showSmartqOverlay('Memproses data...', 'Mohon tunggu, jangan tutup halaman ini', 'save');
-    }, true);
+    });
 
     window.addEventListener('beforeunload', function() {
         // Show overlay on refresh/direct navigation as browser starts unloading page
