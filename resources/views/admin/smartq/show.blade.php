@@ -309,7 +309,7 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <table id="rankingTable" class="table table-bordered table-hover table-sm mb-0" style="width:100%">
+            <table id="rankingTable" class="table table-bordered table-dark-header table-sm mb-0" style="width:100%">
                 <thead>
                     <tr id="rankingHead"></tr>
                 </thead>
@@ -320,49 +320,6 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
-<style>
-    #rankingTable thead th {
-        background: linear-gradient(135deg, #2d3748, #1a202c);
-        color: #ffffff;
-        border-color: #4a5568;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        padding: 0.6rem 0.5rem;
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-    #rankingTable thead th.col-total {
-        background: linear-gradient(135deg, #3182ce, #2b6cb0);
-    }
-    #rankingTable tbody td {
-        vertical-align: middle;
-        font-size: 0.82rem;
-        padding: 0.45rem 0.5rem;
-    }
-    #rankingTable tbody tr:hover {
-        background-color: rgba(66, 153, 225, 0.08) !important;
-    }
-    #rankingTable tbody tr.table-success { background-color: rgba(72, 187, 120, 0.12) !important; }
-    #rankingTable tbody tr.table-warning { background-color: rgba(237, 183, 49, 0.12) !important; }
-    #rankingTable tbody tr.table-danger  { background-color: rgba(245, 101, 101, 0.10) !important; }
-    #rankingTable_wrapper .dataTables_length,
-    #rankingTable_wrapper .dataTables_filter,
-    #rankingTable_wrapper .dataTables_info,
-    #rankingTable_wrapper .dataTables_paginate {
-        padding: 0.65rem 1rem;
-        font-size: 0.85rem;
-    }
-    #rankingTable_wrapper .dataTables_filter input {
-        border-radius: 0.75rem;
-        padding: 0.35rem 0.75rem;
-        border: 1px solid #cbd5e0;
-    }
-    #rankingTable_wrapper .page-item.active .page-link {
-        background: linear-gradient(135deg, #3182ce, #2b6cb0);
-        border-color: #2b6cb0;
-    }
-</style>
 @stop
 
 @section('js')
@@ -400,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
             headHtml += '<th class="text-center" width="85" title="' + k.nama + ' (' + k.bobot + '%)">' +
                 k.kode + '<br><small>' + k.bobot + '%</small></th>';
         });
-        headHtml += '<th class="text-center col-total" width="85">Total</th>';
+        headHtml += '<th class="text-center col-highlight" width="85">Total</th>';
         headHtml += '<th class="text-center" width="100">Status</th>';
         headHtml += '<th class="text-center" width="120">Bidang</th>';
         $('#rankingHead').html(headHtml);
