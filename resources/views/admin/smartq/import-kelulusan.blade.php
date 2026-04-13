@@ -33,18 +33,20 @@
             </div>
             <div class="card-body">
                 <ol class="pl-3">
-                    <li class="mb-2"><strong>Download template Excel</strong> dengan klik tombol di bawah</li>
-                    <li class="mb-2"><strong>Isi NISN, Status, dan Kode Bidang</strong> sesuai kolom</li>
+                    <li class="mb-2"><strong>Download template Excel</strong> — sudah berisi nama & NISN peserta</li>
+                    <li class="mb-2"><strong>Isi kolom kuning:</strong> Peringkat Mapel, Peringkat Umum, dan Mapel</li>
                     <li class="mb-2"><strong>Upload file</strong> — sistem akan memproses dan menampilkan hasil</li>
                 </ol>
 
                 <div class="alert alert-warning mb-0">
                     <h5><i class="icon fas fa-exclamation-triangle"></i> Ketentuan</h5>
                     <ul class="mb-0 pl-3">
-                        <li><strong>NISN</strong> harus sudah terdaftar sebagai peserta SMART-Q periode ini</li>
-                        <li><strong>Status:</strong> <code>diterima</code> atau <code>cadangan</code></li>
-                        <li><strong>Kode Bidang:</strong> kode mapel pilihan (lihat daftar di template)</li>
-                        <li>Setiap siswa hanya punya <strong>1 bidang</strong></li>
+                        <li>Kolom <strong>NAMA</strong> & <strong>NISN</strong> sudah terisi otomatis (jangan diubah)</li>
+                        <li><strong>MAPEL:</strong> pilih dari dropdown atau ketik nama mapel pilihan</li>
+                        <li><strong>Peringkat Mapel:</strong> ranking dalam mapel tersebut</li>
+                        <li><strong>Peringkat Umum:</strong> ranking keseluruhan</li>
+                        <li>Baris tanpa MAPEL akan <strong>dilewati</strong> (hanya proses yang sudah diisi)</li>
+                        <li>Semua peserta yang diimport akan berstatus <strong>Lulus/Diterima</strong></li>
                     </ul>
                 </div>
             </div>
@@ -55,31 +57,31 @@
                 <h3 class="card-title"><i class="fas fa-download"></i> Download Template</h3>
             </div>
             <div class="card-body text-center">
-                <p class="text-muted">Template berisi 2 sheet: Data Kelulusan dan Daftar Kode Bidang.</p>
+                <p class="text-muted">Template berisi data peserta (NAMA & NISN) + daftar mapel pilihan.</p>
                 <a href="{{ route('admin.smartq.kelulusan.template', $smartq) }}" class="btn btn-success btn-lg" download>
                     <i class="fas fa-download"></i> Download Template
                 </a>
             </div>
         </div>
 
-        {{-- Daftar Kode Bidang --}}
+        {{-- Daftar Mapel Pilihan --}}
         <div class="card card-outline card-info">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-book"></i> Daftar Kode Bidang (Mapel Pilihan)</h3>
+                <h3 class="card-title"><i class="fas fa-book"></i> Daftar Mapel Pilihan</h3>
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm table-striped mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th width="120">Kode</th>
                             <th>Nama Mapel</th>
+                            <th width="100">Kode</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($mapelPilihan as $m)
                             <tr>
-                                <td><code>{{ $m->kode_mapel }}</code></td>
                                 <td>{{ $m->nama_mapel }}</td>
+                                <td><code>{{ $m->kode_mapel }}</code></td>
                             </tr>
                         @empty
                             <tr>
@@ -159,11 +161,12 @@
                         <table class="table table-sm table-striped mb-0">
                             <thead class="bg-success text-white">
                                 <tr>
-                                    <th width="60">Baris</th>
-                                    <th width="120">NISN</th>
+                                    <th width="50">Baris</th>
                                     <th>Nama</th>
-                                    <th width="100">Status</th>
-                                    <th width="100">Bidang</th>
+                                    <th width="110">NISN</th>
+                                    <th width="80">P. Mapel</th>
+                                    <th width="80">P. Umum</th>
+                                    <th width="120">Mapel</th>
                                 </tr>
                             </thead>
                             <tbody id="successTableBody"></tbody>
@@ -182,8 +185,9 @@
                         <table class="table table-sm table-striped mb-0">
                             <thead class="bg-danger text-white">
                                 <tr>
-                                    <th width="60">Baris</th>
-                                    <th width="120">NISN</th>
+                                    <th width="50">Baris</th>
+                                    <th>Nama</th>
+                                    <th width="110">NISN</th>
                                     <th>Kendala</th>
                                 </tr>
                             </thead>
@@ -303,10 +307,7 @@ $(function() {
                     if (d.success_count > 0) {
                         var html = '';
                         d.success_rows.forEach(function(r) {
-                            var badge = r.status === 'diterima'
-                                ? '<span class="badge badge-success">Diterima</span>'
-                                : '<span class="badge badge-warning">Cadangan</span>';
-                            html += '<tr><td>' + r.row + '</td><td>' + r.nisn + '</td><td>' + r.nama + '</td><td>' + badge + '</td><td><code>' + r.bidang + '</code></td></tr>';
+                            html += '<tr><td>' + r.row + '</td><td>' + r.nama + '</td><td>' + r.nisn + '</td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + r.mapel + '</span></td></tr>';
                         });
                         $('#successTableBody').html(html);
                         $('#successDetail').show();
@@ -316,7 +317,7 @@ $(function() {
                     if (d.failed_count > 0) {
                         var html = '';
                         d.errors.forEach(function(r) {
-                            html += '<tr><td>' + r.row + '</td><td>' + r.nisn + '</td><td class="text-danger">' + r.error + '</td></tr>';
+                            html += '<tr><td>' + r.row + '</td><td>' + (r.nama || '-') + '</td><td>' + r.nisn + '</td><td class="text-danger">' + r.error + '</td></tr>';
                         });
                         $('#errorTableBody').html(html);
                         $('#errorDetail').show();

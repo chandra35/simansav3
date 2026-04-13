@@ -1107,6 +1107,7 @@ class SmartqController extends Controller
             $row['bidang'] = $p->bidangMapel
                 ? '<span class="badge badge-info" title="' . e($p->bidangMapel->nama_mapel) . '">' . e($p->bidangMapel->kode_mapel) . '</span>'
                 : '<span class="text-muted">-</span>';
+            $row['peringkat_mapel'] = $p->peringkat_mapel ?? '-';
             $row['row_class'] = $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : ''));
 
             return $row;
@@ -1128,7 +1129,7 @@ class SmartqController extends Controller
     public function exportExcel(SmartqPeriode $smartq)
     {
         $smartq->load('komponenNilais');
-        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'nilais.komponenNilai'])
+        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'bidangMapel', 'nilais.komponenNilai'])
             ->where('smartq_periode_id', $smartq->id)
             ->orderBy('ranking')
             ->get();
@@ -1152,6 +1153,8 @@ class SmartqController extends Controller
             }
             $header[] = 'Total Nilai';
             $header[] = 'Status';
+            $header[] = 'Bidang Mapel';
+            $header[] = 'Peringkat Mapel';
             fputcsv($file, $header);
 
             foreach ($pesertas as $p) {
@@ -1170,6 +1173,8 @@ class SmartqController extends Controller
 
                 $row[] = $p->total_nilai ?? '-';
                 $row[] = ucfirst(str_replace('_', ' ', $p->status));
+                $row[] = $p->bidangMapel?->nama_mapel ?? '-';
+                $row[] = $p->peringkat_mapel ?? '-';
                 fputcsv($file, $row);
             }
 
@@ -1411,14 +1416,20 @@ class SmartqController extends Controller
 
     public function importKelulusanTemplate(SmartqPeriode $smartq)
     {
+        $pesertas = SmartqPeserta::where('smartq_periode_id', $smartq->id)
+            ->with('siswa.user')
+            ->orderBy('ranking')
+            ->get();
+
         $mapelPilihan = MataPelajaran::where('is_mapel_pilihan', true)
-            ->orderBy('kode_mapel')
+            ->where('is_active', true)
+            ->orderBy('nama_mapel')
             ->get(['id', 'kode_mapel', 'nama_mapel']);
 
         $safeName = preg_replace('/[\/\\:*?"<>|]/', '-', $smartq->nama);
 
         return Excel::download(
-            new SmartqKelulusanTemplateExport($mapelPilihan),
+            new SmartqKelulusanTemplateExport($pesertas, $mapelPilihan),
             "Template_Kelulusan_{$safeName}.xlsx"
         );
     }
@@ -1431,7 +1442,7 @@ class SmartqController extends Controller
 
         $file = $request->file('file');
 
-        // Parse rows from Excel
+        // Parse rows from Excel: NAMA | NISN | PERINGKAT MAPEL | PERINGKAT UMUM | MAPEL
         $rows = [];
         $data = Excel::toArray(null, $file);
         $sheet = $data[0] ?? [];
@@ -1439,24 +1450,34 @@ class SmartqController extends Controller
         foreach ($sheet as $line) {
             if (!$headerSkipped) { $headerSkipped = true; continue; }
             if (empty(array_filter($line))) continue;
+
+            $namaMapel = trim($line[4] ?? '');
+            $peringkatMapel = trim($line[2] ?? '');
+            $peringkatUmum = trim($line[3] ?? '');
+
+            // Skip rows without mapel (peserta belum diisi admin)
+            if ($namaMapel === '') continue;
+
             $rows[] = [
-                'nisn' => trim($line[0] ?? ''),
-                'status' => strtolower(trim($line[1] ?? '')),
-                'kode_bidang' => strtoupper(trim($line[2] ?? '')),
+                'nama' => trim($line[0] ?? ''),
+                'nisn' => trim($line[1] ?? ''),
+                'peringkat_mapel' => $peringkatMapel !== '' ? (int) $peringkatMapel : null,
+                'peringkat_umum' => $peringkatUmum !== '' ? (int) $peringkatUmum : null,
+                'mapel' => $namaMapel,
             ];
         }
 
         if (empty($rows)) {
             return response()->json([
                 'success' => false,
-                'message' => 'File tidak berisi data. Pastikan format sesuai template.',
+                'message' => 'File tidak berisi data. Pastikan kolom MAPEL sudah diisi.',
             ], 422);
         }
 
-        // Preload lookup maps
+        // Preload lookup maps — match by nama_mapel (case-insensitive)
         $mapelMap = MataPelajaran::where('is_mapel_pilihan', true)
-            ->pluck('id', 'kode_mapel')
-            ->mapWithKeys(fn($id, $kode) => [strtoupper($kode) => $id]);
+            ->get(['id', 'nama_mapel'])
+            ->mapWithKeys(fn($m) => [mb_strtolower($m->nama_mapel) => $m->id]);
 
         $pesertaMap = SmartqPeserta::where('smartq_periode_id', $smartq->id)
             ->with('siswa.user')
@@ -1470,25 +1491,16 @@ class SmartqController extends Controller
             foreach ($rows as $row) {
                 $rowNum++;
                 $nisn = $row['nisn'];
-                $status = $row['status'];
-                $kodeBidang = $row['kode_bidang'];
+                $namaMapel = $row['mapel'];
 
-                // Validate status
-                if (!in_array($status, ['diterima', 'cadangan'])) {
+                // Validate mapel by nama
+                $mapelKey = mb_strtolower($namaMapel);
+                if (!$mapelMap->has($mapelKey)) {
                     $results['errors'][] = [
                         'row' => $rowNum,
                         'nisn' => $nisn,
-                        'error' => "Status '{$status}' tidak valid. Gunakan 'diterima' atau 'cadangan'.",
-                    ];
-                    continue;
-                }
-
-                // Validate bidang
-                if (!$mapelMap->has($kodeBidang)) {
-                    $results['errors'][] = [
-                        'row' => $rowNum,
-                        'nisn' => $nisn,
-                        'error' => "Kode bidang '{$kodeBidang}' tidak ditemukan di daftar mapel pilihan.",
+                        'nama' => $row['nama'],
+                        'error' => "Mapel '{$namaMapel}' tidak ditemukan di daftar mapel pilihan.",
                     ];
                     continue;
                 }
@@ -1499,26 +1511,27 @@ class SmartqController extends Controller
                     $results['errors'][] = [
                         'row' => $rowNum,
                         'nisn' => $nisn,
+                        'nama' => $row['nama'],
                         'error' => 'NISN tidak ditemukan sebagai peserta SMART-Q periode ini.',
                     ];
                     continue;
                 }
 
-                // Map status
-                $dbStatus = $status === 'diterima' ? 'lulus' : 'cadangan';
-
                 $peserta->update([
-                    'status' => $dbStatus,
-                    'bidang_mapel_id' => $mapelMap->get($kodeBidang),
+                    'status' => 'lulus',
+                    'bidang_mapel_id' => $mapelMap->get($mapelKey),
+                    'ranking' => $row['peringkat_umum'],
+                    'peringkat_mapel' => $row['peringkat_mapel'],
                 ]);
 
-                $nama = $peserta->siswa?->nama_lengkap ?? '-';
+                $nama = $peserta->siswa?->nama_lengkap ?? $row['nama'];
                 $results['success'][] = [
                     'row' => $rowNum,
                     'nisn' => $nisn,
                     'nama' => $nama,
-                    'status' => $status,
-                    'bidang' => $kodeBidang,
+                    'mapel' => $namaMapel,
+                    'peringkat_mapel' => $row['peringkat_mapel'],
+                    'peringkat_umum' => $row['peringkat_umum'],
                 ];
             }
         });

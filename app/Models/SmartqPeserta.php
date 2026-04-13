@@ -21,12 +21,14 @@ class SmartqPeserta extends Model
         'status',
         'total_nilai',
         'ranking',
+        'peringkat_mapel',
         'catatan',
     ];
 
     protected $casts = [
         'total_nilai' => 'decimal:2',
         'ranking' => 'integer',
+        'peringkat_mapel' => 'integer',
     ];
 
     public function periode()

@@ -360,6 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headHtml += '<th class="text-center col-highlight" width="85">Total</th>';
         headHtml += '<th class="text-center" width="100">Status</th>';
         headHtml += '<th class="text-center" width="120">Bidang</th>';
+        headHtml += '<th class="text-center" width="70">P. Mapel</th>';
         $('#rankingHead').html(headHtml);
 
         // Column definitions matching thead order
@@ -376,6 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         columns.push({ data: 'total', className: 'text-center font-weight-bold text-primary' });
         columns.push({ data: 'status', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'bidang', className: 'text-center', orderable: false, searchable: false });
+        columns.push({ data: 'peringkat_mapel', className: 'text-center' });
 
         $('#rankingTable').DataTable({
             data: data,
