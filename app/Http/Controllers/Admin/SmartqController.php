@@ -1118,7 +1118,7 @@ class SmartqController extends Controller
                 'id' => $k->id,
                 'kode' => $k->kode,
                 'nama' => $k->nama,
-                'bobot' => $k->bobot,
+                'bobot' => rtrim(rtrim(number_format($k->bobot, 2), '0'), '.') . '%',
             ]),
         ]);
     }

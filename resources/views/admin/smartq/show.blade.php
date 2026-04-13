@@ -301,43 +301,74 @@
     </div>
 
     {{-- Tabel Ranking --}}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-trophy"></i> Ranking Peserta</h3>
+    <div class="card card-outline card-primary">
+        <div class="card-header py-2">
+            <h3 class="card-title"><i class="fas fa-trophy text-warning"></i> Ranking Peserta</h3>
             <div class="card-tools">
                 <span class="badge badge-primary" id="totalPesertaBadge">{{ $stats['total'] }} peserta</span>
             </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table id="rankingTable" class="table table-bordered table-striped table-sm mb-0" style="width:100%">
-                    <thead class="bg-gradient-dark text-white">
-                        <tr>
-                            <th class="text-center" width="60">Rank</th>
-                            <th width="100">No. Peserta</th>
-                            <th>Nama Siswa</th>
-                            <th width="100">NISN</th>
-                            <th width="130">Kelas Asal</th>
-                            {{-- Komponen columns will be added dynamically --}}
-                        </tr>
-                    </thead>
-                </table>
-            </div>
+            <table id="rankingTable" class="table table-bordered table-hover table-sm mb-0" style="width:100%">
+                <thead>
+                    <tr id="rankingHead"></tr>
+                </thead>
+            </table>
         </div>
     </div>
 @stop
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
+<style>
+    #rankingTable thead th {
+        background: linear-gradient(135deg, #2d3748, #1a202c);
+        color: #ffffff;
+        border-color: #4a5568;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.6rem 0.5rem;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    #rankingTable thead th.col-total {
+        background: linear-gradient(135deg, #3182ce, #2b6cb0);
+    }
+    #rankingTable tbody td {
+        vertical-align: middle;
+        font-size: 0.82rem;
+        padding: 0.45rem 0.5rem;
+    }
+    #rankingTable tbody tr:hover {
+        background-color: rgba(66, 153, 225, 0.08) !important;
+    }
+    #rankingTable tbody tr.table-success { background-color: rgba(72, 187, 120, 0.12) !important; }
+    #rankingTable tbody tr.table-warning { background-color: rgba(237, 183, 49, 0.12) !important; }
+    #rankingTable tbody tr.table-danger  { background-color: rgba(245, 101, 101, 0.10) !important; }
+    #rankingTable_wrapper .dataTables_length,
+    #rankingTable_wrapper .dataTables_filter,
+    #rankingTable_wrapper .dataTables_info,
+    #rankingTable_wrapper .dataTables_paginate {
+        padding: 0.65rem 1rem;
+        font-size: 0.85rem;
+    }
+    #rankingTable_wrapper .dataTables_filter input {
+        border-radius: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        border: 1px solid #cbd5e0;
+    }
+    #rankingTable_wrapper .page-item.active .page-link {
+        background: linear-gradient(135deg, #3182ce, #2b6cb0);
+        border-color: #2b6cb0;
+    }
+</style>
 @stop
 
 @section('js')
 @include('admin.smartq._overlay')
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap4.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ========== RANKING DATATABLE ==========
@@ -351,31 +382,34 @@ document.addEventListener('DOMContentLoaded', function() {
             hideSmartqOverlay();
             initRankingTable(res.data, res.komponen);
         },
-        error: function() {
+        error: function(xhr) {
             hideSmartqOverlay();
+            console.error('Ranking AJAX error:', xhr.responseText);
             Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memuat data ranking.' });
         }
     });
 
     function initRankingTable(data, komponen) {
-        // Build dynamic columns for thead
-        var $thead = $('#rankingTable thead tr');
+        // Build thead columns in correct order
+        var headHtml = '<th class="text-center" width="55">Rank</th>';
+        headHtml += '<th width="95">No. Peserta</th>';
+        headHtml += '<th>Nama Siswa</th>';
+        headHtml += '<th width="100">NISN</th>';
+        headHtml += '<th width="120">Kelas Asal</th>';
         komponen.forEach(function(k) {
-            $thead.find('th:last').before(
-                '<th class="text-center" width="90" title="' + k.nama + ' (' + k.bobot + '%)">' +
-                k.kode + '<br><small>' + k.bobot + '%</small></th>'
-            );
+            headHtml += '<th class="text-center" width="85" title="' + k.nama + ' (' + k.bobot + '%)">' +
+                k.kode + '<br><small>' + k.bobot + '%</small></th>';
         });
-        // Append fixed trailing columns
-        $thead.append('<th class="text-center bg-gradient-primary" width="90">Total</th>');
-        $thead.append('<th class="text-center" width="110">Status</th>');
-        $thead.append('<th class="text-center" width="130">Bidang</th>');
+        headHtml += '<th class="text-center col-total" width="85">Total</th>';
+        headHtml += '<th class="text-center" width="100">Status</th>';
+        headHtml += '<th class="text-center" width="120">Bidang</th>';
+        $('#rankingHead').html(headHtml);
 
-        // Build DataTable column definitions
+        // Column definitions matching thead order
         var columns = [
-            { data: 'ranking_display', className: 'text-center', orderData: 'ranking' },
+            { data: 'ranking_display', className: 'text-center' },
             { data: 'nomor_peserta' },
-            { data: 'nama', orderable: true },
+            { data: 'nama' },
             { data: 'nisn' },
             { data: 'kelas' },
         ];
@@ -383,10 +417,10 @@ document.addEventListener('DOMContentLoaded', function() {
             columns.push({ data: 'komponen_' + k.id, className: 'text-center' });
         });
         columns.push({ data: 'total', className: 'text-center font-weight-bold text-primary' });
-        columns.push({ data: 'status', className: 'text-center', orderable: false });
-        columns.push({ data: 'bidang', className: 'text-center', orderable: false });
+        columns.push({ data: 'status', className: 'text-center', orderable: false, searchable: false });
+        columns.push({ data: 'bidang', className: 'text-center', orderable: false, searchable: false });
 
-        var table = $('#rankingTable').DataTable({
+        $('#rankingTable').DataTable({
             data: data,
             columns: columns,
             order: [[0, 'asc']],
@@ -400,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     $(row).addClass(rowData.row_class);
                 }
             },
-            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rtip',
+            dom: '<"row px-3 pt-2"<"col-sm-6"l><"col-sm-6"f>>rtip',
         });
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
