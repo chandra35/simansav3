@@ -1073,37 +1073,6 @@ class SmartqController extends Controller
 
     // ==================== RANKING & KEPUTUSAN ====================
 
-    public function prosesKelulusan(Request $request, SmartqPeriode $smartq)
-    {
-        $request->validate([
-            'metode' => 'required|in:kuota,passing_grade',
-            'passing_grade' => 'required_if:metode,passing_grade|nullable|numeric|min:0|max:100',
-        ]);
-
-        // Ensure ranking is up-to-date
-        $smartq->hitungRanking();
-
-        $pesertas = $smartq->pesertas()
-            ->where('status', '!=', 'mengundurkan_diri')
-            ->orderBy('ranking')
-            ->get();
-
-        DB::transaction(function () use ($request, $pesertas, $smartq) {
-            foreach ($pesertas as $peserta) {
-                if ($request->metode === 'kuota') {
-                    $peserta->status = $peserta->ranking <= $smartq->kuota ? 'lulus' : 'tidak_lulus';
-                } else {
-                    $peserta->status = $peserta->total_nilai >= $request->passing_grade ? 'lulus' : 'tidak_lulus';
-                }
-                $peserta->save();
-            }
-        });
-
-        $lulus = $pesertas->where('status', 'lulus')->count();
-        return redirect()->route('admin.smartq.show', $smartq)
-            ->with('success', "Proses kelulusan selesai. {$lulus} siswa dinyatakan LULUS.");
-    }
-
     // ==================== EXPORT ====================
 
     public function exportExcel(SmartqPeriode $smartq)

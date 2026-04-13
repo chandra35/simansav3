@@ -640,8 +640,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{smartq}/moodle/scan/view', [App\Http\Controllers\Admin\SmartqController::class, 'viewScanCache'])->name('moodle.scan.view');
         Route::get('/{smartq}/nilai-cbt', [App\Http\Controllers\Admin\SmartqController::class, 'nilaiCbt'])->name('nilai-cbt');
 
-        // Kelulusan & Export
-        Route::post('/{smartq}/kelulusan', [App\Http\Controllers\Admin\SmartqController::class, 'prosesKelulusan'])->name('kelulusan');
+        // Kelulusan Import & Export
         Route::get('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanForm'])->name('kelulusan.import');
         Route::get('/{smartq}/kelulusan/template', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanTemplate'])->name('kelulusan.template');
         Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanProcess'])->name('kelulusan.import.process');

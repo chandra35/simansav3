@@ -123,6 +123,9 @@
                                 </a>
                             @endif
                         @endif
+                        <a href="{{ route('admin.smartq.kelulusan.import', $smartq) }}" class="list-group-item list-group-item-action list-group-item-warning">
+                            <i class="fas fa-file-import text-warning"></i> <strong>Import Kelulusan & Bidang</strong>
+                        </a>
                         <a href="{{ route('admin.smartq.export', $smartq) }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-file-excel text-success"></i> Export Excel
                         </a>
@@ -135,45 +138,119 @@
         </div>
     </div>
 
-    {{-- Statistik --}}
+    {{-- Statistik Status --}}
     <div class="row">
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-info">
+            <div class="small-box bg-gradient-info">
                 <div class="inner"><h3>{{ $stats['total'] }}</h3><p>Total Peserta</p></div>
                 <div class="icon"><i class="fas fa-users"></i></div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-success">
-                <div class="inner"><h3>{{ $stats['lulus'] }}</h3><p>Lulus</p></div>
+            <div class="small-box bg-gradient-success">
+                <div class="inner"><h3>{{ $stats['lulus'] }}</h3><p>Diterima</p></div>
                 <div class="icon"><i class="fas fa-check-circle"></i></div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-danger">
+            <div class="small-box bg-gradient-warning">
+                <div class="inner"><h3>{{ $stats['cadangan'] }}</h3><p>Cadangan</p></div>
+                <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-6">
+            <div class="small-box bg-gradient-danger">
                 <div class="inner"><h3>{{ $stats['tidak_lulus'] }}</h3><p>Tidak Lulus</p></div>
                 <div class="icon"><i class="fas fa-times-circle"></i></div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-primary">
-                <div class="inner"><h3>{{ number_format($stats['rata_rata'], 1) }}</h3><p>Rata-rata</p></div>
+            <div class="small-box bg-gradient-primary">
+                <div class="inner"><h3>{{ number_format($stats['rata_rata'], 1) }}</h3><p>Rata-rata Nilai</p></div>
                 <div class="icon"><i class="fas fa-chart-bar"></i></div>
             </div>
         </div>
         <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-warning">
-                <div class="inner"><h3>{{ number_format($stats['tertinggi'], 1) }}</h3><p>Tertinggi</p></div>
-                <div class="icon"><i class="fas fa-arrow-up"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="small-box bg-secondary">
-                <div class="inner"><h3>{{ number_format($stats['terendah'], 1) }}</h3><p>Terendah</p></div>
-                <div class="icon"><i class="fas fa-arrow-down"></i></div>
+            <div class="small-box bg-gradient-secondary">
+                <div class="inner"><h3>{{ $stats['terdaftar'] }}</h3><p>Belum Diproses</p></div>
+                <div class="icon"><i class="fas fa-clock"></i></div>
             </div>
         </div>
     </div>
+
+    {{-- Ringkasan Status Kelulusan --}}
+    @if($stats['total'] > 0)
+        @php
+            $total = $stats['total'];
+            $pctLulus = $total > 0 ? round($stats['lulus'] / $total * 100, 1) : 0;
+            $pctCadangan = $total > 0 ? round($stats['cadangan'] / $total * 100, 1) : 0;
+            $pctTidak = $total > 0 ? round($stats['tidak_lulus'] / $total * 100, 1) : 0;
+            $pctTerdaftar = $total > 0 ? round($stats['terdaftar'] / $total * 100, 1) : 0;
+            $processed = $stats['lulus'] + $stats['cadangan'] + $stats['tidak_lulus'];
+        @endphp
+        <div class="card card-outline card-success">
+            <div class="card-header py-2">
+                <h3 class="card-title"><i class="fas fa-chart-pie text-success"></i> Ringkasan Status Kelulusan</h3>
+                @if($smartq->status !== 'selesai')
+                    <div class="card-tools">
+                        <a href="{{ route('admin.smartq.kelulusan.import', $smartq) }}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-file-import"></i> Import Kelulusan & Bidang
+                        </a>
+                    </div>
+                @endif
+            </div>
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Progres Kelulusan</span>
+                    <strong>{{ $processed }}/{{ $total }} peserta diproses ({{ $total > 0 ? round($processed / $total * 100) : 0 }}%)</strong>
+                </div>
+                <div class="progress" style="height: 24px; border-radius: 8px;">
+                    @if($pctLulus > 0)
+                        <div class="progress-bar bg-success" style="width: {{ $pctLulus }}%" title="Diterima: {{ $stats['lulus'] }}">
+                            @if($pctLulus >= 8) {{ $stats['lulus'] }} @endif
+                        </div>
+                    @endif
+                    @if($pctCadangan > 0)
+                        <div class="progress-bar bg-warning" style="width: {{ $pctCadangan }}%" title="Cadangan: {{ $stats['cadangan'] }}">
+                            @if($pctCadangan >= 8) {{ $stats['cadangan'] }} @endif
+                        </div>
+                    @endif
+                    @if($pctTidak > 0)
+                        <div class="progress-bar bg-danger" style="width: {{ $pctTidak }}%" title="Tidak Lulus: {{ $stats['tidak_lulus'] }}">
+                            @if($pctTidak >= 8) {{ $stats['tidak_lulus'] }} @endif
+                        </div>
+                    @endif
+                    @if($pctTerdaftar > 0)
+                        <div class="progress-bar bg-secondary" style="width: {{ $pctTerdaftar }}%" title="Belum Diproses: {{ $stats['terdaftar'] }}">
+                            @if($pctTerdaftar >= 8) {{ $stats['terdaftar'] }} @endif
+                        </div>
+                    @endif
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="badge badge-success px-2 mr-1"><i class="fas fa-check-circle"></i> Diterima: {{ $stats['lulus'] }} ({{ $pctLulus }}%)</span>
+                    <span class="badge badge-warning px-2 mr-1"><i class="fas fa-hourglass-half"></i> Cadangan: {{ $stats['cadangan'] }} ({{ $pctCadangan }}%)</span>
+                    <span class="badge badge-danger px-2 mr-1"><i class="fas fa-times-circle"></i> Tidak Lulus: {{ $stats['tidak_lulus'] }} ({{ $pctTidak }}%)</span>
+                    <span class="badge badge-secondary px-2"><i class="fas fa-clock"></i> Belum: {{ $stats['terdaftar'] }} ({{ $pctTerdaftar }}%)</span>
+                </div>
+                @if($stats['lulus'] > 0 || $stats['cadangan'] > 0)
+                    <div class="row mt-3 pt-3 border-top">
+                        <div class="col-md-4 text-center">
+                            <span class="text-muted d-block">Nilai Tertinggi</span>
+                            <strong class="text-success" style="font-size: 1.25rem;">{{ number_format($stats['tertinggi'], 1) }}</strong>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <span class="text-muted d-block">Rata-rata Nilai</span>
+                            <strong class="text-primary" style="font-size: 1.25rem;">{{ number_format($stats['rata_rata'], 1) }}</strong>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <span class="text-muted d-block">Nilai Terendah</span>
+                            <strong class="text-danger" style="font-size: 1.25rem;">{{ number_format($stats['terendah'], 1) }}</strong>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 
     {{-- Komponen Nilai --}}
     <div class="card card-outline card-info">
@@ -222,47 +299,6 @@
             </table>
         </div>
     </div>
-
-    {{-- Proses Kelulusan --}}
-    @if($stats['total'] > 0 && $smartq->status !== 'selesai')
-        <div class="card card-outline card-warning">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-gavel"></i> Proses Kelulusan</h3>
-                <div class="card-tools">
-                    <a href="{{ route('admin.smartq.kelulusan.import', $smartq) }}" class="btn btn-sm btn-info">
-                        <i class="fas fa-file-import"></i> Import Kelulusan & Bidang
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('admin.smartq.kelulusan', $smartq) }}" method="POST" id="formKelulusan">
-                    @csrf
-                    <div class="row align-items-end">
-                        <div class="col-md-3">
-                            <div class="form-group mb-0">
-                                <label>Metode</label>
-                                <select name="metode" class="form-control" id="metodeKelulusan" onchange="togglePassingGrade()">
-                                    <option value="kuota">Berdasarkan Kuota (Top {{ $smartq->kuota }})</option>
-                                    <option value="passing_grade">Berdasarkan Passing Grade</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3" id="passingGradeGroup" style="display:none">
-                            <div class="form-group mb-0">
-                                <label>Passing Grade</label>
-                                <input type="number" name="passing_grade" class="form-control" step="0.01" min="0" max="100" value="70">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-gavel"></i> Proses Kelulusan
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 
     {{-- Tabel Ranking --}}
     <div class="card">
@@ -354,11 +390,6 @@
 @section('js')
 @include('admin.smartq._overlay')
 <script>
-function togglePassingGrade() {
-    const metode = document.getElementById('metodeKelulusan').value;
-    document.getElementById('passingGradeGroup').style.display = metode === 'passing_grade' ? '' : 'none';
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     // Sync Nilai CBT form — SweetAlert confirm + overlay
     var formSync = document.getElementById('formSyncMoodle');
@@ -399,35 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ], 2500);
         });
     });
-
-    // Proses Kelulusan form — SweetAlert confirm + overlay
-    var formKelulusan = document.getElementById('formKelulusan');
-    if (formKelulusan) {
-        formKelulusan.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var metode = document.getElementById('metodeKelulusan').value;
-            var metodeLabel = metode === 'kuota' ? 'Berdasarkan Kuota' : 'Berdasarkan Passing Grade';
-            smartqConfirm(null, {
-                title: 'Proses Kelulusan?',
-                text: '<p>Status <b>semua peserta</b> akan diubah berdasarkan metode:</p><p class="text-center"><span class="badge badge-warning px-3 py-2" style="font-size:1rem">' + metodeLabel + '</span></p><p class="text-danger mb-0"><small><i class="fas fa-exclamation-triangle"></i> Tindakan ini akan mengubah status kelulusan!</small></p>',
-                icon: 'warning',
-                confirmText: '<i class="fas fa-gavel"></i> Ya, Proses Kelulusan',
-                confirmColor: '#e6a817',
-            }).then(function(result) {
-                if (result.isConfirmed) {
-                    showSmartqOverlay('Memproses kelulusan...', 'Menghitung ranking dan menentukan status peserta', 'gavel');
-                    smartqOverlayMessages([
-                        'Memproses kelulusan...',
-                        'Menghitung total nilai tertimbang...',
-                        'Menentukan ranking peserta...',
-                        'Mengupdate status kelulusan...',
-                        'Hampir selesai...',
-                    ], 1500);
-                    formKelulusan.submit();
-                }
-            });
-        });
-    }
 
     // Export Excel link
     document.querySelectorAll('a[href*="export"]').forEach(function(link) {
