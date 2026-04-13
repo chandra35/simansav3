@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SmartqKelulusanTemplateExport;
 use App\Exports\NilaiCbtExport;
@@ -1434,7 +1435,11 @@ class SmartqController extends Controller
         );
     }
 
-    public function importKelulusanProcess(Request $request, SmartqPeriode $smartq)
+    /**
+     * Preview: parse file, validate, return match status per row (no save).
+     * Store file in temp for confirm step.
+     */
+    public function importKelulusanPreview(Request $request, SmartqPeriode $smartq)
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls|max:2048',
@@ -1442,41 +1447,136 @@ class SmartqController extends Controller
 
         $file = $request->file('file');
 
+        // Store temp file for confirm step
+        $tempPath = $file->store('smartq-import-temp');
+
         // Parse rows from Excel: NAMA | NISN | PERINGKAT MAPEL | PERINGKAT UMUM | MAPEL | STATUS
-        $rows = [];
-        $data = Excel::toArray(null, $file);
-        $sheet = $data[0] ?? [];
-        $headerSkipped = false;
-        foreach ($sheet as $line) {
-            if (!$headerSkipped) { $headerSkipped = true; continue; }
-            if (empty(array_filter($line))) continue;
-
-            $namaMapel = trim($line[4] ?? '');
-            $peringkatMapel = trim($line[2] ?? '');
-            $peringkatUmum = trim($line[3] ?? '');
-            $status = strtolower(trim($line[5] ?? ''));
-
-            // Skip rows without mapel (peserta belum diisi admin)
-            if ($namaMapel === '') continue;
-
-            $rows[] = [
-                'nama' => trim($line[0] ?? ''),
-                'nisn' => trim($line[1] ?? ''),
-                'peringkat_mapel' => $peringkatMapel !== '' ? (int) $peringkatMapel : null,
-                'peringkat_umum' => $peringkatUmum !== '' ? (int) $peringkatUmum : null,
-                'mapel' => $namaMapel,
-                'status' => $status,
-            ];
-        }
+        $rows = $this->parseKelulusanExcel(storage_path('app/' . $tempPath));
 
         if (empty($rows)) {
+            Storage::delete($tempPath);
             return response()->json([
                 'success' => false,
                 'message' => 'File tidak berisi data. Pastikan kolom MAPEL sudah diisi.',
             ], 422);
         }
 
-        // Preload lookup maps — match by nama_mapel (case-insensitive)
+        // Preload lookup maps
+        $mapelMap = MataPelajaran::where('is_mapel_pilihan', true)
+            ->get(['id', 'nama_mapel'])
+            ->mapWithKeys(fn($m) => [mb_strtolower($m->nama_mapel) => $m->id]);
+
+        $pesertaMap = SmartqPeserta::where('smartq_periode_id', $smartq->id)
+            ->with('siswa')
+            ->get()
+            ->keyBy(fn($p) => $p->siswa?->nisn);
+
+        // Validate each row — build preview with match status
+        $preview = [];
+        $validCount = 0;
+        $errorCount = 0;
+
+        foreach ($rows as $i => $row) {
+            $rowNum = $i + 2; // +1 header, +1 zero-index
+            $nisn = $row['nisn'];
+            $namaMapel = $row['mapel'];
+            $status = $row['status'];
+            $errors = [];
+
+            // Check status
+            $statusValid = in_array($status, ['diterima', 'cadangan']);
+            if (!$statusValid) {
+                $errors[] = "Status '{$status}' tidak valid";
+            }
+
+            // Check mapel
+            $mapelKey = mb_strtolower($namaMapel);
+            $mapelValid = $mapelMap->has($mapelKey);
+            if (!$mapelValid) {
+                $errors[] = "Mapel '{$namaMapel}' tidak ditemukan";
+            }
+
+            // Check NISN match
+            $peserta = $pesertaMap->get($nisn);
+            $nisnMatch = $peserta !== null;
+            if (!$nisnMatch) {
+                $errors[] = 'NISN tidak ditemukan di peserta';
+            }
+
+            // Check nama match (fuzzy)
+            $namaMatch = false;
+            $namaDb = '-';
+            if ($peserta) {
+                $namaDb = $peserta->siswa?->nama_lengkap ?? '-';
+                $namaMatch = mb_strtolower(trim($row['nama'])) === mb_strtolower(trim($namaDb));
+            }
+
+            $isValid = empty($errors);
+            if ($isValid) $validCount++;
+            else $errorCount++;
+
+            $preview[] = [
+                'row' => $rowNum,
+                'nama_file' => $row['nama'],
+                'nama_db' => $namaDb,
+                'nama_match' => $namaMatch,
+                'nisn' => $nisn,
+                'nisn_match' => $nisnMatch,
+                'peringkat_mapel' => $row['peringkat_mapel'],
+                'peringkat_umum' => $row['peringkat_umum'],
+                'mapel' => $namaMapel,
+                'mapel_match' => $mapelValid,
+                'status' => $status,
+                'status_valid' => $statusValid,
+                'valid' => $isValid,
+                'errors' => $errors,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'temp_path' => $tempPath,
+            'data' => [
+                'total' => count($rows),
+                'valid_count' => $validCount,
+                'error_count' => $errorCount,
+                'rows' => $preview,
+            ],
+        ]);
+    }
+
+    /**
+     * Confirm: re-read temp file, save valid rows to database.
+     */
+    public function importKelulusanConfirm(Request $request, SmartqPeriode $smartq)
+    {
+        $request->validate([
+            'temp_path' => 'required|string',
+        ]);
+
+        $tempPath = $request->input('temp_path');
+        $fullPath = storage_path('app/' . $tempPath);
+
+        if (!file_exists($fullPath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File sementara tidak ditemukan. Silakan upload ulang.',
+            ], 422);
+        }
+
+        $rows = $this->parseKelulusanExcel($fullPath);
+
+        // Clean up temp file
+        Storage::delete($tempPath);
+
+        if (empty($rows)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File tidak berisi data.',
+            ], 422);
+        }
+
+        // Preload lookup maps
         $mapelMap = MataPelajaran::where('is_mapel_pilihan', true)
             ->get(['id', 'nama_mapel'])
             ->mapWithKeys(fn($m) => [mb_strtolower($m->nama_mapel) => $m->id]);
@@ -1502,31 +1602,31 @@ class SmartqController extends Controller
                         'row' => $rowNum,
                         'nisn' => $nisn,
                         'nama' => $row['nama'],
-                        'error' => "Status '{$status}' tidak valid. Gunakan 'diterima' atau 'cadangan'.",
+                        'error' => "Status '{$status}' tidak valid.",
                     ];
                     continue;
                 }
 
-                // Validate mapel by nama
+                // Validate mapel
                 $mapelKey = mb_strtolower($namaMapel);
                 if (!$mapelMap->has($mapelKey)) {
                     $results['errors'][] = [
                         'row' => $rowNum,
                         'nisn' => $nisn,
                         'nama' => $row['nama'],
-                        'error' => "Mapel '{$namaMapel}' tidak ditemukan di daftar mapel pilihan.",
+                        'error' => "Mapel '{$namaMapel}' tidak ditemukan.",
                     ];
                     continue;
                 }
 
-                // Find peserta by NISN
+                // Find peserta
                 $peserta = $pesertaMap->get($nisn);
                 if (!$peserta) {
                     $results['errors'][] = [
                         'row' => $rowNum,
                         'nisn' => $nisn,
                         'nama' => $row['nama'],
-                        'error' => 'NISN tidak ditemukan sebagai peserta SMART-Q periode ini.',
+                        'error' => 'NISN tidak ditemukan.',
                     ];
                     continue;
                 }
@@ -1564,5 +1664,38 @@ class SmartqController extends Controller
                 'errors' => $results['errors'],
             ],
         ]);
+    }
+
+    /**
+     * Parse kelulusan Excel file into array of rows.
+     */
+    private function parseKelulusanExcel(string $filePath): array
+    {
+        $rows = [];
+        $data = Excel::toArray(null, $filePath);
+        $sheet = $data[0] ?? [];
+        $headerSkipped = false;
+
+        foreach ($sheet as $line) {
+            if (!$headerSkipped) { $headerSkipped = true; continue; }
+            if (empty(array_filter($line))) continue;
+
+            $namaMapel = trim($line[4] ?? '');
+            if ($namaMapel === '') continue;
+
+            $peringkatMapel = trim($line[2] ?? '');
+            $peringkatUmum = trim($line[3] ?? '');
+
+            $rows[] = [
+                'nama' => trim($line[0] ?? ''),
+                'nisn' => trim($line[1] ?? ''),
+                'peringkat_mapel' => $peringkatMapel !== '' ? (int) $peringkatMapel : null,
+                'peringkat_umum' => $peringkatUmum !== '' ? (int) $peringkatUmum : null,
+                'mapel' => $namaMapel,
+                'status' => strtolower(trim($line[5] ?? '')),
+            ];
+        }
+
+        return $rows;
     }
 }

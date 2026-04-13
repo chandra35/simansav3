@@ -644,7 +644,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{smartq}/ranking-data', [App\Http\Controllers\Admin\SmartqController::class, 'rankingData'])->name('ranking.data');
         Route::get('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanForm'])->name('kelulusan.import');
         Route::get('/{smartq}/kelulusan/template', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanTemplate'])->name('kelulusan.template');
-        Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanProcess'])->name('kelulusan.import.process');
+        Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanPreview'])->name('kelulusan.import.process');
+        Route::post('/{smartq}/kelulusan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanConfirm'])->name('kelulusan.import.confirm');
         Route::get('/{smartq}/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportExcel'])->name('export');
     });
 });
