@@ -351,7 +351,7 @@
                     }
 
                     appShowGlobalOverlay('Membuka halaman...', 'Sedang mengalihkan tampilan');
-                }, true);
+                });
 
                 document.addEventListener('submit', function (event) {
                     const form = event.target;
@@ -361,7 +361,7 @@
 
                     formSubmitting = true;
                     appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan');
-                }, true);
+                });
 
                 window.addEventListener('beforeunload', function () {
                     appShowGlobalOverlay(
