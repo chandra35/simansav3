@@ -479,7 +479,17 @@ body:not(.layout-top-nav) .content-wrapper,
 .simansa-page-hero h1 i,
 .simansa-page-hero h1 .fas,
 .simansa-page-hero h1 .far,
-.simansa-page-hero h1 .fab {
+.simansa-page-hero h1 .fab,
+.simansa-page-hero h1 .text-warning,
+.simansa-page-hero h1 .text-primary,
+.simansa-page-hero h1 .text-info,
+.simansa-page-hero h1 .text-success,
+.simansa-page-hero h1 .text-danger,
+.simansa-page-hero__body .text-warning,
+.simansa-page-hero__body .text-primary,
+.simansa-page-hero__body .text-info,
+.simansa-page-hero__body .text-success,
+.simansa-page-hero__body .text-danger {
     color: rgba(255, 255, 255, 0.92) !important;
 }
 

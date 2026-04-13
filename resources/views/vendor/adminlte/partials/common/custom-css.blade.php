@@ -1,5 +1,5 @@
 {{-- Custom Compact Styles for SIMANSA v3 --}}
-<link rel="stylesheet" href="{{ asset('css/custom-compact.css') }}">
+<link rel="stylesheet" href="{{ asset('css/custom-compact.css') }}?v={{ filemtime(public_path('css/custom-compact.css')) }}">
 <style>
     .simansa-flash {
         border: 0;

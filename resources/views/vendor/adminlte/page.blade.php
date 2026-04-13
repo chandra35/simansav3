@@ -5,7 +5,7 @@
 
 @section('adminlte_css')
     {{-- Custom Compact Styles --}}
-    <link rel="stylesheet" href="{{ asset('css/custom-compact.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/custom-compact.css') }}?v={{ filemtime(public_path('css/custom-compact.css')) }}">
     
     @stack('css')
     @yield('css')
