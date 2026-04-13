@@ -1448,13 +1448,20 @@ class SmartqController extends Controller
         $file = $request->file('file');
 
         // Store temp file for confirm step
-        $tempPath = $file->store('smartq-import-temp');
+        $tempDir = storage_path('app/smartq-import-temp');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0775, true);
+        }
+        $tempName = \Illuminate\Support\Str::random(40) . '.' . $file->getClientOriginalExtension();
+        $file->move($tempDir, $tempName);
+        $fullPath = $tempDir . '/' . $tempName;
+        $tempPath = 'smartq-import-temp/' . $tempName;
 
         // Parse rows from Excel: NAMA | NISN | PERINGKAT MAPEL | PERINGKAT UMUM | MAPEL | STATUS
-        $rows = $this->parseKelulusanExcel(storage_path('app/' . $tempPath));
+        $rows = $this->parseKelulusanExcel($fullPath);
 
         if (empty($rows)) {
-            Storage::delete($tempPath);
+            @unlink($fullPath);
             return response()->json([
                 'success' => false,
                 'message' => 'File tidak berisi data. Pastikan kolom MAPEL sudah diisi.',
@@ -1567,7 +1574,7 @@ class SmartqController extends Controller
         $rows = $this->parseKelulusanExcel($fullPath);
 
         // Clean up temp file
-        Storage::delete($tempPath);
+        @unlink($fullPath);
 
         if (empty($rows)) {
             return response()->json([
