@@ -641,6 +641,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{smartq}/nilai-cbt', [App\Http\Controllers\Admin\SmartqController::class, 'nilaiCbt'])->name('nilai-cbt');
 
         // Kelulusan Import & Export
+        Route::get('/{smartq}/ranking-data', [App\Http\Controllers\Admin\SmartqController::class, 'rankingData'])->name('ranking.data');
         Route::get('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanForm'])->name('kelulusan.import');
         Route::get('/{smartq}/kelulusan/template', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanTemplate'])->name('kelulusan.template');
         Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanProcess'])->name('kelulusan.import.process');

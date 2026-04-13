@@ -305,92 +305,107 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-trophy"></i> Ranking Peserta</h3>
             <div class="card-tools">
-                <span class="badge badge-primary">{{ $pesertas->count() }} peserta</span>
+                <span class="badge badge-primary" id="totalPesertaBadge">{{ $stats['total'] }} peserta</span>
             </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-sm mb-0">
+                <table id="rankingTable" class="table table-bordered table-striped table-sm mb-0" style="width:100%">
                     <thead class="bg-gradient-dark text-white">
                         <tr>
-                            <th width="60" class="text-center">Rank</th>
+                            <th class="text-center" width="60">Rank</th>
                             <th width="100">No. Peserta</th>
                             <th>Nama Siswa</th>
                             <th width="100">NISN</th>
                             <th width="130">Kelas Asal</th>
-                            @foreach($smartq->komponenNilais as $k)
-                                <th width="90" class="text-center" title="{{ $k->nama }} ({{ $k->bobot }}%)">
-                                    {{ $k->kode }}<br><small>{{ $k->bobot }}%</small>
-                                </th>
-                            @endforeach
-                            <th width="90" class="text-center bg-gradient-primary">Total</th>
-                            <th width="110" class="text-center">Status</th>
-                            <th width="130" class="text-center">Bidang</th>
+                            {{-- Komponen columns will be added dynamically --}}
                         </tr>
                     </thead>
-                    <tbody>
-                        @forelse($pesertas as $p)
-                            <tr class="{{ $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : '')) }}">
-                                <td class="text-center">
-                                    @if($p->ranking && $p->ranking <= 3)
-                                        <span class="badge badge-{{ $p->ranking === 1 ? 'warning' : ($p->ranking === 2 ? 'secondary' : 'info') }}">
-                                            <i class="fas fa-trophy"></i> {{ $p->ranking }}
-                                        </span>
-                                    @else
-                                        {{ $p->ranking ?? '-' }}
-                                    @endif
-                                </td>
-                                <td><code>{{ $p->nomor_peserta }}</code></td>
-                                <td>
-                                    <strong>{{ $p->siswa->nama_lengkap ?? '-' }}</strong>
-                                    <br><small class="text-muted">{{ $p->siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</small>
-                                </td>
-                                <td><small>{{ $p->siswa->nisn ?? '-' }}</small></td>
-                                <td>{{ $p->kelasAsal->nama_lengkap ?? '-' }}</td>
-                                @foreach($smartq->komponenNilais as $k)
-                                    @php $nilai = $p->getNilaiKomponen($k->id); @endphp
-                                    <td class="text-center">
-                                        @if($nilai && $nilai->nilai !== null)
-                                            <strong>{{ number_format($nilai->nilai, 1) }}</strong>
-                                            @if($k->isMoodle() && $nilai->moodle_attempt_id)
-                                                <br><small class="text-muted"><i class="fas fa-cloud"></i></small>
-                                            @endif
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                @endforeach
-                                <td class="text-center">
-                                    <strong class="text-primary">{{ $p->total_nilai !== null ? number_format($p->total_nilai, 2) : '-' }}</strong>
-                                </td>
-                                <td class="text-center">{!! $p->status_badge !!}</td>
-                                <td class="text-center">
-                                    @if($p->bidangMapel)
-                                        <span class="badge badge-info" title="{{ $p->bidangMapel->nama_mapel }}">{{ $p->bidangMapel->kode_mapel }}</span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ 7 + $smartq->komponenNilais->count() }}" class="text-center py-4 text-muted">
-                                    <i class="fas fa-users fa-2x mb-2"></i><br>
-                                    Belum ada peserta. <a href="{{ route('admin.smartq.peserta', $smartq) }}">Tambah peserta</a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 @stop
 
+@section('css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
+@stop
+
 @section('js')
 @include('admin.smartq._overlay')
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap4.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ========== RANKING DATATABLE ==========
+    $.ajax({
+        url: '{{ route("admin.smartq.ranking.data", $smartq) }}',
+        dataType: 'json',
+        beforeSend: function() {
+            showSmartqOverlay('Memuat data ranking...', 'Mengambil data peserta dari server', 'table');
+        },
+        success: function(res) {
+            hideSmartqOverlay();
+            initRankingTable(res.data, res.komponen);
+        },
+        error: function() {
+            hideSmartqOverlay();
+            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memuat data ranking.' });
+        }
+    });
+
+    function initRankingTable(data, komponen) {
+        // Build dynamic columns for thead
+        var $thead = $('#rankingTable thead tr');
+        komponen.forEach(function(k) {
+            $thead.find('th:last').before(
+                '<th class="text-center" width="90" title="' + k.nama + ' (' + k.bobot + '%)">' +
+                k.kode + '<br><small>' + k.bobot + '%</small></th>'
+            );
+        });
+        // Append fixed trailing columns
+        $thead.append('<th class="text-center bg-gradient-primary" width="90">Total</th>');
+        $thead.append('<th class="text-center" width="110">Status</th>');
+        $thead.append('<th class="text-center" width="130">Bidang</th>');
+
+        // Build DataTable column definitions
+        var columns = [
+            { data: 'ranking_display', className: 'text-center', orderData: 'ranking' },
+            { data: 'nomor_peserta' },
+            { data: 'nama', orderable: true },
+            { data: 'nisn' },
+            { data: 'kelas' },
+        ];
+        komponen.forEach(function(k) {
+            columns.push({ data: 'komponen_' + k.id, className: 'text-center' });
+        });
+        columns.push({ data: 'total', className: 'text-center font-weight-bold text-primary' });
+        columns.push({ data: 'status', className: 'text-center', orderable: false });
+        columns.push({ data: 'bidang', className: 'text-center', orderable: false });
+
+        var table = $('#rankingTable').DataTable({
+            data: data,
+            columns: columns,
+            order: [[0, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json'
+            },
+            createdRow: function(row, rowData) {
+                if (rowData.row_class) {
+                    $(row).addClass(rowData.row_class);
+                }
+            },
+            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rtip',
+        });
+
+        $('#totalPesertaBadge').text(data.length + ' peserta');
+    }
+
     // Sync Nilai CBT form — SweetAlert confirm + overlay
     var formSync = document.getElementById('formSyncMoodle');
     if (formSync) {

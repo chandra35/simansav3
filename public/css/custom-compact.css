@@ -458,7 +458,9 @@ body:not(.layout-top-nav) .content-wrapper,
 .simansa-page-hero p,
 .simansa-page-hero small,
 .simansa-page-hero .breadcrumb-item,
-.simansa-page-hero .breadcrumb-item a {
+.simansa-page-hero .breadcrumb-item a,
+.simansa-page-hero .breadcrumb-item.active,
+.simansa-page-hero .breadcrumb-item + .breadcrumb-item::before {
     color: rgba(255, 255, 255, 0.82) !important;
 }
 
@@ -470,6 +472,15 @@ body:not(.layout-top-nav) .content-wrapper,
 .simansa-page-hero .h3 {
     color: #ffffff !important;
     margin-bottom: 0.3rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    font-weight: 700;
+}
+
+.simansa-page-hero h1 i,
+.simansa-page-hero h1 .fas,
+.simansa-page-hero h1 .far,
+.simansa-page-hero h1 .fab {
+    color: rgba(255, 255, 255, 0.92) !important;
 }
 
 .simansa-page-hero .btn {

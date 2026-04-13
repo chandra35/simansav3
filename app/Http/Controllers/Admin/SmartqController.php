@@ -83,11 +83,7 @@ class SmartqController extends Controller
     {
         $smartq->load(['tahunPelajaran', 'komponenNilais']);
 
-        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'bidangMapel', 'nilais.komponenNilai'])
-            ->where('smartq_periode_id', $smartq->id)
-            ->orderBy('ranking')
-            ->orderByDesc('total_nilai')
-            ->get();
+        $pesertas = SmartqPeserta::where('smartq_periode_id', $smartq->id)->get();
 
         $stats = [
             'total' => $pesertas->count(),
@@ -103,7 +99,7 @@ class SmartqController extends Controller
         // Check if scan data exists (persisted in DB) — avoid loading the huge JSON blob
         $hasScanData = $smartq->last_scan_at !== null;
 
-        return view('admin.smartq.show', compact('smartq', 'pesertas', 'stats', 'hasScanData'));
+        return view('admin.smartq.show', compact('smartq', 'stats', 'hasScanData'));
     }
 
     public function nilaiCbt(SmartqPeriode $smartq)
@@ -1072,6 +1068,60 @@ class SmartqController extends Controller
     }
 
     // ==================== RANKING & KEPUTUSAN ====================
+
+    public function rankingData(SmartqPeriode $smartq)
+    {
+        $smartq->load('komponenNilais');
+
+        $pesertas = SmartqPeserta::with(['siswa', 'kelasAsal', 'bidangMapel', 'nilais.komponenNilai'])
+            ->where('smartq_periode_id', $smartq->id)
+            ->orderBy('ranking')
+            ->orderByDesc('total_nilai')
+            ->get();
+
+        $rows = $pesertas->map(function ($p) use ($smartq) {
+            $row = [
+                'ranking' => $p->ranking,
+                'ranking_display' => $p->ranking && $p->ranking <= 3
+                    ? '<span class="badge badge-' . ($p->ranking === 1 ? 'warning' : ($p->ranking === 2 ? 'secondary' : 'info')) . '"><i class="fas fa-trophy"></i> ' . $p->ranking . '</span>'
+                    : ($p->ranking ?? '-'),
+                'nomor_peserta' => '<code>' . e($p->nomor_peserta) . '</code>',
+                'nama' => '<strong>' . e($p->siswa->nama_lengkap ?? '-') . '</strong><br><small class="text-muted">' . ($p->siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan') . '</small>',
+                'nama_sort' => $p->siswa->nama_lengkap ?? '-',
+                'nisn' => '<small>' . e($p->siswa->nisn ?? '-') . '</small>',
+                'kelas' => e($p->kelasAsal->nama_lengkap ?? '-'),
+            ];
+
+            foreach ($smartq->komponenNilais as $k) {
+                $nilai = $p->getNilaiKomponen($k->id);
+                $row['komponen_' . $k->id] = $nilai && $nilai->nilai !== null
+                    ? '<strong>' . number_format($nilai->nilai, 1) . '</strong>' . ($k->isMoodle() && $nilai->moodle_attempt_id ? '<br><small class="text-muted"><i class="fas fa-cloud"></i></small>' : '')
+                    : '<span class="text-muted">-</span>';
+                $row['komponen_' . $k->id . '_raw'] = $nilai?->nilai ?? 0;
+            }
+
+            $row['total'] = $p->total_nilai !== null ? number_format($p->total_nilai, 2) : '-';
+            $row['total_raw'] = $p->total_nilai ?? 0;
+            $row['status'] = $p->status_badge;
+            $row['status_raw'] = $p->status;
+            $row['bidang'] = $p->bidangMapel
+                ? '<span class="badge badge-info" title="' . e($p->bidangMapel->nama_mapel) . '">' . e($p->bidangMapel->kode_mapel) . '</span>'
+                : '<span class="text-muted">-</span>';
+            $row['row_class'] = $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : ''));
+
+            return $row;
+        });
+
+        return response()->json([
+            'data' => $rows->values(),
+            'komponen' => $smartq->komponenNilais->map(fn($k) => [
+                'id' => $k->id,
+                'kode' => $k->kode,
+                'nama' => $k->nama,
+                'bobot' => $k->bobot,
+            ]),
+        ]);
+    }
 
     // ==================== EXPORT ====================
 
