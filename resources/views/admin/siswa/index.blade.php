@@ -738,6 +738,17 @@ $(document).ready(function() {
         clearForm();
     });
 
+    // Clear overlay and tab content when view modal is closed
+    $('#viewSiswaModal').on('hidden.bs.modal', function() {
+        if (typeof hideAppGlobalOverlay === 'function') {
+            hideAppGlobalOverlay();
+        }
+        // Clear tab contents to avoid stale data on next open
+        $('#data-siswa, #data-diri, #data-ortu, #sekolah-asal, #dokumen').empty();
+        // Reset to first tab
+        $('#siswaDetailTabs a:first').tab('show');
+    });
+
     $(document).on('click', '.js-preview-foto', function() {
         const previewUrl = $(this).data('preview-url');
         const downloadUrl = $(this).data('download-url');

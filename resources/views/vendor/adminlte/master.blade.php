@@ -329,6 +329,10 @@
                         return;
                     }
 
+                    if (link.closest('.modal')) {
+                        return;
+                    }
+
                     const href = (link.getAttribute('href') || '').trim();
                     if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
                         return;
