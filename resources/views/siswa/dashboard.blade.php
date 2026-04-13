@@ -6,60 +6,7 @@
     {{-- Header moved to welcome banner inside content --}}
 @stop
 
-@section('css')
-<style>
-    /* Page Loading Overlay */
-    .page-loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    .page-loader.fade-out {
-        opacity: 0;
-        visibility: hidden;
-    }
-
-    .page-loader .loader-content {
-        text-align: center;
-        color: white;
-    }
-
-    .page-loader .lottie-container {
-        width: 200px;
-        height: 200px;
-        margin: 0 auto;
-    }
-
-    .page-loader .loading-text {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-top: 15px;
-        opacity: 0.9;
-        animation: pulse-text 1.5s ease-in-out infinite;
-    }
-
-    .page-loader .loading-subtext {
-        font-size: 0.9rem;
-        opacity: 0.7;
-        margin-top: 5px;
-    }
-
-    @keyframes pulse-text {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-    }
-</style>
-@stop
+{{-- CSS is in the second @section('css') below --}}
 
 @section('content')
 <!-- Page Loading Overlay with Lottie Animation -->
@@ -237,6 +184,11 @@
                              style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; position: relative; z-index: 1; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15);"
                              id="fotoProfile"
                              onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($siswa->nama_lengkap) }}&size=300&background={{ $siswa->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
+                        <!-- Quick Change Photo Overlay -->
+                        <label for="dashboardFotoInput" class="dashboard-foto-overlay" title="Ganti Foto Profil">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="dashboardFotoInput" accept="image/jpeg,image/png" style="display:none;">
                     </div>
                     
                     @if(!$siswa->foto_profile)
@@ -617,10 +569,91 @@
     </div>
 </div>
 
+<!-- Crop Foto Modal -->
+<div class="modal fade" id="dashboardCropModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-crop-alt"></i> Crop Foto Profil</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-0">
+                <div style="max-height: 60vh; overflow: hidden;">
+                    <img id="dashboardCropImage" src="" style="max-width: 100%; display: block;">
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCropRotateLeft" title="Putar Kiri"><i class="fas fa-undo"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCropRotateRight" title="Putar Kanan"><i class="fas fa-redo"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCropFlipH" title="Flip Horizontal"><i class="fas fa-arrows-alt-h"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCropFlipV" title="Flip Vertikal"><i class="fas fa-arrows-alt-v"></i></button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnCropSave"><i class="fas fa-check"></i> Simpan Foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
+    /* Page Loading Overlay */
+    .page-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .page-loader.fade-out {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .page-loader .loader-content {
+        text-align: center;
+        color: white;
+    }
+
+    .page-loader .lottie-container {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+
+    .page-loader .loading-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 15px;
+        opacity: 0.9;
+        animation: pulse-text 1.5s ease-in-out infinite;
+    }
+
+    .page-loader .loading-subtext {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-top: 5px;
+    }
+
+    @keyframes pulse-text {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+    }
+
     /* Welcome Banner Gradient */
     .callout {
         animation: fadeIn 0.5s ease-in-out;
@@ -848,6 +881,32 @@
         padding: 20px;
     }
 
+    /* Dashboard Foto Change Overlay */
+    .dashboard-foto-overlay {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 123, 255, 0.9);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        border: 3px solid #fff;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .dashboard-foto-overlay:hover {
+        background: rgba(0, 86, 179, 1);
+        transform: scale(1.1);
+    }
+
     .profile-username {
         font-size: 1.5rem;
         font-weight: 600;
@@ -956,6 +1015,8 @@
 <!-- Lottie Animation Library -->
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+<!-- Cropper.js for foto crop -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
     // Initialize Lottie animation for page loader
     var loaderAnimation = lottie.loadAnimation({
@@ -1029,6 +1090,131 @@
                 var topOfWindow = $(window).scrollTop();
                 if (imagePos < topOfWindow + 600) {
                     $(this).addClass('animate__animated animate__fadeInUp');
+                }
+            });
+        });
+
+        // === Dashboard Foto Profile Quick Replace ===
+        var dashboardCropper = null;
+
+        $('#dashboardFotoInput').on('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+
+            // Validate file type
+            var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                Swal.fire('Format Salah', 'Hanya file JPG, JPEG, atau PNG yang diizinkan.', 'error');
+                this.value = '';
+                return;
+            }
+
+            // Validate file size (2MB)
+            if (file.size > 2048 * 1024) {
+                Swal.fire('File Terlalu Besar', 'Ukuran file maksimal 2MB.', 'error');
+                this.value = '';
+                return;
+            }
+
+            // Read file and open crop modal
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#dashboardCropImage').attr('src', e.target.result);
+                $('#dashboardCropModal').modal('show');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        $('#dashboardCropModal').on('shown.bs.modal', function() {
+            if (dashboardCropper) {
+                dashboardCropper.destroy();
+            }
+            dashboardCropper = new Cropper(document.getElementById('dashboardCropImage'), {
+                aspectRatio: 1,
+                viewMode: 2,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                responsive: true,
+                guides: true,
+                highlight: true,
+                cropBoxResizable: true,
+                cropBoxMovable: true,
+            });
+        });
+
+        $('#dashboardCropModal').on('hidden.bs.modal', function() {
+            if (dashboardCropper) {
+                dashboardCropper.destroy();
+                dashboardCropper = null;
+            }
+            $('#dashboardFotoInput').val('');
+        });
+
+        // Crop controls
+        $('#btnCropRotateLeft').on('click', function() { if (dashboardCropper) dashboardCropper.rotate(-90); });
+        $('#btnCropRotateRight').on('click', function() { if (dashboardCropper) dashboardCropper.rotate(90); });
+        $('#btnCropFlipH').on('click', function() {
+            if (dashboardCropper) {
+                var d = dashboardCropper.getData();
+                dashboardCropper.scaleX(d.scaleX === -1 ? 1 : -1);
+            }
+        });
+        $('#btnCropFlipV').on('click', function() {
+            if (dashboardCropper) {
+                var d = dashboardCropper.getData();
+                dashboardCropper.scaleY(d.scaleY === -1 ? 1 : -1);
+            }
+        });
+
+        // Save cropped foto
+        $('#btnCropSave').on('click', function() {
+            if (!dashboardCropper) return;
+
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengupload...');
+
+            var canvas = dashboardCropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            var base64 = canvas.toDataURL('image/jpeg', 0.9);
+
+            $.ajax({
+                url: '{{ route("siswa.profile.foto.upload") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    cropped_image: base64
+                },
+                success: function(res) {
+                    if (res.success) {
+                        // Update all foto instances on page
+                        $('#fotoProfile').attr('src', res.foto_url);
+
+                        $('#dashboardCropModal').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
+                    } else {
+                        Swal.fire('Gagal', res.message || 'Gagal mengupload foto.', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    var msg = 'Gagal mengupload foto.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error', msg, 'error');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html('<i class="fas fa-check"></i> Simpan Foto');
                 }
             });
         });
