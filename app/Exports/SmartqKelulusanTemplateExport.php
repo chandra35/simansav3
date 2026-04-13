@@ -9,7 +9,6 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Protection;
 
 class SmartqKelulusanTemplateExport implements WithMultipleSheets
 {
@@ -56,7 +55,7 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
     {
         return $this->pesertas->map(fn($p) => [
             $p->siswa?->nama_lengkap ?? '-',
-            $p->siswa?->user?->username ?? '-',
+            $p->siswa?->nisn ?? '-',
             '', // admin fills
             '', // admin fills
             '', // admin fills
@@ -88,22 +87,12 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
             ],
         ];
 
-        // Lock NAMA + NISN columns (A & B), leave C/D/E editable
-        $sheet->getProtection()->setSheet(true);
-        $sheet->getProtection()->setPassword('smartq');
-
-        // Unlock columns C, D, E, F for editing
-        for ($row = 2; $row <= $lastRow; $row++) {
-            $sheet->getStyle("C{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-            $sheet->getStyle("D{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-            $sheet->getStyle("E{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
-            $sheet->getStyle("F{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
+        // Light yellow background for editable columns (C-F)
+        if ($lastRow > 1) {
+            $sheet->getStyle("C2:F{$lastRow}")->applyFromArray([
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFFDE7']],
+            ]);
         }
-
-        // Light yellow background for editable columns
-        $sheet->getStyle("C2:F{$lastRow}")->applyFromArray([
-            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFFDE7']],
-        ]);
 
         // Add data validation (dropdown) for MAPEL column
         $mapelNames = $this->mapelPilihan->pluck('nama_mapel')->implode(',');

@@ -1482,9 +1482,9 @@ class SmartqController extends Controller
             ->mapWithKeys(fn($m) => [mb_strtolower($m->nama_mapel) => $m->id]);
 
         $pesertaMap = SmartqPeserta::where('smartq_periode_id', $smartq->id)
-            ->with('siswa.user')
+            ->with('siswa')
             ->get()
-            ->keyBy(fn($p) => $p->siswa?->user?->username);
+            ->keyBy(fn($p) => $p->siswa?->nisn);
 
         $results = ['success' => [], 'errors' => []];
         $rowNum = 1;
