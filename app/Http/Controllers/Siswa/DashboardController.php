@@ -41,9 +41,9 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Check if user needs to complete profile
+        // Check if user needs to change password (handled by ForcePasswordChange middleware)
         if ($user->is_first_login) {
-            return redirect()->route('siswa.profile.password')->with('info', 'Silakan ganti password Anda terlebih dahulu.');
+            return redirect()->route('siswa.force-setup');
         }
 
         if (!$siswa->data_ortu_completed) {

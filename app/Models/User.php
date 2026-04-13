@@ -33,6 +33,8 @@ class User extends Authenticatable
         'is_active',
         'phone',
         'encrypted_password',
+        'password_reset_at',
+        'password_reset_by',
     ];
 
     /**
@@ -58,6 +60,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_first_login' => 'boolean',
             'is_active' => 'boolean',
+            'password_reset_at' => 'datetime',
         ];
     }
 

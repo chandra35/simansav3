@@ -680,6 +680,8 @@ class SiswaController extends Controller
 
             $user->password = Hash::make($defaultPassword);
             $user->is_first_login = true;
+            $user->password_reset_at = now();
+            $user->password_reset_by = Auth::user()->name;
             $user->readable_password = $defaultPassword;
             $user->save();
 

@@ -102,7 +102,11 @@ class ProfileController extends Controller
             return redirect()->route('siswa.dashboard');
         }
 
-        return view('siswa.profile.force-setup', compact('user'));
+        $isAdminReset = !empty($user->password_reset_at);
+        $resetBy = $user->password_reset_by;
+        $resetAt = $user->password_reset_at;
+
+        return view('siswa.profile.force-setup', compact('user', 'isAdminReset', 'resetBy', 'resetAt'));
     }
 
     /**
@@ -129,6 +133,8 @@ class ProfileController extends Controller
         $user->password = Hash::make($request->password);
         $user->email = $request->email;
         $user->is_first_login = false;
+        $user->password_reset_at = null;
+        $user->password_reset_by = null;
         $user->readable_password = $request->password;
         $user->save();
 

@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Setup Akun - SIMANSA')
+@section('title', 'Wajib Ganti Password - SIMANSA')
 
 @section('css')
 <!-- Cropper.js CSS -->
@@ -26,26 +26,94 @@
     .progress-bar {
         transition: width 0.3s, background-color 0.3s;
     }
-    .widget-user-header {
-        padding: 20px;
+
+    /* Full-screen blocking notice */
+    .force-pwd-blocker {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: blockerFadeIn 0.4s ease;
+    }
+    @keyframes blockerFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .force-pwd-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        max-width: 520px;
+        width: 90%;
+        overflow: hidden;
+        animation: cardSlideUp 0.5s ease 0.2s both;
+    }
+    @keyframes cardSlideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .force-pwd-header {
+        padding: 30px 30px 20px;
         text-align: center;
     }
-    .widget-user-image {
-        margin-bottom: 10px;
-    }
-    .widget-user-image img {
+    .force-pwd-header .icon-circle {
         width: 80px;
         height: 80px;
-        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 2rem;
     }
-    .widget-user-username {
-        font-size: 1.25rem;
-        margin-bottom: 5px;
+    .force-pwd-header .icon-circle.warning {
+        background: #fff3cd;
+        color: #856404;
     }
-    .widget-user-desc {
-        font-size: 0.9rem;
-        opacity: 0.9;
+    .force-pwd-header .icon-circle.danger {
+        background: #f8d7da;
+        color: #721c24;
+        animation: pulseIcon 2s ease-in-out infinite;
     }
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+    }
+    .force-pwd-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 8px;
+    }
+    .force-pwd-header p {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+    .force-pwd-body {
+        padding: 0 30px 30px;
+    }
+    .force-pwd-footer {
+        padding: 0 30px 25px;
+        text-align: center;
+    }
+    .reset-info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 12px;
+    }
+
     /* Foto Upload Styling */
     .foto-frame {
         position: relative;
@@ -114,31 +182,89 @@
 @section('content_header')
     <div class="row">
         <div class="col-12">
-            <h1 class="m-0"><i class="fas fa-user-shield text-primary"></i> Setup Akun Pertama Kali</h1>
+            <h1 class="m-0">
+                @if($isAdminReset)
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Wajib Ganti Password
+                @else
+                    <i class="fas fa-user-shield text-primary"></i> Setup Akun
+                @endif
+            </h1>
         </div>
     </div>
 @stop
 
 @section('content')
+
+{{-- ============================================================ --}}
+{{-- FULL-SCREEN BLOCKING NOTICE (Admin Reset only, shown once)   --}}
+{{-- ============================================================ --}}
+@if($isAdminReset)
+<div class="force-pwd-blocker" id="blockerOverlay">
+    <div class="force-pwd-card">
+        <div class="force-pwd-header">
+            <div class="icon-circle danger">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Password Anda Telah Di-Reset</h2>
+            <p>
+                Demi keamanan akun, password Anda telah di-reset oleh administrator.
+                <br>Anda <strong>WAJIB</strong> membuat password baru sekarang untuk melanjutkan.
+            </p>
+            <div class="reset-info-badge">
+                <i class="fas fa-user-shield"></i>
+                Di-reset oleh <strong>{{ $resetBy }}</strong> &mdash; {{ $resetAt?->translatedFormat('d M Y, H:i') ?? '-' }}
+            </div>
+        </div>
+        <div class="force-pwd-footer">
+            <button type="button" class="btn btn-danger btn-lg btn-block" id="btnDismissBlocker">
+                <i class="fas fa-key"></i> Ya, Saya Mengerti &mdash; Buat Password Baru
+            </button>
+            <small class="text-muted d-block mt-2">
+                Anda tidak dapat mengakses halaman lain sampai password diganti.
+            </small>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row">
     <div class="col-lg-8">
-        <!-- Main Form Card -->
-        <div class="card card-primary card-outline">
+        {{-- Alert Banner (always visible in form) --}}
+        @if($isAdminReset)
+            <div class="alert alert-danger border-0 shadow-sm mb-3" style="border-left: 5px solid #721c24 !important;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle fa-2x text-danger mr-3 mt-1"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1 font-weight-bold">
+                            <i class="fas fa-lock"></i> Ganti Password Wajib!
+                        </h5>
+                        <p class="mb-1">Password Anda telah di-reset oleh <strong>{{ $resetBy }}</strong> pada <strong>{{ $resetAt?->translatedFormat('d M Y, H:i') ?? '-' }}</strong>.</p>
+                        <p class="mb-0 text-sm">Password saat ini adalah NISN Anda. Segera ganti untuk mengamankan akun.</p>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="alert alert-info border-0 shadow-sm mb-3" style="border-left: 5px solid #17a2b8 !important;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-info-circle fa-2x text-info mr-3 mt-1"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1 font-weight-bold">Selamat Datang, {{ $user->name }}!</h5>
+                        <p class="mb-0">Ini adalah login pertama Anda. Silakan buat password baru dan lengkapi profil sebelum melanjutkan.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Main Form Card --}}
+        <div class="card card-{{ $isAdminReset ? 'danger' : 'primary' }} card-outline">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-user-cog"></i> Setup Akun Siswa
+                    <i class="fas fa-key"></i> Buat Password Baru
                 </h3>
             </div>
             <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm">
                 @csrf
                 <div class="card-body">
-                    @if(session('warning'))
-                        <div class="alert alert-warning alert-dismissible fade show">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
-                        </div>
-                    @endif
-
                     @if($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show">
                             <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -150,116 +276,27 @@
                         </div>
                     @endif
 
-                    <div class="callout callout-info">
-                        <h5><i class="fas fa-info-circle"></i> Selamat Datang!</h5>
-                        <p class="mb-0">Lengkapi data berikut untuk mengaktifkan akun Anda. Upload foto profile, ubah password default, dan isi email aktif.</p>
-                    </div>
-
-                    <!-- STEP 1: Foto Profile -->
-                    <div class="card card-outline card-primary mb-4">
+                    {{-- ==================== --}}
+                    {{-- STEP 1: PASSWORD     --}}
+                    {{-- ==================== --}}
+                    <div class="card card-outline card-{{ $isAdminReset ? 'danger' : 'warning' }} mb-4">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
-                                <span class="badge badge-primary mr-2">1</span>
-                                <i class="fas fa-camera"></i> Upload Foto Profile 
-                                <small class="text-muted">(Opsional)</small>
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-4 text-center">
-                                    <div class="foto-frame" id="fotoFrame" title="Klik untuk upload foto">
-                                        <div class="foto-ring"></div>
-                                        <img id="previewFoto" 
-                                             src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
-                                             class="foto-img"
-                                             alt="Foto Profile">
-                                        <div class="foto-overlay">
-                                            <i class="fas fa-camera fa-2x mb-2"></i>
-                                            <span>Upload</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="fotoInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
-                                </div>
-                                <div class="col-md-8">
-                                    <h5 class="text-primary mb-3">
-                                        <i class="fas fa-user-circle"></i> Foto Profile Anda
-                                    </h5>
-                                    <p class="text-muted mb-2">Klik gambar atau tombol di bawah untuk memilih foto:</p>
-                                    <button type="button" class="btn btn-primary" id="btnChooseFoto">
-                                        <i class="fas fa-upload"></i> Pilih Foto
-                                    </button>
-                                    <div class="mt-3">
-                                        <small class="text-muted d-block">
-                                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Maksimal 2MB
-                                        </small>
-                                        <small class="text-success">
-                                            <i class="fas fa-crop-alt"></i> Foto akan dipotong otomatis (1:1)
-                                        </small>
-                                    </div>
-                                    <div id="fotoStatus" class="mt-2" style="display: none;">
-                                        <span class="badge badge-success"><i class="fas fa-check"></i> Foto berhasil diupload</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 2: Email -->
-                    <div class="card card-outline card-info mb-4">
-                        <div class="card-header py-2">
-                            <h5 class="card-title mb-0">
-                                <span class="badge badge-info mr-2">2</span>
-                                <i class="fas fa-envelope"></i> Email & Username
+                                <span class="badge badge-{{ $isAdminReset ? 'danger' : 'warning' }} mr-2">1</span>
+                                <i class="fas fa-lock"></i> Password Baru
+                                <span class="badge badge-danger ml-2">WAJIB</span>
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <!-- Email -->
                                     <div class="form-group">
-                                        <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
-                                        <input type="email" name="email" id="email" 
-                                               class="form-control @error('email') is-invalid @enderror" 
-                                               value="{{ old('email', $user->email) }}"
-                                               placeholder="Masukkan email aktif Anda"
-                                               required>
-                                        <small class="text-muted">Email akan digunakan untuk reset password dan notifikasi penting</small>
-                                        @error('email')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <!-- Username (readonly) -->
-                                    <div class="form-group">
-                                        <label><i class="fas fa-user text-secondary"></i> Username</label>
-                                        <input type="text" class="form-control" value="{{ $user->username }}" readonly disabled>
-                                        <small class="text-muted">Username tidak dapat diubah</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 3: Password -->
-                    <div class="card card-outline card-warning mb-0">
-                        <div class="card-header py-2">
-                            <h5 class="card-title mb-0">
-                                <span class="badge badge-warning mr-2">3</span>
-                                <i class="fas fa-lock"></i> Ubah Password
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <!-- Password Baru -->
-                                    <div class="form-group">
-                                        <label for="password"><i class="fas fa-lock text-primary"></i> Password Baru <span class="text-danger">*</span></label>
+                                        <label for="password"><i class="fas fa-lock text-danger"></i> Password Baru <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <input type="password" name="password" id="password" 
-                                                   class="form-control @error('password') is-invalid @enderror" 
+                                            <input type="password" name="password" id="password"
+                                                   class="form-control form-control-lg @error('password') is-invalid @enderror"
                                                    placeholder="Minimal 8 karakter"
-                                                   required minlength="8">
+                                                   required minlength="8" autofocus>
                                             <div class="input-group-append">
                                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
                                                     <i class="fas fa-eye" id="password-icon"></i>
@@ -269,8 +306,7 @@
                                         @error('password')
                                             <span class="invalid-feedback d-block">{{ $message }}</span>
                                         @enderror
-                                        
-                                        <!-- Password Strength -->
+                                        {{-- Password Strength --}}
                                         <div class="mt-2">
                                             <small class="text-muted">Kekuatan Password:</small>
                                             <div class="progress" style="height: 6px;">
@@ -281,12 +317,11 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <!-- Konfirmasi Password -->
                                     <div class="form-group">
-                                        <label for="password_confirmation"><i class="fas fa-lock text-primary"></i> Konfirmasi Password <span class="text-danger">*</span></label>
+                                        <label for="password_confirmation"><i class="fas fa-lock text-danger"></i> Konfirmasi Password <span class="text-danger">*</span></label>
                                         <div class="input-group">
-                                            <input type="password" name="password_confirmation" id="password_confirmation" 
-                                                   class="form-control" 
+                                            <input type="password" name="password_confirmation" id="password_confirmation"
+                                                   class="form-control form-control-lg"
                                                    placeholder="Ulangi password baru"
                                                    required>
                                             <div class="input-group-append">
@@ -299,12 +334,95 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="callout callout-warning py-2 mb-0">
+                                <small><i class="fas fa-exclamation-triangle"></i> Jangan gunakan NISN, tanggal lahir, atau data pribadi sebagai password.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ==================== --}}
+                    {{-- STEP 2: EMAIL        --}}
+                    {{-- ==================== --}}
+                    <div class="card card-outline card-info mb-4">
+                        <div class="card-header py-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge badge-info mr-2">2</span>
+                                <i class="fas fa-envelope"></i> Email & Username
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
+                                        <input type="email" name="email" id="email"
+                                               class="form-control @error('email') is-invalid @enderror"
+                                               value="{{ old('email', $user->email) }}"
+                                               placeholder="Masukkan email aktif Anda"
+                                               required>
+                                        <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting</small>
+                                        @error('email')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user text-secondary"></i> Username</label>
+                                        <input type="text" class="form-control" value="{{ $user->username }}" readonly disabled>
+                                        <small class="text-muted">Username tidak dapat diubah</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ==================== --}}
+                    {{-- STEP 3: FOTO         --}}
+                    {{-- ==================== --}}
+                    <div class="card card-outline card-secondary mb-0">
+                        <div class="card-header py-2">
+                            <h5 class="card-title mb-0">
+                                <span class="badge badge-secondary mr-2">3</span>
+                                <i class="fas fa-camera"></i> Foto Profile
+                                <small class="text-muted">(Opsional)</small>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <div class="foto-frame" id="fotoFrame" title="Klik untuk upload foto">
+                                        <div class="foto-ring"></div>
+                                        <img id="previewFoto"
+                                             src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff"
+                                             class="foto-img"
+                                             alt="Foto Profile">
+                                        <div class="foto-overlay">
+                                            <i class="fas fa-camera fa-2x mb-2"></i>
+                                            <span>Upload</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="fotoInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                                </div>
+                                <div class="col-md-8">
+                                    <p class="text-muted mb-2">Klik gambar atau tombol untuk memilih foto:</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnChooseFoto">
+                                        <i class="fas fa-upload"></i> Pilih Foto
+                                    </button>
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block"><i class="fas fa-info-circle"></i> Format: JPG/PNG, Maks 2MB</small>
+                                    </div>
+                                    <div id="fotoStatus" class="mt-2" style="display: none;">
+                                        <span class="badge badge-success"><i class="fas fa-check"></i> Foto berhasil diupload</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                        <i class="fas fa-save"></i> Simpan & Lanjutkan ke Dashboard
+                    <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn">
+                        <i class="fas fa-save"></i> Simpan Password & Lanjutkan
                     </button>
                 </div>
             </form>
@@ -312,60 +430,37 @@
     </div>
 
     <div class="col-lg-4">
-        <!-- Welcome Card -->
-        <div class="card card-widget widget-user-2 shadow-sm">
-            <div class="widget-user-header bg-gradient-primary">
-                <div class="widget-user-image">
-                    <img class="img-circle elevation-2" id="welcomeFoto"
-                         src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff" 
-                         alt="User Avatar">
-                </div>
-                <h3 class="widget-user-username">{{ $user->name }}</h3>
-                <h5 class="widget-user-desc">Siswa Baru</h5>
-            </div>
-            <div class="card-footer p-0">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="fas fa-id-badge text-primary"></i> NISN
-                            <span class="float-right badge bg-primary">{{ $user->username }}</span>
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="fas fa-clock text-warning"></i> Status
-                            <span class="float-right badge bg-warning">Perlu Setup</span>
-                        </span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Tips Card -->
-        <div class="card card-success card-outline">
+        {{-- Security Tips Card --}}
+        <div class="card card-{{ $isAdminReset ? 'danger' : 'success' }} card-outline">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-lightbulb"></i> Tips Keamanan
+                    <i class="fas fa-shield-alt"></i> Tips Password Aman
                 </h3>
             </div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success"></i> Gunakan minimal 8 karakter
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success"></i> Kombinasi huruf besar & kecil
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success"></i> Tambahkan angka dan simbol
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-check text-success"></i> Jangan gunakan data pribadi
-                    </li>
-                    <li class="list-group-item">
-                        <i class="fas fa-envelope text-info"></i> Gunakan email yang aktif
-                    </li>
+                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Minimal 8 karakter</li>
+                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Kombinasi huruf besar & kecil</li>
+                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Tambahkan angka dan simbol</li>
+                    <li class="list-group-item"><i class="fas fa-times text-danger"></i> Jangan gunakan NISN / tanggal lahir</li>
+                    <li class="list-group-item"><i class="fas fa-times text-danger"></i> Jangan gunakan nama sendiri</li>
                 </ul>
+            </div>
+        </div>
+
+        {{-- User Info Card --}}
+        <div class="card card-outline card-primary">
+            <div class="card-body text-center">
+                <img class="img-circle elevation-2 mb-3" id="welcomeFoto"
+                     src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff"
+                     alt="User Avatar" style="width: 80px; height: 80px;">
+                <h5 class="mb-1">{{ $user->name }}</h5>
+                <p class="text-muted mb-2">NISN: {{ $user->username }}</p>
+                @if($isAdminReset)
+                    <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Wajib Ganti Password</span>
+                @else
+                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Perlu Setup</span>
+                @endif
             </div>
         </div>
     </div>
@@ -423,6 +518,15 @@ toastr.options = {
     "timeOut": "3000",
     "extendedTimeOut": "1000"
 };
+
+// Dismiss blocker overlay
+$('#btnDismissBlocker').on('click', function() {
+    $('#blockerOverlay').fadeOut(400, function() {
+        $(this).remove();
+        // Focus on password field
+        $('#password').focus();
+    });
+});
 
 var cropper = null;
 
