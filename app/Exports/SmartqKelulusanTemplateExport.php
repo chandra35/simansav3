@@ -49,7 +49,7 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
 
     public function headings(): array
     {
-        return ['NAMA', 'NISN', 'PERINGKAT MAPEL', 'PERINGKAT UMUM', 'MAPEL'];
+        return ['NAMA', 'NISN', 'PERINGKAT MAPEL', 'PERINGKAT UMUM', 'MAPEL', 'STATUS'];
     }
 
     public function array(): array
@@ -57,6 +57,7 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
         return $this->pesertas->map(fn($p) => [
             $p->siswa?->nama_lengkap ?? '-',
             $p->siswa?->user?->username ?? '-',
+            '', // admin fills
             '', // admin fills
             '', // admin fills
             '', // admin fills
@@ -71,6 +72,7 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
             'C' => 18,
             'D' => 18,
             'E' => 28,
+            'F' => 18,
         ];
     }
 
@@ -90,15 +92,16 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
         $sheet->getProtection()->setSheet(true);
         $sheet->getProtection()->setPassword('smartq');
 
-        // Unlock columns C, D, E for editing
+        // Unlock columns C, D, E, F for editing
         for ($row = 2; $row <= $lastRow; $row++) {
             $sheet->getStyle("C{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
             $sheet->getStyle("D{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
             $sheet->getStyle("E{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
+            $sheet->getStyle("F{$row}")->getProtection()->setLocked(Protection::PROTECTION_UNPROTECTED);
         }
 
         // Light yellow background for editable columns
-        $sheet->getStyle("C2:E{$lastRow}")->applyFromArray([
+        $sheet->getStyle("C2:F{$lastRow}")->applyFromArray([
             'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFFDE7']],
         ]);
 
@@ -114,6 +117,19 @@ class SmartqKelulusanDataSheet implements FromArray, WithHeadings, WithStyles, W
             $validation->setShowErrorMessage(true);
             $validation->setErrorTitle('Mapel tidak valid');
             $validation->setError('Pilih mapel dari daftar yang tersedia.');
+        }
+
+        // Add data validation (dropdown) for STATUS column
+        for ($row = 2; $row <= $lastRow; $row++) {
+            $validation = $sheet->getCell("F{$row}")->getDataValidation();
+            $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowDropDown(true);
+            $validation->setFormula1('"diterima,cadangan"');
+            $validation->setShowErrorMessage(true);
+            $validation->setErrorTitle('Status tidak valid');
+            $validation->setError('Gunakan: diterima atau cadangan');
         }
 
         return $styles;

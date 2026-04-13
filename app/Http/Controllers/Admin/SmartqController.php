@@ -1442,7 +1442,7 @@ class SmartqController extends Controller
 
         $file = $request->file('file');
 
-        // Parse rows from Excel: NAMA | NISN | PERINGKAT MAPEL | PERINGKAT UMUM | MAPEL
+        // Parse rows from Excel: NAMA | NISN | PERINGKAT MAPEL | PERINGKAT UMUM | MAPEL | STATUS
         $rows = [];
         $data = Excel::toArray(null, $file);
         $sheet = $data[0] ?? [];
@@ -1454,6 +1454,7 @@ class SmartqController extends Controller
             $namaMapel = trim($line[4] ?? '');
             $peringkatMapel = trim($line[2] ?? '');
             $peringkatUmum = trim($line[3] ?? '');
+            $status = strtolower(trim($line[5] ?? ''));
 
             // Skip rows without mapel (peserta belum diisi admin)
             if ($namaMapel === '') continue;
@@ -1464,6 +1465,7 @@ class SmartqController extends Controller
                 'peringkat_mapel' => $peringkatMapel !== '' ? (int) $peringkatMapel : null,
                 'peringkat_umum' => $peringkatUmum !== '' ? (int) $peringkatUmum : null,
                 'mapel' => $namaMapel,
+                'status' => $status,
             ];
         }
 
@@ -1492,6 +1494,18 @@ class SmartqController extends Controller
                 $rowNum++;
                 $nisn = $row['nisn'];
                 $namaMapel = $row['mapel'];
+                $status = $row['status'];
+
+                // Validate status
+                if (!in_array($status, ['diterima', 'cadangan'])) {
+                    $results['errors'][] = [
+                        'row' => $rowNum,
+                        'nisn' => $nisn,
+                        'nama' => $row['nama'],
+                        'error' => "Status '{$status}' tidak valid. Gunakan 'diterima' atau 'cadangan'.",
+                    ];
+                    continue;
+                }
 
                 // Validate mapel by nama
                 $mapelKey = mb_strtolower($namaMapel);
@@ -1517,8 +1531,10 @@ class SmartqController extends Controller
                     continue;
                 }
 
+                $dbStatus = $status === 'diterima' ? 'lulus' : 'cadangan';
+
                 $peserta->update([
-                    'status' => 'lulus',
+                    'status' => $dbStatus,
                     'bidang_mapel_id' => $mapelMap->get($mapelKey),
                     'ranking' => $row['peringkat_umum'],
                     'peringkat_mapel' => $row['peringkat_mapel'],
@@ -1529,6 +1545,7 @@ class SmartqController extends Controller
                     'row' => $rowNum,
                     'nisn' => $nisn,
                     'nama' => $nama,
+                    'status' => $status,
                     'mapel' => $namaMapel,
                     'peringkat_mapel' => $row['peringkat_mapel'],
                     'peringkat_umum' => $row['peringkat_umum'],

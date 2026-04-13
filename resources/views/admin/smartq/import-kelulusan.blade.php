@@ -34,7 +34,7 @@
             <div class="card-body">
                 <ol class="pl-3">
                     <li class="mb-2"><strong>Download template Excel</strong> — sudah berisi nama & NISN peserta</li>
-                    <li class="mb-2"><strong>Isi kolom kuning:</strong> Peringkat Mapel, Peringkat Umum, dan Mapel</li>
+                    <li class="mb-2"><strong>Isi kolom kuning:</strong> Peringkat Mapel, Peringkat Umum, Mapel, dan Status</li>
                     <li class="mb-2"><strong>Upload file</strong> — sistem akan memproses dan menampilkan hasil</li>
                 </ol>
 
@@ -45,8 +45,8 @@
                         <li><strong>MAPEL:</strong> pilih dari dropdown atau ketik nama mapel pilihan</li>
                         <li><strong>Peringkat Mapel:</strong> ranking dalam mapel tersebut</li>
                         <li><strong>Peringkat Umum:</strong> ranking keseluruhan</li>
+                        <li><strong>STATUS:</strong> pilih <code>diterima</code> atau <code>cadangan</code></li>
                         <li>Baris tanpa MAPEL akan <strong>dilewati</strong> (hanya proses yang sudah diisi)</li>
-                        <li>Semua peserta yang diimport akan berstatus <strong>Lulus/Diterima</strong></li>
                     </ul>
                 </div>
             </div>
@@ -167,6 +167,7 @@
                                     <th width="80">P. Mapel</th>
                                     <th width="80">P. Umum</th>
                                     <th width="120">Mapel</th>
+                                    <th width="90">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="successTableBody"></tbody>
@@ -307,7 +308,10 @@ $(function() {
                     if (d.success_count > 0) {
                         var html = '';
                         d.success_rows.forEach(function(r) {
-                            html += '<tr><td>' + r.row + '</td><td>' + r.nama + '</td><td>' + r.nisn + '</td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + r.mapel + '</span></td></tr>';
+                            var badge = r.status === 'diterima'
+                                ? '<span class="badge badge-success">Diterima</span>'
+                                : '<span class="badge badge-warning">Cadangan</span>';
+                            html += '<tr><td>' + r.row + '</td><td>' + r.nama + '</td><td>' + r.nisn + '</td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + r.mapel + '</span></td><td>' + badge + '</td></tr>';
                         });
                         $('#successTableBody').html(html);
                         $('#successDetail').show();
