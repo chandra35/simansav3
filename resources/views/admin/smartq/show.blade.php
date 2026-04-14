@@ -306,15 +306,30 @@
     </div>
 
     {{-- Tabel Ranking --}}
-    <div class="card card-outline card-primary">
-        <div class="card-header py-2">
-            <h3 class="card-title"><i class="fas fa-trophy text-warning"></i> Ranking Peserta</h3>
-            <div class="card-tools">
-                <span class="badge badge-primary" id="totalPesertaBadge">{{ $stats['total'] }} peserta</span>
+    <div class="card" style="border:0;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.10);overflow:hidden;margin-bottom:1.5rem">
+        <div class="card-header" style="background:linear-gradient(135deg,#1e3a5f,#2563eb)!important;color:#fff!important;border:0;padding:14px 20px">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-trophy" style="color:#fbbf24;font-size:1.1rem;margin-right:10px"></i>
+                    <span style="font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff">Ranking Peserta</span>
+                    <span id="totalPesertaBadge" style="background:rgba(255,255,255,.18);color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;margin-left:10px;font-weight:500">{{ $stats['total'] }} peserta</span>
+                </div>
+                <a href="{{ route('admin.smartq.export', $smartq) }}" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:4px 14px;font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+                    <i class="fas fa-file-excel"></i> <span class="d-none d-md-inline">Export Excel</span>
+                </a>
             </div>
         </div>
+        {{-- Filter strip --}}
+        <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <small class="text-muted" style="margin-right:4px"><i class="fas fa-filter"></i> Filter:</small>
+            <button class="rank-filter-pill active" data-filter="all">Semua <span class="rank-pill-cnt">{{ $stats['total'] }}</span></button>
+            <button class="rank-filter-pill" data-filter="lulus">Diterima <span class="rank-pill-cnt">{{ $stats['lulus'] }}</span></button>
+            <button class="rank-filter-pill" data-filter="cadangan">Cadangan <span class="rank-pill-cnt">{{ $stats['cadangan'] }}</span></button>
+            <button class="rank-filter-pill" data-filter="tidak_lulus">Tidak Lulus <span class="rank-pill-cnt">{{ $stats['tidak_lulus'] }}</span></button>
+            <button class="rank-filter-pill" data-filter="terdaftar">Belum Diproses <span class="rank-pill-cnt">{{ $stats['terdaftar'] }}</span></button>
+        </div>
         <div class="card-body p-0">
-            <table id="rankingTable" class="table table-bordered table-dark-header table-sm mb-0" style="width:100%">
+            <table id="rankingTable" class="table table-hover table-sm mb-0" style="width:100%">
                 <thead>
                     <tr id="rankingHead"></tr>
                 </thead>
@@ -325,6 +340,75 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
+<style>
+/* ===== Ranking Table Professional ===== */
+#rankingTable thead tr th {
+    background: #1e3a5f !important;
+    color: #cbd5e1 !important;
+    border: none !important;
+    font-size: .71rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 10px 7px !important;
+    white-space: nowrap;
+    font-weight: 600;
+}
+#rankingTable thead tr th.col-highlight {
+    background: #162d4a !important;
+    color: #93c5fd !important;
+}
+#rankingTable tbody tr td {
+    border-top: 1px solid #f1f5f9 !important;
+    border-left: none !important;
+    border-right: none !important;
+    vertical-align: middle !important;
+    font-size: .83rem;
+    padding: 7px 7px !important;
+}
+#rankingTable tbody tr:hover > td { background: #eff6ff !important; }
+#rankingTable tbody tr.table-success > td { background: #f0fdf4 !important; }
+#rankingTable tbody tr.table-success > td:first-child { border-left: 3px solid #16a34a !important; }
+#rankingTable tbody tr.table-warning > td { background: #fffbeb !important; }
+#rankingTable tbody tr.table-warning > td:first-child { border-left: 3px solid #d97706 !important; }
+#rankingTable tbody tr.table-danger > td { background: #fef2f2 !important; }
+#rankingTable tbody tr.table-danger > td:first-child { border-left: 3px solid #dc2626 !important; }
+#rankingTable td.col-total { color: #2563eb !important; font-weight: 700 !important; font-size: .9rem; }
+/* DataTables toolbar */
+.ranking-dt-top { background: #fff; border-bottom: 1px solid #f1f5f9; }
+.ranking-dt-foot { background: #fff; border-top: 1px solid #f1f5f9; }
+.ranking-dt-top .dataTables_length label,
+.ranking-dt-top .dataTables_filter label { font-weight: 500; font-size: .83rem; margin-bottom: 0; color: #475569; }
+.ranking-dt-top .dataTables_filter input { border-radius: 8px; border: 1px solid #e2e8f0; padding: 4px 10px; font-size: .83rem; outline: none; }
+.ranking-dt-top .dataTables_filter input:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.ranking-dt-foot .dataTables_info { font-size: .8rem; color: #64748b; }
+.ranking-dt-foot .dataTables_paginate .paginate_button { font-size: .8rem; border-radius: 6px !important; }
+/* Filter pills */
+.rank-filter-pill {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: .77rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.rank-filter-pill:hover { border-color: #94a3b8; color: #334155; }
+.rank-filter-pill.active { background: #2563eb; color: #fff; border-color: #2563eb; box-shadow: 0 2px 8px rgba(37,99,235,.3); }
+.rank-pill-cnt {
+    background: rgba(0,0,0,.08);
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: .7rem;
+    font-weight: 700;
+}
+.rank-filter-pill.active .rank-pill-cnt { background: rgba(255,255,255,.25); }
+</style>
 @stop
 
 @section('js')
@@ -333,6 +417,24 @@
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var dtRanking = null;
+    var _rankFilter = 'all';
+
+    // Custom filter for ranking by status
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'rankingTable') return true;
+        if (_rankFilter === 'all') return true;
+        return data[data.length - 1] === _rankFilter;
+    });
+
+    // Filter pill click handler
+    $(document).on('click', '.rank-filter-pill', function() {
+        _rankFilter = $(this).data('filter');
+        $('.rank-filter-pill').removeClass('active');
+        $(this).addClass('active');
+        if (dtRanking) dtRanking.draw();
+    });
+
     // ========== RANKING DATATABLE ==========
     $.ajax({
         url: '{{ route("admin.smartq.ranking.data", $smartq) }}',
@@ -352,24 +454,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function initRankingTable(data, komponen) {
-        // Build thead columns in correct order
-        var headHtml = '<th class="text-center" width="55">Rank</th>';
-        headHtml += '<th width="95">No. Peserta</th>';
+        // Build thead columns
+        var headHtml = '<th class="text-center" width="50">Rank</th>';
+        headHtml += '<th width="90">No. Peserta</th>';
         headHtml += '<th>Nama Siswa</th>';
-        headHtml += '<th width="100">NISN</th>';
-        headHtml += '<th width="120">Kelas Asal</th>';
+        headHtml += '<th width="95">NISN</th>';
+        headHtml += '<th width="110">Kelas Asal</th>';
         komponen.forEach(function(k) {
-            headHtml += '<th class="text-center" width="85" title="' + k.nama + ' (' + k.bobot + '%)">' +
-                k.kode + '<br><small>' + k.bobot + '%</small></th>';
+            headHtml += '<th class="text-center" width="80" title="' + k.nama + ' (' + k.bobot + ')">' +
+                k.kode + '<br><small class="text-info">' + k.bobot + '</small></th>';
         });
-        headHtml += '<th class="text-center col-highlight" width="85">Total</th>';
-        headHtml += '<th class="text-center" width="100">Status</th>';
-        headHtml += '<th class="text-center" width="120">Bidang</th>';
-        headHtml += '<th class="text-center" width="70">P. Mapel</th>';
-        headHtml += '<th class="text-center" width="65">Aksi</th>';
+        headHtml += '<th class="text-center col-highlight" width="80">Total</th>';
+        headHtml += '<th class="text-center" width="95">Status</th>';
+        headHtml += '<th class="text-center" width="110">Bidang</th>';
+        headHtml += '<th class="text-center" width="65">P.Mapel</th>';
+        headHtml += '<th class="text-center" width="60">Aksi</th>';
+        headHtml += '<th style="display:none"></th>'; // status_raw for filter
         $('#rankingHead').html(headHtml);
 
-        // Column definitions matching thead order
+        // Column definitions
         var columns = [
             { data: 'ranking_display', className: 'text-center' },
             { data: 'nomor_peserta' },
@@ -380,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
         komponen.forEach(function(k) {
             columns.push({ data: 'komponen_' + k.id, className: 'text-center' });
         });
-        columns.push({ data: 'total', className: 'text-center font-weight-bold text-primary' });
+        columns.push({ data: 'total', className: 'text-center col-total' });
         columns.push({ data: 'status', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'bidang', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'peringkat_mapel', className: 'text-center' });
@@ -394,8 +497,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return '<button class="btn btn-xs btn-outline-danger btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + row.nama + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
             }
         });
+        columns.push({ data: 'status_raw', visible: false, searchable: false }); // for filter
 
-        $('#rankingTable').DataTable({
+        dtRanking = $('#rankingTable').DataTable({
             data: data,
             columns: columns,
             order: [[0, 'asc']],
@@ -405,11 +509,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json'
             },
             createdRow: function(row, rowData) {
-                if (rowData.row_class) {
-                    $(row).addClass(rowData.row_class);
-                }
+                if (rowData.row_class) $(row).addClass(rowData.row_class);
             },
-            dom: '<"row px-3 pt-2"<"col-sm-6"l><"col-sm-6"f>>rtip',
+            dom: '<"ranking-dt-top d-flex align-items-center justify-content-between flex-wrap px-3 py-2"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"ranking-dt-foot d-flex align-items-center justify-content-between flex-wrap px-3 py-2"ip>',
+            autoWidth: false,
         });
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
