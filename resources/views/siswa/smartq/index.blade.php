@@ -77,6 +77,38 @@
         font-weight: 600;
         margin-top: 5px;
     }
+    .open-track-card {
+        margin-top: 16px;
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .open-track-card .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .open-track-card .title {
+        font-size: .82rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    .open-track-card .value {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: .92rem;
+    }
 </style>
 @stop
 
@@ -120,6 +152,20 @@
                     Anda masuk dalam daftar <strong>CADANGAN</strong> SMART-Q Kelas Unggulan
                 @endif
             </p>
+        </div>
+
+        <div class="open-track-card">
+            <div class="d-flex align-items-center" style="gap:10px;">
+                <span class="icon"><i class="fas fa-envelope-open-text"></i></span>
+                <div>
+                    <div class="title">Status Amplop Pengumuman</div>
+                    <div class="value">Pengumuman sudah Anda buka</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="title">Waktu Buka Pertama</div>
+                <div class="value">{{ optional($peserta->pengumuman_dibuka_at)->format('d M Y, H:i') ?? '-' }}</div>
+            </div>
         </div>
 
         {{-- Bidang Card --}}

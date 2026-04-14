@@ -313,6 +313,9 @@
                     <i class="fas fa-trophy" style="color:#fbbf24;font-size:1.1rem;margin-right:10px"></i>
                     <span style="font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff">Ranking Peserta</span>
                     <span id="totalPesertaBadge" style="background:rgba(255,255,255,.18);color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;margin-left:10px;font-weight:500">{{ $stats['total'] }} peserta</span>
+                    <span id="openedPesertaBadge" style="background:rgba(16,185,129,.25);color:#d1fae5;border:1px solid rgba(167,243,208,.35);border-radius:20px;padding:2px 10px;font-size:.78rem;margin-left:8px;font-weight:500">
+                        <i class="fas fa-envelope-open-text"></i> {{ $stats['pengumuman_dibuka'] ?? 0 }} dibuka
+                    </span>
                 </div>
                 <a href="{{ route('admin.smartq.export', $smartq) }}" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:4px 14px;font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
                     <i class="fas fa-file-excel"></i> <span class="d-none d-md-inline">Export Excel</span>
@@ -487,6 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headHtml += '<th class="text-center col-highlight" width="80">Total</th>';
         headHtml += '<th class="text-center" width="95">Status</th>';
         headHtml += '<th class="text-center" width="110">Bidang</th>';
+        headHtml += '<th class="text-center" width="110">Amplop</th>';
         headHtml += '<th class="text-center" width="65">P.Mapel</th>';
         headHtml += '<th class="text-center" width="60">Aksi</th>';
         headHtml += '<th style="display:none"></th>'; // status_raw for filter
@@ -506,6 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
         columns.push({ data: 'total', className: 'text-center col-total' });
         columns.push({ data: 'status', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'bidang', className: 'text-center', orderable: false, searchable: false });
+        columns.push({ data: 'pengumuman_dibuka', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'peringkat_mapel', className: 'text-center' });
         columns.push({
             data: null,
@@ -536,6 +541,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
+        var openedCount = data.filter(function(row) { return Number(row.pengumuman_dibuka_raw || 0) === 1; }).length;
+        $('#openedPesertaBadge').html('<i class="fas fa-envelope-open-text"></i> ' + openedCount + ' dibuka');
     }
 
     // ========== RESET KELULUSAN PER PESERTA ==========

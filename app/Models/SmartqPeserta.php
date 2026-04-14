@@ -22,6 +22,9 @@ class SmartqPeserta extends Model
         'total_nilai',
         'ranking',
         'peringkat_mapel',
+        'pengumuman_dibuka_at',
+        'pengumuman_dibuka_ip',
+        'pengumuman_dibuka_user_agent',
         'catatan',
     ];
 
@@ -29,6 +32,7 @@ class SmartqPeserta extends Model
         'total_nilai' => 'decimal:2',
         'ranking' => 'integer',
         'peringkat_mapel' => 'integer',
+        'pengumuman_dibuka_at' => 'datetime',
     ];
 
     public function periode()

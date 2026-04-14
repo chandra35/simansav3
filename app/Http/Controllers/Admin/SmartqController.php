@@ -92,6 +92,7 @@ class SmartqController extends Controller
             'cadangan' => $pesertas->where('status', 'cadangan')->count(),
             'tidak_lulus' => $pesertas->where('status', 'tidak_lulus')->count(),
             'terdaftar' => $pesertas->where('status', 'terdaftar')->count(),
+            'pengumuman_dibuka' => $pesertas->whereNotNull('pengumuman_dibuka_at')->count(),
             'rata_rata' => $pesertas->avg('total_nilai') ?? 0,
             'tertinggi' => $pesertas->max('total_nilai') ?? 0,
             'terendah' => $pesertas->where('total_nilai', '>', 0)->min('total_nilai') ?? 0,
@@ -1151,6 +1152,10 @@ class SmartqController extends Controller
             $row['bidang'] = $p->bidangMapel
                 ? '<span class="badge badge-info" title="' . e($p->bidangMapel->nama_mapel) . '">' . e($p->bidangMapel->kode_mapel) . '</span>'
                 : '<span class="text-muted">-</span>';
+            $row['pengumuman_dibuka'] = $p->pengumuman_dibuka_at
+                ? '<span class="badge badge-success"><i class="fas fa-envelope-open-text"></i> Dibuka</span><br><small class="text-muted">' . $p->pengumuman_dibuka_at->format('d/m H:i') . '</small>'
+                : '<span class="badge badge-secondary"><i class="fas fa-envelope"></i> Belum</span>';
+            $row['pengumuman_dibuka_raw'] = $p->pengumuman_dibuka_at ? 1 : 0;
             $row['peringkat_mapel'] = $p->peringkat_mapel ?? '-';
             $row['peserta_id'] = $p->id;
             $row['row_class'] = $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : ''));
