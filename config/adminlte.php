@@ -477,7 +477,7 @@ return [
             'text' => 'SMART-Q Unggulan',
             'icon' => 'fas fa-fw fa-star text-warning',
             'route' => 'admin.smartq.index',
-            'can' => 'admin-access',
+            'can' => 'admin-menu-only',
             'active' => ['admin/smartq*'],
         ],
         

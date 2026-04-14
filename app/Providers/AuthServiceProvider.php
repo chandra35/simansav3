@@ -26,6 +26,13 @@ class AuthServiceProvider extends ServiceProvider
                 in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
 
+        Gate::define('admin-menu-only', function ($user) {
+            return (
+                $user->hasAnyRole(['Super Admin', 'Admin', 'Operator']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'])
+            ) && !$user->hasRole('Siswa') && !$user->siswa()->exists();
+        });
+
         Gate::define('super-admin-access', function ($user) {
             return $user->hasRole('Super Admin') || $user->role === 'super_admin';
         });
