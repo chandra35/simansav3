@@ -137,31 +137,34 @@
 {{-- PREVIEW SECTION (full width) --}}
 <div id="previewSection" style="display: none;">
     {{-- Stats bar --}}
-    <div class="row">
-        <div class="col-md-4">
-            <div class="info-box shadow-sm">
-                <span class="info-box-icon bg-secondary"><i class="fas fa-list"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Baris Dibaca</span>
-                    <span class="info-box-number" id="previewTotal">0</span>
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <div class="import-stat-card import-stat-card--gray">
+                <div class="import-stat-card__icon"><i class="fas fa-list"></i></div>
+                <div class="import-stat-card__body">
+                    <div class="import-stat-card__label">Total Baris Dibaca</div>
+                    <div class="import-stat-card__value" id="previewTotal">0</div>
+                    <div class="import-stat-card__desc">Data yang terbaca dari file Excel</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="info-box shadow-sm" id="boxValid">
-                <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Data Valid (Siap Simpan)</span>
-                    <span class="info-box-number" id="countValid">0</span>
+        <div class="col-md-4 mb-2">
+            <div class="import-stat-card import-stat-card--green" id="boxValid">
+                <div class="import-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+                <div class="import-stat-card__body">
+                    <div class="import-stat-card__label">Data Valid</div>
+                    <div class="import-stat-card__value" id="countValid">0</div>
+                    <div class="import-stat-card__desc">Siap disimpan ke database</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="info-box shadow-sm" id="boxInvalid">
-                <span class="info-box-icon bg-danger"><i class="fas fa-times-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Data Bermasalah</span>
-                    <span class="info-box-number" id="countInvalid">0</span>
+        <div class="col-md-4 mb-2">
+            <div class="import-stat-card import-stat-card--red" id="boxInvalid">
+                <div class="import-stat-card__icon"><i class="fas fa-times-circle"></i></div>
+                <div class="import-stat-card__body">
+                    <div class="import-stat-card__label">Data Bermasalah</div>
+                    <div class="import-stat-card__value" id="countInvalid">0</div>
+                    <div class="import-stat-card__desc">Perlu diperbaiki di file Excel</div>
                 </div>
             </div>
         </div>
@@ -204,19 +207,25 @@
         <div class="card-footer bg-white border-0 pb-2"></div>
     </div>
 
-    {{-- Action Buttons --}}
-    <div class="card shadow-sm">
+    {{-- Confirm + Batal bar --}}
+    <div class="card import-confirm-bar mb-4">
         <div class="card-body py-3">
             <div class="row align-items-center">
-                <div class="col-md-4">
+                <div class="col-md-5">
+                    <p class="mb-0 text-success font-weight-600">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Periksa data di atas, lalu klik <strong>Konfirmasi & Simpan</strong> jika sudah benar.
+                    </p>
+                </div>
+                <div class="col-md-3 mt-2 mt-md-0">
                     <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
-                        <i class="fas fa-undo"></i> Batal & Upload Ulang
+                        <i class="fas fa-undo mr-1"></i> Batal & Upload Ulang
                     </button>
                 </div>
-                <div class="col-md-5 offset-md-3">
-                    <button type="button" class="btn btn-success btn-lg btn-block" id="btnConfirm" disabled>
-                        <i class="fas fa-save"></i> Konfirmasi & Simpan
-                        <span class="badge badge-light font-weight-bold" id="confirmCount">0</span> data valid
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <button type="button" class="btn btn-success btn-lg btn-block font-weight-bold" id="btnConfirm" disabled>
+                        <i class="fas fa-save mr-1"></i> Konfirmasi & Simpan
+                        <span class="badge badge-light font-weight-bold ml-1" id="confirmCount">0</span>
                     </button>
                 </div>
             </div>
@@ -226,43 +235,45 @@
 
 {{-- FINAL RESULT SECTION --}}
 <div id="finalResultSection" style="display: none;">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="info-box shadow-sm">
-                <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Berhasil Disimpan</span>
-                    <span class="info-box-number" id="countSuccess">0</span>
+    <div class="row mb-3">
+        <div class="col-md-6 mb-2">
+            <div class="import-stat-card import-stat-card--green">
+                <div class="import-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+                <div class="import-stat-card__body">
+                    <div class="import-stat-card__label">Berhasil Disimpan</div>
+                    <div class="import-stat-card__value" id="countSuccess">0</div>
+                    <div class="import-stat-card__desc">Data kelulusan berhasil diperbarui</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="info-box shadow-sm">
-                <span class="info-box-icon bg-danger"><i class="fas fa-times-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Gagal Disimpan</span>
-                    <span class="info-box-number" id="countError">0</span>
+        <div class="col-md-6 mb-2">
+            <div class="import-stat-card import-stat-card--red">
+                <div class="import-stat-card__icon"><i class="fas fa-times-circle"></i></div>
+                <div class="import-stat-card__body">
+                    <div class="import-stat-card__label">Gagal Disimpan</div>
+                    <div class="import-stat-card__value" id="countError">0</div>
+                    <div class="import-stat-card__desc">Perlu diperiksa kembali</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="successDetail" style="display: none;">
-        <div class="card card-success card-outline shadow">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-check-circle"></i> Data Berhasil Disimpan</h3>
+        <div class="card import-result-card mb-3">
+            <div class="card-header" style="background:linear-gradient(135deg,#10b981,#34d399);border-bottom:0;">
+                <h3 class="card-title text-white mb-0"><i class="fas fa-check-circle mr-2"></i> Data Berhasil Disimpan</h3>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm table-striped mb-0">
-                    <thead class="thead-dark">
+                <table class="table table-hover mb-0">
+                    <thead>
                         <tr>
-                            <th width="50" class="text-center">No</th>
+                            <th class="text-center" width="50">#</th>
                             <th>Nama Peserta</th>
-                            <th width="120">NISN</th>
+                            <th width="130">NISN</th>
                             <th class="text-center" width="90">P. Mapel</th>
                             <th class="text-center" width="90">P. Umum</th>
-                            <th width="140">Bidang Mapel</th>
-                            <th width="110">Status</th>
+                            <th width="150">Bidang Mapel</th>
+                            <th width="120">Status</th>
                         </tr>
                     </thead>
                     <tbody id="successTableBody"></tbody>
@@ -272,17 +283,17 @@
     </div>
 
     <div id="errorDetail" style="display: none;">
-        <div class="card card-danger card-outline shadow">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Data Gagal</h3>
+        <div class="card import-result-card mb-3">
+            <div class="card-header" style="background:linear-gradient(135deg,#fb7185,#f43f5e);border-bottom:0;">
+                <h3 class="card-title text-white mb-0"><i class="fas fa-exclamation-triangle mr-2"></i> Data Gagal</h3>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm table-striped mb-0">
-                    <thead class="thead-dark">
+                <table class="table table-hover mb-0">
+                    <thead>
                         <tr>
-                            <th width="50" class="text-center">No</th>
+                            <th class="text-center" width="50">#</th>
                             <th>Nama Peserta</th>
-                            <th width="120">NISN</th>
+                            <th width="130">NISN</th>
                             <th>Keterangan Kendala</th>
                         </tr>
                     </thead>
@@ -307,56 +318,134 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
 <style>
+    /* ====== IMPORT FORM CARD ====== */
     .custom-file-label { border: 2px dashed #ced4da; border-radius: 6px; transition: border-color .2s; }
     .custom-file-label:hover { border-color: #ffc107; }
     .custom-file-label::after { content: "Pilih File"; }
-    #previewSection, #finalResultSection { animation: fadeSlideIn .4s ease; }
+
+    /* ====== STAT CARDS ====== */
+    .import-stat-card {
+        position: relative; overflow: hidden; border: 0;
+        border-radius: 16px; padding: .8rem .9rem;
+        color: #fff; box-shadow: 0 10px 22px rgba(15,23,42,.10);
+        display: flex; align-items: center; gap: .75rem;
+    }
+    .import-stat-card::after {
+        content: ""; position: absolute; right: -24px; bottom: -28px;
+        width: 120px; height: 120px; border-radius: 999px;
+        background: rgba(255,255,255,.12);
+    }
+    .import-stat-card--gray  { background: linear-gradient(135deg,#64748b,#94a3b8); }
+    .import-stat-card--green { background: linear-gradient(135deg,#10b981,#34d399); }
+    .import-stat-card--red   { background: linear-gradient(135deg,#fb7185,#f43f5e); }
+    .import-stat-card__icon {
+        width: 42px; height: 42px; border-radius: 12px; flex: 0 0 42px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,.18); font-size: 1rem; position: relative; z-index: 1;
+    }
+    .import-stat-card__body { position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; }
+    .import-stat-card__label { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .9; margin-bottom: .15rem; }
+    .import-stat-card__value { font-size: 1.55rem; font-weight: 800; line-height: 1; margin-bottom: .2rem; }
+    .import-stat-card__desc  { font-size: .75rem; opacity: .88; line-height: 1.3; }
+
+    /* ====== PREVIEW CARD ====== */
+    .import-preview-card {
+        border: 0; border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,.08); overflow: hidden;
+    }
+    .import-preview-card .card-header {
+        background: linear-gradient(135deg,rgba(37,99,235,.97),rgba(13,148,136,.88));
+        color: #fff; border-bottom: 0; padding: .75rem 1rem;
+    }
+    .import-preview-card .card-header .card-title { color: #fff; font-size: 1rem; }
+
+    /* ====== FILTER PILLS ====== */
+    .filter-pill {
+        display: inline-flex; align-items: center; gap: .35rem;
+        padding: .28rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
+        border: 1.5px solid rgba(255,255,255,.45); color: rgba(255,255,255,.85);
+        background: rgba(255,255,255,.12); cursor: pointer;
+        transition: all .18s; user-select: none;
+    }
+    .filter-pill:hover { background: rgba(255,255,255,.22); color: #fff; }
+    .filter-pill.active { background: rgba(255,255,255,.95); border-color: transparent; color: #1e3a5f; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+    .filter-pill .pill-count { font-size: .72rem; background: rgba(0,0,0,.12); border-radius: 999px; padding: .05rem .45rem; font-weight: 700; }
+    .filter-pill.active .pill-count { background: rgba(37,99,235,.15); }
+
+    /* ====== TABLE ====== */
+    #previewTable thead th {
+        background: #f8fafc; color: #475569;
+        font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; border-bottom: 2px solid #e2e8f0;
+        white-space: nowrap; padding: .55rem .75rem;
+    }
+    #previewTable tbody td { padding: .6rem .75rem; vertical-align: middle; font-size: .875rem; border-color: #f1f5f9; }
+    #previewTable tbody tr:hover td { background-color: #f8fafc !important; }
+    #previewTable tbody tr.row-valid td { background-color: #f0fdf4 !important; }
+    #previewTable tbody tr.row-invalid td { background-color: #fff1f2 !important; }
+    #previewTable tbody tr.row-valid td:first-child { border-left: 3px solid #22c55e; }
+    #previewTable tbody tr.row-invalid td:first-child { border-left: 3px solid #f43f5e; }
+
+    /* Peserta cell */
+    .peserta-nama { font-weight: 700; font-size: .88rem; color: #0f172a; }
+    .peserta-nisn { font-size: .77rem; color: #64748b; font-family: "SFMono-Regular",Consolas,monospace; letter-spacing: .02em; }
+    .peserta-match { font-size: .73rem; margin-top: 3px; }
+    .peserta-match.ok   { color: #16a34a; }
+    .peserta-match.warn { color: #d97706; }
+    .peserta-match.fail { color: #dc2626; }
+
+    /* Badges */
+    .badge-pill-success { background: #dcfce7; color: #15803d; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
+    .badge-pill-warning { background: #fef9c3; color: #a16207; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
+    .badge-pill-info    { background: #e0f2fe; color: #0369a1; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
+    .badge-pill-danger  { background: #fee2e2; color: #b91c1c; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
+    .badge-pill-gray    { background: #f1f5f9; color: #64748b; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
+
+    /* DataTables controls */
+    #previewTable_wrapper { padding: 0; }
+    #previewTable_wrapper .dataTables_length,
+    #previewTable_wrapper .dataTables_filter { font-size: .84rem; padding: .75rem 1rem .5rem; }
+    #previewTable_wrapper .dataTables_info { font-size: .8rem; color: #64748b; padding: .5rem 1rem .75rem; }
+    #previewTable_wrapper .dataTables_paginate { padding: .4rem 1rem .75rem; }
+    #previewTable_wrapper .dataTables_paginate .page-link { border-radius: 8px; font-size: .82rem; }
+    #previewTable_wrapper .dataTables_filter input { border-radius: 8px; border: 1.5px solid #e2e8f0; padding: .3rem .65rem; }
+    #previewTable_wrapper .dataTables_filter input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); outline: none; }
+
+    /* Confirm bar */
+    .import-confirm-bar {
+        border: 0; border-radius: 14px;
+        background: linear-gradient(135deg,#f0fdf4,#dcfce7);
+        box-shadow: 0 4px 16px rgba(16,185,129,.12);
+        border: 1.5px solid #bbf7d0;
+    }
+
+    /* Result cards */
+    .import-result-card {
+        border: 0; border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,.08); overflow: hidden;
+    }
+    .import-result-card thead th {
+        background: #f8fafc; color: #475569;
+        font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; padding: .55rem .75rem;
+        white-space: nowrap; border-bottom: 2px solid #e2e8f0;
+    }
+    .import-result-card tbody td { padding: .6rem .75rem; vertical-align: middle; font-size: .875rem; border-color: #f1f5f9; }
+    .import-result-card tbody tr:hover td { background: #f8fafc !important; }
+
+    /* Animations */
+    #previewSection, #finalResultSection { animation: fadeSlideIn .35s ease; }
     @keyframes fadeSlideIn {
-        from { opacity: 0; transform: translateY(-12px); }
+        from { opacity: 0; transform: translateY(-10px); }
         to   { opacity: 1; transform: translateY(0); }
     }
-    /* Preview table row colors */
-    #previewTable tbody tr.row-valid td { background-color: #f0fff4 !important; }
-    #previewTable tbody tr.row-invalid td { background-color: #fff5f5 !important; }
-    #previewTable tbody tr.row-invalid td:first-child { border-left: 3px solid #dc3545 !important; }
-    #previewTable tbody tr.row-valid td:first-child { border-left: 3px solid #28a745 !important; }
-    /* Peserta cell styling */
-    .peserta-cell .peserta-nama { font-weight: 600; font-size: 0.9rem; color: #343a40; }
-    .peserta-cell .peserta-nisn { font-size: 0.78rem; color: #6c757d; font-family: monospace; }
-    .peserta-cell .match-status { font-size: 0.75rem; margin-top: 2px; }
-    /* match icons */
-    .match-ok { color: #28a745; }
-    .match-fail { color: #dc3545; }
-    .match-icon { font-size: 0.9rem; }
-    /* info-box adjustment */
-    .info-box { min-height: 60px; }
-    .info-box-icon { width: 70px; font-size: 1.5rem; }
-    .info-box-number { font-size: 1.8rem; }
-    /* filter buttons */
-    #filterBtns .btn { transition: all .15s; }
-    #filterBtns .btn .badge { font-size: 0.75rem; min-width: 20px; }
-    /* filter buttons active */
-    #filterBtns .btn.active { font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-    /* DataTables controls area */
-    #previewTable_wrapper { padding: 0; }
-    #previewTable_wrapper .row { padding: 0 1px; }
-    #previewTable_wrapper .dataTables_length,
-    #previewTable_wrapper .dataTables_filter { font-size: 0.85rem; }
-    #previewTable_wrapper .dataTables_info { font-size: 0.82rem; color: #6c757d; }
-    #previewTable_wrapper .dataTables_paginate { font-size: 0.85rem; }
-    #previewTable_wrapper .dataTables_paginate .paginate_button { padding: 2px 8px; }
-    /* Confirmation bar */
-    #previewSection > .card:last-child { border-top: 3px solid #28a745; }
 </style>
 @stop
 
 @section('js')
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
 <script>
 $(function() {
     var tempPath = null;
@@ -440,25 +529,25 @@ $(function() {
                     var cls = r.valid ? 'row-valid' : 'row-invalid';
 
                     // Peserta cell: nama + nisn + match indicator
-                    var namaMatch = r.nisn_match
+                    var namaMatchHtml = r.nisn_match
                         ? (r.nama_match
-                            ? '<span class="match-status text-success"><i class="fas fa-check-circle"></i> Nama cocok</span>'
-                            : '<span class="match-status text-warning"><i class="fas fa-exclamation-circle"></i> Nama berbeda: <em>' + escHtml(r.nama_db) + '</em></span>')
-                        : '<span class="match-status text-danger"><i class="fas fa-times-circle"></i> NISN tidak ditemukan</span>';
-                    var pesertaCell = '<div class="peserta-cell">'
+                            ? '<div class="peserta-match ok"><i class="fas fa-check-circle"></i> Nama cocok</div>'
+                            : '<div class="peserta-match warn"><i class="fas fa-exclamation-circle"></i> Nama berbeda: <em>' + escHtml(r.nama_db) + '</em></div>')
+                        : '<div class="peserta-match fail"><i class="fas fa-times-circle"></i> NISN tidak ditemukan</div>';
+                    var pesertaCell = '<div>'
                         + '<div class="peserta-nama">' + escHtml(r.nama_file) + '</div>'
-                        + '<div class="peserta-nisn"><i class="fas fa-id-card fa-xs text-muted mr-1"></i>' + escHtml(r.nisn) + '</div>'
-                        + namaMatch
+                        + '<div class="peserta-nisn"><i class="fas fa-id-card fa-xs mr-1"></i>' + escHtml(r.nisn) + '</div>'
+                        + namaMatchHtml
                         + '</div>';
 
                     // Mapel cell
                     var mapelCell = '';
                     if (r.mapel) {
                         mapelCell = r.mapel_match
-                            ? '<span class="badge badge-info px-2 py-1">' + escHtml(r.mapel) + '</span>'
-                            : '<span class="badge badge-secondary px-2 py-1">' + escHtml(r.mapel) + '</span> <small class="text-danger">tidak dikenal</small>';
+                            ? '<span class="badge-pill-info">' + escHtml(r.mapel) + '</span>'
+                            : '<span class="badge-pill-gray">' + escHtml(r.mapel) + '</span> <small class="text-danger"><i class="fas fa-exclamation-circle"></i> tidak dikenal</small>';
                     } else {
-                        mapelCell = '<span class="text-muted"><em>kosong</em></span>';
+                        mapelCell = '<span class="text-muted fst-italic">—</span>';
                     }
 
                     // Status cell
@@ -466,19 +555,19 @@ $(function() {
                     if (r.status) {
                         if (r.status_valid) {
                             statusBadge = r.status === 'diterima'
-                                ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check"></i> Diterima</span>'
-                                : '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-clock"></i> Cadangan</span>';
+                                ? '<span class="badge-pill-success"><i class="fas fa-check mr-1"></i>Diterima</span>'
+                                : '<span class="badge-pill-warning"><i class="fas fa-clock mr-1"></i>Cadangan</span>';
                         } else {
-                            statusBadge = '<span class="badge badge-secondary">' + escHtml(r.status) + '</span><br><small class="text-danger">tidak valid</small>';
+                            statusBadge = '<span class="badge-pill-danger">' + escHtml(r.status) + '</span><br><small class="text-danger">tidak valid</small>';
                         }
                     } else {
-                        statusBadge = '<span class="text-muted"><em>kosong</em></span>';
+                        statusBadge = '<span class="badge-pill-gray">Kosong</span>';
                     }
 
                     // Keterangan cell
                     var keterangan = r.valid
-                        ? '<span class="text-success"><i class="fas fa-check-circle"></i> <strong>Siap disimpan</strong></span>'
-                        : '<ul class="mb-0 pl-3">' + r.errors.map(function(e) { return '<li class="text-danger"><small>' + escHtml(e) + '</small></li>'; }).join('') + '</ul>';
+                        ? '<span class="text-success font-weight-600"><i class="fas fa-check-circle mr-1"></i>Siap disimpan</span>'
+                        : '<div>' + r.errors.map(function(e) { return '<div class="d-flex align-items-start" style="gap:4px"><i class="fas fa-dot-circle text-danger mt-1" style="font-size:.65rem;flex:0 0 auto"></i><small class="text-danger">' + escHtml(e) + '</small></div>'; }).join('') + '</div>';
 
                     html += '<tr class="' + cls + '" data-valid="' + (r.valid ? '1' : '0') + '">'
                         + '<td class="text-center align-middle"><strong>' + r.row + '</strong></td>'
@@ -521,7 +610,7 @@ $(function() {
                         paginate: { first: '«', last: '»', next: '›', previous: '‹' },
                         zeroRecords: 'Tidak ada data yang sesuai filter.'
                     },
-                    responsive: true,
+                    responsive: false,
                     columnDefs: [
                         { orderable: false, targets: [1, 6] },
                         { className: 'text-center align-middle', targets: [0, 2, 3] },
@@ -531,9 +620,7 @@ $(function() {
                         +'<"row"<"col-12"t>>'
                         +'<"row mt-2 mb-1"<"col-sm-6"i><"col-sm-6"p>>',
                     drawCallback: function() {
-                        // Update info badges after draw
-                        var info = this.api().page.info();
-                        $('#filterBtns .btn[data-filter="all"] #fcAll').text(info.recordsTotal);
+                        $('#fcAll').text(this.api().page.info().recordsTotal);
                     }
                 });
 
@@ -545,31 +632,10 @@ $(function() {
                 $('#fcValid').text(totalValid);
                 $('#fcInvalid').text(totalInvalid);
 
-                // If there are errors, auto-highlight invalid badge
-                if (totalInvalid > 0) {
-                    $('#fcInvalid').addClass('badge-danger').removeClass('badge-light');
-                }
-                if (totalValid > 0) {
-                    $('#fcValid').addClass('badge-success').removeClass('badge-light');
-                }
-
-                // Filter buttons click
-                $('#filterBtns .btn').off('click').on('click', function() {
-                    $('#filterBtns .btn').removeClass('active btn-secondary btn-success btn-danger')
-                        .addClass(function() {
-                            var f = $(this).data('filter');
-                            return f === 'valid' ? 'btn-outline-success'
-                                : f === 'invalid' ? 'btn-outline-danger'
-                                : 'btn-outline-secondary';
-                        });
-                    $(this).removeClass('btn-outline-secondary btn-outline-success btn-outline-danger')
-                        .addClass('active')
-                        .addClass(function() {
-                            var f = $(this).data('filter');
-                            return f === 'valid' ? 'btn-success'
-                                : f === 'invalid' ? 'btn-danger'
-                                : 'btn-secondary';
-                        });
+                // Filter pill click handler
+                $('#filterBtns .filter-pill').off('click').on('click', function() {
+                    $('#filterBtns .filter-pill').removeClass('active');
+                    $(this).addClass('active');
                     currentFilter = $(this).data('filter');
                     dtPreview.draw();
                 });
@@ -616,7 +682,7 @@ $(function() {
         });
     });
 
-    // Filter buttons (global click handler removed - handled inside DataTable init)
+    // Filter buttons (handled inside DataTable init after data loaded)
 
     // Batal button
     $('#btnBatal').on('click', function() {
@@ -666,9 +732,9 @@ $(function() {
                         var html = '';
                         d.success_rows.forEach(function(r) {
                             var badge = r.status === 'diterima'
-                                ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check"></i> Diterima</span>'
-                                : '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-clock"></i> Cadangan</span>';
-                            html += '<tr><td class="text-center">' + r.row + '</td><td><strong>' + escHtml(r.nama) + '</strong></td><td><code>' + escHtml(r.nisn) + '</code></td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + escHtml(r.mapel) + '</span></td><td>' + badge + '</td></tr>';
+                                ? '<span class="badge-pill-success"><i class="fas fa-check mr-1"></i>Diterima</span>'
+                                : '<span class="badge-pill-warning"><i class="fas fa-clock mr-1"></i>Cadangan</span>';
+                            html += '<tr><td class="text-center">' + r.row + '</td><td><strong>' + escHtml(r.nama) + '</strong></td><td><span class="peserta-nisn">' + escHtml(r.nisn) + '</span></td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge-pill-info">' + escHtml(r.mapel) + '</span></td><td>' + badge + '</td></tr>';
                         });
                         $('#successTableBody').html(html);
                         $('#successDetail').show();
