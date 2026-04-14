@@ -43,12 +43,14 @@ APP_DIR="$(detect_app_dir)" || {
 AUTO_STASH="${AUTO_STASH:-1}"
 GIT_REMOTE="${GIT_REMOTE:-origin}"
 GIT_BRANCH="${GIT_BRANCH:-master}"
+APP_USER="${APP_USER:-www}"
+APP_GROUP="${APP_GROUP:-www}"
 
 MAINTENANCE_ON=0
 
 cleanup_on_exit() {
     if [[ $MAINTENANCE_ON -eq 1 ]]; then
-        "$PHP_BIN" artisan up 2>/dev/null || true
+        run_artisan up 2>/dev/null || true
     fi
 }
 
@@ -61,6 +63,18 @@ if [[ -z "$PHP_BIN" ]]; then
     echo -e "${RED}[ERROR]${NC} Binary PHP tidak ditemukan."
     exit 1
 fi
+
+run_as_app_user() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        sudo -u "$APP_USER" "$@"
+    else
+        "$@"
+    fi
+}
+
+run_artisan() {
+    run_as_app_user "$PHP_BIN" artisan "$@"
+}
 
 # Function untuk print dengan warna
 print_status() {
@@ -112,7 +126,7 @@ fi
 
 # Enable maintenance mode
 print_status "Mengaktifkan maintenance mode..."
-"$PHP_BIN" artisan down --retry=60 2>/dev/null || true
+run_artisan down --retry=60 2>/dev/null || true
 MAINTENANCE_ON=1
 
 # Pull dari GitHub
@@ -148,7 +162,7 @@ fi
 
 # Jalankan migrasi database
 print_status "Menjalankan migrasi database..."
-"$PHP_BIN" artisan migrate --force
+run_artisan migrate --force
 if [ $? -eq 0 ]; then
     print_success "Migrasi database berhasil"
 else
@@ -159,22 +173,22 @@ fi
 print_status "Membersihkan cache..."
 
 echo "  - Clearing application cache..."
-"$PHP_BIN" artisan cache:clear
+run_artisan cache:clear
 
 echo "  - Clearing config cache..."
-"$PHP_BIN" artisan config:clear
+run_artisan config:clear
 
 echo "  - Clearing route cache..."
-"$PHP_BIN" artisan route:clear
+run_artisan route:clear
 
 echo "  - Clearing view cache..."
-"$PHP_BIN" artisan view:clear
+run_artisan view:clear
 
 echo "  - Clearing compiled classes..."
-"$PHP_BIN" artisan clear-compiled 2>/dev/null || true
+run_artisan clear-compiled 2>/dev/null || true
 
 echo "  - Clearing event cache..."
-"$PHP_BIN" artisan event:clear 2>/dev/null || true
+run_artisan event:clear 2>/dev/null || true
 
 print_success "Semua cache telah dibersihkan"
 
@@ -182,37 +196,39 @@ print_success "Semua cache telah dibersihkan"
 print_status "Membangun ulang cache untuk production..."
 
 echo "  - Caching config..."
-"$PHP_BIN" artisan config:cache
+run_artisan config:cache
 
 echo "  - Caching routes..."
-"$PHP_BIN" artisan route:cache
+run_artisan route:cache
 
 echo "  - Caching views..."
-"$PHP_BIN" artisan view:cache
+run_artisan view:cache
 
 print_success "Cache production telah dibangun"
 
 # Optimize
 print_status "Mengoptimasi aplikasi..."
-"$PHP_BIN" artisan optimize 2>/dev/null || true
+run_artisan optimize 2>/dev/null || true
 
 # Storage link (jika belum ada)
 print_status "Mengecek storage link..."
 if [ ! -L "public/storage" ]; then
-    "$PHP_BIN" artisan storage:link
+    run_artisan storage:link
     print_success "Storage link dibuat"
 else
     print_success "Storage link sudah ada"
 fi
 
-# Set permission (opsional, sesuaikan dengan kebutuhan)
+# Set ownership/permission (penting agar cache tidak permission denied)
 print_status "Mengatur permission..."
-chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+chown -R "$APP_USER":"$APP_GROUP" storage bootstrap/cache 2>/dev/null || true
+find storage bootstrap/cache -type d -exec chmod 2775 {} \; 2>/dev/null || true
+find storage bootstrap/cache -type f -exec chmod 664 {} \; 2>/dev/null || true
 print_success "Permission diatur"
 
 # Disable maintenance mode
 print_status "Menonaktifkan maintenance mode..."
-"$PHP_BIN" artisan up
+run_artisan up
 MAINTENANCE_ON=0
 
 # Tampilkan versi dan info
