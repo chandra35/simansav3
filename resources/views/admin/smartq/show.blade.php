@@ -363,16 +363,36 @@
     border-right: none !important;
     vertical-align: middle !important;
     font-size: .83rem;
-    padding: 7px 7px !important;
+    padding: 9px 8px !important;
+    line-height: 1.35;
 }
 #rankingTable tbody tr:hover > td { background: #eff6ff !important; }
-#rankingTable tbody tr.table-success > td { background: #f0fdf4 !important; }
+#rankingTable tbody tr.table-success > td { background: #f9fdf9 !important; }
 #rankingTable tbody tr.table-success > td:first-child { border-left: 3px solid #16a34a !important; }
-#rankingTable tbody tr.table-warning > td { background: #fffbeb !important; }
+#rankingTable tbody tr.table-warning > td { background: #fffdf7 !important; }
 #rankingTable tbody tr.table-warning > td:first-child { border-left: 3px solid #d97706 !important; }
-#rankingTable tbody tr.table-danger > td { background: #fef2f2 !important; }
+#rankingTable tbody tr.table-danger > td { background: #fff8f8 !important; }
 #rankingTable tbody tr.table-danger > td:first-child { border-left: 3px solid #dc2626 !important; }
 #rankingTable td.col-total { color: #2563eb !important; font-weight: 700 !important; font-size: .9rem; }
+#rankingTable td.text-center { white-space: nowrap; }
+
+.btn-reset-kelulusan {
+    border-radius: 999px !important;
+    border-width: 1px !important;
+    width: 30px;
+    height: 30px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    transition: all .15s ease;
+}
+.btn-reset-kelulusan:hover {
+    background: #dc3545 !important;
+    color: #fff !important;
+    border-color: #dc3545 !important;
+    transform: translateY(-1px);
+}
 /* DataTables toolbar */
 .ranking-dt-top { background: #fff; border-bottom: 1px solid #f1f5f9; }
 .ranking-dt-foot { background: #fff; border-top: 1px solid #f1f5f9; }
@@ -494,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
             searchable: false,
             render: function(data, type, row) {
                 if (!row.peserta_id || row.status_raw === 'terdaftar') return '<span class="text-muted">-</span>';
-                return '<button class="btn btn-xs btn-outline-danger btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + row.nama + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
+                return '<button class="btn btn-xs btn-outline-danger btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + (row.nama_sort || '-') + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
             }
         });
         columns.push({ data: 'status_raw', visible: false, searchable: false }); // for filter
