@@ -171,26 +171,43 @@
     </div>
 
     {{-- Preview Table --}}
-    <div class="card import-preview-card">
-        <div class="card-header">
-            <div class="d-flex align-items-center flex-wrap" style="gap:8px">
-                <h3 class="card-title mb-0 mr-2">
-                    <i class="fas fa-table mr-1"></i> Preview Data Import
-                </h3>
-                <div id="filterBtns" class="d-flex" style="gap:6px;flex-wrap:wrap">
-                    <span class="filter-pill active" data-filter="all">
-                        <i class="fas fa-list fa-xs"></i> Semua <span class="pill-count" id="fcAll">0</span>
-                    </span>
-                    <span class="filter-pill" data-filter="valid">
-                        <i class="fas fa-check fa-xs"></i> Valid <span class="pill-count" id="fcValid">0</span>
-                    </span>
-                    <span class="filter-pill" data-filter="invalid">
-                        <i class="fas fa-times fa-xs"></i> Bermasalah <span class="pill-count" id="fcInvalid">0</span>
-                    </span>
+    <div class="card" style="border:0;border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,.10);overflow:hidden">
+        {{-- Gradient header with inline override --}}
+        <div class="card-header" style="background:linear-gradient(135deg,#2563eb,#0d9488)!important;border-bottom:1px solid rgba(255,255,255,.15)!important;padding:.7rem 1rem!important">
+            <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:8px">
+                <div class="d-flex align-items-center" style="gap:8px">
+                    <div style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-table" style="color:#fff;font-size:.9rem"></i>
+                    </div>
+                    <div>
+                        <div style="color:rgba(255,255,255,.75);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Langkah 2 dari 3</div>
+                        <div style="color:#fff;font-weight:700;font-size:.95rem;line-height:1.2">Preview Data Import</div>
+                    </div>
+                </div>
+                <div style="color:rgba(255,255,255,.8);font-size:.8rem">
+                    Periksa data sebelum menyimpan
                 </div>
             </div>
         </div>
-        <div class="card-body p-0">
+
+        {{-- Filter tabs strip --}}
+        <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:.55rem 1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-right:4px">Filter:</span>
+            <div id="filterBtns" style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="filter-pill active" data-filter="all">
+                    <i class="fas fa-list fa-xs"></i> Semua <span class="pill-count" id="fcAll">0</span>
+                </button>
+                <button type="button" class="filter-pill" data-filter="valid">
+                    <i class="fas fa-check-circle fa-xs"></i> Valid <span class="pill-count" id="fcValid">0</span>
+                </button>
+                <button type="button" class="filter-pill" data-filter="invalid">
+                    <i class="fas fa-times-circle fa-xs"></i> Bermasalah <span class="pill-count" id="fcInvalid">0</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- DataTable --}}
+        <div class="card-body" style="padding:0">
             <table id="previewTable" class="table table-hover mb-0" style="width:100%">
                 <thead>
                     <tr>
@@ -209,23 +226,23 @@
     </div>
 
     {{-- Confirm + Batal bar --}}
-    <div class="card import-confirm-bar mb-4">
-        <div class="card-body py-3">
+    <div class="card mb-4" style="border:0;border-radius:14px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #bbf7d0;box-shadow:0 4px 16px rgba(16,185,129,.1)">
+        <div class="card-body" style="padding:.85rem 1.1rem">
             <div class="row align-items-center">
-                <div class="col-md-5">
-                    <p class="mb-0 text-success font-weight-600">
+                <div class="col-lg-5 mb-2 mb-lg-0">
+                    <p class="mb-0" style="color:#15803d;font-size:.88rem">
                         <i class="fas fa-info-circle mr-1"></i>
                         Periksa data di atas, lalu klik <strong>Konfirmasi & Simpan</strong> jika sudah benar.
                     </p>
                 </div>
-                <div class="col-md-3 mt-2 mt-md-0">
+                <div class="col-lg-3 mb-2 mb-lg-0">
                     <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
-                        <i class="fas fa-undo mr-1"></i> Batal & Upload Ulang
+                        <i class="fas fa-undo mr-1"></i> Batal
                     </button>
                 </div>
-                <div class="col-md-4 mt-2 mt-md-0">
+                <div class="col-lg-4">
                     <button type="button" class="btn btn-success btn-lg btn-block font-weight-bold" id="btnConfirm" disabled>
-                        <i class="fas fa-save mr-1"></i> Konfirmasi & Simpan
+                        <i class="fas fa-save mr-1"></i> Konfirmasi &amp; Simpan
                         <span class="badge badge-light font-weight-bold ml-1" id="confirmCount">0</span>
                     </button>
                 </div>
@@ -350,29 +367,22 @@
     .import-stat-card__value { font-size: 1.55rem; font-weight: 800; line-height: 1; margin-bottom: .2rem; }
     .import-stat-card__desc  { font-size: .75rem; opacity: .88; line-height: 1.3; }
 
-    /* ====== PREVIEW CARD ====== */
-    .import-preview-card {
-        border: 0; border-radius: 18px;
-        box-shadow: 0 14px 30px rgba(15,23,42,.08); overflow: hidden;
-    }
-    .import-preview-card .card-header {
-        background: linear-gradient(135deg,rgba(37,99,235,.97),rgba(13,148,136,.88));
-        color: #fff; border-bottom: 0; padding: .75rem 1rem;
-    }
-    .import-preview-card .card-header .card-title { color: #fff; font-size: 1rem; }
+    /* Remove unused preview card class */
+    .import-preview-card { border: 0; border-radius: 16px; overflow: hidden; }
+    .import-confirm-bar { display: none; } /* replaced with inline */
 
-    /* ====== FILTER PILLS ====== */
+    /* ====== FILTER PILLS (light bg, not on gradient) ====== */
     .filter-pill {
-        display: inline-flex; align-items: center; gap: .35rem;
-        padding: .28rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
-        border: 1.5px solid rgba(255,255,255,.45); color: rgba(255,255,255,.85);
-        background: rgba(255,255,255,.12); cursor: pointer;
-        transition: all .18s; user-select: none;
+        display: inline-flex; align-items: center; gap: .3rem;
+        padding: .3rem .8rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
+        border: 1.5px solid #e2e8f0; color: #64748b;
+        background: #fff; cursor: pointer;
+        transition: all .15s; user-select: none; line-height: 1;
     }
-    .filter-pill:hover { background: rgba(255,255,255,.22); color: #fff; }
-    .filter-pill.active { background: rgba(255,255,255,.95); border-color: transparent; color: #1e3a5f; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
-    .filter-pill .pill-count { font-size: .72rem; background: rgba(0,0,0,.12); border-radius: 999px; padding: .05rem .45rem; font-weight: 700; }
-    .filter-pill.active .pill-count { background: rgba(37,99,235,.15); }
+    .filter-pill:hover { border-color: #94a3b8; color: #374151; background: #f1f5f9; }
+    .filter-pill.active { background: #2563eb; border-color: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.3); }
+    .filter-pill.active .pill-count { background: rgba(255,255,255,.25); color: #fff; }
+    .filter-pill .pill-count { font-size: .71rem; background: #e2e8f0; border-radius: 999px; padding: .05rem .42rem; font-weight: 700; color: #475569; transition: all .15s; }
 
     /* ====== TABLE ====== */
     #previewTable thead th {
@@ -651,8 +661,8 @@ $(function() {
                 $('#fcValid').text(totalValid);
                 $('#fcInvalid').text(totalInvalid);
 
-                // Filter pill click handler
-                $('#filterBtns .filter-pill').off('click').on('click', function() {
+                // Filter pill click handler (works for both span and button)
+                $('#filterBtns').off('click', '.filter-pill').on('click', '.filter-pill', function() {
                     $('#filterBtns .filter-pill').removeClass('active');
                     $(this).addClass('active');
                     currentFilter = $(this).data('filter');
