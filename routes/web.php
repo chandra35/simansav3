@@ -117,6 +117,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Pengaturan - Cek NIP (Super Admin Only)
     Route::get('/pengaturan/cek-nip', [App\Http\Controllers\Admin\NipCheckerController::class, 'index'])->name('pengaturan.cek-nip.index');
     Route::post('/pengaturan/cek-nip/check', [App\Http\Controllers\Admin\NipCheckerController::class, 'check'])->name('pengaturan.cek-nip.check');
+
+    // Pengaturan - Cek NIK Dukcapil (Super Admin Only)
+    Route::get('/pengaturan/cek-nik', [App\Http\Controllers\Admin\NikCheckerController::class, 'index'])->name('pengaturan.cek-nik.index');
+    Route::post('/pengaturan/cek-nik/check', [App\Http\Controllers\Admin\NikCheckerController::class, 'check'])->name('pengaturan.cek-nik.check');
     
     // Pengaturan - Cek NISN (Super Admin Only)
     Route::get('/pengaturan/cek-nisn', [App\Http\Controllers\Admin\NisnCheckerController::class, 'index'])->name('pengaturan.cek-nisn.index');

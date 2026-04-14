@@ -847,6 +847,13 @@ return [
                     'active' => ['admin/pengaturan/cek-nip*'],
                 ],
                 [
+                    'text' => 'Cek NIK Dukcapil',
+                    'route' => 'admin.pengaturan.cek-nik.index',
+                    'icon' => 'fas fa-fw fa-fingerprint',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/cek-nik*'],
+                ],
+                [
                     'text' => 'Cek NISN Siswa',
                     'route' => 'admin.pengaturan.cek-nisn.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
