@@ -339,6 +339,9 @@
                 <thead>
                     <tr id="rankingHead"></tr>
                 </thead>
+                <tfoot>
+                    <tr id="rankingFoot"></tr>
+                </tfoot>
             </table>
         </div>
     </div>
@@ -358,6 +361,31 @@
     padding: 10px 7px !important;
     white-space: nowrap;
     font-weight: 600;
+}
+#rankingTable tfoot tr th {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 6px 6px !important;
+}
+#rankingTable tfoot tr th.filter-cell-empty {
+    background: #f8fafc !important;
+}
+#rankingTable .col-filter-input,
+#rankingTable .col-filter-select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    padding: 4px 7px;
+    font-size: .75rem;
+    color: #334155;
+    background: #fff;
+    outline: none;
+}
+#rankingTable .col-filter-input:focus,
+#rankingTable .col-filter-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.10);
 }
 #rankingTable thead tr th.col-highlight {
     background: #162d4a !important;
@@ -499,6 +527,24 @@ document.addEventListener('DOMContentLoaded', function() {
         headHtml += '<th style="display:none"></th>'; // status_raw for filter
         $('#rankingHead').html(headHtml);
 
+        var footHtml = '';
+        footHtml += '<th class="filter-cell-empty"></th>'; // Rank
+        footHtml += '<th><input type="text" class="col-filter-input" data-col="1" placeholder="No Peserta"></th>';
+        footHtml += '<th><input type="text" class="col-filter-input" data-col="2" placeholder="Nama"></th>';
+        footHtml += '<th><input type="text" class="col-filter-input" data-col="3" placeholder="NISN"></th>';
+        footHtml += '<th><input type="text" class="col-filter-input" data-col="4" placeholder="Kelas"></th>';
+        komponen.forEach(function() {
+            footHtml += '<th class="filter-cell-empty"></th>'; // Komponen nilai
+        });
+        footHtml += '<th class="filter-cell-empty"></th>'; // Total
+        footHtml += '<th><select class="col-filter-select" data-col="' + (komponen.length + 6) + '"><option value="">Semua Status</option><option value="Diterima">Diterima</option><option value="Cadangan">Cadangan</option><option value="Tidak Lulus">Tidak Lulus</option><option value="Terdaftar">Terdaftar</option></select></th>';
+        footHtml += '<th><input type="text" class="col-filter-input" data-col="' + (komponen.length + 7) + '" placeholder="Bidang"></th>';
+        footHtml += '<th><select class="col-filter-select" data-col="' + (komponen.length + 8) + '"><option value="">Semua Amplop</option><option value="Dibuka">Dibuka</option><option value="Belum">Belum</option></select></th>';
+        footHtml += '<th class="filter-cell-empty"></th>'; // P.Mapel
+        footHtml += '<th class="filter-cell-empty"></th>'; // Aksi
+        footHtml += '<th class="filter-cell-empty" style="display:none"></th>'; // status_raw hidden
+        $('#rankingFoot').html(footHtml);
+
         // Column definitions
         var columns = [
             { data: 'ranking_display', className: 'text-center' },
@@ -541,6 +587,14 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             dom: '<"ranking-dt-top d-flex align-items-center justify-content-between flex-wrap px-3 py-2"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"ranking-dt-foot d-flex align-items-center justify-content-between flex-wrap px-3 py-2"ip>',
             autoWidth: false,
+            initComplete: function() {
+                var api = this.api();
+                $('#rankingTable tfoot .col-filter-input, #rankingTable tfoot .col-filter-select').on('keyup change', function() {
+                    var colIdx = parseInt($(this).data('col'), 10);
+                    if (Number.isNaN(colIdx)) return;
+                    api.column(colIdx).search(this.value).draw();
+                });
+            },
         });
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
