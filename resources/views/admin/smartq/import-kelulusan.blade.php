@@ -171,40 +171,41 @@
     </div>
 
     {{-- Preview Table --}}
-    <div class="card card-outline card-warning shadow">
-        <div class="card-header py-2">
-            <div class="d-flex align-items-center flex-wrap" style="gap:10px">
-                <h3 class="card-title mb-0 mr-2"><i class="fas fa-table mr-1"></i> Preview Data Import</h3>
-                <div class="btn-group btn-group-sm" id="filterBtns">
-                    <button type="button" class="btn btn-secondary active" data-filter="all">
-                        <i class="fas fa-list"></i> Semua <span class="badge badge-light ml-1" id="fcAll">0</span>
-                    </button>
-                    <button type="button" class="btn btn-outline-success" data-filter="valid">
-                        <i class="fas fa-check"></i> Valid <span class="badge badge-success ml-1" id="fcValid">0</span>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" data-filter="invalid">
-                        <i class="fas fa-times"></i> Bermasalah <span class="badge badge-danger ml-1" id="fcInvalid">0</span>
-                    </button>
+    <div class="card import-preview-card">
+        <div class="card-header">
+            <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+                <h3 class="card-title mb-0 mr-2">
+                    <i class="fas fa-table mr-1"></i> Preview Data Import
+                </h3>
+                <div id="filterBtns" class="d-flex" style="gap:6px;flex-wrap:wrap">
+                    <span class="filter-pill active" data-filter="all">
+                        <i class="fas fa-list fa-xs"></i> Semua <span class="pill-count" id="fcAll">0</span>
+                    </span>
+                    <span class="filter-pill" data-filter="valid">
+                        <i class="fas fa-check fa-xs"></i> Valid <span class="pill-count" id="fcValid">0</span>
+                    </span>
+                    <span class="filter-pill" data-filter="invalid">
+                        <i class="fas fa-times fa-xs"></i> Bermasalah <span class="pill-count" id="fcInvalid">0</span>
+                    </span>
                 </div>
             </div>
         </div>
-        <div class="card-body px-3 pt-3 pb-0">
-            <table id="previewTable" class="table table-bordered table-hover mb-0" style="width:100%">
+        <div class="card-body p-0">
+            <table id="previewTable" class="table table-hover mb-0" style="width:100%">
                 <thead>
-                    <tr class="bg-warning text-dark">
-                        <th class="text-center" width="45">No</th>
+                    <tr>
+                        <th class="text-center" width="50">#</th>
                         <th width="260">Peserta</th>
-                        <th class="text-center" width="80">P. Mapel</th>
-                        <th class="text-center" width="80">P. Umum</th>
-                        <th width="160">Bidang Mapel</th>
-                        <th width="120">Status</th>
+                        <th class="text-center" width="85">P. Mapel</th>
+                        <th class="text-center" width="85">P. Umum</th>
+                        <th width="155">Bidang Mapel</th>
+                        <th width="125">Status</th>
                         <th>Keterangan</th>
                     </tr>
                 </thead>
                 <tbody id="previewTableBody"></tbody>
             </table>
         </div>
-        <div class="card-footer bg-white border-0 pb-2"></div>
     </div>
 
     {{-- Confirm + Batal bar --}}
@@ -402,15 +403,33 @@
     .badge-pill-danger  { background: #fee2e2; color: #b91c1c; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
     .badge-pill-gray    { background: #f1f5f9; color: #64748b; border-radius: 999px; padding: .25rem .65rem; font-size: .76rem; font-weight: 700; }
 
-    /* DataTables controls */
+    /* DataTables controls - inside card-body */
     #previewTable_wrapper { padding: 0; }
-    #previewTable_wrapper .dataTables_length,
-    #previewTable_wrapper .dataTables_filter { font-size: .84rem; padding: .75rem 1rem .5rem; }
-    #previewTable_wrapper .dataTables_info { font-size: .8rem; color: #64748b; padding: .5rem 1rem .75rem; }
-    #previewTable_wrapper .dataTables_paginate { padding: .4rem 1rem .75rem; }
-    #previewTable_wrapper .dataTables_paginate .page-link { border-radius: 8px; font-size: .82rem; }
-    #previewTable_wrapper .dataTables_filter input { border-radius: 8px; border: 1.5px solid #e2e8f0; padding: .3rem .65rem; }
-    #previewTable_wrapper .dataTables_filter input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); outline: none; }
+    #previewTable_wrapper .dataTables_length label,
+    #previewTable_wrapper .dataTables_filter label { font-size: .84rem; color: #64748b; margin: 0; }
+    #previewTable_wrapper .dataTables_length select,
+    #previewTable_wrapper .dataTables_filter input {
+        border: 1.5px solid #e2e8f0; border-radius: 8px;
+        padding: .28rem .55rem; font-size: .84rem; color: #374151;
+    }
+    #previewTable_wrapper .dataTables_filter input:focus {
+        border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); outline: none;
+    }
+    #previewTable_wrapper .dataTables_info { font-size: .8rem; color: #94a3b8; }
+    #previewTable_wrapper .dataTables_paginate .paginate_button {
+        border-radius: 6px !important; padding: 3px 10px !important; font-size: .82rem;
+    }
+    #previewTable_wrapper .dataTables_paginate .paginate_button.current,
+    #previewTable_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: #3b82f6 !important; border-color: #3b82f6 !important; color: #fff !important;
+    }
+    /* Remove vertical column borders from DataTables */
+    #previewTable.dataTable thead th,
+    #previewTable.dataTable tbody td { border-left: none !important; border-right: none !important; }
+    #previewTable.dataTable { border-collapse: collapse !important; }
+    /* Keep valid/invalid left accent */
+    #previewTable tbody tr.row-valid td:first-child { border-left: 3px solid #22c55e !important; }
+    #previewTable tbody tr.row-invalid td:first-child { border-left: 3px solid #f43f5e !important; }
 
     /* Confirm bar */
     .import-confirm-bar {
@@ -616,9 +635,9 @@ $(function() {
                         { className: 'text-center align-middle', targets: [0, 2, 3] },
                         { className: 'align-middle', targets: [1, 4, 5, 6] },
                     ],
-                    dom: '<"row align-items-center mb-2"<"col-sm-5"l><"col-sm-7"f>>'
-                        +'<"row"<"col-12"t>>'
-                        +'<"row mt-2 mb-1"<"col-sm-6"i><"col-sm-6"p>>',
+                    dom: '<"d-flex align-items-center justify-content-between px-3 pt-3 pb-2"<""l><""f>>'
+                        + 't'
+                        + '<"d-flex align-items-center justify-content-between px-3 pt-2 pb-3"<""i><""p>>',
                     drawCallback: function() {
                         $('#fcAll').text(this.api().page.info().recordsTotal);
                     }
