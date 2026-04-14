@@ -24,9 +24,11 @@
     <p class="mb-0 text-muted">Tahun Pelajaran: {{ $smartq->tahunPelajaran->nama ?? '-' }} &bull; Peserta: {{ $smartq->pesertas()->count() }}</p>
 </div>
 
+{{-- FORM SECTION --}}
+<div id="formSection">
 <div class="row">
-    {{-- Left: Info + Template --}}
-    <div class="col-lg-6">
+    {{-- Left: Info + Template + Mapel --}}
+    <div class="col-lg-5">
         <div class="card card-primary">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Panduan Import</h3>
@@ -98,7 +100,7 @@
     </div>
 
     {{-- Right: Upload Form --}}
-    <div class="col-lg-6">
+    <div class="col-lg-7">
         <div class="card card-warning">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-upload"></i> Upload File Kelulusan</h3>
@@ -128,150 +130,163 @@
             </div>
         </div>
 
-        {{-- Preview Section (hidden) --}}
-        <div id="previewSection" style="display: none;">
-            <div class="row">
-                <div class="col-6">
-                    <div class="small-box bg-success" id="boxValid">
-                        <div class="inner">
-                            <h3 id="countValid">0</h3>
-                            <p>Data Valid (Siap Simpan)</p>
-                        </div>
-                        <div class="icon"><i class="fas fa-check-circle"></i></div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="small-box bg-danger" id="boxInvalid">
-                        <div class="inner">
-                            <h3 id="countInvalid">0</h3>
-                            <p>Data Bermasalah</p>
-                        </div>
-                        <div class="icon"><i class="fas fa-times-circle"></i></div>
-                    </div>
-                </div>
-            </div>
+    </div>{{-- end col-lg-7 --}}
+</div>{{-- end row --}}
+</div>{{-- end #formSection --}}
 
-            <div class="card card-outline card-warning">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-search"></i> Preview Data Import</h3>
-                    <div class="card-tools">
-                        <span class="badge badge-secondary" id="previewTotal">0 baris</span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered mb-0" id="previewTable">
-                            <thead>
-                                <tr class="bg-warning">
-                                    <th width="40" class="text-center">No</th>
-                                    <th width="110">NISN</th>
-                                    <th>Nama (File)</th>
-                                    <th>Nama (Database)</th>
-                                    <th width="70" class="text-center">P.Mapel</th>
-                                    <th width="70" class="text-center">P.Umum</th>
-                                    <th width="130">Mapel</th>
-                                    <th width="90">Status</th>
-                                    <th width="55" class="text-center">Valid</th>
-                                    <th>Keterangan</th>
-                                </tr>
-                            </thead>
-                            <tbody id="previewTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-md-6 mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
-                        <i class="fas fa-redo"></i> Batal & Upload Ulang
-                    </button>
-                </div>
-                <div class="col-md-6 mb-2">
-                    <button type="button" class="btn btn-success btn-lg btn-block" id="btnConfirm" disabled>
-                        <i class="fas fa-save"></i> Konfirmasi & Simpan (<span id="confirmCount">0</span> data)
-                    </button>
+{{-- PREVIEW SECTION (full width) --}}
+<div id="previewSection" style="display: none;">
+    {{-- Stats bar --}}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-secondary"><i class="fas fa-list"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Baris Dibaca</span>
+                    <span class="info-box-number" id="previewTotal">0</span>
                 </div>
             </div>
         </div>
-
-        {{-- Final Result Section (hidden) --}}
-        <div id="finalResultSection" style="display: none;">
-            <div class="row">
-                <div class="col-6">
-                    <div class="small-box bg-success">
-                        <div class="inner">
-                            <h3 id="countSuccess">0</h3>
-                            <p>Berhasil Disimpan</p>
-                        </div>
-                        <div class="icon"><i class="fas fa-check-circle"></i></div>
-                    </div>
+        <div class="col-md-4">
+            <div class="info-box shadow-sm" id="boxValid">
+                <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Data Valid (Siap Simpan)</span>
+                    <span class="info-box-number" id="countValid">0</span>
                 </div>
-                <div class="col-6">
-                    <div class="small-box bg-danger">
-                        <div class="inner">
-                            <h3 id="countError">0</h3>
-                            <p>Gagal</p>
-                        </div>
-                        <div class="icon"><i class="fas fa-times-circle"></i></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="successDetail" style="display: none;">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-check-circle"></i> Data Berhasil Disimpan</h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-striped mb-0">
-                            <thead class="bg-success text-white">
-                                <tr>
-                                    <th width="50">Baris</th>
-                                    <th>Nama</th>
-                                    <th width="110">NISN</th>
-                                    <th width="80">P. Mapel</th>
-                                    <th width="80">P. Umum</th>
-                                    <th width="120">Mapel</th>
-                                    <th width="90">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="successTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="errorDetail" style="display: none;">
-                <div class="card card-danger card-outline">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Data Gagal</h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-striped mb-0">
-                            <thead class="bg-danger text-white">
-                                <tr>
-                                    <th width="50">Baris</th>
-                                    <th>Nama</th>
-                                    <th width="110">NISN</th>
-                                    <th>Kendala</th>
-                                </tr>
-                            </thead>
-                            <tbody id="errorTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-3">
-                <button type="button" class="btn btn-primary mr-2" onclick="location.reload()">
-                    <i class="fas fa-redo"></i> Import Ulang
-                </button>
-                <a href="{{ route('admin.smartq.show', $smartq) }}" class="btn btn-success">
-                    <i class="fas fa-eye"></i> Lihat Hasil di Periode
-                </a>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="info-box shadow-sm" id="boxInvalid">
+                <span class="info-box-icon bg-danger"><i class="fas fa-times-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Data Bermasalah</span>
+                    <span class="info-box-number" id="countInvalid">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Preview Table --}}
+    <div class="card card-outline card-warning shadow">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-table"></i> Preview Data Import</h3>
+            <div class="card-tools">
+                <div class="btn-group btn-group-sm mr-2" id="filterBtns">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">Semua</button>
+                    <button type="button" class="btn btn-outline-success" data-filter="valid"><i class="fas fa-check"></i> Valid</button>
+                    <button type="button" class="btn btn-outline-danger" data-filter="invalid"><i class="fas fa-times"></i> Bermasalah</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table id="previewTable" class="table table-bordered table-hover mb-0" style="width:100%">
+                <thead>
+                    <tr class="bg-warning text-dark">
+                        <th class="text-center" width="45">No</th>
+                        <th width="250">Peserta</th>
+                        <th class="text-center" width="80">P. Mapel</th>
+                        <th class="text-center" width="80">P. Umum</th>
+                        <th width="160">Bidang Mapel</th>
+                        <th width="120">Status</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody id="previewTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Action Buttons --}}
+    <div class="row mt-1 mb-4">
+        <div class="col-md-4">
+            <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
+                <i class="fas fa-redo"></i> Batal & Upload Ulang
+            </button>
+        </div>
+        <div class="col-md-4 offset-md-4">
+            <button type="button" class="btn btn-success btn-lg btn-block" id="btnConfirm" disabled>
+                <i class="fas fa-save"></i> Konfirmasi & Simpan &nbsp;<span class="badge badge-light" id="confirmCount">0</span> data valid
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- FINAL RESULT SECTION --}}
+<div id="finalResultSection" style="display: none;">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Berhasil Disimpan</span>
+                    <span class="info-box-number" id="countSuccess">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-danger"><i class="fas fa-times-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Gagal Disimpan</span>
+                    <span class="info-box-number" id="countError">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="successDetail" style="display: none;">
+        <div class="card card-success card-outline shadow">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-check-circle"></i> Data Berhasil Disimpan</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th width="50" class="text-center">No</th>
+                            <th>Nama Peserta</th>
+                            <th width="120">NISN</th>
+                            <th class="text-center" width="90">P. Mapel</th>
+                            <th class="text-center" width="90">P. Umum</th>
+                            <th width="140">Bidang Mapel</th>
+                            <th width="110">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="successTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorDetail" style="display: none;">
+        <div class="card card-danger card-outline shadow">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Data Gagal</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th width="50" class="text-center">No</th>
+                            <th>Nama Peserta</th>
+                            <th width="120">NISN</th>
+                            <th>Keterangan Kendala</th>
+                        </tr>
+                    </thead>
+                    <tbody id="errorTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-3 mb-4">
+        <button type="button" class="btn btn-primary mr-2" onclick="location.reload()">
+            <i class="fas fa-redo"></i> Import Ulang
+        </button>
+        <a href="{{ route('admin.smartq.show', $smartq) }}" class="btn btn-success btn-lg">
+            <i class="fas fa-eye"></i> Lihat Hasil di Periode
+        </a>
     </div>
 </div>
 
@@ -279,28 +294,55 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="/vendor/datatables/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="/vendor/datatables/css/responsive.bootstrap4.min.css">
 <style>
     .custom-file-label { border: 2px dashed #ced4da; border-radius: 6px; transition: border-color .2s; }
-    .custom-file-label:hover { border-color: #007bff; }
-    .custom-file-label::after { content: "Browse"; }
-    .small-box { border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,.12); }
-    #previewSection, #finalResultSection { animation: fadeSlideIn .5s ease; }
+    .custom-file-label:hover { border-color: #ffc107; }
+    .custom-file-label::after { content: "Pilih File"; }
+    #previewSection, #finalResultSection { animation: fadeSlideIn .4s ease; }
     @keyframes fadeSlideIn {
-        from { opacity: 0; transform: translateY(-15px); }
+        from { opacity: 0; transform: translateY(-12px); }
         to   { opacity: 1; transform: translateY(0); }
     }
-    #previewTable tbody tr.row-valid { background-color: #d4edda !important; }
-    #previewTable tbody tr.row-invalid { background-color: #f8d7da !important; }
-    .match-icon { font-size: 1rem; }
+    /* Preview table row colors */
+    #previewTable tbody tr.row-valid td { background-color: #f0fff4 !important; }
+    #previewTable tbody tr.row-invalid td { background-color: #fff5f5 !important; }
+    #previewTable tbody tr.row-invalid td { border-left: 3px solid #dc3545; }
+    #previewTable tbody tr.row-valid td { border-left: 3px solid #28a745; }
+    /* filter hidden */
+    #previewTable tbody tr.dt-hidden { display: none !important; }
+    /* Peserta cell styling */
+    .peserta-cell .peserta-nama { font-weight: 600; font-size: 0.9rem; color: #343a40; }
+    .peserta-cell .peserta-nisn { font-size: 0.78rem; color: #6c757d; font-family: monospace; }
+    .peserta-cell .match-status { font-size: 0.75rem; margin-top: 2px; }
+    /* match icons */
     .match-ok { color: #28a745; }
     .match-fail { color: #dc3545; }
+    .match-icon { font-size: 0.9rem; }
+    /* info-box adjustment */
+    .info-box { min-height: 60px; }
+    .info-box-icon { width: 70px; font-size: 1.5rem; }
+    .info-box-number { font-size: 1.8rem; }
+    /* filter buttons active */
+    #filterBtns .btn.active { font-weight: 700; }
+    /* DataTables spacing */
+    #previewTable_wrapper .dataTables_filter { margin-bottom: 8px; }
+    #previewTable_wrapper .dataTables_length label { font-size: 0.85rem; }
+    #previewTable_wrapper .dataTables_filter label { font-size: 0.85rem; }
 </style>
 @stop
 
 @section('js')
+<script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
+<script src="/vendor/datatables/js/dataTables.bootstrap4.min.js"></script>
+<script src="/vendor/datatables/js/dataTables.responsive.min.js"></script>
+<script src="/vendor/datatables/js/responsive.bootstrap4.min.js"></script>
 <script>
 $(function() {
     var tempPath = null;
+    var dtPreview = null;
+    var allRows = [];
 
     // File input label
     $('.custom-file-input').on('change', function() {
@@ -370,40 +412,86 @@ $(function() {
 
                 $('#countValid').text(d.valid_count);
                 $('#countInvalid').text(d.error_count);
-                $('#previewTotal').text(d.total + ' baris');
+                $('#previewTotal').text(d.total);
+                allRows = d.rows;
 
-                // Build preview table
+                // Build preview table rows
                 var html = '';
                 d.rows.forEach(function(r) {
                     var cls = r.valid ? 'row-valid' : 'row-invalid';
+
+                    // Peserta cell: nama + nisn + match indicator
+                    var namaMatch = r.nisn_match
+                        ? (r.nama_match
+                            ? '<span class="match-status text-success"><i class="fas fa-check-circle"></i> Nama cocok</span>'
+                            : '<span class="match-status text-warning"><i class="fas fa-exclamation-circle"></i> Nama berbeda: <em>' + escHtml(r.nama_db) + '</em></span>')
+                        : '<span class="match-status text-danger"><i class="fas fa-times-circle"></i> NISN tidak ditemukan</span>';
+                    var pesertaCell = '<div class="peserta-cell">'
+                        + '<div class="peserta-nama">' + escHtml(r.nama_file) + '</div>'
+                        + '<div class="peserta-nisn"><i class="fas fa-id-card fa-xs text-muted mr-1"></i>' + escHtml(r.nisn) + '</div>'
+                        + namaMatch
+                        + '</div>';
+
+                    // Mapel cell
+                    var mapelCell = '';
+                    if (r.mapel) {
+                        mapelCell = r.mapel_match
+                            ? '<span class="badge badge-info px-2 py-1">' + escHtml(r.mapel) + '</span>'
+                            : '<span class="badge badge-secondary px-2 py-1">' + escHtml(r.mapel) + '</span> <small class="text-danger">tidak dikenal</small>';
+                    } else {
+                        mapelCell = '<span class="text-muted"><em>kosong</em></span>';
+                    }
+
+                    // Status cell
                     var statusBadge = '';
                     if (r.status) {
-                        statusBadge = r.status_valid
-                            ? '<span class="badge badge-' + (r.status === 'diterima' ? 'success' : 'warning') + '">' + escHtml(r.status) + '</span> ' + matchIcon(true)
-                            : '<span class="badge badge-secondary">' + escHtml(r.status) + '</span> ' + matchIcon(false);
+                        if (r.status_valid) {
+                            statusBadge = r.status === 'diterima'
+                                ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check"></i> Diterima</span>'
+                                : '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-clock"></i> Cadangan</span>';
+                        } else {
+                            statusBadge = '<span class="badge badge-secondary">' + escHtml(r.status) + '</span><br><small class="text-danger">tidak valid</small>';
+                        }
                     } else {
-                        statusBadge = '<span class="text-muted">-</span>';
+                        statusBadge = '<span class="text-muted"><em>kosong</em></span>';
                     }
-                    var mapelCell = r.mapel_match
-                        ? '<span class="badge badge-info">' + escHtml(r.mapel) + '</span> ' + matchIcon(true)
-                        : '<span class="badge badge-secondary">' + escHtml(r.mapel) + '</span> ' + matchIcon(false);
-                    var namaMatchIcon = r.nisn_match ? ' ' + matchIcon(r.nama_match) : '';
-                    var errors = r.errors.length ? '<small class="text-danger">' + r.errors.map(escHtml).join('<br>') + '</small>' : '<span class="text-success"><i class="fas fa-check"></i> OK</span>';
 
-                    html += '<tr class="' + cls + '">'
-                        + '<td class="text-center">' + r.row + '</td>'
-                        + '<td>' + escHtml(r.nisn) + ' ' + matchIcon(r.nisn_match) + '</td>'
-                        + '<td>' + escHtml(r.nama_file) + '</td>'
-                        + '<td>' + escHtml(r.nama_db) + namaMatchIcon + '</td>'
-                        + '<td class="text-center">' + (r.peringkat_mapel || '-') + '</td>'
-                        + '<td class="text-center">' + (r.peringkat_umum || '-') + '</td>'
-                        + '<td>' + mapelCell + '</td>'
-                        + '<td>' + statusBadge + '</td>'
-                        + '<td class="text-center">' + matchIcon(r.valid) + '</td>'
-                        + '<td>' + errors + '</td>'
+                    // Keterangan cell
+                    var keterangan = r.valid
+                        ? '<span class="text-success"><i class="fas fa-check-circle"></i> <strong>Siap disimpan</strong></span>'
+                        : '<ul class="mb-0 pl-3">' + r.errors.map(function(e) { return '<li class="text-danger"><small>' + escHtml(e) + '</small></li>'; }).join('') + '</ul>';
+
+                    html += '<tr class="' + cls + '" data-valid="' + (r.valid ? '1' : '0') + '">'
+                        + '<td class="text-center align-middle"><strong>' + r.row + '</strong></td>'
+                        + '<td class="align-middle">' + pesertaCell + '</td>'
+                        + '<td class="text-center align-middle"><strong>' + (r.peringkat_mapel || '<span class="text-muted">-</span>') + '</strong></td>'
+                        + '<td class="text-center align-middle"><strong>' + (r.peringkat_umum || '<span class="text-muted">-</span>') + '</strong></td>'
+                        + '<td class="align-middle">' + mapelCell + '</td>'
+                        + '<td class="align-middle">' + statusBadge + '</td>'
+                        + '<td class="align-middle">' + keterangan + '</td>'
                         + '</tr>';
                 });
                 $('#previewTableBody').html(html);
+
+                // Init DataTable
+                if (dtPreview) { dtPreview.destroy(); }
+                dtPreview = $('#previewTable').DataTable({
+                    pageLength: 25,
+                    language: {
+                        search: 'Cari:',
+                        lengthMenu: 'Tampilkan _MENU_ baris',
+                        info: 'Menampilkan _START_-_END_ dari _TOTAL_ baris',
+                        infoEmpty: 'Tidak ada data',
+                        paginate: { first: 'Awal', last: 'Akhir', next: '>', previous: '<' },
+                        zeroRecords: 'Tidak ada data yang sesuai filter.'
+                    },
+                    responsive: true,
+                    columnDefs: [
+                        { orderable: false, targets: [0, 1, 6] },
+                        { className: 'text-center align-middle', targets: [0, 2, 3] },
+                    ],
+                    dom: '<"row align-items-center"<"col-sm-4"l><"col-sm-5"f><"col-sm-3 text-right">>rt<"row mt-2"<"col-sm-5"i><"col-sm-7"p>>',
+                });
 
                 // Enable confirm button if there are valid rows
                 if (d.valid_count > 0) {
@@ -414,8 +502,9 @@ $(function() {
                     $('#confirmCount').text('0');
                 }
 
-                $('#importForm').closest('.card').slideUp(300);
+                $('#formSection').slideUp(300);
                 $('#previewSection').show();
+                $('html, body').animate({ scrollTop: $('#previewSection').offset().top - 60 }, 400);
 
                 if (d.error_count > 0 && d.valid_count > 0) {
                     Swal.fire({
@@ -444,6 +533,28 @@ $(function() {
                 Swal.fire({ icon: 'error', title: 'Gagal', html: msg });
             }
         });
+    });
+
+    // Filter buttons
+    $(document).on('click', '#filterBtns .btn', function() {
+        $('#filterBtns .btn').removeClass('active');
+        $(this).addClass('active');
+        var filter = $(this).data('filter');
+        if (dtPreview) {
+            if (filter === 'all') {
+                dtPreview.rows().nodes().each(function(r) { $(r).removeClass('dt-hidden'); });
+            } else if (filter === 'valid') {
+                dtPreview.rows().nodes().each(function(r) {
+                    var isValid = $(r).data('valid') == '1';
+                    $(r).toggleClass('dt-hidden', !isValid);
+                });
+            } else {
+                dtPreview.rows().nodes().each(function(r) {
+                    var isValid = $(r).data('valid') == '1';
+                    $(r).toggleClass('dt-hidden', isValid);
+                });
+            }
+        }
     });
 
     // Batal button
@@ -494,9 +605,9 @@ $(function() {
                         var html = '';
                         d.success_rows.forEach(function(r) {
                             var badge = r.status === 'diterima'
-                                ? '<span class="badge badge-success">Diterima</span>'
-                                : '<span class="badge badge-warning">Cadangan</span>';
-                            html += '<tr><td>' + r.row + '</td><td>' + escHtml(r.nama) + '</td><td>' + escHtml(r.nisn) + '</td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + escHtml(r.mapel) + '</span></td><td>' + badge + '</td></tr>';
+                                ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check"></i> Diterima</span>'
+                                : '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-clock"></i> Cadangan</span>';
+                            html += '<tr><td class="text-center">' + r.row + '</td><td><strong>' + escHtml(r.nama) + '</strong></td><td><code>' + escHtml(r.nisn) + '</code></td><td class="text-center">' + (r.peringkat_mapel || '-') + '</td><td class="text-center">' + (r.peringkat_umum || '-') + '</td><td><span class="badge badge-info">' + escHtml(r.mapel) + '</span></td><td>' + badge + '</td></tr>';
                         });
                         $('#successTableBody').html(html);
                         $('#successDetail').show();
@@ -505,7 +616,7 @@ $(function() {
                     if (d.failed_count > 0) {
                         var html = '';
                         d.errors.forEach(function(r) {
-                            html += '<tr><td>' + r.row + '</td><td>' + escHtml(r.nama || '-') + '</td><td>' + escHtml(r.nisn) + '</td><td class="text-danger">' + escHtml(r.error) + '</td></tr>';
+                            html += '<tr><td class="text-center">' + r.row + '</td><td>' + escHtml(r.nama || '-') + '</td><td><code>' + escHtml(r.nisn) + '</code></td><td><span class="text-danger">' + escHtml(r.error) + '</span></td></tr>';
                         });
                         $('#errorTableBody').html(html);
                         $('#errorDetail').show();
@@ -513,6 +624,7 @@ $(function() {
 
                     $('#previewSection').slideUp(300);
                     $('#finalResultSection').show();
+                    $('html, body').animate({ scrollTop: 0 }, 400);
 
                     if (d.failed_count === 0) {
                         Swal.fire({ icon: 'success', title: 'Berhasil Disimpan!', html: '<strong>' + d.success_count + '</strong> data kelulusan berhasil disimpan.' });
