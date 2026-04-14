@@ -9,6 +9,14 @@
 {{-- CSS is in the second @section('css') below --}}
 
 @section('content')
+@if(session('warning'))
+<div class="alert alert-warning alert-dismissible fade show mx-1 mt-1" role="alert">
+    <i class="fas fa-exclamation-triangle mr-1"></i> {{ session('warning') }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+@endif
 <!-- Page Loading Overlay with Lottie Animation -->
 <div class="page-loader" id="pageLoader">
     <div class="loader-content">

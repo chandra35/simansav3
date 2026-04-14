@@ -13,7 +13,7 @@ class SmartqController extends Controller
         $siswa = $user->siswa;
 
         if (!$siswa) {
-            abort(403, 'Data siswa tidak ditemukan.');
+            return redirect()->route('siswa.dashboard');
         }
 
         $peserta = SmartqPeserta::with(['periode', 'bidangMapel'])
@@ -23,7 +23,8 @@ class SmartqController extends Controller
             ->first();
 
         if (!$peserta) {
-            abort(404, 'Anda belum terdaftar dalam pengumuman SMART-Q.');
+            return redirect()->route('siswa.dashboard')
+                ->with('warning', 'Pengumuman SMART-Q belum tersedia untuk akun Anda.');
         }
 
         return view('siswa.smartq.index', compact('user', 'siswa', 'peserta'));
