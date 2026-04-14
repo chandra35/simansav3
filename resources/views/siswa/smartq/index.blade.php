@@ -117,24 +117,6 @@
         padding: 22px;
         box-shadow: 0 10px 24px rgba(15,23,42,.25);
     }
-    .envelope-btn {
-        border: 0;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #2563eb, #0ea5e9);
-        color: #fff;
-        padding: 12px 18px;
-        font-weight: 700;
-        font-size: .95rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        box-shadow: 0 8px 20px rgba(37,99,235,.35);
-    }
-    .envelope-btn:disabled {
-        opacity: .65;
-        cursor: not-allowed;
-    }
     .envelope-status {
         border-radius: 999px;
         padding: 4px 12px;
@@ -149,43 +131,51 @@
 
     .envelope-scene {
         position: relative;
-        width: 210px;
-        height: 150px;
-        margin: 4px auto 18px;
+        width: 250px;
+        height: 178px;
+        margin: 8px auto 14px;
+        cursor: pointer;
+        transition: transform .2s ease;
+        outline: none;
+    }
+    .envelope-scene:hover { transform: translateY(-3px) scale(1.02); }
+    .envelope-scene:focus-visible {
+        box-shadow: 0 0 0 4px rgba(125, 211, 252, .45);
+        border-radius: 14px;
     }
     .mail-envelope {
         position: absolute;
         left: 50%;
-        top: 36px;
+        top: 40px;
         transform: translateX(-50%);
-        width: 185px;
-        height: 110px;
+        width: 220px;
+        height: 128px;
         filter: drop-shadow(0 10px 20px rgba(0,0,0,.32));
     }
     .mail-body {
         position: absolute;
         inset: 0;
-        border-radius: 10px;
-        background: linear-gradient(145deg, #4f46e5, #2563eb);
+        border-radius: 12px;
+        background: linear-gradient(145deg, #4338ca, #2563eb 55%, #0891b2);
     }
     .mail-flap {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        height: 68px;
+        height: 78px;
         transform-origin: top;
         clip-path: polygon(0 0, 50% 100%, 100% 0);
-        background: linear-gradient(145deg, #60a5fa, #3b82f6);
+        background: linear-gradient(145deg, #67e8f9, #3b82f6 55%, #4f46e5);
         transition: transform .9s cubic-bezier(.2,.75,.15,1);
         z-index: 4;
     }
     .mail-letter {
         position: absolute;
-        left: 15px;
-        right: 15px;
-        top: 14px;
-        height: 80px;
+        left: 18px;
+        right: 18px;
+        top: 16px;
+        height: 94px;
         background: #fff;
         border-radius: 8px;
         z-index: 2;
@@ -205,10 +195,10 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: 30px;
-        height: 30px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background: #f59e0b;
+        background: radial-gradient(circle at 30% 30%, #fcd34d, #f59e0b);
         color: #fff;
         display: inline-flex;
         align-items: center;
@@ -256,6 +246,25 @@
         opacity: 0;
         transform: translateY(-8px) scale(.98);
         transition: all .35s ease;
+    }
+    .envelope-click-hint {
+        text-align: center;
+        color: #bae6fd;
+        font-size: .84rem;
+        letter-spacing: .2px;
+    }
+    .envelope-click-hint .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #38bdf8;
+        margin-right: 7px;
+        animation: dotBlink 1.3s ease-in-out infinite;
+    }
+    @keyframes dotBlink {
+        0%,100% { opacity: .35; transform: scale(.8); }
+        50% { opacity: 1; transform: scale(1.2); }
     }
 </style>
 @stop
@@ -380,12 +389,12 @@
         </div>
 
         <div class="envelope-gate" id="envelopeGate" style="display: {{ $isOpened ? 'none' : 'block' }};">
-            <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:12px;">
-                <div>
+            <div class="d-flex flex-wrap align-items-center justify-content-center" style="gap:12px;">
+                <div class="text-center">
                     <div class="envelope-status closed" id="envelopeBadge">
                         <i class="fas fa-envelope"></i> Belum Dibuka
                     </div>
-                    <div class="envelope-scene">
+                    <div class="envelope-scene" id="envelopeScene" role="button" tabindex="0" aria-label="Buka amplop pengumuman SMART-Q">
                         <span class="mail-glow g1"></span>
                         <span class="mail-glow g2"></span>
                         <span class="mail-glow g3"></span>
@@ -400,12 +409,12 @@
                             <div class="mail-seal"><i class="fas fa-star"></i></div>
                         </div>
                     </div>
+                    <div class="envelope-click-hint" id="envelopeClickHint">
+                        <span class="pulse-dot"></span>Klik amplop untuk membuka pengumuman
+                    </div>
                     <h5 class="mt-2 mb-1" style="font-weight:800;">Anda memiliki 1 amplop pengumuman SMART-Q</h5>
-                    <p class="mb-0" style="color:#cbd5e1;">Klik tombol untuk membuka amplop. Sistem akan menandai pembukaan ini secara otomatis.</p>
+                    <p class="mb-0" style="color:#cbd5e1;">Klik amplop untuk membuka pengumuman. Sistem akan menandai pembukaan ini secara otomatis.</p>
                 </div>
-                <button type="button" class="envelope-btn" id="btnOpenEnvelope">
-                    <i class="fas fa-envelope-open"></i> Buka Amplop
-                </button>
             </div>
         </div>
     </div>
@@ -415,14 +424,21 @@
 @section('js')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var btnOpen = document.getElementById('btnOpenEnvelope');
+    var envelopeScene = document.getElementById('envelopeScene');
     var gate = document.getElementById('envelopeGate');
     var wrapper = document.getElementById('announcementWrapper');
-    if (!btnOpen || !gate || !wrapper) return;
+    var hint = document.getElementById('envelopeClickHint');
+    if (!envelopeScene || !gate || !wrapper) return;
 
-    btnOpen.addEventListener('click', function () {
-        btnOpen.disabled = true;
-        btnOpen.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuka...';
+    var isSubmitting = false;
+
+    function startOpenEnvelope() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        if (hint) {
+            hint.innerHTML = '<span class="pulse-dot"></span>Membuka amplop...';
+        }
+        envelopeScene.style.pointerEvents = 'none';
         gate.classList.add('opening');
 
         fetch('{{ route('siswa.smartq.open-envelope') }}', {
@@ -459,10 +475,21 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(function (err) {
             alert(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
-            btnOpen.disabled = false;
-            btnOpen.innerHTML = '<i class="fas fa-envelope-open"></i> Buka Amplop';
+            isSubmitting = false;
+            envelopeScene.style.pointerEvents = 'auto';
+            if (hint) {
+                hint.innerHTML = '<span class="pulse-dot"></span>Klik amplop untuk membuka pengumuman';
+            }
             gate.classList.remove('opening');
         });
+    }
+
+    envelopeScene.addEventListener('click', startOpenEnvelope);
+    envelopeScene.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            startOpenEnvelope();
+        }
     });
 });
 </script>
