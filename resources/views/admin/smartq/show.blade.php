@@ -316,6 +316,9 @@
                     <span id="openedPesertaBadge" style="background:rgba(16,185,129,.25);color:#d1fae5;border:1px solid rgba(167,243,208,.35);border-radius:20px;padding:2px 10px;font-size:.78rem;margin-left:8px;font-weight:500">
                         <i class="fas fa-envelope-open-text"></i> {{ $stats['pengumuman_dibuka'] ?? 0 }} dibuka
                     </span>
+                    <span id="unopenedPesertaBadge" style="background:rgba(248,113,113,.22);color:#fecaca;border:1px solid rgba(254,202,202,.38);border-radius:20px;padding:2px 10px;font-size:.78rem;margin-left:6px;font-weight:500">
+                        <i class="fas fa-envelope"></i> {{ max(($stats['total'] ?? 0) - ($stats['pengumuman_dibuka'] ?? 0), 0) }} belum
+                    </span>
                 </div>
                 <a href="{{ route('admin.smartq.export', $smartq) }}" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:4px 14px;font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
                     <i class="fas fa-file-excel"></i> <span class="d-none d-md-inline">Export Excel</span>
@@ -542,7 +545,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
         var openedCount = data.filter(function(row) { return Number(row.pengumuman_dibuka_raw || 0) === 1; }).length;
+        var unopenedCount = Math.max(data.length - openedCount, 0);
         $('#openedPesertaBadge').html('<i class="fas fa-envelope-open-text"></i> ' + openedCount + ' dibuka');
+        $('#unopenedPesertaBadge').html('<i class="fas fa-envelope"></i> ' + unopenedCount + ' belum');
     }
 
     // ========== RESET KELULUSAN PER PESERTA ==========

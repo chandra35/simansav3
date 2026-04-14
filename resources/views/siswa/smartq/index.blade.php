@@ -109,6 +109,43 @@
         color: #0f172a;
         font-size: .92rem;
     }
+    .envelope-gate {
+        margin-top: 18px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #fff;
+        padding: 22px;
+        box-shadow: 0 10px 24px rgba(15,23,42,.25);
+    }
+    .envelope-btn {
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        color: #fff;
+        padding: 12px 18px;
+        font-weight: 700;
+        font-size: .95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(37,99,235,.35);
+    }
+    .envelope-btn:disabled {
+        opacity: .65;
+        cursor: not-allowed;
+    }
+    .envelope-status {
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: .78rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .envelope-status.closed { background: rgba(248,113,113,.22); color: #fecaca; }
+    .envelope-status.opened { background: rgba(74,222,128,.2); color: #bbf7d0; }
 </style>
 @stop
 
@@ -125,6 +162,7 @@
     $isDiterima = $peserta->status === 'lulus';
     $statusLabel = $isDiterima ? 'DITERIMA' : 'CADANGAN';
     $statusClass = $isDiterima ? 'diterima' : 'cadangan';
+    $isOpened = !empty($peserta->pengumuman_dibuka_at);
 @endphp
 
 <div class="row justify-content-center">
@@ -156,75 +194,130 @@
 
         <div class="open-track-card">
             <div class="d-flex align-items-center" style="gap:10px;">
-                <span class="icon"><i class="fas fa-envelope-open-text"></i></span>
+                <span class="icon"><i class="fas {{ $isOpened ? 'fa-envelope-open-text' : 'fa-envelope' }}"></i></span>
                 <div>
                     <div class="title">Status Amplop Pengumuman</div>
-                    <div class="value">Pengumuman sudah Anda buka</div>
+                    <div class="value" id="openStatusText">{{ $isOpened ? 'Pengumuman sudah Anda buka' : 'Amplop belum dibuka' }}</div>
                 </div>
             </div>
             <div class="text-right">
                 <div class="title">Waktu Buka Pertama</div>
-                <div class="value">{{ optional($peserta->pengumuman_dibuka_at)->format('d M Y, H:i') ?? '-' }}</div>
+                <div class="value" id="openedAtText">{{ optional($peserta->pengumuman_dibuka_at)->format('d M Y, H:i') ?? '-' }}</div>
             </div>
         </div>
 
-        {{-- Bidang Card --}}
-        @if($peserta->bidangMapel)
-            <div class="bidang-card {{ $statusClass }}">
-                <div class="bidang-label text-muted">
-                    <i class="fas fa-book"></i> Bidang Mapel Pilihan
+        <div class="envelope-gate" id="envelopeGate" style="display: {{ $isOpened ? 'none' : 'block' }};">
+            <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:12px;">
+                <div>
+                    <div class="envelope-status closed" id="envelopeBadge">
+                        <i class="fas fa-envelope"></i> Belum Dibuka
+                    </div>
+                    <h5 class="mt-2 mb-1" style="font-weight:800;">Anda memiliki 1 amplop pengumuman SMART-Q</h5>
+                    <p class="mb-0" style="color:#cbd5e1;">Klik tombol untuk membuka amplop. Sistem akan menandai pembukaan ini secara otomatis.</p>
                 </div>
-                <div class="bidang-name text-{{ $isDiterima ? 'success' : 'warning' }}">
-                    {{ $peserta->bidangMapel->nama_mapel }}
-                </div>
-                <div class="bidang-code text-muted">
-                    Kode: {{ $peserta->bidangMapel->kode_mapel }}
-                </div>
+                <button type="button" class="envelope-btn" id="btnOpenEnvelope">
+                    <i class="fas fa-envelope-open"></i> Buka Amplop
+                </button>
             </div>
-        @endif
+        </div>
 
-        {{-- Info Card --}}
-        <div class="card mt-4">
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="text-muted small text-uppercase">Status</div>
-                        <div class="mt-1">
-                            @if($isDiterima)
-                                <span class="badge badge-success px-3 py-2" style="font-size: 1rem;">
-                                    <i class="fas fa-check-circle"></i> Diterima
-                                </span>
-                            @else
-                                <span class="badge badge-warning px-3 py-2" style="font-size: 1rem;">
-                                    <i class="fas fa-hourglass-half"></i> Cadangan
-                                </span>
-                            @endif
+        <div id="announcementContent" style="display: {{ $isOpened ? 'block' : 'none' }};">
+            {{-- Bidang Card --}}
+            @if($peserta->bidangMapel)
+                <div class="bidang-card {{ $statusClass }}">
+                    <div class="bidang-label text-muted">
+                        <i class="fas fa-book"></i> Bidang Mapel Pilihan
+                    </div>
+                    <div class="bidang-name text-{{ $isDiterima ? 'success' : 'warning' }}">
+                        {{ $peserta->bidangMapel->nama_mapel }}
+                    </div>
+                    <div class="bidang-code text-muted">
+                        Kode: {{ $peserta->bidangMapel->kode_mapel }}
+                    </div>
+                </div>
+            @endif
+
+            {{-- Info Card --}}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-muted small text-uppercase">Status</div>
+                            <div class="mt-1">
+                                @if($isDiterima)
+                                    <span class="badge badge-success px-3 py-2" style="font-size: 1rem;">
+                                        <i class="fas fa-check-circle"></i> Diterima
+                                    </span>
+                                @else
+                                    <span class="badge badge-warning px-3 py-2" style="font-size: 1rem;">
+                                        <i class="fas fa-hourglass-half"></i> Cadangan
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted small text-uppercase">No. Peserta</div>
+                            <div class="mt-1 font-weight-bold" style="font-size: 1.1rem;">{{ $peserta->nomor_peserta }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted small text-uppercase">Periode</div>
+                            <div class="mt-1 font-weight-bold" style="font-size: 1.1rem;">{{ $peserta->periode->nama ?? '-' }}</div>
                         </div>
                     </div>
-                    <div class="col-4">
-                        <div class="text-muted small text-uppercase">No. Peserta</div>
-                        <div class="mt-1 font-weight-bold" style="font-size: 1.1rem;">{{ $peserta->nomor_peserta }}</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="text-muted small text-uppercase">Periode</div>
-                        <div class="mt-1 font-weight-bold" style="font-size: 1.1rem;">{{ $peserta->periode->nama ?? '-' }}</div>
-                    </div>
                 </div>
             </div>
-        </div>
 
-        @if(!$isDiterima)
-            <div class="alert alert-warning mt-3">
-                <i class="fas fa-info-circle"></i>
-                Status Anda saat ini adalah <strong>Cadangan</strong>. Jika ada peserta yang diterima mengundurkan diri, Anda berpeluang naik menjadi peserta diterima.
-                Pantau terus informasi dari pihak madrasah.
-            </div>
-        @else
-            <div class="alert alert-success mt-3">
-                <i class="fas fa-info-circle"></i>
-                Selamat atas penerimaan Anda! Silakan pantau informasi selanjutnya dari pihak madrasah mengenai jadwal dan ketentuan kelas unggulan.
-            </div>
-        @endif
+            @if(!$isDiterima)
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    Status Anda saat ini adalah <strong>Cadangan</strong>. Jika ada peserta yang diterima mengundurkan diri, Anda berpeluang naik menjadi peserta diterima.
+                    Pantau terus informasi dari pihak madrasah.
+                </div>
+            @else
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    Selamat atas penerimaan Anda! Silakan pantau informasi selanjutnya dari pihak madrasah mengenai jadwal dan ketentuan kelas unggulan.
+                </div>
+            @endif
+        </div>
     </div>
 </div>
+@stop
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btnOpen = document.getElementById('btnOpenEnvelope');
+    if (!btnOpen) return;
+
+    btnOpen.addEventListener('click', function () {
+        btnOpen.disabled = true;
+        btnOpen.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuka...';
+
+        fetch('{{ route('siswa.smartq.open-envelope') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (res) {
+            if (!res.success) throw new Error(res.message || 'Gagal membuka amplop');
+
+            document.getElementById('envelopeGate').style.display = 'none';
+            document.getElementById('announcementContent').style.display = 'block';
+            document.getElementById('openStatusText').textContent = 'Pengumuman sudah Anda buka';
+            document.getElementById('openedAtText').textContent = res.opened_at || '-';
+        })
+        .catch(function (err) {
+            alert(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+            btnOpen.disabled = false;
+            btnOpen.innerHTML = '<i class="fas fa-envelope-open"></i> Buka Amplop';
+        });
+    });
+});
+</script>
 @stop

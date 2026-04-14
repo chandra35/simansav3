@@ -715,6 +715,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
 
     // SMART-Q Pengumuman Kelulusan
     Route::get('/smartq', [App\Http\Controllers\Siswa\SmartqController::class, 'index'])->name('smartq.index');
+    Route::post('/smartq/open-envelope', [App\Http\Controllers\Siswa\SmartqController::class, 'openEnvelope'])->name('smartq.open-envelope');
 
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
