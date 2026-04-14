@@ -626,6 +626,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'tambahPeserta'])->name('peserta.tambah');
         Route::delete('/{smartq}/peserta/{peserta}', [App\Http\Controllers\Admin\SmartqController::class, 'hapusPeserta'])->name('peserta.hapus');
 
+        // Kelulusan reset
+        Route::delete('/{smartq}/kelulusan/{peserta}/reset', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanPeserta'])->name('kelulusan.reset.peserta');
+        Route::delete('/{smartq}/kelulusan/reset-all', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanBulk'])->name('kelulusan.reset.bulk');
+
         // Nilai
         Route::get('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'inputNilai'])->name('nilai');
         Route::post('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'simpanNilai'])->name('nilai.simpan');

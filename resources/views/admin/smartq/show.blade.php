@@ -126,6 +126,11 @@
                         <a href="{{ route('admin.smartq.kelulusan.import', $smartq) }}" class="list-group-item list-group-item-action list-group-item-warning">
                             <i class="fas fa-file-import text-warning"></i> <strong>Import Kelulusan & Bidang</strong>
                         </a>
+                        @if($stats['lulus'] + $stats['cadangan'] + $stats['tidak_lulus'] > 0)
+                        <button type="button" class="list-group-item list-group-item-action list-group-item-danger text-left" id="btnResetBulk">
+                            <i class="fas fa-undo text-danger"></i> Reset Semua Status Kelulusan
+                        </button>
+                        @endif
                         <a href="{{ route('admin.smartq.export', $smartq) }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-file-excel text-success"></i> Export Excel
                         </a>
@@ -361,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headHtml += '<th class="text-center" width="100">Status</th>';
         headHtml += '<th class="text-center" width="120">Bidang</th>';
         headHtml += '<th class="text-center" width="70">P. Mapel</th>';
+        headHtml += '<th class="text-center" width="65">Aksi</th>';
         $('#rankingHead').html(headHtml);
 
         // Column definitions matching thead order
@@ -378,6 +384,16 @@ document.addEventListener('DOMContentLoaded', function() {
         columns.push({ data: 'status', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'bidang', className: 'text-center', orderable: false, searchable: false });
         columns.push({ data: 'peringkat_mapel', className: 'text-center' });
+        columns.push({
+            data: null,
+            className: 'text-center',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row) {
+                if (!row.peserta_id || row.status_raw === 'terdaftar') return '<span class="text-muted">-</span>';
+                return '<button class="btn btn-xs btn-outline-danger btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + row.nama + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
+            }
+        });
 
         $('#rankingTable').DataTable({
             data: data,
@@ -397,6 +413,89 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         $('#totalPesertaBadge').text(data.length + ' peserta');
+    }
+
+    // ========== RESET KELULUSAN PER PESERTA ==========
+    $(document).on('click', '.btn-reset-kelulusan', function() {
+        var id   = $(this).data('id');
+        var nama = $(this).data('nama');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Reset Kelulusan?',
+            html: 'Status kelulusan <strong>' + nama + '</strong> akan dikembalikan ke <em>Terdaftar</em>.<br>Bidang mapel & peringkat akan dihapus.',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: '<i class="fas fa-undo"></i> Ya, Reset',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            showSmartqOverlay('Mereset data kelulusan...', 'Mohon tunggu', 'undo');
+            $.ajax({
+                url: '{{ route("admin.smartq.kelulusan.reset.peserta", ["smartq" => $smartq, "peserta" => "__ID__"]) }}'.replace('__ID__', id),
+                type: 'POST',
+                data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+                success: function(res) {
+                    hideSmartqOverlay();
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Reset Berhasil', text: res.message, timer: 1800, showConfirmButton: false });
+                        setTimeout(function() { location.reload(); }, 1900);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+                    }
+                },
+                error: function() {
+                    hideSmartqOverlay();
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan server.' });
+                }
+            });
+        });
+    });
+
+    // ========== RESET KELULUSAN BULK ==========
+    var btnResetBulk = document.getElementById('btnResetBulk');
+    if (btnResetBulk) {
+        btnResetBulk.addEventListener('click', function() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Reset SEMUA Kelulusan?',
+                html: '<p>Seluruh status kelulusan peserta akan dikembalikan ke <em>Terdaftar</em>.</p><p class="text-danger mb-0"><strong><i class="fas fa-exclamation-triangle"></i> Tindakan ini tidak dapat dibatalkan!</strong></p>',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: '<i class="fas fa-undo"></i> Ya, Reset Semua',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                input: 'text',
+                inputPlaceholder: 'Ketik RESET untuk konfirmasi',
+                preConfirm: function(val) {
+                    if (val !== 'RESET') {
+                        Swal.showValidationMessage('Ketik RESET untuk konfirmasi');
+                        return false;
+                    }
+                },
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+                showSmartqOverlay('Mereset semua data kelulusan...', 'Mohon tunggu', 'undo');
+                $.ajax({
+                    url: '{{ route("admin.smartq.kelulusan.reset.bulk", $smartq) }}',
+                    type: 'POST',
+                    data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        hideSmartqOverlay();
+                        if (res.success) {
+                            Swal.fire({ icon: 'success', title: 'Reset Berhasil', text: res.message, timer: 2000, showConfirmButton: false });
+                            setTimeout(function() { location.reload(); }, 2100);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+                        }
+                    },
+                    error: function() {
+                        hideSmartqOverlay();
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan server.' });
+                    }
+                });
+            });
+        });
     }
 
     // Sync Nilai CBT form — SweetAlert confirm + overlay

@@ -292,6 +292,49 @@ class SmartqController extends Controller
             ->with('success', 'Peserta berhasil dihapus.');
     }
 
+    /**
+     * Reset status kelulusan satu peserta → kembali ke 'terdaftar'.
+     */
+    public function resetKelulusanPeserta(Request $request, SmartqPeriode $smartq, SmartqPeserta $peserta)
+    {
+        if ($peserta->smartq_periode_id !== $smartq->id) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $peserta->update([
+            'status'          => 'terdaftar',
+            'bidang_mapel_id' => null,
+            'ranking'         => null,
+            'peringkat_mapel' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status kelulusan peserta berhasil direset.',
+        ]);
+    }
+
+    /**
+     * Reset status kelulusan semua peserta periode ini → kembali ke 'terdaftar'.
+     */
+    public function resetKelulusanBulk(Request $request, SmartqPeriode $smartq)
+    {
+        $count = SmartqPeserta::where('smartq_periode_id', $smartq->id)
+            ->whereIn('status', ['lulus', 'cadangan', 'tidak_lulus'])
+            ->update([
+                'status'          => 'terdaftar',
+                'bidang_mapel_id' => null,
+                'ranking'         => null,
+                'peringkat_mapel' => null,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Status kelulusan {$count} peserta berhasil direset.",
+            'count'   => $count,
+        ]);
+    }
+
     // ==================== NILAI ====================
 
     public function inputNilai(SmartqPeriode $smartq)
@@ -1109,6 +1152,7 @@ class SmartqController extends Controller
                 ? '<span class="badge badge-info" title="' . e($p->bidangMapel->nama_mapel) . '">' . e($p->bidangMapel->kode_mapel) . '</span>'
                 : '<span class="text-muted">-</span>';
             $row['peringkat_mapel'] = $p->peringkat_mapel ?? '-';
+            $row['peserta_id'] = $p->id;
             $row['row_class'] = $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : ''));
 
             return $row;
