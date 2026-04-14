@@ -114,6 +114,8 @@ class ProfileController extends Controller
      */
     public function updateForceSetup(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'password' => 'required|string|min:8',
             'password_confirmation' => 'required|string|same:password',
@@ -128,10 +130,25 @@ class ProfileController extends Controller
             'email.unique' => 'Email sudah digunakan.',
         ]);
 
-        $user = Auth::user();
+        // Force user to provide a new email address on first setup.
+        $currentEmail = strtolower(trim((string) $user->email));
+        $newEmail = strtolower(trim((string) $request->email));
+
+        if ($currentEmail !== '' && $newEmail === $currentEmail) {
+            return back()
+                ->withErrors(['email' => 'Email wajib diganti. Gunakan email aktif milik Anda yang berbeda dari email lama.'])
+                ->withInput();
+        }
+
+        // Force password replacement; new password cannot be same as current one.
+        if (Hash::check($request->password, $user->password)) {
+            return back()
+                ->withErrors(['password' => 'Password baru harus berbeda dari password sebelumnya.'])
+                ->withInput();
+        }
 
         $user->password = Hash::make($request->password);
-        $user->email = $request->email;
+        $user->email = $newEmail;
         $user->is_first_login = false;
         $user->password_reset_at = null;
         $user->password_reset_by = null;

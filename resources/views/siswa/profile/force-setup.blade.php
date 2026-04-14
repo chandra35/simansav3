@@ -176,6 +176,31 @@
         max-width: 100%;
         display: block;
     }
+
+    .setup-requirement-list {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .setup-requirement-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 12px;
+        background: #f8fafc;
+        font-size: .86rem;
+        color: #334155;
+    }
+    .setup-requirement-item i { margin-right: 6px; }
+    .setup-requirement-item.valid {
+        border-color: #86efac;
+        background: #f0fdf4;
+        color: #166534;
+    }
+    .setup-requirement-item.invalid {
+        border-color: #fda4af;
+        background: #fff1f2;
+        color: #9f1239;
+    }
 </style>
 @stop
 
@@ -347,20 +372,39 @@
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
                                 <span class="badge badge-info mr-2">2</span>
-                                <i class="fas fa-envelope"></i> Email & Username
+                                <i class="fas fa-envelope"></i> Email Wajib Diganti
+                                <span class="badge badge-danger ml-2">WAJIB</span>
                             </h5>
                         </div>
                         <div class="card-body">
+                            <div class="alert alert-warning mb-3 py-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Demi keamanan, email lama tidak boleh dipakai lagi. Masukkan email aktif milik Anda.
+                            </div>
+                            <div class="setup-requirement-list" id="setupRequirementList">
+                                <div class="setup-requirement-item invalid" id="reqEmailChanged">
+                                    <i class="fas fa-times-circle"></i> Email harus berbeda dari email sebelumnya
+                                </div>
+                                <div class="setup-requirement-item invalid" id="reqPasswordMatch">
+                                    <i class="fas fa-times-circle"></i> Password dan konfirmasi harus sama
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
+                                        <input type="hidden" id="initialEmail" value="{{ strtolower((string) $user->email) }}">
                                         <input type="email" name="email" id="email"
                                                class="form-control @error('email') is-invalid @enderror"
                                                value="{{ old('email', $user->email) }}"
                                                placeholder="Masukkan email aktif Anda"
                                                required>
-                                        <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting</small>
+                                        <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting.</small>
+                                        @if(!empty($user->email))
+                                            <small class="text-danger d-block mt-1">
+                                                Email sebelumnya: <strong>{{ $user->email }}</strong>
+                                            </small>
+                                        @endif
                                         @error('email')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -421,8 +465,8 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn">
-                        <i class="fas fa-save"></i> Simpan Password & Lanjutkan
+                    <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn" disabled>
+                        <i class="fas fa-shield-alt"></i> Simpan Perubahan Wajib
                     </button>
                 </div>
             </form>
@@ -721,7 +765,49 @@ function checkPasswordMatch() {
     } else {
         matchDiv.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Password tidak cocok</span>';
     }
+
+    updateSetupValidationState();
 }
+
+function setRequirementState(el, isValid, validText, invalidText) {
+    if (!el) return;
+    el.classList.remove('valid', 'invalid');
+    el.classList.add(isValid ? 'valid' : 'invalid');
+    el.innerHTML = '<i class="fas ' + (isValid ? 'fa-check-circle' : 'fa-times-circle') + '"></i>' + (isValid ? validText : invalidText);
+}
+
+function updateSetupValidationState() {
+    const initialEmail = (document.getElementById('initialEmail')?.value || '').trim().toLowerCase();
+    const currentEmail = (document.getElementById('email')?.value || '').trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const confirmation = document.getElementById('password_confirmation').value;
+    const submitBtn = document.getElementById('submitBtn');
+
+    const isEmailValid = currentEmail !== '' && (initialEmail === '' || currentEmail !== initialEmail);
+    const isPasswordMatch = password.length >= 8 && confirmation !== '' && password === confirmation;
+
+    setRequirementState(
+        document.getElementById('reqEmailChanged'),
+        isEmailValid,
+        'Email baru sudah valid dan berbeda dari email lama',
+        'Email harus berbeda dari email sebelumnya'
+    );
+    setRequirementState(
+        document.getElementById('reqPasswordMatch'),
+        isPasswordMatch,
+        'Password dan konfirmasi sudah sesuai',
+        'Password dan konfirmasi harus sama (minimal 8 karakter)'
+    );
+
+    if (submitBtn) {
+        submitBtn.disabled = !(isEmailValid && isPasswordMatch);
+    }
+}
+
+document.getElementById('email').addEventListener('input', updateSetupValidationState);
+document.getElementById('password').addEventListener('input', updateSetupValidationState);
+document.getElementById('password_confirmation').addEventListener('input', updateSetupValidationState);
+updateSetupValidationState();
 
 // Form submit with loading
 document.getElementById('setupForm').addEventListener('submit', function() {
