@@ -21,7 +21,7 @@
             </div>
             <div class="simansa-hero-chip">
                 <span class="simansa-hero-chip__label">Kelas</span>
-                <span class="simansa-hero-chip__value">{{ $siswa->kelasAktif->nama_kelas ?? 'Tanpa Rombel' }}</span>
+                <span class="simansa-hero-chip__value">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Tanpa Rombel' }}</span>
             </div>
         </div>
     </div>
@@ -84,8 +84,8 @@
                     @else
                         <span class="badge badge-danger"><i class="fas fa-female"></i> Perempuan</span>
                     @endif
-                    @if($siswa->kelasAktif)
-                        <span class="badge badge-success">{{ $siswa->kelasAktif->nama_kelas ?? 'Aktif' }}</span>
+                    @if($siswa->getKelasSekarang())
+                        <span class="badge badge-success">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Aktif' }}</span>
                     @endif
                 </p>
 
