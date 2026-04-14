@@ -336,6 +336,39 @@ class SmartqController extends Controller
         ]);
     }
 
+    /**
+     * Ubah status kelulusan satu peserta.
+     */
+    public function updateKelulusanPesertaStatus(Request $request, SmartqPeriode $smartq, SmartqPeserta $peserta)
+    {
+        if ($peserta->smartq_periode_id !== $smartq->id) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:terdaftar,lulus,cadangan,tidak_lulus',
+        ]);
+
+        $payload = [
+            'status' => $validated['status'],
+        ];
+
+        // Saat dikembalikan ke terdaftar, data kelulusan turunan ikut dibersihkan.
+        if ($validated['status'] === 'terdaftar') {
+            $payload['bidang_mapel_id'] = null;
+            $payload['ranking'] = null;
+            $payload['peringkat_mapel'] = null;
+        }
+
+        $peserta->update($payload);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status peserta berhasil diperbarui.',
+            'status' => $peserta->status,
+        ]);
+    }
+
     // ==================== NILAI ====================
 
     public function inputNilai(SmartqPeriode $smartq)
@@ -1158,6 +1191,7 @@ class SmartqController extends Controller
             $row['pengumuman_dibuka_raw'] = $p->pengumuman_dibuka_at ? 1 : 0;
             $row['peringkat_mapel'] = $p->peringkat_mapel ?? '-';
             $row['peserta_id'] = $p->id;
+            $row['siswa_id'] = $p->siswa_id;
             $row['row_class'] = $p->status === 'lulus' ? 'table-success' : ($p->status === 'cadangan' ? 'table-warning' : ($p->status === 'tidak_lulus' ? 'table-danger' : ''));
 
             return $row;

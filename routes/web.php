@@ -629,6 +629,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Kelulusan reset
         Route::delete('/{smartq}/kelulusan/{peserta}/reset', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanPeserta'])->name('kelulusan.reset.peserta');
         Route::delete('/{smartq}/kelulusan/reset-all', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanBulk'])->name('kelulusan.reset.bulk');
+        Route::put('/{smartq}/kelulusan/{peserta}/status', [App\Http\Controllers\Admin\SmartqController::class, 'updateKelulusanPesertaStatus'])->name('kelulusan.status.update');
 
         // Nilai
         Route::get('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'inputNilai'])->name('nilai');

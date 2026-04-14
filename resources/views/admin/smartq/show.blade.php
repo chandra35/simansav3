@@ -427,6 +427,20 @@
     border-color: #dc3545 !important;
     transform: translateY(-1px);
 }
+.rank-action-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-rank-action {
+    border-radius: 999px !important;
+    width: 30px;
+    height: 30px;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
 /* DataTables toolbar */
 .ranking-dt-top { background: #fff; border-bottom: 1px solid #f1f5f9; }
 .ranking-dt-foot { background: #fff; border-top: 1px solid #f1f5f9; }
@@ -523,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headHtml += '<th class="text-center" width="110">Bidang</th>';
         headHtml += '<th class="text-center" width="110">Amplop</th>';
         headHtml += '<th class="text-center" width="65">P.Mapel</th>';
-        headHtml += '<th class="text-center" width="60">Aksi</th>';
+        headHtml += '<th class="text-center" width="115">Aksi</th>';
         headHtml += '<th style="display:none"></th>'; // status_raw for filter
         $('#rankingHead').html(headHtml);
 
@@ -567,8 +581,19 @@ document.addEventListener('DOMContentLoaded', function() {
             orderable: false,
             searchable: false,
             render: function(data, type, row) {
-                if (!row.peserta_id || row.status_raw === 'terdaftar') return '<span class="text-muted">-</span>';
-                return '<button class="btn btn-xs btn-outline-danger btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + (row.nama_sort || '-') + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
+                var detailUrl = row.siswa_id ? '{{ route("admin.siswa.show", "__SID__") }}'.replace('__SID__', row.siswa_id) : '#';
+                var html = '<span class="rank-action-wrap">';
+                if (row.siswa_id) {
+                    html += '<a href="' + detailUrl + '" class="btn btn-xs btn-outline-primary btn-rank-action" title="Detail Siswa"><i class="fas fa-user"></i></a>';
+                }
+                if (row.peserta_id) {
+                    html += '<button class="btn btn-xs btn-outline-warning btn-rank-action btn-update-status" data-id="' + row.peserta_id + '" data-status="' + row.status_raw + '" data-nama="' + (row.nama_sort || '-') + '" title="Ubah Status"><i class="fas fa-exchange-alt"></i></button>';
+                }
+                if (row.peserta_id && row.status_raw !== 'terdaftar') {
+                    html += '<button class="btn btn-xs btn-outline-danger btn-rank-action btn-reset-kelulusan" data-id="' + row.peserta_id + '" data-nama="' + (row.nama_sort || '-') + '" title="Reset ke Terdaftar"><i class="fas fa-undo"></i></button>';
+                }
+                html += '</span>';
+                return html;
             }
         });
         columns.push({ data: 'status_raw', visible: false, searchable: false }); // for filter
@@ -636,6 +661,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 error: function() {
                     hideSmartqOverlay();
                     Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan server.' });
+                }
+            });
+        });
+    });
+
+    // ========== UBAH STATUS PER PESERTA ==========
+    $(document).on('click', '.btn-update-status', function() {
+        var id = $(this).data('id');
+        var nama = $(this).data('nama');
+        var currentStatus = $(this).data('status');
+
+        Swal.fire({
+            title: 'Ubah Status Peserta',
+            html: 'Pilih status baru untuk <strong>' + nama + '</strong>',
+            input: 'select',
+            inputOptions: {
+                terdaftar: 'Terdaftar',
+                lulus: 'Diterima',
+                cadangan: 'Cadangan',
+                tidak_lulus: 'Tidak Lulus'
+            },
+            inputValue: currentStatus || 'terdaftar',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-save"></i> Simpan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#2563eb',
+            reverseButtons: true,
+            preConfirm: function(value) {
+                if (!value) {
+                    Swal.showValidationMessage('Status wajib dipilih');
+                    return false;
+                }
+                return value;
+            }
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            showSmartqOverlay('Memperbarui status peserta...', 'Mohon tunggu', 'exchange-alt');
+            $.ajax({
+                url: '{{ route("admin.smartq.kelulusan.status.update", ["smartq" => $smartq, "peserta" => "__ID__"]) }}'.replace('__ID__', id),
+                type: 'POST',
+                data: {
+                    _method: 'PUT',
+                    _token: '{{ csrf_token() }}',
+                    status: result.value,
+                },
+                success: function(res) {
+                    hideSmartqOverlay();
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
+                        setTimeout(function() { location.reload(); }, 1600);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Tidak dapat memperbarui status.' });
+                    }
+                },
+                error: function(xhr) {
+                    hideSmartqOverlay();
+                    var msg = 'Terjadi kesalahan server.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
                 }
             });
         });
