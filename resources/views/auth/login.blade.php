@@ -18,7 +18,11 @@
 body.login-page {
     background: linear-gradient(135deg, #0f2027 0%, #203a43 40%, #2c5364 100%) !important;
     min-height: 100vh;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
+.login-page .wrapper { display: contents; }
 
 /* ── Login Box ── */
 .login-box {
@@ -112,6 +116,27 @@ body.login-page {
 }
 .login-box .form-control:focus + .input-group-append .input-group-text {
     border-color: #1a73e8 !important;
+    color: #1a73e8;
+}
+
+/* Stable field layout to avoid local bootstrap/input-group rendering differences */
+.simansa-field {
+    position: relative;
+    margin-bottom: 14px;
+}
+.simansa-field .simansa-field-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #90a4ae;
+    font-size: .9rem;
+    pointer-events: none;
+}
+.simansa-field .form-control {
+    padding-left: 36px !important;
+}
+.simansa-field .form-control:focus ~ .simansa-field-icon {
     color: #1a73e8;
 }
 
@@ -290,14 +315,10 @@ body.login-page {
     <input type="hidden" name="longitude" id="longitude">
 
     {{-- Username field --}}
-    <div class="input-group">
+    <div class="simansa-field">
         <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
                value="{{ old('username') }}" placeholder="Username / NISN" autofocus>
-        <div class="input-group-append">
-            <div class="input-group-text">
-                <span class="fas fa-user"></span>
-            </div>
-        </div>
+        <span class="fas fa-user simansa-field-icon"></span>
         @error('username')
             <span class="invalid-feedback" role="alert">
                 <strong>{{ $message }}</strong>
@@ -306,14 +327,10 @@ body.login-page {
     </div>
 
     {{-- Password field --}}
-    <div class="input-group">
+    <div class="simansa-field">
         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
                placeholder="Password">
-        <div class="input-group-append">
-            <div class="input-group-text">
-                <span class="fas fa-lock"></span>
-            </div>
-        </div>
+        <span class="fas fa-lock simansa-field-icon"></span>
         @error('password')
             <span class="invalid-feedback" role="alert">
                 <strong>{{ $message }}</strong>
