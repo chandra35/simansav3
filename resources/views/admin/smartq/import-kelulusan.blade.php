@@ -169,22 +169,28 @@
 
     {{-- Preview Table --}}
     <div class="card card-outline card-warning shadow">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-table"></i> Preview Data Import</h3>
-            <div class="card-tools">
-                <div class="btn-group btn-group-sm mr-2" id="filterBtns">
-                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">Semua</button>
-                    <button type="button" class="btn btn-outline-success" data-filter="valid"><i class="fas fa-check"></i> Valid</button>
-                    <button type="button" class="btn btn-outline-danger" data-filter="invalid"><i class="fas fa-times"></i> Bermasalah</button>
+        <div class="card-header py-2">
+            <div class="d-flex align-items-center flex-wrap" style="gap:10px">
+                <h3 class="card-title mb-0 mr-2"><i class="fas fa-table mr-1"></i> Preview Data Import</h3>
+                <div class="btn-group btn-group-sm" id="filterBtns">
+                    <button type="button" class="btn btn-secondary active" data-filter="all">
+                        <i class="fas fa-list"></i> Semua <span class="badge badge-light ml-1" id="fcAll">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success" data-filter="valid">
+                        <i class="fas fa-check"></i> Valid <span class="badge badge-success ml-1" id="fcValid">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" data-filter="invalid">
+                        <i class="fas fa-times"></i> Bermasalah <span class="badge badge-danger ml-1" id="fcInvalid">0</span>
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body px-3 pt-3 pb-0">
             <table id="previewTable" class="table table-bordered table-hover mb-0" style="width:100%">
                 <thead>
                     <tr class="bg-warning text-dark">
                         <th class="text-center" width="45">No</th>
-                        <th width="250">Peserta</th>
+                        <th width="260">Peserta</th>
                         <th class="text-center" width="80">P. Mapel</th>
                         <th class="text-center" width="80">P. Umum</th>
                         <th width="160">Bidang Mapel</th>
@@ -195,19 +201,25 @@
                 <tbody id="previewTableBody"></tbody>
             </table>
         </div>
+        <div class="card-footer bg-white border-0 pb-2"></div>
     </div>
 
     {{-- Action Buttons --}}
-    <div class="row mt-1 mb-4">
-        <div class="col-md-4">
-            <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
-                <i class="fas fa-redo"></i> Batal & Upload Ulang
-            </button>
-        </div>
-        <div class="col-md-4 offset-md-4">
-            <button type="button" class="btn btn-success btn-lg btn-block" id="btnConfirm" disabled>
-                <i class="fas fa-save"></i> Konfirmasi & Simpan &nbsp;<span class="badge badge-light" id="confirmCount">0</span> data valid
-            </button>
+    <div class="card shadow-sm">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-outline-secondary btn-block" id="btnBatal">
+                        <i class="fas fa-undo"></i> Batal & Upload Ulang
+                    </button>
+                </div>
+                <div class="col-md-5 offset-md-3">
+                    <button type="button" class="btn btn-success btn-lg btn-block" id="btnConfirm" disabled>
+                        <i class="fas fa-save"></i> Konfirmasi & Simpan
+                        <span class="badge badge-light font-weight-bold" id="confirmCount">0</span> data valid
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -308,10 +320,8 @@
     /* Preview table row colors */
     #previewTable tbody tr.row-valid td { background-color: #f0fff4 !important; }
     #previewTable tbody tr.row-invalid td { background-color: #fff5f5 !important; }
-    #previewTable tbody tr.row-invalid td { border-left: 3px solid #dc3545; }
-    #previewTable tbody tr.row-valid td { border-left: 3px solid #28a745; }
-    /* filter hidden */
-    #previewTable tbody tr.dt-hidden { display: none !important; }
+    #previewTable tbody tr.row-invalid td:first-child { border-left: 3px solid #dc3545 !important; }
+    #previewTable tbody tr.row-valid td:first-child { border-left: 3px solid #28a745 !important; }
     /* Peserta cell styling */
     .peserta-cell .peserta-nama { font-weight: 600; font-size: 0.9rem; color: #343a40; }
     .peserta-cell .peserta-nisn { font-size: 0.78rem; color: #6c757d; font-family: monospace; }
@@ -324,12 +334,21 @@
     .info-box { min-height: 60px; }
     .info-box-icon { width: 70px; font-size: 1.5rem; }
     .info-box-number { font-size: 1.8rem; }
+    /* filter buttons */
+    #filterBtns .btn { transition: all .15s; }
+    #filterBtns .btn .badge { font-size: 0.75rem; min-width: 20px; }
     /* filter buttons active */
-    #filterBtns .btn.active { font-weight: 700; }
-    /* DataTables spacing */
-    #previewTable_wrapper .dataTables_filter { margin-bottom: 8px; }
-    #previewTable_wrapper .dataTables_length label { font-size: 0.85rem; }
-    #previewTable_wrapper .dataTables_filter label { font-size: 0.85rem; }
+    #filterBtns .btn.active { font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+    /* DataTables controls area */
+    #previewTable_wrapper { padding: 0; }
+    #previewTable_wrapper .row { padding: 0 1px; }
+    #previewTable_wrapper .dataTables_length,
+    #previewTable_wrapper .dataTables_filter { font-size: 0.85rem; }
+    #previewTable_wrapper .dataTables_info { font-size: 0.82rem; color: #6c757d; }
+    #previewTable_wrapper .dataTables_paginate { font-size: 0.85rem; }
+    #previewTable_wrapper .dataTables_paginate .paginate_button { padding: 2px 8px; }
+    /* Confirmation bar */
+    #previewSection > .card:last-child { border-top: 3px solid #28a745; }
 </style>
 @stop
 
@@ -473,24 +492,86 @@ $(function() {
                 });
                 $('#previewTableBody').html(html);
 
-                // Init DataTable
+                // Init DataTable with proper custom search
                 if (dtPreview) { dtPreview.destroy(); }
+
+                // Custom search function for valid/invalid filter
+                var currentFilter = 'all';
+                $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(fn) {
+                    return fn._previewFilter !== true; // remove old filter if reinit
+                });
+                var filterFn = function(settings, data, dataIndex) {
+                    if (!dtPreview || settings.nTable.id !== 'previewTable') return true;
+                    if (currentFilter === 'all') return true;
+                    var node = dtPreview.row(dataIndex).node();
+                    var isValid = $(node).data('valid') == '1';
+                    return currentFilter === 'valid' ? isValid : !isValid;
+                };
+                filterFn._previewFilter = true;
+                $.fn.dataTable.ext.search.push(filterFn);
+
                 dtPreview = $('#previewTable').DataTable({
                     pageLength: 25,
                     language: {
                         search: 'Cari:',
                         lengthMenu: 'Tampilkan _MENU_ baris',
-                        info: 'Menampilkan _START_-_END_ dari _TOTAL_ baris',
+                        info: 'Menampilkan _START_–_END_ dari _TOTAL_ baris',
                         infoEmpty: 'Tidak ada data',
-                        paginate: { first: 'Awal', last: 'Akhir', next: '>', previous: '<' },
+                        infoFiltered: '(difilter dari _MAX_ total)',
+                        paginate: { first: '«', last: '»', next: '›', previous: '‹' },
                         zeroRecords: 'Tidak ada data yang sesuai filter.'
                     },
                     responsive: true,
                     columnDefs: [
-                        { orderable: false, targets: [0, 1, 6] },
+                        { orderable: false, targets: [1, 6] },
                         { className: 'text-center align-middle', targets: [0, 2, 3] },
+                        { className: 'align-middle', targets: [1, 4, 5, 6] },
                     ],
-                    dom: '<"row align-items-center"<"col-sm-4"l><"col-sm-5"f><"col-sm-3 text-right">>rt<"row mt-2"<"col-sm-5"i><"col-sm-7"p>>',
+                    dom: '<"row align-items-center mb-2"<"col-sm-5"l><"col-sm-7"f>>'
+                        +'<"row"<"col-12"t>>'
+                        +'<"row mt-2 mb-1"<"col-sm-6"i><"col-sm-6"p>>',
+                    drawCallback: function() {
+                        // Update info badges after draw
+                        var info = this.api().page.info();
+                        $('#filterBtns .btn[data-filter="all"] #fcAll').text(info.recordsTotal);
+                    }
+                });
+
+                // Set filter badge counts
+                var totalAll = d.rows.length;
+                var totalValid = d.valid_count;
+                var totalInvalid = d.error_count;
+                $('#fcAll').text(totalAll);
+                $('#fcValid').text(totalValid);
+                $('#fcInvalid').text(totalInvalid);
+
+                // If there are errors, auto-highlight invalid badge
+                if (totalInvalid > 0) {
+                    $('#fcInvalid').addClass('badge-danger').removeClass('badge-light');
+                }
+                if (totalValid > 0) {
+                    $('#fcValid').addClass('badge-success').removeClass('badge-light');
+                }
+
+                // Filter buttons click
+                $('#filterBtns .btn').off('click').on('click', function() {
+                    $('#filterBtns .btn').removeClass('active btn-secondary btn-success btn-danger')
+                        .addClass(function() {
+                            var f = $(this).data('filter');
+                            return f === 'valid' ? 'btn-outline-success'
+                                : f === 'invalid' ? 'btn-outline-danger'
+                                : 'btn-outline-secondary';
+                        });
+                    $(this).removeClass('btn-outline-secondary btn-outline-success btn-outline-danger')
+                        .addClass('active')
+                        .addClass(function() {
+                            var f = $(this).data('filter');
+                            return f === 'valid' ? 'btn-success'
+                                : f === 'invalid' ? 'btn-danger'
+                                : 'btn-secondary';
+                        });
+                    currentFilter = $(this).data('filter');
+                    dtPreview.draw();
                 });
 
                 // Enable confirm button if there are valid rows
@@ -535,27 +616,7 @@ $(function() {
         });
     });
 
-    // Filter buttons
-    $(document).on('click', '#filterBtns .btn', function() {
-        $('#filterBtns .btn').removeClass('active');
-        $(this).addClass('active');
-        var filter = $(this).data('filter');
-        if (dtPreview) {
-            if (filter === 'all') {
-                dtPreview.rows().nodes().each(function(r) { $(r).removeClass('dt-hidden'); });
-            } else if (filter === 'valid') {
-                dtPreview.rows().nodes().each(function(r) {
-                    var isValid = $(r).data('valid') == '1';
-                    $(r).toggleClass('dt-hidden', !isValid);
-                });
-            } else {
-                dtPreview.rows().nodes().each(function(r) {
-                    var isValid = $(r).data('valid') == '1';
-                    $(r).toggleClass('dt-hidden', isValid);
-                });
-            }
-        }
-    });
+    // Filter buttons (global click handler removed - handled inside DataTable init)
 
     // Batal button
     $('#btnBatal').on('click', function() {
