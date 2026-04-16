@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\Siswa;
 use App\Models\Ortu;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -484,6 +486,8 @@ class SiswaController extends Controller
             'sekolahAsal',
             'kelasAktif'
         ]);
+
+        $riwayatPerubahan = $this->getStudentActivityLogs($siswa);
         
         // Check if request wants JSON (AJAX) or HTML (direct access)
         if (request()->wantsJson() || request()->ajax()) {
@@ -515,7 +519,7 @@ class SiswaController extends Controller
         }
         
         // Return HTML view for direct browser access
-        return view('admin.siswa.show', compact('siswa'));
+        return view('admin.siswa.show', compact('siswa', 'riwayatPerubahan'));
     }
 
     /**
@@ -584,6 +588,13 @@ class SiswaController extends Controller
 
         DB::beginTransaction();
         try {
+            $oldSnapshot = [
+                'nisn' => $siswa->nisn,
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'jenis_kelamin' => $siswa->jenis_kelamin,
+                'username' => $siswa->user?->username,
+            ];
+
             // Update siswa
             $siswa->update([
                 'nisn' => $request->nisn,
@@ -597,18 +608,22 @@ class SiswaController extends Controller
                 'username' => $request->nisn,
             ]);
 
+            $newSnapshot = [
+                'nisn' => $request->nisn,
+                'nama_lengkap' => $request->nama_lengkap,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'username' => $request->nisn,
+            ];
+
             DB::commit();
 
-            // Log activity
-            \App\Models\ActivityLog::create([
-                'user_id' => Auth::id(),
-                'activity_type' => 'update',
-                'model_type' => 'App\\Models\\Siswa',
-                'model_id' => $siswa->id,
-                'description' => "Memperbarui data siswa: {$request->nama_lengkap} (NISN: {$request->nisn})",
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
+            ActivityLogService::logChanges(
+                'admin_update_siswa',
+                $siswa,
+                $oldSnapshot,
+                $newSnapshot,
+                "Admin memperbarui data siswa: {$request->nama_lengkap} (NISN: {$request->nisn})"
+            );
 
             return response()->json([
                 'success' => true,
@@ -768,5 +783,33 @@ class SiswaController extends Controller
             });
 
         return response()->json($kelas);
+    }
+
+    private function getStudentActivityLogs(Siswa $siswa)
+    {
+        return ActivityLog::with('user.roles')
+            ->where(function ($activityQuery) use ($siswa) {
+                $activityQuery->where(function ($studentQuery) use ($siswa) {
+                    $studentQuery->where('model_type', Siswa::class)
+                        ->where('model_id', $siswa->id);
+                });
+
+                if ($siswa->ortu) {
+                    $activityQuery->orWhere(function ($ortuQuery) use ($siswa) {
+                        $ortuQuery->where('model_type', Ortu::class)
+                            ->where('model_id', $siswa->ortu->id);
+                    });
+                }
+
+                if ($siswa->user_id) {
+                    $activityQuery->orWhere(function ($userQuery) use ($siswa) {
+                        $userQuery->where('model_type', User::class)
+                            ->where('model_id', $siswa->user_id);
+                    });
+                }
+            })
+            ->latest()
+            ->limit(40)
+            ->get();
     }
 }

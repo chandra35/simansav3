@@ -28,6 +28,27 @@
 @stop
 
 @section('content')
+@php
+    $fieldLabels = [
+        'nama_lengkap' => 'Nama Lengkap',
+        'tempat_lahir' => 'Tempat Lahir',
+        'tanggal_lahir' => 'Tanggal Lahir',
+        'nisn' => 'NISN',
+        'nik' => 'NIK',
+        'jenis_kelamin' => 'Jenis Kelamin',
+        'username' => 'Username',
+        'agama' => 'Agama',
+        'npsn_asal_sekolah' => 'NPSN Asal Sekolah',
+        'alamat_siswa' => 'Alamat Siswa',
+        'nomor_hp' => 'Nomor HP',
+        'foto_profile' => 'Foto Profil',
+        'nama_ayah' => 'Nama Ayah',
+        'nama_ibu' => 'Nama Ibu',
+    ];
+
+    $ijazahFields = ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'nisn', 'nik', 'jenis_kelamin'];
+@endphp
+
 <style>
     .student-show-card {
         border: 0;
@@ -61,6 +82,17 @@
     .student-show-card .table th {
         color: #475569;
         font-weight: 700;
+    }
+
+    .student-log-item + .student-log-item {
+        border-top: 1px solid rgba(148, 163, 184, .18);
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+
+    .student-log-value {
+        word-break: break-word;
+        white-space: normal;
     }
 </style>
 
@@ -368,6 +400,93 @@
                         </small>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="card student-show-card">
+            <div class="card-header bg-gradient-secondary text-white">
+                <h3 class="card-title"><i class="fas fa-history"></i> Riwayat Perubahan Siswa</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Admin dapat meninjau perubahan data penting siswa beserta waktu, pelaku, dan nilai sebelum-sesudah untuk kebutuhan validasi ijazah.
+                </p>
+
+                @forelse($riwayatPerubahan as $log)
+                    @php
+                        $oldValues = $log->old_values ?? data_get($log->properties, 'old', []);
+                        $newValues = $log->new_values ?? data_get($log->properties, 'new', []);
+                        $changedFields = $log->changed_fields ?? array_values(array_unique(array_merge(array_keys($oldValues ?? []), array_keys($newValues ?? []))));
+                        $ijazahChanges = collect($changedFields)->intersect($ijazahFields);
+                    @endphp
+                    <div class="student-log-item">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="font-weight-bold text-dark">{{ $log->description }}</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-user-shield"></i>
+                                    {{ $log->user->name ?? 'System' }}
+                                    @if($log->user && $log->user->roles->isNotEmpty())
+                                        • {{ $log->user->roles->pluck('name')->implode(', ') }}
+                                    @endif
+                                </small>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge badge-light border text-uppercase">{{ str_replace('_', ' ', $log->activity_type) }}</span><br>
+                                <small class="text-muted">{{ $log->created_at?->format('d M Y H:i:s') }}</small>
+                            </div>
+                        </div>
+
+                        @if($ijazahChanges->isNotEmpty())
+                            <div class="mb-2">
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-file-signature"></i> Menyentuh data penting ijazah
+                                </span>
+                            </div>
+                        @endif
+
+                        @if(!empty($changedFields))
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th width="24%">Field</th>
+                                            <th width="38%">Nilai Lama</th>
+                                            <th width="38%">Nilai Baru</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($changedFields as $field)
+                                            @php
+                                                $oldValue = $oldValues[$field] ?? null;
+                                                $newValue = $newValues[$field] ?? null;
+                                                if (is_bool($oldValue)) $oldValue = $oldValue ? 'Ya' : 'Tidak';
+                                                if (is_bool($newValue)) $newValue = $newValue ? 'Ya' : 'Tidak';
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ $fieldLabels[$field] ?? \Illuminate\Support\Str::headline($field) }}</strong>
+                                                    @if(in_array($field, $ijazahFields))
+                                                        <div><span class="badge badge-warning">Ijazah</span></div>
+                                                    @endif
+                                                </td>
+                                                <td class="student-log-value text-muted">{{ filled($oldValue) ? $oldValue : 'Kosong' }}</td>
+                                                <td class="student-log-value text-dark">{{ filled($newValue) ? $newValue : 'Kosong' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <small class="text-muted">Aktivitas ini tidak menyimpan detail perubahan field, tetapi waktu dan pelakunya tetap tercatat.</small>
+                        @endif
+                    </div>
+                @empty
+                    <div class="alert alert-light border mb-0">
+                        <i class="fas fa-info-circle text-info"></i>
+                        Belum ada riwayat perubahan yang tercatat untuk siswa ini.
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
