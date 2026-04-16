@@ -570,6 +570,9 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <a href="#" id="viewSiswaFullDetailLink" class="btn btn-primary">
+                    <i class="fas fa-history"></i> Lihat Riwayat Perubahan
+                </a>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times"></i> Tutup
                 </button>
@@ -793,6 +796,7 @@ function showSiswa(id) {
         .done(function(response) {
             if (response.success) {
                 const siswa = response.data;
+                $('#viewSiswaFullDetailLink').attr('href', `{{ url('admin/siswa') }}/${id}`);
                 loadSiswaDataTab(siswa);
                 loadDataDiriTab(siswa);
                 loadDataOrtuTab(siswa);
