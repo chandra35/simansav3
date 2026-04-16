@@ -84,6 +84,151 @@
         font-weight: 700;
     }
 
+    .student-show-section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .student-show-section-title h4 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .student-show-section-title p {
+        margin: .35rem 0 0;
+        color: #64748b;
+        font-size: .92rem;
+    }
+
+    .student-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .student-summary-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.1rem 1.15rem;
+        border-radius: 20px;
+        color: #fff;
+        min-height: 142px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+    }
+
+    .student-summary-card::after {
+        content: "";
+        position: absolute;
+        right: -24px;
+        bottom: -28px;
+        width: 110px;
+        height: 110px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+    .student-summary-card__icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, .16);
+        font-size: 1.1rem;
+    }
+
+    .student-summary-card__label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        opacity: .9;
+        margin-bottom: .45rem;
+    }
+
+    .student-summary-card__value {
+        display: block;
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 800;
+        margin-bottom: .6rem;
+    }
+
+    .student-summary-card__meta {
+        position: relative;
+        z-index: 1;
+        font-size: .92rem;
+        opacity: .95;
+    }
+
+    .student-summary-card--primary { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+    .student-summary-card--info { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+    .student-summary-card--success { background: linear-gradient(135deg, #10b981, #34d399); }
+    .student-summary-card--warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #172033; }
+    .student-summary-card--warning .student-summary-card__icon { background: rgba(255,255,255,.25); }
+
+    .student-highlight-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .student-highlight-item {
+        border-radius: 18px;
+        padding: 1rem 1.05rem;
+        background: linear-gradient(180deg, rgba(248, 250, 252, .95), rgba(241, 245, 249, .95));
+        border: 1px solid rgba(148, 163, 184, .16);
+    }
+
+    .student-highlight-item__label {
+        color: #64748b;
+        font-size: .76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: .4rem;
+    }
+
+    .student-highlight-item__value {
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 700;
+        word-break: break-word;
+    }
+
+    .student-data-table td,
+    .student-data-table th {
+        padding-top: .55rem;
+        padding-bottom: .55rem;
+        vertical-align: top;
+    }
+
+    .student-data-table th {
+        width: 38%;
+    }
+
+    .student-log-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: .35rem;
+    }
+
+    .student-log-meta .badge {
+        font-weight: 700;
+        padding: .45rem .65rem;
+    }
+
     .student-log-item + .student-log-item {
         border-top: 1px solid rgba(148, 163, 184, .18);
         margin-top: 1rem;
@@ -94,7 +239,37 @@
         word-break: break-word;
         white-space: normal;
     }
+
+    @media (max-width: 1199.98px) {
+        .student-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .student-summary-grid,
+        .student-highlight-list {
+            grid-template-columns: 1fr;
+        }
+
+        .student-profile-card .profile-user-img {
+            width: 132px;
+            height: 132px;
+        }
+    }
 </style>
+
+@php
+    $kelasSekarang = optional($siswa->getKelasSekarang())->nama_kelas;
+    $statusLogin = $siswa->user && $siswa->user->is_first_login ? 'Belum ganti password' : 'Sudah aktif';
+    $kelengkapanData = collect([
+        $siswa->data_diri_completed ?? false,
+        $siswa->data_ortu_completed ?? false,
+        filled($siswa->nomor_hp),
+        filled($siswa->alamat_siswa),
+    ])->filter()->count();
+    $totalKelengkapan = 4;
+@endphp
 
 <div class="row">
     <!-- Left Column: Profile Card -->
@@ -190,15 +365,68 @@
 
     <!-- Right Column: Details -->
     <div class="col-md-8">
+        <div class="student-summary-grid">
+            <div class="student-summary-card student-summary-card--primary">
+                <div class="student-summary-card__icon"><i class="fas fa-school"></i></div>
+                <span class="student-summary-card__label">Kelas Aktif</span>
+                <span class="student-summary-card__value">{{ $kelasSekarang ? e($kelasSekarang) : '-' }}</span>
+                <div class="student-summary-card__meta">Rombel yang sedang terhubung pada data akademik siswa.</div>
+            </div>
+            <div class="student-summary-card student-summary-card--info">
+                <div class="student-summary-card__icon"><i class="fas fa-fingerprint"></i></div>
+                <span class="student-summary-card__label">NIK</span>
+                <span class="student-summary-card__value">{{ filled($siswa->nik) ? \Illuminate\Support\Str::limit($siswa->nik, 16, '') : '-' }}</span>
+                <div class="student-summary-card__meta">Data sensitif untuk validasi ijazah dan identitas resmi.</div>
+            </div>
+            <div class="student-summary-card student-summary-card--success">
+                <div class="student-summary-card__icon"><i class="fas fa-user-check"></i></div>
+                <span class="student-summary-card__label">Status Login</span>
+                <span class="student-summary-card__value" style="font-size:1.35rem; line-height:1.2;">{{ $statusLogin }}</span>
+                <div class="student-summary-card__meta">Pantau apakah akun sudah dipakai siswa atau masih perlu pendampingan.</div>
+            </div>
+            <div class="student-summary-card student-summary-card--warning">
+                <div class="student-summary-card__icon"><i class="fas fa-clipboard-check"></i></div>
+                <span class="student-summary-card__label">Kelengkapan Inti</span>
+                <span class="student-summary-card__value">{{ $kelengkapanData }}/{{ $totalKelengkapan }}</span>
+                <div class="student-summary-card__meta">Cek cepat data diri, orang tua, alamat, dan nomor HP.</div>
+            </div>
+        </div>
+
+        <div class="student-highlight-list">
+            <div class="student-highlight-item">
+                <div class="student-highlight-item__label">Tanggal Lahir untuk Ijazah</div>
+                <div class="student-highlight-item__value">{{ $siswa->tanggal_lahir ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d F Y') : '-' }}</div>
+            </div>
+            <div class="student-highlight-item">
+                <div class="student-highlight-item__label">Tempat Lahir untuk Ijazah</div>
+                <div class="student-highlight-item__value">{{ $siswa->tempat_lahir ?? '-' }}</div>
+            </div>
+            <div class="student-highlight-item">
+                <div class="student-highlight-item__label">Asal Sekolah</div>
+                <div class="student-highlight-item__value">{{ $siswa->sekolahAsal->nama ?? $siswa->nama_sekolah_asal ?? '-' }}</div>
+            </div>
+            <div class="student-highlight-item">
+                <div class="student-highlight-item__label">Kontak Aktif</div>
+                <div class="student-highlight-item__value">{{ $siswa->nomor_hp ?? ($siswa->user->email ?? '-') }}</div>
+            </div>
+        </div>
+
         <!-- Data Pribadi -->
         <div class="card student-show-card">
             <div class="card-header bg-info text-white">
                 <h3 class="card-title"><i class="fas fa-user"></i> Data Pribadi</h3>
             </div>
             <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Identitas Utama</h4>
+                        <p>Fokus utama admin untuk verifikasi ijazah, sinkron dokumen, dan validasi biodata siswa.</p>
+                    </div>
+                    <span class="badge badge-warning px-3 py-2"><i class="fas fa-file-signature"></i> Data sensitif ijazah</span>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">Nama Lengkap</th>
                                 <td>{{ $siswa->nama_lengkap ?? '-' }}</td>
@@ -222,7 +450,7 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">NIK</th>
                                 <td>{{ $siswa->nik ?? '-' }}</td>
@@ -255,6 +483,12 @@
                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Alamat</h3>
             </div>
             <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Alamat dan Wilayah</h4>
+                        <p>Gunakan bagian ini untuk memastikan alamat siswa, wilayah administrasi, dan data domisili sudah konsisten.</p>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-12">
                         <p><strong>Alamat Lengkap:</strong></p>
@@ -288,9 +522,15 @@
                 <h3 class="card-title"><i class="fas fa-school"></i> Asal Sekolah</h3>
             </div>
             <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Rekam Asal Sekolah</h4>
+                        <p>Bagian ini memudahkan operator mengecek sumber sekolah sebelum proses mutasi, sinkronisasi, dan validasi administrasi.</p>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">NPSN</th>
                                 <td>{{ $siswa->npsn_asal_sekolah ?? '-' }}</td>
@@ -302,7 +542,7 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">Bentuk</th>
                                 <td>{{ $siswa->sekolahAsal->bentuk_pendidikan ?? '-' }}</td>
@@ -332,10 +572,16 @@
                 <h3 class="card-title"><i class="fas fa-users"></i> Data Orang Tua</h3>
             </div>
             <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Kontak Orang Tua</h4>
+                        <p>Bantu admin memastikan identitas orang tua, pekerjaan, dan nomor yang bisa dihubungi saat ada kebutuhan validasi.</p>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="text-primary"><i class="fas fa-male"></i> Ayah</h5>
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">Nama</th>
                                 <td>{{ $siswa->ortu->nama_ayah ?? '-' }}</td>
@@ -356,7 +602,7 @@
                     </div>
                     <div class="col-md-6">
                         <h5 class="text-danger"><i class="fas fa-female"></i> Ibu</h5>
-                        <table class="table table-sm table-borderless">
+                        <table class="table table-sm table-borderless student-data-table">
                             <tr>
                                 <th width="40%">Nama</th>
                                 <td>{{ $siswa->ortu->nama_ibu ?? '-' }}</td>
@@ -386,6 +632,12 @@
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Sistem</h3>
             </div>
             <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Jejak Administrasi</h4>
+                        <p>Catatan ini membantu admin mengetahui siapa yang membuat dan terakhir memperbarui data siswa.</p>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <small class="text-muted">
@@ -408,9 +660,13 @@
                 <h3 class="card-title"><i class="fas fa-history"></i> Riwayat Perubahan Siswa</h3>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-3">
-                    Admin dapat meninjau perubahan data penting siswa beserta waktu, pelaku, dan nilai sebelum-sesudah untuk kebutuhan validasi ijazah.
-                </p>
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Audit Perubahan Data</h4>
+                        <p>Admin dapat meninjau perubahan data penting siswa beserta waktu, pelaku, dan nilai sebelum-sesudah untuk kebutuhan validasi ijazah.</p>
+                    </div>
+                    <span class="badge badge-light border px-3 py-2">{{ $riwayatPerubahan->count() }} log terbaru</span>
+                </div>
 
                 @forelse($riwayatPerubahan as $log)
                     @php
@@ -423,13 +679,15 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-start mb-2">
                             <div>
                                 <div class="font-weight-bold text-dark">{{ $log->description }}</div>
-                                <small class="text-muted">
-                                    <i class="fas fa-user-shield"></i>
-                                    {{ $log->user->name ?? 'System' }}
+                                <div class="student-log-meta">
+                                    <span class="badge badge-light border">
+                                        <i class="fas fa-user-shield"></i>
+                                        {{ $log->user->name ?? 'System' }}
+                                    </span>
                                     @if($log->user && $log->user->roles->isNotEmpty())
-                                        • {{ $log->user->roles->pluck('name')->implode(', ') }}
+                                        <span class="badge badge-light border">{{ $log->user->roles->pluck('name')->implode(', ') }}</span>
                                     @endif
-                                </small>
+                                </div>
                             </div>
                             <div class="text-right">
                                 <span class="badge badge-light border text-uppercase">{{ str_replace('_', ' ', $log->activity_type) }}</span><br>
