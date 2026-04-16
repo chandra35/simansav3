@@ -107,7 +107,7 @@
 
     .student-summary-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
@@ -118,7 +118,7 @@
         padding: 1.1rem 1.15rem;
         border-radius: 20px;
         color: #fff;
-        min-height: 142px;
+        min-height: 126px;
         box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
     }
 
@@ -176,36 +176,6 @@
     .student-summary-card--warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #172033; }
     .student-summary-card--warning .student-summary-card__icon { background: rgba(255,255,255,.25); }
 
-    .student-highlight-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: .9rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .student-highlight-item {
-        border-radius: 18px;
-        padding: 1rem 1.05rem;
-        background: linear-gradient(180deg, rgba(248, 250, 252, .95), rgba(241, 245, 249, .95));
-        border: 1px solid rgba(148, 163, 184, .16);
-    }
-
-    .student-highlight-item__label {
-        color: #64748b;
-        font-size: .76rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        margin-bottom: .4rem;
-    }
-
-    .student-highlight-item__value {
-        color: #0f172a;
-        font-size: 1rem;
-        font-weight: 700;
-        word-break: break-word;
-    }
-
     .student-data-table td,
     .student-data-table th {
         padding-top: .55rem;
@@ -229,6 +199,28 @@
         padding: .45rem .65rem;
     }
 
+    .student-log-summary {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .student-log-summary__title {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: .35rem;
+    }
+
+    .student-log-summary__right {
+        min-width: 180px;
+        text-align: right;
+    }
+
+    .student-log-detail-toggle {
+        margin-top: .65rem;
+    }
+
     .student-log-item + .student-log-item {
         border-top: 1px solid rgba(148, 163, 184, .18);
         margin-top: 1rem;
@@ -242,19 +234,27 @@
 
     @media (max-width: 1199.98px) {
         .student-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 767.98px) {
-        .student-summary-grid,
-        .student-highlight-list {
+        .student-summary-grid {
             grid-template-columns: 1fr;
         }
 
         .student-profile-card .profile-user-img {
             width: 132px;
             height: 132px;
+        }
+
+        .student-log-summary {
+            flex-direction: column;
+        }
+
+        .student-log-summary__right {
+            min-width: auto;
+            text-align: left;
         }
     }
 </style>
@@ -269,6 +269,7 @@
         filled($siswa->alamat_siswa),
     ])->filter()->count();
     $totalKelengkapan = 4;
+    $displayLogs = $riwayatPerubahan->take(6);
 @endphp
 
 <div class="row">
@@ -389,25 +390,6 @@
                 <span class="student-summary-card__label">Kelengkapan Inti</span>
                 <span class="student-summary-card__value">{{ $kelengkapanData }}/{{ $totalKelengkapan }}</span>
                 <div class="student-summary-card__meta">Cek cepat data diri, orang tua, alamat, dan nomor HP.</div>
-            </div>
-        </div>
-
-        <div class="student-highlight-list">
-            <div class="student-highlight-item">
-                <div class="student-highlight-item__label">Tanggal Lahir untuk Ijazah</div>
-                <div class="student-highlight-item__value">{{ $siswa->tanggal_lahir ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d F Y') : '-' }}</div>
-            </div>
-            <div class="student-highlight-item">
-                <div class="student-highlight-item__label">Tempat Lahir untuk Ijazah</div>
-                <div class="student-highlight-item__value">{{ $siswa->tempat_lahir ?? '-' }}</div>
-            </div>
-            <div class="student-highlight-item">
-                <div class="student-highlight-item__label">Asal Sekolah</div>
-                <div class="student-highlight-item__value">{{ $siswa->sekolahAsal->nama ?? $siswa->nama_sekolah_asal ?? '-' }}</div>
-            </div>
-            <div class="student-highlight-item">
-                <div class="student-highlight-item__label">Kontak Aktif</div>
-                <div class="student-highlight-item__value">{{ $siswa->nomor_hp ?? ($siswa->user->email ?? '-') }}</div>
             </div>
         </div>
 
@@ -665,20 +647,21 @@
                         <h4>Audit Perubahan Data</h4>
                         <p>Admin dapat meninjau perubahan data penting siswa beserta waktu, pelaku, dan nilai sebelum-sesudah untuk kebutuhan validasi ijazah.</p>
                     </div>
-                    <span class="badge badge-light border px-3 py-2">{{ $riwayatPerubahan->count() }} log terbaru</span>
+                    <span class="badge badge-light border px-3 py-2">Menampilkan {{ $displayLogs->count() }} dari {{ $riwayatPerubahan->count() }} log</span>
                 </div>
 
-                @forelse($riwayatPerubahan as $log)
+                @forelse($displayLogs as $log)
                     @php
                         $oldValues = $log->old_values ?? data_get($log->properties, 'old', []);
                         $newValues = $log->new_values ?? data_get($log->properties, 'new', []);
                         $changedFields = $log->changed_fields ?? array_values(array_unique(array_merge(array_keys($oldValues ?? []), array_keys($newValues ?? []))));
                         $ijazahChanges = collect($changedFields)->intersect($ijazahFields);
+                        $detailCollapseId = 'student-log-detail-' . $loop->index;
                     @endphp
                     <div class="student-log-item">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start mb-2">
-                            <div>
-                                <div class="font-weight-bold text-dark">{{ $log->description }}</div>
+                        <div class="student-log-summary">
+                            <div class="flex-grow-1">
+                                <div class="student-log-summary__title">{{ $log->description }}</div>
                                 <div class="student-log-meta">
                                     <span class="badge badge-light border">
                                         <i class="fas fa-user-shield"></i>
@@ -689,51 +672,59 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="text-right">
+                            <div class="student-log-summary__right">
                                 <span class="badge badge-light border text-uppercase">{{ str_replace('_', ' ', $log->activity_type) }}</span><br>
                                 <small class="text-muted">{{ $log->created_at?->format('d M Y H:i:s') }}</small>
                             </div>
                         </div>
 
-                        @if($ijazahChanges->isNotEmpty())
-                            <div class="mb-2">
-                                <span class="badge badge-warning">
+                        <div class="student-log-detail-toggle">
+                            @if($ijazahChanges->isNotEmpty())
+                                <span class="badge badge-warning mr-2">
                                     <i class="fas fa-file-signature"></i> Menyentuh data penting ijazah
                                 </span>
-                            </div>
-                        @endif
+                            @endif
+
+                            @if(!empty($changedFields))
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-toggle="collapse" data-target="#{{ $detailCollapseId }}" aria-expanded="false" aria-controls="{{ $detailCollapseId }}">
+                                    <i class="fas fa-eye"></i> Detail perubahan
+                                </button>
+                            @endif
+                        </div>
 
                         @if(!empty($changedFields))
-                            <div class="table-responsive">
-                                <table class="table table-sm table-borderless mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th width="24%">Field</th>
-                                            <th width="38%">Nilai Lama</th>
-                                            <th width="38%">Nilai Baru</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($changedFields as $field)
-                                            @php
-                                                $oldValue = $oldValues[$field] ?? null;
-                                                $newValue = $newValues[$field] ?? null;
-                                                if (is_bool($oldValue)) $oldValue = $oldValue ? 'Ya' : 'Tidak';
-                                                if (is_bool($newValue)) $newValue = $newValue ? 'Ya' : 'Tidak';
-                                            @endphp
+                            <div class="collapse mt-3" id="{{ $detailCollapseId }}">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <thead>
                                             <tr>
-                                                <td>
-                                                    <strong>{{ $fieldLabels[$field] ?? \Illuminate\Support\Str::headline($field) }}</strong>
-                                                    @if(in_array($field, $ijazahFields))
-                                                        <div><span class="badge badge-warning">Ijazah</span></div>
-                                                    @endif
-                                                </td>
-                                                <td class="student-log-value text-muted">{{ filled($oldValue) ? $oldValue : 'Kosong' }}</td>
-                                                <td class="student-log-value text-dark">{{ filled($newValue) ? $newValue : 'Kosong' }}</td>
+                                                <th width="24%">Field</th>
+                                                <th width="38%">Nilai Lama</th>
+                                                <th width="38%">Nilai Baru</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($changedFields as $field)
+                                                @php
+                                                    $oldValue = $oldValues[$field] ?? null;
+                                                    $newValue = $newValues[$field] ?? null;
+                                                    if (is_bool($oldValue)) $oldValue = $oldValue ? 'Ya' : 'Tidak';
+                                                    if (is_bool($newValue)) $newValue = $newValue ? 'Ya' : 'Tidak';
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $fieldLabels[$field] ?? \Illuminate\Support\Str::headline($field) }}</strong>
+                                                        @if(in_array($field, $ijazahFields))
+                                                            <div><span class="badge badge-warning">Ijazah</span></div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="student-log-value text-muted">{{ filled($oldValue) ? $oldValue : 'Kosong' }}</td>
+                                                    <td class="student-log-value text-dark">{{ filled($newValue) ? $newValue : 'Kosong' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         @else
                             <small class="text-muted">Aktivitas ini tidak menyimpan detail perubahan field, tetapi waktu dan pelakunya tetap tercatat.</small>
@@ -745,6 +736,13 @@
                         Belum ada riwayat perubahan yang tercatat untuk siswa ini.
                     </div>
                 @endforelse
+
+                @if($riwayatPerubahan->count() > $displayLogs->count())
+                    <div class="alert alert-light border mt-3 mb-0">
+                        <i class="fas fa-info-circle text-info"></i>
+                        Log ditampilkan ringkas agar halaman tetap nyaman dibaca. Kalau perlu, saya bisa lanjut tambahkan halaman riwayat penuh khusus siswa ini.
+                    </div>
+                @endif
             </div>
         </div>
     </div>
