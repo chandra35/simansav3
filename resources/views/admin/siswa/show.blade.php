@@ -3,25 +3,29 @@
 @section('title', 'Detail Siswa - ' . $siswa->nama_lengkap)
 
 @section('content_header')
-    <div class="simansa-page-hero">
-        <div class="simansa-page-hero__content">
-            <div class="simansa-page-hero__eyebrow">
+    <div class="student-detail-hero">
+        <div class="student-detail-hero__content">
+            <div class="student-detail-hero__eyebrow">
                 <i class="fas fa-user-graduate"></i>
                 Profil Peserta Didik
             </div>
-            <h1 class="simansa-page-hero__title">Detail Siswa</h1>
-            <p class="simansa-page-hero__subtitle">
-                Tinjau identitas, akun, asal sekolah, data orang tua, dan jejak administrasi siswa dalam satu tampilan ringkas.
+            <h1 class="student-detail-hero__title">Detail Siswa</h1>
+            <p class="student-detail-hero__subtitle">
+                Tinjau identitas, akun, asal sekolah, data orang tua, dan jejak administrasi siswa dalam satu tampilan yang lebih tenang dan mudah dioperasikan.
             </p>
         </div>
-        <div class="simansa-page-hero__meta">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">NISN</span>
-                <span class="simansa-hero-chip__value">{{ $siswa->nisn ?? '-' }}</span>
+        <div class="student-detail-hero__meta">
+            <div class="student-detail-hero__chip">
+                <span class="student-detail-hero__chip-label">NISN</span>
+                <span class="student-detail-hero__chip-value">{{ $siswa->nisn ?? '-' }}</span>
             </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Kelas</span>
-                <span class="simansa-hero-chip__value">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Tanpa Rombel' }}</span>
+            <div class="student-detail-hero__chip">
+                <span class="student-detail-hero__chip-label">Kelas</span>
+                <span class="student-detail-hero__chip-value">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Tanpa Rombel' }}</span>
+            </div>
+            <div class="student-detail-hero__chip">
+                <span class="student-detail-hero__chip-label">Status Login</span>
+                <span class="student-detail-hero__chip-value">{{ $siswa->user && $siswa->user->is_first_login ? 'Belum login' : 'Sudah aktif' }}</span>
             </div>
         </div>
     </div>
@@ -50,6 +54,83 @@
 @endphp
 
 <style>
+    .student-detail-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #3157c7 0%, #3182b5 58%, #3f9fa6 100%);
+        color: #fff;
+        box-shadow: 0 24px 52px rgba(37, 99, 235, .18);
+    }
+
+    .student-detail-hero__content {
+        max-width: 760px;
+    }
+
+    .student-detail-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .82rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        opacity: .88;
+        margin-bottom: .55rem;
+    }
+
+    .student-detail-hero__title {
+        font-size: 2rem;
+        line-height: 1.08;
+        font-weight: 800;
+        margin: 0 0 .45rem;
+    }
+
+    .student-detail-hero__subtitle {
+        max-width: 700px;
+        margin: 0;
+        color: rgba(255, 255, 255, .88);
+        font-size: 1rem;
+        line-height: 1.65;
+    }
+
+    .student-detail-hero__meta {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: .85rem;
+        min-width: 310px;
+    }
+
+    .student-detail-hero__chip {
+        min-width: 150px;
+        padding: .9rem 1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .14);
+        backdrop-filter: blur(8px);
+    }
+
+    .student-detail-hero__chip-label {
+        display: block;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.74);
+        margin-bottom: .35rem;
+    }
+
+    .student-detail-hero__chip-value {
+        display: block;
+        font-size: 1.02rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
     .student-show-card {
         border: 0;
         border-radius: 22px;
@@ -104,77 +185,6 @@
         color: #64748b;
         font-size: .92rem;
     }
-
-    .student-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .student-summary-card {
-        position: relative;
-        overflow: hidden;
-        padding: 1.1rem 1.15rem;
-        border-radius: 20px;
-        color: #fff;
-        min-height: 126px;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
-    }
-
-    .student-summary-card::after {
-        content: "";
-        position: absolute;
-        right: -24px;
-        bottom: -28px;
-        width: 110px;
-        height: 110px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .12);
-    }
-
-    .student-summary-card__icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, .16);
-        font-size: 1.1rem;
-    }
-
-    .student-summary-card__label {
-        display: block;
-        font-size: .78rem;
-        font-weight: 800;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-        opacity: .9;
-        margin-bottom: .45rem;
-    }
-
-    .student-summary-card__value {
-        display: block;
-        font-size: 2rem;
-        line-height: 1;
-        font-weight: 800;
-        margin-bottom: .6rem;
-    }
-
-    .student-summary-card__meta {
-        position: relative;
-        z-index: 1;
-        font-size: .92rem;
-        opacity: .95;
-    }
-
-    .student-summary-card--primary { background: linear-gradient(135deg, #4f46e5, #6366f1); }
-    .student-summary-card--info { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
-    .student-summary-card--success { background: linear-gradient(135deg, #10b981, #34d399); }
-    .student-summary-card--warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #172033; }
-    .student-summary-card--warning .student-summary-card__icon { background: rgba(255,255,255,.25); }
 
     .student-data-table td,
     .student-data-table th {
@@ -233,14 +243,31 @@
     }
 
     @media (max-width: 1199.98px) {
-        .student-summary-grid {
-            grid-template-columns: 1fr;
+        .student-detail-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .student-detail-hero__meta {
+            justify-content: flex-start;
+            width: 100%;
+            min-width: 0;
         }
     }
 
     @media (max-width: 767.98px) {
-        .student-summary-grid {
-            grid-template-columns: 1fr;
+        .student-detail-hero {
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+        }
+
+        .student-detail-hero__title {
+            font-size: 1.6rem;
+        }
+
+        .student-detail-hero__chip {
+            width: 100%;
+            min-width: 0;
         }
 
         .student-profile-card .profile-user-img {
@@ -260,15 +287,6 @@
 </style>
 
 @php
-    $kelasSekarang = optional($siswa->getKelasSekarang())->nama_kelas;
-    $statusLogin = $siswa->user && $siswa->user->is_first_login ? 'Belum ganti password' : 'Sudah aktif';
-    $kelengkapanData = collect([
-        $siswa->data_diri_completed ?? false,
-        $siswa->data_ortu_completed ?? false,
-        filled($siswa->nomor_hp),
-        filled($siswa->alamat_siswa),
-    ])->filter()->count();
-    $totalKelengkapan = 4;
     $displayLogs = $riwayatPerubahan->take(6);
 @endphp
 
@@ -366,33 +384,6 @@
 
     <!-- Right Column: Details -->
     <div class="col-md-8">
-        <div class="student-summary-grid">
-            <div class="student-summary-card student-summary-card--primary">
-                <div class="student-summary-card__icon"><i class="fas fa-school"></i></div>
-                <span class="student-summary-card__label">Kelas Aktif</span>
-                <span class="student-summary-card__value">{{ $kelasSekarang ? e($kelasSekarang) : '-' }}</span>
-                <div class="student-summary-card__meta">Rombel yang sedang terhubung pada data akademik siswa.</div>
-            </div>
-            <div class="student-summary-card student-summary-card--info">
-                <div class="student-summary-card__icon"><i class="fas fa-fingerprint"></i></div>
-                <span class="student-summary-card__label">NIK</span>
-                <span class="student-summary-card__value">{{ filled($siswa->nik) ? \Illuminate\Support\Str::limit($siswa->nik, 16, '') : '-' }}</span>
-                <div class="student-summary-card__meta">Data sensitif untuk validasi ijazah dan identitas resmi.</div>
-            </div>
-            <div class="student-summary-card student-summary-card--success">
-                <div class="student-summary-card__icon"><i class="fas fa-user-check"></i></div>
-                <span class="student-summary-card__label">Status Login</span>
-                <span class="student-summary-card__value" style="font-size:1.35rem; line-height:1.2;">{{ $statusLogin }}</span>
-                <div class="student-summary-card__meta">Pantau apakah akun sudah dipakai siswa atau masih perlu pendampingan.</div>
-            </div>
-            <div class="student-summary-card student-summary-card--warning">
-                <div class="student-summary-card__icon"><i class="fas fa-clipboard-check"></i></div>
-                <span class="student-summary-card__label">Kelengkapan Inti</span>
-                <span class="student-summary-card__value">{{ $kelengkapanData }}/{{ $totalKelengkapan }}</span>
-                <div class="student-summary-card__meta">Cek cepat data diri, orang tua, alamat, dan nomor HP.</div>
-            </div>
-        </div>
-
         <!-- Data Pribadi -->
         <div class="card student-show-card">
             <div class="card-header bg-info text-white">
