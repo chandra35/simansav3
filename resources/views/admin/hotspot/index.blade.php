@@ -2,16 +2,8 @@
 
 @section('title', 'Hotspot Manager - SIMANSA')
 
-@section('plugins.js')
-    <script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="//cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-@stop
-
-@section('plugins.css')
-    <link rel="stylesheet" href="//cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
-@stop
-
 @section('css')
+<link rel="stylesheet" href="//cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 <style>
 /* ── Hero Card ─────────────────────────────────── */
 .hs-hero {
@@ -551,6 +543,8 @@
 @endsection
 
 @section('js')
+<script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script>
 const ROUTES = {
     data:         '{{ route("admin.hotspot.data") }}',
