@@ -569,6 +569,15 @@ return [
             ],
         ],
 
+        // HOTSPOT MANAGER
+        [
+            'text' => 'Hotspot',
+            'icon' => 'fas fa-fw fa-wifi',
+            'can' => 'admin-access',
+            'active' => ['admin/hotspot*'],
+            'route' => 'admin.hotspot.index',
+        ],
+
         // KEUANGAN - Collapsible
         [
             'text' => 'Keuangan',

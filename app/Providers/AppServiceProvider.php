@@ -12,6 +12,8 @@ use JeroenNoten\LaravelAdminLte\Events\BuildingMenu;
 use Illuminate\Support\Facades\Event;
 use App\Models\CustomMenu;
 use App\Models\CustomMenuSiswa;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // Register User Observer untuk sync password ke RADIUS
+        User::observe(UserObserver::class);
         RateLimiter::for('exam-browser-config', function (Request $request) {
             return [
                 Limit::perMinute(1200)->by($request->ip())->response(fn () => response()->json([

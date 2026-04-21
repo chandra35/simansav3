@@ -53,6 +53,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/profile/password', [AdminProfileController::class, 'changePassword'])->name('profile.password');
     Route::delete('/profile/avatar', [AdminProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     
+    // Hotspot Management
+    Route::prefix('hotspot')->name('hotspot.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\HotspotController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\Admin\HotspotController::class, 'data'])->name('data');
+        Route::post('/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'sync'])->name('sync');
+        Route::post('/sync/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'syncSingle'])->name('sync-single');
+        Route::post('/{hotspot}/toggle-active', [\App\Http\Controllers\Admin\HotspotController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');
+        // Tamu CRUD
+        Route::post('/tamu', [\App\Http\Controllers\Admin\HotspotController::class, 'storeTamu'])->name('tamu.store');
+        Route::put('/tamu/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateTamu'])->name('tamu.update');
+        Route::delete('/tamu/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'destroyTamu'])->name('tamu.destroy');
+    });
+
     // Siswa Management
     Route::resource('siswa', AdminSiswaController::class);
     Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');

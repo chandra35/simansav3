@@ -82,6 +82,25 @@ return [
             ]) : [],
         ],
 
+        'mysql_radius' => [
+            'driver' => 'mysql',
+            'host' => env('RADIUS_DB_HOST', '172.16.250.8'),
+            'port' => env('RADIUS_DB_PORT', '3306'),
+            'database' => env('RADIUS_DB_DATABASE', 'radius'),
+            'username' => env('RADIUS_DB_USERNAME', 'radius'),
+            'password' => env('RADIUS_DB_PASSWORD', ''),
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => false,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mysql_rdm' => [
             'driver' => 'mysql',
             'host' => env('RDM_DB_HOST', '172.16.251.2'),
