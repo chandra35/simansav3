@@ -309,6 +309,59 @@ class HotspotController extends Controller
         }
     }
 
+    public function onlineUsers()
+    {
+        try {
+            $sessions = DB::connection('mysql_radius')
+                ->table('radacct')
+                ->whereNull('acctstoptime')
+                ->orderByDesc('acctstarttime')
+                ->get();
+
+            $usernames  = $sessions->pluck('username')->unique()->values();
+            $hotspotMap = HotspotUser::whereIn('username', $usernames)
+                ->with('user.siswa.kelasAktif')
+                ->get()
+                ->keyBy('username');
+
+            $result = $sessions->map(function ($s) use ($hotspotMap) {
+                $hs    = $hotspotMap->get($s->username);
+                $kelas = null;
+                if ($hs && $hs->role === 'siswa' && $hs->user?->siswa) {
+                    $kelas = optional($hs->user->siswa->kelasAktif->first())->nama_kelas;
+                }
+
+                return [
+                    'session_id'   => $s->radacctid,
+                    'username'     => $s->username,
+                    'display_name' => $hs?->display_name ?? $s->username,
+                    'role'         => $hs?->role ?? 'unknown',
+                    'kelas'        => $kelas,
+                    'hotspot_id'   => $hs?->id,
+                    'is_active'    => $hs?->is_active ?? true,
+                    'framed_ip'    => $s->framedipaddress,
+                    'mac'          => $s->callingstationid,
+                    'nas_ip'       => $s->nasipaddress,
+                    'started_at'   => $s->acctstarttime,
+                    'session_time' => (int) ($s->acctsessiontime ?? 0),
+                    'bytes_in'     => (int) ($s->acctinputoctets ?? 0),
+                    'bytes_out'    => (int) ($s->acctoutputoctets ?? 0),
+                ];
+            });
+
+            return response()->json([
+                'success'  => true,
+                'count'    => $result->count(),
+                'sessions' => $result->values(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function filterOptions()
     {
         $kelas = \App\Models\Kelas::select('id', 'nama_kelas', 'tingkat')

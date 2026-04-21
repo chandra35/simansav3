@@ -247,10 +247,11 @@
         <div class="hs-stat__val" id="statTamu">{{ $stats['tamu'] }}</div>
         <div class="hs-stat__label">Tamu</div>
     </div>
-    <div class="hs-stat hs-stat--online">
+    <div class="hs-stat hs-stat--online" id="statCardOnline" title="Klik untuk lihat siapa yang sedang online">
         <div class="hs-stat__icon"><span class="pulse">🟢</span></div>
         <div class="hs-stat__val" id="statOnline">{{ $stats['online'] }}</div>
         <div class="hs-stat__label">Online Sekarang</div>
+        <div style="font-size:.6rem;color:#16a34a;margin-top:.1rem"><i class="fas fa-external-link-alt mr-1"></i>Klik detail</div>
     </div>
     <div class="hs-stat hs-stat--err">
         <div class="hs-stat__icon">⚠️</div>
@@ -405,6 +406,44 @@
     </div>
 </div>
 
+{{-- Modal: User Online --------------------------------------------------- --}}
+<div id="onlineOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)">
+    <div class="online-monitor-modal">
+
+        {{-- Header --}}
+        <div style="padding:1rem 1.4rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#f8fafc;border-radius:20px 20px 0 0">
+            <div style="font-size:.88rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:.5rem">
+                <span class="pulse">🟢</span>
+                <span>User Online Sekarang</span>
+                <span class="badge badge-success ml-1" id="onlineCountBadge">0</span>
+            </div>
+            <div class="d-flex align-items-center" style="gap:.5rem">
+                <button class="btn btn-xs btn-outline-secondary" id="btnRefreshOnline" title="Refresh">
+                    <i class="fas fa-sync"></i>
+                </button>
+                <button class="btn btn-xs btn-light" id="btnCloseOnlineModal" style="border-radius:8px;padding:.25rem .6rem">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div id="onlineModalBody" style="padding:.9rem 1rem;overflow-y:auto;flex:1">
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                <p class="small mb-0">Memuat data...</p>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div style="padding:.65rem 1.1rem;border-top:1px solid #e2e8f0;background:#f8fafc;border-radius:0 0 20px 20px;font-size:.71rem;color:#64748b;display:flex;align-items:center;justify-content:space-between">
+            <span id="onlineLastRefresh">-</span>
+            <span><i class="fas fa-sync mr-1"></i>Auto-refresh tiap 30 detik</span>
+        </div>
+
+    </div>
+</div>
+
 {{-- Sync Overlay --------------------------------------------------------- --}}
 <div id="syncOverlay">
     <div class="sync-modal">
@@ -553,6 +592,7 @@ const ROUTES = {
     radiusStatus: '{{ route("admin.hotspot.radius-status") }}',
     filterOptions:'{{ route("admin.hotspot.filter-options") }}',
     bulkToggle:   '{{ route("admin.hotspot.bulk-toggle") }}',
+    onlineUsers:  '{{ route("admin.hotspot.online-users") }}',
     tamuStore:    '{{ route("admin.hotspot.tamu.store") }}',
     tamuUpdate:   (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
     tamuDestroy:  (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
@@ -950,6 +990,111 @@ $(document).on('click', '.btn-delete', function () {
             toastr[r.success ? 'success' : 'error'](r.message);
             table.ajax.reload();
         });
+});
+
+// ── Online Users Monitor ──────────────────────────────────────────────────
+let _onlineRefreshTimer = null;
+
+function openOnlineModal() {
+    $('#onlineOverlay').css('display', 'flex');
+    loadOnlineUsers();
+    _onlineRefreshTimer = setInterval(loadOnlineUsers, 30000);
+}
+
+function closeOnlineModal() {
+    $('#onlineOverlay').hide();
+    if (_onlineRefreshTimer) { clearInterval(_onlineRefreshTimer); _onlineRefreshTimer = null; }
+}
+
+function fmtBytes(b) {
+    if (!b || b <= 0) return '0 B';
+    const u = ['B','KB','MB','GB']; let i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return b.toFixed(i > 0 ? 1 : 0) + '\u00a0' + u[i];
+}
+
+function fmtDuration(s) {
+    if (!s || s <= 0) return '-';
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    if (h > 0) return h + 'j ' + m + 'm';
+    if (m > 0) return m + 'm ' + sec + 'd';
+    return sec + 'd';
+}
+
+function loadOnlineUsers() {
+    $('#btnRefreshOnline').html('<i class="fas fa-spin fa-sync"></i>');
+    $.get(ROUTES.onlineUsers)
+        .done(r => {
+            const now = new Date().toLocaleTimeString('id-ID');
+            $('#onlineLastRefresh').text('Diperbarui: ' + now);
+            const cnt = r.count || 0;
+            $('#onlineCountBadge').text(cnt);
+            $('#statOnline').text(cnt);
+
+            if (!r.success) {
+                $('#onlineModalBody').html(`<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i><small>${r.error || 'Error tidak diketahui'}</small></div>`);
+                return;
+            }
+            if (!r.sessions || r.sessions.length === 0) {
+                $('#onlineModalBody').html(`
+                    <div class="text-center py-5">
+                        <div style="font-size:3rem">📡</div>
+                        <h6 class="mt-2 font-weight-bold text-muted">Tidak ada user online</h6>
+                        <small class="text-muted">Belum ada sesi aktif di FreeRADIUS</small>
+                    </div>`);
+                return;
+            }
+            const avMap = {
+                guru:  { bg:'#dbeafe', ic:'👨‍🏫', badge:'primary' },
+                siswa: { bg:'#e0f2fe', ic:'👨‍🎓', badge:'info' },
+                tamu:  { bg:'#fef3c7', ic:'🧑‍💼', badge:'warning' },
+            };
+            const rows = r.sessions.map(s => {
+                const av  = avMap[s.role] || { bg:'#f1f5f9', ic:'👤', badge:'secondary' };
+                const kb  = s.kelas ? `<span class="badge badge-light border ml-1" style="font-size:.62rem">${s.kelas}</span>` : '';
+                const blk = s.hotspot_id
+                    ? `<button class="btn btn-xs btn-outline-danger btn-block-online mt-2" data-id="${s.hotspot_id}" data-username="${s.username}" style="width:100%"><i class="fas fa-ban mr-1"></i>Blokir</button>`
+                    : '';
+                return `<div class="online-item">
+    <div class="online-item__avatar" style="background:${av.bg}">${av.ic}</div>
+    <div class="online-item__body">
+        <div class="online-item__name">${s.display_name || s.username}${kb}</div>
+        <div class="online-item__sub"><code style="font-size:.67rem">${s.username}</code> <span class="badge badge-${av.badge} ml-1" style="font-size:.6rem">${s.role}</span></div>
+        <div class="online-item__sub"><i class="fas fa-network-wired mr-1 text-primary"></i>${s.framed_ip || '-'} &middot; <i class="fas fa-ethernet mr-1 text-secondary"></i>${s.mac || '-'}</div>
+    </div>
+    <div class="online-item__stat">
+        <div class="dur"><i class="fas fa-clock mr-1"></i>${fmtDuration(s.session_time)}</div>
+        <div class="mt-1"><i class="fas fa-arrow-down text-success mr-1"></i>${fmtBytes(s.bytes_out)}</div>
+        <div><i class="fas fa-arrow-up text-primary mr-1"></i>${fmtBytes(s.bytes_in)}</div>
+        ${blk}
+    </div>
+</div>`;
+            }).join('');
+            $('#onlineModalBody').html(rows);
+        })
+        .fail(() => $('#onlineModalBody').html('<div class="text-center py-4 text-danger small">Gagal memuat data. Cek koneksi RADIUS.</div>'))
+        .always(() => $('#btnRefreshOnline').html('<i class="fas fa-sync"></i>'));
+}
+
+// Blokir user dari modal online
+$(document).on('click', '.btn-block-online', function () {
+    const id  = $(this).data('id');
+    const usr = $(this).data('username');
+    if (!confirm(`Blokir akun "${usr}"?\nSession aktif akan berakhir saat koneksi ulang.`)) return;
+    $.post(ROUTES.toggleActive(id), { _token: '{{ csrf_token() }}' })
+        .done(r => {
+            toastr[r.is_active ? 'success' : 'warning'](r.is_active ? r.message : `Akun ${usr} diblokir.`);
+            loadOnlineUsers();
+            table.ajax.reload();
+        })
+        .fail(() => toastr.error('Gagal memblokir.'));
+});
+
+$('#statCardOnline').on('click', openOnlineModal);
+$('#btnCloseOnlineModal').on('click', closeOnlineModal);
+$('#btnRefreshOnline').on('click', loadOnlineUsers);
+$('#onlineOverlay').on('click', function (e) {
+    if (e.target === this) closeOnlineModal();
 });
 
 // ── RADIUS Live Status ────────────────────────────────────────────────────
