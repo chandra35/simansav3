@@ -99,23 +99,87 @@
 /* ── Sync progress overlay ─────────────────────── */
 #syncOverlay {
     display: none;
-    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    position: fixed; inset: 0; background: rgba(15,23,42,.6);
     z-index: 9999; align-items: center; justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(3px);
 }
 #syncOverlay.show { display: flex; }
 .sync-modal {
-    background: #fff; border-radius: 18px; padding: 2rem 2.5rem;
-    max-width: 520px; width: 90%; text-align: center;
-    box-shadow: 0 24px 60px rgba(0,0,0,.2);
+    background: #fff; border-radius: 20px;
+    max-width: 500px; width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,.3);
+    display: flex; flex-direction: column;
+    max-height: 90vh; overflow: hidden;
 }
-.sync-spinner { font-size: 2.5rem; color: #2563eb; animation: spin 1s linear infinite; }
+.sync-modal__header {
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.sync-modal__header-title {
+    font-size: .88rem; font-weight: 700; color: #1e293b;
+    display: flex; align-items: center; gap: .5rem;
+}
+.sync-modal__body {
+    padding: 1.75rem 2rem;
+    text-align: center;
+    overflow-y: auto;
+    flex: 1;
+}
+.sync-modal__footer {
+    padding: 1rem 1.4rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex; justify-content: flex-end; gap: .5rem;
+    flex-shrink: 0;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+}
+/* Running state */
+.sync-spinner-wrap {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #6366f1);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 8px 24px rgba(37,99,235,.35);
+}
+.sync-spinner-wrap i { font-size: 1.6rem; color: #fff; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Done state */
+.sync-result-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem; line-height: 1;
+}
+.sync-result-icon.ok  { background: #dcfce7; box-shadow: 0 8px 24px rgba(34,197,94,.25); }
+.sync-result-icon.err { background: #fef9c3; box-shadow: 0 8px 24px rgba(234,179,8,.25); }
+.sync-result-icon.fail{ background: #fee2e2; box-shadow: 0 8px 24px rgba(239,68,68,.25); }
+.sync-counts {
+    display: flex; justify-content: center; gap: 0;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+    overflow: hidden; margin: 1.25rem 0 0;
+}
+.sync-count-item {
+    flex: 1; padding: .6rem .25rem; text-align: center;
+    border-right: 1px solid #e2e8f0;
+}
+.sync-count-item:last-child { border-right: none; }
+.sync-count-item__val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.sync-count-item__label { font-size: .62rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #64748b; margin-top: .15rem; }
 .sync-output {
     text-align: left; background: #0f172a; color: #94a3b8;
-    border-radius: 10px; padding: .8rem 1rem; font-family: monospace;
-    font-size: .75rem; max-height: 240px; overflow-y: auto; margin-top: 1rem;
+    border-radius: 10px; padding: .7rem 1rem; font-family: monospace;
+    font-size: .72rem; max-height: 180px; overflow-y: auto; margin-top: 1rem;
     display: none;
 }
+.sync-output-toggle {
+    font-size: .75rem; color: #64748b; cursor: pointer; margin-top: .6rem;
+    display: inline-flex; align-items: center; gap: .3rem;
+    border: none; background: none; padding: 0;
+}
+.sync-output-toggle:hover { color: #2563eb; }
 
 /* ── RADIUS live panel ─────────────────────────── */
 .radius-live {
@@ -308,22 +372,64 @@
 {{-- Sync Overlay --------------------------------------------------------- --}}
 <div id="syncOverlay">
     <div class="sync-modal">
-        {{-- Running state --}}
-        <div id="syncStateRunning">
-            <div class="sync-spinner"><i class="fas fa-sync fa-spin"></i></div>
-            <h5 class="mt-3 mb-1 font-weight-bold">Sinkronisasi Berjalan...</h5>
-            <p class="text-muted small mb-2">Harap tunggu, jangan tutup halaman ini.</p>
-            <div class="sync-output" id="syncOutput"></div>
+
+        {{-- Header --}}
+        <div class="sync-modal__header">
+            <div class="sync-modal__header-title">
+                <i class="fas fa-wifi text-primary"></i>
+                <span id="syncHeaderTitle">Hotspot Sync</span>
+            </div>
+            <button type="button" id="btnCloseSyncOverlay"
+                class="btn btn-sm btn-light"
+                style="display:none;border-radius:8px;padding:.25rem .6rem"
+                title="Tutup">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        {{-- Done state --}}
-        <div id="syncStateDone" style="display:none">
-            <div id="syncResultIcon" style="font-size:3rem;line-height:1"></div>
-            <h5 class="mt-3 mb-1 font-weight-bold" id="syncResultTitle"></h5>
-            <p class="text-muted small mb-0" id="syncResultSub"></p>
-            <div id="syncResultCounts" class="mt-3 d-flex justify-content-center" style="gap:.75rem;flex-wrap:wrap"></div>
-            <div class="sync-output mt-3" id="syncOutputDone" style="max-height:180px"></div>
+
+        {{-- Body --}}
+        <div class="sync-modal__body">
+
+            {{-- Running state --}}
+            <div id="syncStateRunning">
+                <div class="sync-spinner-wrap">
+                    <i class="fas fa-sync fa-spin"></i>
+                </div>
+                <h5 class="font-weight-bold mb-1">Sinkronisasi Berjalan...</h5>
+                <p class="text-muted small mb-0">Harap tunggu, jangan tutup halaman ini.</p>
+            </div>
+
+            {{-- Done state --}}
+            <div id="syncStateDone" style="display:none">
+                <div id="syncResultIconWrap" class="sync-result-icon">
+                    <span id="syncResultEmoji"></span>
+                </div>
+                <h5 class="font-weight-bold mb-1" id="syncResultTitle"></h5>
+                <p class="text-muted small mb-0" id="syncResultSub"></p>
+
+                {{-- Count grid --}}
+                <div class="sync-counts" id="syncResultCounts"></div>
+
+                {{-- Log toggle --}}
+                <button class="sync-output-toggle" id="btnToggleSyncLog" style="display:none">
+                    <i class="fas fa-chevron-down" id="syncLogIcon"></i>
+                    <span id="syncLogLabel">Lihat detail log</span>
+                </button>
+                <div class="sync-output" id="syncOutputDone"></div>
+            </div>
+
         </div>
-        <button class="btn btn-primary px-4 mt-4" id="btnCloseSyncOverlay" style="display:none">Tutup</button>
+
+        {{-- Footer --}}
+        <div class="sync-modal__footer" id="syncModalFooter" style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm px-3" id="btnCloseSyncOverlay2">
+                <i class="fas fa-times mr-1"></i>Tutup
+            </button>
+            <button type="button" class="btn btn-primary btn-sm px-3" id="btnSyncAgain">
+                <i class="fas fa-redo mr-1"></i>Sync Lagi
+            </button>
+        </div>
+
     </div>
 </div>
 
@@ -458,43 +564,77 @@ $('.filter-active').on('click', function () {
 });
 
 // ── Sync overlay ──────────────────────────────────────────────────────────
+let lastSyncRole = '', lastSyncForce = false;
+
+function closeSyncOverlay() {
+    $('#syncOverlay').removeClass('show');
+}
+
 function doSync(role = '', force = false) {
-    // Reset ke state running
+    lastSyncRole  = role;
+    lastSyncForce = force;
+
+    // Reset ke running state
+    $('#syncHeaderTitle').text('Hotspot Sync');
     $('#syncStateRunning').show();
     $('#syncStateDone').hide();
+    $('#syncModalFooter').hide();
     $('#btnCloseSyncOverlay').hide();
-    $('#syncOutput').hide().html('');
-    $('.sync-spinner i').addClass('fa-spin');
+    $('#syncOutputDone').hide().html('');
+    $('#syncResultCounts').html('');
+    $('#btnToggleSyncLog').hide();
     $('#syncOverlay').addClass('show');
 
     $.post(ROUTES.sync, { role, force: force ? 1 : 0, _token: '{{ csrf_token() }}' })
         .done(r => {
             const c = r.counts || {};
             const hasError = (c.errors || 0) > 0;
+            const total = (c.created || 0) + (c.updated || 0);
 
-            // Bangun badge ringkasan
-            const badges = [
-                { label: 'Dibuat',      val: c.created     || 0, color: 'success' },
-                { label: 'Diperbarui',  val: c.updated     || 0, color: 'info'    },
-                { label: 'Nonaktifkan', val: c.deactivated || 0, color: 'warning' },
-                { label: 'Error',       val: c.errors      || 0, color: hasError ? 'danger' : 'secondary' },
-            ];
-            const badgeHtml = badges.map(b =>
-                `<div class="text-center">
-                    <div style="font-size:1.4rem;font-weight:800;color:var(--${b.color === 'secondary' ? 'gray' : b.color})" class="text-${b.color}">${b.val}</div>
-                    <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">${b.label}</div>
-                </div>`
-            ).join('');
+            // Icon + warna
+            const iconWrap = $('#syncResultIconWrap');
+            iconWrap.removeClass('ok err fail');
+            if (hasError) {
+                iconWrap.addClass('err');
+                $('#syncResultEmoji').text('⚠️');
+            } else {
+                iconWrap.addClass('ok');
+                $('#syncResultEmoji').text('✅');
+            }
 
-            // Tampilkan done state
-            $('#syncStateRunning').hide();
-            $('#syncResultIcon').html(hasError ? '⚠️' : '✅');
+            $('#syncHeaderTitle').text(hasError ? 'Selesai dengan Error' : 'Sync Berhasil');
             $('#syncResultTitle').text(hasError ? 'Sync Selesai dengan Error' : 'Sinkronisasi Berhasil!');
             $('#syncResultSub').text(hasError
-                ? `${c.errors} akun gagal disync ke RADIUS. Lihat detail di bawah.`
-                : `Semua akun berhasil disinkronkan ke FreeRADIUS.`);
-            $('#syncResultCounts').html(badgeHtml);
-            $('#syncOutputDone').html(r.output).show();
+                ? `${c.errors} akun gagal disync ke RADIUS.`
+                : total > 0
+                    ? `${total} akun berhasil disinkronkan ke FreeRADIUS.`
+                    : `Semua akun sudah up-to-date di FreeRADIUS.`);
+
+            // Count grid
+            const items = [
+                { label: 'Dibuat',      val: c.created     || 0, color: '#16a34a' },
+                { label: 'Diperbarui',  val: c.updated     || 0, color: '#0891b2' },
+                { label: 'Nonaktifkan', val: c.deactivated || 0, color: '#d97706' },
+                { label: 'Error',       val: c.errors      || 0, color: hasError ? '#dc2626' : '#94a3b8' },
+            ];
+            $('#syncResultCounts').html(
+                items.map(i => `
+                    <div class="sync-count-item">
+                        <div class="sync-count-item__val" style="color:${i.color}">${i.val}</div>
+                        <div class="sync-count-item__label">${i.label}</div>
+                    </div>`).join('')
+            );
+
+            // Log toggle
+            if (r.output) {
+                $('#syncOutputDone').html(r.output);
+                $('#btnToggleSyncLog').show();
+                $('#syncLogIcon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                $('#syncLogLabel').text('Lihat detail log');
+                $('#syncOutputDone').hide();
+            }
+
+            $('#syncStateRunning').hide();
             $('#syncStateDone').show();
 
             // Update stat cards
@@ -503,18 +643,46 @@ function doSync(role = '', force = false) {
             loadRadiusStatus();
         })
         .fail(() => {
-            $('#syncStateRunning').hide();
-            $('#syncResultIcon').html('❌');
-            $('#syncResultTitle').text('Sync Gagal!');
-            $('#syncResultSub').text('Terjadi kesalahan saat menghubungi server.');
+            $('#syncResultIconWrap').removeClass('ok err').addClass('fail');
+            $('#syncResultEmoji').text('❌');
+            $('#syncHeaderTitle').text('Sync Gagal');
+            $('#syncResultTitle').text('Terjadi Kesalahan!');
+            $('#syncResultSub').text('Gagal menghubungi server. Cek koneksi dan coba lagi.');
             $('#syncResultCounts').html('');
-            $('#syncOutputDone').html('').hide();
+            $('#btnToggleSyncLog').hide();
+            $('#syncStateRunning').hide();
             $('#syncStateDone').show();
         })
         .always(() => {
             $('#btnCloseSyncOverlay').show();
+            $('#syncModalFooter').show();
         });
 }
+
+// Log toggle
+$('#btnToggleSyncLog').on('click', function () {
+    const out  = $('#syncOutputDone');
+    const show = !out.is(':visible');
+    out.toggle(show);
+    $('#syncLogIcon').toggleClass('fa-chevron-down', !show).toggleClass('fa-chevron-up', show);
+    $('#syncLogLabel').text(show ? 'Sembunyikan log' : 'Lihat detail log');
+});
+
+// Close buttons
+$('#btnCloseSyncOverlay, #btnCloseSyncOverlay2').on('click', closeSyncOverlay);
+$('#btnSyncAgain').on('click', () => doSync(lastSyncRole, lastSyncForce));
+
+// Klik backdrop untuk tutup (hanya saat done)
+$('#syncOverlay').on('click', function (e) {
+    if (e.target === this && $('#syncStateDone').is(':visible')) closeSyncOverlay();
+});
+
+// Binding tombol sync
+$('#btnSyncAll').on('click', () => doSync());
+$('.btn-sync-role').on('click', function () {
+    doSync($(this).data('role'), $(this).data('force') == 1);
+});
+$('#btnSyncErrors').on('click', () => doSync('', true));
 
 function updateStatCards(s) {
     $('#statGuru').text(s.guru ?? '-');
@@ -525,16 +693,6 @@ function updateStatCards(s) {
     $('#statError').text(s.error_sync ?? '-');
     $('#statPending').text(s.pending_sync ?? '-');
 }
-
-$('#btnSyncAll').on('click', () => doSync());
-$('.btn-sync-role').on('click', function () {
-    doSync($(this).data('role'), $(this).data('force') == 1);
-});
-$('#btnSyncErrors').on('click', () => doSync('', true));
-$('#btnCloseSyncOverlay').on('click', () => {
-    $('#syncOverlay').removeClass('show');
-    $('.sync-spinner').css('display', '');
-});
 
 // ── Sync single ───────────────────────────────────────────────────────────
 $(document).on('click', '.btn-sync-single', function () {
