@@ -1,4 +1,7 @@
 /.phpunit.cache
+CREDENTIALS.md
+tmp_*.php
+tmp_*.sh
 /node_modules
 /public/build
 /public/hot

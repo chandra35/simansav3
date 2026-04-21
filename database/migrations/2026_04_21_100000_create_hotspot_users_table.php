@@ -11,7 +11,8 @@ return new class extends Migration
     {
         Schema::create('hotspot_users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->char('user_id', 36)->nullable(); // UUID sesuai users.id
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('username', 64)->unique(); // nisn / nik / custom
             $table->enum('role', ['guru', 'siswa', 'tamu'])->index();
             $table->string('display_name', 150)->nullable();
