@@ -309,6 +309,12 @@ class HotspotController extends Controller
         }
     }
 
+    public function onlinePage()
+    {
+        $radiusConnected = $this->checkRadiusConnection();
+        return view('admin.hotspot.online', compact('radiusConnected'));
+    }
+
     public function onlineUsers()
     {
         try {

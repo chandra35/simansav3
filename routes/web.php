@@ -57,6 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('hotspot')->name('hotspot.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\HotspotController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\Admin\HotspotController::class, 'data'])->name('data');
+        Route::get('/online', [\App\Http\Controllers\Admin\HotspotController::class, 'onlinePage'])->name('online');
         Route::get('/online-users', [\App\Http\Controllers\Admin\HotspotController::class, 'onlineUsers'])->name('online-users');
         Route::get('/filter-options', [\App\Http\Controllers\Admin\HotspotController::class, 'filterOptions'])->name('filter-options');
         Route::post('/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'sync'])->name('sync');
