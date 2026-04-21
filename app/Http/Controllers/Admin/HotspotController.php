@@ -26,7 +26,7 @@ class HotspotController extends Controller
 
     public function data(Request $request)
     {
-        $query = HotspotUser::with('user')
+        $query = HotspotUser::with(['user', 'user.siswa.kelasAktif'])
             ->withTrashed($request->boolean('show_deleted'));
 
         if ($request->filled('role')) {
@@ -50,7 +50,26 @@ class HotspotController extends Controller
             });
         }
 
+        // Filter kelas (hanya berlaku saat role = siswa)
+        if ($request->input('role') === 'siswa' &&
+            ($request->filled('tingkat') || $request->filled('kelas_id'))) {
+            $query->whereHas('user.siswa.kelasAktif', function ($q) use ($request) {
+                if ($request->filled('tingkat')) {
+                    $q->where('kelas.tingkat', $request->tingkat);
+                }
+                if ($request->filled('kelas_id')) {
+                    $q->where('kelas.id', $request->kelas_id);
+                }
+            });
+        }
+
         return datatables()->of($query)
+            ->addColumn('kelas_info', function (HotspotUser $h) {
+                if ($h->role !== 'siswa' || !$h->user || !$h->user->siswa) return '';
+                $kelas = $h->user->siswa->kelasAktif->first();
+                if (!$kelas) return '<span class="text-muted" style="font-size:.75rem">-</span>';
+                return '<span class="badge badge-light border" style="font-size:.72rem">' . e($kelas->nama_kelas) . '</span>';
+            })
             ->addColumn('status_badge', function (HotspotUser $h) {
                 if ($h->deleted_at) {
                     return '<span class="badge badge-secondary"><i class="fas fa-trash mr-1"></i>Dihapus</span>';
@@ -95,7 +114,7 @@ class HotspotController extends Controller
                 }
                 return $btn;
             })
-            ->rawColumns(['status_badge', 'sync_badge', 'role_badge', 'actions'])
+            ->rawColumns(['kelas_info', 'status_badge', 'sync_badge', 'role_badge', 'actions'])
             ->make(true);
     }
 
@@ -288,6 +307,67 @@ class HotspotController extends Controller
         } catch (\Exception $e) {
             return response()->json(['connected' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    public function filterOptions()
+    {
+        $kelas = \App\Models\Kelas::select('id', 'nama_kelas', 'tingkat')
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get()
+            ->map(fn($k) => [
+                'id'     => $k->id,
+                'nama'   => $k->nama_kelas,
+                'tingkat'=> $k->tingkat,
+            ]);
+
+        return response()->json([
+            'tingkat' => [10, 11, 12],
+            'kelas'   => $kelas,
+        ]);
+    }
+
+    public function bulkToggle(Request $request)
+    {
+        $request->validate([
+            'ids'    => 'required|array|min:1|max:500',
+            'ids.*'  => 'integer|exists:hotspot_users,id',
+            'action' => 'required|in:aktif,nonaktif',
+        ]);
+
+        $isActive = $request->action === 'aktif';
+        $users    = HotspotUser::whereIn('id', $request->ids)->get();
+        $radius   = DB::connection('mysql_radius');
+        $count    = 0;
+
+        foreach ($users as $hotspot) {
+            $hotspot->update(['is_active' => $isActive]);
+
+            // Sync status ke RADIUS
+            if ($isActive) {
+                $radius->table('radcheck')
+                    ->where('username', $hotspot->username)
+                    ->where('attribute', 'Auth-Type')
+                    ->delete();
+            } else {
+                $radius->table('radcheck')->updateOrInsert(
+                    ['username' => $hotspot->username, 'attribute' => 'Auth-Type'],
+                    ['op' => ':=', 'value' => 'Reject']
+                );
+            }
+
+            $hotspot->update(['sync_status' => 'synced', 'last_synced_at' => now()]);
+            $count++;
+        }
+
+        $label = $isActive ? 'diaktifkan' : 'dinonaktifkan';
+
+        return response()->json([
+            'success' => true,
+            'count'   => $count,
+            'message' => "{$count} akun berhasil {$label}.",
+            'stats'   => $this->getStats(),
+        ]);
     }
 
     private function getStats(): array

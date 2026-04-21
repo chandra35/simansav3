@@ -57,9 +57,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('hotspot')->name('hotspot.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\HotspotController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\Admin\HotspotController::class, 'data'])->name('data');
+        Route::get('/filter-options', [\App\Http\Controllers\Admin\HotspotController::class, 'filterOptions'])->name('filter-options');
         Route::post('/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'sync'])->name('sync');
         Route::post('/sync/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'syncSingle'])->name('sync-single');
         Route::post('/{hotspot}/toggle-active', [\App\Http\Controllers\Admin\HotspotController::class, 'toggleActive'])->name('toggle-active');
+        Route::post('/bulk-toggle', [\App\Http\Controllers\Admin\HotspotController::class, 'bulkToggle'])->name('bulk-toggle');
         Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');
         Route::get('/stats', [\App\Http\Controllers\Admin\HotspotController::class, 'stats'])->name('stats');
         // Tamu CRUD

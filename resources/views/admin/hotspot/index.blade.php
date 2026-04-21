@@ -279,7 +279,7 @@
         <div class="hs-panel">
             <div class="hs-panel__header">
                 <span class="hs-panel__title"><i class="fas fa-users mr-1 text-primary"></i>Daftar Akun Hotspot</span>
-                <div class="d-flex gap-2 align-items-center">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
                     <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="Cari username / nama..." style="width:200px">
                     <select id="filterRole" class="form-control form-control-sm" style="width:110px">
                         <option value="">Semua Role</option>
@@ -287,6 +287,18 @@
                         <option value="siswa">Siswa</option>
                         <option value="tamu">Tamu</option>
                     </select>
+                    {{-- Filter kelas: tampil saat role=siswa --}}
+                    <div id="kelasFilterWrap" style="display:none" class="d-flex gap-2 align-items-center">
+                        <select id="filterTingkat" class="form-control form-control-sm" style="width:82px">
+                            <option value="">Kelas</option>
+                            <option value="10">X</option>
+                            <option value="11">XI</option>
+                            <option value="12">XII</option>
+                        </select>
+                        <select id="filterRombel" class="form-control form-control-sm" style="width:145px">
+                            <option value="">Semua Rombel</option>
+                        </select>
+                    </div>
                     <select id="filterSync" class="form-control form-control-sm" style="width:110px">
                         <option value="">Semua Status</option>
                         <option value="synced">Synced</option>
@@ -296,6 +308,25 @@
                 </div>
             </div>
             <div class="hs-panel__body" style="padding:.5rem">
+
+                {{-- Bulk action bar --}}
+                <div id="bulkBar" style="display:none;background:#eff6ff;border-bottom:1px solid #bfdbfe"
+                     class="d-flex align-items-center flex-wrap gap-2 px-3 py-2">
+                    <i class="fas fa-check-square text-primary"></i>
+                    <span class="font-weight-bold text-primary small" id="bulkCount">0 dipilih</span>
+                    <div class="d-flex gap-1 ml-2">
+                        <button class="btn btn-success btn-sm px-3" id="btnBulkAktif">
+                            <i class="fas fa-check mr-1"></i>Aktifkan
+                        </button>
+                        <button class="btn btn-danger btn-sm px-3" id="btnBulkNonaktif">
+                            <i class="fas fa-ban mr-1"></i>Nonaktifkan
+                        </button>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm ml-auto" id="btnBulkClear" title="Batal pilih semua">
+                        <i class="fas fa-times mr-1"></i>Batal Pilih
+                    </button>
+                </div>
+
                 <div class="hs-filter-bar" style="padding:.3rem .5rem 0">
                     <button class="btn btn-outline-secondary filter-active active" data-active="">Semua</button>
                     <button class="btn btn-outline-success filter-active" data-active="1">Aktif</button>
@@ -309,8 +340,12 @@
                 <table id="hotspotTable" class="table table-sm table-hover" style="width:100%;font-size:.82rem">
                     <thead class="thead-light">
                         <tr>
+                            <th style="width:38px;text-align:center">
+                                <input type="checkbox" id="checkAll" title="Pilih semua di halaman ini" style="cursor:pointer">
+                            </th>
                             <th>Username</th>
                             <th>Nama</th>
+                            <th>Kelas</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th>Sync</th>
@@ -509,15 +544,17 @@
 @section('js')
 <script>
 const ROUTES = {
-    data:        '{{ route("admin.hotspot.data") }}',
-    sync:        '{{ route("admin.hotspot.sync") }}',
-    stats:       '{{ route("admin.hotspot.stats") }}',
-    radiusStatus:'{{ route("admin.hotspot.radius-status") }}',
-    tamuStore:   '{{ route("admin.hotspot.tamu.store") }}',
-    tamuUpdate:  (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
-    tamuDestroy: (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
-    syncSingle:  (id) => `{{ url("admin/hotspot/sync") }}/${id}`,
-    toggleActive:(id) => `{{ url("admin/hotspot") }}/${id}/toggle-active`,
+    data:         '{{ route("admin.hotspot.data") }}',
+    sync:         '{{ route("admin.hotspot.sync") }}',
+    stats:        '{{ route("admin.hotspot.stats") }}',
+    radiusStatus: '{{ route("admin.hotspot.radius-status") }}',
+    filterOptions:'{{ route("admin.hotspot.filter-options") }}',
+    bulkToggle:   '{{ route("admin.hotspot.bulk-toggle") }}',
+    tamuStore:    '{{ route("admin.hotspot.tamu.store") }}',
+    tamuUpdate:   (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
+    tamuDestroy:  (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
+    syncSingle:   (id) => `{{ url("admin/hotspot/sync") }}/${id}`,
+    toggleActive: (id) => `{{ url("admin/hotspot") }}/${id}/toggle-active`,
 };
 
 // ── DataTable ─────────────────────────────────────────────────────────────
@@ -533,11 +570,20 @@ $(function () {
                 d.sync_status = $('#filterSync').val();
                 d.is_active   = activeFilter;
                 d.search      = $('#searchBox').val();
+                d.tingkat     = $('#filterTingkat').val();
+                d.kelas_id    = $('#filterRombel').val();
             }
         },
         columns: [
+            {
+                data: null,
+                render: (d, t, row) =>
+                    `<div style="text-align:center"><input type="checkbox" class="row-check" data-id="${row.id}" style="cursor:pointer"></div>`,
+                orderable: false, searchable: false, width: 38
+            },
             { data: 'username',     name: 'username' },
             { data: 'display_name', name: 'display_name' },
+            { data: 'kelas_info',   name: 'kelas_info', orderable: false, searchable: false },
             { data: 'role_badge',   name: 'role', orderable: false },
             { data: 'status_badge', name: 'is_active', orderable: false },
             { data: 'sync_badge',   name: 'sync_status', orderable: false },
@@ -545,13 +591,46 @@ $(function () {
         ],
         language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
         pageLength: 20,
-        order: [[2, 'asc']],
+        order: [[1, 'asc']],
         dom: 'tip',
     });
 
+    // Restore checkbox state setelah setiap draw
+    table.on('draw.dt', function () {
+        $('.row-check').each(function () {
+            $(this).prop('checked', selectedIds.has(parseInt($(this).data('id'))));
+        });
+        const total   = $('.row-check').length;
+        const checked = $('.row-check:checked').length;
+        $('#checkAll')
+            .prop('checked', total > 0 && checked === total)
+            .prop('indeterminate', checked > 0 && checked < total);
+        updateBulkBar();
+    });
+
     // Filter bindings
-    $('#filterRole, #filterSync').on('change', () => table.ajax.reload());
+    $('#filterSync').on('change', () => table.ajax.reload());
+    $('#filterRombel').on('change', () => table.ajax.reload());
+    $('#filterTingkat').on('change', function () {
+        populateRombel($(this).val());
+        $('#filterRombel').val('');
+        table.ajax.reload();
+    });
+    $('#filterRole').on('change', function () {
+        const isSiswa = $(this).val() === 'siswa';
+        if (isSiswa) {
+            $('#kelasFilterWrap').show();
+        } else {
+            $('#kelasFilterWrap').hide();
+            $('#filterTingkat').val('');
+            $('#filterRombel').html('<option value="">Semua Rombel</option>').val('');
+        }
+        table.ajax.reload();
+    });
     $('#searchBox').on('keyup', debounce(() => table.ajax.reload(), 400));
+
+    // Load kelas options
+    loadFilterOptions();
 });
 
 // ── Active filter buttons ─────────────────────────────────────────────────
@@ -562,6 +641,85 @@ $('.filter-active').on('click', function () {
     activeFilter = $(this).data('active');
     table.ajax.reload();
 });
+
+// ── Filter options (tingkat / rombel) ─────────────────────────────────────
+let _allKelas = [];
+
+function loadFilterOptions() {
+    $.get(ROUTES.filterOptions).done(data => {
+        _allKelas = data.kelas || [];
+        populateRombel('');
+    });
+}
+
+function populateRombel(tingkat) {
+    const $s = $('#filterRombel');
+    $s.html('<option value="">Semua Rombel</option>');
+    const list = tingkat ? _allKelas.filter(k => String(k.tingkat) === String(tingkat)) : _allKelas;
+    list.forEach(k => $s.append(`<option value="${k.id}">${k.nama}</option>`));
+}
+
+// ── Bulk select ───────────────────────────────────────────────────────────
+let selectedIds = new Set();
+
+function updateBulkBar() {
+    const n = selectedIds.size;
+    $('#bulkCount').text(n + ' akun dipilih');
+    if (n > 0) { $('#bulkBar').slideDown(150); }
+    else       { $('#bulkBar').slideUp(150); }
+}
+
+// Header checkAll
+$('#hotspotTable thead').on('change', '#checkAll', function () {
+    const chk = this.checked;
+    $('.row-check').each(function () {
+        this.checked = chk;
+        const id = parseInt($(this).data('id'));
+        if (chk) selectedIds.add(id); else selectedIds.delete(id);
+    });
+    updateBulkBar();
+});
+
+// Row checkbox
+$(document).on('change', '.row-check', function () {
+    const id = parseInt($(this).data('id'));
+    if (this.checked) selectedIds.add(id); else selectedIds.delete(id);
+    const total   = $('.row-check').length;
+    const checked = $('.row-check:checked').length;
+    $('#checkAll')
+        .prop('checked', total > 0 && checked === total)
+        .prop('indeterminate', checked > 0 && checked < total);
+    updateBulkBar();
+});
+
+$('#btnBulkClear').on('click', () => {
+    selectedIds.clear();
+    $('.row-check').prop('checked', false);
+    $('#checkAll').prop('checked', false).prop('indeterminate', false);
+    updateBulkBar();
+});
+
+function doBulkToggle(action) {
+    const ids   = Array.from(selectedIds);
+    const label = action === 'aktif' ? 'aktifkan' : 'nonaktifkan';
+    if (!confirm(`${ids.length} akun akan di-${label}. Lanjutkan?`)) return;
+
+    $.post(ROUTES.bulkToggle, { ids, action, _token: '{{ csrf_token() }}' })
+        .done(r => {
+            toastr[r.success ? 'success' : 'error'](r.message);
+            if (r.success) {
+                selectedIds.clear();
+                $('#checkAll').prop('checked', false).prop('indeterminate', false);
+                updateBulkBar();
+                table.ajax.reload();
+                if (r.stats) updateStatCards(r.stats);
+            }
+        })
+        .fail(() => toastr.error('Gagal. Coba lagi.'));
+}
+
+$('#btnBulkAktif').on('click', () => doBulkToggle('aktif'));
+$('#btnBulkNonaktif').on('click', () => doBulkToggle('nonaktif'));
 
 // ── Sync overlay ──────────────────────────────────────────────────────────
 let lastSyncRole = '', lastSyncForce = false;
