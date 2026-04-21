@@ -69,6 +69,12 @@ class HotspotUser extends Model
                 ['groupname' => $this->role, 'priority' => 1]
             );
 
+            // 4. Pastikan userinfo ada (dibutuhkan daloRADIUS untuk menampilkan user)
+            $db->table('userinfo')->updateOrInsert(
+                ['username' => $this->username],
+                ['updatedate' => now(), 'updateby' => 'simansav3']
+            );
+
             $this->update([
                 'last_synced_at' => now(),
                 'sync_status' => 'synced',
@@ -101,6 +107,7 @@ class HotspotUser extends Model
             $db->table('radcheck')->where('username', $this->username)->delete();
             $db->table('radreply')->where('username', $this->username)->delete();
             $db->table('radusergroup')->where('username', $this->username)->delete();
+            $db->table('userinfo')->where('username', $this->username)->delete();
         } catch (\Exception $e) {
             Log::error('[HotspotUser] Remove from RADIUS failed', [
                 'username' => $this->username,
