@@ -576,10 +576,10 @@ $(function () {
         },
         columns: [
             {
-                data: null,
-                render: (d, t, row) =>
-                    `<div style="text-align:center"><input type="checkbox" class="row-check" data-id="${row.id}" style="cursor:pointer"></div>`,
-                orderable: false, searchable: false, width: 38
+                data: 'id',
+                render: (data) =>
+                    `<div style="text-align:center"><input type="checkbox" class="row-check" data-id="${data}" style="cursor:pointer"></div>`,
+                orderable: false, searchable: false, width: 38, name: 'id'
             },
             { data: 'username',     name: 'username' },
             { data: 'display_name', name: 'display_name' },
