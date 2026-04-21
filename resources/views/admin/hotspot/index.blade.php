@@ -169,17 +169,17 @@
 <div class="hs-stats">
     <div class="hs-stat hs-stat--guru">
         <div class="hs-stat__icon">👨‍🏫</div>
-        <div class="hs-stat__val">{{ $stats['guru'] }}</div>
+        <div class="hs-stat__val" id="statGuru">{{ $stats['guru'] }}</div>
         <div class="hs-stat__label">Guru/GTK</div>
     </div>
     <div class="hs-stat hs-stat--siswa">
         <div class="hs-stat__icon">👨‍🎓</div>
-        <div class="hs-stat__val">{{ $stats['siswa'] }}</div>
+        <div class="hs-stat__val" id="statSiswa">{{ $stats['siswa'] }}</div>
         <div class="hs-stat__label">Siswa</div>
     </div>
     <div class="hs-stat hs-stat--tamu">
         <div class="hs-stat__icon">🧑‍💼</div>
-        <div class="hs-stat__val">{{ $stats['tamu'] }}</div>
+        <div class="hs-stat__val" id="statTamu">{{ $stats['tamu'] }}</div>
         <div class="hs-stat__label">Tamu</div>
     </div>
     <div class="hs-stat hs-stat--online">
@@ -189,22 +189,22 @@
     </div>
     <div class="hs-stat hs-stat--err">
         <div class="hs-stat__icon">⚠️</div>
-        <div class="hs-stat__val">{{ $stats['error_sync'] }}</div>
+        <div class="hs-stat__val" id="statError">{{ $stats['error_sync'] }}</div>
         <div class="hs-stat__label">Error Sync</div>
     </div>
     <div class="hs-stat hs-stat--pend">
         <div class="hs-stat__icon">⏳</div>
-        <div class="hs-stat__val">{{ $stats['pending_sync'] }}</div>
+        <div class="hs-stat__val" id="statPending">{{ $stats['pending_sync'] }}</div>
         <div class="hs-stat__label">Pending Sync</div>
     </div>
     <div class="hs-stat">
         <div class="hs-stat__icon">✅</div>
-        <div class="hs-stat__val">{{ $stats['aktif'] }}</div>
+        <div class="hs-stat__val" id="statAktif">{{ $stats['aktif'] }}</div>
         <div class="hs-stat__label">Akun Aktif</div>
     </div>
     <div class="hs-stat">
         <div class="hs-stat__icon">🚫</div>
-        <div class="hs-stat__val">{{ $stats['nonaktif'] }}</div>
+        <div class="hs-stat__val" id="statNonaktif">{{ $stats['nonaktif'] }}</div>
         <div class="hs-stat__label">Nonaktif</div>
     </div>
 </div>
@@ -308,11 +308,22 @@
 {{-- Sync Overlay --------------------------------------------------------- --}}
 <div id="syncOverlay">
     <div class="sync-modal">
-        <div class="sync-spinner"><i class="fas fa-sync fa-spin"></i></div>
-        <h5 class="mt-3 mb-1 font-weight-bold">Sinkronisasi Berjalan...</h5>
-        <p class="text-muted small mb-2">Harap tunggu, jangan tutup halaman ini.</p>
-        <div class="sync-output" id="syncOutput"></div>
-        <button class="btn btn-secondary btn-sm mt-3" id="btnCloseSyncOverlay" style="display:none">Tutup</button>
+        {{-- Running state --}}
+        <div id="syncStateRunning">
+            <div class="sync-spinner"><i class="fas fa-sync fa-spin"></i></div>
+            <h5 class="mt-3 mb-1 font-weight-bold">Sinkronisasi Berjalan...</h5>
+            <p class="text-muted small mb-2">Harap tunggu, jangan tutup halaman ini.</p>
+            <div class="sync-output" id="syncOutput"></div>
+        </div>
+        {{-- Done state --}}
+        <div id="syncStateDone" style="display:none">
+            <div id="syncResultIcon" style="font-size:3rem;line-height:1"></div>
+            <h5 class="mt-3 mb-1 font-weight-bold" id="syncResultTitle"></h5>
+            <p class="text-muted small mb-0" id="syncResultSub"></p>
+            <div id="syncResultCounts" class="mt-3 d-flex justify-content-center" style="gap:.75rem;flex-wrap:wrap"></div>
+            <div class="sync-output mt-3" id="syncOutputDone" style="max-height:180px"></div>
+        </div>
+        <button class="btn btn-primary px-4 mt-4" id="btnCloseSyncOverlay" style="display:none">Tutup</button>
     </div>
 </div>
 
@@ -394,6 +405,7 @@
 const ROUTES = {
     data:        '{{ route("admin.hotspot.data") }}',
     sync:        '{{ route("admin.hotspot.sync") }}',
+    stats:       '{{ route("admin.hotspot.stats") }}',
     radiusStatus:'{{ route("admin.hotspot.radius-status") }}',
     tamuStore:   '{{ route("admin.hotspot.tamu.store") }}',
     tamuUpdate:  (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
@@ -447,22 +459,71 @@ $('.filter-active').on('click', function () {
 
 // ── Sync overlay ──────────────────────────────────────────────────────────
 function doSync(role = '', force = false) {
-    $('#syncOverlay').addClass('show');
-    $('#syncOutput').hide().html('');
+    // Reset ke state running
+    $('#syncStateRunning').show();
+    $('#syncStateDone').hide();
     $('#btnCloseSyncOverlay').hide();
+    $('#syncOutput').hide().html('');
+    $('.sync-spinner i').addClass('fa-spin');
+    $('#syncOverlay').addClass('show');
 
     $.post(ROUTES.sync, { role, force: force ? 1 : 0, _token: '{{ csrf_token() }}' })
         .done(r => {
-            $('#syncOutput').html(r.output).show();
-            toastr.success(r.message);
+            const c = r.counts || {};
+            const hasError = (c.errors || 0) > 0;
+
+            // Bangun badge ringkasan
+            const badges = [
+                { label: 'Dibuat',      val: c.created     || 0, color: 'success' },
+                { label: 'Diperbarui',  val: c.updated     || 0, color: 'info'    },
+                { label: 'Nonaktifkan', val: c.deactivated || 0, color: 'warning' },
+                { label: 'Error',       val: c.errors      || 0, color: hasError ? 'danger' : 'secondary' },
+            ];
+            const badgeHtml = badges.map(b =>
+                `<div class="text-center">
+                    <div style="font-size:1.4rem;font-weight:800;color:var(--${b.color === 'secondary' ? 'gray' : b.color})" class="text-${b.color}">${b.val}</div>
+                    <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">${b.label}</div>
+                </div>`
+            ).join('');
+
+            // Tampilkan done state
+            $('#syncStateRunning').hide();
+            $('#syncResultIcon').html(hasError ? '⚠️' : '✅');
+            $('#syncResultTitle').text(hasError ? 'Sync Selesai dengan Error' : 'Sinkronisasi Berhasil!');
+            $('#syncResultSub').text(hasError
+                ? `${c.errors} akun gagal disync ke RADIUS. Lihat detail di bawah.`
+                : `Semua akun berhasil disinkronkan ke FreeRADIUS.`);
+            $('#syncResultCounts').html(badgeHtml);
+            $('#syncOutputDone').html(r.output).show();
+            $('#syncStateDone').show();
+
+            // Update stat cards
+            if (r.stats) updateStatCards(r.stats);
             table.ajax.reload();
             loadRadiusStatus();
         })
-        .fail(() => toastr.error('Sync gagal.'))
+        .fail(() => {
+            $('#syncStateRunning').hide();
+            $('#syncResultIcon').html('❌');
+            $('#syncResultTitle').text('Sync Gagal!');
+            $('#syncResultSub').text('Terjadi kesalahan saat menghubungi server.');
+            $('#syncResultCounts').html('');
+            $('#syncOutputDone').html('').hide();
+            $('#syncStateDone').show();
+        })
         .always(() => {
             $('#btnCloseSyncOverlay').show();
-            $('.sync-spinner').css('display', 'none');
         });
+}
+
+function updateStatCards(s) {
+    $('#statGuru').text(s.guru ?? '-');
+    $('#statSiswa').text(s.siswa ?? '-');
+    $('#statTamu').text(s.tamu ?? '-');
+    $('#statAktif').text(s.aktif ?? '-');
+    $('#statNonaktif').text(s.nonaktif ?? '-');
+    $('#statError').text(s.error_sync ?? '-');
+    $('#statPending').text(s.pending_sync ?? '-');
 }
 
 $('#btnSyncAll').on('click', () => doSync());

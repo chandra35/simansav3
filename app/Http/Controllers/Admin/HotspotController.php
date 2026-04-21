@@ -113,11 +113,24 @@ class HotspotController extends Controller
         Artisan::call('hotspot:sync', $params, $output);
         $result = $output->fetch();
 
+        // Parse counts from output
+        $created     = (int) (preg_match('/Created\s*:\s*(\d+)/i', $result, $m) ? $m[1] : 0);
+        $updated     = (int) (preg_match('/Updated\s*:\s*(\d+)/i', $result, $m) ? $m[1] : 0);
+        $deactivated = (int) (preg_match('/Deactivated\s*:\s*(\d+)/i', $result, $m) ? $m[1] : 0);
+        $errors      = (int) (preg_match('/Errors\s*:\s*(\d+)/i', $result, $m) ? $m[1] : 0);
+
         return response()->json([
-            'success' => true,
-            'message' => 'Sync selesai.',
-            'output' => nl2br(htmlspecialchars($result)),
+            'success'     => true,
+            'message'     => 'Sync selesai.',
+            'output'      => nl2br(htmlspecialchars($result)),
+            'counts'      => compact('created', 'updated', 'deactivated', 'errors'),
+            'stats'       => $this->getStats(),
         ]);
+    }
+
+    public function stats()
+    {
+        return response()->json($this->getStats());
     }
 
     public function syncSingle(Request $request, HotspotUser $hotspot)

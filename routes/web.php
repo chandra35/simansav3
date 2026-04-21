@@ -61,6 +61,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/sync/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'syncSingle'])->name('sync-single');
         Route::post('/{hotspot}/toggle-active', [\App\Http\Controllers\Admin\HotspotController::class, 'toggleActive'])->name('toggle-active');
         Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');
+        Route::get('/stats', [\App\Http\Controllers\Admin\HotspotController::class, 'stats'])->name('stats');
         // Tamu CRUD
         Route::post('/tamu', [\App\Http\Controllers\Admin\HotspotController::class, 'storeTamu'])->name('tamu.store');
         Route::put('/tamu/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateTamu'])->name('tamu.update');
