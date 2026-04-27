@@ -30,9 +30,11 @@
 @endsection
 
 @section('content_header')
-    <h1 class="m-0 text-dark" style="font-size:1.2rem;font-weight:700;">
-        <i class="fas fa-certificate text-purple mr-2"></i> Verifikasi Ijazah SMP/MTs
-    </h1>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-certificate"></i> Verifikasi Ijazah SMP/MTs</h1>
+        </div>
+    </div>
 @endsection
 
 @section('content')
