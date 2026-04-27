@@ -142,8 +142,32 @@
 .dok-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }
 .dok-icon.img  { background: #dbeafe; color: #1d4ed8; }
 .dok-icon.pdf  { background: #fee2e2; color: #dc2626; }
-.dok-icon.kk   { background: #dcfce7; color: #16a34a; }
+.dok-icon.other{ background: #e5e7eb; color: #6b7280; }
 .dok-empty     { padding: .5rem 1rem; font-size: .78rem; color: #9ca3af; }
+.dok-section-title {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: #6b7280;
+    padding: .35rem 1rem;
+    background: #f8f9fa; border-bottom: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.dok-section-title:first-of-type { border-top: none; }
+.dok-info { flex: 1; min-width: 0; }
+.dok-name { font-size: .78rem; font-weight: 600; color: #374151;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dok-meta { font-size: .68rem; color: #9ca3af; margin-top: 2px; }
+.dok-actions { display: flex; gap: .25rem; flex-shrink: 0; }
+.dok-actions .btn-dok {
+    width: 26px; height: 26px; border-radius: 6px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; cursor: pointer; transition: all .15s;
+    text-decoration: none;
+}
+.btn-dok.view     { background: #eff6ff; color: #1d4ed8; }
+.btn-dok.view:hover { background: #1d4ed8; color: #fff; }
+.btn-dok.dl       { background: #f0fdf4; color: #16a34a; }
+.btn-dok.dl:hover { background: #16a34a; color: #fff; }
 
 /* Timeline history */
 .tl-item { display: flex; gap: .75rem; padding: .5rem 1rem; border-bottom: 1px solid #f4f4f4; }
@@ -361,57 +385,121 @@
         {{-- ══ KANAN ══════════════════════════════════════════════════════════ --}}
         <div class="col-md-4">
 
-            {{-- Dokumen Ijazah --}}
+            {{-- Dokumen Pendukung --}}
+            @php
+                $totalDok = $dokumenIjazah->count() + $dokumenKK->count() + ($dokumenLain->count() ?? 0);
+            @endphp
             <div class="side-card card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-file-alt text-danger mr-1"></i> Dokumen Ijazah SMP/MTs</span>
-                    @if($dokumenIjazah->isNotEmpty())
-                        <span class="badge badge-danger">{{ $dokumenIjazah->count() }}</span>
+                    <span><i class="fas fa-folder-open text-warning mr-1"></i> Dokumen Pendukung</span>
+                    @if($totalDok > 0)
+                        <span class="badge badge-warning text-dark">{{ $totalDok }} file</span>
                     @endif
                 </div>
                 <div>
+                    {{-- Ijazah SMP/MTs --}}
+                    <div class="dok-section-title">
+                        <span><i class="fas fa-file-alt text-danger mr-1"></i> Ijazah SMP/MTs</span>
+                        @if($dokumenIjazah->isNotEmpty())<span class="badge badge-danger" style="font-size:.65rem;">{{ $dokumenIjazah->count() }}</span>@endif
+                    </div>
                     @if($dokumenIjazah->isEmpty())
-                        <div class="dok-empty"><i class="fas fa-exclamation-triangle text-warning mr-1"></i>Belum ada dokumen ijazah.</div>
+                        <div class="dok-empty"><i class="fas fa-minus-circle text-muted mr-1"></i> Belum diunggah</div>
                     @else
                         @foreach($dokumenIjazah as $dok)
-                            @php $ext = strtolower(pathinfo($dok->original_name ?? $dok->nama_file, PATHINFO_EXTENSION)); @endphp
-                            <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dok-item">
-                                <div class="dok-icon img"><i class="fas fa-file-image"></i></div>
-                                <div>
-                                    <div>{{ Str::limit($dok->original_name ?? $dok->nama_file, 28) }}</div>
-                                    <small class="text-muted">{{ strtoupper($ext) }}</small>
+                            @php
+                                $ext  = $dok->getFileExtension();
+                                $isPdf = $ext === 'pdf';
+                                $isImg = in_array($ext, ['jpg','jpeg','png','gif','webp']);
+                                $iconClass = $isPdf ? 'pdf fas fa-file-pdf' : ($isImg ? 'img fas fa-file-image' : 'other fas fa-file-alt');
+                                [$iconBg, $iconIcon] = explode(' ', $iconClass . ' x', 3);
+                                $fileUrl  = $dok->getFileUrl();
+                                $fileName = Str::limit($dok->original_name ?? $dok->nama_file, 30);
+                                $fileMeta = strtoupper($ext) . ($dok->file_size ? ' · ' . $dok->getFileSizeFormatted() : '');
+                                $fileDate = $dok->created_at?->format('d/m/Y');
+                            @endphp
+                            <div class="dok-item">
+                                <div class="dok-icon {{ $isPdf ? 'pdf' : ($isImg ? 'img' : 'other') }}">
+                                    <i class="fas {{ $isPdf ? 'fa-file-pdf' : ($isImg ? 'fa-file-image' : 'fa-file-alt') }}"></i>
                                 </div>
-                            </a>
+                                <div class="dok-info">
+                                    <div class="dok-name" title="{{ $dok->original_name ?? $dok->nama_file }}">{{ $fileName }}</div>
+                                    <div class="dok-meta">{{ $fileMeta }}@if($fileDate) · {{ $fileDate }}@endif</div>
+                                </div>
+                                <div class="dok-actions">
+                                    <a href="{{ $fileUrl }}" target="_blank" class="btn-dok view" title="Lihat"><i class="fas fa-eye"></i></a>
+                                </div>
+                            </div>
                         @endforeach
                     @endif
-                </div>
-            </div>
 
-            {{-- Dokumen KK --}}
-            <div class="side-card card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-users text-success mr-1"></i> Kartu Keluarga (KK)</span>
-                    @if($dokumenKK->isNotEmpty())
-                        <span class="badge badge-success">{{ $dokumenKK->count() }}</span>
-                    @endif
-                </div>
-                <div>
+                    {{-- Kartu Keluarga --}}
+                    <div class="dok-section-title">
+                        <span><i class="fas fa-id-card text-success mr-1"></i> Kartu Keluarga</span>
+                        @if($dokumenKK->isNotEmpty())<span class="badge badge-success" style="font-size:.65rem;">{{ $dokumenKK->count() }}</span>@endif
+                    </div>
                     @if($dokumenKK->isEmpty())
-                        <div class="dok-empty"><i class="fas fa-exclamation-triangle text-warning mr-1"></i>Belum ada dokumen KK.</div>
+                        <div class="dok-empty"><i class="fas fa-minus-circle text-muted mr-1"></i> Belum diunggah</div>
                     @else
                         @foreach($dokumenKK as $dok)
-                            <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dok-item">
-                                <div class="dok-icon kk"><i class="fas fa-id-card"></i></div>
-                                <div>
-                                    <div>{{ Str::limit($dok->original_name ?? $dok->nama_file, 28) }}</div>
-                                    <small class="text-muted">KK</small>
+                            @php
+                                $ext  = $dok->getFileExtension();
+                                $isPdf = $ext === 'pdf';
+                                $isImg = in_array($ext, ['jpg','jpeg','png','gif','webp']);
+                                $fileUrl  = $dok->getFileUrl();
+                                $fileName = Str::limit($dok->original_name ?? $dok->nama_file, 30);
+                                $fileMeta = strtoupper($ext) . ($dok->file_size ? ' · ' . $dok->getFileSizeFormatted() : '');
+                                $fileDate = $dok->created_at?->format('d/m/Y');
+                            @endphp
+                            <div class="dok-item">
+                                <div class="dok-icon {{ $isPdf ? 'pdf' : ($isImg ? 'img' : 'other') }}">
+                                    <i class="fas {{ $isPdf ? 'fa-file-pdf' : ($isImg ? 'fa-file-image' : 'fa-file-alt') }}"></i>
                                 </div>
-                            </a>
+                                <div class="dok-info">
+                                    <div class="dok-name" title="{{ $dok->original_name ?? $dok->nama_file }}">{{ $fileName }}</div>
+                                    <div class="dok-meta">{{ $fileMeta }}@if($fileDate) · {{ $fileDate }}@endif</div>
+                                </div>
+                                <div class="dok-actions">
+                                    <a href="{{ $fileUrl }}" target="_blank" class="btn-dok view" title="Lihat"><i class="fas fa-eye"></i></a>
+                                </div>
+                            </div>
                         @endforeach
                     @endif
-                    <div style="padding:.5rem 1rem;border-top:1px solid #f4f4f4;">
-                        <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary btn-block" style="font-size:.78rem;">
-                            <i class="fas fa-folder-open mr-1"></i> Lihat Semua Dokumen
+
+                    {{-- Lainnya (jika ada) --}}
+                    @if(isset($dokumenLain) && $dokumenLain->isNotEmpty())
+                        <div class="dok-section-title">
+                            <span><i class="fas fa-paperclip text-secondary mr-1"></i> Dokumen Lain</span>
+                            <span class="badge badge-secondary" style="font-size:.65rem;">{{ $dokumenLain->count() }}</span>
+                        </div>
+                        @foreach($dokumenLain as $dok)
+                            @php
+                                $ext  = $dok->getFileExtension();
+                                $isPdf = $ext === 'pdf';
+                                $isImg = in_array($ext, ['jpg','jpeg','png','gif','webp']);
+                                $fileUrl  = $dok->getFileUrl();
+                                $fileName = Str::limit($dok->original_name ?? $dok->nama_file, 30);
+                                $fileMeta = $dok->getJenisDokumenLabel() . ($dok->file_size ? ' · ' . $dok->getFileSizeFormatted() : '');
+                            @endphp
+                            <div class="dok-item">
+                                <div class="dok-icon {{ $isPdf ? 'pdf' : ($isImg ? 'img' : 'other') }}">
+                                    <i class="fas {{ $isPdf ? 'fa-file-pdf' : ($isImg ? 'fa-file-image' : 'fa-file-alt') }}"></i>
+                                </div>
+                                <div class="dok-info">
+                                    <div class="dok-name" title="{{ $dok->original_name ?? $dok->nama_file }}">{{ $fileName }}</div>
+                                    <div class="dok-meta">{{ $fileMeta }}</div>
+                                </div>
+                                <div class="dok-actions">
+                                    <a href="{{ $fileUrl }}" target="_blank" class="btn-dok view" title="Lihat"><i class="fas fa-eye"></i></a>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    {{-- Footer --}}
+                    <div style="padding:.6rem 1rem;border-top:1px solid #f0f0f0;">
+                        <a href="{{ route('siswa.dokumen', $siswa->id) }}" target="_blank"
+                           class="btn btn-sm btn-outline-secondary btn-block" style="font-size:.78rem;">
+                            <i class="fas fa-folder-open mr-1"></i> Kelola Semua Dokumen
                         </a>
                     </div>
                 </div>
