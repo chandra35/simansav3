@@ -948,7 +948,7 @@ function loadDataOrtuTab(siswa) {
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-male"></i> Data Ayah</h6>
                 <table class="table table-detail table-sm table-bordered">
-                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ayah == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : '<span class="badge badge-secondary">Meninggal</span>'}</td></tr>
+                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ayah == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : ortu.status_ayah == 'meninggal' ? '<span class="badge badge-secondary">Meninggal</span>' : '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>HP</strong></td><td>${ortu.hp_ayah || '-'}</td></tr>
@@ -959,7 +959,7 @@ function loadDataOrtuTab(siswa) {
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-female"></i> Data Ibu</h6>
                 <table class="table table-detail table-sm table-bordered">
-                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ibu == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : '<span class="badge badge-secondary">Meninggal</span>'}</td></tr>
+                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ibu == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : ortu.status_ibu == 'meninggal' ? '<span class="badge badge-secondary">Meninggal</span>' : '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>HP</strong></td><td>${ortu.hp_ibu || '-'}</td></tr>
