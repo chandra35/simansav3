@@ -49,25 +49,25 @@
     {{-- CATATAN: AdminLTE 3 override Bootstrap bg-* pada .card — WAJIB pakai inline style background-color + color, bukan class bg-* + text-white --}}
     <div class="row mb-3">
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#6c757d;color:#fff;" onclick="filterByStatus('belum_diverifikasi')">
+            <div class="card stat-card p-3" style="background-color:#6c757d !important;color:#fff !important;" onclick="filterByStatus('belum_diverifikasi')">
                 <div class="stat-num">{{ $stats['belum'] }}</div>
                 <div class="stat-label">Belum Diverifikasi</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#28a745;color:#fff;" onclick="filterByStatus('sesuai')">
+            <div class="card stat-card p-3" style="background-color:#28a745 !important;color:#fff !important;" onclick="filterByStatus('sesuai')">
                 <div class="stat-num">{{ $stats['sesuai'] }}</div>
                 <div class="stat-label">Sesuai</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#dc3545;color:#fff;" onclick="filterByStatus('tidak_sesuai')">
+            <div class="card stat-card p-3" style="background-color:#dc3545 !important;color:#fff !important;" onclick="filterByStatus('tidak_sesuai')">
                 <div class="stat-num">{{ $stats['tidak_sesuai'] }}</div>
                 <div class="stat-label">Tidak Sesuai</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#ffc107;color:#212529;" onclick="filterByStatus('perlu_perbaikan')">
+            <div class="card stat-card p-3" style="background-color:#ffc107 !important;color:#212529 !important;" onclick="filterByStatus('perlu_perbaikan')">
                 <div class="stat-num">{{ $stats['perlu_perbaikan'] }}</div>
                 <div class="stat-label">Perlu Perbaikan</div>
             </div>
