@@ -9,13 +9,22 @@ use Illuminate\Support\Facades\Http;
 
 // 1. Ambil token dari DB
 $tokenRow = DB::table('api_tokens')->where('name', 'emis_api_token')->first();
-if (!$tokenRow) {
-    echo "ERROR: token emis_api_token tidak ada di DB\n";
-    exit(1);
-}
+$institusiRow = DB::table('api_tokens')->where('name', 'emis_institusi_token')->first();
 
-echo "Token prefix : " . substr($tokenRow->token, 0, 60) . "...\n";
-echo "Expires at   : " . $tokenRow->expires_at . "\n\n";
+echo "=== emis_api_token ===\n";
+echo "Token prefix : " . substr($tokenRow->token ?? 'NULL', 0, 60) . "...\n";
+echo "Expires at   : " . ($tokenRow->expires_at ?? 'NULL') . "\n\n";
+
+echo "=== emis_institusi_token ===\n";
+echo "Token prefix : " . substr($institusiRow->token ?? 'NULL', 0, 60) . "...\n";
+echo "Expires at   : " . ($institusiRow->expires_at ?? 'NULL') . "\n\n";
+
+// Test pakai token yang lebih baru
+$activeToken = $tokenRow;
+if ($institusiRow && $institusiRow->expires_at > ($tokenRow->expires_at ?? '')) {
+    echo ">>> Pakai emis_institusi_token (lebih baru)\n\n";
+    $activeToken = $institusiRow;
+}
 
 // 2. Test hit Kemdikbud endpoint
 $nisn = '0073888908';
@@ -25,7 +34,7 @@ echo "---\n";
 echo "1. Kemdikbud endpoint...\n";
 try {
     $res = Http::timeout(10)
-        ->withHeaders(['Authorization' => 'Bearer ' . $tokenRow->token, 'Accept' => 'application/json'])
+        ->withHeaders(['Authorization' => 'Bearer ' . $activeToken->token, 'Accept' => 'application/json'])
         ->withOptions(['verify' => false])
         ->get("https://api-emis.kemenag.go.id/v1/students/pusdatin/{$nisn}/0");
 
@@ -38,7 +47,7 @@ try {
 echo "2. Kemenag PPDB endpoint...\n";
 try {
     $res = Http::timeout(10)
-        ->withHeaders(['Authorization' => 'Bearer ' . $tokenRow->token, 'Accept' => 'application/json'])
+        ->withHeaders(['Authorization' => 'Bearer ' . $activeToken->token, 'Accept' => 'application/json'])
         ->withOptions(['verify' => false])
         ->get("https://api-emis.kemenag.go.id/v1/students/student-ppdb-search?fnisn={$nisn}");
 
