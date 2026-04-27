@@ -242,7 +242,7 @@
                             </h3>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnReupload">
+                            <button type="button" class="btn btn-sm btn-secondary" id="btnReupload">
                                 <i class="fas fa-redo mr-1"></i> Upload Ulang
                             </button>
                         </div>
@@ -339,7 +339,7 @@
                             <a href="{{ route('admin.siswa.index') }}" class="btn btn-primary">
                                 <i class="fas fa-list mr-1"></i> Lihat Data Siswa
                             </a>
-                            <button type="button" class="btn btn-outline-secondary" id="btnImportLagi">
+                            <button type="button" class="btn btn-secondary" id="btnImportLagi">
                                 <i class="fas fa-redo mr-1"></i> Import Lagi
                             </button>
                         </div>
