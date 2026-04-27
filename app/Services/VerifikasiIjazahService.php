@@ -244,6 +244,12 @@ class VerifikasiIjazahService
                 $nilaiEmis    = $this->normalizeTanggal($nilaiEmis);
             }
 
+            // Normalisasi jenis kelamin: L/P vs Laki-laki/Perempuan
+            if ($field === 'jenis_kelamin') {
+                $nilaiSimansa = $this->normalizeJenisKelamin($nilaiSimansa);
+                $nilaiEmis    = $this->normalizeJenisKelamin($nilaiEmis);
+            }
+
             if ($nilaiSimansa !== $nilaiEmis && !($nilaiSimansa === '' && $nilaiEmis === '')) {
                 $tidakSesuai[] = $field;
             }
@@ -365,6 +371,17 @@ class VerifikasiIjazahService
             DB::rollBack();
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Normalisasi jenis kelamin: L/P/Laki-laki/Perempuan/laki-laki → l/p
+     */
+    private function normalizeJenisKelamin(string $val): string
+    {
+        $v = strtolower(trim($val));
+        if (in_array($v, ['l', 'laki-laki', 'laki laki', 'male', 'm'])) return 'l';
+        if (in_array($v, ['p', 'perempuan', 'female', 'f', 'wanita'])) return 'p';
+        return $v;
     }
 
     /**
