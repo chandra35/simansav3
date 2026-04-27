@@ -14,10 +14,10 @@
     .verif-hero h4 { font-weight: 800; margin: 0 0 .2rem 0; font-size: 1.3rem; }
     .verif-hero p  { margin: 0; font-size: .85rem; opacity: .88; }
 
-    .stat-card { border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); cursor: pointer; transition: transform .15s; }
+    .stat-card { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.12); cursor: pointer; transition: transform .15s; padding: 1rem; }
     .stat-card:hover { transform: translateY(-2px); }
     .stat-card .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; }
-    .stat-card .stat-label { font-size: .75rem; opacity: .75; text-transform: uppercase; letter-spacing: .04em; }
+    .stat-card .stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
 
     .filter-bar { background: #f8f9fa; border-radius: 10px; padding: .7rem 1rem; margin-bottom: 1rem; }
 
@@ -46,28 +46,28 @@
     </div>
 
     {{-- Stats --}}
-    {{-- CATATAN: AdminLTE 3 override Bootstrap bg-* pada .card — WAJIB pakai inline style background-color + color, bukan class bg-* + text-white --}}
+    {{-- CATATAN: Jangan pakai class .card untuk stat boxes di AdminLTE — gunakan div biasa dengan inline style penuh --}}
     <div class="row mb-3">
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#6c757d !important;color:#fff !important;" onclick="filterByStatus('belum_diverifikasi')">
+            <div class="stat-card" style="background-color:#6c757d;color:#fff;" onclick="filterByStatus('belum_diverifikasi')">
                 <div class="stat-num">{{ $stats['belum'] }}</div>
                 <div class="stat-label">Belum Diverifikasi</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#28a745 !important;color:#fff !important;" onclick="filterByStatus('sesuai')">
+            <div class="stat-card" style="background-color:#28a745;color:#fff;" onclick="filterByStatus('sesuai')">
                 <div class="stat-num">{{ $stats['sesuai'] }}</div>
                 <div class="stat-label">Sesuai</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#dc3545 !important;color:#fff !important;" onclick="filterByStatus('tidak_sesuai')">
+            <div class="stat-card" style="background-color:#dc3545;color:#fff;" onclick="filterByStatus('tidak_sesuai')">
                 <div class="stat-num">{{ $stats['tidak_sesuai'] }}</div>
                 <div class="stat-label">Tidak Sesuai</div>
             </div>
         </div>
         <div class="col-6 col-md-3 mb-2">
-            <div class="card stat-card p-3" style="background-color:#ffc107 !important;color:#212529 !important;" onclick="filterByStatus('perlu_perbaikan')">
+            <div class="stat-card" style="background-color:#ffc107;color:#212529;" onclick="filterByStatus('perlu_perbaikan')">
                 <div class="stat-num">{{ $stats['perlu_perbaikan'] }}</div>
                 <div class="stat-label">Perlu Perbaikan</div>
             </div>
