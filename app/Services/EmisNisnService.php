@@ -96,6 +96,28 @@ class EmisNisnService
                     $data = $response2->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results']) && !empty($data['results'])) {
                         $kemenagData = $data['results'][0]; // Get first result from array
+
+                        // Coba fetch parents via student numeric id endpoint
+                        $studentNumId = $kemenagData['id'] ?? null;
+                        if ($studentNumId) {
+                            try {
+                                $rParents = $http->get($this->apiUrl . "/students/students/{$studentNumId}/parents");
+                                Log::info('EmisNisnService: Parents endpoint', [
+                                    'url' => "/students/students/{$studentNumId}/parents",
+                                    'status' => $rParents->status(),
+                                    'body_preview' => substr($rParents->body(), 0, 200),
+                                ]);
+                                if ($rParents->successful()) {
+                                    $pd = $rParents->json();
+                                    $parentsResult = $pd['results'] ?? $pd['data'] ?? null;
+                                    if ($parentsResult) {
+                                        $kemenagData['parents'] = $parentsResult;
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning('EmisNisnService: parents endpoint failed', ['error' => $e->getMessage()]);
+                            }
+                        }
                     }
                 }
             } catch (\Exception $e) {
