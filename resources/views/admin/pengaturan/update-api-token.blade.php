@@ -6,25 +6,19 @@
     <h1 class="m-0 text-dark">Update API Token</h1>
 @stop
 
-@section('css')
-<style>
-    /* Fix AdminLTE card-primary override: nav-link teks jadi putih di atas bg putih */
-    .card-outline-tabs .nav-tabs .nav-link {
-        color: #495057 !important;
-    }
-    .card-outline-tabs .nav-tabs .nav-link.active {
-        color: #007bff !important;
-        border-top: 3px solid #007bff;
-    }
-    .card-outline-tabs .nav-tabs .nav-link:hover {
-        color: #0056b3 !important;
-    }
-</style>
-@stop
-
 @section('plugins.Sweetalert2', true)
 
 @section('content')
+{{-- FIX: AdminLTE card-primary.card-outline-tabs memaksa nav-link:not(.active) jadi putih.
+     Style ini WAJIB di dalam @section('content') agar load setelah semua CSS AdminLTE. --}}
+<style>
+    .card.card-primary.card-outline.card-outline-tabs .card-header .nav-tabs .nav-link:not(.active) {
+        color: #495057 !important;
+    }
+    .card.card-primary.card-outline.card-outline-tabs .card-header .nav-tabs .nav-link:not(.active):hover {
+        color: #007bff !important;
+    }
+</style>
 <div class="row">
     <div class="col-md-9">
         <div class="card card-primary card-outline card-outline-tabs">
