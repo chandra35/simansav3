@@ -81,27 +81,71 @@
     </div>
 
     {{-- Filter bar --}}
-    <div class="filter-bar d-flex flex-wrap align-items-center gap-2" style="gap:.5rem;">
-        <form method="GET" action="{{ route('admin.verifikasi-ijazah.index') }}" class="d-flex flex-wrap" style="gap:.5rem;width:100%;">
-            <input type="text" name="search" class="form-control form-control-sm" style="width:200px;"
-                   placeholder="Cari nama / NISN..." value="{{ $search }}">
-            <select name="kelas_id" class="form-control form-control-sm" style="width:160px;">
-                <option value="">Semua Kelas</option>
-                @foreach($kelasOptions as $kelas)
-                    <option value="{{ $kelas->id }}" {{ $kelasFilter == $kelas->id ? 'selected' : '' }}>
-                        {{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}
-                    </option>
-                @endforeach
-            </select>
-            <select name="status" class="form-control form-control-sm" style="width:180px;" id="statusSelect">
-                <option value="semua" {{ $statusFilter=='semua' ? 'selected' : '' }}>Semua Status</option>
-                <option value="belum_diverifikasi" {{ $statusFilter=='belum_diverifikasi' ? 'selected' : '' }}>Belum Diverifikasi</option>
-                <option value="sesuai" {{ $statusFilter=='sesuai' ? 'selected' : '' }}>Sesuai</option>
-                <option value="tidak_sesuai" {{ $statusFilter=='tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai</option>
-                <option value="perlu_perbaikan" {{ $statusFilter=='perlu_perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search mr-1"></i>Filter</button>
-            <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-secondary btn-sm"><i class="fas fa-times mr-1"></i>Reset</a>
+    <div class="filter-bar" style="background:#f8f9fa;border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;">
+        <form method="GET" action="{{ route('admin.verifikasi-ijazah.index') }}" id="filterForm">
+            <div class="d-flex flex-wrap align-items-end" style="gap:.5rem;">
+                {{-- Cari --}}
+                <div>
+                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">CARI</label>
+                    <input type="text" name="search" class="form-control form-control-sm" style="width:200px;"
+                           placeholder="Nama / NISN / NIK..." value="{{ $search }}">
+                </div>
+                {{-- Tingkat --}}
+                <div>
+                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">TINGKAT</label>
+                    <select name="tingkat" id="selTingkat" class="form-control form-control-sm" style="width:100px;">
+                        <option value="">Semua</option>
+                        @foreach($tingkatList as $t)
+                            <option value="{{ $t }}" {{ $tingkatFilter == $t ? 'selected' : '' }}>
+                                {{ $t == 10 ? 'X' : ($t == 11 ? 'XI' : 'XII') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                {{-- Jurusan --}}
+                <div>
+                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">JURUSAN</label>
+                    <select name="jurusan_id" id="selJurusan" class="form-control form-control-sm" style="width:140px;">
+                        <option value="">Semua</option>
+                        @foreach($jurusanAll as $j)
+                            <option value="{{ $j->id }}" {{ $jurusanFilter == $j->id ? 'selected' : '' }}
+                                    data-tingkat="">
+                                {{ $j->singkatan ?? $j->nama_jurusan }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                {{-- Kelas --}}
+                <div>
+                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">KELAS</label>
+                    <select name="kelas_id" id="selKelas" class="form-control form-control-sm" style="width:160px;">
+                        <option value="">Semua Kelas</option>
+                        @foreach($kelasAll as $kelas)
+                            <option value="{{ $kelas->id }}"
+                                    data-tingkat="{{ $kelas->tingkat }}"
+                                    data-jurusan="{{ $kelas->jurusan_id }}"
+                                    {{ $kelasFilter == $kelas->id ? 'selected' : '' }}>
+                                {{ $kelas->nama_kelas }}{{ $kelas->jurusan ? ' ('.$kelas->jurusan->singkatan.')' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                {{-- Status --}}
+                <div>
+                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">STATUS</label>
+                    <select name="status" class="form-control form-control-sm" style="width:175px;" id="statusSelect">
+                        <option value="semua" {{ $statusFilter=='semua' ? 'selected' : '' }}>Semua Status</option>
+                        <option value="belum_diverifikasi" {{ $statusFilter=='belum_diverifikasi' ? 'selected' : '' }}>Belum Diverifikasi</option>
+                        <option value="sesuai" {{ $statusFilter=='sesuai' ? 'selected' : '' }}>Sesuai</option>
+                        <option value="tidak_sesuai" {{ $statusFilter=='tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai</option>
+                        <option value="perlu_perbaikan" {{ $statusFilter=='perlu_perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
+                    </select>
+                </div>
+                <div class="d-flex" style="gap:.3rem;padding-bottom:1px;">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search mr-1"></i>Filter</button>
+                    <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-secondary btn-sm"><i class="fas fa-times mr-1"></i>Reset</a>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -190,5 +234,68 @@ function filterByStatus(status) {
     document.getElementById('statusSelect').value = status;
     document.getElementById('statusSelect').closest('form').submit();
 }
+
+(function () {
+    const kelasData = @json($kelasAll->map(fn($k) => [
+        'id'      => $k->id,
+        'tingkat' => $k->tingkat,
+        'jurusan' => $k->jurusan_id,
+        'label'   => $k->nama_kelas . ($k->jurusan ? ' ('.$k->jurusan->singkatan.')' : ''),
+    ]));
+
+    const jurusanData = @json($jurusanAll->map(fn($j) => [
+        'id'    => $j->id,
+        'label' => $j->singkatan ?? $j->nama_jurusan,
+    ]));
+
+    const jurusanByTingkat = {};
+    kelasData.forEach(k => {
+        if (!k.jurusan) return;
+        if (!jurusanByTingkat[k.tingkat]) jurusanByTingkat[k.tingkat] = new Set();
+        jurusanByTingkat[k.tingkat].add(k.jurusan);
+    });
+
+    const selTingkat = document.getElementById('selTingkat');
+    const selJurusan = document.getElementById('selJurusan');
+    const selKelas   = document.getElementById('selKelas');
+
+    function rebuildJurusan(tingkat, selectedJurusan) {
+        selJurusan.innerHTML = '<option value="">Semua</option>';
+        const allowed = tingkat ? jurusanByTingkat[tingkat] : null;
+        jurusanData.forEach(j => {
+            if (allowed && !allowed.has(j.id)) return;
+            const opt = document.createElement('option');
+            opt.value = j.id;
+            opt.textContent = j.label;
+            if (String(j.id) === String(selectedJurusan)) opt.selected = true;
+            selJurusan.appendChild(opt);
+        });
+    }
+
+    function rebuildKelas(tingkat, jurusan, selectedKelas) {
+        selKelas.innerHTML = '<option value="">Semua Kelas</option>';
+        kelasData.forEach(k => {
+            if (tingkat && k.tingkat != tingkat) return;
+            if (jurusan && String(k.jurusan) !== String(jurusan)) return;
+            const opt = document.createElement('option');
+            opt.value = k.id;
+            opt.textContent = k.label;
+            if (String(k.id) === String(selectedKelas)) opt.selected = true;
+            selKelas.appendChild(opt);
+        });
+    }
+
+    selTingkat.addEventListener('change', function () {
+        rebuildJurusan(this.value, '');
+        rebuildKelas(this.value, '', '');
+    });
+
+    selJurusan.addEventListener('change', function () {
+        rebuildKelas(selTingkat.value, this.value, '');
+    });
+
+    rebuildJurusan('{{ $tingkatFilter }}', '{{ $jurusanFilter }}');
+    rebuildKelas('{{ $tingkatFilter }}', '{{ $jurusanFilter }}', '{{ $kelasFilter }}');
+})();
 </script>
 @endsection

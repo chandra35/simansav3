@@ -23,11 +23,13 @@ class VerifikasiIjazahController extends Controller
     {
         $this->authorize('verifikasi-ijazah');
 
-        $statusFilter = $request->get('status', 'semua');
-        $kelasFilter  = $request->get('kelas_id', '');
-        $search       = $request->get('search', '');
+        $statusFilter  = $request->get('status', 'semua');
+        $kelasFilter   = $request->get('kelas_id', '');
+        $jurusanFilter = $request->get('jurusan_id', '');
+        $tingkatFilter = $request->get('tingkat', '');
+        $search        = $request->get('search', '');
 
-        $query = Siswa::with(['verifikasiIjazah', 'kelasSaatIni'])
+        $query = Siswa::with(['verifikasiIjazah', 'kelasSaatIni.jurusan'])
             ->orderBy('nama_lengkap');
 
         if ($search) {
@@ -40,6 +42,10 @@ class VerifikasiIjazahController extends Controller
 
         if ($kelasFilter) {
             $query->where('kelas_saat_ini_id', $kelasFilter);
+        } elseif ($jurusanFilter) {
+            $query->whereHas('kelasSaatIni', fn($q) => $q->where('jurusan_id', $jurusanFilter));
+        } elseif ($tingkatFilter) {
+            $query->whereHas('kelasSaatIni', fn($q) => $q->where('tingkat', $tingkatFilter));
         }
 
         if ($statusFilter !== 'semua') {
@@ -63,9 +69,23 @@ class VerifikasiIjazahController extends Controller
             'perlu_perbaikan'  => VerifikasiIjazah::where('status', 'perlu_perbaikan')->count(),
         ];
 
-        $kelasOptions = \App\Models\Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
+        // Data untuk cascading filter
+        $kelasAll = \App\Models\Kelas::with('jurusan')
+            ->where('is_active', true)
+            ->orderBy('tingkat')->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'tingkat', 'jurusan_id']);
 
-        return view('admin.verifikasi-ijazah.index', compact('siswaList', 'stats', 'statusFilter', 'kelasFilter', 'search', 'kelasOptions'));
+        $jurusanAll = \App\Models\Jurusan::where('is_active', true)
+            ->orderBy('urutan')->orderBy('nama_jurusan')
+            ->get(['id', 'nama_jurusan', 'singkatan']);
+
+        $tingkatList = $kelasAll->pluck('tingkat')->unique()->sort()->values();
+
+        return view('admin.verifikasi-ijazah.index', compact(
+            'siswaList', 'stats', 'statusFilter', 'kelasFilter',
+            'jurusanFilter', 'tingkatFilter', 'search',
+            'kelasAll', 'jurusanAll', 'tingkatList'
+        ));
     }
 
     /**
