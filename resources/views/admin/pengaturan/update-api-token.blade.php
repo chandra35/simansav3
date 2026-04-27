@@ -31,17 +31,17 @@
             <div class="card-header p-0 border-bottom-0">
                 <ul class="nav nav-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="emis-tab" data-toggle="pill" href="#emis" role="tab">
+                        <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab">
                             <i class="fas fa-user-graduate"></i> Token EMIS (NISN)
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="emis-institusi-tab" data-toggle="pill" href="#emis-institusi" role="tab">
+                        <a class="nav-link" id="emis-institusi-tab" data-toggle="tab" href="#emis-institusi" role="tab">
                             <i class="fas fa-school"></i> Token EMIS Lembaga
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="kemenag-tab" data-toggle="pill" href="#kemenag" role="tab">
+                        <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab">
                             <i class="fas fa-id-card"></i> Token Kemenag (NIP)
                         </a>
                     </li>
