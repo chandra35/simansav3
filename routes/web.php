@@ -110,6 +110,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/import/template', [SiswaImportController::class, 'downloadTemplate'])->name('siswa.import.template');
     Route::post('/siswa/import/process', [SiswaImportController::class, 'import'])->name('siswa.import.process');
     
+    // EMIS Import (fitur baru - beda dari import biasa)
+    Route::get('/siswa/import-emis/form', [App\Http\Controllers\Admin\EmisImportController::class, 'form'])->name('emis-import.form');
+    Route::post('/siswa/import-emis/parse', [App\Http\Controllers\Admin\EmisImportController::class, 'parse'])->name('emis-import.parse');
+    Route::post('/siswa/import-emis/execute', [App\Http\Controllers\Admin\EmisImportController::class, 'execute'])->name('emis-import.execute');
+
     // NPSN Import
     Route::get('/siswa/import-npsn/form', [App\Http\Controllers\Admin\NpsnImportController::class, 'index'])->name('siswa.import-npsn');
     Route::get('/siswa/import-npsn/template', [App\Http\Controllers\Admin\NpsnImportController::class, 'downloadTemplate'])->name('siswa.import-npsn.template');
