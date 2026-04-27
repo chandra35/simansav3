@@ -35,7 +35,7 @@ class VerifikasiIjazahService
      */
     public function getDataSimansa(Siswa $siswa): array
     {
-        $siswa->load('ortu');
+        $siswa->load('ortu', 'sekolahAsal');
 
         return [
             'nama_lengkap'    => $siswa->nama_lengkap,
@@ -44,7 +44,7 @@ class VerifikasiIjazahService
             'tempat_lahir'    => $siswa->tempat_lahir,
             'tanggal_lahir'   => $siswa->tanggal_lahir?->format('Y-m-d'),
             'jenis_kelamin'   => $siswa->jenis_kelamin,
-            'nama_sekolah_asal' => $siswa->asal_siswa,
+            'nama_sekolah_asal' => $siswa->sekolahAsal?->nama,
             'nama_ayah'       => $siswa->ortu?->nama_ayah,
             'nama_ibu'        => $siswa->ortu?->nama_ibu,
         ];
