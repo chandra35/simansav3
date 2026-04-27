@@ -258,9 +258,7 @@ class SiswaController extends Controller
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
                 'kelas' => $kelasNama,
                 'username' => $item->user->username ?? '-',
-                'status_ortu' => $item->data_ortu_completed ? 
-                    '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-danger">Belum Lengkap</span>',
+                'status_ortu' => $this->getStatusOrtu($item),
                 'status_diri' => $item->data_diri_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
                     '<span class="badge badge-danger">Belum Lengkap</span>',
@@ -275,6 +273,38 @@ class SiswaController extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
+    }
+
+    private function getStatusOrtu(Siswa $siswa): string
+    {
+        $ortu = $siswa->ortu;
+
+        // Tidak ada record ortu sama sekali → Belum Lengkap
+        if (!$ortu) {
+            return '<span class="badge badge-danger">Belum Lengkap</span>';
+        }
+
+        // Data "benar-benar lengkap": sudah diverifikasi admin/siswa via flag
+        if ($siswa->data_ortu_completed) {
+            // Cek apakah field kritis benar-benar terisi (bukan cuma nama)
+            $fullyFilled = !empty($ortu->status_ayah)
+                && !empty($ortu->status_ibu)
+                && !empty($ortu->alamat_ortu)
+                && !empty($ortu->kodepos);
+
+            if ($fullyFilled) {
+                return '<span class="badge badge-success">Lengkap</span>';
+            }
+            // Flag true tapi field kritis kosong → dari import EMIS (hanya nama)
+            return '<span class="badge badge-warning text-dark">Terisi, Belum Lengkap</span>';
+        }
+
+        // Flag false tapi ada nama ayah/ibu → sebagian terisi (import EMIS)
+        if (!empty($ortu->nama_ayah) || !empty($ortu->nama_ibu)) {
+            return '<span class="badge badge-warning text-dark">Terisi, Belum Lengkap</span>';
+        }
+
+        return '<span class="badge badge-danger">Belum Lengkap</span>';
     }
 
     private function getFotoColumn(Siswa $siswa): string
