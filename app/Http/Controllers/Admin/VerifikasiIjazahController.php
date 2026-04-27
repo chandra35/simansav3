@@ -158,17 +158,22 @@ class VerifikasiIjazahController extends Controller
             'saran_perbaikan'     => 'nullable|array',
             'data_emis_kemdikbud' => 'nullable|string',
             'data_emis_kemenag'   => 'nullable|string',
+            'data_emis_lembaga'   => 'nullable|string',
         ]);
 
         try {
             $dataEmisKemdikbud = null;
             $dataEmisKemenag   = null;
+            $dataEmisLembaga   = null;
 
             if ($request->data_emis_kemdikbud) {
                 $dataEmisKemdikbud = json_decode($request->data_emis_kemdikbud, true);
             }
             if ($request->data_emis_kemenag) {
                 $dataEmisKemenag = json_decode($request->data_emis_kemenag, true);
+            }
+            if ($request->data_emis_lembaga) {
+                $dataEmisLembaga = json_decode($request->data_emis_lembaga, true);
             }
 
             $this->service->simpanVerifikasi(
@@ -181,7 +186,8 @@ class VerifikasiIjazahController extends Controller
                 dataEmis: [
                     'kemdikbud' => $dataEmisKemdikbud,
                     'kemenag'   => $dataEmisKemenag,
-                ]
+                ],
+                dataEmisLembaga: $dataEmisLembaga,
             );
 
             return redirect()
@@ -214,17 +220,23 @@ class VerifikasiIjazahController extends Controller
         $verifikasi = VerifikasiIjazah::where('siswa_id', $siswa->id)->first();
         if ($verifikasi) {
             $this->service->refreshDataEmis($verifikasi, Auth::user());
+            // Reload setelah refresh untuk dapat data terbaru
+            $verifikasi->refresh();
         }
 
         // Re-compare
         $dataSimansa = $this->service->getDataSimansa($siswa);
         $fieldBeda   = $this->service->compareData($dataSimansa, $dataEmis['kemdikbud'], $dataEmis['kemenag']);
 
+        // Lembaga data (sudah di-refresh di dalam refreshDataEmis jika token tersedia)
+        $dataEmisLembaga = $this->service->fetchDataEmisLembaga($siswa->nisn);
+
         return response()->json([
-            'success'    => true,
-            'kemdikbud'  => $dataEmis['kemdikbud'],
-            'kemenag'    => $dataEmis['kemenag'],
-            'field_beda' => $fieldBeda,
+            'success'         => true,
+            'kemdikbud'       => $dataEmis['kemdikbud'],
+            'kemenag'         => $dataEmis['kemenag'],
+            'lembaga'         => $dataEmisLembaga,
+            'field_beda'      => $fieldBeda,
         ]);
     }
 

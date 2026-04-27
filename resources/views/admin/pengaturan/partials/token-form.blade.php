@@ -54,9 +54,11 @@
             <button type="button" class="btn btn-secondary" onclick="window.location.reload()">
                 <i class="fas fa-redo"></i> Reset
             </button>
+            @if(!empty($tokenInfo['test_route']))
             <a href="{{ route($tokenInfo['test_route']) }}" class="btn btn-info" target="_blank">
                 <i class="fas fa-vial"></i> Test Token
             </a>
+            @endif
         </div>
     </form>
 </div>

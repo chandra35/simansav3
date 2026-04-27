@@ -185,7 +185,7 @@
                                     </td>
                                     @if($dataEmisLembaga)
                                     <td>
-                                        <span class="text-muted small">{{ $valLembaga ?: '-' }}</span>
+                                        <span class="val-lembaga text-muted small">{{ $valLembaga ?: '-' }}</span>
                                     </td>
                                     @endif
                                     <td class="text-center">
@@ -228,6 +228,8 @@
                                value="{{ json_encode($dataEmis['kemdikbud'] ?? null) }}">
                         <input type="hidden" name="data_emis_kemenag" id="hiddenKemenag"
                                value="{{ json_encode($dataEmis['kemenag'] ?? null) }}">
+                        <input type="hidden" name="data_emis_lembaga" id="hiddenLembaga"
+                               value="{{ json_encode($dataEmisLembaga ?? null) }}">
 
                         <div class="form-row">
                             <div class="form-group col-md-5">
@@ -399,6 +401,9 @@ $(function () {
                     // Update hidden inputs
                     $('#hiddenKemdikbud').val(JSON.stringify(res.kemdikbud));
                     $('#hiddenKemenag').val(JSON.stringify(res.kemenag));
+                    if (res.lembaga) {
+                        $('#hiddenLembaga').val(JSON.stringify(res.lembaga));
+                    }
 
                     // Update tampilan nilai EMIS di tabel
                     if (res.kemenag) {
@@ -411,6 +416,12 @@ $(function () {
                         $.each(res.kemdikbud, function (field, val) {
                             if (field === 'raw') return;
                             $('[data-field="' + field + '"] .val-kemdikbud').text(val || '-');
+                        });
+                    }
+                    if (res.lembaga) {
+                        $.each(res.lembaga, function (field, val) {
+                            if (field === 'raw') return;
+                            $('[data-field="' + field + '"] .val-lembaga').text(val || '-');
                         });
                     }
 

@@ -262,7 +262,8 @@ class VerifikasiIjazahService
         array $fieldTidakSesuai,
         array $saranPerbaikan,
         string $catatan,
-        array $dataEmis
+        array $dataEmis,
+        ?array $dataEmisLembaga = null
     ): VerifikasiIjazah {
         $dataSimansa = $this->getDataSimansa($siswa);
 
@@ -280,6 +281,7 @@ class VerifikasiIjazahService
                     'data_simansa'        => $dataSimansa,
                     'data_emis_kemdikbud' => $dataEmis['kemdikbud'],
                     'data_emis_kemenag'   => $dataEmis['kemenag'],
+                    'data_emis_lembaga'   => $dataEmisLembaga,
                     'field_tidak_sesuai'  => $fieldTidakSesuai,
                     'saran_perbaikan'     => $saranPerbaikan,
                     'catatan'             => $catatan,
@@ -334,10 +336,18 @@ class VerifikasiIjazahService
 
         DB::beginTransaction();
         try {
-            $verifikasi->update([
+            $updateData = [
                 'data_emis_kemdikbud' => $dataEmis['kemdikbud'],
                 'data_emis_kemenag'   => $dataEmis['kemenag'],
-            ]);
+            ];
+
+            // Refresh lembaga juga jika token tersedia
+            $lembagaData = $this->fetchDataEmisLembaga($siswa->nisn);
+            if ($lembagaData !== null) {
+                $updateData['data_emis_lembaga'] = $lembagaData;
+            }
+
+            $verifikasi->update($updateData);
 
             VerifikasiIjazahLog::create([
                 'verifikasi_id' => $verifikasi->id,
