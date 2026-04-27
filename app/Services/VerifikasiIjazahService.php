@@ -98,14 +98,15 @@ class VerifikasiIjazahService
         if (!empty($emisData['kemenag'])) {
             $m = $emisData['kemenag'];
             $kemenag = [
-                'nama_lengkap'    => $m['nama_siswa'] ?? $m['name'] ?? null,
+                'nama_lengkap'    => $m['full_name'] ?? $m['nama_siswa'] ?? $m['name'] ?? null,
+                'nik'             => $m['nik'] ?? null,
                 'nisn'            => $m['nisn'] ?? null,
-                'tempat_lahir'    => $m['tempat_lahir'] ?? null,
-                'tanggal_lahir'   => $m['tanggal_lahir'] ?? null,
-                'jenis_kelamin'   => $m['jenis_kelamin'] ?? null,
+                'tempat_lahir'    => $m['birth_place'] ?? $m['tempat_lahir'] ?? null,
+                'tanggal_lahir'   => $m['birth_date'] ?? $m['tanggal_lahir'] ?? null,
+                'jenis_kelamin'   => $m['m_gender']['name'] ?? $m['gender'] ?? $m['jenis_kelamin'] ?? null,
                 'nama_sekolah_asal' => $m['nama_sekolah_asal'] ?? $m['sekolah_asal'] ?? null,
-                'nama_ayah'       => $m['nama_ayah'] ?? null,
-                'nama_ibu'        => $m['nama_ibu'] ?? null,
+                'nama_ayah'       => $m['parents']['father_full_name'] ?? $m['family_head_name'] ?? $m['nama_ayah'] ?? null,
+                'nama_ibu'        => $m['parents']['mother_full_name'] ?? $m['nama_ibu'] ?? null,
                 'raw'             => $m,
             ];
         }

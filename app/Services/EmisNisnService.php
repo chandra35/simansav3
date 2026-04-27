@@ -96,6 +96,25 @@ class EmisNisnService
                     $data = $response2->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results']) && !empty($data['results'])) {
                         $kemenagData = $data['results'][0]; // Get first result from array
+
+                        // Fetch detail endpoint for richer data (parents, full address, etc.)
+                        $studentId = $kemenagData['id'] ?? null;
+                        if ($studentId) {
+                            try {
+                                $response3 = $http->get($this->apiUrl . "/students/students/{$studentId}?is_search=1");
+                                if ($response3->successful()) {
+                                    $detail = $response3->json();
+                                    $detailResult = $detail['results'] ?? null;
+                                    if ($detailResult) {
+                                        // Merge detail data into kemenagData (preserves all ppdb-search fields)
+                                        $kemenagData = array_merge($kemenagData, $detailResult);
+                                        Log::info('EmisNisnService: Detail data fetched', ['student_id' => $studentId]);
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning('EmisNisnService: Detail endpoint failed (non-fatal)', ['error' => $e->getMessage()]);
+                            }
+                        }
                     }
                 }
             } catch (\Exception $e) {
