@@ -21,7 +21,7 @@ class EmisNisnService
         $tokenData = DB::table('api_tokens')->where('name', 'emis_api_token')->first();
         $this->bearerToken = $tokenData ? $tokenData->token : config('services.emis.bearer_token');
         
-        $this->timeout = 30; // 30 seconds timeout
+        $this->timeout = 15; // 15 seconds timeout (reduce spinner wait time)
     }
 
     /**

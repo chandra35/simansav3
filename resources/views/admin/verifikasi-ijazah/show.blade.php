@@ -395,6 +395,7 @@ $(function () {
         $.ajax({
             url: '{{ route("admin.verifikasi-ijazah.refresh-emis", $siswa->id) }}',
             method: 'POST',
+            timeout: 35000,
             data: { _token: '{{ csrf_token() }}' },
             success: function (res) {
                 if (res.success) {
