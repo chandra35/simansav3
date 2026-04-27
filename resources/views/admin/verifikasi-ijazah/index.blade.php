@@ -228,6 +228,19 @@
 </div>
 @endsection
 
+@php
+    $jsKelasData   = $kelasAll->map(fn($k) => [
+        'id'      => $k->id,
+        'tingkat' => $k->tingkat,
+        'jurusan' => $k->jurusan_id,
+        'label'   => $k->nama_kelas . ($k->jurusan ? ' ('.$k->jurusan->singkatan.')' : ''),
+    ])->values();
+    $jsJurusanData = $jurusanAll->map(fn($j) => [
+        'id'    => $j->id,
+        'label' => $j->singkatan ?? $j->nama_jurusan,
+    ])->values();
+@endphp
+
 @section('js')
 <script>
 function filterByStatus(status) {
@@ -236,17 +249,8 @@ function filterByStatus(status) {
 }
 
 (function () {
-    const kelasData = @json($kelasAll->map(fn($k) => [
-        'id'      => $k->id,
-        'tingkat' => $k->tingkat,
-        'jurusan' => $k->jurusan_id,
-        'label'   => $k->nama_kelas . ($k->jurusan ? ' ('.$k->jurusan->singkatan.')' : ''),
-    ]));
-
-    const jurusanData = @json($jurusanAll->map(fn($j) => [
-        'id'    => $j->id,
-        'label' => $j->singkatan ?? $j->nama_jurusan,
-    ]));
+    const kelasData   = {!! json_encode($jsKelasData) !!};
+    const jurusanData = {!! json_encode($jsJurusanData) !!};
 
     const jurusanByTingkat = {};
     kelasData.forEach(k => {
