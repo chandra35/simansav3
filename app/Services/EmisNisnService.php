@@ -17,8 +17,11 @@ class EmisNisnService
     {
         $this->apiUrl = config('services.emis.api_url', 'https://api-emis.kemenag.go.id/v1');
         
-        // Get token from database first, fallback to config
-        $tokenData = DB::table('api_tokens')->where('name', 'emis_api_token')->first();
+        // Prefer emis_institusi_token (operator lembaga), fallback ke emis_api_token, lalu config
+        $tokenData = DB::table('api_tokens')->where('name', 'emis_institusi_token')->whereNotNull('token')->first();
+        if (!$tokenData) {
+            $tokenData = DB::table('api_tokens')->where('name', 'emis_api_token')->whereNotNull('token')->first();
+        }
         $this->bearerToken = $tokenData ? $tokenData->token : config('services.emis.bearer_token');
         
         $this->timeout = 15; // 15 seconds timeout (reduce spinner wait time)
