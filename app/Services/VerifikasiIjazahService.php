@@ -149,12 +149,16 @@ class VerifikasiIjazahService
         }
 
         $payload = json_decode(base64_decode(str_pad(strtr($parts[1], '-_', '+/'), strlen($parts[1]) % 4, '=', STR_PAD_RIGHT)), true);
-        $institutionId = $payload['institution_id'] ?? $payload['institutionId'] ?? $payload['lembaga_id'] ?? null;
+        // JWT EMIS kadang menyimpan institution_id di 'identifiable_id' (ketika identifiable_field = institution/lembaga)
+        $institutionId = $payload['institution_id'] ?? $payload['institutionId'] ?? $payload['lembaga_id']
+            ?? $payload['identifiable_id'] ?? null;
 
         if (!$institutionId) {
-            Log::warning('VerifikasiIjazah: institution_id tidak ditemukan di JWT emis_institusi_token', ['payload_keys' => array_keys($payload ?? [])]);
+            Log::warning('VerifikasiIjazah: institution_id tidak ditemukan di JWT emis_institusi_token', ['payload_keys' => array_keys($payload ?? []), 'payload' => $payload]);
             return null;
         }
+
+        Log::info('VerifikasiIjazah: fetchDataEmisLembaga', ['institution_id' => $institutionId, 'nisn' => $nisn]);
 
         try {
             $response = Http::timeout(20)
