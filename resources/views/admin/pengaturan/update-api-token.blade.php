@@ -13,19 +13,25 @@
     <div class="col-md-9">
         <div class="card">
             <div class="card-header" style="border-top: 3px solid #007bff; padding-bottom: 0;">
+                {{-- accent-white dari navbar-white memaksa nav-tabs .nav-link jadi #fff.
+                     Fix: override color langsung di elemen nav-link (inline style tidak
+                     bisa di-override oleh class selector manapun). --}}
                 <ul class="nav nav-tabs card-header-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab">
+                        <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab"
+                           style="color: inherit;">
                             <i class="fas fa-user-graduate"></i> Token EMIS (NISN)
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="emis-institusi-tab" data-toggle="tab" href="#emis-institusi" role="tab">
+                        <a class="nav-link" id="emis-institusi-tab" data-toggle="tab" href="#emis-institusi" role="tab"
+                           style="color: inherit;">
                             <i class="fas fa-school"></i> Token EMIS Lembaga
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab">
+                        <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab"
+                           style="color: inherit;">
                             <i class="fas fa-id-card"></i> Token Kemenag (NIP)
                         </a>
                     </li>
