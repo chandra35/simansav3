@@ -189,6 +189,15 @@ class PermissionSyncService
                     'edit-profile',
                 ],
             ],
+            'verifikasi-ijazah' => [
+                'label' => 'Verifikasi Ijazah',
+                'icon' => 'certificate',
+                'color' => 'purple',
+                'description' => 'Verifikasi data ijazah SMP/MTs siswa dengan EMIS',
+                'permissions' => [
+                    'verifikasi-ijazah',
+                ],
+            ],
             'dashboard' => [
                 'label' => 'Dashboard',
                 'icon' => 'tachometer-alt',

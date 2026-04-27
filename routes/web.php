@@ -247,6 +247,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/api/villages/{kecamatan}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getVillages'])->name('gtk.api.villages');
     });
     
+    // ─── Verifikasi Ijazah SMP/MTs ─────────────────────────────────────────────
+    Route::middleware(['permission:verifikasi-ijazah'])->prefix('verifikasi-ijazah')->name('verifikasi-ijazah.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'index'])->name('index');
+        Route::get('/data', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'data'])->name('data');
+        Route::get('/{siswa}', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'show'])->name('show');
+        Route::post('/{siswa}', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'store'])->name('store');
+        Route::post('/{siswa}/refresh-emis', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'refreshEmis'])->name('refresh-emis');
+    });
+
     // GTK Management (for Admin/Super Admin)
     Route::middleware(['permission:view-gtk'])->group(function () {
         Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');

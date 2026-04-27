@@ -130,6 +130,11 @@ class Siswa extends Model
         return $this->belongsTo(Sekolah::class, 'npsn_asal_sekolah', 'npsn');
     }
 
+    public function verifikasiIjazah()
+    {
+        return $this->hasOne(VerifikasiIjazah::class);
+    }
+
     // Akademik relations
     public function kelasSaatIni()
     {

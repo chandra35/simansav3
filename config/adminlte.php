@@ -354,6 +354,13 @@ return [
                     'active' => ['admin/sekolah-asal*'],
                 ],
                 [
+                    'text' => 'Verifikasi Ijazah',
+                    'route' => 'admin.verifikasi-ijazah.index',
+                    'icon' => 'fas fa-fw fa-certificate',
+                    'can' => 'verifikasi-ijazah',
+                    'active' => ['admin/verifikasi-ijazah*'],
+                ],
+                [
                     'text' => 'Data GTK',
                     'route' => 'admin.gtk.index',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
