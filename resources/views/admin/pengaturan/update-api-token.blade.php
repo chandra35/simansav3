@@ -9,19 +9,9 @@
 @section('plugins.Sweetalert2', true)
 
 @section('content')
-{{-- FIX: AdminLTE card-primary.card-outline-tabs memaksa nav-link:not(.active) jadi putih.
-     Style ini WAJIB di dalam @section('content') agar load setelah semua CSS AdminLTE. --}}
-<style>
-    .card.card-primary.card-outline.card-outline-tabs .card-header .nav-tabs .nav-link:not(.active) {
-        color: #495057 !important;
-    }
-    .card.card-primary.card-outline.card-outline-tabs .card-header .nav-tabs .nav-link:not(.active):hover {
-        color: #007bff !important;
-    }
-</style>
 <div class="row">
     <div class="col-md-9">
-        <div class="card card-primary card-outline card-outline-tabs">
+        <div class="card card-outline card-outline-tabs">
             <div class="card-header p-0 border-bottom-0">
                 <ul class="nav nav-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
