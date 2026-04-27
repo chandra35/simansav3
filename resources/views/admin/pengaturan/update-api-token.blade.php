@@ -6,6 +6,10 @@
     <h1 class="m-0 text-dark">Update API Token</h1>
 @stop
 
+@section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+@stop
+
 @section('plugins.Sweetalert2', true)
 
 @section('content')
@@ -131,6 +135,7 @@
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script>
 // Fix: accent-white memaksa nav-link jadi putih — set warna saat load + saat tab switch
 $(function () {
