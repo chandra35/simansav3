@@ -196,11 +196,17 @@
 @endsection
 
 @section('content_header')
-    <div class="d-flex align-items-center" style="gap:.5rem;">
-        <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
-        <span class="text-muted" style="font-size:.85rem;">Verifikasi Ijazah SMP/MTs</span>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-certificate"></i> Verifikasi Ijazah SMP/MTs</h1>
+        </div>
+        <div class="col-sm-6">
+            <div class="float-sm-right">
+                <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </div>
     </div>
 @endsection
 
