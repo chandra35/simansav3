@@ -19,19 +19,19 @@
                 <ul class="nav nav-tabs card-header-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab"
-                           style="color: inherit;">
+                           style="color: #007bff;">
                             <i class="fas fa-user-graduate"></i> Token EMIS (NISN)
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="emis-institusi-tab" data-toggle="tab" href="#emis-institusi" role="tab"
-                           style="color: inherit;">
+                           style="color: #495057;">
                             <i class="fas fa-school"></i> Token EMIS Lembaga
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab"
-                           style="color: inherit;">
+                           style="color: #495057;">
                             <i class="fas fa-id-card"></i> Token Kemenag (NIP)
                         </a>
                     </li>
@@ -127,6 +127,14 @@
 
 @section('js')
 <script>
+// Fix: accent-white memaksa nav-link jadi putih — update warna saat tab switch
+$(function () {
+    $('#tokenTabs .nav-link').on('shown.bs.tab', function () {
+        $('#tokenTabs .nav-link').css('color', '#495057');
+        $(this).css('color', '#007bff');
+    });
+});
+
 // Shared token validation functions
 function validateTokenFormat(token) {
     const parts = token.split('.');
