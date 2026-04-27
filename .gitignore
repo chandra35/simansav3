@@ -1,5 +1,7 @@
 /.phpunit.cache
-CREDENTIALS.md
+# Markdown docs — gitignored (gunakan docs/INTERNAL.md sebagai referensi AI)
+*.md
+!README.md
 tmp_*.php
 tmp_*.sh
 /node_modules
