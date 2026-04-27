@@ -89,11 +89,13 @@
 .ptable tr.row-skip   { border-left: 3px solid #d1d5db; opacity: .55; }
 
 /* Status badges */
-.s-baru   { background: #d1fae5; color: #065f46; }
-.s-update { background: #dbeafe; color: #1e40af; }
-.s-fuzzy  { background: #fef9c3; color: #78350f; }
-.s-skip   { background: #f3f4f6; color: #6b7280; }
-.s-badge  { display: inline-block; border-radius: 20px; padding: .1rem .55rem; font-size: .68rem; font-weight: 700; }
+.s-baru    { background: #d1fae5; color: #065f46; }
+.s-update  { background: #dbeafe; color: #1e40af; }
+.s-fuzzy   { background: #fef9c3; color: #78350f; }
+.s-skip    { background: #f3f4f6; color: #6b7280; }
+.s-lengkap { background: #f0fdf4; color: #15803d; }
+.s-badge   { display: inline-block; border-radius: 20px; padding: .1rem .55rem; font-size: .68rem; font-weight: 700; }
+.ptable tr.row-complete { opacity: .6; }
 
 /* Fuzzy note */
 .fuzzy-note {
@@ -221,6 +223,7 @@
                             <div class="col-sm-6">
                                 <p class="mb-1"><span class="s-badge s-baru">BARU</span> Siswa belum ada di Simansa → akan ditambahkan</p>
                                 <p class="mb-1"><span class="s-badge s-update">UPDATE</span> Cocok by NISN/NIK → data kosong akan diisi dari EMIS</p>
+                                <p class="mb-1"><span class="s-badge s-lengkap">✓ LENGKAP</span> Data di Simansa sudah lengkap → default tidak dipilih, bisa di-toggle</p>
                             </div>
                             <div class="col-sm-6">
                                 <p class="mb-1"><span class="s-badge s-fuzzy">FUZZY</span> Nama mirip (≥80%) + tingkat cocok → perlu dikonfirmasi</p>
@@ -261,7 +264,11 @@
                         {{-- Bulk action bar --}}
                         <div class="bulk-bar">
                             <div class="sel-count"><strong id="selCountNum">0</strong> baris dipilih dari <span id="selCountTotal">0</span> yang ditampilkan</div>
-                            <div style="display:flex;gap:.4rem;">
+                            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                                <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer;font-size:.8rem;color:#374151;white-space:nowrap;margin:0;" title="Data yang sudah lengkap di Simansa (NISN, NIK, TTL, ortu) akan ikut diproses">
+                                    <input type="checkbox" id="chkUpdateLengkap" style="cursor:pointer;">
+                                    <span>Sertakan data lengkap</span>
+                                </label>
                                 <button type="button" class="btn btn-xs btn-outline-secondary" id="btnCheckAll">Pilih Semua</button>
                                 <button type="button" class="btn btn-xs btn-outline-secondary" id="btnUncheckAll">Batal Semua</button>
                             </div>
@@ -518,13 +525,17 @@
             const isSkip     = item.action === 'skip';
             const canSelect  = !isSkip;
             const isChecked  = canSelect && item.selected;
+            const isComplete = !!item.existing_complete;
 
-            const actionLabel = {
+            let actionLabel = {
                 baru:   '<span class="s-badge s-baru">BARU</span>',
                 update: '<span class="s-badge s-update">UPDATE</span>',
                 fuzzy:  '<span class="s-badge s-fuzzy"><i class="fas fa-exclamation-triangle mr-1"></i>FUZZY</span>',
                 skip:   '<span class="s-badge s-skip">SKIP</span>',
             }[item.action] || item.action;
+            if (isComplete) {
+                actionLabel += '<br><span class="s-badge s-lengkap" style="margin-top:.15rem;">&#10003; LENGKAP</span>';
+            }
 
             // Keterangan column
             let keterangan = '';
@@ -567,7 +578,7 @@
                 }
             }
 
-            const tr = `<tr class="row-${item.action}" data-idx="${idx}" data-action="${item.action}">
+            const tr = `<tr class="row-${item.action}${isComplete ? ' row-complete' : ''}" data-idx="${idx}" data-action="${item.action}" data-complete="${isComplete ? '1' : '0'}">`;
                 <td style="text-align:center;">
                     <input type="checkbox" class="row-check" data-idx="${idx}"
                         ${isChecked ? 'checked' : ''} ${!canSelect ? 'disabled' : ''}>
@@ -634,6 +645,17 @@
         updateSelCount();
     });
 
+    // ── Toggle: sertakan / lewati data yang sudah lengkap ──
+    $('#chkUpdateLengkap').on('change', function () {
+        const include = $(this).is(':checked');
+        previewData.forEach(function (item) {
+            if (item.existing_complete) {
+                item.selected = include;
+            }
+        });
+        renderTable();
+    });
+
     function updateSelCount() {
         const totalSelected = previewData.filter(r => r.selected).length;
 
@@ -655,6 +677,7 @@
         $('#fileInput').val('');
         $('#dzFilename').hide();
         $('#btnParse').prop('disabled', true);
+        $('#chkUpdateLengkap').prop('checked', false);
         $uploadSection.show();
         $previewSection.hide();
         $resultSection.hide();

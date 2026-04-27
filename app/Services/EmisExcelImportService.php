@@ -360,13 +360,26 @@ class EmisExcelImportService
                 ];
             }
 
+            // Data "lengkap" = semua field penting sudah terisi di Simansa
+            // (hanya relevan untuk update/fuzzy, bukan baru)
+            $existingComplete = false;
+            if ($existing && in_array($action, ['update', 'fuzzy'])) {
+                $existingComplete = !empty($existing['nisn'])
+                    && !empty($existing['nik'])
+                    && !empty($existing['tempat_lahir'])
+                    && !empty($existing['tanggal_lahir'])
+                    && !empty($existing['nama_ayah'])
+                    && !empty($existing['nama_ibu']);
+            }
+
             $result[] = [
-                'action'     => $action,      // baru | update | fuzzy | skip
-                'confidence' => $confidence,
-                'fuzzy_note' => $fuzzyNote,
-                'emis'       => $row,
-                'existing'   => $existing,
-                'selected'   => ($action !== 'skip'),
+                'action'            => $action,      // baru | update | fuzzy | skip
+                'confidence'        => $confidence,
+                'fuzzy_note'        => $fuzzyNote,
+                'emis'              => $row,
+                'existing'          => $existing,
+                'existing_complete' => $existingComplete,
+                'selected'          => ($action !== 'skip' && !$existingComplete),
             ];
         }
 
