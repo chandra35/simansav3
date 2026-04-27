@@ -11,9 +11,9 @@
 @section('content')
 <div class="row">
     <div class="col-md-9">
-        <div class="card card-outline card-outline-tabs">
-            <div class="card-header p-0 border-bottom-0">
-                <ul class="nav nav-tabs" id="tokenTabs" role="tablist">
+        <div class="card">
+            <div class="card-header" style="border-top: 3px solid #007bff; padding-bottom: 0;">
+                <ul class="nav nav-tabs card-header-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab">
                             <i class="fas fa-user-graduate"></i> Token EMIS (NISN)
