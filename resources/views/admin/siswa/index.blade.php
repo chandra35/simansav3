@@ -330,6 +330,9 @@
                             <a href="{{ route('admin.siswa.import') }}" class="btn btn-light mr-2">
                                 <i class="fas fa-file-excel"></i> Import Data Siswa
                             </a>
+                            <a href="{{ route('admin.emis-import.form') }}" class="btn btn-light mr-2">
+                                <i class="fas fa-cloud-download-alt"></i> Import EMIS
+                            </a>
                             <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-outline-light mr-2">
                                 <i class="fas fa-school"></i> Import NPSN
                             </a>
