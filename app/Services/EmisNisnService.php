@@ -97,9 +97,8 @@ class EmisNisnService
                     if (isset($data['success']) && $data['success'] === true && isset($data['results']) && !empty($data['results'])) {
                         $kemenagData = $data['results'][0]; // Get first result from array
 
-                        // Fetch detail endpoint untuk data lengkap (parents, nik, dsb)
-                        // Detail endpoint butuh UUID (siswa_id), bukan integer id
-                        $studentUuid = $kemenagData['siswa_id'] ?? null;
+                        // Fetch detail endpoint — UUID ada di integration_id (dari ppdb-search)
+                        $studentUuid = strtolower($kemenagData['integration_id'] ?? '');
                         if ($studentUuid) {
                             try {
                                 $response3 = $http->get($this->apiUrl . "/students/students/{$studentUuid}?is_search=1");

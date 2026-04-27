@@ -85,11 +85,13 @@ class VerifikasiIjazahService
             $k = $emisData['kemdikbud'];
             $kemdikbud = [
                 'nama_lengkap'    => $k['nama'] ?? $k['nm_siswa'] ?? null,
+                'nik'             => $k['nik'] ?? null,
                 'nisn'            => $k['nisn'] ?? null,
                 'tempat_lahir'    => $k['tempat_lahir'] ?? $k['tmpt_lahir'] ?? null,
                 'tanggal_lahir'   => $k['tanggal_lahir'] ?? $k['tgl_lahir'] ?? null,
                 'jenis_kelamin'   => $k['jenis_kelamin'] ?? $k['jk'] ?? null,
                 'nama_sekolah_asal' => $k['nama_sekolah_asal'] ?? $k['sekolah_asal'] ?? null,
+                'nama_ibu'        => $k['nama_ibu_kandung'] ?? null, // Kemdikbud punya ini
                 'raw'             => $k,
             ];
         }
