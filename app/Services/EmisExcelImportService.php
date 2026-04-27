@@ -428,6 +428,11 @@ class EmisExcelImportService
             'nama_ayah' => $emis['nama_ayah'],
             'nama_ibu'  => $emis['nama_ibu'],
         ]);
+
+        // Set flag jika nama_ayah DAN nama_ibu sudah ada dari EMIS
+        if (!empty($emis['nama_ayah']) && !empty($emis['nama_ibu'])) {
+            $siswa->update(['data_ortu_completed' => true]);
+        }
     }
 
     protected function updateExisting(string $siswaId, array $emis): void
@@ -460,5 +465,15 @@ class EmisExcelImportService
                 Ortu::create(array_merge(['siswa_id' => $siswa->id], $ortuData));
             }
         }
+
+        // Update flag data_ortu_completed berdasarkan kondisi aktual setelah import:
+        // true  → nama_ayah DAN nama_ibu sudah terisi (dari EMIS atau sebelumnya)
+        // false → salah satu / keduanya masih kosong → tampil "Belum Lengkap"
+        $siswa->refresh();
+        $namaAyahFinal = $siswa->ortu?->nama_ayah ?? null;
+        $namaIbuFinal  = $siswa->ortu?->nama_ibu  ?? null;
+        $siswa->update([
+            'data_ortu_completed' => !empty($namaAyahFinal) && !empty($namaIbuFinal),
+        ]);
     }
 }
