@@ -79,9 +79,12 @@ class VerifikasiIjazahService
         $kemdikbud = null;
         $kemenag   = null;
 
+        // cekNisn() returns data nested under $result['data']
+        $emisData = $result['data'] ?? $result;
+
         // Parsing data Kemdikbud (Pusdatin)
-        if (!empty($result['kemdikbud'])) {
-            $k = $result['kemdikbud'];
+        if (!empty($emisData['kemdikbud'])) {
+            $k = $emisData['kemdikbud'];
             $kemdikbud = [
                 'nama_lengkap'    => $k['nama'] ?? $k['nm_siswa'] ?? null,
                 'nisn'            => $k['nisn'] ?? null,
@@ -95,8 +98,8 @@ class VerifikasiIjazahService
         }
 
         // Parsing data Kemenag (PPDB Search)
-        if (!empty($result['kemenag'])) {
-            $m = $result['kemenag'];
+        if (!empty($emisData['kemenag'])) {
+            $m = $emisData['kemenag'];
             $kemenag = [
                 'nama_lengkap'    => $m['nama_siswa'] ?? $m['name'] ?? null,
                 'nisn'            => $m['nisn'] ?? null,
