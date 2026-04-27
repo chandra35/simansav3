@@ -578,7 +578,7 @@
                 }
             }
 
-            const tr = `<tr class="row-${item.action}${isComplete ? ' row-complete' : ''}" data-idx="${idx}" data-action="${item.action}" data-complete="${isComplete ? '1' : '0'}">`;
+            const tr = `<tr class="row-${item.action}${isComplete ? ' row-complete' : ''}" data-idx="${idx}" data-action="${item.action}" data-complete="${isComplete ? '1' : '0'}">
                 <td style="text-align:center;">
                     <input type="checkbox" class="row-check" data-idx="${idx}"
                         ${isChecked ? 'checked' : ''} ${!canSelect ? 'disabled' : ''}>
