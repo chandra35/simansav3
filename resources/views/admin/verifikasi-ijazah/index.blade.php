@@ -14,10 +14,9 @@
     .verif-hero h4 { font-weight: 800; margin: 0 0 .2rem 0; font-size: 1.3rem; }
     .verif-hero p  { margin: 0; font-size: .85rem; opacity: .88; }
 
-    .stat-card { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.12); cursor: pointer; transition: transform .15s; padding: 1rem; }
-    .stat-card:hover { transform: translateY(-2px); }
     .stat-card .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; }
     .stat-card .stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
+    .small-box { cursor: pointer; }
 
     .filter-bar { background: #f8f9fa; border-radius: 10px; padding: .7rem 1rem; margin-bottom: 1rem; }
 
@@ -45,31 +44,38 @@
         <p>Cocokkan data siswa di Simansa dengan data EMIS Kemenag / Kemdikbud. Tandai ketidaksesuaian sebagai acuan perbaikan di Vervalpd.</p>
     </div>
 
-    {{-- Stats --}}
-    {{-- CATATAN: Jangan pakai class .card untuk stat boxes di AdminLTE — gunakan div biasa dengan inline style penuh --}}
+    {{-- Stats — pakai small-box (komponen AdminLTE) karena bg-* bekerja di sini, tidak di .card biasa --}}
     <div class="row mb-3">
-        <div class="col-6 col-md-3 mb-2">
-            <div class="stat-card" style="background-color:#6c757d;color:#fff;" onclick="filterByStatus('belum_diverifikasi')">
-                <div class="stat-num">{{ $stats['belum'] }}</div>
-                <div class="stat-label">Belum Diverifikasi</div>
+        <div class="col-6 col-md-3">
+            <div class="small-box bg-secondary" onclick="filterByStatus('belum_diverifikasi')" style="cursor:pointer;">
+                <div class="inner">
+                    <h3>{{ $stats['belum'] }}</h3>
+                    <p>Belum Diverifikasi</p>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="stat-card" style="background-color:#28a745;color:#fff;" onclick="filterByStatus('sesuai')">
-                <div class="stat-num">{{ $stats['sesuai'] }}</div>
-                <div class="stat-label">Sesuai</div>
+        <div class="col-6 col-md-3">
+            <div class="small-box bg-success" onclick="filterByStatus('sesuai')" style="cursor:pointer;">
+                <div class="inner">
+                    <h3>{{ $stats['sesuai'] }}</h3>
+                    <p>Sesuai</p>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="stat-card" style="background-color:#dc3545;color:#fff;" onclick="filterByStatus('tidak_sesuai')">
-                <div class="stat-num">{{ $stats['tidak_sesuai'] }}</div>
-                <div class="stat-label">Tidak Sesuai</div>
+        <div class="col-6 col-md-3">
+            <div class="small-box bg-danger" onclick="filterByStatus('tidak_sesuai')" style="cursor:pointer;">
+                <div class="inner">
+                    <h3>{{ $stats['tidak_sesuai'] }}</h3>
+                    <p>Tidak Sesuai</p>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="stat-card" style="background-color:#ffc107;color:#212529;" onclick="filterByStatus('perlu_perbaikan')">
-                <div class="stat-num">{{ $stats['perlu_perbaikan'] }}</div>
-                <div class="stat-label">Perlu Perbaikan</div>
+        <div class="col-6 col-md-3">
+            <div class="small-box bg-warning" onclick="filterByStatus('perlu_perbaikan')" style="cursor:pointer;">
+                <div class="inner">
+                    <h3>{{ $stats['perlu_perbaikan'] }}</h3>
+                    <p>Perlu Perbaikan</p>
+                </div>
             </div>
         </div>
     </div>
