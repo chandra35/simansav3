@@ -102,6 +102,11 @@ class EmisNisnService
                         if ($studentId) {
                             try {
                                 $response3 = $http->get($this->apiUrl . "/students/students/{$studentId}?is_search=1");
+                                Log::info('EmisNisnService: Detail API Response', [
+                                    'student_id' => $studentId,
+                                    'status' => $response3->status(),
+                                    'body_preview' => substr($response3->body(), 0, 300),
+                                ]);
                                 if ($response3->successful()) {
                                     $detail = $response3->json();
                                     $detailResult = $detail['results'] ?? null;
