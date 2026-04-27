@@ -202,7 +202,7 @@
         </div>
         <div class="col-sm-6">
             <div class="float-sm-right">
-                <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-secondary">
+                <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-light">
                     <i class="fas fa-arrow-left"></i> Kembali ke Verifikasi Ijazah
                 </a>
             </div>
