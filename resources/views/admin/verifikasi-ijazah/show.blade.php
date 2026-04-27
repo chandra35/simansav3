@@ -5,77 +5,178 @@
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
 <style>
-    .verif-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-    @media(max-width:768px){ .verif-grid { grid-template-columns:1fr; } }
+/* ── Student Header ─────────────────────────── */
+.student-header {
+    background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #3949ab 100%);
+    border-radius: 12px;
+    color: #fff;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.student-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.4);
+}
+.student-header .name   { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+.student-header .meta   { font-size: .8rem; opacity: .85; margin-top: .15rem; }
+.student-header .badges { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .35rem; }
+.student-header .s-badge {
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35);
+    border-radius: 20px; padding: .15rem .65rem; font-size: .73rem; font-weight: 600;
+}
 
-    .data-source-card {
-        border-radius: 12px;
-        border: 2px solid transparent;
-        overflow: hidden;
-    }
-    .data-source-card.simansa  { border-color: #4e73df; }
-    .data-source-card.emis     { border-color: #1cc88a; }
-    .data-source-card .card-header { font-weight: 700; font-size: .85rem; padding: .5rem .9rem; }
-    .data-source-card.simansa .card-header { background: #4e73df; color:#fff; }
-    .data-source-card.emis    .card-header { background: #1cc88a; color:#fff; }
+/* ── EMIS alert ─────────────────────────────── */
+.emis-alert-warn {
+    background: #fff8e1; border-left: 4px solid #f59e0b;
+    border-radius: 8px; padding: .6rem .9rem;
+    font-size: .82rem; color: #78350f;
+    margin-bottom: 1rem;
+}
 
-    .field-row {
-        display: grid;
-        grid-template-columns: 140px 1fr;
-        gap: .25rem;
-        align-items: center;
-        padding: .35rem .9rem;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: .82rem;
-    }
-    .field-row:last-child { border-bottom: none; }
-    .field-row .label { color: #6c757d; font-weight: 600; font-size: .75rem; text-transform: uppercase; }
-    .field-row .value { color: #212529; }
+/* ── Compare Table ──────────────────────────── */
+.compare-card { border-radius: 12px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 1rem; }
+.compare-card .card-head {
+    background: #f8f9fa; border-bottom: 1px solid #e9ecef;
+    padding: .6rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.compare-card .card-head strong { font-size: .85rem; }
+.compare-card .legend { font-size: .73rem; color: #6c757d; }
 
-    .field-beda   { background: #fff3cd !important; }
-    .field-beda .value { color: #856404; font-weight: 600; }
-    .field-beda .label { color: #856404; }
+.ctable { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.ctable th {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .03em; padding: .5rem .75rem;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+.ctable th.th-field    { color: #6c757d; background: #f8f9fa; width: 145px; }
+.ctable th.th-simansa  { color: #1e40af; background: #eff6ff; }
+.ctable th.th-kemenag  { color: #065f46; background: #f0fdf4; }
+.ctable th.th-kemdikbud{ color: #374151; background: #f9fafb; }
+.ctable th.th-lembaga  { color: #5b21b6; background: #f5f3ff; }
+.ctable th.th-check    { background: #f8f9fa; text-align: center; width: 56px; }
 
-    .check-table th, .check-table td { font-size: .82rem; vertical-align: middle; }
-    .check-table .field-label { font-weight: 600; color: #495057; }
+.ctable td {
+    padding: .45rem .75rem;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+.ctable tr:last-child td { border-bottom: none; }
+.ctable .td-field {
+    font-weight: 600; color: #374151; font-size: .78rem;
+    background: #fafafa;
+}
+.ctable .td-simansa { color: #1e3a5f; }
+.ctable .td-kemenag { color: #064e3b; }
+.ctable .td-kemdikbud { color: #6b7280; font-size: .78rem; }
+.ctable .td-lembaga { color: #5b21b6; font-size: .78rem; }
 
-    .history-item { border-left: 3px solid #dee2e6; padding: .4rem .8rem; margin-bottom: .5rem; font-size: .82rem; }
-    .history-item.created        { border-color: #4e73df; }
-    .history-item.status_changed { border-color: #f6c23e; }
-    .history-item.catatan_updated{ border-color: #36b9cc; }
-    .history-item.data_refreshed { border-color: #1cc88a; }
+/* Beda row */
+.row-beda .td-field    { background: #fef9c3 !important; color: #78350f; }
+.row-beda .td-simansa  { background: #fff7ed; }
+.row-beda .td-kemenag  { background: #f0fdf4; }
+.row-beda .td-kemdikbud{ background: #fafafa; }
+.row-beda .td-lembaga  { background: #faf5ff; }
+.row-beda .td-check    { background: #fef9c3 !important; }
+.row-beda .beda-icon   { color: #f59e0b; margin-left: 4px; }
+.row-beda .val-kemenag { font-weight: 700; color: #065f46; }
 
-    .dokumen-thumb { width:80px; height:80px; object-fit:cover; border-radius:8px; border:2px solid #dee2e6; cursor:pointer; transition: transform .15s; }
-    .dokumen-thumb:hover { transform:scale(1.05); border-color:#4e73df; }
-    .dokumen-link  { display:block; padding:.3rem .5rem; border-radius:6px; border:1px solid #dee2e6; font-size:.78rem; text-align:center; }
+/* Saran row */
+.saran-row td {
+    background: #fffde7 !important;
+    padding: .3rem .75rem .45rem 145px !important;
+    border-bottom: 1px solid #fde68a;
+}
+.saran-row .saran-inner {
+    display: flex; align-items: center; gap: .5rem;
+}
+.saran-row .saran-label { font-size: .72rem; color: #92400e; white-space: nowrap; font-weight: 600; }
+.saran-row input { font-size: .78rem; border-color: #fcd34d; background: #fffbeb; }
+.saran-row input:focus { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,.2); }
 
-    .emis-tabs .nav-link { font-size:.8rem; padding:.3rem .75rem; }
-    .emis-tabs .nav-link.active { font-weight: 700; }
+.ctable .td-check { text-align: center; }
+.ctable .td-check input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: #f59e0b; }
 
-    .btn-refresh-emis { font-size: .78rem; }
+/* dash value */
+.dash { color: #d1d5db; }
+
+/* ── Action Card ────────────────────────────── */
+.action-card {
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    margin-bottom: 1rem;
+    border: none;
+}
+.action-card .card-header {
+    background: #f8f9fa; border-bottom: 1px solid #e9ecef;
+    padding: .6rem 1rem; font-size: .85rem;
+}
+
+/* ── Right Sidebar ──────────────────────────── */
+.side-card {
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    margin-bottom: 1rem; border: none;
+}
+.side-card .card-header {
+    padding: .55rem 1rem; font-size: .8rem; font-weight: 700;
+    border-bottom: 1px solid #f0f0f0;
+}
+.dok-item {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .45rem .9rem; border-bottom: 1px solid #f4f4f4;
+    font-size: .8rem; text-decoration: none; color: #374151;
+    transition: background .15s;
+}
+.dok-item:last-child { border-bottom: none; }
+.dok-item:hover { background: #f0f9ff; color: #1d4ed8; text-decoration: none; }
+.dok-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }
+.dok-icon.img  { background: #dbeafe; color: #1d4ed8; }
+.dok-icon.pdf  { background: #fee2e2; color: #dc2626; }
+.dok-icon.kk   { background: #dcfce7; color: #16a34a; }
+.dok-empty     { padding: .5rem 1rem; font-size: .78rem; color: #9ca3af; }
+
+/* Timeline history */
+.tl-item { display: flex; gap: .75rem; padding: .5rem 1rem; border-bottom: 1px solid #f4f4f4; }
+.tl-item:last-child { border-bottom: none; }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.tl-dot.created        { background: #3b82f6; }
+.tl-dot.status_changed { background: #f59e0b; }
+.tl-dot.catatan_updated{ background: #06b6d4; }
+.tl-dot.data_refreshed { background: #10b981; }
+.tl-body { flex: 1; }
+.tl-action { font-size: .78rem; font-weight: 600; color: #374151; }
+.tl-meta   { font-size: .72rem; color: #9ca3af; margin-top: 1px; }
+.tl-status { font-size: .7rem; display: inline-block; margin-top: .2rem; }
+.tl-note   { font-size: .72rem; color: #6b7280; margin-top: .2rem; }
+
+/* Refresh button */
+.btn-refresh {
+    font-size: .78rem; padding: .3rem .8rem;
+    border: 1.5px solid rgba(255,255,255,.5);
+    color: #fff; background: transparent; border-radius: 20px;
+    transition: all .15s;
+}
+.btn-refresh:hover { background: rgba(255,255,255,.15); color: #fff; }
+.btn-refresh:disabled { opacity: .6; }
 </style>
 @endsection
 
 @section('content_header')
-    <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:.5rem;">
-        <div>
-            <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-sm btn-outline-secondary mr-2">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-            <strong style="font-size:1rem;">Verifikasi Ijazah:</strong>
-            <span class="text-purple font-weight-bold">{{ $siswa->nama_lengkap }}</span>
-        </div>
-        <div>
-            @if($verifikasi)
-                {!! $verifikasi->status_badge !!}
-            @else
-                <span class="badge badge-secondary">Belum Diverifikasi</span>
-            @endif
-        </div>
+    <div class="d-flex align-items-center" style="gap:.5rem;">
+        <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        <span class="text-muted" style="font-size:.85rem;">Verifikasi Ijazah SMP/MTs</span>
     </div>
 @endsection
 
@@ -83,130 +184,130 @@
 <div class="container-fluid px-0">
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
+        <div class="alert alert-success alert-dismissible fade show py-2">
             <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show">
+        <div class="alert alert-danger alert-dismissible fade show py-2">
             <i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     @endif
 
     <div class="row">
-        {{-- ── KOLOM KIRI: Data Simansa & EMIS ───────────────────────────────── --}}
+        {{-- ══ KIRI ══════════════════════════════════════════════════════════ --}}
         <div class="col-md-8">
 
-            {{-- Info singkat siswa --}}
-            <div class="card shadow-sm mb-3">
-                <div class="card-body py-2 px-3">
-                    <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
-                        <div>
-                            <strong>{{ $siswa->nama_lengkap }}</strong>
-                            <span class="badge badge-light text-muted ml-1">{{ $siswa->nisn ?? 'No NISN' }}</span>
-                            <span class="badge badge-light text-muted ml-1">{{ $siswa->kelasSaatIni?->nama_lengkap ?? $siswa->kelasSaatIni?->nama_kelas ?? 'Tanpa Kelas' }}</span>
-                        </div>
-                        <div class="ml-auto">
-                            <button type="button" class="btn btn-sm btn-outline-success btn-refresh-emis" id="btnRefreshEmis">
-                                <i class="fas fa-sync-alt mr-1"></i> Refresh Data EMIS
-                            </button>
-                        </div>
+            {{-- Student Header --}}
+            <div class="student-header">
+                <div class="student-avatar">
+                    {{ strtoupper(substr($siswa->nama_lengkap, 0, 1)) }}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="name">{{ $siswa->nama_lengkap }}</div>
+                    <div class="meta">NIK: {{ $siswa->nik ?? '-' }}</div>
+                    <div class="badges">
+                        <span class="s-badge"><i class="fas fa-hashtag mr-1" style="opacity:.7;"></i>{{ $siswa->nisn ?? 'No NISN' }}</span>
+                        <span class="s-badge"><i class="fas fa-school mr-1" style="opacity:.7;"></i>{{ $siswa->kelasSaatIni?->nama_kelas ?? 'Tanpa Kelas' }}</span>
+                        @if($verifikasi)
+                            <span class="s-badge">{!! $verifikasi->status_badge !!}</span>
+                        @else
+                            <span class="badge badge-secondary" style="font-size:.72rem;">Belum Diverifikasi</span>
+                        @endif
                     </div>
+                </div>
+                <div class="flex-shrink-0">
+                    <button type="button" class="btn-refresh" id="btnRefreshEmis">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh EMIS
+                    </button>
                 </div>
             </div>
 
-            {{-- EMIS error warning --}}
+            {{-- EMIS Warning --}}
             @if($emisError)
-            <div class="alert alert-warning py-2">
-                <i class="fas fa-exclamation-triangle mr-1"></i> <strong>EMIS:</strong> {{ $emisError }}
+            <div class="emis-alert-warn">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <strong>EMIS:</strong> {{ $emisError }}
             </div>
             @endif
 
-            {{-- Tabel perbandingan data --}}
-            <div class="card shadow-sm mb-3">
-                <div class="card-header py-2">
-                    <strong><i class="fas fa-balance-scale mr-1"></i> Perbandingan Data</strong>
-                    <small class="text-muted ml-2">— field berwarna kuning = berbeda antara Simansa vs EMIS</small>
+            {{-- Tabel Perbandingan --}}
+            <div class="compare-card">
+                <div class="card-head">
+                    <strong><i class="fas fa-balance-scale text-secondary mr-1"></i> Perbandingan Data</strong>
+                    <span class="legend"><span style="display:inline-block;width:10px;height:10px;background:#fef9c3;border:1px solid #fcd34d;border-radius:2px;margin-right:4px;"></span>Berbeda antara Simansa &amp; EMIS</span>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table check-table mb-0" id="compareTable">
-                        <thead class="thead-light">
+                <div style="overflow-x:auto;">
+                    <table class="ctable" id="compareTable">
+                        <thead>
                             <tr>
-                                <th width="160">Field</th>
-                                <th>
-                                    <i class="fas fa-database text-primary mr-1"></i> Simansa
-                                </th>
-                                <th>
-                                    <i class="fas fa-cloud-download-alt text-success mr-1"></i> EMIS Kemenag
-                                    <small class="text-muted">(utama)</small>
-                                </th>
-                                <th>
-                                    <i class="fas fa-cloud text-info mr-1"></i> EMIS Kemdikbud
-                                </th>
+                                <th class="th-field">Field</th>
+                                <th class="th-simansa"><i class="fas fa-database mr-1"></i>Simansa</th>
+                                <th class="th-kemenag"><i class="fas fa-cloud-download-alt mr-1"></i>EMIS Kemenag</th>
+                                <th class="th-kemdikbud"><i class="fas fa-cloud mr-1"></i>EMIS Kemdikbud</th>
                                 @if($dataEmisLembaga)
-                                <th>
-                                    <i class="fas fa-school text-purple mr-1"></i> EMIS Lembaga
-                                    <small class="text-muted">(MA)</small>
-                                </th>
+                                <th class="th-lembaga"><i class="fas fa-school mr-1"></i>EMIS Lembaga</th>
                                 @endif
-                                <th width="80" class="text-center">Centang</th>
+                                <th class="th-check"><i class="fas fa-exclamation-circle text-warning"></i></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($verifikasiFields as $field => $label)
                                 @php
-                                    $valSimansa   = $dataSimansa[$field] ?? '-';
-                                    $valKemenag   = $dataEmis['kemenag'][$field]   ?? '-';
-                                    $valKemdikbud = $dataEmis['kemdikbud'][$field] ?? '-';
-                                    $valLembaga   = $dataEmisLembaga[$field] ?? '-';
-                                    $isBeda = in_array($field, $fieldBeda);
+                                    $valSimansa   = $dataSimansa[$field]              ?? null;
+                                    $valKemenag   = $dataEmis['kemenag'][$field]      ?? null;
+                                    $valKemdikbud = $dataEmis['kemdikbud'][$field]    ?? null;
+                                    $valLembaga   = $dataEmisLembaga[$field]          ?? null;
+                                    $isBeda   = in_array($field, $fieldBeda);
                                     $isChecked = $verifikasi ? in_array($field, $verifikasi->field_tidak_sesuai ?? []) : $isBeda;
-                                    $saranVal = $verifikasi?->saran_perbaikan[$field] ?? '';
-                                    $colspan = $dataEmisLembaga ? 6 : 5;
+                                    $saranVal  = $verifikasi?->saran_perbaikan[$field] ?? '';
+                                    $colspan   = $dataEmisLembaga ? 6 : 5;
                                 @endphp
-                                <tr class="{{ $isBeda ? 'table-warning' : '' }}" data-field="{{ $field }}">
-                                    <td class="field-label">
+                                <tr class="{{ $isBeda ? 'row-beda' : '' }}" data-field="{{ $field }}">
+                                    <td class="td-field">
                                         {{ $label }}
-                                        @if($isBeda)
-                                            <i class="fas fa-exclamation-circle text-warning ml-1" title="Berbeda"></i>
-                                        @endif
+                                        @if($isBeda)<i class="fas fa-circle beda-icon" style="font-size:.45rem;vertical-align:middle;"></i>@endif
                                     </td>
-                                    <td><span class="val-simansa">{{ $valSimansa ?: '-' }}</span></td>
-                                    <td>
-                                        <span class="val-kemenag {{ $isBeda && $valKemenag !== '-' ? 'text-success font-weight-bold' : '' }}">
-                                            {{ $valKemenag ?: '-' }}
+                                    <td class="td-simansa val-simansa">
+                                        @if($valSimansa)<span>{{ $valSimansa }}</span>@else<span class="dash">—</span>@endif
+                                    </td>
+                                    <td class="td-kemenag">
+                                        <span class="val-kemenag">
+                                            @if($valKemenag){{ $valKemenag }}@else<span class="dash">—</span>@endif
                                         </span>
                                     </td>
-                                    <td>
-                                        <span class="val-kemdikbud text-muted small">
-                                            {{ $valKemdikbud ?: '-' }}
+                                    <td class="td-kemdikbud">
+                                        <span class="val-kemdikbud">
+                                            @if($valKemdikbud){{ $valKemdikbud }}@else<span class="dash">—</span>@endif
                                         </span>
                                     </td>
                                     @if($dataEmisLembaga)
-                                    <td>
-                                        <span class="val-lembaga text-muted small">{{ $valLembaga ?: '-' }}</span>
+                                    <td class="td-lembaga">
+                                        <span class="val-lembaga">
+                                            @if($valLembaga){{ $valLembaga }}@else<span class="dash">—</span>@endif
+                                        </span>
                                     </td>
                                     @endif
-                                    <td class="text-center">
+                                    <td class="td-check">
                                         <input type="checkbox" class="field-check"
                                                name="field_tidak_sesuai[]"
                                                value="{{ $field }}"
                                                form="formVerifikasi"
-                                               {{ $isChecked ? 'checked' : '' }}>
+                                               {{ $isChecked ? 'checked' : '' }}
+                                               title="Tandai tidak sesuai">
                                     </td>
                                 </tr>
-                                {{-- Baris saran perbaikan (tersembunyi jika tidak ada) --}}
                                 <tr class="saran-row {{ $isChecked ? '' : 'd-none' }}" data-for="{{ $field }}">
-                                    <td colspan="{{ $colspan }}" class="py-1 px-3" style="background:#fffdf0;">
-                                        <div class="d-flex align-items-center" style="gap:.5rem;">
-                                            <small class="text-muted" style="white-space:nowrap;">Nilai yang benar:</small>
+                                    <td colspan="{{ $colspan }}">
+                                        <div class="saran-inner">
+                                            <span class="saran-label"><i class="fas fa-pen mr-1"></i>Nilai benar:</span>
                                             <input type="text" class="form-control form-control-sm"
                                                    name="saran_perbaikan[{{ $field }}]"
                                                    form="formVerifikasi"
                                                    value="{{ $saranVal }}"
-                                                   placeholder="Isi nilai yang benar jika diketahui...">
+                                                   placeholder="Tulis nilai yang seharusnya...">
                                         </div>
                                     </td>
                                 </tr>
@@ -216,52 +317,40 @@
                 </div>
             </div>
 
-            {{-- Form verifikasi --}}
-            <div class="card shadow-sm mb-3">
-                <div class="card-header py-2">
-                    <strong><i class="fas fa-pen mr-1"></i> Hasil Verifikasi</strong>
+            {{-- Form Verifikasi --}}
+            <div class="action-card card">
+                <div class="card-header">
+                    <strong><i class="fas fa-clipboard-check text-primary mr-1"></i> Hasil Verifikasi</strong>
                 </div>
                 <div class="card-body">
                     <form id="formVerifikasi" action="{{ route('admin.verifikasi-ijazah.store', $siswa->id) }}" method="POST">
                         @csrf
-                        {{-- hidden field data EMIS snapshot --}}
-                        <input type="hidden" name="data_emis_kemdikbud" id="hiddenKemdikbud"
-                               value="{{ json_encode($dataEmis['kemdikbud'] ?? null) }}">
-                        <input type="hidden" name="data_emis_kemenag" id="hiddenKemenag"
-                               value="{{ json_encode($dataEmis['kemenag'] ?? null) }}">
-                        <input type="hidden" name="data_emis_lembaga" id="hiddenLembaga"
-                               value="{{ json_encode($dataEmisLembaga ?? null) }}">
+                        <input type="hidden" name="data_emis_kemdikbud" id="hiddenKemdikbud" value="{{ json_encode($dataEmis['kemdikbud'] ?? null) }}">
+                        <input type="hidden" name="data_emis_kemenag"   id="hiddenKemenag"   value="{{ json_encode($dataEmis['kemenag']   ?? null) }}">
+                        <input type="hidden" name="data_emis_lembaga"   id="hiddenLembaga"   value="{{ json_encode($dataEmisLembaga        ?? null) }}">
 
                         <div class="form-row">
-                            <div class="form-group col-md-5">
-                                <label class="font-weight-bold" style="font-size:.82rem;">Status Verifikasi <span class="text-danger">*</span></label>
-                                <select name="status" class="form-control" id="statusSelect" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="sesuai" {{ ($verifikasi?->status === 'sesuai') ? 'selected' : '' }}>
-                                        ✅ Sesuai — data cocok dengan ijazah/KK
-                                    </option>
-                                    <option value="tidak_sesuai" {{ ($verifikasi?->status === 'tidak_sesuai') ? 'selected' : '' }}>
-                                        ❌ Tidak Sesuai — ada perbedaan data
-                                    </option>
-                                    <option value="perlu_perbaikan" {{ ($verifikasi?->status === 'perlu_perbaikan') ? 'selected' : '' }}>
-                                        ⚠️ Perlu Perbaikan — butuh koreksi di Vervalpd
-                                    </option>
+                            <div class="form-group col-md-5 mb-2">
+                                <label class="font-weight-bold" style="font-size:.8rem;">Status Verifikasi <span class="text-danger">*</span></label>
+                                <select name="status" class="form-control form-control-sm" id="statusSelect" required>
+                                    <option value="">— Pilih Status —</option>
+                                    <option value="sesuai"           {{ ($verifikasi?->status==='sesuai')          ? 'selected':'' }}>✅ Sesuai</option>
+                                    <option value="tidak_sesuai"     {{ ($verifikasi?->status==='tidak_sesuai')    ? 'selected':'' }}>❌ Tidak Sesuai</option>
+                                    <option value="perlu_perbaikan"  {{ ($verifikasi?->status==='perlu_perbaikan') ? 'selected':'' }}>⚠️ Perlu Perbaikan</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-7">
-                                <label class="font-weight-bold" style="font-size:.82rem;">Catatan</label>
-                                <textarea name="catatan" class="form-control" rows="2"
-                                          placeholder="Tuliskan catatan verifikasi, field yang berbeda, atau saran perbaikan...">{{ $verifikasi?->catatan }}</textarea>
+                            <div class="form-group col-md-7 mb-2">
+                                <label class="font-weight-bold" style="font-size:.8rem;">Catatan</label>
+                                <textarea name="catatan" class="form-control form-control-sm" rows="2"
+                                          placeholder="Catatan verifikasi, field yang berbeda, atau saran perbaikan...">{{ $verifikasi?->catatan }}</textarea>
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center" style="gap:.5rem;">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
+                            <button type="submit" class="btn btn-primary btn-sm px-4">
                                 <i class="fas fa-save mr-1"></i> Simpan Verifikasi
                             </button>
-                            <span class="text-muted small">
-                                Centang field yang tidak sesuai di tabel di atas, lalu pilih status dan simpan.
-                            </span>
+                            <small class="text-muted">Centang baris yang tidak sesuai, pilih status, lalu simpan.</small>
                         </div>
                     </form>
                 </div>
@@ -269,101 +358,96 @@
 
         </div>
 
-        {{-- ── KOLOM KANAN: Dokumen + History ──────────────────────────────── --}}
+        {{-- ══ KANAN ══════════════════════════════════════════════════════════ --}}
         <div class="col-md-4">
 
             {{-- Dokumen Ijazah --}}
-            <div class="card shadow-sm mb-3">
-                <div class="card-header py-2">
-                    <strong><i class="fas fa-file-alt text-danger mr-1"></i> Dokumen Ijazah SMP/MTs</strong>
+            <div class="side-card card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file-alt text-danger mr-1"></i> Dokumen Ijazah SMP/MTs</span>
+                    @if($dokumenIjazah->isNotEmpty())
+                        <span class="badge badge-danger">{{ $dokumenIjazah->count() }}</span>
+                    @endif
                 </div>
-                <div class="card-body py-2">
+                <div>
                     @if($dokumenIjazah->isEmpty())
-                        <p class="text-muted small mb-0"><i class="fas fa-exclamation-triangle text-warning mr-1"></i> Belum ada dokumen ijazah diupload.</p>
+                        <div class="dok-empty"><i class="fas fa-exclamation-triangle text-warning mr-1"></i>Belum ada dokumen ijazah.</div>
                     @else
-                        <div class="d-flex flex-wrap" style="gap:.5rem;">
-                            @foreach($dokumenIjazah as $dok)
-                                @php
-                                    $ext = strtolower(pathinfo($dok->original_name ?? $dok->nama_file, PATHINFO_EXTENSION));
-                                    $isImg = in_array($ext, ['jpg','jpeg','png','webp']);
-                                @endphp
-                                @if($isImg)
-                                    <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank">
-                                        <div class="text-center">
-                                            <div class="dokumen-link" style="width:80px;">
-                                                <i class="fas fa-file-image fa-2x text-primary"></i><br>
-                                                <span style="font-size:.7rem;">{{ Str::limit($dok->original_name ?? $dok->nama_file, 12) }}</span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                @else
-                                    <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dokumen-link" style="width:80px;">
-                                        <i class="fas fa-file-pdf fa-2x text-danger"></i><br>
-                                        <span>{{ Str::limit($dok->original_name ?? $dok->nama_file, 12) }}</span>
-                                    </a>
-                                @endif
-                            @endforeach
-                        </div>
+                        @foreach($dokumenIjazah as $dok)
+                            @php $ext = strtolower(pathinfo($dok->original_name ?? $dok->nama_file, PATHINFO_EXTENSION)); @endphp
+                            <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dok-item">
+                                <div class="dok-icon img"><i class="fas fa-file-image"></i></div>
+                                <div>
+                                    <div>{{ Str::limit($dok->original_name ?? $dok->nama_file, 28) }}</div>
+                                    <small class="text-muted">{{ strtoupper($ext) }}</small>
+                                </div>
+                            </a>
+                        @endforeach
                     @endif
                 </div>
             </div>
 
             {{-- Dokumen KK --}}
-            <div class="card shadow-sm mb-3">
-                <div class="card-header py-2">
-                    <strong><i class="fas fa-users text-success mr-1"></i> Kartu Keluarga (KK)</strong>
-                </div>
-                <div class="card-body py-2">
-                    @if($dokumenKK->isEmpty())
-                        <p class="text-muted small mb-0"><i class="fas fa-exclamation-triangle text-warning mr-1"></i> Belum ada dokumen KK diupload.</p>
-                    @else
-                        <div class="d-flex flex-wrap" style="gap:.5rem;">
-                            @foreach($dokumenKK as $dok)
-                                <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dokumen-link" style="width:80px;">
-                                    <i class="fas fa-id-card fa-2x text-success"></i><br>
-                                    <span>{{ Str::limit($dok->original_name ?? $dok->nama_file, 12) }}</span>
-                                </a>
-                            @endforeach
-                        </div>
+            <div class="side-card card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-users text-success mr-1"></i> Kartu Keluarga (KK)</span>
+                    @if($dokumenKK->isNotEmpty())
+                        <span class="badge badge-success">{{ $dokumenKK->count() }}</span>
                     @endif
-                    <div class="mt-2">
-                        <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary btn-sm">
+                </div>
+                <div>
+                    @if($dokumenKK->isEmpty())
+                        <div class="dok-empty"><i class="fas fa-exclamation-triangle text-warning mr-1"></i>Belum ada dokumen KK.</div>
+                    @else
+                        @foreach($dokumenKK as $dok)
+                            <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="dok-item">
+                                <div class="dok-icon kk"><i class="fas fa-id-card"></i></div>
+                                <div>
+                                    <div>{{ Str::limit($dok->original_name ?? $dok->nama_file, 28) }}</div>
+                                    <small class="text-muted">KK</small>
+                                </div>
+                            </a>
+                        @endforeach
+                    @endif
+                    <div style="padding:.5rem 1rem;border-top:1px solid #f4f4f4;">
+                        <a href="{{ route('admin.siswa.dokumen', $siswa->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary btn-block" style="font-size:.78rem;">
                             <i class="fas fa-folder-open mr-1"></i> Lihat Semua Dokumen
                         </a>
                     </div>
                 </div>
             </div>
 
-            {{-- History Verifikasi --}}
-            <div class="card shadow-sm">
-                <div class="card-header py-2">
-                    <strong><i class="fas fa-history mr-1"></i> Riwayat Verifikasi</strong>
+            {{-- Riwayat Verifikasi --}}
+            <div class="side-card card">
+                <div class="card-header">
+                    <i class="fas fa-history text-secondary mr-1"></i> Riwayat Verifikasi
                 </div>
-                <div class="card-body py-2" style="max-height:320px;overflow-y:auto;">
+                <div style="max-height:320px;overflow-y:auto;">
                     @if($verifikasi && $verifikasi->logs->isNotEmpty())
                         @foreach($verifikasi->logs as $log)
-                            <div class="history-item {{ $log->aksi }}">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ $log->aksi_label }}</strong>
-                                    <small class="text-muted">{{ $log->created_at->format('d/m/Y H:i') }}</small>
-                                </div>
-                                <div>
-                                    <small class="text-primary"><i class="fas fa-user mr-1"></i>{{ $log->user_nama }}</small>
-                                </div>
-                                @if($log->status_lama && $log->status_baru && $log->status_lama !== $log->status_baru)
-                                    <div class="mt-1">
-                                        <span class="badge badge-secondary" style="font-size:.7rem;">{{ $log->status_lama }}</span>
-                                        <i class="fas fa-arrow-right text-muted mx-1" style="font-size:.7rem;"></i>
-                                        <span class="badge badge-primary" style="font-size:.7rem;">{{ $log->status_baru }}</span>
+                            <div class="tl-item">
+                                <div class="tl-dot {{ $log->aksi }}"></div>
+                                <div class="tl-body">
+                                    <div class="tl-action">{{ $log->aksi_label }}</div>
+                                    <div class="tl-meta">
+                                        <i class="fas fa-user mr-1"></i>{{ $log->user_nama }}
+                                        &nbsp;·&nbsp;{{ $log->created_at->format('d/m/Y H:i') }}
                                     </div>
-                                @endif
-                                @if($log->keterangan)
-                                    <p class="mb-0 mt-1 text-muted" style="font-size:.78rem;">{{ $log->keterangan }}</p>
-                                @endif
+                                    @if($log->status_lama && $log->status_baru && $log->status_lama !== $log->status_baru)
+                                        <div class="tl-status">
+                                            <span class="badge badge-secondary" style="font-size:.65rem;">{{ $log->status_lama }}</span>
+                                            <i class="fas fa-arrow-right text-muted mx-1" style="font-size:.6rem;"></i>
+                                            <span class="badge badge-primary" style="font-size:.65rem;">{{ $log->status_baru }}</span>
+                                        </div>
+                                    @endif
+                                    @if($log->keterangan)
+                                        <div class="tl-note">{{ $log->keterangan }}</div>
+                                    @endif
+                                </div>
                             </div>
                         @endforeach
                     @else
-                        <p class="text-muted small mb-0">Belum ada riwayat verifikasi.</p>
+                        <div class="dok-empty">Belum ada riwayat verifikasi.</div>
                     @endif
                 </div>
             </div>
@@ -372,7 +456,6 @@
     </div>
 </div>
 @endsection
-
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
 <script>
