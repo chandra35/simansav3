@@ -96,30 +96,6 @@ class EmisNisnService
                     $data = $response2->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results']) && !empty($data['results'])) {
                         $kemenagData = $data['results'][0]; // Get first result from array
-
-                        // Fetch detail endpoint — UUID ada di integration_id (dari ppdb-search)
-                        $studentUuid = strtolower($kemenagData['integration_id'] ?? '');
-                        if ($studentUuid) {
-                            try {
-                                $response3 = $http->get($this->apiUrl . "/students/students/{$studentUuid}?is_search=1");
-                                Log::info('EmisNisnService: Detail API Response', [
-                                    'student_id' => $studentUuid,
-                                    'status' => $response3->status(),
-                                    'body_preview' => substr($response3->body(), 0, 300),
-                                ]);
-                                if ($response3->successful()) {
-                                    $detail = $response3->json();
-                                    $detailResult = $detail['results'] ?? null;
-                                    if ($detailResult) {
-                                        // Merge detail data into kemenagData (preserves all ppdb-search fields)
-                                        $kemenagData = array_merge($kemenagData, $detailResult);
-                                        Log::info('EmisNisnService: Detail data fetched', ['student_uuid' => $studentUuid]);
-                                    }
-                                }
-                            } catch (\Exception $e) {
-                                Log::warning('EmisNisnService: Detail endpoint failed (non-fatal)', ['error' => $e->getMessage()]);
-                            }
-                        }
                     }
                 }
             } catch (\Exception $e) {

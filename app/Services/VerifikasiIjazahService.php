@@ -105,7 +105,7 @@ class VerifikasiIjazahService
                 'nisn'            => $m['nisn'] ?? null,
                 'tempat_lahir'    => $m['birth_place'] ?? $m['tempat_lahir'] ?? null,
                 'tanggal_lahir'   => $m['birth_date'] ?? $m['tanggal_lahir'] ?? null,
-                'jenis_kelamin'   => $m['m_gender']['name'] ?? $m['gender'] ?? $m['jenis_kelamin'] ?? null,
+                'jenis_kelamin'   => $m['m_gender']['name'] ?? $m['gender_name'] ?? $m['gender'] ?? $m['jenis_kelamin'] ?? null,
                 'nama_sekolah_asal' => $m['nama_sekolah_asal'] ?? $m['sekolah_asal'] ?? null,
                 'nama_ayah'       => $m['parents']['father_full_name'] ?? $m['family_head_name'] ?? $m['nama_ayah'] ?? null,
                 'nama_ibu'        => $m['parents']['mother_full_name'] ?? $m['nama_ibu'] ?? null,
