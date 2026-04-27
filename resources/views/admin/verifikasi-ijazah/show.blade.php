@@ -3,6 +3,7 @@
 @section('title', 'Verifikasi Ijazah: {{ $siswa->nama_lengkap }}')
 
 @section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
 <style>
     .verif-grid {
         display: grid;
@@ -373,6 +374,7 @@
 @endsection
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
 <script>
 $(function () {
     // Toggle saran-perbaikan row saat checkbox berubah

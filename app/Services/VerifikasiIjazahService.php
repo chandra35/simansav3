@@ -91,7 +91,7 @@ class VerifikasiIjazahService
                 'tempat_lahir'    => $k['tempat_lahir'] ?? $k['tmpt_lahir'] ?? null,
                 'tanggal_lahir'   => $k['tanggal_lahir'] ?? $k['tgl_lahir'] ?? null,
                 'jenis_kelamin'   => $k['jenis_kelamin'] ?? $k['jk'] ?? null,
-                'nama_sekolah_asal' => $k['sekolah'] ?? $k['nama_sekolah'] ?? null,
+                'nama_sekolah_asal' => $k['nama_sekolah_asal'] ?? $k['sekolah_asal'] ?? null,
                 'npsn_asal'       => $k['npsn'] ?? null,
                 'raw'             => $k,
             ];
