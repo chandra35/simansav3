@@ -127,8 +127,13 @@
 
 @section('js')
 <script>
-// Fix: accent-white memaksa nav-link jadi putih — update warna saat tab switch
+// Fix: accent-white memaksa nav-link jadi putih — set warna saat load + saat tab switch
 $(function () {
+    // Set warna awal saat halaman dimuat
+    $('#tokenTabs .nav-link').css('color', '#495057');
+    $('#tokenTabs .nav-link.active').css('color', '#007bff');
+
+    // Update warna saat klik tab lain
     $('#tokenTabs .nav-link').on('shown.bs.tab', function () {
         $('#tokenTabs .nav-link').css('color', '#495057');
         $(this).css('color', '#007bff');
