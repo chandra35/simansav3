@@ -9,13 +9,18 @@
 @section('plugins.Sweetalert2', true)
 
 @section('content')
+{{-- Nuclear fix: accent-white body class (dari navbar-white) memaksa semua .nav-link jadi #fff.
+     CSS di @section('css') dimuat sebelum adminlte CSS, sehingga kalah. Style block di body
+     dimuat SETELAH semua CSS head + !important = menang absolut. --}}
+<style>
+    #tokenTabs .nav-link          { color: #495057 !important; }
+    #tokenTabs .nav-link.active   { color: #007bff !important; }
+    #tokenTabs .nav-link:hover    { color: #007bff !important; }
+</style>
 <div class="row">
     <div class="col-md-9">
         <div class="card">
             <div class="card-header" style="border-top: 3px solid #007bff; padding-bottom: 0;">
-                {{-- accent-white dari navbar-white memaksa nav-tabs .nav-link jadi #fff.
-                     Fix: override color langsung di elemen nav-link (inline style tidak
-                     bisa di-override oleh class selector manapun). --}}
                 <ul class="nav nav-tabs card-header-tabs" id="tokenTabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="emis-tab" data-toggle="tab" href="#emis" role="tab"
