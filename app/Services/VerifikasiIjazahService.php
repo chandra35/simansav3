@@ -24,8 +24,9 @@ class VerifikasiIjazahService
         'tanggal_lahir'   => 'Tanggal Lahir',
         'jenis_kelamin'   => 'Jenis Kelamin',
         'nama_sekolah_asal' => 'Nama Sekolah Asal (SMP/MTs)',
-        'nama_ayah'       => 'Nama Ayah',
-        'nama_ibu'        => 'Nama Ibu',
+        'nama_ayah'         => 'Nama Ayah',
+        'kepala_keluarga'  => 'Kepala Keluarga',
+        'nama_ibu'         => 'Nama Ibu',
     ];
 
     public function __construct(private readonly EmisNisnService $emisService) {}
@@ -46,6 +47,7 @@ class VerifikasiIjazahService
             'jenis_kelamin'   => $siswa->jenis_kelamin,
             'nama_sekolah_asal' => $siswa->sekolahAsal?->nama,
             'nama_ayah'       => $siswa->ortu?->nama_ayah,
+            'kepala_keluarga' => null,
             'nama_ibu'        => $siswa->ortu?->nama_ibu,
         ];
     }
@@ -107,7 +109,8 @@ class VerifikasiIjazahService
                 'tanggal_lahir'   => $m['birth_date'] ?? $m['tanggal_lahir'] ?? null,
                 'jenis_kelamin'   => $m['m_gender']['name'] ?? $m['gender_name'] ?? $m['gender'] ?? $m['jenis_kelamin'] ?? null,
                 'nama_sekolah_asal' => $m['nama_sekolah_asal'] ?? $m['sekolah_asal'] ?? null,
-                'nama_ayah'       => $m['parents']['father_full_name'] ?? $m['family_head_name'] ?? $m['nama_ayah'] ?? null,
+                'nama_ayah'       => $m['parents']['father_full_name'] ?? $m['nama_ayah'] ?? null,
+                'kepala_keluarga' => $m['family_head_name'] ?? null,
                 'nama_ibu'        => $m['parents']['mother_full_name'] ?? $m['nama_ibu'] ?? null,
                 'raw'             => $m,
             ];
@@ -215,6 +218,7 @@ class VerifikasiIjazahService
             'tanggal_lahir' => $s['tanggal_lahir'] ?? null,
             'jenis_kelamin' => $s['jenis_kelamin'] ?? $s['gender'] ?? null,
             'nama_ayah'     => $s['nama_ayah'] ?? null,
+            'kepala_keluarga' => $s['family_head_name'] ?? $s['kepala_keluarga'] ?? null,
             'nama_ibu'      => $s['nama_ibu'] ?? null,
             'raw'           => $s,
         ];
