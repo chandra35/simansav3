@@ -6,6 +6,22 @@
     <h1 class="m-0 text-dark">Update API Token</h1>
 @stop
 
+@section('css')
+<style>
+    /* Fix AdminLTE card-primary override: nav-link teks jadi putih di atas bg putih */
+    .card-outline-tabs .nav-tabs .nav-link {
+        color: #495057 !important;
+    }
+    .card-outline-tabs .nav-tabs .nav-link.active {
+        color: #007bff !important;
+        border-top: 3px solid #007bff;
+    }
+    .card-outline-tabs .nav-tabs .nav-link:hover {
+        color: #0056b3 !important;
+    }
+</style>
+@stop
+
 @section('plugins.Sweetalert2', true)
 
 @section('content')
