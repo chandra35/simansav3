@@ -24,7 +24,6 @@ class VerifikasiIjazahService
         'tanggal_lahir'   => 'Tanggal Lahir',
         'jenis_kelamin'   => 'Jenis Kelamin',
         'nama_sekolah_asal' => 'Nama Sekolah Asal (SMP/MTs)',
-        'npsn_asal'       => 'NPSN Sekolah Asal',
         'nama_ayah'       => 'Nama Ayah',
         'nama_ibu'        => 'Nama Ibu',
     ];
@@ -46,7 +45,6 @@ class VerifikasiIjazahService
             'tanggal_lahir'   => $siswa->tanggal_lahir?->format('Y-m-d'),
             'jenis_kelamin'   => $siswa->jenis_kelamin,
             'nama_sekolah_asal' => $siswa->asal_siswa,
-            'npsn_asal'       => $siswa->npsn_asal_sekolah,
             'nama_ayah'       => $siswa->ortu?->nama_ayah,
             'nama_ibu'        => $siswa->ortu?->nama_ibu,
         ];
@@ -92,7 +90,6 @@ class VerifikasiIjazahService
                 'tanggal_lahir'   => $k['tanggal_lahir'] ?? $k['tgl_lahir'] ?? null,
                 'jenis_kelamin'   => $k['jenis_kelamin'] ?? $k['jk'] ?? null,
                 'nama_sekolah_asal' => $k['nama_sekolah_asal'] ?? $k['sekolah_asal'] ?? null,
-                'npsn_asal'       => $k['npsn'] ?? null,
                 'raw'             => $k,
             ];
         }
@@ -107,7 +104,6 @@ class VerifikasiIjazahService
                 'tanggal_lahir'   => $m['tanggal_lahir'] ?? null,
                 'jenis_kelamin'   => $m['jenis_kelamin'] ?? null,
                 'nama_sekolah_asal' => $m['nama_sekolah_asal'] ?? $m['sekolah_asal'] ?? null,
-                'npsn_asal'       => $m['npsn_asal'] ?? null,
                 'nama_ayah'       => $m['nama_ayah'] ?? null,
                 'nama_ibu'        => $m['nama_ibu'] ?? null,
                 'raw'             => $m,
