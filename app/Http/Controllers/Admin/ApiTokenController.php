@@ -18,6 +18,12 @@ class ApiTokenController extends Controller
             'api_url' => 'https://api-emis.kemenag.go.id/v1',
             'test_route' => 'admin.pengaturan.cek-nisn.index',
         ],
+        'emis_institusi_token' => [
+            'name' => 'Token EMIS Lembaga (Data Siswa)',
+            'description' => 'Token Bearer EMIS akun operator lembaga — digunakan untuk mengambil daftar siswa per lembaga (institution_id wajib ada di JWT)',
+            'api_url' => 'https://api-emis.kemenag.go.id/v1',
+            'test_route' => null,
+        ],
         'kemenag_nip_token' => [
             'name' => 'Token Kemenag (Cek NIP)',
             'description' => 'Token Bearer untuk API Kemenag BE-PINTAR (Cek NIP GTK)',

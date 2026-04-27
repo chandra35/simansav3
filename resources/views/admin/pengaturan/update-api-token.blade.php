@@ -20,6 +20,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="emis-institusi-tab" data-toggle="pill" href="#emis-institusi" role="tab">
+                            <i class="fas fa-school"></i> Token EMIS Lembaga
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" id="kemenag-tab" data-toggle="pill" href="#kemenag" role="tab">
                             <i class="fas fa-id-card"></i> Token Kemenag (NIP)
                         </a>
@@ -35,6 +40,24 @@
                             'tokenName' => 'Token EMIS (Cek NISN)',
                             'tokenData' => $tokens->get('emis_api_token'),
                             'tokenInfo' => $tokenTypes['emis_api_token'],
+                        ])
+                    </div>
+
+                    {{-- EMIS Lembaga Token Tab --}}
+                    <div class="tab-pane fade" id="emis-institusi" role="tabpanel">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Token EMIS Lembaga</strong> digunakan untuk mengambil data siswa dari EMIS berdasarkan lembaga (MAN 1 Metro).
+                            Token ini harus dari <strong>akun operator lembaga</strong> (bukan akun pusat).
+                            Cara mendapat token: Login ke <a href="https://emis.kemenag.go.id" target="_blank">emis.kemenag.go.id</a>
+                            dengan akun operator lembaga → buka DevTools (F12) → tab Network → cari request ke <code>api-emis.kemenag.go.id</code>
+                            → salin isi header <code>Authorization: Bearer ...</code>.
+                        </div>
+                        @include('admin.pengaturan.partials.token-form', [
+                            'tokenType' => 'emis_institusi_token',
+                            'tokenName' => 'Token EMIS Lembaga (Data Siswa)',
+                            'tokenData' => $tokens->get('emis_institusi_token'),
+                            'tokenInfo' => $tokenTypes['emis_institusi_token'],
                         ])
                     </div>
 

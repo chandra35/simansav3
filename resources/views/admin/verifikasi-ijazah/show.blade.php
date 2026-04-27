@@ -144,18 +144,26 @@
                                 <th>
                                     <i class="fas fa-cloud text-info mr-1"></i> EMIS Kemdikbud
                                 </th>
+                                @if($dataEmisLembaga)
+                                <th>
+                                    <i class="fas fa-school text-purple mr-1"></i> EMIS Lembaga
+                                    <small class="text-muted">(MA)</small>
+                                </th>
+                                @endif
                                 <th width="80" class="text-center">Centang</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($verifikasiFields as $field => $label)
                                 @php
-                                    $valSimansa  = $dataSimansa[$field] ?? '-';
-                                    $valKemenag  = $dataEmis['kemenag'][$field]   ?? '-';
+                                    $valSimansa   = $dataSimansa[$field] ?? '-';
+                                    $valKemenag   = $dataEmis['kemenag'][$field]   ?? '-';
                                     $valKemdikbud = $dataEmis['kemdikbud'][$field] ?? '-';
+                                    $valLembaga   = $dataEmisLembaga[$field] ?? '-';
                                     $isBeda = in_array($field, $fieldBeda);
                                     $isChecked = $verifikasi ? in_array($field, $verifikasi->field_tidak_sesuai ?? []) : $isBeda;
                                     $saranVal = $verifikasi?->saran_perbaikan[$field] ?? '';
+                                    $colspan = $dataEmisLembaga ? 6 : 5;
                                 @endphp
                                 <tr class="{{ $isBeda ? 'table-warning' : '' }}" data-field="{{ $field }}">
                                     <td class="field-label">
@@ -175,6 +183,11 @@
                                             {{ $valKemdikbud ?: '-' }}
                                         </span>
                                     </td>
+                                    @if($dataEmisLembaga)
+                                    <td>
+                                        <span class="text-muted small">{{ $valLembaga ?: '-' }}</span>
+                                    </td>
+                                    @endif
                                     <td class="text-center">
                                         <input type="checkbox" class="field-check"
                                                name="field_tidak_sesuai[]"
@@ -185,7 +198,7 @@
                                 </tr>
                                 {{-- Baris saran perbaikan (tersembunyi jika tidak ada) --}}
                                 <tr class="saran-row {{ $isChecked ? '' : 'd-none' }}" data-for="{{ $field }}">
-                                    <td colspan="5" class="py-1 px-3" style="background:#fffdf0;">
+                                    <td colspan="{{ $colspan }}" class="py-1 px-3" style="background:#fffdf0;">
                                         <div class="d-flex align-items-center" style="gap:.5rem;">
                                             <small class="text-muted" style="white-space:nowrap;">Nilai yang benar:</small>
                                             <input type="text" class="form-control form-control-sm"

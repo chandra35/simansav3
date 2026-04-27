@@ -106,6 +106,16 @@ class VerifikasiIjazahController extends Controller
             $emisError = 'Siswa tidak memiliki NISN, tidak bisa mengambil data EMIS.';
         }
 
+        // Data EMIS Lembaga (opsional — hanya jika emis_institusi_token sudah di-set)
+        $dataEmisLembaga = null;
+        if ($siswa->nisn) {
+            if ($verifikasi && $verifikasi->data_emis_lembaga) {
+                $dataEmisLembaga = $verifikasi->data_emis_lembaga;
+            } else {
+                $dataEmisLembaga = $this->service->fetchDataEmisLembaga($siswa->nisn);
+            }
+        }
+
         // Compare otomatis untuk highlight perbedaan
         $fieldBeda = [];
         if ($dataEmis && !$emisError) {
@@ -123,6 +133,7 @@ class VerifikasiIjazahController extends Controller
             'verifikasi',
             'dataSimansa',
             'dataEmis',
+            'dataEmisLembaga',
             'emisError',
             'fieldBeda',
             'verifikasiFields',

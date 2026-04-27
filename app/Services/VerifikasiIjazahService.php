@@ -7,6 +7,7 @@ use App\Models\VerifikasiIjazah;
 use App\Models\VerifikasiIjazahLog;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class VerifikasiIjazahService
@@ -114,6 +115,102 @@ class VerifikasiIjazahService
             'kemdikbud' => $kemdikbud,
             'kemenag'   => $kemenag,
             'error'     => null,
+        ];
+    }
+
+    /**
+     * Ambil token EMIS lembaga dari DB (emis_institusi_token)
+     */
+    protected function getEmisInstitusiToken(): ?object
+    {
+        return DB::table('api_tokens')->where('name', 'emis_institusi_token')->first();
+    }
+
+    /**
+     * Fetch data siswa dari EMIS endpoint lembaga berdasarkan NISN.
+     * Membutuhkan emis_institusi_token (token akun operator lembaga).
+     * Returns: array data siswa atau null jika tidak ditemukan / token tidak ada.
+     */
+    public function fetchDataEmisLembaga(string $nisn): ?array
+    {
+        $tokenData = $this->getEmisInstitusiToken();
+
+        if (!$tokenData || empty($tokenData->token)) {
+            return null; // Token belum di-set — fitur ini opsional
+        }
+
+        // Decode JWT untuk ambil institution_id
+        $parts = explode('.', $tokenData->token);
+        if (count($parts) !== 3) {
+            Log::warning('VerifikasiIjazah: emis_institusi_token bukan JWT valid');
+            return null;
+        }
+
+        $payload = json_decode(base64_decode(str_pad(strtr($parts[1], '-_', '+/'), strlen($parts[1]) % 4, '=', STR_PAD_RIGHT)), true);
+        $institutionId = $payload['institution_id'] ?? $payload['institutionId'] ?? $payload['lembaga_id'] ?? null;
+
+        if (!$institutionId) {
+            Log::warning('VerifikasiIjazah: institution_id tidak ditemukan di JWT emis_institusi_token', ['payload_keys' => array_keys($payload ?? [])]);
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $tokenData->token,
+                ])
+                ->get('https://api-emis.kemenag.go.id/v1/students/institution/' . $institutionId . '/student/search', [
+                    'q' => $nisn,
+                    'student_status_id' => 1, // aktif
+                    'page' => 1,
+                    'per_page' => 5,
+                ]);
+
+            if (!$response->successful()) {
+                Log::warning('VerifikasiIjazah: EMIS lembaga API gagal', ['status' => $response->status()]);
+                return null;
+            }
+
+            $body = $response->json();
+            $results = $body['data']['results'] ?? $body['results'] ?? [];
+
+            if (empty($results)) {
+                return null;
+            }
+
+            // Cari yang NISN-nya cocok
+            foreach ($results as $s) {
+                $nisnEmis = $s['nisn'] ?? $s['no_nisn'] ?? null;
+                if ($nisnEmis && trim($nisnEmis) === trim($nisn)) {
+                    return $this->normalizeEmisLembagaData($s);
+                }
+            }
+
+            // Jika tidak ada yang persis cocok, return first result
+            return $this->normalizeEmisLembagaData($results[0]);
+
+        } catch (\Exception $e) {
+            Log::error('VerifikasiIjazah: fetchDataEmisLembaga error', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Normalisasi data siswa dari endpoint EMIS lembaga ke format standar
+     */
+    protected function normalizeEmisLembagaData(array $s): array
+    {
+        return [
+            'nama_lengkap'  => $s['nama_siswa'] ?? $s['name'] ?? $s['nama'] ?? null,
+            'nisn'          => $s['nisn'] ?? $s['no_nisn'] ?? null,
+            'nik'           => $s['nik'] ?? $s['no_ktp'] ?? null,
+            'tempat_lahir'  => $s['tempat_lahir'] ?? null,
+            'tanggal_lahir' => $s['tanggal_lahir'] ?? null,
+            'jenis_kelamin' => $s['jenis_kelamin'] ?? $s['gender'] ?? null,
+            'nama_ayah'     => $s['nama_ayah'] ?? null,
+            'nama_ibu'      => $s['nama_ibu'] ?? null,
+            'raw'           => $s,
         ];
     }
 
