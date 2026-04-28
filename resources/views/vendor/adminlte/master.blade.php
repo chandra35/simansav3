@@ -109,28 +109,41 @@
             text-transform: uppercase;
         }
 
-        .card > .card-header {
+        /* Gradient header: berlaku untuk card biasa, KECUALI card-outline, bg-gradient-*, card-widget */
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header {
             background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .88));
             color: #fff;
             border-bottom: 0;
         }
 
-        .card > .card-header .card-title,
-        .card > .card-header .card-tools,
-        .card > .card-header .btn-tool,
-        .card > .card-header .btn-tool i,
-        .card > .card-header .btn,
-        .card > .card-header .nav-link {
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .card-title,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .card-tools,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .nav-link {
             color: #fff !important;
         }
 
-        .card > .card-header .btn-outline-light {
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget) > .card-header .btn-outline-light {
             border-color: rgba(255, 255, 255, 0.65);
         }
 
-        .card > .card-header .btn-light {
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget) > .card-header .btn-light {
             color: #1e3a8a !important;
             font-weight: 700;
+        }
+
+        /* Pastikan card-outline tetap pakai warna AdminLTE default */
+        .card.card-outline > .card-header {
+            background: #fff;
+            color: inherit;
+            border-bottom: 1px solid rgba(0,0,0,.125);
+        }
+
+        .card.card-outline > .card-header .card-title,
+        .card.card-outline > .card-header .btn {
+            color: inherit !important;
         }
 
         .app-global-overlay {
