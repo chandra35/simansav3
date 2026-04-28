@@ -1091,9 +1091,14 @@ function loadDokumenTab(siswaId) {
                                             </a>
                                             <a href="${dok.file_url}" 
                                                download 
-                                               class="btn btn-sm btn-success" 
+                                               class="btn btn-sm btn-success mb-1" 
                                                title="Download">
                                                 <i class="fas fa-download"></i>
+                                            </a>
+                                            <a href="${dok.download_jpg_url}" 
+                                               class="btn btn-sm btn-warning" 
+                                               title="Download JPG">
+                                                <i class="fas fa-file-image"></i> JPG
                                             </a>
                                         </div>
                                     </div>

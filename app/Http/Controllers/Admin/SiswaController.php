@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\Siswa;
 use App\Models\Ortu;
+use App\Models\DokumenSiswa;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -763,7 +764,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
 
         try {
-            $dokumen = $siswa->dokumen()->latest()->get()->map(function($dok) {
+            $dokumen = $siswa->dokumen()->latest()->get()->map(function($dok) use ($siswa) {
                 return [
                     'id' => $dok->id,
                     'jenis_dokumen' => $dok->jenis_dokumen,
@@ -774,6 +775,8 @@ class SiswaController extends Controller
                     'file_size_formatted' => $dok->getFileSizeFormatted(),
                     'keterangan' => $dok->keterangan,
                     'created_at' => $dok->created_at,
+                    'nama_siswa' => $siswa->nama_lengkap,
+                    'download_jpg_url' => route('admin.siswa.dokumen.download-jpg', [$siswa->id, $dok->id]),
                 ];
             });
 
@@ -788,6 +791,65 @@ class SiswaController extends Controller
                 'message' => 'Gagal memuat dokumen: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Download dokumen siswa as JPG
+     */
+    public function downloadDokumenAsJpg(Siswa $siswa, DokumenSiswa $dokumen)
+    {
+        $this->authorize('view-siswa');
+
+        if ($dokumen->siswa_id !== $siswa->id) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $filePath = $dokumen->getSecureFilePath();
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        $namaSlug = strtoupper(str_replace([' ', '/'], ['_', '_'], $siswa->nama_lengkap));
+        $jenisSlug = $dokumen->jenis_dokumen;
+        $filename = "{$namaSlug}-{$jenisSlug}.jpg";
+
+        $mime = mime_content_type($filePath);
+
+        if (str_contains($mime, 'pdf')) {
+            $tmpPrefix = sys_get_temp_dir() . '/simansa_' . uniqid();
+            $cmd = sprintf(
+                'pdftoppm -jpeg -r 150 -f 1 -l 1 %s %s 2>&1',
+                escapeshellarg($filePath),
+                escapeshellarg($tmpPrefix)
+            );
+            exec($cmd, $output, $retCode);
+
+            $generated = glob($tmpPrefix . '*.jpg');
+            if (empty($generated)) {
+                Log::error('PDF to JPG conversion failed', ['output' => $output, 'file' => $filePath]);
+                abort(500, 'Gagal konversi PDF ke JPG');
+            }
+
+            return response()->download($generated[0], $filename, ['Content-Type' => 'image/jpeg'])
+                ->deleteFileAfterSend(true);
+        }
+
+        if (in_array($mime, ['image/png', 'image/webp', 'image/gif', 'image/bmp'])) {
+            $image = @imagecreatefromstring(file_get_contents($filePath));
+            if (!$image) {
+                abort(422, 'Format gambar tidak dapat diproses');
+            }
+            $tmpFile = tempnam(sys_get_temp_dir(), 'simansa_img_') . '.jpg';
+            imagejpeg($image, $tmpFile, 90);
+            imagedestroy($image);
+
+            return response()->download($tmpFile, $filename, ['Content-Type' => 'image/jpeg'])
+                ->deleteFileAfterSend(true);
+        }
+
+        // Already JPEG
+        return response()->download($filePath, $filename, ['Content-Type' => 'image/jpeg']);
     }
 
     /**
