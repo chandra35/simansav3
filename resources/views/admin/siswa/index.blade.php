@@ -414,6 +414,7 @@
                                 <th>Username</th>
                                 <th>Status Ortu</th>
                                 <th>Status Diri</th>
+                                <th>Verval Ijazah</th>
                                 <th>Tgl Dibuat</th>
                                 <th>Aksi</th>
                             </tr>
@@ -689,6 +690,7 @@ $(document).ready(function() {
             { data: 'username', name: 'username' },
             { data: 'status_ortu', name: 'status_ortu', orderable: false, searchable: false },
             { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
+            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
         ],
@@ -764,6 +766,24 @@ $(document).ready(function() {
         $('#fotoPreviewImage').attr('src', previewUrl);
         $('#fotoPreviewDownload').attr('href', downloadUrl);
         $('#fotoPreviewModal').modal('show');
+    });
+
+    // Toggle Verval Ijazah
+    $(document).on('click', '.btn-toggle-verval', function() {
+        const btn = $(this);
+        const url = btn.data('url');
+        btn.prop('disabled', true);
+        $.post(url, { _token: '{{ csrf_token() }}' })
+            .done(function(res) {
+                if (res.success) {
+                    btn.closest('td').html(res.badge);
+                    toastr.success(res.verval_ijazah ? 'Ditandai sudah verval ijazah' : 'Tanda verval ijazah dibatalkan');
+                }
+            })
+            .fail(function() {
+                toastr.error('Gagal mengubah status verval ijazah');
+                btn.prop('disabled', false);
+            });
     });
 });
 

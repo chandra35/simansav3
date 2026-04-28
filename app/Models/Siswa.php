@@ -47,6 +47,9 @@ class Siswa extends Model
         'kodepos_siswa',
         'data_ortu_completed',
         'data_diri_completed',
+        'verval_ijazah',
+        'verval_ijazah_at',
+        'verval_ijazah_by',
         'created_by',
         'updated_by',
         // Kolom akademik baru
@@ -64,6 +67,8 @@ class Siswa extends Model
         'alamat_sama_ortu' => 'boolean',
         'data_ortu_completed' => 'boolean',
         'data_diri_completed' => 'boolean',
+        'verval_ijazah' => 'boolean',
+        'verval_ijazah_at' => 'datetime',
         'tahun_masuk' => 'integer',
         'ppdb_imported_at' => 'datetime',
     ];

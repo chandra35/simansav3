@@ -123,7 +123,7 @@ class SiswaController extends Controller
         
         $user = Auth::user();
         $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
-            ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'created_at']);
+            ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'created_at']);
 
         // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
         if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
@@ -263,6 +263,7 @@ class SiswaController extends Controller
                 'status_diri' => $item->data_diri_completed ? 
                     '<span class="badge badge-success">Lengkap</span>' : 
                     '<span class="badge badge-danger">Belum Lengkap</span>',
+                'verval_ijazah' => $this->getVervalIjazahBadge($item),
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item)
             ];
@@ -273,6 +274,45 @@ class SiswaController extends Controller
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $data
+        ]);
+    }
+
+    private function getVervalIjazahBadge(Siswa $siswa): string
+    {
+        $toggleUrl = route('admin.siswa.toggle-verval-ijazah', $siswa);
+        $csrf = csrf_field();
+
+        if ($siswa->verval_ijazah) {
+            $tgl = $siswa->verval_ijazah_at ? $siswa->verval_ijazah_at->format('d/m/Y') : '';
+            $title = "Sudah Verval" . ($tgl ? " ({$tgl})" : "") . " — Klik untuk batalkan";
+            return '<button class="btn btn-success btn-xs btn-toggle-verval" 
+                data-url="' . $toggleUrl . '" 
+                title="' . e($title) . '">'
+                . '<i class="fas fa-check-circle"></i> Sudah</button>';
+        }
+
+        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval" 
+            data-url="' . $toggleUrl . '" 
+            title="Klik untuk tandai sudah verval ijazah">'
+            . '<i class="far fa-circle"></i> Belum</button>';
+    }
+
+    /**
+     * Toggle verval ijazah status
+     */
+    public function toggleVervalIjazah(Siswa $siswa)
+    {
+        $this->authorize('edit-siswa');
+
+        $siswa->verval_ijazah = !$siswa->verval_ijazah;
+        $siswa->verval_ijazah_at = $siswa->verval_ijazah ? now() : null;
+        $siswa->verval_ijazah_by = $siswa->verval_ijazah ? Auth::id() : null;
+        $siswa->save();
+
+        return response()->json([
+            'success' => true,
+            'verval_ijazah' => $siswa->verval_ijazah,
+            'badge' => $this->getVervalIjazahBadge($siswa),
         ]);
     }
 
