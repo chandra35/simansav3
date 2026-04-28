@@ -140,8 +140,8 @@
                         <div class="card-body py-2">
                             @foreach($perms as $permission)
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge badge-light permission-badge">
-                                    <i class="fas fa-key text-success"></i> {{ $permission->name }}
+                                <span class="permission-badge badge badge-secondary text-white">
+                                    <i class="fas fa-key"></i> {{ $permission->name }}
                                 </span>
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ route('admin.permissions.show', $permission) }}" class="btn btn-outline-info btn-sm" 

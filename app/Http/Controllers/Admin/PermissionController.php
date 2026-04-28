@@ -17,12 +17,41 @@ class PermissionController extends Controller
     public function index()
     {
         $permissions = Permission::orderBy('name')->get();
-        
-        // Group permissions by category
-        $groupedPermissions = $permissions->groupBy(function($permission) {
+
+        // Module keyword map — key: second word in permission name → label
+        $moduleLabels = [
+            'siswa'        => 'Siswa',
+            'gtk'          => 'GTK',
+            'kelas'        => 'Kelas',
+            'kurikulum'    => 'Kurikulum',
+            'mutasi'       => 'Mutasi',
+            'nilai'        => 'Nilai & Rapor',
+            'absensi'      => 'Absensi',
+            'laporan'      => 'Laporan',
+            'users'        => 'User Management',
+            'roles'        => 'Role Management',
+            'role'         => 'Role Management',
+            'permissions'  => 'Permission Management',
+            'permission'   => 'Permission Management',
+            'dashboard'    => 'Dashboard',
+            'settings'     => 'Settings',
+            'profile'      => 'Profil',
+            'tahun'        => 'Tahun Pelajaran',
+            'semester'     => 'Tahun Pelajaran',
+            'active'       => 'Tahun Pelajaran',
+            'jurusan'      => 'Kurikulum',
+            'rapor'        => 'Nilai & Rapor',
+            'wali'         => 'Kelas',
+            'dokumen'      => 'Dokumen',
+            'password'     => 'Akun',
+        ];
+
+        // Group permissions by module (second word), not by action (first word)
+        $groupedPermissions = $permissions->groupBy(function ($permission) use ($moduleLabels) {
             $parts = explode('-', $permission->name);
-            return $parts[0] ?? 'general';
-        });
+            $second = $parts[1] ?? null;
+            return $moduleLabels[$second] ?? ucfirst($second ?? $parts[0] ?? 'Lainnya');
+        })->sortKeys();
         
         return view('admin.permissions.index', compact('permissions', 'groupedPermissions'));
     }
