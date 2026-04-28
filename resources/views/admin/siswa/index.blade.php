@@ -1112,12 +1112,14 @@ function loadDokumenTab(siswaId) {
                                             <a href="${dok.file_url}" 
                                                download 
                                                class="btn btn-sm btn-success mb-1" 
-                                               title="Download">
+                                               title="Download"
+                                               onclick="setTimeout(()=>$('#viewSiswaModal').modal('hide'),300)">
                                                 <i class="fas fa-download"></i>
                                             </a>
                                             <a href="${dok.download_jpg_url}" 
                                                class="btn btn-sm btn-warning" 
-                                               title="Download JPG">
+                                               title="Download JPG"
+                                               onclick="setTimeout(()=>$('#viewSiswaModal').modal('hide'),300)">
                                                 <i class="fas fa-file-image"></i> JPG
                                             </a>
                                         </div>
