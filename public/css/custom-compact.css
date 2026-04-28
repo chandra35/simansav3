@@ -2123,26 +2123,17 @@ a {
 
 .simansa-management-card > .card-header {
     background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9)) !important;
-    color: #fff !important;
+    /* NO color here — prevents color inheritance to child buttons */
     border-bottom: 0 !important;
     padding: .8rem 1rem !important;
 }
 
+/* Only the title and icon tools get white text explicitly */
 .simansa-management-card > .card-header .card-title,
+.simansa-management-card > .card-header .card-title i,
 .simansa-management-card > .card-header .btn-tool,
 .simansa-management-card > .card-header .btn-tool i {
     color: #fff !important;
-}
-
-/* Dedicated class for action buttons inside simansa-management-card header */
-.simansa-header-btn,
-.simansa-header-btn:hover,
-.simansa-header-btn:focus,
-.simansa-header-btn:active {
-    color: #1e3a8a !important;
-    background-color: #ffffff !important;
-    border-color: transparent !important;
-    font-weight: 600 !important;
 }
 
 /* ── Filter panel ── */

@@ -81,16 +81,16 @@
         </h3>
         <div class="card-tools ml-0">
             @can('edit-gtk')
-                <button type="button" class="btn btn-sm simansa-header-btn mr-1" id="btnBulkSyncKemenag">
+                <button type="button" class="btn btn-warning btn-sm mr-1" id="btnBulkSyncKemenag">
                     <i class="fas fa-sync-alt"></i> Sinkron Semua GTK Ber-NIP
-                    <span class="badge badge-secondary ml-1">{{ $stats['gtk_with_nip'] }}</span>
+                    <span class="badge badge-light ml-1">{{ $stats['gtk_with_nip'] }}</span>
                 </button>
             @endcan
             @can('create-gtk')
-                <a href="{{ route('admin.gtk.import') }}" class="btn btn-sm simansa-header-btn mr-1">
+                <a href="{{ route('admin.gtk.import') }}" class="btn btn-success btn-sm mr-1">
                     <i class="fas fa-file-excel"></i> Import GTK
                 </a>
-                <button type="button" class="btn btn-sm simansa-header-btn" data-toggle="modal" data-target="#addGtkModal">
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addGtkModal">
                     <i class="fas fa-plus"></i> Tambah GTK
                 </button>
             @endcan

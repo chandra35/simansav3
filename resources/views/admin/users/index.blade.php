@@ -83,12 +83,12 @@
                     </h3>
                     <div class="card-tools ml-0">
                     @can('view-permission')
-                    <a href="{{ route('admin.users.permission-matrix') }}" class="btn btn-sm simansa-header-btn mr-2">
+                    <a href="{{ route('admin.users.permission-matrix') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-shield-alt"></i> Permission Matrix
                     </a>
                     @endcan
                     @can('create-user')
-                    <a href="{{ route('admin.users.create') }}" class="btn btn-sm simansa-header-btn">
+                    <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus"></i> Tambah User
                     </a>
                     @endcan
