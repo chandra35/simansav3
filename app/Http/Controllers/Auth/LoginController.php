@@ -15,6 +15,24 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            if ($user->gtk) {
+                return redirect('admin/gtk/dashboard');
+            }
+            if ($user->siswa) {
+                return redirect('siswa/dashboard');
+            }
+            if ($user->hasRole('GTK')) {
+                return redirect('admin/gtk/dashboard');
+            }
+            if ($user->isSiswa()) {
+                return redirect('siswa/dashboard');
+            }
+            return redirect('admin/dashboard');
+        }
+
         return view('auth.login');
     }
 
