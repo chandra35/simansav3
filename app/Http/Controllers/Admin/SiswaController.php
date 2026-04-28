@@ -846,9 +846,10 @@ class SiswaController extends Controller
 
         $siswa = $dokumen->siswa;
 
-        $filePath = $dokumen->getSecureFilePath();
+        // Gunakan disk yang sama seperti preview — bukan getSecureFilePath()
+        $disk = $dokumen->storage_disk ?? \App\Helpers\StorageHelper::getDiskFromPath($dokumen->file_path);
 
-        if (!file_exists($filePath)) {
+        if (!Storage::disk($disk)->exists($dokumen->file_path)) {
             abort(404, 'File tidak ditemukan');
         }
 
@@ -856,20 +857,25 @@ class SiswaController extends Controller
         $jenisSlug = $dokumen->jenis_dokumen;
         $filename = "{$namaSlug}-{$jenisSlug}.jpg";
 
-        $mime = mime_content_type($filePath);
+        $mime = $dokumen->mime_type ?? 'application/octet-stream';
+
+        // Tulis ke temp file agar bisa diproses pdftoppm / GD
+        $tmpInput = tempnam(sys_get_temp_dir(), 'simansa_in_');
+        file_put_contents($tmpInput, Storage::disk($disk)->get($dokumen->file_path));
 
         if (str_contains($mime, 'pdf')) {
             $tmpPrefix = sys_get_temp_dir() . '/simansa_' . uniqid();
             $cmd = sprintf(
-                'pdftoppm -jpeg -r 150 -f 1 -l 1 %s %s 2>&1',
-                escapeshellarg($filePath),
+                'pdftoppm -jpeg -r 150 -f 1 -l 1 %s %s',
+                escapeshellarg($tmpInput),
                 escapeshellarg($tmpPrefix)
             );
             exec($cmd, $output, $retCode);
+            unlink($tmpInput);
 
             $generated = glob($tmpPrefix . '*.jpg');
             if (empty($generated)) {
-                Log::error('PDF to JPG conversion failed', ['output' => $output, 'file' => $filePath]);
+                Log::error('PDF to JPG conversion failed', ['output' => $output, 'retCode' => $retCode]);
                 abort(500, 'Gagal konversi PDF ke JPG');
             }
 
@@ -878,20 +884,24 @@ class SiswaController extends Controller
         }
 
         if (in_array($mime, ['image/png', 'image/webp', 'image/gif', 'image/bmp'])) {
-            $image = @imagecreatefromstring(file_get_contents($filePath));
+            $image = @imagecreatefromstring(file_get_contents($tmpInput));
+            unlink($tmpInput);
             if (!$image) {
                 abort(422, 'Format gambar tidak dapat diproses');
             }
-            $tmpFile = tempnam(sys_get_temp_dir(), 'simansa_img_') . '.jpg';
-            imagejpeg($image, $tmpFile, 90);
+            $tmpOut = tempnam(sys_get_temp_dir(), 'simansa_img_') . '.jpg';
+            imagejpeg($image, $tmpOut, 90);
             imagedestroy($image);
 
-            return response()->download($tmpFile, $filename, ['Content-Type' => 'image/jpeg'])
+            return response()->download($tmpOut, $filename, ['Content-Type' => 'image/jpeg'])
                 ->deleteFileAfterSend(true);
         }
 
-        // Already JPEG
-        return response()->download($filePath, $filename, ['Content-Type' => 'image/jpeg']);
+        // Already JPEG — rename temp dan serve
+        $tmpJpg = $tmpInput . '.jpg';
+        rename($tmpInput, $tmpJpg);
+        return response()->download($tmpJpg, $filename, ['Content-Type' => 'image/jpeg'])
+            ->deleteFileAfterSend(true);
     }
 
     /**
