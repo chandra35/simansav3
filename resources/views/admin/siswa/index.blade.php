@@ -85,16 +85,16 @@
                     </h3>
                     <div class="card-tools ml-0">
                         @can('create-siswa')
-                            <a href="{{ route('admin.siswa.import') }}" class="btn btn-light text-dark btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.import') }}" class="btn btn-sm simansa-header-btn mr-2">
                                 <i class="fas fa-file-excel"></i> Import Data Siswa
                             </a>
-                            <a href="{{ route('admin.emis-import.form') }}" class="btn btn-light text-dark btn-sm mr-2">
+                            <a href="{{ route('admin.emis-import.form') }}" class="btn btn-sm simansa-header-btn mr-2">
                                 <i class="fas fa-cloud-download-alt"></i> Import EMIS
                             </a>
-                            <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-light text-dark btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-sm simansa-header-btn mr-2">
                                 <i class="fas fa-school"></i> Import NPSN
                             </a>
-                            <button type="button" class="btn btn-light text-dark btn-sm" onclick="addSiswa()">
+                            <button type="button" class="btn btn-sm simansa-header-btn" onclick="addSiswa()">
                                 <i class="fas fa-plus"></i> Tambah Siswa
                             </button>
                         @endcan

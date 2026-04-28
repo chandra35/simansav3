@@ -2134,11 +2134,15 @@ a {
     color: #fff !important;
 }
 
-.simansa-management-card > .card-header .card-tools .btn-light {
+/* Dedicated class for action buttons inside simansa-management-card header */
+.simansa-header-btn,
+.simansa-header-btn:hover,
+.simansa-header-btn:focus,
+.simansa-header-btn:active {
     color: #1e3a8a !important;
-    background-color: #fff !important;
+    background-color: #ffffff !important;
     border-color: transparent !important;
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
 /* ── Filter panel ── */
