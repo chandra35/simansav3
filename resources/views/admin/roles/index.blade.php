@@ -23,28 +23,25 @@
         font-size: 0.75rem;
         margin: 2px;
     }
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
 </style>
 @stop
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-sm-6">
-            <h1><i class="fas fa-user-tag text-primary"></i> Role Management</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <p class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Manajemen Sistem</p>
+            <h1 class="simansa-hero__title">Role Management</h1>
+            <p class="simansa-hero__subtitle">Kelola hak akses dan permissions untuk setiap role pengguna.</p>
         </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Roles</li>
-            </ol>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total Role</span>
+                <span class="simansa-hero-chip__value">{{ $roles->count() }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total Permission</span>
+                <span class="simansa-hero-chip__value">{{ \Spatie\Permission\Models\Permission::count() }}</span>
+            </div>
         </div>
     </div>
 @stop
@@ -66,56 +63,47 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-gradient-primary">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stat-icon bg-white text-primary mr-3">
-                        <i class="fas fa-user-tag"></i>
-                    </div>
-                    <div>
-                        <h3 class="mb-0 text-white">{{ $roles->count() }}</h3>
-                        <span class="text-white-50">Total Roles</span>
-                    </div>
+        <div class="col-md-4 mb-3">
+            <div class="simansa-stat-card simansa-stat-card--blue">
+                <div class="simansa-stat-card__icon"><i class="fas fa-user-tag"></i></div>
+                <div class="simansa-stat-card__body">
+                    <div class="simansa-stat-card__value">{{ $roles->count() }}</div>
+                    <div class="simansa-stat-card__label">Total Role</div>
+                    <div class="simansa-stat-card__desc">Role aktif di sistem</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-gradient-success">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stat-icon bg-white text-success mr-3">
-                        <i class="fas fa-key"></i>
-                    </div>
-                    <div>
-                        <h3 class="mb-0 text-white">{{ \Spatie\Permission\Models\Permission::count() }}</h3>
-                        <span class="text-white-50">Total Permissions</span>
-                    </div>
+        <div class="col-md-4 mb-3">
+            <div class="simansa-stat-card simansa-stat-card--teal">
+                <div class="simansa-stat-card__icon"><i class="fas fa-key"></i></div>
+                <div class="simansa-stat-card__body">
+                    <div class="simansa-stat-card__value">{{ \Spatie\Permission\Models\Permission::count() }}</div>
+                    <div class="simansa-stat-card__label">Total Permission</div>
+                    <div class="simansa-stat-card__desc">Permission terdaftar</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-gradient-info">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stat-icon bg-white text-info mr-3">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div>
-                        <h3 class="mb-0 text-white">{{ $roles->sum('users_count') }}</h3>
-                        <span class="text-white-50">Users with Roles</span>
-                    </div>
+        <div class="col-md-4 mb-3">
+            <div class="simansa-stat-card simansa-stat-card--indigo">
+                <div class="simansa-stat-card__icon"><i class="fas fa-users"></i></div>
+                <div class="simansa-stat-card__body">
+                    <div class="simansa-stat-card__value">{{ $roles->sum('users_count') }}</div>
+                    <div class="simansa-stat-card__label">User Berrole</div>
+                    <div class="simansa-stat-card__desc">User dengan role aktif</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="card">
+    <!-- Role List -->
+    <div class="card simansa-management-card">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Role</h3>
-            <div class="card-tools">
-                <a href="{{ route('admin.permissions.index') }}" class="btn btn-info btn-sm mr-2">
+            <div class="card-tools d-flex">
+                <a href="{{ route('admin.permissions.index') }}" class="btn btn-sm btn-light mr-2">
                     <i class="fas fa-key"></i> Kelola Permissions
                 </a>
-                <a href="{{ route('admin.roles.create') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('admin.roles.create') }}" class="btn btn-sm btn-light">
                     <i class="fas fa-plus"></i> Tambah Role
                 </a>
             </div>
