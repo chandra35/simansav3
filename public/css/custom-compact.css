@@ -2129,15 +2129,16 @@ a {
 }
 
 .simansa-management-card > .card-header .card-title,
-.simansa-management-card > .card-header .card-tools .btn,
 .simansa-management-card > .card-header .btn-tool,
 .simansa-management-card > .card-header .btn-tool i {
     color: #fff !important;
 }
 
-.simansa-management-card > .card-header .btn-light {
+.simansa-management-card > .card-header .card-tools .btn-light {
     color: #1e3a8a !important;
-    font-weight: 700;
+    background-color: #fff !important;
+    border-color: transparent !important;
+    font-weight: 600;
 }
 
 /* ── Filter panel ── */
