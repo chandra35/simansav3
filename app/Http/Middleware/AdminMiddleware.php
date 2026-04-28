@@ -22,8 +22,8 @@ class AdminMiddleware
 
         $user = Auth::user();
         
-        // Check if user is admin (not siswa)
-        if ($user->role === 'siswa') {
+        // Block siswa from admin routes (check both Spatie role and legacy column)
+        if ($user->hasRole('Siswa') || $user->role === 'siswa') {
             abort(403, 'Unauthorized action.');
         }
 

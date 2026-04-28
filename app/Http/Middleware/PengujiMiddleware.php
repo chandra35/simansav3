@@ -23,10 +23,10 @@ class PengujiMiddleware
 
         $user = Auth::user();
         
-        // Allow access for penguji, admin, super_admin, or users with penguji permission
+        // Allow access for penguji, admin, super_admin (Spatie) or legacy role column
         $allowedRoles = ['penguji', 'admin', 'super_admin'];
         
-        if (!in_array($user->role, $allowedRoles) && !$user->hasRole('Penguji')) {
+        if (!in_array($user->role, $allowedRoles) && !$user->hasAnyRole(['Super Admin', 'Admin', 'Penguji'])) {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 

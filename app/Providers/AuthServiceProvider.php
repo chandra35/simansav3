@@ -51,7 +51,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('siswa-menu-only', function ($user) {
             return ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists()) &&
                 !$user->hasRole('GTK') &&
-                !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
+                !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
         });
 
         // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
@@ -65,9 +65,9 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         // Gate for Admin Dashboard
-        // Show to Super Admin, Admin, but NOT to pure GTK users
+        // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {
-            return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Sekolah', 'Wakil Kepala Sekolah']) ||
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
                 in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
 
@@ -85,7 +85,7 @@ class AuthServiceProvider extends ServiceProvider
             return !$user->hasRole('Siswa') &&
                 !$user->siswa()->exists() &&
                 (
-                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Sekolah', 'Wakil Kepala Sekolah']) ||
+                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Madrasah', 'WAKA']) ||
                     in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk'])
                 );
         });

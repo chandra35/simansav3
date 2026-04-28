@@ -23,10 +23,10 @@ class OperatorMiddleware
 
         $user = Auth::user();
         
-        // Allow access for operator, admin, super_admin, or users with operator permission
+        // Allow access for operator, admin, super_admin (Spatie) or legacy role column
         $allowedRoles = ['operator', 'admin', 'super_admin'];
         
-        if (!in_array($user->role, $allowedRoles) && !$user->hasRole('Operator')) {
+        if (!in_array($user->role, $allowedRoles) && !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator'])) {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
