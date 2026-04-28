@@ -1,306 +1,78 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', 'Data GTK - SIMANSA')
 
-@section('css')
-<style>
-    .gtk-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
-        gap: .7rem;
-        align-items: stretch;
-        margin-bottom: .65rem;
-    }
-
-    .gtk-hero__main {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .92), rgba(13, 148, 136, .84));
-        border: 1px solid rgba(255, 255, 255, .15);
-        border-radius: 20px;
-        padding: .95rem 1.05rem;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
-    }
-
-    .gtk-hero__eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        color: rgba(255, 255, 255, .86);
-        font-size: .76rem;
-        font-weight: 700;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        margin-bottom: .35rem;
-    }
-
-    .gtk-hero__title {
-        font-size: 1.4rem;
-        font-weight: 800;
-        color: #fff;
-        line-height: 1.1;
-        margin: 0 0 .25rem 0;
-    }
-
-    .gtk-hero__subtitle {
-        color: rgba(255, 255, 255, .9);
-        font-size: .84rem;
-        line-height: 1.45;
-        margin: 0;
-        max-width: 780px;
-    }
-
-    .gtk-hero__side {
-        display: grid;
-        gap: .9rem;
-    }
-
-    .gtk-hero-chip {
-        background: rgba(255, 255, 255, .92);
-        border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 14px;
-        padding: .62rem .82rem;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
-    }
-
-    .gtk-hero-chip__label {
-        display: block;
-        color: #64748b;
-        font-size: .72rem;
-        font-weight: 700;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-        margin-bottom: .35rem;
-    }
-
-    .gtk-hero-chip__value {
-        display: block;
-        color: #0f172a;
-        font-size: 1.06rem;
-        font-weight: 800;
-        line-height: 1.2;
-    }
-
-    @media (max-width: 991.98px) {
-        .gtk-hero {
-            grid-template-columns: 1fr;
-        }
-
-        .gtk-hero__side {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .gtk-hero__title {
-            font-size: 1.7rem;
-        }
-
-        .gtk-hero__side {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-@stop
 
 @section('content_header')
-    <div class="gtk-hero">
-        <div class="gtk-hero__main">
-            <div class="gtk-hero__eyebrow">
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow">
                 <i class="fas fa-chalkboard-teacher"></i>
                 Master GTK
             </div>
-            <h1 class="gtk-hero__title">Data GTK</h1>
-            <p class="gtk-hero__subtitle">
+            <h1 class="simansa-hero__title">Data GTK</h1>
+            <p class="simansa-hero__subtitle">
                 Kelola guru dan tenaga kependidikan, pantau kelengkapan data, dan jalankan sinkronisasi Kemenag dari satu halaman operasional.
             </p>
         </div>
-        <div class="gtk-hero__side">
-            <div class="gtk-hero-chip">
-                <span class="gtk-hero-chip__label">Total GTK</span>
-                <span class="gtk-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total GTK</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
             </div>
-            <div class="gtk-hero-chip">
-                <span class="gtk-hero-chip__label">Siap Sinkron</span>
-                <span class="gtk-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Siap Sinkron</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
             </div>
         </div>
     </div>
 @stop
 
 @section('content')
-<style>
-    .gtk-stat-card {
-        position: relative;
-        overflow: hidden;
-        min-height: 132px;
-        border: 0;
-        border-radius: 16px;
-        padding: .86rem .86rem .8rem;
-        color: #fff;
-        box-shadow: 0 12px 24px rgba(15, 23, 42, .10);
-        display: flex;
-        align-items: flex-start;
-        gap: .75rem;
-    }
-
-    .gtk-stat-card::after {
-        content: "";
-        position: absolute;
-        right: -30px;
-        bottom: -36px;
-        width: 144px;
-        height: 144px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .12);
-    }
-
-    .gtk-stat-card--blue { background: linear-gradient(135deg, #4f46e5, #6366f1); }
-    .gtk-stat-card--cyan { background: linear-gradient(135deg, #0ea5e9, #22d3ee); }
-    .gtk-stat-card--rose { background: linear-gradient(135deg, #fb7185, #f43f5e); }
-    .gtk-stat-card--green { background: linear-gradient(135deg, #10b981, #34d399); }
-
-    .gtk-stat-card__icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, .16);
-        font-size: .92rem;
-        position: relative;
-        z-index: 1;
-        flex: 0 0 42px;
-    }
-
-    .gtk-stat-card__body {
-        position: relative;
-        z-index: 1;
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-        min-width: 0;
-    }
-
-    .gtk-stat-card__label {
-        position: relative;
-        font-size: .68rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        opacity: .9;
-        margin-bottom: .25rem;
-    }
-
-    .gtk-stat-card__value {
-        position: relative;
-        font-size: 1.48rem;
-        font-weight: 800;
-        line-height: 1;
-        margin-bottom: .35rem;
-    }
-
-    .gtk-stat-card__desc {
-        position: relative;
-        opacity: .92;
-        line-height: 1.28;
-        font-size: .78rem;
-    }
-
-    @media (max-width: 575.98px) {
-        .gtk-stat-card {
-            flex-direction: column;
-            gap: .9rem;
-        }
-
-        .gtk-stat-card__body {
-            width: 100%;
-        }
-    }
-
-    .gtk-management-card {
-        border: 0;
-        border-radius: 18px;
-        box-shadow: 0 14px 30px rgba(15, 23, 42, .08);
-        overflow: hidden;
-    }
-
-    .gtk-management-card .card-header {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
-        color: #fff;
-        border-bottom: 0;
-        padding: .8rem 1rem;
-    }
-
-    .gtk-filter-panel {
-        background: linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(255, 255, 255, .98));
-        border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 20px;
-        padding: 1rem 1rem .35rem;
-        margin-bottom: 1rem;
-    }
-
-    .gtk-filter-label {
-        display: block;
-        font-size: .82rem;
-        font-weight: 700;
-        color: #475569;
-        margin-bottom: .4rem;
-    }
-
-    .gtk-table-note {
-        color: #64748b;
-        font-size: .92rem;
-        line-height: 1.5;
-        margin-bottom: 1rem;
-    }
-</style>
-
 <div class="row mb-4">
     <div class="col-md-3 col-sm-6">
-        <div class="gtk-stat-card gtk-stat-card--blue">
-            <div class="gtk-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="gtk-stat-card__body">
-                <div class="gtk-stat-card__label">Total GTK</div>
-                <div class="gtk-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
-                <div class="gtk-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+        <div class="simansa-stat-card simansa-stat-card--blue">
+            <div class="simansa-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Total GTK</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
+                <div class="simansa-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="gtk-stat-card gtk-stat-card--cyan">
-            <div class="gtk-stat-card__icon"><i class="fas fa-male"></i></div>
-            <div class="gtk-stat-card__body">
-                <div class="gtk-stat-card__label">Laki-Laki</div>
-                <div class="gtk-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
-                <div class="gtk-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
+        <div class="simansa-stat-card simansa-stat-card--cyan">
+            <div class="simansa-stat-card__icon"><i class="fas fa-male"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Laki-Laki</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
+                <div class="simansa-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="gtk-stat-card gtk-stat-card--rose">
-            <div class="gtk-stat-card__icon"><i class="fas fa-female"></i></div>
-            <div class="gtk-stat-card__body">
-                <div class="gtk-stat-card__label">Perempuan</div>
-                <div class="gtk-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
-                <div class="gtk-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
+        <div class="simansa-stat-card simansa-stat-card--rose">
+            <div class="simansa-stat-card__icon"><i class="fas fa-female"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Perempuan</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
+                <div class="simansa-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="gtk-stat-card gtk-stat-card--green">
-            <div class="gtk-stat-card__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="gtk-stat-card__body">
-                <div class="gtk-stat-card__label">Data Lengkap</div>
-                <div class="gtk-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
-                <div class="gtk-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
+        <div class="simansa-stat-card simansa-stat-card--green">
+            <div class="simansa-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Data Lengkap</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
+                <div class="simansa-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card gtk-management-card">
+<div class="card simansa-management-card">
     <div class="card-header">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
         <h3 class="card-title mb-3 mb-lg-0">
@@ -327,11 +99,11 @@
     </div>
     <div class="card-body">
         {{-- Filter Section --}}
-        <div class="gtk-filter-panel">
+        <div class="simansa-filter-panel">
                         <form id="filterForm">
                         <div class="row">
                             <div class="col-md-6 col-xl-3 mb-3">
-                                <label for="filterKategoriPtk" class="gtk-filter-label">
+                                <label for="filterKategoriPtk" class="simansa-filter-label">
                                     <i class="fas fa-users mr-1"></i> Kategori PTK
                                 </label>
                                 <select id="filterKategoriPtk" class="form-control form-control-sm">
@@ -341,7 +113,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6 col-xl-3 mb-3">
-                                <label for="filterJenisPtk" class="gtk-filter-label">
+                                <label for="filterJenisPtk" class="simansa-filter-label">
                                     <i class="fas fa-user-tag mr-1"></i> Jenis PTK
                                 </label>
                                 <select id="filterJenisPtk" class="form-control form-control-sm">
@@ -359,7 +131,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6 col-xl-2 mb-3">
-                                <label for="filterJenisKelamin" class="gtk-filter-label">
+                                <label for="filterJenisKelamin" class="simansa-filter-label">
                                     <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
                                 </label>
                                 <select id="filterJenisKelamin" class="form-control form-control-sm">
@@ -369,7 +141,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6 col-xl-2 mb-3">
-                                <label for="filterStatusKepegawaian" class="gtk-filter-label">
+                                <label for="filterStatusKepegawaian" class="simansa-filter-label">
                                     <i class="fas fa-briefcase mr-1"></i> Status Kepeg
                                 </label>
                                 <select id="filterStatusKepegawaian" class="form-control form-control-sm">
@@ -380,7 +152,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6 col-xl-2 mb-3">
-                                <label for="filterStatus" class="gtk-filter-label">
+                                <label for="filterStatus" class="simansa-filter-label">
                                     <i class="fas fa-database mr-1"></i> Status Data
                                 </label>
                                 <select id="filterStatus" class="form-control form-control-sm">
@@ -398,7 +170,7 @@
                         </form>
         </div>
 
-        <p class="gtk-table-note">
+        <p class="text-muted mb-3">
             Gunakan filter untuk memantau komposisi GTK, kelengkapan data, dan kesiapan sinkronisasi Kemenag tanpa meninggalkan halaman ini.
         </p>
 
@@ -584,237 +356,6 @@
 
 @stop
 
-@section('css')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
-<style>
-    .info-box {
-        min-height: 80px;
-    }
-    .info-box-number {
-        font-weight: bold;
-    }
-    
-    /* DataTables styling */
-    .dataTables_length select {
-        min-width: 80px !important;
-        width: auto !important;
-        padding: 0.375rem 1.75rem 0.375rem 0.75rem !important;
-    }
-    .dataTables_length {
-        margin-bottom: 1rem;
-    }
-
-    .dataTables_wrapper .dataTables_paginate {
-        margin-top: 0.35rem;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .pagination {
-        gap: 0.22rem;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item {
-        margin: 0 !important;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link {
-        min-width: 2.45rem;
-        min-height: 2.45rem;
-        padding: 0.48rem 0.9rem !important;
-        border-radius: 0.95rem !important;
-        border: 1px solid rgba(203, 213, 225, 0.95) !important;
-        background: rgba(255, 255, 255, 0.96) !important;
-        color: #334155 !important;
-        font-weight: 600 !important;
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link:hover,
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link:focus {
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.1)) !important;
-        border-color: rgba(99, 102, 241, 0.35) !important;
-        color: #312e81 !important;
-        box-shadow: 0 14px 28px rgba(79, 70, 229, 0.12) !important;
-        transform: translateY(-1px);
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.active .page-link {
-        background: linear-gradient(135deg, #312e81, #4f46e5) !important;
-        border-color: transparent !important;
-        color: #ffffff !important;
-        box-shadow: 0 16px 32px rgba(49, 46, 129, 0.22) !important;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.disabled .page-link {
-        background: rgba(241, 245, 249, 0.82) !important;
-        color: #94a3b8 !important;
-        border-color: rgba(226, 232, 240, 0.95) !important;
-        box-shadow: none !important;
-    }
-    
-    #gtk-table {
-        font-size: 0.9rem;
-    }
-    
-    .badge {
-        font-size: 85%;
-    }
-
-    .bulk-sync-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(17, 24, 39, 0.72);
-        backdrop-filter: blur(6px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-    }
-
-    .bulk-sync-panel {
-        width: min(820px, 100%);
-        background: #ffffff;
-        border-radius: 22px;
-        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.3);
-        overflow: hidden;
-        border: 1px solid rgba(226, 232, 240, 0.9);
-    }
-
-    .bulk-sync-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1.4rem 1.5rem 1rem;
-        background: linear-gradient(135deg, #1d4ed8, #0f766e);
-        color: #ffffff;
-    }
-
-    .bulk-sync-eyebrow {
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        opacity: 0.85;
-        margin-bottom: 0.35rem;
-    }
-
-    .bulk-sync-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-    }
-
-    .bulk-sync-spinner {
-        width: 54px;
-        height: 54px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.14);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-    }
-
-    .bulk-sync-meta {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.75rem;
-        padding: 1.25rem 1.5rem 0;
-    }
-
-    .bulk-sync-stat {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 0.9rem 1rem;
-    }
-
-    .bulk-sync-stat-label {
-        display: block;
-        font-size: 0.78rem;
-        color: #64748b;
-        margin-bottom: 0.2rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .bulk-sync-stat-value {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #0f172a;
-    }
-
-    .bulk-sync-progress-wrap {
-        padding: 1rem 1.5rem 0.75rem;
-    }
-
-    .bulk-sync-progress {
-        height: 18px;
-        border-radius: 999px;
-        background: #e2e8f0;
-        overflow: hidden;
-    }
-
-    .bulk-sync-progress .progress-bar {
-        font-weight: 700;
-    }
-
-    .bulk-sync-note {
-        margin-top: 0.85rem;
-        font-size: 0.96rem;
-        color: #334155;
-        font-weight: 600;
-    }
-
-    .bulk-sync-log {
-        margin: 0.75rem 1.5rem 0;
-        border-radius: 18px;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-    }
-
-    .bulk-sync-log .card-header {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .bulk-sync-log .list-group-item {
-        font-size: 0.92rem;
-        border-color: #eef2f7;
-    }
-
-    .bulk-sync-footer {
-        padding: 1rem 1.5rem 1.4rem;
-    }
-
-    @media (max-width: 767.98px) {
-        .bulk-sync-meta {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .dataTables_wrapper .dataTables_paginate .pagination {
-            justify-content: center;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link {
-            min-width: 2.1rem;
-            min-height: 2.1rem;
-            padding: 0.34rem 0.62rem !important;
-            border-radius: 0.8rem !important;
-            font-size: 0.8125rem !important;
-        }
-
-        .bulk-sync-header {
-            align-items: flex-start;
-        }
-    }
-</style>
-@stop
 
 @section('js')
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -1040,7 +581,7 @@ $(document).ready(function() {
         this.value = this.value.replace(/[^0-9]/g, '').substring(0, 16);
     });
 
-    // Cascading Dropdown: Kategori PTK → Jenis PTK
+    // Cascading Dropdown: Kategori PTK â†’ Jenis PTK
     const jenisPtkOptions = {
         'Pendidik': [
             { value: 'Guru Mapel', text: 'Guru Mata Pelajaran' },
@@ -1396,3 +937,6 @@ function deleteGtk(id) {
 }
 </script>
 @stop
+
+
+

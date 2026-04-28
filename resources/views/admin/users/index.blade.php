@@ -3,45 +3,70 @@
 @section('title', 'Data User - SIMANSA')
 
 @section('content_header')
-    <h1>Data User</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow">
+                <i class="fas fa-users-cog"></i>
+                Manajemen Akun
+            </div>
+            <h1 class="simansa-hero__title">Data User</h1>
+            <p class="simansa-hero__subtitle">
+                Kelola semua akun pengguna SIMANSA — admin, GTK, dan siswa — beserta role dan permission dari satu halaman.
+            </p>
+        </div>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Total User</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['total_users']) }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Siswa Terdaftar</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['siswa']) }}</span>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('content')
-{{-- Card Informasi Users --}}
-<div class="row mb-3">
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-info">
-            <span class="info-box-icon"><i class="fas fa-users"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total User</span>
-                <span class="info-box-number">{{ $stats['total_users'] }} User</span>
+{{-- Stat Cards --}}
+<div class="row mb-4">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-stat-card simansa-stat-card--blue">
+            <div class="simansa-stat-card__icon"><i class="fas fa-users"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Total User</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['total_users']) }}</div>
+                <div class="simansa-stat-card__desc">Semua akun yang terdaftar di SIMANSA.</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-danger">
-            <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Admin</span>
-                <span class="info-box-number">{{ $stats['admin'] }} User</span>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-stat-card simansa-stat-card--rose">
+            <div class="simansa-stat-card__icon"><i class="fas fa-user-shield"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Admin</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['admin']) }}</div>
+                <div class="simansa-stat-card__desc">Akun dengan role admin dan operator.</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-success">
-            <span class="info-box-icon"><i class="fas fa-chalkboard-teacher"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">GTK</span>
-                <span class="info-box-number">{{ $stats['gtk'] }} User</span>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-stat-card simansa-stat-card--teal">
+            <div class="simansa-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">GTK</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['gtk']) }}</div>
+                <div class="simansa-stat-card__desc">Guru dan tenaga kependidikan yang aktif.</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="info-box bg-primary">
-            <span class="info-box-icon"><i class="fas fa-user-graduate"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Siswa</span>
-                <span class="info-box-number">{{ $stats['siswa'] }} User</span>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-stat-card simansa-stat-card--green">
+            <div class="simansa-stat-card__icon"><i class="fas fa-user-graduate"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">Siswa</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['siswa']) }}</div>
+                <div class="simansa-stat-card__desc">Akun siswa yang sudah terdaftar di sistem.</div>
             </div>
         </div>
     </div>
@@ -49,13 +74,14 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card card-primary card-outline">
+        <div class="card simansa-management-card">
             <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-users mr-1"></i>
-                    Manajemen Data User
-                </h3>
-                <div class="card-tools">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                    <h3 class="card-title mb-3 mb-lg-0">
+                        <i class="fas fa-users mr-2"></i>
+                        Manajemen Data User
+                    </h3>
+                    <div class="card-tools ml-0">
                     @can('view-permission')
                     <a href="{{ route('admin.users.permission-matrix') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-shield-alt"></i> Permission Matrix
@@ -66,33 +92,30 @@
                         <i class="fas fa-plus"></i> Tambah User
                     </a>
                     @endcan
+                    </div>
                 </div>
             </div>
             <div class="card-body">
                 {{-- Filter Section --}}
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <div class="card bg-light">
-                            <div class="card-body p-3">
-                                <form id="filterForm" class="form-inline">
-                                    <div class="form-group mr-2 mb-2">
-                                        <label for="filterRole" class="mr-2">
-                                            <i class="fas fa-user-tag"></i> Role:
-                                        </label>
-                                        <select id="filterRole" class="form-control form-control-sm" style="width: 200px;">
-                                            <option value="">Semua Role</option>
-                                            @foreach($roles as $role)
-                                                <option value="{{ $role->name }}">{{ $role->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <button type="button" id="btnResetFilter" class="btn btn-sm btn-secondary mb-2">
-                                        <i class="fas fa-redo"></i> Reset
-                                    </button>
-                                </form>
+                <div class="simansa-filter-panel mb-3">
+                    <form id="filterForm">
+                        <div class="row">
+                            <div class="col-md-4 col-xl-3 mb-3">
+                                <label class="simansa-filter-label"><i class="fas fa-user-tag mr-1"></i> Role</label>
+                                <select id="filterRole" class="form-control form-control-sm">
+                                    <option value="">Semua Role</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
-                    </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-redo"></i> Reset Filter
+                            </button>
+                        </div>
+                    </form>
                 </div>
                 
                 <div class="table-responsive">

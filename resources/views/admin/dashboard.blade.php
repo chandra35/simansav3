@@ -8,6 +8,8 @@
 @endphp
 
 @section('content_header')
+    <div class="simansa-page-hero">
+        <div class="simansa-page-hero__body">
     <div class="simansa-dashboard-header">
         <div class="simansa-dashboard-header__content">
             <div class="simansa-dashboard-hero__eyebrow">
@@ -32,6 +34,8 @@
                 <span class="simansa-dashboard-chip__value">{{ $persenAktif }}%</span>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 @stop
 

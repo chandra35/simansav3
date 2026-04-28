@@ -302,8 +302,8 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div>
-                        <h3 class="mb-0 text-white">{{ $totalUsers }}</h3>
-                        <span class="text-white-50">Total Users</span>
+                        <h3 class="mb-0 text-dark">{{ $totalUsers }}</h3>
+                        <span class="text-muted">Total Users</span>
                     </div>
                 </div>
             </div>

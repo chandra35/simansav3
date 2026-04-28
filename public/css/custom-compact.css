@@ -1938,3 +1938,241 @@ a {
         display: none !important;
     }
 }
+
+/* ===============================================
+   SIMANSA DESIGN SYSTEM — GENERIK (dipakai di semua halaman)
+   class: .simansa-hero, .simansa-stat-card, .simansa-management-card,
+          .simansa-filter-panel, .simansa-hero-chip
+   =============================================== */
+
+/* ── Hero (page header) ── */
+.simansa-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr);
+    gap: .7rem;
+    align-items: stretch;
+    margin-bottom: .65rem;
+}
+
+.simansa-hero__main {
+    background: linear-gradient(135deg, rgba(37, 99, 235, .92), rgba(13, 148, 136, .84));
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 20px;
+    padding: .95rem 1.05rem;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, .08);
+}
+
+.simansa-hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: rgba(255, 255, 255, .86);
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: .35rem;
+}
+
+.simansa-hero__title {
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    color: #fff !important;
+    line-height: 1.1;
+    margin: 0 0 .25rem 0;
+}
+
+.simansa-hero__subtitle {
+    color: rgba(255, 255, 255, .9) !important;
+    font-size: .84rem;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 780px;
+}
+
+.simansa-hero__side {
+    display: grid;
+    gap: .9rem;
+}
+
+/* ── Hero chip (stat inside hero) ── */
+.simansa-hero-chip {
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 14px;
+    padding: .62rem .82rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+}
+
+.simansa-hero-chip__label {
+    display: block;
+    color: #64748b;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: .2rem;
+}
+
+.simansa-hero-chip__value {
+    display: block;
+    color: #0f172a;
+    font-size: 1.06rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+/* ── Stat cards (row di bawah hero) ── */
+.simansa-stat-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 132px;
+    border: 0;
+    border-radius: 16px !important;
+    padding: .86rem .86rem .8rem;
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, .10);
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+}
+
+.simansa-stat-card::after {
+    content: "";
+    position: absolute;
+    right: -30px;
+    bottom: -36px;
+    width: 144px;
+    height: 144px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .12);
+}
+
+/* Color variants */
+.simansa-stat-card--blue    { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+.simansa-stat-card--indigo  { background: linear-gradient(135deg, #4338ca, #6366f1); }
+.simansa-stat-card--cyan    { background: linear-gradient(135deg, #0ea5e9, #22d3ee); }
+.simansa-stat-card--teal    { background: linear-gradient(135deg, #0d9488, #2dd4bf); }
+.simansa-stat-card--rose    { background: linear-gradient(135deg, #fb7185, #f43f5e); }
+.simansa-stat-card--red     { background: linear-gradient(135deg, #ef4444, #f87171); }
+.simansa-stat-card--green   { background: linear-gradient(135deg, #10b981, #34d399); }
+.simansa-stat-card--emerald { background: linear-gradient(135deg, #059669, #10b981); }
+.simansa-stat-card--orange  { background: linear-gradient(135deg, #f97316, #fb923c); }
+.simansa-stat-card--amber   { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.simansa-stat-card--purple  { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.simansa-stat-card--slate   { background: linear-gradient(135deg, #475569, #64748b); }
+
+.simansa-stat-card__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .16);
+    font-size: .92rem;
+    position: relative;
+    z-index: 1;
+    flex: 0 0 42px;
+    color: #fff;
+}
+
+.simansa-stat-card__body {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    min-width: 0;
+}
+
+.simansa-stat-card__label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .9;
+    margin-bottom: .25rem;
+    color: #fff;
+}
+
+.simansa-stat-card__value {
+    font-size: 1.48rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: .35rem;
+    color: #fff;
+}
+
+.simansa-stat-card__desc {
+    opacity: .92;
+    line-height: 1.28;
+    font-size: .78rem;
+    color: #fff;
+}
+
+/* ── Management card (tabel utama) ── */
+.simansa-management-card {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, .08) !important;
+    overflow: hidden;
+}
+
+.simansa-management-card > .card-header {
+    background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9)) !important;
+    color: #fff !important;
+    border-bottom: 0 !important;
+    padding: .8rem 1rem !important;
+}
+
+.simansa-management-card > .card-header .card-title,
+.simansa-management-card > .card-header .card-tools .btn,
+.simansa-management-card > .card-header .btn-tool,
+.simansa-management-card > .card-header .btn-tool i {
+    color: #fff !important;
+}
+
+.simansa-management-card > .card-header .btn-light {
+    color: #1e3a8a !important;
+    font-weight: 700;
+}
+
+/* ── Filter panel ── */
+.simansa-filter-panel {
+    background: linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(255, 255, 255, .98));
+    border: 1px solid rgba(148, 163, 184, .18);
+    border-radius: 20px;
+    padding: 1rem 1rem .35rem;
+    margin-bottom: 1rem;
+}
+
+.simansa-filter-label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: .4rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 991.98px) {
+    .simansa-hero {
+        grid-template-columns: 1fr;
+    }
+    .simansa-hero__side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .simansa-hero__title { font-size: 1.2rem !important; }
+    .simansa-hero__side { grid-template-columns: 1fr; }
+    .simansa-stat-card {
+        flex-direction: column;
+        gap: .9rem;
+    }
+    .simansa-stat-card__body { width: 100%; }
+}
