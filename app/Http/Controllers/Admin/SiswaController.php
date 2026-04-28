@@ -776,7 +776,7 @@ class SiswaController extends Controller
                     'keterangan' => $dok->keterangan,
                     'created_at' => $dok->created_at,
                     'nama_siswa' => $siswa->nama_lengkap,
-                    'download_jpg_url' => route('admin.siswa.dokumen.download-jpg', [$siswa->id, $dok->id]),
+                    'download_jpg_url' => route('admin.siswa.dokumen.download-jpg', ['siswaId' => $siswa->id, 'dokumenId' => $dok->id]),
                 ];
             });
 
@@ -796,13 +796,15 @@ class SiswaController extends Controller
     /**
      * Download dokumen siswa as JPG
      */
-    public function downloadDokumenAsJpg(Siswa $siswa, DokumenSiswa $dokumen)
+    public function downloadDokumenAsJpg(string $siswaId, string $dokumenId)
     {
         $this->authorize('view-siswa');
 
-        if ($dokumen->siswa_id !== $siswa->id) {
-            abort(403, 'Akses ditolak');
-        }
+        $dokumen = DokumenSiswa::where('id', $dokumenId)
+            ->where('siswa_id', $siswaId)
+            ->firstOrFail();
+
+        $siswa = $dokumen->siswa;
 
         $filePath = $dokumen->getSecureFilePath();
 
