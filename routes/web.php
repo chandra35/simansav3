@@ -14,9 +14,23 @@ use App\Http\Controllers\Admin\RdmMapelMappingController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
-// Redirect root to login
+// Redirect root: if logged in go to appropriate dashboard, else go to login
 Route::get('/', function () {
-    return redirect('/login');
+    if (!auth()->check()) {
+        return redirect('/login');
+    }
+
+    $user = auth()->user();
+
+    if ($user->hasRole('Siswa') || $user->role === 'siswa') {
+        return redirect('/siswa/dashboard');
+    }
+
+    if ($user->hasRole('GTK') && !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])) {
+        return redirect('/admin/gtk/dashboard');
+    }
+
+    return redirect('/admin/dashboard');
 });
 
 // Public Verification Routes (No Auth Required - for QR Code scanning)
