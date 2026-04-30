@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Cetak Dokumen')
+@section('plugins.Select2', true)
 
 @section('content_header')
     <h1><i class="fas fa-print"></i> Cetak Dokumen</h1>
@@ -14,7 +15,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Cetak Absensi Kelas (Batch)</h3>
                 </div>
-                <form action="{{ route('admin.cetak.absensi-batch') }}" method="POST" id="formCetakAbsensi" target="printPreviewFrame">
+                <form action="{{ route('admin.cetak.absensi-batch') }}" method="POST" id="formCetakAbsensi" target="printPreviewFrame" data-no-overlay>
                     @csrf
                     @if($isRestrictedWaliKelas)
                         <input type="hidden" name="tahun_pelajaran_id" id="filter_tahun_pelajaran" value="{{ $defaultTahunPelajaranId }}">
@@ -34,7 +35,7 @@
                                         <label for="filter_tahun_pelajaran">
                                             <i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span>
                                         </label>
-                                        <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control" required>
+                                        <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tahun Pelajaran --</option>
                                             @foreach($tahunPelajarans as $tp)
                                                 <option value="{{ $tp->id }}" {{ $tp->is_active ? 'selected' : '' }}>
@@ -50,7 +51,7 @@
                                         <label for="filter_tingkat">
                                             <i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span>
                                         </label>
-                                        <select name="tingkat" id="filter_tingkat" class="form-control" required>
+                                        <select name="tingkat" id="filter_tingkat" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tingkat --</option>
                                             @foreach($tingkatOptions as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
@@ -62,7 +63,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
-                                        <select name="jurusan_id" id="filter_jurusan" class="form-control">
+                                        <select name="jurusan_id" id="filter_jurusan" class="form-control print-filter-select">
                                             <option value="">-- Semua Jurusan --</option>
                                             @foreach($jurusans as $jurusan)
                                                 <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
@@ -74,7 +75,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_kurikulum"><i class="fas fa-book"></i> Kurikulum</label>
-                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control">
+                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control print-filter-select">
                                             <option value="">-- Semua Kurikulum --</option>
                                             @foreach($kurikulums as $kurikulum)
                                                 <option value="{{ $kurikulum->id }}">{{ $kurikulum->nama }}</option>
@@ -213,6 +214,17 @@
         $(document).ready(function() {
             const isRestrictedWaliKelas = @json($isRestrictedWaliKelas);
             let previewPending = false;
+            const $printPreviewModal = $('#printPreviewModal');
+            const $printPreviewLoading = $('#printPreviewLoading');
+            const $printPreviewFrame = $('#printPreviewFrame');
+
+            if ($.fn.select2) {
+                $('.print-filter-select').select2({
+                    width: '100%',
+                    allowClear: false,
+                    minimumResultsForSearch: 8,
+                });
+            }
 
             function loadKelasByCurrentContext() {
                 const tahunPelajaran = $('#filter_tahun_pelajaran').val();
@@ -260,6 +272,9 @@
                                 title: 'Tidak Ada Kelas',
                                 text: 'Tidak ada kelas yang ditemukan dengan filter tersebut.'
                             });
+                            $('#kelasCheckboxes').empty();
+                            $('#selectAll').prop('checked', false);
+                            updateSelectedCount();
                             $('#kelasList').slideUp();
                         }
                     },
@@ -360,30 +375,36 @@
                     .html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...');
 
                 previewPending = true;
-                $('#printPreviewLoading').show();
-                $('#printPreviewModal').modal('show');
+                if (window.hideAppGlobalOverlay) {
+                    window.hideAppGlobalOverlay();
+                }
+                $printPreviewLoading.show();
+                $printPreviewModal.modal('show');
             });
 
             if (isRestrictedWaliKelas) {
                 loadKelasByCurrentContext();
             }
 
-            $('#printPreviewFrame').on('load', function() {
+            $printPreviewFrame.on('load', function() {
                 if (!previewPending) {
                     return;
                 }
 
                 previewPending = false;
-                $('#printPreviewLoading').hide();
+                if (window.hideAppGlobalOverlay) {
+                    window.hideAppGlobalOverlay();
+                }
+                $printPreviewLoading.hide();
                 $('#btnCetak')
                     .prop('disabled', false)
                     .html('<i class="fas fa-print"></i> Cetak Absensi');
             });
 
-            $('#printPreviewModal').on('hidden.bs.modal', function() {
+            $printPreviewModal.on('hidden.bs.modal', function() {
                 previewPending = false;
-                $('#printPreviewFrame').attr('src', 'about:blank');
-                $('#printPreviewLoading').show();
+                $printPreviewFrame.attr('src', 'about:blank');
+                $printPreviewLoading.show();
             });
         });
     </script>
@@ -391,6 +412,25 @@
 
 @section('css')
     <style>
+        .select2-container--default .select2-selection--single {
+            height: calc(2.25rem + 2px);
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            padding: .375rem .75rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #495057;
+            line-height: 1.5rem;
+            padding-left: 0;
+            padding-right: 1.5rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: calc(2.25rem + 2px);
+            right: .35rem;
+        }
+        .select2-container {
+            display: block;
+        }
         .print-preview-frame {
             width: 100%;
             height: 78vh;

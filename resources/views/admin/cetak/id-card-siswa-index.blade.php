@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Cetak ID Card Siswa')
+@section('plugins.Select2', true)
 
 @section('content_header')
     <h1><i class="fas fa-id-card"></i> Cetak ID Card Siswa</h1>
@@ -13,7 +14,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-card"></i> Cetak Kartu Pelajar</h3>
                 </div>
-                <form action="{{ route('admin.cetak.id-card-siswa') }}" method="POST" id="formCetakIdSiswa" target="printPreviewFrame">
+                <form action="{{ route('admin.cetak.id-card-siswa') }}" method="POST" id="formCetakIdSiswa" target="printPreviewFrame" data-no-overlay>
                     @csrf
                     @if($isRestrictedWaliKelas)
                         <input type="hidden" name="tahun_pelajaran_id" id="id_siswa_tahun_pelajaran" value="{{ $defaultTahunPelajaranId }}">
@@ -33,7 +34,7 @@
                                         <label for="id_siswa_tahun_pelajaran">
                                             <i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span>
                                         </label>
-                                        <select name="tahun_pelajaran_id" id="id_siswa_tahun_pelajaran" class="form-control" required>
+                                        <select name="tahun_pelajaran_id" id="id_siswa_tahun_pelajaran" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tahun Pelajaran --</option>
                                             @foreach($tahunPelajarans as $tp)
                                                 <option value="{{ $tp->id }}" {{ $tp->is_active ? 'selected' : '' }}>
@@ -48,7 +49,7 @@
                                         <label for="id_siswa_tingkat">
                                             <i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span>
                                         </label>
-                                        <select name="tingkat" id="id_siswa_tingkat" class="form-control" required>
+                                        <select name="tingkat" id="id_siswa_tingkat" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tingkat --</option>
                                             @foreach($tingkatOptions as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
@@ -59,7 +60,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="id_siswa_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
-                                        <select name="jurusan_id" id="id_siswa_jurusan" class="form-control">
+                                        <select name="jurusan_id" id="id_siswa_jurusan" class="form-control print-filter-select">
                                             <option value="">-- Semua Jurusan --</option>
                                             @foreach($jurusans as $jurusan)
                                                 <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
@@ -137,6 +138,17 @@
 $(document).ready(function() {
     const isRestrictedWaliKelas = @json($isRestrictedWaliKelas);
     let previewPending = false;
+    const $printPreviewModal = $('#printPreviewModal');
+    const $printPreviewLoading = $('#printPreviewLoading');
+    const $printPreviewFrame = $('#printPreviewFrame');
+
+    if ($.fn.select2) {
+        $('.print-filter-select').select2({
+            width: '100%',
+            allowClear: false,
+            minimumResultsForSearch: 8,
+        });
+    }
 
     function loadKelasByCurrentContext() {
         const tp = $('#id_siswa_tahun_pelajaran').val();
@@ -181,6 +193,9 @@ $(document).ready(function() {
                     updateCount();
                 } else {
                     Swal.fire({ icon: 'info', title: 'Tidak Ada Kelas', text: 'Tidak ada kelas yang ditemukan.' });
+                    $('#kelasCheckboxes').empty();
+                    $('#selectAll').prop('checked', false);
+                    updateCount();
                     $('#kelasList').slideUp();
                 }
             },
@@ -227,30 +242,36 @@ $(document).ready(function() {
             .prop('disabled', true)
             .html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...');
         previewPending = true;
-        $('#printPreviewLoading').show();
-        $('#printPreviewModal').modal('show');
+        if (window.hideAppGlobalOverlay) {
+            window.hideAppGlobalOverlay();
+        }
+        $printPreviewLoading.show();
+        $printPreviewModal.modal('show');
     });
 
     if (isRestrictedWaliKelas) {
         loadKelasByCurrentContext();
     }
 
-    $('#printPreviewFrame').on('load', function() {
+    $printPreviewFrame.on('load', function() {
         if (!previewPending) {
             return;
         }
 
         previewPending = false;
-        $('#printPreviewLoading').hide();
+        if (window.hideAppGlobalOverlay) {
+            window.hideAppGlobalOverlay();
+        }
+        $printPreviewLoading.hide();
         $('#btnCetak')
             .prop('disabled', false)
             .html('<i class="fas fa-id-card"></i> Cetak ID Card Siswa');
     });
 
-    $('#printPreviewModal').on('hidden.bs.modal', function() {
+    $printPreviewModal.on('hidden.bs.modal', function() {
         previewPending = false;
-        $('#printPreviewFrame').attr('src', 'about:blank');
-        $('#printPreviewLoading').show();
+        $printPreviewFrame.attr('src', 'about:blank');
+        $printPreviewLoading.show();
     });
 });
 </script>
@@ -258,6 +279,25 @@ $(document).ready(function() {
 
 @section('css')
 <style>
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px);
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        padding: .375rem .75rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #495057;
+        line-height: 1.5rem;
+        padding-left: 0;
+        padding-right: 1.5rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(2.25rem + 2px);
+        right: .35rem;
+    }
+    .select2-container {
+        display: block;
+    }
     .print-preview-frame {
         width: 100%;
         height: 78vh;

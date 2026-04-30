@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Cetak ID Card GTK')
+@section('plugins.Select2', true)
 
 @section('content_header')
     <h1><i class="fas fa-id-badge"></i> Cetak ID Card GTK</h1>
@@ -13,7 +14,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-badge"></i> Cetak Kartu Identitas GTK</h3>
                 </div>
-                <form action="{{ route('admin.cetak.id-card-gtk') }}" method="POST" id="formCetakIdGtk" target="printPreviewFrame">
+                <form action="{{ route('admin.cetak.id-card-gtk') }}" method="POST" id="formCetakIdGtk" target="printPreviewFrame" data-no-overlay>
                     @csrf
                     <div class="card-body">
                         <div class="alert alert-warning">
@@ -29,7 +30,7 @@
                                     <label for="id_gtk_kategori">
                                         <i class="fas fa-user-tag"></i> Kategori PTK
                                     </label>
-                                    <select name="kategori_ptk" id="id_gtk_kategori" class="form-control">
+                                    <select name="kategori_ptk" id="id_gtk_kategori" class="form-control print-filter-select">
                                         <option value="">-- Semua Kategori --</option>
                                         <option value="Pendidik">Pendidik (Guru)</option>
                                         <option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
@@ -41,7 +42,7 @@
                                     <label for="id_gtk_status">
                                         <i class="fas fa-briefcase"></i> Status Kepegawaian
                                     </label>
-                                    <select name="status_kepegawaian" id="id_gtk_status" class="form-control">
+                                    <select name="status_kepegawaian" id="id_gtk_status" class="form-control print-filter-select">
                                         <option value="">-- Semua Status --</option>
                                         <option value="PNS">PNS</option>
                                         <option value="PPPK">PPPK</option>
@@ -119,6 +120,17 @@
 <script>
 $(document).ready(function() {
     let previewPending = false;
+    const $printPreviewModal = $('#printPreviewModal');
+    const $printPreviewLoading = $('#printPreviewLoading');
+    const $printPreviewFrame = $('#printPreviewFrame');
+
+    if ($.fn.select2) {
+        $('.print-filter-select').select2({
+            width: '100%',
+            allowClear: false,
+            minimumResultsForSearch: 8,
+        });
+    }
 
     $('#btnLoadGtk').on('click', function() {
         const kategori = $('#id_gtk_kategori').val();
@@ -154,6 +166,9 @@ $(document).ready(function() {
                     updateCount();
                 } else {
                     Swal.fire({ icon: 'info', title: 'Tidak Ada GTK', text: 'Tidak ada GTK yang ditemukan.' });
+                    $('#gtkCheckboxes').empty();
+                    $('#selectAll').prop('checked', false);
+                    updateCount();
                     $('#gtkListSection').slideUp();
                 }
             },
@@ -196,26 +211,32 @@ $(document).ready(function() {
             .prop('disabled', true)
             .html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...');
         previewPending = true;
-        $('#printPreviewLoading').show();
-        $('#printPreviewModal').modal('show');
+        if (window.hideAppGlobalOverlay) {
+            window.hideAppGlobalOverlay();
+        }
+        $printPreviewLoading.show();
+        $printPreviewModal.modal('show');
     });
 
-    $('#printPreviewFrame').on('load', function() {
+    $printPreviewFrame.on('load', function() {
         if (!previewPending) {
             return;
         }
 
         previewPending = false;
-        $('#printPreviewLoading').hide();
+        if (window.hideAppGlobalOverlay) {
+            window.hideAppGlobalOverlay();
+        }
+        $printPreviewLoading.hide();
         $('#btnCetak')
             .prop('disabled', false)
             .html('<i class="fas fa-id-badge"></i> Cetak ID Card GTK');
     });
 
-    $('#printPreviewModal').on('hidden.bs.modal', function() {
+    $printPreviewModal.on('hidden.bs.modal', function() {
         previewPending = false;
-        $('#printPreviewFrame').attr('src', 'about:blank');
-        $('#printPreviewLoading').show();
+        $printPreviewFrame.attr('src', 'about:blank');
+        $printPreviewLoading.show();
     });
 });
 </script>
@@ -223,6 +244,25 @@ $(document).ready(function() {
 
 @section('css')
 <style>
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px);
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        padding: .375rem .75rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #495057;
+        line-height: 1.5rem;
+        padding-left: 0;
+        padding-right: 1.5rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(2.25rem + 2px);
+        right: .35rem;
+    }
+    .select2-container {
+        display: block;
+    }
     .print-preview-frame {
         width: 100%;
         height: 78vh;
