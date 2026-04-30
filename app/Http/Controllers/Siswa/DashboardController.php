@@ -54,6 +54,10 @@ class DashboardController extends Controller
             return redirect()->route('siswa.profile.diri')->with('info', 'Silakan lengkapi data diri Anda.');
         }
 
+        $siswa->load([
+            'kelasAktif.waliKelas.gtk',
+        ]);
+
         // Get tahun pelajaran aktif
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
 

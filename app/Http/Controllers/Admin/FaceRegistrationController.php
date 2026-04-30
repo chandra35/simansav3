@@ -91,6 +91,8 @@ class FaceRegistrationController extends Controller
             'angles' => 'required|array|min:3',
             'angles.*' => 'required|string',
             'quality_score' => 'nullable|numeric|min:0|max:100',
+            'liveness_score' => 'nullable|numeric|min:0|max:100',
+            'liveness_summary' => 'required|array',
             'photo' => 'nullable|string',
         ]);
 
@@ -112,6 +114,8 @@ class FaceRegistrationController extends Controller
 
         abort_unless($this->userMatchesType($targetUser, $userType), 422, 'Target registrasi tidak sesuai dengan tipe pengguna.');
 
+        $this->validateLivenessPayload($request);
+
         $duplicateMatch = $this->findDuplicateFaceMatch($request->descriptors, $targetUser->id);
         abort_if($duplicateMatch, 422, $this->buildDuplicateMessage($duplicateMatch));
 
@@ -125,7 +129,7 @@ class FaceRegistrationController extends Controller
                 'descriptors' => $request->descriptors,
                 'capture_angles' => $request->angles,
                 'total_captures' => count($request->descriptors),
-                'quality_score' => $request->quality_score,
+                'quality_score' => $request->input('quality_score', $request->input('liveness_score')),
                 'is_active' => true,
                 'is_verified' => false,
                 'verified_by' => null,
@@ -143,6 +147,65 @@ class FaceRegistrationController extends Controller
                 'angles' => $faceData->capture_angles,
             ],
         ]);
+    }
+
+    protected function validateLivenessPayload(Request $request): void
+    {
+        $summary = collect($request->input('liveness_summary', []));
+        $completedSteps = collect($summary->get('completed_steps', []))
+            ->filter(fn ($value) => is_string($value) && $value !== '')
+            ->values();
+
+        $requiredSteps = collect(['frontal', 'kedip', 'senyum']);
+        $hasDirectionalTurn = $completedSteps->contains('kanan') || $completedSteps->contains('kiri');
+
+        abort_if(
+            $summary->get('challenge_count', 0) < 5 || count($request->input('angles', [])) < 5,
+            422,
+            'Registrasi wajah belum lengkap. Ulangi hingga semua tantangan selesai.'
+        );
+
+        abort_if(
+            $requiredSteps->diff($completedSteps)->isNotEmpty() || !$hasDirectionalTurn,
+            422,
+            'Deteksi liveness belum lengkap. Sistem membutuhkan kedipan, senyum, dan gerakan kepala asli.'
+        );
+
+        abort_if(
+            (float) $summary->get('total_duration_ms', 0) < 4500,
+            422,
+            'Proses registrasi terlalu cepat untuk diverifikasi. Mohon ulangi dengan mengikuti instruksi kamera.'
+        );
+
+        abort_if(
+            (int) $summary->get('blink_count', 0) < 1 || (int) $summary->get('max_blink_close_frames', 0) < 2,
+            422,
+            'Kedipan mata belum terdeteksi dengan jelas. Mohon ulangi registrasi dari kamera langsung.'
+        );
+
+        abort_if(
+            (float) $summary->get('yaw_span', 0) < 0.30,
+            422,
+            'Gerakan kepala belum cukup berbeda. Jangan gunakan foto atau layar lain saat registrasi.'
+        );
+
+        abort_if(
+            (float) $summary->get('smile_delta', 0) < 0.02,
+            422,
+            'Perubahan ekspresi belum cukup terbaca. Mohon ulangi dengan senyum natural di depan kamera.'
+        );
+
+        abort_if(
+            (float) $summary->get('passive_motion_score', 0) < 0.012 || (float) $summary->get('gesture_motion_score', 0) < 0.05,
+            422,
+            'Gerakan liveness terdeteksi terlalu datar. Sistem menolak foto, layar, atau video replay.'
+        );
+
+        abort_if(
+            (float) $request->input('liveness_score', $summary->get('liveness_score', 0)) < 65,
+            422,
+            'Skor liveness terlalu rendah. Mohon gunakan wajah asli di depan kamera dengan cahaya yang cukup.'
+        );
     }
 
     public function verificationList(Request $request)

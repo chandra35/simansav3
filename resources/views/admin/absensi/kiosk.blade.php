@@ -546,6 +546,134 @@
         let detectionLoop = null;
         let lastMatchTime = 0;
         const MATCH_COOLDOWN = 5000; // 5 seconds cooldown between same-person matches
+        let livenessState = createLivenessState();
+
+        function createLivenessState() {
+            return {
+                challenge: null,
+                samples: [],
+                earHistory: [],
+                eyeWasClosed: false,
+                blinkCount: 0,
+                blinkCloseFrames: 0,
+                unlockedUntil: 0,
+            };
+        }
+
+        function pickLivenessChallenge() {
+            const challenges = [
+                { type: 'blink', text: 'Kedipkan mata 1 kali' },
+                { type: 'right', text: 'Toleh sedikit ke kanan' },
+                { type: 'left', text: 'Toleh sedikit ke kiri' },
+                { type: 'smile', text: 'Beri senyum tipis' },
+            ];
+            return challenges[Math.floor(Math.random() * challenges.length)];
+        }
+
+        function setLivenessInstruction(text, active = true) {
+            const box = document.getElementById('livenessInstruction');
+            const label = document.getElementById('livenessText');
+            if (!box || !label) return;
+            label.textContent = text;
+            box.classList.toggle('active', active);
+        }
+
+        function computeEyeAspectRatio(eye) {
+            const d = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+            return (d(eye[1], eye[5]) + d(eye[2], eye[4])) / (2 * d(eye[0], eye[3]));
+        }
+
+        function collectKioskMetrics(landmarks) {
+            const pts = landmarks.positions;
+            const noseTip = pts[30], jawLeft = pts[0], jawRight = pts[16], mouthL = pts[48], mouthR = pts[54];
+            const dL = Math.sqrt((noseTip.x - jawLeft.x) ** 2 + (noseTip.y - jawLeft.y) ** 2);
+            const dR = Math.sqrt((noseTip.x - jawRight.x) ** 2 + (noseTip.y - jawRight.y) ** 2);
+            const yawRatio = dL / Math.max(dR, 0.001);
+            const mouthW = Math.sqrt((mouthR.x - mouthL.x) ** 2 + (mouthR.y - mouthL.y) ** 2);
+            const jawW = Math.sqrt((jawRight.x - jawLeft.x) ** 2 + (jawRight.y - jawLeft.y) ** 2);
+            const smileRatio = mouthW / Math.max(jawW, 0.001);
+            return { yawRatio, smileRatio };
+        }
+
+        function ensureLivenessChallenge() {
+            if (!livenessState.challenge) {
+                livenessState.challenge = pickLivenessChallenge();
+            }
+            return livenessState.challenge;
+        }
+
+        function handleKioskBlink(landmarks) {
+            const leftEye = landmarks.getLeftEye();
+            const rightEye = landmarks.getRightEye();
+            const rawEar = (computeEyeAspectRatio(leftEye) + computeEyeAspectRatio(rightEye)) / 2;
+            livenessState.earHistory.push(rawEar);
+            if (livenessState.earHistory.length > 3) livenessState.earHistory.shift();
+            const ear = livenessState.earHistory.reduce((sum, value) => sum + value, 0) / livenessState.earHistory.length;
+            const threshold = 0.26;
+
+            if (ear < threshold) {
+                livenessState.blinkCloseFrames++;
+                livenessState.eyeWasClosed = true;
+            } else if (ear > threshold + 0.03 && livenessState.eyeWasClosed) {
+                if (livenessState.blinkCloseFrames >= 2) {
+                    livenessState.blinkCount++;
+                }
+                livenessState.eyeWasClosed = false;
+                livenessState.blinkCloseFrames = 0;
+            }
+        }
+
+        function verifyLiveness(detection) {
+            if (!CONFIG.livenessEnabled) {
+                setLivenessInstruction('Deteksi hidup dimatikan oleh admin.', false);
+                return true;
+            }
+
+            if (Date.now() < livenessState.unlockedUntil) {
+                setLivenessInstruction('Liveness terverifikasi.', false);
+                return true;
+            }
+
+            const challenge = ensureLivenessChallenge();
+            const metrics = collectKioskMetrics(detection.landmarks);
+            livenessState.samples.push(metrics);
+            if (livenessState.samples.length > 18) livenessState.samples.shift();
+            handleKioskBlink(detection.landmarks);
+
+            const yawValues = livenessState.samples.map(sample => sample.yawRatio);
+            const smileValues = livenessState.samples.map(sample => sample.smileRatio);
+            const yawMin = Math.min(...yawValues);
+            const yawMax = Math.max(...yawValues);
+            const smileMax = Math.max(...smileValues);
+            const yawSpan = yawMax - yawMin;
+
+            let passed = false;
+            if (challenge.type === 'blink') {
+                passed = livenessState.blinkCount >= 1;
+            } else if (challenge.type === 'right') {
+                passed = yawMin < 0.84 && yawSpan > 0.12;
+            } else if (challenge.type === 'left') {
+                passed = yawMax > 1.18 && yawSpan > 0.12;
+            } else if (challenge.type === 'smile') {
+                passed = smileMax > 0.39;
+            }
+
+            if (passed) {
+                livenessState.unlockedUntil = Date.now() + 8000;
+                livenessState.challenge = null;
+                livenessState.samples = [];
+                livenessState.earHistory = [];
+                livenessState.eyeWasClosed = false;
+                livenessState.blinkCloseFrames = 0;
+                livenessState.blinkCount = 0;
+                setLivenessInstruction('Liveness terverifikasi. Silakan lanjut.', true);
+                return true;
+            }
+
+            setLivenessInstruction(challenge.text, true);
+            setCameraStatus('detecting', `Liveness: ${challenge.text}`);
+            return false;
+        }
 
         // ============================================
         // CLOCK
@@ -779,18 +907,25 @@
 
                     // Update face guide
                     document.getElementById('faceGuide').classList.add('detected');
+                    const bestDetection = detections.reduce((best, det) =>
+                        det.detection.score > best.detection.score ? det : best
+                    );
                     
-                    // Try matching (only the best/largest face)
-                    if (!isProcessing && Date.now() - lastMatchTime > MATCH_COOLDOWN) {
-                        const bestDetection = detections.reduce((best, det) =>
-                            det.detection.score > best.detection.score ? det : best
-                        );
+                    // Try matching (only after liveness passes)
+                    const livenessOk = verifyLiveness(bestDetection);
+                    if (livenessOk && !isProcessing && Date.now() - lastMatchTime > MATCH_COOLDOWN) {
                         matchFace(bestDetection.descriptor);
                     }
 
-                    setCameraStatus('detecting', `Wajah terdeteksi (${detections.length})`);
+                    if (!CONFIG.livenessEnabled || Date.now() < livenessState.unlockedUntil) {
+                        setCameraStatus('detecting', `Wajah terdeteksi (${detections.length})`);
+                    }
                 } else {
                     document.getElementById('faceGuide').classList.remove('detected');
+                    if (CONFIG.livenessEnabled) {
+                        livenessState = createLivenessState();
+                        setLivenessInstruction('Mendeteksi wajah...', false);
+                    }
                     setCameraStatus('idle', 'Menunggu wajah...');
                 }
 

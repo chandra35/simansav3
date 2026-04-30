@@ -17,6 +17,26 @@
     </button>
 </div>
 @endif
+@php
+    $kelasAktif = $siswa->kelasAktif->first();
+    $waliKelasUser = $kelasAktif?->waliKelas;
+    $waliKelasGtk = $waliKelasUser?->gtk;
+    $waliKelasNama = $waliKelasGtk?->nama_lengkap ?? $waliKelasUser?->name;
+    $waliKelasJabatan = $waliKelasGtk?->jabatan ?? $waliKelasGtk?->jenis_ptk;
+    $waliKelasNomorHp = $waliKelasGtk?->nomor_hp ?? $waliKelasUser?->phone;
+    $waliKelasFoto = $waliKelasGtk?->foto_profile_url
+        ?? $waliKelasUser?->avatar_url
+        ?? ($waliKelasNama
+            ? 'https://ui-avatars.com/api/?name=' . urlencode($waliKelasNama) . '&size=160&background=2563eb&color=ffffff'
+            : null);
+    $waliKelasStatusMessage = null;
+
+    if (!$kelasAktif) {
+        $waliKelasStatusMessage = 'Kelas aktif Anda belum ditentukan. Silakan hubungi admin madrasah untuk penempatan kelas.';
+    } elseif (!$waliKelasNama) {
+        $waliKelasStatusMessage = 'Wali kelas untuk kelas Anda belum ditetapkan. Silakan cek kembali nanti atau hubungi admin madrasah.';
+    }
+@endphp
 <!-- Page Loading Overlay with Lottie Animation -->
 <div class="page-loader" id="pageLoader">
     <div class="loader-content">
@@ -237,9 +257,6 @@
                         </span>
                     </li>
                     @endif
-                    @php
-                        $kelasAktif = $siswa->kelasAktif->first();
-                    @endphp
                     @if($kelasAktif)
                     <li class="list-group-item">
                         <b><i class="fas fa-school mr-1"></i> Kelas</b>
@@ -247,11 +264,11 @@
                             <span class="badge badge-success">{{ $kelasAktif->nama_lengkap }}</span>
                         </span>
                     </li>
-                    @if($kelasAktif->waliKelas)
+                    @if($waliKelasNama)
                     <li class="list-group-item">
                         <b><i class="fas fa-chalkboard-teacher mr-1"></i> Wali Kelas</b>
                         <span class="float-right text-muted">
-                            {{ $kelasAktif->waliKelas->nama }}
+                            {{ $waliKelasNama ?? '-' }}
                         </span>
                     </li>
                     @endif
@@ -269,6 +286,74 @@
                 </a>
             </div>
         </div>
+
+        @if($kelasAktif && $waliKelasNama)
+        <div class="card card-info card-outline wali-kelas-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chalkboard-teacher mr-1"></i>
+                    Wali Kelas Saya
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="wali-kelas-photo mr-3">
+                        <img src="{{ $waliKelasFoto }}"
+                             alt="Foto {{ $waliKelasNama }}"
+                             class="img-circle"
+                             onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($waliKelasNama) }}&size=160&background=2563eb&color=ffffff';">
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1 font-weight-bold text-dark">{{ $waliKelasNama }}</h5>
+                        <div class="text-muted small mb-2">
+                            {{ $waliKelasJabatan ?: 'Wali Kelas ' . $kelasAktif->nama_lengkap }}
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge badge-info px-2 py-1">
+                                <i class="fas fa-school mr-1"></i>{{ $kelasAktif->nama_lengkap }}
+                            </span>
+                            @if($waliKelasGtk?->nip)
+                                <span class="badge badge-light border px-2 py-1">
+                                    <i class="fas fa-id-card mr-1 text-muted"></i>{{ $waliKelasGtk->nip }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                @if($waliKelasNomorHp)
+                <div class="wali-kelas-contact mt-3">
+                    <i class="fas fa-phone-alt text-info mr-2"></i>
+                    <span>{{ $waliKelasNomorHp }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        @if($waliKelasStatusMessage)
+        <div class="card card-warning card-outline wali-kelas-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Informasi Wali Kelas
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="mr-3 mt-1 text-warning" style="font-size: 1.6rem;">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div>
+                        <div class="font-weight-bold text-dark mb-1">Informasi wali kelas belum tersedia</div>
+                        <div class="text-muted">
+                            {{ $waliKelasStatusMessage }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Quick Actions Card -->
         <div class="card card-primary">
@@ -921,6 +1006,29 @@
         color: #333;
     }
 
+    .wali-kelas-card .card-body {
+        padding: 1rem 1.1rem;
+    }
+
+    .wali-kelas-photo img {
+        width: 74px;
+        height: 74px;
+        object-fit: cover;
+        border: 3px solid #e0f2fe;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.16);
+    }
+
+    .wali-kelas-contact {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.55rem 0.8rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #dbeafe;
+        color: #334155;
+        font-size: 0.92rem;
+    }
+
     /* Button Styling */
     .btn-lg {
         padding: 12px 20px;
@@ -994,6 +1102,11 @@
         .profile-user-img {
             width: 120px !important;
             height: 120px !important;
+        }
+
+        .wali-kelas-photo img {
+            width: 64px;
+            height: 64px;
         }
 
         .card-body {
