@@ -251,6 +251,120 @@
 
     <script>
         (function () {
+            const deviceLocationConfig = {
+                syncUrl: @json(route('device-location.sync')),
+                isAuthenticated: @json(auth()->check()),
+                csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                storageKey: 'simansa_device_location',
+            };
+
+            let currentDeviceLocation = null;
+
+            function loadStoredDeviceLocation() {
+                try {
+                    const raw = window.localStorage.getItem(deviceLocationConfig.storageKey);
+                    if (!raw) {
+                        return null;
+                    }
+
+                    const parsed = JSON.parse(raw);
+                    if (!parsed || parsed.latitude === undefined || parsed.longitude === undefined) {
+                        return null;
+                    }
+
+                    return parsed;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function persistDeviceLocation(location) {
+                currentDeviceLocation = location;
+
+                try {
+                    window.localStorage.setItem(deviceLocationConfig.storageKey, JSON.stringify(location));
+                } catch (error) {
+                    // Ignore storage failures.
+                }
+            }
+
+            function applyDeviceLocationHeaders() {
+                if (!currentDeviceLocation) {
+                    return;
+                }
+
+                if (window.axios && window.axios.defaults && window.axios.defaults.headers) {
+                    window.axios.defaults.headers.common['X-Device-Latitude'] = currentDeviceLocation.latitude;
+                    window.axios.defaults.headers.common['X-Device-Longitude'] = currentDeviceLocation.longitude;
+                }
+            }
+
+            function appendDeviceLocationToForm(form) {
+                if (!form || !currentDeviceLocation) {
+                    return;
+                }
+
+                ['latitude', 'longitude'].forEach(function (field) {
+                    let input = form.querySelector('input[name="' + field + '"]');
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = field;
+                        form.appendChild(input);
+                    }
+
+                    input.value = currentDeviceLocation[field];
+                });
+            }
+
+            function syncDeviceLocationToSession() {
+                if (!deviceLocationConfig.isAuthenticated || !currentDeviceLocation || !window.fetch) {
+                    return;
+                }
+
+                window.fetch(deviceLocationConfig.syncUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': deviceLocationConfig.csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        latitude: currentDeviceLocation.latitude,
+                        longitude: currentDeviceLocation.longitude,
+                    }),
+                }).catch(function () {
+                    // Ignore sync failures and keep local state.
+                });
+            }
+
+            function activateDeviceLocation(location) {
+                persistDeviceLocation(location);
+                applyDeviceLocationHeaders();
+                syncDeviceLocationToSession();
+            }
+
+            function detectDeviceLocation() {
+                if (!navigator.geolocation) {
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        activateDeviceLocation({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            captured_at: new Date().toISOString(),
+                        });
+                    },
+                    function () {
+                        // Keep the last known coordinates if browser blocks location.
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+                );
+            }
+
             function appShowGlobalOverlay(title, subtitle) {
                 const overlay = document.getElementById('appGlobalOverlay');
                 if (!overlay) {
@@ -319,6 +433,15 @@
             }
 
             if (window.jQuery) {
+                window.jQuery(document).ajaxSend(function (_event, xhr) {
+                    if (!currentDeviceLocation) {
+                        return;
+                    }
+
+                    xhr.setRequestHeader('X-Device-Latitude', currentDeviceLocation.latitude);
+                    xhr.setRequestHeader('X-Device-Longitude', currentDeviceLocation.longitude);
+                });
+
                 window.jQuery(document).ajaxError(function (_event, xhr) {
                     if (xhr.status !== 419) {
                         return;
@@ -330,6 +453,10 @@
             }
 
             document.addEventListener('DOMContentLoaded', function () {
+                currentDeviceLocation = loadStoredDeviceLocation();
+                applyDeviceLocationHeaders();
+                detectDeviceLocation();
+
                 let formSubmitting = false;
 
                 document.addEventListener('click', function (event) {
@@ -372,6 +499,7 @@
                         return;
                     }
 
+                    appendDeviceLocationToForm(form);
                     formSubmitting = true;
                     appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan');
                 });

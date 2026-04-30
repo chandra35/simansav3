@@ -51,6 +51,7 @@ class AppSetting extends Model
         'smtp_from_address',
         'smtp_from_name',
         'smtp_enabled',
+        'activity_log_require_location',
     ];
 
     protected $casts = [
@@ -63,6 +64,7 @@ class AppSetting extends Model
         'logo_column_width' => 'integer',
         'smtp_port' => 'integer',
         'smtp_enabled' => 'boolean',
+        'activity_log_require_location' => 'boolean',
     ];
 
     protected $hidden = [
@@ -113,6 +115,7 @@ class AppSetting extends Model
                 'telepon' => '0000000000',
                 'email' => 'info@sekolah.sch.id',
                 'kop_mode' => 'builder',
+                'activity_log_require_location' => false,
             ]);
         }
         

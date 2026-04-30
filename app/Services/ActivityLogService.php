@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppSetting;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 use Jenssegers\Agent\Agent;
@@ -9,23 +10,24 @@ use Torann\GeoIP\Facades\GeoIP;
 
 class ActivityLogService
 {
+    private static ?bool $locationRequired = null;
+
     /**
      * Log activity with enhanced details
      */
     public static function log(array $data)
     {
         $agent = new Agent();
-        
+
         // Get real IP address (even behind proxy/cloudflare)
         $ip = self::getRealIpAddress();
-        
-        // Check if device location provided (from GPS)
-        $hasDeviceLocation = isset($data['latitude']) && isset($data['longitude']);
-        
-        // If device location provided, use reverse geocoding
+
+        $deviceLocation = self::resolveDeviceLocation($data);
+        $hasDeviceLocation = $deviceLocation !== null;
+
         if ($hasDeviceLocation) {
             try {
-                $location = self::reverseGeocode($data['latitude'], $data['longitude']);
+                $location = self::reverseGeocode($deviceLocation['latitude'], $deviceLocation['longitude']);
             } catch (\Exception $e) {
                 $location = null;
             }
@@ -47,7 +49,16 @@ class ActivityLogService
                 $location = null;
             }
         }
-        
+
+        $properties = is_array($data['properties'] ?? null) ? $data['properties'] : [];
+        $locationMeta = [
+            'required' => self::isLocationRequired(),
+            'source' => $deviceLocation['source'] ?? ($location ? 'geoip' : 'missing'),
+            'status' => self::buildLocationStatus($hasDeviceLocation, $location !== null),
+            'captured_at' => $deviceLocation['captured_at'] ?? null,
+        ];
+        $properties['location_meta'] = $locationMeta;
+
         $logData = array_merge([
             'user_id' => Auth::id(),
             'ip_address' => $ip,
@@ -73,8 +84,18 @@ class ActivityLogService
             // Request Info
             'url' => request()->fullUrl(),
             'method' => request()->method(),
+            'properties' => $properties,
+            'notes' => self::buildLocationNote($locationMeta),
         ], $data);
-        
+
+        if (!isset($data['properties'])) {
+            $logData['properties'] = $properties;
+        }
+
+        if (!isset($data['notes'])) {
+            $logData['notes'] = self::buildLocationNote($locationMeta);
+        }
+
         return ActivityLog::create($logData);
     }
     
@@ -343,7 +364,90 @@ class ActivityLogService
         } elseif (str_contains($browser, 'opera')) {
             return '<i class="fab fa-opera text-danger"></i>';
         }
-        
+
         return '<i class="fas fa-globe text-muted"></i>';
+    }
+
+    private static function resolveDeviceLocation(array $data): ?array
+    {
+        if (isset($data['latitude'], $data['longitude'])) {
+            return [
+                'latitude' => (float) $data['latitude'],
+                'longitude' => (float) $data['longitude'],
+                'source' => 'payload',
+                'captured_at' => now()->toIso8601String(),
+            ];
+        }
+
+        $request = request();
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            return [
+                'latitude' => (float) $request->input('latitude'),
+                'longitude' => (float) $request->input('longitude'),
+                'source' => 'request',
+                'captured_at' => now()->toIso8601String(),
+            ];
+        }
+
+        if ($request->headers->has('X-Device-Latitude') && $request->headers->has('X-Device-Longitude')) {
+            return [
+                'latitude' => (float) $request->header('X-Device-Latitude'),
+                'longitude' => (float) $request->header('X-Device-Longitude'),
+                'source' => 'header',
+                'captured_at' => now()->toIso8601String(),
+            ];
+        }
+
+        $sessionLocation = $request->session()->get('device_location');
+
+        if (!empty($sessionLocation['latitude']) && !empty($sessionLocation['longitude'])) {
+            return [
+                'latitude' => (float) $sessionLocation['latitude'],
+                'longitude' => (float) $sessionLocation['longitude'],
+                'source' => 'session',
+                'captured_at' => $sessionLocation['captured_at'] ?? null,
+            ];
+        }
+
+        return null;
+    }
+
+    private static function buildLocationStatus(bool $hasDeviceLocation, bool $hasResolvedLocation): string
+    {
+        if ($hasDeviceLocation) {
+            return 'device_location';
+        }
+
+        if ($hasResolvedLocation) {
+            return 'geoip_fallback';
+        }
+
+        return self::isLocationRequired() ? 'missing_required' : 'missing_optional';
+    }
+
+    private static function buildLocationNote(array $locationMeta): string
+    {
+        $requiredLabel = $locationMeta['required'] ? 'wajib' : 'opsional';
+
+        return sprintf(
+            'Lokasi %s | sumber: %s | status: %s',
+            $requiredLabel,
+            $locationMeta['source'] ?? 'missing',
+            $locationMeta['status'] ?? 'unknown'
+        );
+    }
+
+    private static function isLocationRequired(): bool
+    {
+        if (self::$locationRequired !== null) {
+            return self::$locationRequired;
+        }
+
+        self::$locationRequired = (bool) (AppSetting::query()
+            ->select('activity_log_require_location')
+            ->value('activity_log_require_location') ?? false);
+
+        return self::$locationRequired;
     }
 }

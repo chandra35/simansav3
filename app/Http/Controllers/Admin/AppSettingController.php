@@ -72,6 +72,7 @@ class AppSettingController extends Controller
             'logo_sekolah_height' => 'nullable|integer|min:50|max:300',
             'logo_display_height' => 'nullable|integer|min:30|max:100',
             'logo_column_width' => 'nullable|integer|min:8|max:20',
+            'activity_log_require_location' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -107,6 +108,7 @@ class AppSettingController extends Controller
                 'logo_sekolah_height',
                 'logo_display_height',
                 'logo_column_width',
+                'activity_log_require_location',
             ]));
             
             // Update kop_surat_config if provided

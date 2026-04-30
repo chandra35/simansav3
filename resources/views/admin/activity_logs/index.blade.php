@@ -446,6 +446,9 @@ function showDetail(id) {
                 if (log.region && log.region !== log.city) locationParts.push(log.region);
                 if (log.country) locationParts.push(log.country);
                 let locationStr = locationParts.join(', ') || 'Tidak diketahui';
+                let locationMeta = log.properties && log.properties.location_meta ? log.properties.location_meta : null;
+                let locationSource = locationMeta && locationMeta.source ? locationMeta.source : 'N/A';
+                let locationStatus = locationMeta && locationMeta.status ? locationMeta.status : 'N/A';
                 
                 // Map link
                 let mapLink = '';
@@ -570,6 +573,8 @@ function showDetail(id) {
                                         <tr><th>Negara</th><td>${log.country || 'N/A'} ${log.country_code ? '(' + log.country_code + ')' : ''}</td></tr>
                                         <tr><th>Kota</th><td>${log.city || 'N/A'}</td></tr>
                                         <tr><th>Koordinat</th><td>${log.latitude && log.longitude ? log.latitude + ', ' + log.longitude : 'N/A'}</td></tr>
+                                        <tr><th>Sumber Lokasi</th><td>${locationSource}</td></tr>
+                                        <tr><th>Status Lokasi</th><td>${locationStatus}</td></tr>
                                         <tr><th>Timezone</th><td>${log.timezone || 'N/A'}</td></tr>
                                         <tr><th>Peta</th><td>${mapLink || '<span class="text-muted">Tidak tersedia</span>'}</td></tr>
                                     </table>

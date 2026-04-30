@@ -1006,6 +1006,28 @@
             </div>
         </div>
 
+        <div class="card card-warning">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Audit Log Lokasi</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light border">
+                    Saat opsi ini aktif, semua aksi simpan, ubah, hapus, dan login akan meminta koordinat perangkat. Log tetap mencatat sumber lokasi agar bisa dibedakan antara GPS perangkat, sesi terakhir, atau fallback IP.
+                </div>
+
+                <div class="form-group mb-0">
+                    <label for="activity_log_require_location">Wajibkan lokasi perangkat pada aktivitas pengguna</label>
+                    <select name="activity_log_require_location" id="activity_log_require_location" class="form-control">
+                        <option value="0" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? '' : 'selected' }}>Tidak wajib</option>
+                        <option value="1" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? 'selected' : '' }}>Wajib</option>
+                    </select>
+                    <small class="text-muted">
+                        Jika wajib, request aksi yang tidak membawa lokasi perangkat akan ditolak sebelum data diproses.
+                    </small>
+                </div>
+            </div>
+        </div>
+
         {{-- Submit Button --}}
         <div class="card">
             <div class="card-body">

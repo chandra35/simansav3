@@ -2,9 +2,8 @@
 
 namespace App\Traits;
 
-use App\Models\ActivityLog;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
 
 trait HasActivityLog
 {
@@ -36,18 +35,16 @@ trait HasActivityLog
 
         $description = static::getActivityDescription($type, $model);
 
-        ActivityLog::create([
+        ActivityLogService::log([
             'user_id' => Auth::id(),
             'activity_type' => $type,
             'model_type' => get_class($model),
             'model_id' => $model->getKey(),
             'description' => $description,
-            'properties' => [
-                'old' => $old,
-                'new' => $new,
-            ],
-            'ip_address' => Request::ip(),
-            'user_agent' => Request::userAgent(),
+            'properties' => ['old' => $old, 'new' => $new],
+            'old_values' => $old,
+            'new_values' => $new,
+            'changed_fields' => is_array($new) ? array_keys($new) : null,
         ]);
     }
 
@@ -74,15 +71,13 @@ trait HasActivityLog
             return;
         }
 
-        ActivityLog::create([
+        ActivityLogService::log([
             'user_id' => Auth::id(),
             'activity_type' => $type,
             'model_type' => $model ? get_class($model) : null,
             'model_id' => $model ? $model->getKey() : null,
             'description' => $description,
             'properties' => null,
-            'ip_address' => Request::ip(),
-            'user_agent' => Request::userAgent(),
         ]);
     }
 }

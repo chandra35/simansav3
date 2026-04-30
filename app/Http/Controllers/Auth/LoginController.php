@@ -57,6 +57,11 @@ class LoginController extends Controller
             if ($request->filled('latitude') && $request->filled('longitude')) {
                 $logData['latitude'] = $request->latitude;
                 $logData['longitude'] = $request->longitude;
+                $request->session()->put('device_location', [
+                    'latitude' => (float) $request->latitude,
+                    'longitude' => (float) $request->longitude,
+                    'captured_at' => now()->toIso8601String(),
+                ]);
             }
             
             ActivityLogService::log(array_merge([

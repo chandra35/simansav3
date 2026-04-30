@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
             'exam.browser.client' => \App\Http\Middleware\EnsureSupportedExamBrowserClient::class,
+            'activity.location.required' => \App\Http\Middleware\EnsureDeviceLocationForActivity::class,
         ]);
         
         // Exclude ExaManmet API routes from CSRF verification
@@ -31,7 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Track user activity untuk authenticated users
         $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserActivity::class);
-        
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureDeviceLocationForActivity::class);
+
         // Force password change for siswa
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
     })
