@@ -85,9 +85,17 @@ class AuthServiceProvider extends ServiceProvider
             return !$user->hasRole('Siswa') &&
                 !$user->siswa()->exists() &&
                 (
-                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Madrasah', 'WAKA']) ||
+                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Wali Kelas', 'Kepala Madrasah', 'WAKA']) ||
                     in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk'])
                 );
+        });
+
+        Gate::define('kesiswaan-lulusan-access', function ($user) {
+            if ($user->hasRole('Wali Kelas') && !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])) {
+                return false;
+            }
+
+            return $user->can('view-siswa');
         });
     }
 }

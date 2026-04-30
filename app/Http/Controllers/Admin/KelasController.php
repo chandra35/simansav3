@@ -1186,6 +1186,16 @@ class KelasController extends Controller
     public function cetakAbsensi(Kelas $kelas)
     {
         $this->authorize('view-kelas');
+        $user = auth()->user();
+
+        if (
+            $user &&
+            $user->hasRole('Wali Kelas') &&
+            !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+            $kelas->wali_kelas_id !== $user->id
+        ) {
+            abort(403, 'Anda hanya dapat mencetak absensi untuk kelas yang Anda ampu.');
+        }
         
         // Increase memory limit for PDF generation
         ini_set('memory_limit', '256M');

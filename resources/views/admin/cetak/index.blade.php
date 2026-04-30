@@ -14,84 +14,89 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Cetak Absensi Kelas (Batch)</h3>
                 </div>
-                <form action="{{ route('admin.cetak.absensi-batch') }}" method="POST" id="formCetakAbsensi" target="_blank">
+                <form action="{{ route('admin.cetak.absensi-batch') }}" method="POST" id="formCetakAbsensi" target="printPreviewFrame">
                     @csrf
+                    @if($isRestrictedWaliKelas)
+                        <input type="hidden" name="tahun_pelajaran_id" id="filter_tahun_pelajaran" value="{{ $defaultTahunPelajaranId }}">
+                    @endif
                     <div class="card-body">
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> 
-                            <strong>Cetak Absensi Sekaligus</strong><br>
-                            Pilih filter untuk mencetak absensi beberapa kelas sekaligus. Setiap kelas akan dicetak dalam halaman terpisah dalam satu file PDF.
+                            <strong>{{ $isRestrictedWaliKelas ? 'Cetak Absensi Kelas Anda' : 'Cetak Absensi Sekaligus' }}</strong><br>
+                            {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih filter untuk mencetak absensi beberapa kelas sekaligus. Setiap kelas akan dicetak dalam halaman terpisah dalam satu file PDF.' }}
                         </div>
 
-                        {{-- Filter Section --}}
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="filter_tahun_pelajaran">
-                                        <i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control" required>
-                                        <option value="">-- Pilih Tahun Pelajaran --</option>
-                                        @foreach($tahunPelajarans as $tp)
-                                            <option value="{{ $tp->id }}" {{ $tp->is_active ? 'selected' : '' }}>
-                                                {{ $tp->nama }} {{ $tp->is_active ? '(Aktif)' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                        @unless($isRestrictedWaliKelas)
+                            {{-- Filter Section --}}
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter_tahun_pelajaran">
+                                            <i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control" required>
+                                            <option value="">-- Pilih Tahun Pelajaran --</option>
+                                            @foreach($tahunPelajarans as $tp)
+                                                <option value="{{ $tp->id }}" {{ $tp->is_active ? 'selected' : '' }}>
+                                                    {{ $tp->nama }} {{ $tp->is_active ? '(Aktif)' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter_tingkat">
+                                            <i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="tingkat" id="filter_tingkat" class="form-control" required>
+                                            <option value="">-- Pilih Tingkat --</option>
+                                            @foreach($tingkatOptions as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
+                                        <select name="jurusan_id" id="filter_jurusan" class="form-control">
+                                            <option value="">-- Semua Jurusan --</option>
+                                            @foreach($jurusans as $jurusan)
+                                                <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="filter_kurikulum"><i class="fas fa-book"></i> Kurikulum</label>
+                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control">
+                                            <option value="">-- Semua Kurikulum --</option>
+                                            @foreach($kurikulums as $kurikulum)
+                                                <option value="{{ $kurikulum->id }}">{{ $kurikulum->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="filter_tingkat">
-                                        <i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="tingkat" id="filter_tingkat" class="form-control" required>
-                                        <option value="">-- Pilih Tingkat --</option>
-                                        @foreach($tingkatOptions as $key => $label)
-                                            <option value="{{ $key }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-info" id="btnLoadKelas">
+                                        <i class="fas fa-search"></i> Cari Kelas
+                                    </button>
                                 </div>
                             </div>
-
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="filter_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
-                                    <select name="jurusan_id" id="filter_jurusan" class="form-control">
-                                        <option value="">-- Semua Jurusan --</option>
-                                        @foreach($jurusans as $jurusan)
-                                            <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="filter_kurikulum"><i class="fas fa-book"></i> Kurikulum</label>
-                                    <select name="kurikulum_id" id="filter_kurikulum" class="form-control">
-                                        <option value="">-- Semua Kurikulum --</option>
-                                        @foreach($kurikulums as $kurikulum)
-                                            <option value="{{ $kurikulum->id }}">{{ $kurikulum->nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="button" class="btn btn-info" id="btnLoadKelas">
-                                    <i class="fas fa-search"></i> Cari Kelas
-                                </button>
-                            </div>
-                        </div>
+                        @endunless
 
                         <hr>
 
                         {{-- Kelas List Section --}}
-                        <div id="kelasList" style="display: none;">
+                        <div id="kelasList" style="{{ $isRestrictedWaliKelas ? '' : 'display: none;' }}">
                             <h5><i class="fas fa-list"></i> Pilih Kelas yang Akan Dicetak</h5>
                             <div class="form-group">
                                 <div class="custom-control custom-checkbox">
@@ -178,19 +183,53 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="printPreviewModal" tabindex="-1" role="dialog" aria-labelledby="printPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printPreviewModalLabel"><i class="fas fa-file-pdf text-danger mr-1"></i> Preview Cetak</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0 position-relative">
+                    <div class="print-preview-loading" id="printPreviewLoading">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <div class="font-weight-bold">Menyiapkan preview PDF...</div>
+                            <div class="text-muted small">Gunakan toolbar PDF untuk print atau simpan.</div>
+                        </div>
+                    </div>
+                    <iframe name="printPreviewFrame" id="printPreviewFrame" class="print-preview-frame" title="Preview Cetak Absensi"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('js')
     <script>
         $(document).ready(function() {
-            // Load Kelas by Filter
-            $('#btnLoadKelas').on('click', function() {
+            const isRestrictedWaliKelas = @json($isRestrictedWaliKelas);
+            let previewPending = false;
+
+            function loadKelasByCurrentContext() {
                 const tahunPelajaran = $('#filter_tahun_pelajaran').val();
                 const tingkat = $('#filter_tingkat').val();
                 const jurusan = $('#filter_jurusan').val();
                 const kurikulum = $('#filter_kurikulum').val();
 
-                if (!tahunPelajaran || !tingkat) {
+                if (!tahunPelajaran) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tahun Pelajaran Belum Tersedia',
+                        text: 'Tahun pelajaran aktif belum ditemukan.'
+                    });
+                    return;
+                }
+
+                if (!isRestrictedWaliKelas && !tingkat) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Filter Belum Lengkap',
@@ -235,6 +274,11 @@
                         $('#btnLoadKelas').prop('disabled', false).html('<i class="fas fa-search"></i> Cari Kelas');
                     }
                 });
+            }
+
+            // Load Kelas by Filter
+            $('#btnLoadKelas').on('click', function() {
+                loadKelasByCurrentContext();
             });
 
             // Render Kelas List
@@ -310,22 +354,36 @@
                     });
                     return false;
                 }
-                
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Sedang Mencetak...',
-                    text: `Mencetak ${count} kelas. Mohon tunggu...`,
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Auto close after 3 seconds
-                setTimeout(function() {
-                    Swal.close();
-                }, 3000);
+
+                $('#btnCetak')
+                    .prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...');
+
+                previewPending = true;
+                $('#printPreviewLoading').show();
+                $('#printPreviewModal').modal('show');
+            });
+
+            if (isRestrictedWaliKelas) {
+                loadKelasByCurrentContext();
+            }
+
+            $('#printPreviewFrame').on('load', function() {
+                if (!previewPending) {
+                    return;
+                }
+
+                previewPending = false;
+                $('#printPreviewLoading').hide();
+                $('#btnCetak')
+                    .prop('disabled', false)
+                    .html('<i class="fas fa-print"></i> Cetak Absensi');
+            });
+
+            $('#printPreviewModal').on('hidden.bs.modal', function() {
+                previewPending = false;
+                $('#printPreviewFrame').attr('src', 'about:blank');
+                $('#printPreviewLoading').show();
             });
         });
     </script>
@@ -333,6 +391,21 @@
 
 @section('css')
     <style>
+        .print-preview-frame {
+            width: 100%;
+            height: 78vh;
+            border: 0;
+            background: #f4f6f9;
+        }
+        .print-preview-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.92);
+            z-index: 2;
+        }
         .small-box.disabled {
             opacity: 0.6;
             cursor: not-allowed;

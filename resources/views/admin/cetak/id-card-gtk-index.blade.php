@@ -13,7 +13,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-badge"></i> Cetak Kartu Identitas GTK</h3>
                 </div>
-                <form action="{{ route('admin.cetak.id-card-gtk') }}" method="POST" id="formCetakIdGtk" target="_blank">
+                <form action="{{ route('admin.cetak.id-card-gtk') }}" method="POST" id="formCetakIdGtk" target="printPreviewFrame">
                     @csrf
                     <div class="card-body">
                         <div class="alert alert-warning">
@@ -90,11 +90,36 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="printPreviewModal" tabindex="-1" role="dialog" aria-labelledby="printPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printPreviewModalLabel"><i class="fas fa-file-pdf text-danger mr-1"></i> Preview ID Card GTK</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0 position-relative">
+                    <div class="print-preview-loading" id="printPreviewLoading">
+                        <div class="text-center">
+                            <div class="spinner-border text-warning mb-3" role="status"></div>
+                            <div class="font-weight-bold">Menyiapkan preview PDF...</div>
+                            <div class="text-muted small">Gunakan toolbar PDF untuk print atau simpan.</div>
+                        </div>
+                    </div>
+                    <iframe name="printPreviewFrame" id="printPreviewFrame" class="print-preview-frame" title="Preview ID Card GTK"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('js')
 <script>
 $(document).ready(function() {
+    let previewPending = false;
+
     $('#btnLoadGtk').on('click', function() {
         const kategori = $('#id_gtk_kategori').val();
         const status = $('#id_gtk_status').val();
@@ -167,8 +192,30 @@ $(document).ready(function() {
     $('#formCetakIdGtk').on('submit', function(e) {
         const count = $('.gtk-checkbox:checked').length;
         if (count === 0) { e.preventDefault(); return false; }
-        Swal.fire({ icon: 'info', title: 'Sedang Mencetak...', text: `Mencetak ID Card untuk ${count} GTK. Mohon tunggu...`, allowOutsideClick: false, showConfirmButton: false, willOpen: () => { Swal.showLoading(); } });
-        setTimeout(function() { Swal.close(); }, 5000);
+        $('#btnCetak')
+            .prop('disabled', true)
+            .html('<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...');
+        previewPending = true;
+        $('#printPreviewLoading').show();
+        $('#printPreviewModal').modal('show');
+    });
+
+    $('#printPreviewFrame').on('load', function() {
+        if (!previewPending) {
+            return;
+        }
+
+        previewPending = false;
+        $('#printPreviewLoading').hide();
+        $('#btnCetak')
+            .prop('disabled', false)
+            .html('<i class="fas fa-id-badge"></i> Cetak ID Card GTK');
+    });
+
+    $('#printPreviewModal').on('hidden.bs.modal', function() {
+        previewPending = false;
+        $('#printPreviewFrame').attr('src', 'about:blank');
+        $('#printPreviewLoading').show();
     });
 });
 </script>
@@ -176,6 +223,21 @@ $(document).ready(function() {
 
 @section('css')
 <style>
+    .print-preview-frame {
+        width: 100%;
+        height: 78vh;
+        border: 0;
+        background: #f4f6f9;
+    }
+    .print-preview-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.92);
+        z-index: 2;
+    }
     .custom-control-label { cursor: pointer; }
 </style>
 @stop

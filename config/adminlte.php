@@ -525,7 +525,7 @@ return [
                     'text' => 'Lulusan',
                     'route' => 'admin.lulusan.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
-                    'can' => 'view-siswa',
+                    'can' => 'kesiswaan-lulusan-access',
                     'active' => ['admin/lulusan*'],
                 ],
             ],
@@ -565,6 +565,13 @@ return [
                     'icon' => 'fas fa-fw fa-user-shield',
                     'can' => 'face-registration-access',
                     'active' => ['admin/absensi/face-register*'],
+                ],
+                [
+                    'text' => 'Absensi Siswa',
+                    'route' => 'admin.absensi-siswa.index',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'view-kelas',
+                    'active' => ['admin/absensi-siswa*'],
                 ],
                 [
                     'text' => 'Verifikasi Wajah',

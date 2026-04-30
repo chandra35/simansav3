@@ -106,12 +106,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/sekolah-asal', [App\Http\Controllers\Admin\SekolahAsalController::class, 'index'])->name('sekolah-asal.index');
         Route::get('/sekolah-asal/{npsn}', [App\Http\Controllers\Admin\SekolahAsalController::class, 'show'])->name('sekolah-asal.show');
         Route::get('/sekolah-asal/{npsn}/siswa-data', [App\Http\Controllers\Admin\SekolahAsalController::class, 'getSiswaData'])->name('sekolah-asal.siswa-data');
-        Route::get('/lulusan', [App\Http\Controllers\Admin\LulusanController::class, 'index'])->name('lulusan.index');
-        Route::get('/lulusan/data', [App\Http\Controllers\Admin\LulusanController::class, 'data'])->name('lulusan.data');
-        Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
-        Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
-        Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
-        Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
+        Route::middleware(['can:kesiswaan-lulusan-access'])->group(function () {
+            Route::get('/lulusan', [App\Http\Controllers\Admin\LulusanController::class, 'index'])->name('lulusan.index');
+            Route::get('/lulusan/data', [App\Http\Controllers\Admin\LulusanController::class, 'data'])->name('lulusan.data');
+            Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
+            Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
+            Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
+            Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
+        });
     });
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'index'])->name('referensi-perguruan-tinggi.index');
@@ -629,6 +631,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Absensi Input & Edit
     Route::middleware(['permission:create-absensi'])->group(function () {
         Route::post('/absensi/manual', [App\Http\Controllers\Admin\AbsensiController::class, 'manualInput'])->name('absensi.manual');
+    });
+
+    Route::middleware(['permission:view-kelas'])->group(function () {
+        Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
+        Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
     });
 
     Route::middleware(['permission:edit-absensi'])->group(function () {

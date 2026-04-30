@@ -28,12 +28,17 @@ class CetakController extends Controller
         $kurikulums = Kurikulum::where('is_active', true)->get();
         $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
+        $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
+        $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
+            ?? optional($tahunPelajarans->first())->id;
         
         return view('admin.cetak.index', compact(
             'tahunPelajarans',
             'kurikulums',
             'jurusans',
-            'tingkatOptions'
+            'tingkatOptions',
+            'isRestrictedWaliKelas',
+            'defaultTahunPelajaranId'
         ));
     }
 
@@ -47,11 +52,16 @@ class CetakController extends Controller
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
+        $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
+        $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
+            ?? optional($tahunPelajarans->first())->id;
 
         return view('admin.cetak.id-card-siswa-index', compact(
             'tahunPelajarans',
             'jurusans',
-            'tingkatOptions'
+            'tingkatOptions',
+            'isRestrictedWaliKelas',
+            'defaultTahunPelajaranId'
         ));
     }
 
@@ -95,6 +105,7 @@ class CetakController extends Controller
                   ->orderBy('nama_lengkap');
             }
         ]);
+        $this->applyWaliKelasScope($query, $request->user());
         
         // Apply filters
         if ($tahunPelajaranId) {
@@ -196,6 +207,7 @@ class CetakController extends Controller
         $this->authorize('view-kelas');
         
         $query = Kelas::with(['tahunPelajaran', 'jurusan'])->withCount('siswaAktif');
+        $this->applyWaliKelasScope($query, $request->user());
         
         if ($request->filled('tahun_pelajaran_id')) {
             $query->where('tahun_pelajaran_id', $request->tahun_pelajaran_id);
@@ -247,7 +259,7 @@ class CetakController extends Controller
             return redirect()->back()->with('error', 'Pilih minimal 1 kelas.');
         }
 
-        $kelasList = Kelas::with([
+        $query = Kelas::with([
             'jurusan',
             'tahunPelajaran',
             'siswas' => function ($q) use ($tahunPelajaranId) {
@@ -255,10 +267,12 @@ class CetakController extends Controller
                   ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
                   ->orderBy('nama_lengkap');
             }
-        ])->whereIn('id', $kelasIds)
-          ->orderBy('tingkat')
-          ->orderBy('nama_kelas')
-          ->get();
+        ])->whereIn('id', $kelasIds);
+        $this->applyWaliKelasScope($query, $request->user());
+
+        $kelasList = $query->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
         if ($kelasList->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada kelas yang ditemukan.');
@@ -294,6 +308,35 @@ class CetakController extends Controller
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream('ID_Card_Siswa.pdf');
+    }
+
+    protected function applyWaliKelasScope($query, $user): void
+    {
+        if (!$this->isRestrictedWaliKelas($user)) {
+            return;
+        }
+
+        $kelasIds = $this->getAssignedKelasIds($user);
+        if ($kelasIds->isEmpty()) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        $query->whereIn('id', $kelasIds);
+    }
+
+    protected function isRestrictedWaliKelas($user): bool
+    {
+        return $user &&
+            $user->hasRole('Wali Kelas') &&
+            !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
+    }
+
+    protected function getAssignedKelasIds($user)
+    {
+        return Kelas::query()
+            ->where('wali_kelas_id', $user->id)
+            ->pluck('id');
     }
 
     /**
