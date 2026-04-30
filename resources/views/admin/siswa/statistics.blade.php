@@ -1,0 +1,1075 @@
+@extends('adminlte::page')
+
+@section('title', 'Statistik Siswa - SIMANSA')
+
+@section('content_header')
+    <div class="simansa-stat-hero">
+        <div class="simansa-stat-hero__main">
+            <div class="simansa-stat-hero__eyebrow">
+                <i class="fas fa-chart-pie"></i>
+                Manajemen Data
+            </div>
+            <h1 class="simansa-stat-hero__title">Statistik Siswa</h1>
+            <p class="simansa-stat-hero__subtitle">
+                Pantau kelengkapan biodata, status login, sebaran domisili, dan sebaran asal sekolah dari satu tampilan analitik.
+            </p>
+        </div>
+        <div class="simansa-stat-hero__meta">
+            <div class="simansa-stat-hero-chip">
+                <span class="simansa-stat-hero-chip__label">Sudah Login</span>
+                <span class="simansa-stat-hero-chip__value">{{ number_format($kpi['sudah_login']) }}</span>
+            </div>
+            <div class="simansa-stat-hero-chip">
+                <span class="simansa-stat-hero-chip__label">Belum Pernah Login</span>
+                <span class="simansa-stat-hero-chip__value">{{ number_format($kpi['belum_pernah_login']) }}</span>
+            </div>
+        </div>
+    </div>
+@stop
+
+@section('content')
+<div class="row">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-kpi simansa-kpi--blue">
+            <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
+            <div class="simansa-kpi__body">
+                <div class="simansa-kpi__label">Total Siswa</div>
+                <div class="simansa-kpi__value">{{ number_format($kpi['total_siswa']) }}</div>
+                <div class="simansa-kpi__desc">Seluruh siswa yang saat ini tercatat di SIMANSA.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-kpi simansa-kpi--green">
+            <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
+            <div class="simansa-kpi__body">
+                <div class="simansa-kpi__label">Data Lengkap</div>
+                <div class="simansa-kpi__value">{{ number_format($kpi['data_lengkap']) }}</div>
+                <div class="simansa-kpi__desc">Data diri dan data orang tua sudah lengkap.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-kpi simansa-kpi--amber">
+            <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
+            <div class="simansa-kpi__body">
+                <div class="simansa-kpi__label">Sudah Login</div>
+                <div class="simansa-kpi__value">{{ number_format($kpi['sudah_login']) }}</div>
+                <div class="simansa-kpi__desc">Sudah pernah tercatat login ke sistem.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-kpi simansa-kpi--rose">
+            <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
+            <div class="simansa-kpi__body">
+                <div class="simansa-kpi__label">Belum Pernah Login</div>
+                <div class="simansa-kpi__value">{{ number_format($kpi['belum_pernah_login']) }}</div>
+                <div class="simansa-kpi__desc">Akun aktif tetapi belum pernah punya riwayat login.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-7 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Ringkasan Operasional</h3>
+                    <p>Perbandingan status akun dan kelengkapan data siswa.</p>
+                </div>
+            </div>
+            <div class="simansa-chart-grid simansa-chart-grid--summary">
+                <div class="simansa-chart-panel">
+                    <h4>Status Kelengkapan</h4>
+                    <div class="simansa-chart-canvas simansa-chart-canvas--compact">
+                        <canvas id="completionChart"></canvas>
+                    </div>
+                </div>
+                <div class="simansa-chart-panel">
+                    <h4>Status Login</h4>
+                    <div class="simansa-chart-canvas simansa-chart-canvas--compact">
+                        <canvas id="loginChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-xl-5 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Asal Sekolah</h3>
+                    <p>Proporsi asal siswa berdasarkan bentuk pendidikan sekolah.</p>
+                </div>
+            </div>
+            <div class="simansa-chart-panel simansa-chart-panel--full">
+                <h4>Distribusi SMP / MTs / Lainnya</h4>
+                <div class="simansa-chart-canvas simansa-chart-canvas--education">
+                    <canvas id="educationSpreadChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-7 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Sebaran Alamat</h3>
+                    <p>Wilayah domisili siswa berdasarkan alamat siswa atau alamat orang tua yang dipakai.</p>
+                </div>
+            </div>
+            <div class="simansa-chart-grid">
+                <div class="simansa-chart-panel">
+                    <h4>Kabupaten / Kota Terbanyak</h4>
+                    <div class="simansa-chart-canvas simansa-chart-canvas--wide">
+                        <canvas id="addressCityChart"></canvas>
+                    </div>
+                </div>
+                <div class="simansa-chart-panel">
+                    <h4>Kecamatan Terbanyak</h4>
+                    <div class="simansa-chart-canvas simansa-chart-canvas--wide">
+                        <canvas id="addressDistrictChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-xl-5 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Wilayah Asal Sekolah</h3>
+                    <p>Kota/kabupaten asal sekolah yang paling banyak menyumbang siswa.</p>
+                </div>
+            </div>
+            <div class="simansa-chart-panel simansa-chart-panel--full">
+                <h4>Sebaran Kota Asal Sekolah</h4>
+                <div class="simansa-chart-canvas simansa-chart-canvas--wide">
+                    <canvas id="schoolCityChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-8 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Peta Sebaran</h3>
+                    <p>Marker dihasilkan dari agregasi wilayah domisili dan sekolah asal yang paling dominan.</p>
+                </div>
+                <div class="simansa-map-toggles">
+                    <button type="button" class="btn btn-sm btn-primary" id="toggleAddressLayer">Alamat</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleSchoolLayer">Asal Sekolah</button>
+                </div>
+            </div>
+            <div id="studentSpreadMap" class="simansa-map"></div>
+            <div class="simansa-map-note">
+                Geolokasi peta menggunakan hasil geocoding nama wilayah/sekolah. Jika ada titik yang belum muncul, biasanya karena lokasi belum berhasil dikenali secara publik.
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-xl-4 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Provinsi Teratas</h3>
+                    <p>Wilayah provinsi domisili dengan jumlah siswa terbanyak.</p>
+                </div>
+            </div>
+            <div class="simansa-list-panel simansa-list-panel--scroll">
+                @forelse($addressProvinceSpread as $index => $item)
+                    <div class="simansa-list-row">
+                        <div class="simansa-list-rank">{{ $index + 1 }}</div>
+                        <div class="simansa-list-copy">
+                            <div class="simansa-list-title">{{ $item['name'] }}</div>
+                            <div class="simansa-list-subtitle">{{ number_format($item['count']) }} siswa</div>
+                        </div>
+                        <a href="{{ route('admin.siswa.index', ['address_scope' => 'province', 'address_name' => $item['name']]) }}" class="btn btn-xs btn-outline-primary ml-auto">
+                            Lihat Siswa
+                        </a>
+                    </div>
+                @empty
+                    <div class="simansa-empty-state">Belum ada data wilayah provinsi yang bisa diringkas.</div>
+                @endforelse
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-7 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Sekolah Terbanyak</h3>
+                    <p>Daftar sekolah asal dengan jumlah siswa tertinggi.</p>
+                </div>
+            </div>
+            <div class="table-responsive simansa-table-shell">
+                <table class="table table-hover simansa-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Sekolah</th>
+                            <th>Bentuk</th>
+                            <th>Wilayah</th>
+                            <th class="text-right">Jumlah</th>
+                            <th class="text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($topSchools as $index => $school)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="simansa-table-title">{{ $school['school_name'] }}</div>
+                                    <div class="simansa-table-subtitle">NPSN: {{ $school['npsn'] ?: '-' }}</div>
+                                </td>
+                                <td>{{ $school['education_form'] }}</td>
+                                <td>{{ collect([$school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
+                                <td class="text-right font-weight-bold">{{ number_format($school['count']) }}</td>
+                                <td class="text-right">
+                                    <a href="{{ route('admin.siswa.index', ['school_npsn' => $school['npsn'], 'school_name' => $school['school_name'], 'education_form' => $school['education_form'], 'school_city_name' => $school['city_name'], 'school_province_name' => $school['province_name']]) }}" class="btn btn-xs btn-outline-primary">
+                                        Lihat Siswa
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Belum ada data asal sekolah yang bisa ditampilkan.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-12 col-xl-5 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>Kota Domisili Teratas</h3>
+                    <p>Wilayah alamat siswa paling dominan untuk pemetaan sebaran.</p>
+                </div>
+            </div>
+            <div class="table-responsive simansa-table-shell">
+                <table class="table table-hover simansa-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Kabupaten / Kota</th>
+                            <th>Provinsi</th>
+                            <th class="text-right">Jumlah</th>
+                            <th class="text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($addressCitySpread as $index => $city)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td class="simansa-table-title">{{ $city['name'] }}</td>
+                                <td>{{ $city['province_name'] ?: '-' }}</td>
+                                <td class="text-right font-weight-bold">{{ number_format($city['count']) }}</td>
+                                <td class="text-right">
+                                    <a href="{{ route('admin.siswa.index', ['address_scope' => 'city', 'address_name' => $city['name'], 'province_name' => $city['province_name']]) }}" class="btn btn-xs btn-outline-primary">
+                                        Lihat Siswa
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Belum ada data alamat yang cukup untuk ditampilkan.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+@stop
+
+@section('css')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        .simansa-stat-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 1.25rem;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #0f4c81 0%, #2563eb 55%, #60a5fa 100%);
+            color: #fff;
+            box-shadow: 0 22px 48px rgba(37, 99, 235, 0.24);
+        }
+
+        .simansa-stat-hero__main {
+            max-width: 760px;
+        }
+
+        .simansa-stat-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            margin-bottom: 0.85rem;
+        }
+
+        .simansa-stat-hero__title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+        }
+
+        .simansa-stat-hero__subtitle {
+            margin-bottom: 0;
+            color: rgba(255, 255, 255, 0.88);
+            line-height: 1.65;
+            max-width: 650px;
+        }
+
+        .simansa-stat-hero__meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+            min-width: 280px;
+        }
+
+        .simansa-stat-hero-chip {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+        }
+
+        .simansa-stat-hero-chip__label {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.74);
+            margin-bottom: 0.35rem;
+        }
+
+        .simansa-stat-hero-chip__value {
+            font-size: 1.55rem;
+            font-weight: 700;
+        }
+
+        .simansa-kpi {
+            display: flex;
+            gap: 0.95rem;
+            min-height: 168px;
+            padding: 1rem;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        .simansa-kpi__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .simansa-kpi__label {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-bottom: 0.35rem;
+        }
+
+        .simansa-kpi__value {
+            font-size: 1.8rem;
+            line-height: 1.1;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.45rem;
+        }
+
+        .simansa-kpi__desc {
+            color: #64748b;
+            line-height: 1.55;
+            font-size: 0.9rem;
+        }
+
+        .simansa-kpi--blue .simansa-kpi__icon { background: #dbeafe; color: #1d4ed8; }
+        .simansa-kpi--green .simansa-kpi__icon { background: #dcfce7; color: #15803d; }
+        .simansa-kpi--amber .simansa-kpi__icon { background: #fef3c7; color: #b45309; }
+        .simansa-kpi--rose .simansa-kpi__icon { background: #ffe4e6; color: #be123c; }
+
+        .simansa-analytics-section {
+            padding: 1.1rem;
+            border-radius: 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+            height: 100%;
+        }
+
+        .simansa-section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .simansa-section-head h3 {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.3rem;
+        }
+
+        .simansa-section-head p {
+            color: #64748b;
+            line-height: 1.55;
+            margin-bottom: 0;
+            max-width: 720px;
+        }
+
+        .simansa-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .simansa-chart-grid--summary {
+            align-items: stretch;
+        }
+
+        .simansa-chart-panel,
+        .simansa-list-panel {
+            padding: 1rem;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid #e5edf7;
+            height: 100%;
+        }
+
+        .simansa-chart-panel--full {
+            min-height: 100%;
+        }
+
+        .simansa-chart-panel h4 {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.85rem;
+        }
+
+        .simansa-chart-canvas {
+            position: relative;
+            width: 100%;
+        }
+
+        .simansa-chart-canvas canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .simansa-chart-canvas--compact {
+            height: 240px;
+        }
+
+        .simansa-chart-canvas--wide {
+            height: 300px;
+        }
+
+        .simansa-chart-canvas--education {
+            height: 320px;
+            max-height: 320px;
+            overflow: hidden;
+        }
+
+        .simansa-list-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid #e5edf7;
+        }
+
+        .simansa-list-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .simansa-list-rank {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .simansa-list-title {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .simansa-list-subtitle {
+            color: #64748b;
+            font-size: 0.88rem;
+            margin-top: 0.15rem;
+        }
+
+        .simansa-map {
+            width: 100%;
+            height: 460px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #d9e3f0;
+        }
+
+        .simansa-map-note {
+            margin-top: 0.85rem;
+            color: #64748b;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .simansa-map-toggles {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .simansa-table thead th {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            border-top: 0;
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            z-index: 2;
+        }
+
+        .simansa-table-title {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .simansa-table-subtitle {
+            color: #64748b;
+            font-size: 0.84rem;
+            margin-top: 0.15rem;
+        }
+
+        .simansa-empty-state {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .simansa-table-shell,
+        .simansa-list-panel--scroll {
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .simansa-table-shell {
+            border: 1px solid #e5edf7;
+            border-radius: 18px;
+            background: #f8fafc;
+            padding: 0;
+        }
+
+        .simansa-table {
+            margin-bottom: 0;
+        }
+
+        .simansa-table td,
+        .simansa-table th {
+            white-space: normal;
+            vertical-align: top;
+        }
+
+        .simansa-table td {
+            padding-top: 0.85rem;
+            padding-bottom: 0.85rem;
+        }
+
+        .simansa-list-panel--scroll {
+            scrollbar-gutter: stable;
+        }
+
+        @media (min-width: 1200px) {
+            .simansa-chart-panel--full {
+                min-height: 360px;
+            }
+
+            .simansa-table-shell {
+                max-height: 560px;
+            }
+
+            .simansa-list-panel--scroll {
+                max-height: 560px;
+            }
+
+            .simansa-chart-canvas--education {
+                height: 340px;
+                max-height: 340px;
+            }
+        }
+
+        @media (max-width: 1199.98px) {
+            .simansa-stat-hero {
+                flex-direction: column;
+            }
+
+            .simansa-stat-hero__meta {
+                min-width: 0;
+            }
+
+            .simansa-table-shell,
+            .simansa-list-panel--scroll {
+                max-height: none;
+                overflow: visible;
+            }
+
+            .simansa-chart-canvas--education,
+            .simansa-chart-canvas--wide {
+                height: 280px;
+                max-height: 280px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .simansa-stat-hero,
+            .simansa-analytics-section,
+            .simansa-kpi {
+                border-radius: 18px;
+            }
+
+            .simansa-stat-hero {
+                padding: 1rem;
+            }
+
+            .simansa-stat-hero__title {
+                font-size: 1.6rem;
+            }
+
+            .simansa-stat-hero__meta,
+            .simansa-chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .simansa-analytics-section,
+            .simansa-chart-panel,
+            .simansa-list-panel {
+                padding: 0.95rem;
+            }
+
+            .simansa-map {
+                height: 360px;
+            }
+
+            .simansa-chart-canvas--compact {
+                height: 220px;
+            }
+
+            .simansa-chart-canvas--education,
+            .simansa-chart-canvas--wide {
+                height: 260px;
+                max-height: 260px;
+            }
+        }
+    </style>
+@stop
+
+@section('js')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const completionData = @json([
+            'Lengkap' => $kpi['data_lengkap'],
+            'Belum Lengkap' => $kpi['belum_lengkap'],
+        ]);
+        const loginData = @json([
+            'Sudah Login' => $kpi['sudah_login'],
+            'Belum Pernah Login' => $kpi['belum_pernah_login'],
+        ]);
+        const educationSpread = @json($educationSpread);
+        const addressCitySpread = @json($addressCitySpread);
+        const addressDistrictSpread = @json($addressDistrictSpread);
+        const schoolCitySpread = @json($schoolCitySpread);
+        const mapAddressPoints = @json($mapAddressPoints);
+        const mapSchoolPoints = @json($mapSchoolPoints);
+        const siswaIndexBaseUrl = @json(route('admin.siswa.index'));
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('id-ID').format(value || 0);
+        }
+
+        function navigateToStudentList(params) {
+            const url = new URL(siswaIndexBaseUrl, window.location.origin);
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    url.searchParams.set(key, value);
+                }
+            });
+            window.location.href = url.toString();
+        }
+
+        function buildBarChart(canvasId, labels, values, color, horizontal = false) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx || typeof Chart === 'undefined') return null;
+
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: color,
+                        borderRadius: 10,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: horizontal ? 'y' : 'x',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + formatNumber(context.raw) + ' siswa';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(148, 163, 184, 0.15)' }
+                        },
+                        y: {
+                            ticks: { color: '#64748b', precision: 0 },
+                            grid: { color: 'rgba(148, 163, 184, 0.15)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function buildDoughnutChart(canvasId, source, colors) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx || typeof Chart === 'undefined') return null;
+
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(source),
+                    datasets: [{
+                        data: Object.values(source),
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + formatNumber(context.raw) + ' siswa';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '66%'
+                }
+            });
+        }
+
+        function cacheKey(query) {
+            return 'simansa-geocode-' + btoa(unescape(encodeURIComponent(query))).replace(/=/g, '');
+        }
+
+        function isValidCoordinatePair(lat, lon) {
+            return Number.isFinite(lat)
+                && Number.isFinite(lon)
+                && lat >= -90
+                && lat <= 90
+                && lon >= -180
+                && lon <= 180;
+        }
+
+        async function geocodePoint(point) {
+            const key = cacheKey(point.location_query);
+            const cached = localStorage.getItem(key);
+            if (cached) {
+                try {
+                    const payload = JSON.parse(cached);
+                    if (isValidCoordinatePair(payload.lat, payload.lon)) {
+                        return payload;
+                    }
+
+                    localStorage.removeItem(key);
+                } catch (error) {
+                    localStorage.removeItem(key);
+                }
+            }
+
+            const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(point.location_query)}`;
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const result = await response.json();
+            if (!result.length) {
+                return null;
+            }
+
+            const payload = {
+                lat: parseFloat(result[0].lat),
+                lon: parseFloat(result[0].lon),
+                display_name: result[0].display_name
+            };
+
+            if (!isValidCoordinatePair(payload.lat, payload.lon)) {
+                return null;
+            }
+
+            localStorage.setItem(key, JSON.stringify(payload));
+            return payload;
+        }
+
+        function markerStyle(type, count) {
+            const radius = Math.max(10, Math.min(26, 10 + Math.round((count || 1) / 4)));
+            return {
+                radius: radius,
+                fillColor: type === 'sekolah' ? '#14b8a6' : '#2563eb',
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.82
+            };
+        }
+
+        function fitLayerBounds(map, layer, maxFitBoundsZoom) {
+            const bounds = layer.getBounds();
+            if (!bounds.isValid()) {
+                return;
+            }
+
+            const northEast = bounds.getNorthEast();
+            const southWest = bounds.getSouthWest();
+            const samePoint = northEast.lat === southWest.lat && northEast.lng === southWest.lng;
+
+            if (samePoint) {
+                map.setView([northEast.lat, northEast.lng], Math.min(maxFitBoundsZoom, 11));
+                return;
+            }
+
+            map.fitBounds(bounds.pad(0.2), {
+                maxZoom: maxFitBoundsZoom,
+                animate: false
+            });
+        }
+
+        async function populateLayer(map, points, layer, typeLabel, activeLayer, maxFitBoundsZoom) {
+            for (const point of points) {
+                try {
+                    const location = await geocodePoint(point);
+                    if (!location || !isValidCoordinatePair(location.lat, location.lon)) {
+                        continue;
+                    }
+
+                    const marker = L.circleMarker([location.lat, location.lon], markerStyle(point.type, point.count));
+                    marker.bindPopup(`
+                        <div style="min-width:220px">
+                            <strong>${point.label}</strong><br>
+                            <span>${typeLabel}</span><br>
+                            <span>Jumlah: <strong>${formatNumber(point.count)}</strong> siswa</span><br>
+                            <small class="text-muted">${location.display_name}</small>
+                        </div>
+                    `);
+                    layer.addLayer(marker);
+                } catch (error) {
+                    console.warn('Geocoding gagal untuk', point.location_query, error);
+                }
+            }
+
+            if (activeLayer === (typeLabel === 'Alamat Domisili' ? 'address' : 'school')) {
+                fitLayerBounds(map, layer, maxFitBoundsZoom);
+            }
+        }
+
+        function bindChartDrilldown(canvasId, chart, sourceItems, buildParams) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !chart) {
+                return;
+            }
+
+            canvas.addEventListener('click', function(event) {
+                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true) || [];
+                if (!points.length) return;
+
+                const item = sourceItems[points[0].index];
+                if (!item) return;
+
+                navigateToStudentList(buildParams(item));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const completionChart = buildDoughnutChart('completionChart', completionData, ['#10b981', '#f59e0b']);
+            const loginChart = buildDoughnutChart('loginChart', loginData, ['#2563eb', '#f43f5e']);
+
+            const educationChartItems = educationSpread;
+            const addressCityChartItems = addressCitySpread.slice(0, 10);
+            const addressDistrictChartItems = addressDistrictSpread.slice(0, 10);
+            const schoolCityChartItems = schoolCitySpread.slice(0, 10);
+
+            const educationChart = buildBarChart(
+                'educationSpreadChart',
+                educationChartItems.map(item => item.label),
+                educationChartItems.map(item => item.count),
+                ['#2563eb', '#06b6d4', '#8b5cf6', '#22c55e', '#f59e0b'],
+                true
+            );
+
+            const addressCityChart = buildBarChart(
+                'addressCityChart',
+                addressCityChartItems.map(item => item.name),
+                addressCityChartItems.map(item => item.count),
+                '#0ea5e9',
+                true
+            );
+
+            const addressDistrictChart = buildBarChart(
+                'addressDistrictChart',
+                addressDistrictChartItems.map(item => item.name),
+                addressDistrictChartItems.map(item => item.count),
+                '#8b5cf6',
+                true
+            );
+
+            const schoolCityChart = buildBarChart(
+                'schoolCityChart',
+                schoolCityChartItems.map(item => item.name),
+                schoolCityChartItems.map(item => item.count),
+                '#14b8a6',
+                true
+            );
+
+            bindChartDrilldown('educationSpreadChart', educationChart, educationChartItems, function(item) {
+                return { education_form: item.label };
+            });
+
+            bindChartDrilldown('addressCityChart', addressCityChart, addressCityChartItems, function(item) {
+                return { address_scope: 'city', address_name: item.name, province_name: item.province_name };
+            });
+
+            bindChartDrilldown('addressDistrictChart', addressDistrictChart, addressDistrictChartItems, function(item) {
+                return { address_scope: 'district', address_name: item.name, province_name: item.province_name };
+            });
+
+            bindChartDrilldown('schoolCityChart', schoolCityChart, schoolCityChartItems, function(item) {
+                return { school_city_name: item.name, school_province_name: item.province_name };
+            });
+
+            const mapElement = document.getElementById('studentSpreadMap');
+            if (!mapElement || typeof L === 'undefined') {
+                return;
+            }
+
+            const DEFAULT_MAP_CENTER = [-2.5, 118];
+            const DEFAULT_MAP_ZOOM = 5;
+            const MAX_FIT_BOUNDS_ZOOM = 12;
+            const map = L.map('studentSpreadMap', {
+                scrollWheelZoom: false,
+                minZoom: 4,
+                maxZoom: 17
+            }).setView(DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            const addressLayer = L.layerGroup().addTo(map);
+            const schoolLayer = L.layerGroup();
+            let activeLayer = 'address';
+
+            function setLayer(type) {
+                activeLayer = type;
+
+                if (type === 'address') {
+                    if (!map.hasLayer(addressLayer)) map.addLayer(addressLayer);
+                    if (map.hasLayer(schoolLayer)) map.removeLayer(schoolLayer);
+                    document.getElementById('toggleAddressLayer').className = 'btn btn-sm btn-primary';
+                    document.getElementById('toggleSchoolLayer').className = 'btn btn-sm btn-outline-primary';
+                    fitLayerBounds(map, addressLayer, MAX_FIT_BOUNDS_ZOOM);
+                } else {
+                    if (!map.hasLayer(schoolLayer)) map.addLayer(schoolLayer);
+                    if (map.hasLayer(addressLayer)) map.removeLayer(addressLayer);
+                    document.getElementById('toggleAddressLayer').className = 'btn btn-sm btn-outline-primary';
+                    document.getElementById('toggleSchoolLayer').className = 'btn btn-sm btn-primary';
+                    fitLayerBounds(map, schoolLayer, MAX_FIT_BOUNDS_ZOOM);
+                }
+            }
+
+            document.getElementById('toggleAddressLayer')?.addEventListener('click', function() {
+                setLayer('address');
+            });
+
+            document.getElementById('toggleSchoolLayer')?.addEventListener('click', function() {
+                setLayer('school');
+            });
+
+            window.addEventListener('load', function() {
+                map.invalidateSize();
+            });
+
+            populateLayer(map, mapAddressPoints, addressLayer, 'Alamat Domisili', activeLayer, MAX_FIT_BOUNDS_ZOOM);
+            populateLayer(map, mapSchoolPoints, schoolLayer, 'Asal Sekolah', activeLayer, MAX_FIT_BOUNDS_ZOOM);
+        });
+    </script>
+@stop

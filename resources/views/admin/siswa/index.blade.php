@@ -84,6 +84,11 @@
                         Manajemen Data Siswa
                     </h3>
                     <div class="card-tools ml-0">
+                        @can('view-siswa')
+                            <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-primary btn-sm mr-2">
+                                <i class="fas fa-chart-pie"></i> Statistik Siswa
+                            </a>
+                        @endcan
                         @can('create-siswa')
                             <a href="{{ route('admin.siswa.import') }}" class="btn btn-secondary btn-sm mr-2">
                                 <i class="fas fa-file-excel"></i> Import Data Siswa
@@ -94,7 +99,7 @@
                             <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-secondary btn-sm mr-2">
                                 <i class="fas fa-school"></i> Import NPSN
                             </a>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="addSiswa()">
+                            <button type="button" class="btn simansa-btn-strong btn-sm" onclick="addSiswa()">
                                 <i class="fas fa-plus"></i> Tambah Siswa
                             </button>
                         @endcan
@@ -153,6 +158,18 @@
                         </button>
                     </div>
                 </div>
+
+                @if(!empty($contextScope))
+                    <div class="alert alert-info simansa-stat-context d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3">
+                        <div class="mb-2 mb-lg-0">
+                            <strong>{{ $contextScope['title'] }}</strong><br>
+                            <span>{{ $contextScope['description'] ?: 'Daftar siswa sedang difilter dari halaman statistik.' }}</span>
+                        </div>
+                        <a href="{{ route('admin.siswa.index') }}" class="btn btn-sm simansa-btn-contrast">
+                            <i class="fas fa-times-circle"></i> Hapus Filter Statistik
+                        </a>
+                    </div>
+                @endif
 
                 <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 gap-2">
                     <p class="text-muted mb-0">
@@ -261,7 +278,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn simansa-btn-strong">
                         <i class="fas fa-save"></i> Simpan
                     </button>
                 </div>
@@ -354,6 +371,74 @@
         .status-badge {
             font-size: 0.8em;
         }
+
+        .simansa-btn-strong {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            border-color: #1e3a8a;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 10px 22px rgba(30, 64, 175, 0.22);
+        }
+
+        .simansa-btn-strong:hover,
+        .simansa-btn-strong:focus {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            border-color: #172554;
+            color: #fff;
+        }
+
+        .simansa-btn-strong:focus {
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.22);
+        }
+
+        .simansa-btn-contrast {
+            background: #ffffff !important;
+            border: 1px solid #2563eb !important;
+            color: #1d4ed8 !important;
+            font-weight: 600;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+            text-decoration: none !important;
+        }
+
+        .simansa-btn-contrast:hover,
+        .simansa-btn-contrast:focus {
+            background: #1d4ed8 !important;
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important;
+        }
+
+        .simansa-btn-contrast:focus {
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.18);
+        }
+
+        .simansa-btn-contrast i,
+        .simansa-btn-contrast span {
+            color: inherit !important;
+        }
+
+        .simansa-stat-context {
+            border: 1px solid #bfd7ff;
+            background: linear-gradient(135deg, #eef5ff 0%, #e5efff 100%);
+            color: #1e3a8a;
+        }
+
+        .simansa-stat-context strong {
+            color: #1d4ed8;
+        }
+
+        #siswaModal .modal-footer {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        #siswaModal .btn-secondary {
+            font-weight: 600;
+        }
         .modal-xl {
             max-width: 1200px;
         }
@@ -409,6 +494,12 @@
         .foto-cell .js-preview-foto:hover img {
             transform: scale(1.05);
         }
+
+        @media (max-width: 767.98px) {
+            .simansa-stat-context .simansa-btn-contrast {
+                width: 100%;
+            }
+        }
     </style>
 @stop
 
@@ -423,6 +514,7 @@
 <script>
 let siswaTable;
 let editingId = null;
+const statsContextFilters = @json($contextQuery ?? []);
 
 $(document).ready(function() {
     // Initialize DataTable
@@ -432,6 +524,9 @@ $(document).ready(function() {
         ajax: {
             url: '{{ route('admin.siswa.data') }}',
             type: 'GET',
+            data: function(d) {
+                return $.extend({}, d, statsContextFilters);
+            },
             error: function(xhr, error, code) {
                 console.log('Ajax error:', xhr, error, code);
                 if (xhr.status === 500) {
@@ -1202,7 +1297,7 @@ $(document).ready(function() {
         let status = $('#filterStatus').val();
         
         // Build filter parameters
-        let filterParams = {};
+        let filterParams = Object.assign({}, statsContextFilters);
         if (jk) filterParams.jenis_kelamin = jk;
         if (tingkat) filterParams.tingkat = tingkat;
         if (kelas) filterParams.kelas_id = kelas;
@@ -1228,4 +1323,3 @@ $(document).ready(function() {
 
 </script>
 @stop
-

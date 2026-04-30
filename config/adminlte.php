@@ -347,6 +347,13 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
+                    'text' => 'Statistik Siswa',
+                    'route' => 'admin.siswa.statistics',
+                    'icon' => 'fas fa-fw fa-chart-pie',
+                    'can' => 'view-siswa',
+                    'active' => ['admin/siswa-statistik*'],
+                ],
+                [
                     'text' => 'Sekolah Asal',
                     'route' => 'admin.sekolah-asal.index',
                     'icon' => 'fas fa-fw fa-school',

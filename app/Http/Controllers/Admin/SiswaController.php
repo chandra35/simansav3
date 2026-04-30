@@ -23,28 +23,12 @@ class SiswaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('view-siswa');
 
-        $user = Auth::user();
-        
-        // Base query
-        $siswaQuery = Siswa::query();
-        
-        // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
-        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
-            
-            if ($kelasIds->isNotEmpty()) {
-                $siswaQuery->whereHas('kelasAktif', function($q) use ($kelasIds) {
-                    $q->whereIn('kelas.id', $kelasIds);
-                });
-            } else {
-                // Jika tidak punya kelas, set count ke 0
-                $siswaQuery->whereRaw('1 = 0');
-            }
-        }
+        $siswaQuery = $this->baseSiswaQuery();
+        $this->applyStatisticsDrilldownFilters($siswaQuery, $request);
 
         // Statistics (dengan filter role)
         $stats = [
@@ -61,7 +45,19 @@ class SiswaController extends Controller
             12 => 'Kelas XII',
         ];
 
-        return view('admin.siswa.index', compact('stats', 'tingkatOptions'));
+        $contextScope = $this->buildStatisticsContext($request);
+        $contextQuery = collect($request->only([
+            'school_npsn',
+            'school_name',
+            'education_form',
+            'school_city_name',
+            'school_province_name',
+            'address_scope',
+            'address_name',
+            'province_name',
+        ]))->filter(fn ($value) => filled($value))->all();
+
+        return view('admin.siswa.index', compact('stats', 'tingkatOptions', 'contextScope', 'contextQuery'));
     }
 
     /**
@@ -71,18 +67,8 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
 
-        $user = Auth::user();
-        $query = Siswa::query();
-
-        // Role-based filter
-        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
-            if ($kelasIds->isNotEmpty()) {
-                $query->whereHas('kelasAktif', fn($q) => $q->whereIn('kelas.id', $kelasIds));
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        $query = $this->baseSiswaQuery();
+        $this->applyStatisticsDrilldownFilters($query, $request);
 
         // Apply same filters as data()
         if ($request->filled('jenis_kelamin')) {
@@ -121,25 +107,11 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
         
-        $user = Auth::user();
         $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
             ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'created_at']);
 
-        // FILTER BY ROLE: Wali Kelas hanya lihat siswa di kelasnya
-        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            // Get kelas yang di-wali oleh user ini
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
-            
-            if ($kelasIds->isEmpty()) {
-                // Jika tidak punya kelas, return empty
-                $siswa->whereRaw('1 = 0'); // Force empty result
-            } else {
-                // Filter hanya siswa di kelas yang di-wali
-                $siswa->whereHas('kelasAktif', function($q) use ($kelasIds) {
-                    $q->whereIn('kelas.id', $kelasIds);
-                });
-            }
-        }
+        $this->applyRoleScope($siswa);
+        $this->applyStatisticsDrilldownFilters($siswa, $request);
 
         // Filter by Jenis Kelamin
         if ($request->filled('jenis_kelamin')) {
@@ -188,7 +160,7 @@ class SiswaController extends Controller
             });
         }
 
-        $totalRecords = Siswa::count();
+        $totalRecords = (clone $this->baseSiswaQuery())->count();
         $filteredRecords = $siswa->count();
         
         // Pagination
@@ -955,5 +927,151 @@ class SiswaController extends Controller
             ->latest()
             ->limit(40)
             ->get();
+    }
+
+    private function baseSiswaQuery()
+    {
+        $query = Siswa::query();
+        $this->applyRoleScope($query);
+
+        return $query;
+    }
+
+    private function applyRoleScope($query)
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
+            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
+
+            if ($kelasIds->isNotEmpty()) {
+                $query->whereHas('kelasAktif', function ($q) use ($kelasIds) {
+                    $q->whereIn('kelas.id', $kelasIds);
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        return $query;
+    }
+
+    private function applyStatisticsDrilldownFilters($query, Request $request)
+    {
+        if ($request->filled('school_npsn') || $request->filled('school_name') || $request->filled('school_city_name') || $request->filled('school_province_name') || $request->filled('education_form')) {
+            $query->leftJoin('sekolah as sekolah_asal_filter', 'sekolah_asal_filter.npsn', '=', 'siswa.npsn_asal_sekolah');
+
+            if ($request->filled('school_npsn')) {
+                $query->where('siswa.npsn_asal_sekolah', $request->school_npsn);
+            }
+
+            if ($request->filled('school_name')) {
+                $query->where(function ($schoolQuery) use ($request) {
+                    $schoolQuery->where('sekolah_asal_filter.nama', $request->school_name);
+
+                    if ($request->filled('school_npsn')) {
+                        $schoolQuery->orWhere('siswa.npsn_asal_sekolah', $request->school_npsn);
+                    }
+                });
+            }
+
+            if ($request->filled('school_city_name')) {
+                $query->where('sekolah_asal_filter.kabupaten_kota', $request->school_city_name);
+            }
+
+            if ($request->filled('school_province_name')) {
+                $query->where('sekolah_asal_filter.provinsi', $request->school_province_name);
+            }
+
+            if ($request->filled('education_form')) {
+                $query->where('sekolah_asal_filter.bentuk_pendidikan', $request->education_form);
+            }
+        }
+
+        if ($request->filled('address_scope') && $request->filled('address_name')) {
+            $query->leftJoin('ortu as ortu_siswa_filter', 'ortu_siswa_filter.siswa_id', '=', 'siswa.id');
+
+            if ($request->address_scope === 'province') {
+                $query->leftJoin('indonesia_provinces as siswa_prov_filter', 'siswa_prov_filter.code', '=', 'siswa.provinsi_id_siswa')
+                    ->leftJoin('indonesia_provinces as ortu_prov_filter', 'ortu_prov_filter.code', '=', 'ortu_siswa_filter.provinsi_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_prov_filter.name ELSE siswa_prov_filter.name END = ?',
+                        [$request->address_name]
+                    );
+            }
+
+            if ($request->address_scope === 'city') {
+                $query->leftJoin('indonesia_cities as siswa_city_filter', 'siswa_city_filter.code', '=', 'siswa.kabupaten_id_siswa')
+                    ->leftJoin('indonesia_cities as ortu_city_filter', 'ortu_city_filter.code', '=', 'ortu_siswa_filter.kabupaten_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_city_filter.name ELSE siswa_city_filter.name END = ?',
+                        [$request->address_name]
+                    );
+            }
+
+            if ($request->address_scope === 'district') {
+                $query->leftJoin('indonesia_districts as siswa_district_filter', 'siswa_district_filter.code', '=', 'siswa.kecamatan_id_siswa')
+                    ->leftJoin('indonesia_districts as ortu_district_filter', 'ortu_district_filter.code', '=', 'ortu_siswa_filter.kecamatan_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_district_filter.name ELSE siswa_district_filter.name END = ?',
+                        [$request->address_name]
+                    );
+            }
+
+            if ($request->filled('province_name') && in_array($request->address_scope, ['city', 'district'], true)) {
+                $query->leftJoin('indonesia_provinces as siswa_prov_scope_filter', 'siswa_prov_scope_filter.code', '=', 'siswa.provinsi_id_siswa')
+                    ->leftJoin('indonesia_provinces as ortu_prov_scope_filter', 'ortu_prov_scope_filter.code', '=', 'ortu_siswa_filter.provinsi_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_prov_scope_filter.name ELSE siswa_prov_scope_filter.name END = ?',
+                        [$request->province_name]
+                    );
+            }
+        }
+
+        return $query->select('siswa.*')->distinct();
+    }
+
+    private function buildStatisticsContext(Request $request): ?array
+    {
+        if ($request->filled('school_npsn') || $request->filled('school_name')) {
+            return [
+                'title' => 'Filter Statistik: Sekolah Asal',
+                'description' => trim(collect([
+                    $request->school_name,
+                    $request->education_form,
+                    $request->school_city_name,
+                    $request->school_province_name,
+                ])->filter()->implode(' | ')),
+            ];
+        }
+
+        if ($request->filled('address_scope') && $request->filled('address_name')) {
+            $scopeLabels = [
+                'province' => 'Provinsi',
+                'city' => 'Kabupaten / Kota',
+                'district' => 'Kecamatan',
+            ];
+
+            return [
+                'title' => 'Filter Statistik: Sebaran Alamat',
+                'description' => ($scopeLabels[$request->address_scope] ?? 'Wilayah') . ' - ' . $request->address_name . ($request->filled('province_name') ? ' | ' . $request->province_name : ''),
+            ];
+        }
+
+        if ($request->filled('school_city_name')) {
+            return [
+                'title' => 'Filter Statistik: Wilayah Asal Sekolah',
+                'description' => trim(collect([$request->school_city_name, $request->school_province_name])->filter()->implode(', ')),
+            ];
+        }
+
+        if ($request->filled('education_form')) {
+            return [
+                'title' => 'Filter Statistik: Bentuk Pendidikan',
+                'description' => $request->education_form,
+            ];
+        }
+
+        return null;
     }
 }

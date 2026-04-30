@@ -402,6 +402,376 @@
             background-position: -200% 0;
         }
     }
+
+    .profile-shell {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .profile-row {
+        margin-bottom: 0;
+    }
+
+    .profile-card {
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.08);
+        margin-bottom: 0;
+    }
+
+    .profile-card .card-header {
+        background: linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+        border-bottom: 1px solid #e9eef6;
+        padding: 1rem 1.25rem;
+    }
+
+    .profile-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .profile-card .card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0;
+        color: #0f172a;
+    }
+
+    .profile-lead {
+        border-left: 0;
+        border-radius: 18px;
+        padding: 1.1rem 1.25rem;
+        background: linear-gradient(135deg, #eef6ff 0%, #f8fbff 52%, #ffffff 100%);
+        box-shadow: 0 14px 34px rgba(59, 130, 246, 0.12);
+    }
+
+    .profile-lead h5 {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 0.65rem;
+        font-weight: 700;
+    }
+
+    .profile-lead p {
+        color: #4b5563;
+        line-height: 1.65;
+    }
+
+    .profile-photo-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .profile-photo-meta {
+        text-align: center;
+        max-width: 320px;
+    }
+
+    .profile-photo-meta p {
+        margin-bottom: 0.35rem;
+        color: #64748b;
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+
+    .foto-action-group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .foto-action-group .btn {
+        border-radius: 12px;
+        min-height: 44px;
+        font-weight: 600;
+    }
+
+    .profile-inline-search .form-control {
+        min-height: 48px;
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+    }
+
+    .profile-inline-search .input-group-append .btn {
+        min-width: 104px;
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+        font-weight: 600;
+    }
+
+    .section-hint {
+        margin-top: 0.35rem;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .profile-card .form-control,
+    .profile-card .custom-select,
+    .profile-card select.form-control,
+    .profile-card .input-group-text {
+        min-height: 46px;
+        border-radius: 12px;
+    }
+
+    .profile-card textarea.form-control {
+        min-height: 96px;
+    }
+
+    .profile-card .input-group > .form-control:not(:last-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .profile-card .input-group > .input-group-append > .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .profile-card .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .readonly-grid .form-control,
+    .readonly-grid textarea {
+        background: #f8fafc !important;
+    }
+
+    .address-choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .address-choice-card {
+        position: relative;
+        border: 1px solid #dbe4f0;
+        border-radius: 16px;
+        background: #fff;
+        padding: 1rem 1rem 1rem 2.8rem;
+        min-height: 92px;
+        display: flex;
+        align-items: center;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .address-choice-card:hover {
+        border-color: #8fb7ff;
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .address-choice-card .custom-control-input {
+        top: 1.15rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .address-choice-card .custom-control-label {
+        display: block;
+        width: 100%;
+        margin: 0;
+        line-height: 1.45;
+    }
+
+    .address-choice-card .custom-control-label::before,
+    .address-choice-card .custom-control-label::after {
+        top: 1.2rem;
+        left: -1.8rem;
+    }
+
+    .address-choice-title {
+        display: block;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.15rem;
+    }
+
+    .address-choice-copy {
+        display: block;
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+
+    .sticky-submit-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 1rem 1.25rem 1.1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .sticky-submit-note {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        flex: 1 1 240px;
+    }
+
+    .sticky-submit-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .sticky-submit-actions .btn {
+        min-width: 150px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .sticky-media-card {
+        height: 100%;
+    }
+
+    @media (min-width: 992px) {
+        .profile-shell {
+            gap: 1.4rem;
+        }
+
+        .profile-row {
+            margin-left: -0.55rem;
+            margin-right: -0.55rem;
+        }
+
+        .profile-row > [class*='col-'] {
+            padding-left: 0.55rem;
+            padding-right: 0.55rem;
+        }
+
+        .profile-card .card-header {
+            padding: 0.9rem 1.15rem;
+        }
+
+        .profile-card .card-body {
+            padding: 1.1rem 1.15rem 1rem;
+        }
+
+        .profile-card .card-footer {
+            padding-left: 1.15rem;
+            padding-right: 1.15rem;
+        }
+
+        .profile-card .row {
+            margin-left: -0.45rem;
+            margin-right: -0.45rem;
+        }
+
+        .profile-card .row > [class*='col-'] {
+            padding-left: 0.45rem;
+            padding-right: 0.45rem;
+        }
+
+        .profile-card .form-group {
+            margin-bottom: 0.85rem;
+        }
+
+        .profile-photo-panel {
+            gap: 0.75rem;
+        }
+
+        .profile-photo-meta {
+            max-width: 280px;
+        }
+
+        .section-hint,
+        .profile-card small.form-text {
+            font-size: 0.84rem;
+        }
+
+        .address-choice-grid {
+            gap: 0.75rem;
+        }
+
+        .address-choice-card {
+            min-height: 84px;
+            padding-right: 1.1rem;
+        }
+
+        .sticky-submit-bar {
+            padding: 0.95rem 1.15rem 1rem;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .sticky-media-card {
+            position: sticky;
+            top: 1rem;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .profile-card .card-header,
+        .profile-card .card-body,
+        .sticky-submit-bar {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .address-choice-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .profile-shell {
+            gap: 1rem;
+        }
+
+        .profile-lead {
+            border-radius: 16px;
+            padding: 1rem;
+        }
+
+        .profile-card {
+            border-radius: 16px;
+        }
+
+        .profile-card .card-title {
+            font-size: 1rem;
+        }
+
+        .foto-action-group {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-inline-search {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-inline-search .form-control {
+            border-radius: 12px 12px 0 0;
+        }
+
+        .profile-inline-search .input-group-append {
+            width: 100%;
+        }
+
+        .profile-inline-search .input-group-append .btn {
+            width: 100%;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .sticky-submit-actions {
+            width: 100%;
+        }
+
+        .sticky-submit-actions .btn {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+    }
 </style>
 @stop
 
@@ -413,7 +783,7 @@
 <!-- Info Progress -->
 <div class="row">
     <div class="col-12">
-        <div class="callout callout-success">
+        <div class="callout callout-success profile-lead">
             <h5><i class="fas fa-check-circle"></i> Langkah 2: Data Diri Siswa</h5>
             <p class="mb-0">
                 Lengkapi data diri Anda dengan benar dan lengkap. Data ini penting untuk administrasi dan komunikasi sekolah.
@@ -455,14 +825,15 @@
         </div>
     @endif
 
-    <div class="row">
+    <div class="profile-shell">
+    <div class="row profile-row">
         <!-- Foto Profile -->
-        <div class="col-md-4">
-            <div class="card card-outline card-primary">
+        <div class="col-12 col-xl-4 mb-4 mb-xl-0">
+            <div class="card card-outline card-primary profile-card sticky-media-card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-camera"></i> Foto Profile</h3>
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body text-center profile-photo-panel">
                     <div class="form-group">
                         <!-- Circle Photo Preview - Same as Dashboard -->
                         <div class="mb-3" style="display: flex; flex-direction: column; align-items: center;">
@@ -498,23 +869,21 @@
                         </div>
                         
                         <!-- Upload Buttons -->
-                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                        <div class="foto-action-group mb-2" role="group" aria-label="Aksi foto profil">
                             <button type="button" class="btn btn-outline-primary" id="btnChooseFile">
-                                <i class="fas fa-folder-open"></i> Pilih File
+                                <i class="fas fa-folder-open mr-1"></i> Pilih File
                             </button>
                             <button type="button" class="btn btn-outline-success" id="btnOpenCamera">
-                                <i class="fas fa-camera"></i> Kamera
+                                <i class="fas fa-camera mr-1"></i> Kamera
                             </button>
                         </div>
                         
                         <input type="file" id="foto_profile" class="d-none" accept="image/jpeg,image/jpg,image/png">
-                        
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle"></i> Format: JPG/PNG, Max 2MB
-                        </small>
-                        <small class="form-text text-success">
-                            <i class="fas fa-crop-alt"></i> <strong>Crop & Resize:</strong> Foto dipotong square 1:1
-                        </small>
+
+                        <div class="profile-photo-meta">
+                            <p><i class="fas fa-info-circle text-muted mr-1"></i> Format JPG/PNG dengan ukuran maksimal 2MB.</p>
+                            <p class="text-success mb-0"><i class="fas fa-crop-alt mr-1"></i> Foto akan dipotong otomatis ke rasio 1:1 agar rapi di semua perangkat.</p>
+                        </div>
                         @error('foto_profile')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -524,8 +893,8 @@
         </div>
 
         <!-- Asal Sekolah (NPSN) -->
-        <div class="col-md-8">
-            <div class="card card-outline card-info">
+        <div class="col-12 col-xl-8">
+            <div class="card card-outline card-info profile-card h-100">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-school"></i> Asal Sekolah (MTs/SMP)</h3>
                 </div>
@@ -533,7 +902,7 @@
                     <!-- NPSN Input with Search -->
                     <div class="form-group">
                         <label>NPSN Asal Sekolah <span class="text-danger">*</span></label>
-                        <div class="input-group">
+                        <div class="input-group profile-inline-search">
                             <input type="text" name="npsn_asal_sekolah" id="npsn_asal_sekolah" 
                                    class="form-control @error('npsn_asal_sekolah') is-invalid @enderror" 
                                    placeholder="Contoh: 10648374 atau A1234567" 
@@ -550,7 +919,7 @@
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
-                        <small class="form-text text-muted">
+                        <small class="form-text text-muted section-hint">
                             <i class="fas fa-info-circle"></i> Masukkan 8 karakter NPSN (huruf/angka), pencarian otomatis dilakukan
                         </small>
                     </div>
@@ -570,8 +939,8 @@
                     </div>
 
                     <!-- Auto-filled Fields (Readonly) -->
-                    <div class="row">
-                        <div class="col-md-12">
+                    <div class="row readonly-grid">
+                        <div class="col-12">
                             <div class="form-group mb-2">
                                 <label class="mb-1"><small>Nama Sekolah</small></label>
                                 <input type="text" id="nama_sekolah" class="form-control form-control-sm bg-light" readonly>
@@ -579,14 +948,14 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="row readonly-grid">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group mb-2">
                                 <label class="mb-1"><small>Status</small></label>
                                 <input type="text" id="status_sekolah" class="form-control form-control-sm bg-light" readonly>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group mb-2">
                                 <label class="mb-1"><small>Bentuk Pendidikan</small></label>
                                 <input type="text" id="bentuk_pendidikan" class="form-control form-control-sm bg-light" readonly>
@@ -594,8 +963,8 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
+                    <div class="row readonly-grid">
+                        <div class="col-12">
                             <div class="form-group mb-0">
                                 <label class="mb-1"><small>Alamat Lengkap Sekolah</small></label>
                                 <textarea id="alamat_sekolah" class="form-control form-control-sm bg-light" rows="2" readonly></textarea>
@@ -607,10 +976,10 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row profile-row">
         <div class="col-12">
             <!-- Data Pribadi -->
-            <div class="card card-outline card-primary">
+            <div class="card card-outline card-primary profile-card">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-user"></i> Data Pribadi
@@ -618,7 +987,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="nisn">
                                     NISN
@@ -630,7 +999,7 @@
                                 </small>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="nik">
                                     NIK <span class="text-danger">*</span>
@@ -652,7 +1021,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="tempat_lahir">
                                     Tempat Lahir <span class="text-danger">*</span>
@@ -669,7 +1038,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="tanggal_lahir">
                                     Tanggal Lahir <span class="text-danger">*</span>
@@ -719,7 +1088,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="jenis_kelamin">
                                     Jenis Kelamin <span class="text-danger">*</span>
@@ -742,7 +1111,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-lg-6">
                             <div class="form-group">
                                 <label for="agama">
                                     Agama <span class="text-danger">*</span>
@@ -768,7 +1137,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-6 col-xl-4">
                             <div class="form-group">
                                 <label for="jumlah_saudara">
                                     Jumlah Saudara Kandung <span class="text-danger">*</span>
@@ -786,7 +1155,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-6 col-xl-4">
                             <div class="form-group">
                                 <label for="anak_ke">
                                     Anak Ke <span class="text-danger">*</span>
@@ -804,7 +1173,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-xl-4">
                             <div class="form-group">
                                 <label for="nomor_hp">
                                     No. HP <span class="text-danger">*</span>
@@ -825,7 +1194,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-6 col-xl-4">
                             <div class="form-group">
                                 <label for="hobi">Hobi</label>
                                 <input type="text" name="hobi" id="hobi" 
@@ -839,7 +1208,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-md-6 col-xl-4">
                             <div class="form-group">
                                 <label for="cita_cita">Cita-cita</label>
                                 <input type="text" name="cita_cita" id="cita_cita" 
@@ -853,7 +1222,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-xl-4">
                             <div class="form-group">
                                 <label for="email">Email</label>
                                 <input type="email" name="email" id="email" 
@@ -876,10 +1245,10 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row profile-row">
         <div class="col-12">
             <!-- Alamat Siswa -->
-            <div class="card card-outline card-success">
+            <div class="card card-outline card-success profile-card">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-map-marked-alt"></i> Alamat Siswa
@@ -890,29 +1259,27 @@
                         <label>
                             Pilih Alamat Siswa <span class="text-danger">*</span>
                         </label>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="custom-control custom-radio">
+                        <div class="address-choice-grid">
+                            <div class="custom-control custom-radio address-choice-card">
                                     <input class="custom-control-input" type="radio" name="alamat_sama_ortu" 
                                            id="alamat_sama" value="1" 
                                            {{ old('alamat_sama_ortu', $siswa->alamat_sama_ortu ?? 0) == 1 ? 'checked' : '' }}>
                                     <label class="custom-control-label" for="alamat_sama">
-                                        <i class="fas fa-home text-primary"></i> Sama dengan Alamat Orangtua
+                                        <span class="address-choice-title"><i class="fas fa-home text-primary mr-1"></i> Sama dengan Alamat Orangtua</span>
+                                        <span class="address-choice-copy">Alamat siswa mengikuti data orangtua agar pengisian lebih cepat.</span>
                                     </label>
-                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="custom-control custom-radio">
+                            <div class="custom-control custom-radio address-choice-card">
                                     <input class="custom-control-input" type="radio" name="alamat_sama_ortu" 
                                            id="alamat_lainnya" value="0" 
                                            {{ old('alamat_sama_ortu', $siswa->alamat_sama_ortu ?? 0) == 0 ? 'checked' : '' }}>
                                     <label class="custom-control-label" for="alamat_lainnya">
-                                        <i class="fas fa-map-marker-alt text-success"></i> Alamat Lainnya (Berbeda)
+                                        <span class="address-choice-title"><i class="fas fa-map-marker-alt text-success mr-1"></i> Alamat Lainnya</span>
+                                        <span class="address-choice-copy">Gunakan opsi ini jika tinggal di asrama, kost, kontrakan, atau bersama saudara.</span>
                                     </label>
-                                </div>
                             </div>
                         </div>
-                        <small class="form-text text-muted">
+                        <small class="form-text text-muted section-hint">
                             <i class="fas fa-info-circle"></i> Jika memilih "Sama dengan Orangtua", data alamat akan otomatis terisi
                         </small>
                     </div>
@@ -941,7 +1308,7 @@
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                            <small class="form-text text-muted">
+                            <small class="form-text text-muted section-hint">
                                 <i class="fas fa-info-circle"></i> Pilih jenis tempat tinggal untuk alamat berbeda
                             </small>
                             <div id="alert-asrama" class="alert alert-info mt-2" style="display: none;">
@@ -969,7 +1336,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-3 col-lg-2">
                                 <div class="form-group">
                                     <label for="rt_siswa">RT</label>
                                     <input type="text" name="rt_siswa" id="rt_siswa" 
@@ -984,7 +1351,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-md-3 col-lg-2">
                                 <div class="form-group">
                                     <label for="rw_siswa">RW</label>
                                     <input type="text" name="rw_siswa" id="rw_siswa" 
@@ -999,7 +1366,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-12 col-md-6 col-lg-3">
                                 <div class="form-group">
                                     <label for="kodepos_siswa">Kode Pos</label>
                                     <input type="text" name="kodepos_siswa" id="kodepos_siswa" 
@@ -1017,7 +1384,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-6 col-xl-3">
                                 <div class="form-group">
                                     <label for="provinsi_id_siswa">Provinsi</label>
                                     <select name="provinsi_id_siswa" id="provinsi_id_siswa" 
@@ -1037,7 +1404,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-6 col-xl-3">
                                 <div class="form-group">
                                     <label for="kabupaten_id_siswa">Kabupaten/Kota</label>
                                     <select name="kabupaten_id_siswa" id="kabupaten_id_siswa" 
@@ -1052,7 +1419,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-6 col-xl-3">
                                 <div class="form-group">
                                     <label for="kecamatan_id_siswa">Kecamatan</label>
                                     <select name="kecamatan_id_siswa" id="kecamatan_id_siswa" 
@@ -1066,7 +1433,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-6 col-xl-3">
                                 <div class="form-group">
                                     <label for="kelurahan_id_siswa">Kelurahan/Desa</label>
                                     <select name="kelurahan_id_siswa" id="kelurahan_id_siswa" 
@@ -1083,16 +1450,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> Simpan Data Diri
-                    </button>
-                    <a href="{{ route('siswa.dashboard') }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times"></i> Batal
-                    </a>
+                <div class="card-footer sticky-submit-bar">
+                    <div class="sticky-submit-note">
+                        Periksa kembali NIK, tanggal lahir, nomor HP, dan alamat sebelum menyimpan agar data administrasi tetap akurat.
+                    </div>
+                    <div class="sticky-submit-actions">
+                        <a href="{{ route('siswa.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save mr-1"></i> Simpan Data Diri
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </form>
 
