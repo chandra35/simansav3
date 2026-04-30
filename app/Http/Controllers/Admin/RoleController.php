@@ -71,6 +71,12 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $role->load('users', 'permissions');
+
+        $availableUsers = User::whereDoesntHave('roles', function ($query) use ($role) {
+                $query->where('roles.id', $role->id);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
         
         // Group permissions by category
         $groupedPermissions = $role->permissions->groupBy(function($permission) {
@@ -78,7 +84,7 @@ class RoleController extends Controller
             return $parts[0] ?? 'general';
         });
         
-        return view('admin.roles.show', compact('role', 'groupedPermissions'));
+        return view('admin.roles.show', compact('role', 'groupedPermissions', 'availableUsers'));
     }
 
     /**

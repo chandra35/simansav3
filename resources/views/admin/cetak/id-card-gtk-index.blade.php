@@ -4,32 +4,51 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <h1><i class="fas fa-id-badge"></i> Cetak ID Card GTK</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow"><i class="fas fa-id-badge"></i> Akademik</div>
+            <h1 class="simansa-hero__title">Cetak ID Card GTK</h1>
+            <p class="simansa-hero__subtitle">Pilih kategori GTK dan siapkan preview kartu identitas tanpa meninggalkan halaman admin.</p>
+        </div>
+    </div>
 @stop
 
 @section('content')
     <div class="row">
         <div class="col-md-12">
-            <div class="card card-warning">
+            <div class="card simansa-management-card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-badge"></i> Cetak Kartu Identitas GTK</h3>
                 </div>
                 <form action="{{ route('admin.cetak.id-card-gtk') }}" method="POST" id="formCetakIdGtk" target="printPreviewFrame" data-no-overlay>
                     @csrf
                     <div class="card-body">
-                        <div class="alert alert-warning">
+                        <div class="simansa-section-note mb-4">
                             <i class="fas fa-info-circle"></i>
                             <strong>Cetak Kartu Identitas GTK</strong><br>
                             Pilih kategori dan data GTK untuk mencetak ID Card. Kartu akan dicetak dalam format standar (85.6mm x 54mm) dengan bagian depan dan belakang.
                         </div>
 
                         {{-- Filter Section --}}
+                        <div class="simansa-filter-panel mb-4">
+                        <div class="simansa-form-section">
+                            <div>
+                                <h4 class="simansa-form-section__title">Filter GTK</h4>
+                                <p class="simansa-form-section__desc">Pilih kategori PTK atau status kepegawaian. Hasil bisa dimuat ulang kapan saja dan tetap tampil di preview modal.</p>
+                            </div>
+                            <div class="simansa-toolbar__group">
+                                <button type="button" class="btn simansa-btn-contrast" id="btnLoadGtk">
+                                    <i class="fas fa-search mr-1"></i> Muat GTK
+                                </button>
+                                <button type="button" class="btn simansa-btn-muted" id="btnReset">
+                                    <i class="fas fa-redo mr-1"></i> Reset
+                                </button>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="id_gtk_kategori">
-                                        <i class="fas fa-user-tag"></i> Kategori PTK
-                                    </label>
+                                    <label for="id_gtk_kategori" class="simansa-filter-label"><i class="fas fa-user-tag"></i> Kategori PTK</label>
                                     <select name="kategori_ptk" id="id_gtk_kategori" class="form-control print-filter-select">
                                         <option value="">-- Semua Kategori --</option>
                                         <option value="Pendidik">Pendidik (Guru)</option>
@@ -39,9 +58,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="id_gtk_status">
-                                        <i class="fas fa-briefcase"></i> Status Kepegawaian
-                                    </label>
+                                    <label for="id_gtk_status" class="simansa-filter-label"><i class="fas fa-briefcase"></i> Status Kepegawaian</label>
                                     <select name="status_kepegawaian" id="id_gtk_status" class="form-control print-filter-select">
                                         <option value="">-- Semua Status --</option>
                                         <option value="PNS">PNS</option>
@@ -53,38 +70,38 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <button type="button" class="btn btn-info btn-block" id="btnLoadGtk">
-                                        <i class="fas fa-search"></i> Cari GTK
-                                    </button>
+                                <div class="simansa-mini-stat mt-md-4">
+                                    <span class="simansa-mini-stat__label">Output</span>
+                                    <span class="simansa-mini-stat__value">PDF Preview</span>
                                 </div>
                             </div>
+                        </div>
                         </div>
 
                         <hr>
 
                         {{-- GTK List --}}
                         <div id="gtkListSection" style="display: none;">
-                            <h5><i class="fas fa-list"></i> Pilih GTK</h5>
-                            <div class="form-group">
+                            <div class="simansa-results-panel">
+                            <div class="simansa-results-panel__title">
+                                <h5><i class="fas fa-list mr-1"></i> Pilih GTK</h5>
+                                <div id="selectedCount" class="badge badge-success px-3 py-2" style="display: none;">
+                                    <i class="fas fa-check-circle mr-1"></i> <strong><span id="countText">0</span> GTK</strong> dipilih
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="selectAll">
                                     <label class="custom-control-label font-weight-bold" for="selectAll">Pilih Semua</label>
                                 </div>
                             </div>
-                            <div class="row" id="gtkCheckboxes"></div>
-                            <div id="selectedCount" class="alert alert-success mt-3" style="display: none;">
-                                <i class="fas fa-check-circle"></i> <strong><span id="countText">0</span> GTK</strong> dipilih
+                            <div class="row simansa-selection-grid" id="gtkCheckboxes"></div>
                             </div>
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-warning btn-lg" id="btnCetak" disabled>
+                        <button type="submit" class="btn simansa-btn-strong btn-lg" id="btnCetak" disabled>
                             <i class="fas fa-id-badge"></i> Cetak ID Card GTK
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-lg" id="btnReset">
-                            <i class="fas fa-redo"></i> Reset
                         </button>
                     </div>
                 </form>
@@ -120,6 +137,7 @@
 <script>
 $(document).ready(function() {
     let previewPending = false;
+    let autoLoadTimer = null;
     const $printPreviewModal = $('#printPreviewModal');
     const $printPreviewLoading = $('#printPreviewLoading');
     const $printPreviewFrame = $('#printPreviewFrame');
@@ -132,6 +150,13 @@ $(document).ready(function() {
         });
     }
 
+    function queueAutoLoad() {
+        clearTimeout(autoLoadTimer);
+        autoLoadTimer = setTimeout(function() {
+            $('#btnLoadGtk').trigger('click');
+        }, 280);
+    }
+
     $('#btnLoadGtk').on('click', function() {
         const kategori = $('#id_gtk_kategori').val();
         const status = $('#id_gtk_status').val();
@@ -141,14 +166,14 @@ $(document).ready(function() {
             method: 'GET',
             data: { kategori_ptk: kategori, status_kepegawaian: status },
             beforeSend: function() {
-                $('#btnLoadGtk').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+                $('#btnLoadGtk').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...');
             },
             success: function(response) {
                 if (response.success && response.data.length > 0) {
                     let html = '';
                     response.data.forEach(function(gtk) {
                         html += `
-                            <div class="col-md-4 mb-2">
+                            <div class="col-md-4 col-lg-3 mb-3">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input gtk-checkbox"
                                            id="gtk_${gtk.id}" name="gtk_ids[]" value="${gtk.id}">
@@ -174,7 +199,7 @@ $(document).ready(function() {
             },
             error: function() { Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal memuat data GTK.' }); },
             complete: function() {
-                $('#btnLoadGtk').prop('disabled', false).html('<i class="fas fa-search"></i> Cari GTK');
+                $('#btnLoadGtk').prop('disabled', false).html('<i class="fas fa-search mr-1"></i> Muat GTK');
             }
         });
     });
@@ -199,9 +224,21 @@ $(document).ready(function() {
 
     $('#btnReset').on('click', function() {
         $('#formCetakIdGtk')[0].reset();
+        if ($.fn.select2) {
+            $('.print-filter-select').val('').trigger('change');
+        }
+        $('#gtkListSection').slideUp();
+        $('#selectAll').prop('checked', false);
+        $('#gtkCheckboxes').empty();
+        updateCount();
+    });
+
+    $('#id_gtk_kategori, #id_gtk_status').on('change', function() {
+        $('#gtkCheckboxes').empty();
         $('#gtkListSection').slideUp();
         $('#selectAll').prop('checked', false);
         updateCount();
+        queueAutoLoad();
     });
 
     $('#formCetakIdGtk').on('submit', function(e) {

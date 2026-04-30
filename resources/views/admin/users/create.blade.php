@@ -3,168 +3,135 @@
 @section('title', 'Tambah User - SIMANSA')
 
 @section('content_header')
-    <h1>Tambah User</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow"><i class="fas fa-users-cog"></i> Users & Role</div>
+            <h1 class="simansa-hero__title">Tambah User</h1>
+            <p class="simansa-hero__subtitle">Buat akun baru dengan identitas yang jelas, lalu tetapkan role yang tepat agar akses pengguna langsung sesuai kebutuhan.</p>
+        </div>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Role Tersedia</span>
+                <span class="simansa-hero-chip__value">{{ $roles->count() }}</span>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('content')
-<form action="{{ route('admin.users.store') }}" method="POST">
-            @csrf
-            <div class="row">
-                <!-- Left Column -->
-                <div class="col-md-6">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-user mr-1"></i>
-                                Informasi User
-                            </h3>
+<form action="{{ route('admin.users.store') }}" method="POST" class="simansa-form-shell">
+    @csrf
+
+    <div class="row">
+        <div class="col-xl-7 mb-4">
+            <div class="card simansa-management-card simansa-form-card h-100">
+                <div class="card-header">
+                    <h3 class="card-title mb-0"><i class="fas fa-user mr-2"></i> Informasi User</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name" class="simansa-filter-label"><i class="fas fa-id-card"></i> Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                         </div>
-                        <div class="card-body">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="name">Nama Lengkap <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                       id="name" name="name" value="{{ old('name') }}" required>
-                                @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label for="username" class="simansa-filter-label"><i class="fas fa-user-circle"></i> Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('username') is-invalid @enderror" id="username" name="username" value="{{ old('username') }}" required>
+                                @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="simansa-filter-hint">Dipakai untuk login.</div>
                             </div>
-
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="username">Username <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('username') is-invalid @enderror" 
-                                       id="username" name="username" value="{{ old('username') }}" required>
-                                @error('username')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="form-text text-muted">Username untuk login</small>
+                                <label for="email" class="simansa-filter-label"><i class="fas fa-envelope"></i> Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-
-                            <div class="form-group">
-                                <label for="email">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                       id="email" name="email" value="{{ old('email') }}" required>
-                                @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phone">Telepon</label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                       id="phone" name="phone" value="{{ old('phone') }}">
-                                @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-0">
+                                <label for="phone" class="simansa-filter-label"><i class="fas fa-phone"></i> Telepon</label>
+                                <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
+                                @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Right Column -->
-                <div class="col-md-6">
-                    <div class="card card-warning card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-key mr-1"></i>
-                                Password & Roles
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="password">Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                       id="password" name="password" required>
-                                @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="form-text text-muted">Minimal 8 karakter</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="password_confirmation">Konfirmasi Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                       id="password_confirmation" name="password_confirmation" required>
-                                @error('password_confirmation')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label>Roles <span class="text-muted">(opsional)</span></label>
-                                <div class="border rounded p-3 bg-light">
-                                    @foreach($roles as $role)
+        <div class="col-xl-5 mb-4">
+            <div class="card simansa-surface-card simansa-form-card h-100">
+                <div class="card-header">
+                    <h3 class="card-title mb-0"><i class="fas fa-lock mr-2"></i> Password & Role</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group position-relative">
+                        <label for="password" class="simansa-filter-label"><i class="fas fa-key"></i> Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                        @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="simansa-filter-hint">Minimal 8 karakter.</div>
+                    </div>
+                    <div class="form-group position-relative">
+                        <label for="password_confirmation" class="simansa-filter-label"><i class="fas fa-check-circle"></i> Konfirmasi Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="simansa-filter-label"><i class="fas fa-user-tag"></i> Role</label>
+                        <div class="simansa-check-grid">
+                            @foreach($roles as $role)
+                                <div class="simansa-check-card">
                                     <div class="custom-control custom-checkbox">
-                                        <input class="custom-control-input" type="checkbox" name="roles[]" 
+                                        <input class="custom-control-input" type="checkbox" name="roles[]"
                                                value="{{ $role->id }}" id="role{{ $role->id }}"
                                                {{ in_array($role->id, old('roles', [])) ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="role{{ $role->id }}">
                                             {{ $role->name }}
                                         </label>
                                     </div>
-                                    @endforeach
                                 </div>
-                                <small class="form-text text-muted">Pilih role yang sesuai. Bisa lebih dari satu.</small>
-                            </div>
-
-                            <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Catatan:</strong>
-                                <ul class="mb-0 pl-3">
-                                    <li>User akan diminta ganti password saat login pertama kali</li>
-                                    <li>Jika tidak memilih role, user dapat diassign role nanti</li>
-                                </ul>
-                            </div>
+                            @endforeach
                         </div>
+                        <div class="simansa-filter-hint">User bisa diberi lebih dari satu role bila memang diperlukan.</div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Action Buttons -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </a>
-                            <button type="submit" class="btn btn-primary float-right">
-                                <i class="fas fa-save"></i> Simpan
-                            </button>
-                        </div>
-                    </div>
+    <div class="card simansa-management-card">
+        <div class="card-footer">
+            <div class="simansa-toolbar">
+                <div class="text-muted small">User baru bisa disempurnakan role dan direct permission-nya nanti dari halaman Data User.</div>
+                <div class="simansa-toolbar__group">
+                    <a href="{{ route('admin.users.index') }}" class="btn simansa-btn-muted">
+                        <i class="fas fa-arrow-left mr-1"></i> Kembali
+                    </a>
+                    <button type="submit" class="btn simansa-btn-strong">
+                        <i class="fas fa-save mr-1"></i> Simpan User
+                    </button>
                 </div>
             </div>
-        </form>
+        </div>
+    </div>
+</form>
 @stop
-
-@push('styles')
-<style>
-    .custom-control-label {
-        cursor: pointer;
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Auto-generate username dari nama (opsional)
+$(function() {
     $('#name').on('input', function() {
         const name = $(this).val();
         const username = name.toLowerCase().replace(/\s+/g, '');
         if ($('#username').val() === '') {
             $('#username').val(username);
         }
-    });
-
-    // Toggle password visibility
-    $('<i class="fas fa-eye position-absolute" style="right: 10px; top: 38px; cursor: pointer;" id="togglePassword"></i>')
-        .insertAfter('#password');
-    
-    $('#togglePassword').on('click', function() {
-        const type = $('#password').attr('type') === 'password' ? 'text' : 'password';
-        $('#password').attr('type', type);
-        $(this).toggleClass('fa-eye fa-eye-slash');
     });
 });
 </script>

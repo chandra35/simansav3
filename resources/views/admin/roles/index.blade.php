@@ -100,10 +100,10 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Role</h3>
             <div class="card-tools d-flex">
-                <a href="{{ route('admin.permissions.index') }}" class="btn btn-info btn-sm mr-2">
+                <a href="{{ route('admin.permissions.index') }}" class="btn btn-sm simansa-btn-contrast mr-2">
                     <i class="fas fa-key"></i> Kelola Permissions
                 </a>
-                <a href="{{ route('admin.roles.create') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('admin.roles.create') }}" class="btn btn-sm simansa-btn-strong">
                     <i class="fas fa-plus"></i> Tambah Role
                 </a>
             </div>
@@ -179,7 +179,7 @@
                             @endif
                         </div>
                         <div class="card-footer bg-transparent">
-                            <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-sm btn-outline-primary btn-block">
+                            <a href="{{ route('admin.roles.show', $role) }}" class="btn btn-sm simansa-btn-contrast btn-block">
                                 <i class="fas fa-eye"></i> Lihat Detail & Users
                             </a>
                         </div>

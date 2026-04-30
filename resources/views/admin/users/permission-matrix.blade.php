@@ -3,15 +3,21 @@
 @section('title', 'Permission Matrix - SIMANSA')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-shield-alt mr-2"></i> Permission Matrix</h1>
-        <div>
-            <button type="button" class="btn btn-info" id="btnScan" title="Scan Permission">
-                <i class="fas fa-search"></i> Scan
-            </button>
-            <button type="button" class="btn btn-success" id="btnAddRole" title="Tambah Role">
-                <i class="fas fa-plus"></i> Tambah Role
-            </button>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Users & Role</div>
+            <h1 class="simansa-hero__title">Permission Matrix</h1>
+            <p class="simansa-hero__subtitle">Atur izin per role secara menyeluruh dari satu layar. Cocok untuk audit cepat, sinkronisasi permission baru, dan koreksi akses lintas modul.</p>
+        </div>
+        <div class="simansa-hero__side">
+            <div class="simansa-toolbar__group">
+                <button type="button" class="btn simansa-btn-contrast" id="btnScan" title="Scan Permission">
+                    <i class="fas fa-search mr-1"></i> Scan
+                </button>
+                <button type="button" class="btn simansa-btn-strong" id="btnAddRole" title="Tambah Role">
+                    <i class="fas fa-plus mr-1"></i> Tambah Role
+                </button>
+            </div>
         </div>
     </div>
 @stop
@@ -20,7 +26,7 @@
 <div class="row">
     <!-- Left Sidebar: Roles -->
     <div class="col-md-3">
-        <div class="card card-primary card-outline sticky-top" style="top: 10px; z-index: 100;">
+        <div class="card simansa-management-card sticky-top" style="top: 10px; z-index: 100;">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-user-tag mr-1"></i> Roles</h3>
             </div>
@@ -61,7 +67,7 @@
         </div>
 
         <!-- Stats Card -->
-        <div class="card card-info card-outline mt-3">
+        <div class="card simansa-surface-card mt-3">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-chart-pie mr-1"></i> Statistik</h3>
             </div>
@@ -88,16 +94,18 @@
 
     <!-- Main Content: Permission Matrix -->
     <div class="col-md-9">
-        <div class="card card-success card-outline">
+        <div class="card simansa-management-card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-th mr-1"></i> Permission per Module</h3>
-                <div class="card-tools">
-                    <button class="btn btn-sm btn-default" id="expandAll">
+                <div class="simansa-toolbar">
+                    <h3 class="card-title mb-0"><i class="fas fa-th mr-1"></i> Permission per Module</h3>
+                    <div class="simansa-toolbar__group">
+                    <button class="btn btn-sm simansa-btn-contrast" id="expandAll">
                         <i class="fas fa-expand-alt"></i> Expand All
                     </button>
-                    <button class="btn btn-sm btn-default" id="collapseAll">
+                    <button class="btn btn-sm simansa-btn-muted" id="collapseAll">
                         <i class="fas fa-compress-alt"></i> Collapse All
                     </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-2">
@@ -303,24 +311,28 @@
 
     .role-item {
         transition: all 0.2s ease;
+        border-left: 3px solid transparent;
     }
 
     .role-item:hover {
-        background-color: #f8f9fa;
+        background-color: #f8fbff;
     }
 
     .role-item.active {
-        background-color: #e3f2fd;
-        border-left: 3px solid #2196f3;
+        background-color: #e0f2fe;
+        border-left-color: #2563eb;
     }
 
     .module-card {
+        border: 1px solid rgba(203, 213, 225, 0.8);
         border-left: 3px solid transparent;
-        transition: border-color 0.2s ease;
+        border-radius: 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .module-card:hover {
         border-left-color: #007bff;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
     }
 
     .module-toggle {
@@ -335,6 +347,11 @@
         position: sticky;
         top: 0;
         z-index: 10;
+    }
+
+    .permission-table thead th {
+        background: #eff6ff;
+        color: #1e3a8a;
     }
 
     .bg-warning-subtle {
@@ -361,6 +378,10 @@
     .custom-control {
         padding-left: 1.8rem;
         min-height: 1.2rem;
+    }
+
+    #floatingSaveBtn .btn {
+        border-radius: 999px;
     }
 </style>
 @stop

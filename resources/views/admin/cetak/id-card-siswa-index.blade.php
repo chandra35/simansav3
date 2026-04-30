@@ -4,13 +4,25 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <h1><i class="fas fa-id-card"></i> Cetak ID Card Siswa</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow"><i class="fas fa-id-card"></i> Akademik</div>
+            <h1 class="simansa-hero__title">Cetak ID Card Siswa</h1>
+            <p class="simansa-hero__subtitle">Pilih kelas dan siapkan kartu pelajar dalam preview PDF tanpa meninggalkan halaman kerja.</p>
+        </div>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Mode</span>
+                <span class="simansa-hero-chip__value">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</span>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('content')
     <div class="row">
         <div class="col-md-12">
-            <div class="card card-success">
+            <div class="card simansa-management-card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-card"></i> Cetak Kartu Pelajar</h3>
                 </div>
@@ -20,7 +32,7 @@
                         <input type="hidden" name="tahun_pelajaran_id" id="id_siswa_tahun_pelajaran" value="{{ $defaultTahunPelajaranId }}">
                     @endif
                     <div class="card-body">
-                        <div class="alert alert-success">
+                        <div class="simansa-section-note mb-4">
                             <i class="fas fa-info-circle"></i>
                             <strong>Cetak Kartu Pelajar</strong><br>
                             {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih kelas untuk mencetak ID Card siswa. Kartu akan dicetak dalam format standar (85.6mm x 54mm) dengan bagian depan dan belakang.' }}
@@ -28,12 +40,25 @@
 
                         @unless($isRestrictedWaliKelas)
                             {{-- Filter Section --}}
+                            <div class="simansa-filter-panel mb-4">
+                            <div class="simansa-form-section">
+                                <div>
+                                    <h4 class="simansa-form-section__title">Filter Kelas</h4>
+                                    <p class="simansa-form-section__desc">Setelah tahun dan tingkat dipilih, daftar kelas akan menyesuaikan lebih cepat dan bisa dimuat ulang kapan saja.</p>
+                                </div>
+                                <div class="simansa-toolbar__group">
+                                    <button type="button" class="btn simansa-btn-contrast" id="btnLoadKelas">
+                                        <i class="fas fa-search mr-1"></i> Muat Kelas
+                                    </button>
+                                    <button type="button" class="btn simansa-btn-muted" id="btnReset">
+                                        <i class="fas fa-redo mr-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="id_siswa_tahun_pelajaran">
-                                            <i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span>
-                                        </label>
+                                        <label for="id_siswa_tahun_pelajaran" class="simansa-filter-label"><i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span></label>
                                         <select name="tahun_pelajaran_id" id="id_siswa_tahun_pelajaran" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tahun Pelajaran --</option>
                                             @foreach($tahunPelajarans as $tp)
@@ -46,9 +71,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="id_siswa_tingkat">
-                                            <i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span>
-                                        </label>
+                                        <label for="id_siswa_tingkat" class="simansa-filter-label"><i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span></label>
                                         <select name="tingkat" id="id_siswa_tingkat" class="form-control print-filter-select" required>
                                             <option value="">-- Pilih Tingkat --</option>
                                             @foreach($tingkatOptions as $key => $label)
@@ -59,20 +82,20 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="id_siswa_rombel"><i class="fas fa-users"></i> Rombel</label>
+                                        <label for="id_siswa_rombel" class="simansa-filter-label"><i class="fas fa-users"></i> Rombel</label>
                                         <select name="rombel" id="id_siswa_rombel" class="form-control print-filter-select">
                                             <option value="">-- Semua Rombel --</option>
                                         </select>
+                                        <div class="simansa-filter-hint">Rombel mengikuti tingkat yang dipilih.</div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>&nbsp;</label>
-                                        <button type="button" class="btn btn-info btn-block" id="btnLoadKelas">
-                                            <i class="fas fa-search"></i> Cari Kelas
-                                        </button>
+                                    <div class="simansa-mini-stat mt-md-4">
+                                        <span class="simansa-mini-stat__label">Output</span>
+                                        <span class="simansa-mini-stat__value">PDF Preview</span>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         @endunless
 
@@ -80,25 +103,26 @@
 
                         {{-- Kelas List --}}
                         <div id="kelasList" style="{{ $isRestrictedWaliKelas ? '' : 'display: none;' }}">
-                            <h5><i class="fas fa-list"></i> Pilih Kelas</h5>
-                            <div class="form-group">
+                            <div class="simansa-results-panel">
+                            <div class="simansa-results-panel__title">
+                                <h5><i class="fas fa-list mr-1"></i> Pilih Kelas</h5>
+                                <div id="selectedCount" class="badge badge-success px-3 py-2" style="display: none;">
+                                    <i class="fas fa-check-circle mr-1"></i> <strong><span id="countText">0</span> kelas</strong> dipilih
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="selectAll">
                                     <label class="custom-control-label font-weight-bold" for="selectAll">Pilih Semua</label>
                                 </div>
                             </div>
-                            <div class="row" id="kelasCheckboxes"></div>
-                            <div id="selectedCount" class="alert alert-success mt-3" style="display: none;">
-                                <i class="fas fa-check-circle"></i> <strong><span id="countText">0</span> kelas</strong> dipilih
+                            <div class="row simansa-selection-grid" id="kelasCheckboxes"></div>
                             </div>
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-success btn-lg" id="btnCetak" disabled>
+                        <button type="submit" class="btn simansa-btn-strong btn-lg" id="btnCetak" disabled>
                             <i class="fas fa-id-card"></i> Cetak ID Card Siswa
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-lg" id="btnReset">
-                            <i class="fas fa-redo"></i> Reset
                         </button>
                     </div>
                 </form>
@@ -147,6 +171,23 @@ $(document).ready(function() {
         });
     }
 
+    let autoLoadTimer = null;
+
+    function queueAutoLoad() {
+        if (isRestrictedWaliKelas) {
+            return;
+        }
+
+        clearTimeout(autoLoadTimer);
+        autoLoadTimer = setTimeout(function() {
+            const tp = $('#id_siswa_tahun_pelajaran').val();
+            const tingkat = $('#id_siswa_tingkat').val();
+            if (tp && tingkat) {
+                loadKelasByCurrentContext();
+            }
+        }, 280);
+    }
+
     function loadKelasByCurrentContext() {
         const tp = $('#id_siswa_tahun_pelajaran').val();
         const tingkat = $('#id_siswa_tingkat').val();
@@ -167,20 +208,20 @@ $(document).ready(function() {
             method: 'GET',
             data: { tahun_pelajaran_id: tp, tingkat: tingkat, rombel: rombel },
             beforeSend: function() {
-                $('#btnLoadKelas').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+                $('#btnLoadKelas').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...');
             },
             success: function(response) {
                 if (response.success && response.data.length > 0) {
                     let html = '';
                     response.data.forEach(function(kelas) {
                         html += `
-                            <div class="col-md-4 mb-2">
+                            <div class="col-md-4 col-lg-3 mb-3">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input kelas-checkbox"
                                            id="kelas_${kelas.id}" name="kelas_ids[]" value="${kelas.id}">
                                     <label class="custom-control-label" for="kelas_${kelas.id}">
                                         <strong>${kelas.nama_lengkap}</strong><br>
-                                        <small class="text-muted"><i class="fas fa-users"></i> ${kelas.siswa_count} siswa</small>
+                                        <small class="text-muted d-block mt-1"><i class="fas fa-users mr-1"></i>${kelas.siswa_count} siswa</small>
                                     </label>
                                 </div>
                             </div>`;
@@ -198,7 +239,7 @@ $(document).ready(function() {
             },
             error: function() { Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal memuat data kelas.' }); },
             complete: function() {
-                $('#btnLoadKelas').prop('disabled', false).html('<i class="fas fa-search"></i> Cari Kelas');
+                $('#btnLoadKelas').prop('disabled', false).html('<i class="fas fa-search mr-1"></i> Muat Kelas');
             }
         });
     }
@@ -257,6 +298,7 @@ $(document).ready(function() {
         $('#selectAll').prop('checked', false);
         updateCount();
         refreshRombelOptions();
+        queueAutoLoad();
     });
 
     $('#id_siswa_rombel').on('change', function() {
@@ -264,6 +306,7 @@ $(document).ready(function() {
         $('#kelasList').slideUp();
         $('#selectAll').prop('checked', false);
         updateCount();
+        queueAutoLoad();
     });
 
     $('#selectAll').on('change', function() {
@@ -286,8 +329,12 @@ $(document).ready(function() {
 
     $('#btnReset').on('click', function() {
         $('#formCetakIdSiswa')[0].reset();
+        if ($.fn.select2) {
+            $('.print-filter-select').val('').trigger('change');
+        }
         $('#kelasList').slideUp();
         $('#selectAll').prop('checked', false);
+        $('#kelasCheckboxes').empty();
         updateCount();
     });
 

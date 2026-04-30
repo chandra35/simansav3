@@ -102,13 +102,13 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Permission</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.roles.index') }}" class="btn btn-info btn-sm mr-2">
+                <a href="{{ route('admin.roles.index') }}" class="btn btn-sm simansa-btn-contrast mr-2">
                     <i class="fas fa-user-tag"></i> Kelola Roles
                 </a>
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#bulkCreateModal">
                     <i class="fas fa-layer-group"></i> Bulk Create
                 </button>
-                <a href="{{ route('admin.permissions.create') }}" class="btn btn-primary btn-sm">
+                <a href="{{ route('admin.permissions.create') }}" class="btn btn-sm simansa-btn-strong">
                     <i class="fas fa-plus"></i> Tambah Permission
                 </a>
             </div>

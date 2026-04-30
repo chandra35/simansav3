@@ -104,3 +104,43 @@ Saat menambah halaman baru:
 - prioritaskan `simansa-btn-strong` untuk CTA utama
 - gunakan `simansa-btn-contrast` jika tombol berada di dalam panel berwarna
 - evaluasi screenshot desktop dan mobile sebelum final
+
+## Toolbar & Filter
+
+Selain tombol, ada dua area yang sekarang perlu ikut konsisten karena paling sering dipakai admin:
+
+### 1. Toolbar halaman
+
+Gunakan pola:
+
+- aksi utama di kanan memakai `simansa-btn-strong`
+- aksi sekunder yang masih penting boleh `btn-info` atau `simansa-btn-contrast`
+- jangan menumpuk terlalu banyak tombol kecil tanpa pengelompokan
+
+Contoh:
+
+```html
+<div class="simansa-toolbar">
+  <div></div>
+  <div class="simansa-toolbar__group">
+    <a class="btn btn-sm simansa-btn-contrast">Permission Matrix</a>
+    <a class="btn btn-sm simansa-btn-strong">Tambah User</a>
+  </div>
+</div>
+```
+
+### 2. Filter operasional
+
+Untuk halaman seperti `Data Siswa`, `Cetak Dokumen`, `Data User`, dan dashboard laporan:
+
+- bungkus filter dalam `simansa-filter-panel`
+- beri label jelas dengan icon kecil
+- pakai tombol pencarian yang kontras
+- tampilkan ringkasan hasil/seleksi dekat area hasil supaya admin tidak perlu scan ulang layar
+
+## Card & Surface
+
+- gunakan `simansa-management-card` atau `simansa-surface-card` untuk area kerja utama
+- hindari card kecil bertumpuk tanpa hirarki
+- ringkasan cepat sebaiknya pakai mini stat atau stat card, bukan alert biasa
+- footer aksi form gunakan CTA kuat di kanan dan aksi kembali/batal yang netral

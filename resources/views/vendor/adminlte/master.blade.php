@@ -146,6 +146,369 @@
             color: inherit !important;
         }
 
+        .content-wrapper {
+            background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 180px, #f5f8ff 100%);
+        }
+
+        .content-header {
+            padding-bottom: .5rem;
+        }
+
+        .card {
+            border: 1px solid rgba(203, 213, 225, 0.72);
+            border-radius: 18px;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .card-body,
+        .card-footer {
+            background: rgba(255, 255, 255, 0.96);
+        }
+
+        .card-footer {
+            border-top: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .simansa-page-hero {
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .9));
+            box-shadow: 0 24px 48px rgba(37, 99, 235, 0.16);
+            overflow: hidden;
+        }
+
+        .simansa-page-hero__body,
+        .simansa-page-hero__content {
+            padding: 1.35rem 1.45rem;
+        }
+
+        .simansa-hero,
+        .simansa-page-hero__body > .simansa-hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem 1.25rem;
+        }
+
+        .simansa-hero__main,
+        .simansa-page-hero__content {
+            flex: 1 1 420px;
+            min-width: 0;
+        }
+
+        .simansa-hero__eyebrow,
+        .simansa-page-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            margin-bottom: .65rem;
+            font-size: .76rem;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        .simansa-hero__title,
+        .simansa-page-hero__title {
+            margin: 0 0 .45rem;
+            font-size: clamp(1.7rem, 2.2vw, 2.3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            color: #fff;
+        }
+
+        .simansa-hero__subtitle,
+        .simansa-page-hero__subtitle {
+            margin: 0;
+            max-width: 780px;
+            font-size: .96rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .simansa-hero__side,
+        .simansa-page-hero__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .8rem;
+            justify-content: flex-end;
+            flex: 0 1 520px;
+        }
+
+        .simansa-hero-chip {
+            min-width: 158px;
+            padding: .8rem .95rem;
+            border-radius: 16px;
+            border: 1px solid rgba(219, 234, 254, 0.7);
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+        }
+
+        .simansa-hero-chip__label {
+            display: block;
+            margin-bottom: .3rem;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .simansa-hero-chip__value {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: #0f172a;
+        }
+
+        .simansa-management-card > .card-header,
+        .simansa-surface-card > .card-header {
+            padding: 1rem 1.15rem;
+        }
+
+        .simansa-management-card > .card-body,
+        .simansa-surface-card > .card-body {
+            padding: 1.15rem;
+        }
+
+        .simansa-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem 1rem;
+        }
+
+        .simansa-toolbar__group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .simansa-filter-panel {
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: 18px;
+            padding: 1rem 1rem .85rem;
+            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(240, 247, 255, 0.92));
+        }
+
+        .simansa-filter-panel--accent {
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(224, 242, 254, 0.96));
+        }
+
+        .simansa-filter-label {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            margin-bottom: .45rem;
+            font-size: .82rem;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .simansa-filter-hint {
+            margin-top: .45rem;
+            font-size: .77rem;
+            color: #64748b;
+        }
+
+        .simansa-results-panel {
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            border-radius: 16px;
+            padding: .95rem 1rem;
+            background: #fff;
+        }
+
+        .simansa-results-panel__title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: .8rem;
+        }
+
+        .simansa-results-panel__title h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .simansa-selection-grid .custom-control {
+            padding: .9rem 1rem .9rem 2.2rem;
+            border: 1px solid rgba(203, 213, 225, 0.86);
+            border-radius: 14px;
+            background: #fff;
+            min-height: 100%;
+            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .simansa-selection-grid .custom-control:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 22px rgba(59, 130, 246, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .simansa-selection-grid .custom-control-input:checked ~ .custom-control-label {
+            color: #0f172a;
+        }
+
+        .simansa-selection-grid .custom-control-input:checked ~ .custom-control-label::before {
+            border-color: #2563eb;
+            background-color: #2563eb;
+        }
+
+        .simansa-selection-grid .custom-control-label {
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .simansa-section-note {
+            border: 1px solid rgba(191, 219, 254, .85);
+            border-radius: 16px;
+            padding: .9rem 1rem;
+            background: rgba(239, 246, 255, 0.94);
+            color: #1e3a8a;
+        }
+
+        .simansa-form-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .simansa-form-card > .card-body {
+            padding: 1.15rem 1.15rem 1rem;
+        }
+
+        .simansa-form-section {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .simansa-form-section__title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .simansa-form-section__desc {
+            margin: .3rem 0 0;
+            font-size: .85rem;
+            line-height: 1.65;
+            color: #64748b;
+        }
+
+        .simansa-check-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: .8rem;
+        }
+
+        .simansa-check-card {
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            border-radius: 15px;
+            padding: .85rem .95rem;
+            background: #fff;
+        }
+
+        .simansa-check-card--active {
+            border-color: rgba(34, 197, 94, 0.36);
+            background: rgba(240, 253, 244, 0.96);
+        }
+
+        .simansa-check-card__meta {
+            display: block;
+            margin-top: .2rem;
+            font-size: .78rem;
+            color: #64748b;
+        }
+
+        .simansa-sticky-actions {
+            position: sticky;
+            bottom: 16px;
+            z-index: 20;
+        }
+
+        .simansa-btn-strong {
+            background: linear-gradient(135deg, #1d4ed8, #0f766e);
+            border: 1px solid rgba(29, 78, 216, 0.92);
+            color: #fff !important;
+            font-weight: 700;
+            box-shadow: 0 14px 28px rgba(29, 78, 216, 0.18);
+        }
+
+        .simansa-btn-strong:hover,
+        .simansa-btn-strong:focus {
+            background: linear-gradient(135deg, #1e40af, #0f766e);
+            border-color: rgba(30, 64, 175, 0.96);
+            color: #fff !important;
+        }
+
+        .simansa-btn-contrast {
+            background: #fff !important;
+            border: 1px solid #2563eb !important;
+            color: #1d4ed8 !important;
+            font-weight: 700;
+        }
+
+        .simansa-btn-contrast:hover,
+        .simansa-btn-contrast:focus {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #fff !important;
+        }
+
+        .simansa-btn-muted {
+            background: rgba(241, 245, 249, 0.96);
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            color: #334155 !important;
+            font-weight: 700;
+        }
+
+        .simansa-mini-stat {
+            padding: .75rem .9rem;
+            border-radius: 14px;
+            border: 1px solid rgba(226, 232, 240, .92);
+            background: rgba(255, 255, 255, .96);
+        }
+
+        .simansa-mini-stat__label {
+            display: block;
+            font-size: .73rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .simansa-mini-stat__value {
+            display: block;
+            margin-top: .25rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .simansa-empty-state {
+            padding: 2.3rem 1.5rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .simansa-empty-state i {
+            font-size: 2.7rem;
+            color: #94a3b8;
+            margin-bottom: .8rem;
+        }
+
         .app-global-overlay {
             position: fixed;
             inset: 0;
@@ -200,6 +563,36 @@
         @keyframes appGlobalSpin {
             to {
                 transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .simansa-page-hero__body,
+            .simansa-page-hero__content {
+                padding: 1.15rem;
+            }
+
+            .simansa-hero__side,
+            .simansa-page-hero__meta {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .card {
+                border-radius: 16px;
+            }
+
+            .simansa-filter-panel {
+                padding: .95rem .9rem .8rem;
+            }
+
+            .simansa-form-section {
+                flex-direction: column;
+            }
+
+            .simansa-sticky-actions {
+                position: static;
             }
         }
     </style>

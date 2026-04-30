@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Data User - SIMANSA')
+@section('plugins.Select2', true)
 
 @section('content_header')
     <div class="simansa-hero">
@@ -83,12 +84,12 @@
                     </h3>
                     <div class="card-tools ml-0">
                     @can('view-permission')
-                    <a href="{{ route('admin.users.permission-matrix') }}" class="btn btn-info btn-sm mr-2">
+                    <a href="{{ route('admin.users.permission-matrix') }}" class="btn btn-sm simansa-btn-contrast mr-2">
                         <i class="fas fa-shield-alt"></i> Permission Matrix
                     </a>
                     @endcan
                     @can('create-user')
-                    <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('admin.users.create') }}" class="btn btn-sm simansa-btn-strong">
                         <i class="fas fa-plus"></i> Tambah User
                     </a>
                     @endcan
@@ -111,7 +112,7 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
+                            <button type="button" id="btnResetFilter" class="btn btn-sm simansa-btn-contrast">
                                 <i class="fas fa-redo"></i> Reset Filter
                             </button>
                         </div>
@@ -459,6 +460,13 @@
 
 <script>
 $(document).ready(function() {
+    if ($.fn.select2) {
+        $('#filterRole').select2({
+            width: '100%',
+            minimumResultsForSearch: 8
+        });
+    }
+
     // Debug log
     console.log('Initializing DataTable...');
     console.log('AJAX URL:', '{{ route("admin.users.index") }}');
@@ -899,7 +907,7 @@ $(document).ready(function() {
     });
     
     $('#btnResetFilter').on('click', function() {
-        $('#filterRole').val('');
+        $('#filterRole').val('').trigger('change');
         applyFilters();
     });
     
