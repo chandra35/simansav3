@@ -8,7 +8,6 @@ use App\Models\Siswa;
 use App\Models\Gtk;
 use App\Models\TahunPelajaran;
 use App\Models\Kurikulum;
-use App\Models\Jurusan;
 use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +25,6 @@ class CetakController extends Controller
         
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $kurikulums = Kurikulum::where('is_active', true)->get();
-        $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
         $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
@@ -35,7 +33,6 @@ class CetakController extends Controller
         return view('admin.cetak.index', compact(
             'tahunPelajarans',
             'kurikulums',
-            'jurusans',
             'tingkatOptions',
             'isRestrictedWaliKelas',
             'defaultTahunPelajaranId'
@@ -50,7 +47,6 @@ class CetakController extends Controller
         $this->authorize('view-siswa');
 
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
-        $jurusans = Jurusan::where('is_active', true)->orderBy('urutan')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
         $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
@@ -58,7 +54,6 @@ class CetakController extends Controller
 
         return view('admin.cetak.id-card-siswa-index', compact(
             'tahunPelajarans',
-            'jurusans',
             'tingkatOptions',
             'isRestrictedWaliKelas',
             'defaultTahunPelajaranId'
@@ -89,7 +84,7 @@ class CetakController extends Controller
         // Get filter parameters
         $tahunPelajaranId = $request->input('tahun_pelajaran_id');
         $tingkat = $request->input('tingkat');
-        $jurusanId = $request->input('jurusan_id');
+        $rombel = $request->input('rombel');
         $kurikulumId = $request->input('kurikulum_id');
         $kelasIds = $request->input('kelas_ids', []);
         
@@ -116,8 +111,8 @@ class CetakController extends Controller
             $query->where('tingkat', $tingkat);
         }
         
-        if ($jurusanId) {
-            $query->where('jurusan_id', $jurusanId);
+        if ($rombel) {
+            $query->where('nama_kelas', $rombel);
         }
         
         if ($kurikulumId) {
@@ -217,8 +212,8 @@ class CetakController extends Controller
             $query->where('tingkat', $request->tingkat);
         }
         
-        if ($request->filled('jurusan_id')) {
-            $query->where('jurusan_id', $request->jurusan_id);
+        if ($request->filled('rombel')) {
+            $query->where('nama_kelas', $request->rombel);
         }
         
         if ($request->filled('kurikulum_id')) {
@@ -233,6 +228,7 @@ class CetakController extends Controller
                 return [
                     'id' => $kelas->id,
                     'nama_lengkap' => $kelas->nama_lengkap,
+                    'rombel' => $kelas->nama_kelas,
                     'tingkat' => $kelas->tingkat,
                     'tingkat_romawi' => $kelas->tingkat_romawi,
                     'jurusan' => $kelas->jurusan?->nama ?? '-',

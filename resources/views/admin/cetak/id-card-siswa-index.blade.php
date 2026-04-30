@@ -59,12 +59,9 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="id_siswa_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
-                                        <select name="jurusan_id" id="id_siswa_jurusan" class="form-control print-filter-select">
-                                            <option value="">-- Semua Jurusan --</option>
-                                            @foreach($jurusans as $jurusan)
-                                                <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
-                                            @endforeach
+                                        <label for="id_siswa_rombel"><i class="fas fa-users"></i> Rombel</label>
+                                        <select name="rombel" id="id_siswa_rombel" class="form-control print-filter-select">
+                                            <option value="">-- Semua Rombel --</option>
                                         </select>
                                     </div>
                                 </div>
@@ -153,7 +150,7 @@ $(document).ready(function() {
     function loadKelasByCurrentContext() {
         const tp = $('#id_siswa_tahun_pelajaran').val();
         const tingkat = $('#id_siswa_tingkat').val();
-        const jurusan = $('#id_siswa_jurusan').val();
+        const rombel = $('#id_siswa_rombel').val();
 
         if (!tp) {
             Swal.fire({ icon: 'warning', title: 'Tahun Pelajaran Belum Tersedia', text: 'Tahun pelajaran aktif belum ditemukan.' });
@@ -168,7 +165,7 @@ $(document).ready(function() {
         $.ajax({
             url: '{{ route("admin.cetak.kelas-by-filter") }}',
             method: 'GET',
-            data: { tahun_pelajaran_id: tp, tingkat: tingkat, jurusan_id: jurusan },
+            data: { tahun_pelajaran_id: tp, tingkat: tingkat, rombel: rombel },
             beforeSend: function() {
                 $('#btnLoadKelas').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
             },
@@ -206,8 +203,67 @@ $(document).ready(function() {
         });
     }
 
+    function resetRombelOptions() {
+        const $rombel = $('#id_siswa_rombel');
+        $rombel.html('<option value="">-- Semua Rombel --</option>').val('');
+        $rombel.trigger('change.select2');
+    }
+
+    function populateRombelOptions(kelasList) {
+        const $rombel = $('#id_siswa_rombel');
+        const currentValue = $rombel.val();
+        const rombels = [...new Set(kelasList.map(function(kelas) {
+            return kelas.rombel;
+        }).filter(Boolean))].sort(function(a, b) {
+            return a.localeCompare(b, 'id');
+        });
+
+        $rombel.html('<option value="">-- Semua Rombel --</option>');
+        rombels.forEach(function(rombel) {
+            $rombel.append(new Option(rombel, rombel, false, rombel === currentValue));
+        });
+        $rombel.trigger('change.select2');
+    }
+
+    function refreshRombelOptions() {
+        const tp = $('#id_siswa_tahun_pelajaran').val();
+        const tingkat = $('#id_siswa_tingkat').val();
+
+        if (!tp || !tingkat) {
+            resetRombelOptions();
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route("admin.cetak.kelas-by-filter") }}',
+            method: 'GET',
+            data: { tahun_pelajaran_id: tp, tingkat: tingkat },
+            success: function(response) {
+                populateRombelOptions(response.data || []);
+            },
+            error: function() {
+                resetRombelOptions();
+            }
+        });
+    }
+
     $('#btnLoadKelas').on('click', function() {
         loadKelasByCurrentContext();
+    });
+
+    $('#id_siswa_tahun_pelajaran, #id_siswa_tingkat').on('change', function() {
+        $('#kelasCheckboxes').empty();
+        $('#kelasList').slideUp();
+        $('#selectAll').prop('checked', false);
+        updateCount();
+        refreshRombelOptions();
+    });
+
+    $('#id_siswa_rombel').on('change', function() {
+        $('#kelasCheckboxes').empty();
+        $('#kelasList').slideUp();
+        $('#selectAll').prop('checked', false);
+        updateCount();
     });
 
     $('#selectAll').on('change', function() {
@@ -251,6 +307,8 @@ $(document).ready(function() {
 
     if (isRestrictedWaliKelas) {
         loadKelasByCurrentContext();
+    } else {
+        refreshRombelOptions();
     }
 
     $printPreviewFrame.on('load', function() {

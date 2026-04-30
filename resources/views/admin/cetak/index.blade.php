@@ -62,12 +62,9 @@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="filter_jurusan"><i class="fas fa-graduation-cap"></i> Jurusan</label>
-                                        <select name="jurusan_id" id="filter_jurusan" class="form-control print-filter-select">
-                                            <option value="">-- Semua Jurusan --</option>
-                                            @foreach($jurusans as $jurusan)
-                                                <option value="{{ $jurusan->id }}">{{ $jurusan->nama }}</option>
-                                            @endforeach
+                                        <label for="filter_rombel"><i class="fas fa-users"></i> Rombel</label>
+                                        <select name="rombel" id="filter_rombel" class="form-control print-filter-select">
+                                            <option value="">-- Semua Rombel --</option>
                                         </select>
                                     </div>
                                 </div>
@@ -229,7 +226,7 @@
             function loadKelasByCurrentContext() {
                 const tahunPelajaran = $('#filter_tahun_pelajaran').val();
                 const tingkat = $('#filter_tingkat').val();
-                const jurusan = $('#filter_jurusan').val();
+                const rombel = $('#filter_rombel').val();
                 const kurikulum = $('#filter_kurikulum').val();
 
                 if (!tahunPelajaran) {
@@ -256,7 +253,7 @@
                     data: {
                         tahun_pelajaran_id: tahunPelajaran,
                         tingkat: tingkat,
-                        jurusan_id: jurusan,
+                        rombel: rombel,
                         kurikulum_id: kurikulum
                     },
                     beforeSend: function() {
@@ -291,9 +288,73 @@
                 });
             }
 
+            function resetRombelOptions() {
+                const $rombel = $('#filter_rombel');
+                $rombel.html('<option value="">-- Semua Rombel --</option>').val('');
+                $rombel.trigger('change.select2');
+            }
+
+            function populateRombelOptions(kelasList) {
+                const $rombel = $('#filter_rombel');
+                const currentValue = $rombel.val();
+                const rombels = [...new Set(kelasList.map(function(kelas) {
+                    return kelas.rombel;
+                }).filter(Boolean))].sort(function(a, b) {
+                    return a.localeCompare(b, 'id');
+                });
+
+                $rombel.html('<option value="">-- Semua Rombel --</option>');
+                rombels.forEach(function(rombel) {
+                    $rombel.append(new Option(rombel, rombel, false, rombel === currentValue));
+                });
+                $rombel.trigger('change.select2');
+            }
+
+            function refreshRombelOptions() {
+                const tahunPelajaran = $('#filter_tahun_pelajaran').val();
+                const tingkat = $('#filter_tingkat').val();
+                const kurikulum = $('#filter_kurikulum').val();
+
+                if (!tahunPelajaran || !tingkat) {
+                    resetRombelOptions();
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route('admin.cetak.kelas-by-filter') }}',
+                    method: 'GET',
+                    data: {
+                        tahun_pelajaran_id: tahunPelajaran,
+                        tingkat: tingkat,
+                        kurikulum_id: kurikulum
+                    },
+                    success: function(response) {
+                        populateRombelOptions(response.data || []);
+                    },
+                    error: function() {
+                        resetRombelOptions();
+                    }
+                });
+            }
+
             // Load Kelas by Filter
             $('#btnLoadKelas').on('click', function() {
                 loadKelasByCurrentContext();
+            });
+
+            $('#filter_tahun_pelajaran, #filter_tingkat, #filter_kurikulum').on('change', function() {
+                $('#kelasCheckboxes').empty();
+                $('#kelasList').slideUp();
+                $('#selectAll').prop('checked', false);
+                updateSelectedCount();
+                refreshRombelOptions();
+            });
+
+            $('#filter_rombel').on('change', function() {
+                $('#kelasCheckboxes').empty();
+                $('#kelasList').slideUp();
+                $('#selectAll').prop('checked', false);
+                updateSelectedCount();
             });
 
             // Render Kelas List
@@ -384,6 +445,8 @@
 
             if (isRestrictedWaliKelas) {
                 loadKelasByCurrentContext();
+            } else {
+                refreshRombelOptions();
             }
 
             $printPreviewFrame.on('load', function() {
