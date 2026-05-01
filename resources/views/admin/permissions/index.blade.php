@@ -5,12 +5,27 @@
 @section('css')
 <style>
     .permission-group-card {
+        border: 1px solid rgba(191, 219, 254, 0.82);
         border-left: 4px solid;
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%),
+            linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(239, 246, 255, 0.94));
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
         transition: all 0.3s ease;
     }
+    .permission-group-card > .card-header {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(239, 246, 255, 0.68) 100%);
+        color: #1e3a8a;
+        border-bottom: 1px solid rgba(191, 219, 254, 0.95);
+    }
+    .permission-group-card > .card-header strong,
+    .permission-group-card > .card-header i {
+        color: #1e3a8a !important;
+    }
     .permission-group-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 18px 36px rgba(37, 99, 235, 0.12);
     }
     .color-1 { border-left-color: #007bff; }
     .color-2 { border-left-color: #28a745; }
@@ -20,10 +35,77 @@
     .color-6 { border-left-color: #6f42c1; }
     .color-7 { border-left-color: #fd7e14; }
     .color-8 { border-left-color: #20c997; }
-    .permission-badge {
-        font-size: 0.85rem;
-        margin: 3px;
-        padding: 6px 12px;
+    .permission-group-card .card-body {
+        background: transparent;
+    }
+    .permission-group-card .btn-group .btn {
+        border-radius: 10px !important;
+    }
+    .permission-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .7rem .8rem;
+        margin-bottom: .65rem;
+        border: 1px solid rgba(191, 219, 254, 0.78);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.68);
+        backdrop-filter: blur(6px);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .permission-item:last-child {
+        margin-bottom: 0;
+    }
+    .permission-item:hover {
+        transform: translateY(-1px);
+        border-color: rgba(96, 165, 250, 0.9);
+        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.08);
+    }
+    .permission-item__content {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+    }
+    .permission-item__icon {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(13, 148, 136, 0.14));
+        color: #1d4ed8;
+    }
+    .permission-item__title {
+        margin: 0;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #0f172a;
+        word-break: break-word;
+    }
+    .permission-item__meta {
+        margin-top: .12rem;
+        font-size: .74rem;
+        color: #64748b;
+    }
+    .permission-item__actions {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        flex-shrink: 0;
+    }
+    .permission-action-btn {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border-radius: 10px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>
 @stop
@@ -102,7 +184,7 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Permission</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.roles.index') }}" class="btn btn-sm simansa-btn-contrast mr-2">
+                <a href="{{ route('admin.roles.index') }}" class="btn btn-sm simansa-btn-header-soft mr-2">
                     <i class="fas fa-user-tag"></i> Kelola Roles
                 </a>
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#bulkCreateModal">
@@ -126,12 +208,18 @@
                         </div>
                         <div class="card-body py-2">
                             @foreach($perms as $permission)
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="permission-badge badge badge-secondary text-white">
-                                    <i class="fas fa-key"></i> {{ $permission->name }}
-                                </span>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('admin.permissions.show', $permission) }}" class="btn btn-outline-info btn-sm" 
+                            <div class="permission-item">
+                                <div class="permission-item__content">
+                                    <span class="permission-item__icon">
+                                        <i class="fas fa-key"></i>
+                                    </span>
+                                    <div>
+                                        <p class="permission-item__title">{{ $permission->name }}</p>
+                                        <div class="permission-item__meta">Permission aktif pada modul {{ ucfirst($group) }}</div>
+                                    </div>
+                                </div>
+                                <div class="permission-item__actions">
+                                    <a href="{{ route('admin.permissions.show', $permission) }}" class="btn btn-outline-info btn-sm permission-action-btn" 
                                        data-toggle="tooltip" title="Lihat roles dengan permission ini">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -139,7 +227,7 @@
                                           onsubmit="return confirm('Hapus permission {{ $permission->name }}?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        <button type="submit" class="btn btn-outline-danger btn-sm permission-action-btn" 
                                                 data-toggle="tooltip" title="Hapus permission">
                                             <i class="fas fa-trash"></i>
                                         </button>

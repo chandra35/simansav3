@@ -12,7 +12,7 @@
         <div class="simansa-hero__side">
             <div class="simansa-hero-chip">
                 <span class="simansa-hero-chip__label">Grup Permission</span>
-                <span class="simansa-hero-chip__value">{{ count($permissions) }}</span>
+                <span class="simansa-hero-chip__value">{{ count($permissionCatalog) }}</span>
             </div>
         </div>
     </div>
@@ -75,28 +75,34 @@
             </div>
             <div class="card-body">
                 <div class="simansa-section-note mb-4">
-                    <i class="fas fa-lightbulb mr-1"></i> Gunakan toggle per grup untuk mempercepat pengaturan. Permission yang dipilih akan langsung menjadi paket akses default untuk user dengan role ini.
+                    <i class="fas fa-lightbulb mr-1"></i> Permission sekarang dikelompokkan per fitur sekolah. Jadi Anda bisa langsung menyusun akses untuk modul seperti Data Siswa, GTK, Kelas, atau Tahun Pelajaran.
                 </div>
                 <div class="simansa-check-grid">
-                    @foreach($permissions as $group => $groupPermissions)
+                    @foreach($permissionCatalog as $module)
                         <div class="simansa-check-card">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <div class="font-weight-bold text-dark text-capitalize">{{ ucfirst($group) }}</div>
-                                    <small class="text-muted">{{ count($groupPermissions) }} permission</small>
+                                    <div class="font-weight-bold text-dark">
+                                        <i class="fas fa-{{ $module['icon'] }} mr-1 text-{{ $module['color'] }}"></i>{{ $module['label'] }}
+                                    </div>
+                                    <small class="text-muted">{{ count($module['items']) }} permission</small>
                                 </div>
-                                <button type="button" class="btn btn-xs simansa-btn-contrast" onclick="checkGroup('{{ $group }}')">
+                                <button type="button" class="btn btn-xs simansa-btn-contrast" onclick="checkGroup('{{ $module['key'] }}')">
                                     <i class="fas fa-check mr-1"></i> Toggle
                                 </button>
                             </div>
-                            @foreach($groupPermissions as $permission)
+                            @if(!empty($module['description']))
+                                <div class="simansa-filter-hint mb-2">{{ $module['description'] }}</div>
+                            @endif
+                            @foreach($module['items'] as $permission)
                                 <div class="custom-control custom-checkbox mb-2">
-                                    <input type="checkbox" class="custom-control-input permission-checkbox permission-{{ $group }}"
-                                           id="perm_{{ $permission->id }}" name="permissions[]" value="{{ $permission->name }}"
-                                           {{ in_array($permission->name, old('permissions', [])) ? 'checked' : '' }}>
-                                    <label class="custom-control-label" for="perm_{{ $permission->id }}">
-                                        {{ $permission->name }}
+                                    <input type="checkbox" class="custom-control-input permission-checkbox permission-{{ $module['key'] }}"
+                                           id="perm_{{ md5($permission['name']) }}" name="permissions[]" value="{{ $permission['name'] }}"
+                                           {{ in_array($permission['name'], old('permissions', [])) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="perm_{{ md5($permission['name']) }}">
+                                        {{ $permission['label'] }}
                                     </label>
+                                    <div class="simansa-check-card__meta">{{ $permission['name'] }}</div>
                                 </div>
                             @endforeach
                         </div>

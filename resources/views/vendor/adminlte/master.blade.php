@@ -120,7 +120,7 @@
         .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .card-tools,
         .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool,
         .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn:not(.simansa-btn-contrast):not(.simansa-btn-muted):not(.simansa-btn-strong),
         .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .nav-link {
             color: #fff !important;
         }
@@ -471,6 +471,68 @@
             border: 1px solid rgba(203, 213, 225, 0.92);
             color: #334155 !important;
             font-weight: 700;
+        }
+
+        .simansa-btn-header-soft {
+            background: rgba(255, 255, 255, 0.14) !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            color: #fff !important;
+            font-weight: 700;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+        }
+
+        .simansa-btn-header-soft i,
+        .simansa-btn-header-soft span {
+            color: #fff !important;
+        }
+
+        .simansa-btn-header-soft:hover,
+        .simansa-btn-header-soft:focus {
+            background: rgba(255, 255, 255, 0.22) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            color: #fff !important;
+        }
+
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast span,
+        .card-header .simansa-btn-contrast,
+        .card-header .simansa-btn-contrast i,
+        .card-header .simansa-btn-contrast span {
+            color: #1d4ed8 !important;
+        }
+
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover span,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus span,
+        .card-header .simansa-btn-contrast:hover,
+        .card-header .simansa-btn-contrast:focus,
+        .card-header .simansa-btn-contrast:hover i,
+        .card-header .simansa-btn-contrast:focus i,
+        .card-header .simansa-btn-contrast:hover span,
+        .card-header .simansa-btn-contrast:focus span {
+            color: #fff !important;
+        }
+
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted span,
+        .card-header .simansa-btn-muted,
+        .card-header .simansa-btn-muted i,
+        .card-header .simansa-btn-muted span {
+            color: #334155 !important;
+        }
+
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong i,
+        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong span,
+        .card-header .simansa-btn-strong,
+        .card-header .simansa-btn-strong i,
+        .card-header .simansa-btn-strong span {
+            color: #fff !important;
         }
 
         .simansa-mini-stat {

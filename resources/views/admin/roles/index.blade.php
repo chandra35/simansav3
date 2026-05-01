@@ -6,12 +6,18 @@
 @include('admin.partials.action-buttons-style')
 <style>
     .role-card {
-        transition: all 0.3s ease;
+        border: 1px solid rgba(191, 219, 254, 0.82);
         border-left: 4px solid transparent;
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%),
+            linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(239, 246, 255, 0.94));
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
+        transition: all 0.3s ease;
     }
     .role-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 18px 36px rgba(37, 99, 235, 0.12);
     }
     .role-card.system-role {
         border-left-color: #6c757d;
@@ -19,9 +25,56 @@
     .role-card.custom-role {
         border-left-color: #007bff;
     }
-    .permission-badge {
-        font-size: 0.75rem;
-        margin: 2px;
+    .role-module-list {
+        display: grid;
+        gap: .65rem;
+    }
+    .role-module-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .7rem;
+        padding: .75rem .8rem;
+        border: 1px solid rgba(191, 219, 254, 0.78);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.66);
+    }
+    .role-module-item__main {
+        min-width: 0;
+        display: flex;
+        gap: .7rem;
+    }
+    .role-module-item__icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(13, 148, 136, 0.14));
+        color: #1d4ed8;
+        flex: 0 0 34px;
+    }
+    .role-module-item__title {
+        margin: 0;
+        font-size: .86rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .role-module-item__meta {
+        margin-top: .15rem;
+        font-size: .74rem;
+        color: #64748b;
+        line-height: 1.5;
+    }
+    .role-module-item__count {
+        flex-shrink: 0;
+        padding: .2rem .55rem;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.12);
+        color: #1d4ed8;
+        font-size: .74rem;
+        font-weight: 700;
     }
 </style>
 @stop
@@ -100,7 +153,7 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Role</h3>
             <div class="card-tools d-flex">
-                <a href="{{ route('admin.permissions.index') }}" class="btn btn-sm simansa-btn-contrast mr-2">
+                <a href="{{ route('admin.permissions.index') }}" class="btn btn-sm simansa-btn-header-soft mr-2">
                     <i class="fas fa-key"></i> Kelola Permissions
                 </a>
                 <a href="{{ route('admin.roles.create') }}" class="btn btn-sm simansa-btn-strong">
@@ -165,14 +218,24 @@
                                 </span>
                             </div>
 
-                            @if($role->permissions->count() > 0)
-                                <div class="permission-tags">
-                                    @foreach($role->permissions->take(5) as $permission)
-                                        <span class="badge badge-light permission-badge">{{ $permission->name }}</span>
+                            @if(!empty($rolePermissionSummaries[$role->id]))
+                                <div class="role-module-list">
+                                    @foreach(collect($rolePermissionSummaries[$role->id])->take(3) as $module)
+                                        <div class="role-module-item">
+                                            <div class="role-module-item__main">
+                                                <span class="role-module-item__icon">
+                                                    <i class="fas fa-{{ $module['icon'] }}"></i>
+                                                </span>
+                                                <div>
+                                                    <p class="role-module-item__title">{{ $module['label'] }}</p>
+                                                    <div class="role-module-item__meta">
+                                                        {{ implode(' | ', $module['preview']) ?: 'Akses fitur aktif' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span class="role-module-item__count">{{ $module['count'] }}</span>
+                                        </div>
                                     @endforeach
-                                    @if($role->permissions->count() > 5)
-                                        <span class="badge badge-secondary permission-badge">+{{ $role->permissions->count() - 5 }} lainnya</span>
-                                    @endif
                                 </div>
                             @else
                                 <small class="text-muted">Tidak ada permission</small>

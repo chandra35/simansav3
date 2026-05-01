@@ -529,7 +529,7 @@ class UserController extends Controller
      */
     public function updatePermissionMatrix(Request $request)
     {
-        $this->authorize('manage-permission');
+        $this->authorize('assign-permissions');
 
         $validated = $request->validate([
             'changes' => 'required|array',
@@ -598,21 +598,23 @@ class UserController extends Controller
      */
     public function scanPermissions()
     {
-        $this->authorize('manage-permission');
+        $this->authorize('assign-permissions');
 
         $permissionService = new PermissionSyncService();
         
         try {
-            $unregistered = $permissionService->getUnregisteredPermissions();
-            $fromRoutes = $permissionService->scanRoutesForPermissions();
-            $fromMenu = $permissionService->scanMenuForPermissions();
+            $audit = $permissionService->scanPermissionAudit();
             
             return response()->json([
                 'success' => true,
-                'unregistered' => $unregistered,
-                'from_routes' => count($fromRoutes),
-                'from_menu' => count($fromMenu),
-                'total' => count($unregistered)
+                'unregistered' => $audit['unregistered'],
+                'uncatalogued' => $audit['uncatalogued'],
+                'shared_menu_permissions' => $audit['shared_menu_permissions'],
+                'from_routes' => $audit['route_total'],
+                'from_menu' => $audit['menu_total'],
+                'catalog_total' => $audit['catalog_total'],
+                'registered_total' => $audit['registered_total'],
+                'total' => count($audit['unregistered'])
             ]);
 
         } catch (\Exception $e) {
@@ -630,7 +632,7 @@ class UserController extends Controller
      */
     public function syncPermissions()
     {
-        $this->authorize('manage-permission');
+        $this->authorize('assign-permissions');
 
         $permissionService = new PermissionSyncService();
         
@@ -666,7 +668,7 @@ class UserController extends Controller
      */
     public function bulkUpdateRolePermissions(Request $request)
     {
-        $this->authorize('manage-permission');
+        $this->authorize('assign-permissions');
 
         $validated = $request->validate([
             'role_id' => 'required|integer|exists:roles,id',

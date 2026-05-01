@@ -63,13 +63,18 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($groupedPermissions->count() > 0)
+                    @if(count($permissionCatalog) > 0)
                         <div class="simansa-check-grid">
-                            @foreach($groupedPermissions as $group => $perms)
+                            @foreach($permissionCatalog as $module)
                                 <div class="simansa-check-card">
-                                    <div class="font-weight-bold text-dark text-capitalize mb-2">{{ ucfirst($group) }}</div>
-                                    @foreach($perms as $permission)
-                                        <div class="small text-muted mb-1"><i class="fas fa-check text-success mr-1"></i>{{ $permission->name }}</div>
+                                    <div class="font-weight-bold text-dark mb-2">
+                                        <i class="fas fa-{{ $module['icon'] }} mr-1 text-{{ $module['color'] }}"></i>{{ $module['label'] }}
+                                    </div>
+                                    @if(!empty($module['description']))
+                                        <div class="simansa-filter-hint mb-2">{{ $module['description'] }}</div>
+                                    @endif
+                                    @foreach($module['items'] as $permission)
+                                        <div class="small text-muted mb-1"><i class="fas fa-check text-success mr-1"></i>{{ $permission['label'] }}</div>
                                     @endforeach
                                 </div>
                             @endforeach

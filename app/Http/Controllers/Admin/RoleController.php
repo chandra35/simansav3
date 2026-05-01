@@ -7,6 +7,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Services\PermissionSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -17,12 +18,18 @@ class RoleController extends Controller
      */
     public function index()
     {
+        $permissionService = new PermissionSyncService();
         $roles = Role::with('permissions')
             ->withCount('users')
             ->orderBy('name')
             ->get();
+
+        $rolePermissionSummaries = [];
+        foreach ($roles as $role) {
+            $rolePermissionSummaries[$role->id] = $permissionService->summarizePermissionsByModule($role->permissions);
+        }
             
-        return view('admin.roles.index', compact('roles'));
+        return view('admin.roles.index', compact('roles', 'rolePermissionSummaries'));
     }
 
     /**
@@ -30,12 +37,10 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::orderBy('name')->get()->groupBy(function($permission) {
-            $parts = explode('-', $permission->name);
-            return $parts[0] ?? 'general';
-        });
+        $permissionService = new PermissionSyncService();
+        $permissionCatalog = $permissionService->getPermissionCatalog(Permission::orderBy('name')->get());
         
-        return view('admin.roles.create', compact('permissions'));
+        return view('admin.roles.create', compact('permissionCatalog'));
     }
 
     /**
@@ -70,6 +75,7 @@ class RoleController extends Controller
      */
     public function show(Role $role)
     {
+        $permissionService = new PermissionSyncService();
         $role->load('users', 'permissions');
 
         $availableUsers = User::whereDoesntHave('roles', function ($query) use ($role) {
@@ -78,13 +84,9 @@ class RoleController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
         
-        // Group permissions by category
-        $groupedPermissions = $role->permissions->groupBy(function($permission) {
-            $parts = explode('-', $permission->name);
-            return $parts[0] ?? 'general';
-        });
+        $permissionCatalog = $permissionService->getPermissionCatalog($role->permissions);
         
-        return view('admin.roles.show', compact('role', 'groupedPermissions', 'availableUsers'));
+        return view('admin.roles.show', compact('role', 'permissionCatalog', 'availableUsers'));
     }
 
     /**
@@ -99,14 +101,12 @@ class RoleController extends Controller
                 ->with('error', 'Role sistem tidak dapat diedit');
         }
 
-        $permissions = Permission::orderBy('name')->get()->groupBy(function($permission) {
-            $parts = explode('-', $permission->name);
-            return $parts[0] ?? 'general';
-        });
+        $permissionService = new PermissionSyncService();
+        $permissionCatalog = $permissionService->getPermissionCatalog(Permission::orderBy('name')->get());
         
         $rolePermissions = $role->permissions->pluck('name')->toArray();
         
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('admin.roles.edit', compact('role', 'permissionCatalog', 'rolePermissions'));
     }
 
     /**
