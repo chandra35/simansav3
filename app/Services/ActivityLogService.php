@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AppSetting;
 use App\Models\ActivityLog;
+use App\Support\ClientRequest;
 use Illuminate\Support\Facades\Auth;
 use Jenssegers\Agent\Agent;
 use Torann\GeoIP\Facades\GeoIP;
@@ -19,8 +20,8 @@ class ActivityLogService
     {
         $agent = new Agent();
 
-        // Get real IP address (even behind proxy/cloudflare)
-        $ip = self::getRealIpAddress();
+        $request = request();
+        $ip = ClientRequest::ip($request);
 
         $deviceLocation = self::resolveDeviceLocation($data);
         $hasDeviceLocation = $deviceLocation !== null;
@@ -31,7 +32,7 @@ class ActivityLogService
             } catch (\Exception $e) {
                 $location = null;
             }
-        } else {
+        } elseif (ClientRequest::isPublicIp($ip)) {
             // Fallback to IP-based location
             try {
                 $geoip = GeoIP::getLocation($ip);
@@ -48,21 +49,30 @@ class ActivityLogService
             } catch (\Exception $e) {
                 $location = null;
             }
+        } else {
+            $location = null;
         }
 
         $properties = is_array($data['properties'] ?? null) ? $data['properties'] : [];
         $locationMeta = [
             'required' => self::isLocationRequired(),
-            'source' => $deviceLocation['source'] ?? ($location ? 'geoip' : 'missing'),
-            'status' => self::buildLocationStatus($hasDeviceLocation, $location !== null),
+            'source' => $deviceLocation['source'] ?? ($location ? 'geoip' : (ClientRequest::isPublicIp($ip) ? 'missing' : 'private_ip')),
+            'status' => self::buildLocationStatus($hasDeviceLocation, $location !== null, $ip),
             'captured_at' => $deviceLocation['captured_at'] ?? null,
+            'accuracy' => $deviceLocation['accuracy'] ?? null,
+        ];
+        $properties['request_meta'] = [
+            'resolved_ip' => $ip,
+            'ip_source' => ClientRequest::ipSource($request),
+            'laravel_ip' => $request->ip(),
+            'forwarded_for' => $request->header('X-Forwarded-For'),
         ];
         $properties['location_meta'] = $locationMeta;
 
         $logData = array_merge([
             'user_id' => Auth::id(),
             'ip_address' => $ip,
-            'user_agent' => request()->userAgent(),
+            'user_agent' => $request->userAgent(),
             
             // Device & Browser Info
             'device_type' => self::getDeviceType($agent),
@@ -82,8 +92,8 @@ class ActivityLogService
             'timezone' => $location['timezone'] ?? null,
             
             // Request Info
-            'url' => request()->fullUrl(),
-            'method' => request()->method(),
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
             'properties' => $properties,
             'notes' => self::buildLocationNote($locationMeta),
         ], $data);
@@ -158,53 +168,6 @@ class ActivityLogService
             return 'mobile';
         }
         return 'unknown';
-    }
-    
-    /**
-     * Get real IP address (even behind proxy/load balancer)
-     */
-    private static function getRealIpAddress()
-    {
-        // Check for IP from shared internet
-        if (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        }
-        
-        // Check for IP passed from proxy (CloudFlare, etc)
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            foreach ($ipList as $ip) {
-                $ip = trim($ip);
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
-            }
-        }
-        
-        // CloudFlare specific
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP']) && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'], FILTER_VALIDATE_IP)) {
-            return $_SERVER['HTTP_CF_CONNECTING_IP'];
-        }
-        
-        // Standard remote address
-        $ip = $_SERVER['REMOTE_ADDR'] ?? request()->ip();
-        
-        // For development/localhost, try to get public IP from external service
-        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'])) {
-            try {
-                // Try to get public IP (with timeout)
-                $context = stream_context_create(['http' => ['timeout' => 2]]);
-                $publicIp = @file_get_contents('https://api.ipify.org', false, $context);
-                
-                if ($publicIp && filter_var($publicIp, FILTER_VALIDATE_IP)) {
-                    return $publicIp;
-                }
-            } catch (\Exception $e) {
-                // Fallback to localhost IP
-            }
-        }
-        
-        return $ip;
     }
     
     /**
@@ -374,6 +337,7 @@ class ActivityLogService
             return [
                 'latitude' => (float) $data['latitude'],
                 'longitude' => (float) $data['longitude'],
+                'accuracy' => isset($data['location_accuracy']) ? (float) $data['location_accuracy'] : null,
                 'source' => 'payload',
                 'captured_at' => now()->toIso8601String(),
             ];
@@ -385,6 +349,7 @@ class ActivityLogService
             return [
                 'latitude' => (float) $request->input('latitude'),
                 'longitude' => (float) $request->input('longitude'),
+                'accuracy' => $request->filled('location_accuracy') ? (float) $request->input('location_accuracy') : null,
                 'source' => 'request',
                 'captured_at' => now()->toIso8601String(),
             ];
@@ -394,6 +359,7 @@ class ActivityLogService
             return [
                 'latitude' => (float) $request->header('X-Device-Latitude'),
                 'longitude' => (float) $request->header('X-Device-Longitude'),
+                'accuracy' => $request->header('X-Device-Accuracy') !== null ? (float) $request->header('X-Device-Accuracy') : null,
                 'source' => 'header',
                 'captured_at' => now()->toIso8601String(),
             ];
@@ -405,6 +371,7 @@ class ActivityLogService
             return [
                 'latitude' => (float) $sessionLocation['latitude'],
                 'longitude' => (float) $sessionLocation['longitude'],
+                'accuracy' => isset($sessionLocation['accuracy']) ? (float) $sessionLocation['accuracy'] : null,
                 'source' => 'session',
                 'captured_at' => $sessionLocation['captured_at'] ?? null,
             ];
@@ -413,7 +380,7 @@ class ActivityLogService
         return null;
     }
 
-    private static function buildLocationStatus(bool $hasDeviceLocation, bool $hasResolvedLocation): string
+    private static function buildLocationStatus(bool $hasDeviceLocation, bool $hasResolvedLocation, ?string $ip): string
     {
         if ($hasDeviceLocation) {
             return 'device_location';
@@ -421,6 +388,10 @@ class ActivityLogService
 
         if ($hasResolvedLocation) {
             return 'geoip_fallback';
+        }
+
+        if ($ip && !ClientRequest::isPublicIp($ip)) {
+            return 'private_ip_unresolvable';
         }
 
         return self::isLocationRequired() ? 'missing_required' : 'missing_optional';
@@ -431,10 +402,13 @@ class ActivityLogService
         $requiredLabel = $locationMeta['required'] ? 'wajib' : 'opsional';
 
         return sprintf(
-            'Lokasi %s | sumber: %s | status: %s',
+            'Lokasi %s | sumber: %s | status: %s%s',
             $requiredLabel,
             $locationMeta['source'] ?? 'missing',
-            $locationMeta['status'] ?? 'unknown'
+            $locationMeta['status'] ?? 'unknown',
+            isset($locationMeta['accuracy']) && $locationMeta['accuracy'] !== null
+                ? ' | akurasi ±' . round((float) $locationMeta['accuracy']) . ' m'
+                : ''
         );
     }
 

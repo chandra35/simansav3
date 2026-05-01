@@ -58,6 +58,22 @@ class DashboardController extends Controller
             'kelasAktif.waliKelas.gtk',
         ]);
 
+        $kelasAktif = $siswa->kelasAktif->first();
+        $temanSekelas = collect();
+        $temanSekelasOnline = 0;
+
+        if ($kelasAktif) {
+            $temanSekelas = $kelasAktif->siswaAktif()
+                ->where('siswa.id', '!=', $siswa->id)
+                ->with(['user.latestSession'])
+                ->orderBy('siswa.nama_lengkap')
+                ->get();
+
+            $temanSekelasOnline = $temanSekelas->filter(function ($teman) {
+                return $teman->user?->latestSession?->isStillOnline();
+            })->count();
+        }
+
         // Get tahun pelajaran aktif
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
 
@@ -84,6 +100,12 @@ class DashboardController extends Controller
             }
         }
 
-        return view('siswa.dashboard', compact('siswa', 'tahunPelajaranAktif', 'snbpReminder'));
+        return view('siswa.dashboard', compact(
+            'siswa',
+            'tahunPelajaranAktif',
+            'snbpReminder',
+            'temanSekelas',
+            'temanSekelasOnline'
+        ));
     }
 }

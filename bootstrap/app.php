@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
@@ -32,7 +34,6 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Track user activity untuk authenticated users
         $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserActivity::class);
-        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureDeviceLocationForActivity::class);
 
         // Force password change for siswa
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);

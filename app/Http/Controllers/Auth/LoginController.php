@@ -57,9 +57,13 @@ class LoginController extends Controller
             if ($request->filled('latitude') && $request->filled('longitude')) {
                 $logData['latitude'] = $request->latitude;
                 $logData['longitude'] = $request->longitude;
+                if ($request->filled('location_accuracy')) {
+                    $logData['location_accuracy'] = $request->location_accuracy;
+                }
                 $request->session()->put('device_location', [
                     'latitude' => (float) $request->latitude,
                     'longitude' => (float) $request->longitude,
+                    'accuracy' => $request->filled('location_accuracy') ? (float) $request->location_accuracy : null,
                     'captured_at' => now()->toIso8601String(),
                 ]);
             }
@@ -107,6 +111,12 @@ class LoginController extends Controller
     {
         // Enhanced logout log
         ActivityLogService::logLogout();
+
+        if ($user = Auth::user()) {
+            \App\Models\UserSession::where('user_id', $user->id)
+                ->where('session_id', $request->session()->getId())
+                ->update(['is_online' => false]);
+        }
         
         Auth::logout();
 

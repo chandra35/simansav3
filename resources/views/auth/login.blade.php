@@ -313,6 +313,7 @@ body.login-page {
     {{-- Hidden fields for GPS location --}}
     <input type="hidden" name="latitude" id="latitude">
     <input type="hidden" name="longitude" id="longitude">
+    <input type="hidden" name="location_accuracy" id="location_accuracy">
 
     {{-- Username field --}}
     <div class="simansa-field">
@@ -383,7 +384,8 @@ document.addEventListener('DOMContentLoaded', function() {
             function(position) {
                 document.getElementById('latitude').value = position.coords.latitude;
                 document.getElementById('longitude').value = position.coords.longitude;
-                locStatus.innerHTML = '<i class="fas fa-check-circle"></i> Lokasi terdeteksi';
+                document.getElementById('location_accuracy').value = position.coords.accuracy || '';
+                locStatus.innerHTML = '<i class="fas fa-check-circle"></i> Lokasi terdeteksi' + (position.coords.accuracy ? ' (±' + Math.round(position.coords.accuracy) + ' m)' : '');
                 locStatus.classList.add('detected');
             },
             function() {

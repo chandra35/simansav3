@@ -452,6 +452,65 @@
             margin-bottom: .8rem;
         }
 
+        .simansa-navbar-live {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            padding: .38rem .8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            color: #0f172a;
+            font-size: .78rem;
+            font-weight: 700;
+        }
+
+        .simansa-navbar-live__clock {
+            color: #1d4ed8;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .simansa-navbar-live__tz {
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .simansa-navbar-presence {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .38rem .72rem;
+            border-radius: 999px;
+            font-size: .76rem;
+            font-weight: 700;
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            background: rgba(255, 255, 255, 0.82);
+            color: #0f172a;
+        }
+
+        .simansa-navbar-presence__dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: #94a3b8;
+            box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.2);
+        }
+
+        .simansa-navbar-presence.is-online .simansa-navbar-presence__dot {
+            background: #22c55e;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.22);
+            animation: simansaMenuPulse 1.8s ease-in-out infinite;
+        }
+
+        .simansa-navbar-presence.is-offline .simansa-navbar-presence__dot {
+            background: #94a3b8;
+        }
+
+        .simansa-navbar-presence.is-syncing .simansa-navbar-presence__dot {
+            background: #f59e0b;
+        }
+
         .app-global-overlay {
             position: fixed;
             inset: 0;
@@ -706,6 +765,8 @@
                 isAuthenticated: @json(auth()->check()),
                 csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 storageKey: 'simansa_device_location',
+                heartbeatUrl: @json(auth()->check() ? route('client-runtime.heartbeat') : null),
+                serverTimeUrl: @json(auth()->check() ? route('client-runtime.server-time') : null),
             };
 
             let currentDeviceLocation = null;
@@ -746,6 +807,9 @@
                 if (window.axios && window.axios.defaults && window.axios.defaults.headers) {
                     window.axios.defaults.headers.common['X-Device-Latitude'] = currentDeviceLocation.latitude;
                     window.axios.defaults.headers.common['X-Device-Longitude'] = currentDeviceLocation.longitude;
+                    if (currentDeviceLocation.accuracy !== undefined && currentDeviceLocation.accuracy !== null) {
+                        window.axios.defaults.headers.common['X-Device-Accuracy'] = currentDeviceLocation.accuracy;
+                    }
                 }
             }
 
@@ -754,7 +818,7 @@
                     return;
                 }
 
-                ['latitude', 'longitude'].forEach(function (field) {
+                ['latitude', 'longitude', 'location_accuracy'].forEach(function (field) {
                     let input = form.querySelector('input[name="' + field + '"]');
                     if (!input) {
                         input = document.createElement('input');
@@ -762,8 +826,11 @@
                         input.name = field;
                         form.appendChild(input);
                     }
-
-                    input.value = currentDeviceLocation[field];
+                    if (field === 'location_accuracy') {
+                        input.value = currentDeviceLocation.accuracy ?? '';
+                    } else {
+                        input.value = currentDeviceLocation[field];
+                    }
                 });
             }
 
@@ -783,6 +850,7 @@
                     body: JSON.stringify({
                         latitude: currentDeviceLocation.latitude,
                         longitude: currentDeviceLocation.longitude,
+                        accuracy: currentDeviceLocation.accuracy ?? null,
                     }),
                 }).catch(function () {
                     // Ignore sync failures and keep local state.
@@ -805,6 +873,7 @@
                         activateDeviceLocation({
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy ?? null,
                             captured_at: new Date().toISOString(),
                         });
                     },
@@ -890,6 +959,9 @@
 
                     xhr.setRequestHeader('X-Device-Latitude', currentDeviceLocation.latitude);
                     xhr.setRequestHeader('X-Device-Longitude', currentDeviceLocation.longitude);
+                    if (currentDeviceLocation.accuracy !== undefined && currentDeviceLocation.accuracy !== null) {
+                        xhr.setRequestHeader('X-Device-Accuracy', currentDeviceLocation.accuracy);
+                    }
                 });
 
                 window.jQuery(document).ajaxError(function (_event, xhr) {
@@ -906,6 +978,8 @@
                 currentDeviceLocation = loadStoredDeviceLocation();
                 applyDeviceLocationHeaders();
                 detectDeviceLocation();
+                initLiveServerTime();
+                initUserHeartbeat();
 
                 let formSubmitting = false;
 
@@ -1052,6 +1126,128 @@
                     coach.setAttribute('aria-hidden', 'false');
                     pulse.setAttribute('aria-hidden', 'false');
                 }, 700);
+            }
+
+            function updatePresenceBadge(state, label) {
+                const badge = document.getElementById('simansaNavbarPresence');
+                const labelEl = document.getElementById('simansaNavbarPresenceLabel');
+
+                if (!badge || !labelEl) {
+                    return;
+                }
+
+                badge.classList.remove('is-online', 'is-offline', 'is-syncing');
+                badge.classList.add(state === 'online' ? 'is-online' : state === 'syncing' ? 'is-syncing' : 'is-offline');
+                labelEl.textContent = label;
+            }
+
+            function initLiveServerTime() {
+                const clock = document.getElementById('simansaServerClock');
+                const tz = document.getElementById('simansaServerTimezone');
+
+                if (!clock || !deviceLocationConfig.serverTimeUrl || !window.fetch) {
+                    return;
+                }
+
+                let serverNow = null;
+
+                function renderClock() {
+                    if (!serverNow) {
+                        return;
+                    }
+
+                    clock.textContent = serverNow.toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                    });
+
+                    serverNow = new Date(serverNow.getTime() + 1000);
+                }
+
+                function syncServerTime() {
+                    window.fetch(deviceLocationConfig.serverTimeUrl, {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                    })
+                    .then(function (response) { return response.json(); })
+                    .then(function (payload) {
+                        if (!payload.server_time) {
+                            return;
+                        }
+
+                        serverNow = new Date(payload.server_time);
+                        if (tz && payload.timezone) {
+                            tz.textContent = payload.timezone;
+                        }
+                        renderClock();
+                    })
+                    .catch(function () {
+                        // Keep last rendered time if sync fails.
+                    });
+                }
+
+                syncServerTime();
+                window.setInterval(renderClock, 1000);
+                window.setInterval(syncServerTime, 60000);
+            }
+
+            function initUserHeartbeat() {
+                if (!deviceLocationConfig.isAuthenticated || !deviceLocationConfig.heartbeatUrl || !window.fetch) {
+                    return;
+                }
+
+                let heartbeatRunning = false;
+
+                function sendHeartbeat() {
+                    if (heartbeatRunning) {
+                        return;
+                    }
+
+                    heartbeatRunning = true;
+                    updatePresenceBadge('syncing', 'Menyinkronkan');
+
+                    window.fetch(deviceLocationConfig.heartbeatUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': deviceLocationConfig.csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ ping: true }),
+                    })
+                    .then(function (response) { return response.json(); })
+                    .then(function (payload) {
+                        if (payload.server_time) {
+                            const clock = document.getElementById('simansaServerClock');
+                            if (clock) {
+                                const serverNow = new Date(payload.server_time);
+                                clock.textContent = serverNow.toLocaleTimeString('id-ID', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                });
+                            }
+                        }
+
+                        updatePresenceBadge(payload.user_online ? 'online' : 'offline', payload.user_online ? 'Online' : 'Offline');
+                    })
+                    .catch(function () {
+                        updatePresenceBadge('offline', 'Koneksi putus');
+                    })
+                    .finally(function () {
+                        heartbeatRunning = false;
+                    });
+                }
+
+                sendHeartbeat();
+                window.setInterval(sendHeartbeat, 60000);
+                document.addEventListener('visibilitychange', function () {
+                    if (document.visibilityState === 'visible') {
+                        sendHeartbeat();
+                    }
+                });
             }
         })();
     </script>

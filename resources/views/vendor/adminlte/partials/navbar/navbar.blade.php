@@ -18,6 +18,22 @@
 
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">
+        @if(Auth::check())
+            <li class="nav-item d-none d-md-flex align-items-center mr-2">
+                <div class="simansa-navbar-live">
+                    <i class="far fa-clock text-primary"></i>
+                    <span id="simansaServerClock" class="simansa-navbar-live__clock">--:--:--</span>
+                    <span id="simansaServerTimezone" class="simansa-navbar-live__tz">{{ config('app.timezone') }}</span>
+                </div>
+            </li>
+            <li class="nav-item d-none d-md-flex align-items-center mr-2">
+                <div id="simansaNavbarPresence" class="simansa-navbar-presence is-syncing">
+                    <span class="simansa-navbar-presence__dot"></span>
+                    <span id="simansaNavbarPresenceLabel">Menyinkronkan</span>
+                </div>
+            </li>
+        @endif
+
         {{-- Custom right links --}}
         @yield('content_top_nav_right')
 

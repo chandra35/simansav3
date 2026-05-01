@@ -1012,17 +1012,17 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-light border">
-                    Saat opsi ini aktif, semua aksi simpan, ubah, hapus, dan login akan meminta koordinat perangkat. Log tetap mencatat sumber lokasi agar bisa dibedakan antara GPS perangkat, sesi terakhir, atau fallback IP.
+                    Saat opsi ini aktif, sistem akan menandai log yang belum membawa lokasi perangkat. Penyimpanan data tetap berjalan agar pengguna tidak terhambat saat GPS mati, rusak, atau izin lokasi tidak tersedia.
                 </div>
 
                 <div class="form-group mb-0">
-                    <label for="activity_log_require_location">Wajibkan lokasi perangkat pada aktivitas pengguna</label>
+                    <label for="activity_log_require_location">Tandai log yang seharusnya membawa lokasi perangkat</label>
                     <select name="activity_log_require_location" id="activity_log_require_location" class="form-control">
-                        <option value="0" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? '' : 'selected' }}>Tidak wajib</option>
-                        <option value="1" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? 'selected' : '' }}>Wajib</option>
+                        <option value="0" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? '' : 'selected' }}>Tidak perlu penandaan khusus</option>
+                        <option value="1" {{ old('activity_log_require_location', $setting->activity_log_require_location) ? 'selected' : '' }}>Ya, tandai jika lokasi tidak ikut</option>
                     </select>
                     <small class="text-muted">
-                        Jika wajib, request aksi yang tidak membawa lokasi perangkat akan ditolak sebelum data diproses.
+                        Opsi ini hanya memengaruhi status audit pada Activity Logs, tidak lagi memblokir request simpan, ubah, hapus, atau login.
                     </small>
                 </div>
             </div>

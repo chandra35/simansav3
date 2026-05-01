@@ -547,11 +547,6 @@
         </div>
 
         <!-- Teman Sekelas Card -->
-        @php
-            $kelasAktif = $siswa->kelasAktif->first();
-            $temanSekelas = $kelasAktif ? $kelasAktif->siswaAktif()->where('siswa_id', '!=', $siswa->id)->orderBy('nama_lengkap', 'asc')->get() : collect();
-        @endphp
-        
         @if($kelasAktif)
         <div class="card card-success">
             <div class="card-header">
@@ -565,21 +560,50 @@
             </div>
             <div class="card-body p-0">
                 @if($temanSekelas->count() > 0)
+                    <div class="d-flex flex-wrap justify-content-between align-items-center px-3 pt-3 pb-2 border-bottom bg-light">
+                        <div class="small text-muted">
+                            Pantau teman kelas yang sedang aktif secara real-time.
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center" style="gap:.5rem;">
+                            <span class="badge badge-success px-3 py-2">
+                                <i class="fas fa-circle mr-1" style="font-size:.55rem;"></i>{{ $temanSekelasOnline }} Online
+                            </span>
+                            <span class="badge badge-secondary px-3 py-2">
+                                <i class="fas fa-circle mr-1" style="font-size:.55rem;"></i>{{ max($temanSekelas->count() - $temanSekelasOnline, 0) }} Offline
+                            </span>
+                        </div>
+                    </div>
                     <div class="teman-sekelas-grid p-3" style="max-height: 450px; overflow-y: auto;">
                         <div class="row">
                             @foreach($temanSekelas as $teman)
+                            @php
+                                $temanOnline = $teman->user?->latestSession?->isStillOnline() ?? false;
+                                $temanLastSeen = $teman->user?->latestSession?->last_activity;
+                            @endphp
                             <div class="col-6 col-md-4 col-lg-3 mb-3">
                                 <div class="teman-card text-center p-2" style="background: #f8f9fa; border-radius: 10px; transition: all 0.3s ease;">
-                                    <div class="teman-foto mx-auto mb-2" style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid {{ $teman->jenis_kelamin == 'L' ? '#007bff' : '#e83e8c' }}; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <div class="teman-foto mx-auto mb-2 position-relative" style="width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 3px solid {{ $teman->jenis_kelamin == 'L' ? '#007bff' : '#e83e8c' }}; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                                         <img src="{{ $teman->foto_profile_url }}" 
                                              alt="{{ $teman->nama_lengkap }}"
                                              style="width: 100%; height: 100%; object-fit: cover;"
                                              onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($teman->nama_lengkap) }}&size=100&background={{ $teman->jenis_kelamin == 'L' ? '007bff' : 'e83e8c' }}&color=fff'">
+                                        <span class="teman-status-indicator {{ $temanOnline ? 'is-online' : 'is-offline' }}"
+                                              title="{{ $temanOnline ? 'Sedang online' : 'Sedang offline' }}"></span>
                                     </div>
                                     <h6 class="mb-0 small font-weight-bold text-truncate" title="{{ $teman->nama_lengkap }}">
                                         {{ Str::limit($teman->nama_lengkap, 15) }}
                                     </h6>
                                     <small class="text-muted">{{ $teman->nisn }}</small>
+                                    <div class="mt-1">
+                                        <span class="badge {{ $temanOnline ? 'badge-success' : 'badge-secondary' }} px-2 py-1">
+                                            <i class="fas fa-circle mr-1" style="font-size:.5rem;"></i>{{ $temanOnline ? 'Online' : 'Offline' }}
+                                        </span>
+                                    </div>
+                                    @if($temanLastSeen)
+                                        <div class="mt-1 text-muted" style="font-size:.72rem;">
+                                            Aktif {{ \Carbon\Carbon::parse($temanLastSeen)->diffForHumans() }}
+                                        </div>
+                                    @endif
                                     <div class="mt-1">
                                         @if($teman->jenis_kelamin == 'L')
                                             <span class="badge badge-primary badge-sm"><i class="fas fa-mars"></i></span>
@@ -901,6 +925,25 @@
     
     .teman-card:hover .teman-foto img {
         transform: scale(1.1);
+    }
+
+    .teman-status-indicator {
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    }
+
+    .teman-status-indicator.is-online {
+        background: #22c55e;
+    }
+
+    .teman-status-indicator.is-offline {
+        background: #94a3b8;
     }
 
     /* Info Box Hover */

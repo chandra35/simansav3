@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\HasUuid;
 use App\Traits\HasActivityLog;
+use App\Models\UserSession;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Crypt;
 
@@ -107,6 +108,16 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class);
     }
 
+    public function sessions()
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
+    public function latestSession()
+    {
+        return $this->hasOne(UserSession::class)->latestOfMany('last_activity');
+    }
+
     /**
      * Relationship: User has many tugas tambahan
      */
@@ -174,5 +185,10 @@ class User extends Authenticatable
             return asset('storage/avatars/' . $this->avatar);
         }
         return asset('vendor/adminlte/dist/img/user2-160x160.jpg');
+    }
+
+    public function getIsOnlineAttribute(): bool
+    {
+        return $this->latestSession?->isStillOnline() ?? false;
     }
 }

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Jenssegers\Agent\Agent;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Support\ClientRequest;
+use Torann\GeoIP\Facades\GeoIP;
 
 class UserSession extends Model
 {
@@ -90,6 +92,8 @@ class UserSession extends Model
             
             $userAgent = $request->userAgent();
             $deviceInfo = self::parseUserAgent($userAgent);
+            $ipAddress = ClientRequest::ip($request);
+            $geoLocation = self::resolveGeoLocation($ipAddress);
 
             return self::updateOrCreate(
                 [
@@ -97,11 +101,13 @@ class UserSession extends Model
                     'session_id' => $sessionId
                 ],
                 [
-                    'ip_address' => $request->ip(),
+                    'ip_address' => $ipAddress,
                     'user_agent' => $userAgent,
                     'device_type' => $deviceInfo['device_type'],
                     'browser' => $deviceInfo['browser'],
                     'platform' => $deviceInfo['platform'],
+                    'country' => $geoLocation['country'],
+                    'city' => $geoLocation['city'],
                     'last_activity' => Carbon::now(),
                     'is_online' => true
                 ]
@@ -179,5 +185,23 @@ class UserSession extends Model
         if (str_contains($platform, 'linux')) return 'fab fa-linux';
         
         return 'fas fa-question-circle';
+    }
+
+    private static function resolveGeoLocation(?string $ip): array
+    {
+        if (!$ip || !ClientRequest::isPublicIp($ip)) {
+            return ['country' => null, 'city' => null];
+        }
+
+        try {
+            $geoip = GeoIP::getLocation($ip);
+
+            return [
+                'country' => $geoip->country ?? null,
+                'city' => $geoip->city ?? null,
+            ];
+        } catch (\Throwable $e) {
+            return ['country' => null, 'city' => null];
+        }
     }
 }

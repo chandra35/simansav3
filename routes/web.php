@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ClientRuntimeController;
 use App\Http\Controllers\DeviceLocationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
@@ -43,6 +44,10 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/device-location/sync', [DeviceLocationController::class, 'sync'])->name('device-location.sync');
+Route::middleware('auth')->group(function () {
+    Route::post('/client-runtime/heartbeat', [ClientRuntimeController::class, 'heartbeat'])->name('client-runtime.heartbeat');
+    Route::get('/client-runtime/server-time', [ClientRuntimeController::class, 'serverTime'])->name('client-runtime.server-time');
+});
 
 // Forgot Password Routes
 Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');

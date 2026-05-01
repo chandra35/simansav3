@@ -45,7 +45,7 @@ class UserController extends Controller
      */
     public function data(Request $request)
     {
-        $users = User::with('roles')->select('users.*');
+        $users = User::with(['roles', 'latestSession'])->select('users.*');
 
         // Filter by Role
         if ($request->filled('role')) {
@@ -99,11 +99,20 @@ class UserController extends Controller
                 return "<span class='badge badge-{$color}'>{$role->name}</span>";
             })->implode(' ');
 
+            $isOnline = $user->latestSession?->isStillOnline() ?? false;
+            $lastSeen = $user->latestSession?->last_activity?->diffForHumans();
+
             // Generate status toggle
             $checked = $user->is_active ? 'checked' : '';
-            $statusHtml = "<div class='custom-control custom-switch' style='padding-left: 2.25rem;'>
-                <input type='checkbox' class='custom-control-input toggle-status' id='status{$user->id}' data-id='{$user->id}' {$checked}>
-                <label class='custom-control-label' for='status{$user->id}'></label>
+            $statusHtml = "<div class='text-center'>
+                <div class='mb-2'>
+                    <span class='badge badge-" . ($isOnline ? "success" : "secondary") . "'>" . ($isOnline ? "Online" : "Offline") . "</span>
+                </div>
+                <div class='custom-control custom-switch d-inline-block' style='padding-left: 2.25rem;'>
+                    <input type='checkbox' class='custom-control-input toggle-status' id='status{$user->id}' data-id='{$user->id}' {$checked}>
+                    <label class='custom-control-label' for='status{$user->id}'></label>
+                </div>
+                <div class='small text-muted mt-1'>" . ($lastSeen ?: '-') . "</div>
             </div>";
 
             // Generate action buttons with button group

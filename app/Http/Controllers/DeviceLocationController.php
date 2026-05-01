@@ -12,11 +12,13 @@ class DeviceLocationController extends Controller
         $validated = $request->validate([
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
+            'accuracy' => 'nullable|numeric|min:0|max:10000',
         ]);
 
         $request->session()->put('device_location', [
             'latitude' => (float) $validated['latitude'],
             'longitude' => (float) $validated['longitude'],
+            'accuracy' => isset($validated['accuracy']) ? (float) $validated['accuracy'] : null,
             'captured_at' => now()->toIso8601String(),
         ]);
 

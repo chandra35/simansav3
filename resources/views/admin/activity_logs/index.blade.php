@@ -447,8 +447,15 @@ function showDetail(id) {
                 if (log.country) locationParts.push(log.country);
                 let locationStr = locationParts.join(', ') || 'Tidak diketahui';
                 let locationMeta = log.properties && log.properties.location_meta ? log.properties.location_meta : null;
+                let requestMeta = log.properties && log.properties.request_meta ? log.properties.request_meta : null;
                 let locationSource = locationMeta && locationMeta.source ? locationMeta.source : 'N/A';
                 let locationStatus = locationMeta && locationMeta.status ? locationMeta.status : 'N/A';
+                let locationAccuracy = locationMeta && locationMeta.accuracy !== null && locationMeta.accuracy !== undefined
+                    ? '±' + Number(locationMeta.accuracy).toFixed(0) + ' meter'
+                    : 'N/A';
+                let locationSourceBadge = formatLocationSourceBadge(locationSource);
+                let locationStatusBadge = formatLocationStatusBadge(locationStatus);
+                let ipSourceBadge = formatIpSourceBadge(requestMeta && requestMeta.ip_source ? requestMeta.ip_source : 'remote-addr');
                 
                 // Map link
                 let mapLink = '';
@@ -569,12 +576,14 @@ function showDetail(id) {
                                 <div class="card-body p-0">
                                     <table class="table table-sm mb-0 detail-table">
                                         <tr><th>Alamat IP</th><td><code>${log.ip_address || 'N/A'}</code></td></tr>
+                                        <tr><th>Sumber IP</th><td>${ipSourceBadge}</td></tr>
                                         <tr><th>Lokasi</th><td>${locationStr}</td></tr>
                                         <tr><th>Negara</th><td>${log.country || 'N/A'} ${log.country_code ? '(' + log.country_code + ')' : ''}</td></tr>
                                         <tr><th>Kota</th><td>${log.city || 'N/A'}</td></tr>
                                         <tr><th>Koordinat</th><td>${log.latitude && log.longitude ? log.latitude + ', ' + log.longitude : 'N/A'}</td></tr>
-                                        <tr><th>Sumber Lokasi</th><td>${locationSource}</td></tr>
-                                        <tr><th>Status Lokasi</th><td>${locationStatus}</td></tr>
+                                        <tr><th>Sumber Lokasi</th><td>${locationSourceBadge}</td></tr>
+                                        <tr><th>Status Lokasi</th><td>${locationStatusBadge}</td></tr>
+                                        <tr><th>Akurasi GPS</th><td>${locationAccuracy}</td></tr>
                                         <tr><th>Timezone</th><td>${log.timezone || 'N/A'}</td></tr>
                                         <tr><th>Peta</th><td>${mapLink || '<span class="text-muted">Tidak tersedia</span>'}</td></tr>
                                     </table>
@@ -589,6 +598,8 @@ function showDetail(id) {
                                     <table class="table table-sm mb-0 detail-table">
                                         <tr><th>URL</th><td><small style="word-break: break-all;">${log.url || 'N/A'}</small></td></tr>
                                         <tr><th>Method</th><td><span class="badge badge-secondary">${log.method || 'N/A'}</span></td></tr>
+                                        <tr><th>Resolved IP</th><td><code>${requestMeta && requestMeta.resolved_ip ? requestMeta.resolved_ip : (log.ip_address || 'N/A')}</code></td></tr>
+                                        <tr><th>X-Forwarded-For</th><td><small style="word-break: break-all;">${requestMeta && requestMeta.forwarded_for ? requestMeta.forwarded_for : 'N/A'}</small></td></tr>
                                         <tr><th>Model</th><td>${log.model_type ? log.model_type.split('\\').pop() : 'N/A'}</td></tr>
                                         <tr><th>Model ID</th><td><code>${log.model_id || 'N/A'}</code></td></tr>
                                     </table>
@@ -692,6 +703,47 @@ function getBrowserIcon(browser) {
     if (browser.includes('edge')) return 'fab fa-edge';
     if (browser.includes('opera')) return 'fab fa-opera';
     return 'fas fa-globe';
+}
+
+function formatLocationSourceBadge(source) {
+    const map = {
+        payload: ['success', 'GPS dikirim form'],
+        request: ['success', 'GPS request'],
+        header: ['success', 'GPS header'],
+        session: ['primary', 'GPS session'],
+        geoip: ['warning', 'GeoIP'],
+        private_ip: ['secondary', 'IP private'],
+        missing: ['secondary', 'Tidak ada'],
+        'N/A': ['secondary', 'N/A']
+    };
+    const config = map[source] || ['secondary', source];
+    return `<span class="badge badge-${config[0]}">${config[1]}</span>`;
+}
+
+function formatLocationStatusBadge(status) {
+    const map = {
+        device_location: ['success', 'GPS perangkat'],
+        geoip_fallback: ['warning', 'Fallback GeoIP'],
+        private_ip_unresolvable: ['warning', 'IP private, perlu GPS'],
+        missing_optional: ['secondary', 'Tidak ada, tapi opsional'],
+        missing_required: ['danger', 'Wajib, tapi kosong'],
+        missing: ['secondary', 'Tidak tersedia']
+    };
+    const config = map[status] || ['secondary', status];
+    return `<span class="badge badge-${config[0]}">${config[1]}</span>`;
+}
+
+function formatIpSourceBadge(source) {
+    const map = {
+        'cf-connecting-ip': ['info', 'Cloudflare'],
+        'true-client-ip': ['info', 'True-Client-IP'],
+        'x-real-ip': ['info', 'X-Real-IP'],
+        'x-forwarded-for': ['success', 'X-Forwarded-For'],
+        'forwarded': ['success', 'Forwarded'],
+        'remote-addr': ['secondary', 'Remote Addr']
+    };
+    const config = map[source] || ['secondary', source];
+    return `<span class="badge badge-${config[0]}">${config[1]}</span>`;
 }
 
 function exportLogs() {
