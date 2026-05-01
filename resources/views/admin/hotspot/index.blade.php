@@ -207,13 +207,17 @@
         <p class="hs-hero__sub mb-0">Kelola akun WiFi siswa, guru &amp; tamu terintegrasi dengan FreeRADIUS</p>
     </div>
     <div class="hs-hero__actions">
-        @if($radiusConnected)
+        @if($radiusConnected === true)
             <span class="hs-radius-badge ok">
                 <span class="dot"></span> FreeRADIUS Terhubung
             </span>
-        @else
+        @elseif($radiusConnected === false)
             <span class="hs-radius-badge err">
                 <span class="dot"></span> FreeRADIUS Offline
+            </span>
+        @else
+            <span class="hs-radius-badge" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);">
+                <span class="dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24;"></span> Status RADIUS dicek otomatis
             </span>
         @endif
         <div class="d-flex gap-2">
@@ -249,7 +253,7 @@
     </a>
     <a href="{{ route('admin.hotspot.online') }}" class="hs-stat hs-stat--online">
         <div class="hs-stat__icon"><span class="pulse">🟢</span></div>
-        <div class="hs-stat__val" id="statOnline">{{ $stats['online'] }}</div>
+        <div class="hs-stat__val" id="statOnline">{{ $stats['online'] ?? '--' }}</div>
         <div class="hs-stat__label">Online Sekarang</div>
     </a>
     <a href="{{ route('admin.hotspot.index') }}?sync_status=error" class="hs-stat hs-stat--err">
@@ -397,7 +401,8 @@
             <div class="hs-panel__body">
                 <div id="radiusStatusPanel">
                     <div class="text-center text-muted py-3">
-                        <i class="fas fa-spinner fa-spin"></i> Memuat...
+                        <i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa koneksi RADIUS...
+                        <div class="small mt-2 text-muted">Data hotspot lokal tetap bisa dipakai walau layanan eksternal lambat atau offline.</div>
                     </div>
                 </div>
             </div>
@@ -972,14 +977,31 @@ $(document).on('click', '.btn-delete', function () {
 
 // ── RADIUS Live Status ────────────────────────────────────────────────────
 function loadRadiusStatus() {
-    $.get(ROUTES.radiusStatus).done(r => {
+    const $panel = $('#radiusStatusPanel');
+    const $btn = $('#btnRefreshRadius');
+
+    $btn.prop('disabled', true).addClass('disabled');
+    $panel.html(`
+        <div class="text-center text-muted py-3">
+            <i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa koneksi RADIUS...
+            <div class="small mt-2 text-muted">Halaman hotspot tetap berjalan memakai data lokal selama pengecekan berlangsung.</div>
+        </div>
+    `);
+
+    $.ajax({
+        url: ROUTES.radiusStatus,
+        method: 'GET',
+        timeout: 8000
+    }).done(r => {
         if (!r.connected) {
-            $('#radiusStatusPanel').html(`
+            $panel.html(`
                 <div class="text-center py-3 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <p class="small mb-0">Tidak dapat terhubung ke RADIUS</p>
-                    <small class="text-muted">${r.error || ''}</small>
+                    <p class="small mb-1 font-weight-bold">RADIUS sedang tidak dapat dihubungi</p>
+                    <small class="text-muted d-block">${r.error || 'Koneksi ke layanan eksternal sedang bermasalah.'}</small>
+                    <small class="text-muted d-block mt-2">Data akun hotspot lokal tetap tersedia. Coba refresh beberapa saat lagi.</small>
                 </div>`);
+            $('#statOnline').text('--');
             return;
         }
 
@@ -993,7 +1015,7 @@ function loadRadiusStatus() {
 
         $('#statOnline').text(c.radacct_active);
 
-        $('#radiusStatusPanel').html(`
+        $panel.html(`
             <div class="radius-live mb-2">
                 <div class="radius-live__row"><span>Akun di RADIUS</span><span class="radius-live__val">${c.radcheck}</span></div>
                 <div class="radius-live__row"><span>User groups</span><span class="radius-live__val">${c.radusergroup}</span></div>
@@ -1003,8 +1025,19 @@ function loadRadiusStatus() {
             <div class="mb-1" style="font-size:.72rem;font-weight:700;color:#64748b;letter-spacing:.05em;text-transform:uppercase">AUTH TERBARU</div>
             <div class="radius-live" style="padding:.5rem">${authRows || '<div class="text-muted text-center py-2" style="font-size:.75rem">Belum ada data</div>'}</div>
         `);
-    }).fail(() => {
-        $('#radiusStatusPanel').html('<div class="text-danger small text-center py-2">Gagal load.</div>');
+    }).fail((xhr, textStatus) => {
+        const isTimeout = textStatus === 'timeout';
+        $panel.html(`
+            <div class="text-center py-3 text-warning">
+                <i class="fas fa-clock fa-2x mb-2"></i>
+                <p class="small mb-1 font-weight-bold">${isTimeout ? 'Pengecekan RADIUS melebihi batas waktu' : 'Status RADIUS belum bisa dimuat'}</p>
+                <small class="text-muted d-block">${isTimeout ? 'Koneksi ke layanan luar terlalu lama merespons.' : 'Terjadi kendala saat memuat status layanan eksternal.'}</small>
+                <small class="text-muted d-block mt-2">Anda tetap bisa mengelola data hotspot lokal dan mencoba cek ulang nanti.</small>
+            </div>
+        `);
+        $('#statOnline').text('--');
+    }).always(() => {
+        $btn.prop('disabled', false).removeClass('disabled');
     });
 }
 

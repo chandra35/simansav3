@@ -19,11 +19,7 @@
     @hasSection('content_header')
         <div class="content-header">
             <div class="{{ config('adminlte.classes_content_header') ?: $def_container_class }}">
-                <div class="simansa-page-hero">
-                    <div class="simansa-page-hero__body">
-                        @yield('content_header')
-                    </div>
-                </div>
+                @yield('content_header')
             </div>
         </div>
     @endif

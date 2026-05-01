@@ -149,6 +149,47 @@ Saat mengedit halaman lama:
 - kalau menemukan style global yang bentrok, prioritaskan pindahkan ke style lokal halaman
 - untuk komponen baru, lebih baik mulai dari default AdminLTE lalu poles lokal seperlunya
 
+## Content Header & Breadcrumb
+
+Mulai sekarang, area `content_header` juga mengikuti prinsip **AdminLTE-first**.
+
+Aturannya:
+
+- jangan bungkus semua `content_header` secara global dengan hero custom
+- file wrapper global `resources/views/vendor/adminlte/partials/cwrapper/cwrapper-default.blade.php` harus merender `@yield('content_header')` secara normal
+- kalau sebuah halaman butuh hero visual, hero itu harus dibuat **lokal di halaman tersebut**, bukan dipaksakan ke semua halaman
+- breadcrumb standar harus tetap memakai pola AdminLTE / Bootstrap biasa:
+
+```html
+@section('content_header')
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1>Judul Halaman</h1>
+        </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Halaman</li>
+            </ol>
+        </div>
+    </div>
+@endsection
+```
+
+Kalau ingin hero khusus, gunakan class lokal seperti:
+
+- `simansa-page-hero`
+- `simansa-hero`
+- atau namespace fitur lain
+
+Tetapi pemakaiannya harus **eksplisit per halaman**, misalnya pada dashboard, halaman ringkasan, atau halaman landing modul tertentu.
+
+Tujuannya:
+
+- breadcrumb tidak hilang saat fitur baru dibuat
+- halaman CRUD/detail/form tetap stabil dan familiar
+- hero visual hanya muncul di tempat yang memang perlu
+
 ## Toolbar & Filter
 
 Selain tombol, ada dua area yang sekarang perlu ikut konsisten karena paling sering dipakai admin:

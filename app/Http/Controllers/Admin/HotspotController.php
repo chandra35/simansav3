@@ -18,8 +18,8 @@ class HotspotController extends Controller
 {
     public function index()
     {
-        $stats = $this->getStats();
-        $radiusConnected = $this->checkRadiusConnection();
+        $stats = $this->getStats(false);
+        $radiusConnected = null;
 
         return view('admin.hotspot.index', compact('stats', 'radiusConnected'));
     }
@@ -143,13 +143,13 @@ class HotspotController extends Controller
             'message'     => 'Sync selesai.',
             'output'      => nl2br(htmlspecialchars($result)),
             'counts'      => compact('created', 'updated', 'deactivated', 'errors'),
-            'stats'       => $this->getStats(),
+            'stats'       => $this->getStats(false),
         ]);
     }
 
     public function stats()
     {
-        return response()->json($this->getStats());
+        return response()->json($this->getStats(false));
     }
 
     public function syncSingle(Request $request, HotspotUser $hotspot)
@@ -425,11 +425,11 @@ class HotspotController extends Controller
             'success' => true,
             'count'   => $count,
             'message' => "{$count} akun berhasil {$label}.",
-            'stats'   => $this->getStats(),
+            'stats'   => $this->getStats(false),
         ]);
     }
 
-    private function getStats(): array
+    private function getStats(bool $includeRadius = false): array
     {
         return [
             'total' => HotspotUser::count(),
@@ -440,7 +440,7 @@ class HotspotController extends Controller
             'nonaktif' => HotspotUser::where('is_active', false)->count(),
             'error_sync' => HotspotUser::where('sync_status', 'error')->count(),
             'pending_sync' => HotspotUser::where('sync_status', 'pending')->count(),
-            'online' => $this->getOnlineCount(),
+            'online' => $includeRadius ? $this->getOnlineCount() : null,
         ];
     }
 
