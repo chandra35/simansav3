@@ -260,7 +260,7 @@
         .scene {
             position: relative;
             z-index: 1;
-            width: min(360px, 100%);
+            width: min(372px, 100%);
             aspect-ratio: 1 / 1.08;
         }
 
@@ -288,31 +288,30 @@
             animation: floatY 8s ease-in-out infinite reverse;
         }
 
-        .scene-card {
+        .scene-panel {
             position: absolute;
-            inset: 52px 16px 16px;
+            inset: 34px 18px 18px;
             border-radius: 28px;
-            background: linear-gradient(180deg, rgba(18, 66, 136, 0.95), rgba(30, 123, 167, 0.86));
+            background: linear-gradient(180deg, rgba(25, 66, 138, 0.97), rgba(30, 99, 170, 0.88));
             box-shadow: 0 30px 70px rgba(19, 49, 94, 0.24);
             overflow: hidden;
+            padding: 24px;
         }
 
-        .scene-card::before {
+        .scene-panel::before {
             content: "";
             position: absolute;
-            inset: auto -20% -24% -12%;
+            inset: auto -15% -18% 8%;
             height: 52%;
             background:
-                radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.22), transparent 26%),
-                radial-gradient(circle at 80% 40%, rgba(255, 255, 255, 0.18), transparent 24%);
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.26), transparent 24%),
+                radial-gradient(circle at 78% 34%, rgba(255, 255, 255, 0.18), transparent 20%);
             animation: drift 14s ease-in-out infinite alternate;
         }
 
         .scene-header {
-            position: absolute;
-            top: 22px;
-            left: 24px;
-            right: 24px;
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -331,171 +330,18 @@
             backdrop-filter: blur(4px);
         }
 
-        .students {
-            position: absolute;
-            left: 18px;
-            right: 18px;
-            bottom: 18px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .student {
+        .scene-console {
             position: relative;
-            width: 94px;
-            height: 220px;
-            animation: floatY 6s ease-in-out infinite;
-        }
-
-        .student:nth-child(2) {
-            width: 112px;
-            height: 252px;
-            animation-delay: .3s;
-        }
-
-        .student:nth-child(3) {
-            animation-delay: .6s;
-        }
-
-        .student-head {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 52px;
-            height: 52px;
-            margin-left: -26px;
-            border-radius: 999px;
-            background: #f3c9a6;
-            box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.04);
-            z-index: 3;
-        }
-
-        .student--boy .student-head::before,
-        .student--girl .student-head::before {
-            content: "";
-            position: absolute;
-            inset: -8px 4px 20px;
-            border-radius: 999px 999px 24px 24px;
-        }
-
-        .student--boy .student-head::before {
-            background: #0f2247;
-        }
-
-        .student--girl .student-head::before {
-            background: #ffffff;
-            inset: -6px -5px 8px;
-            border-radius: 999px 999px 30px 30px;
-            box-shadow: 0 8px 18px rgba(8, 25, 58, 0.08);
-        }
-
-        .student-head::after {
-            content: "";
-            position: absolute;
-            top: 13px;
-            left: 50%;
-            width: 16px;
-            height: 7px;
-            margin-left: -8px;
-            border-bottom: 2px solid rgba(22, 51, 95, 0.65);
-            border-radius: 0 0 12px 12px;
-        }
-
-        .student-cap {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            width: 66px;
-            height: 18px;
-            margin-left: -33px;
-            border-radius: 999px 999px 10px 10px;
-            background: #111f3f;
-            z-index: 4;
-        }
-
-        .student-cap::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 6px;
-            width: 10px;
-            height: 36px;
-            margin-left: -5px;
-            border-radius: 8px;
-            background: linear-gradient(180deg, #ffcf57, rgba(255, 207, 87, 0.18));
-        }
-
-        .student-body {
-            position: absolute;
-            left: 50%;
-            top: 46px;
-            width: 88px;
-            height: 166px;
-            margin-left: -44px;
-            border-radius: 34px 34px 22px 22px;
-            background: linear-gradient(180deg, #fffaf2, #efe1c3);
             z-index: 1;
-        }
-
-        .student-body::before {
-            content: "";
-            position: absolute;
-            inset: 24px 18px 12px;
-            border-radius: 24px;
-            background: linear-gradient(180deg, #0f6d7f, #1a8ca0);
-        }
-
-        .student-body::after {
-            content: "";
-            position: absolute;
-            top: 24px;
-            left: 50%;
-            width: 18px;
-            height: 124px;
-            margin-left: -9px;
-            border-radius: 12px;
-            background: linear-gradient(180deg, #ffd568, #f0a91d);
-            z-index: 2;
-        }
-
-        .student--girl .student-body {
-            width: 96px;
-            margin-left: -48px;
-        }
-
-        .student-book {
-            position: absolute;
-            bottom: 34px;
-            left: 50%;
-            width: 62px;
-            height: 38px;
-            margin-left: -31px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #f7fbff, #d8ebff);
-            border: 1px solid rgba(255, 255, 255, 0.62);
-            box-shadow: 0 14px 24px rgba(8, 29, 64, 0.12);
-            transform: rotate(-7deg);
-            z-index: 5;
-        }
-
-        .student-book::after {
-            content: "";
-            position: absolute;
-            top: 6px;
-            bottom: 6px;
-            left: 50%;
-            width: 2px;
-            margin-left: -1px;
-            background: rgba(45, 108, 223, 0.18);
+            margin-top: 20px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 20px 18px 18px;
+            backdrop-filter: blur(8px);
         }
 
         .scene-copy {
-            position: absolute;
-            left: 28px;
-            right: 28px;
-            top: 84px;
             color: rgba(255, 255, 255, 0.95);
         }
 
@@ -509,8 +355,8 @@
 
         .scene-copy__title {
             margin-top: 10px;
-            font-size: 28px;
-            line-height: 1.15;
+            font-size: 27px;
+            line-height: 1.16;
             font-weight: 800;
         }
 
@@ -519,6 +365,137 @@
             font-size: 14px;
             line-height: 1.7;
             color: rgba(255, 255, 255, 0.8);
+        }
+
+        .scene-monitor {
+            position: relative;
+            z-index: 1;
+            margin-top: 18px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(11, 29, 63, 0.88), rgba(17, 53, 96, 0.7));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 16px 16px 14px;
+            overflow: hidden;
+        }
+
+        .scene-monitor__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .scene-monitor__dots {
+            display: inline-flex;
+            gap: 5px;
+        }
+
+        .scene-monitor__dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .scene-wave {
+            position: relative;
+            height: 118px;
+            border-radius: 16px;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+                repeating-linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0.04) 0 1px,
+                    transparent 1px 34px
+                );
+        }
+
+        .scene-wave::before,
+        .scene-wave::after {
+            content: "";
+            position: absolute;
+            left: -8%;
+            right: -8%;
+            height: 60px;
+            border-radius: 999px;
+        }
+
+        .scene-wave::before {
+            top: 36px;
+            background: linear-gradient(90deg, rgba(19, 163, 136, 0.12), rgba(19, 163, 136, 0.78), rgba(45, 108, 223, 0.2));
+            animation: waveSlide 4.8s ease-in-out infinite;
+        }
+
+        .scene-wave::after {
+            top: 54px;
+            background: linear-gradient(90deg, rgba(45, 108, 223, 0.08), rgba(124, 58, 237, 0.58), rgba(255, 255, 255, 0.12));
+            animation: waveSlide 5.8s ease-in-out infinite reverse;
+        }
+
+        .scene-cards {
+            position: relative;
+            z-index: 1;
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .scene-mini-card {
+            border-radius: 16px;
+            padding: 14px 12px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+            animation: floatCard 6.2s ease-in-out infinite;
+        }
+
+        .scene-mini-card:nth-child(2) {
+            animation-delay: .35s;
+        }
+
+        .scene-mini-card:nth-child(3) {
+            animation-delay: .7s;
+        }
+
+        .scene-mini-card__icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .scene-mini-card__icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.85;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .scene-mini-card__title {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.92);
+            line-height: 1.4;
+        }
+
+        .scene-mini-card__meta {
+            margin-top: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.66);
+            line-height: 1.5;
         }
 
         .countdown {
@@ -560,6 +537,16 @@
         @keyframes floatY {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
+        }
+
+        @keyframes waveSlide {
+            0%, 100% { transform: translateX(-4%) scaleX(.98); }
+            50% { transform: translateX(6%) scaleX(1.02); }
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
         }
 
         @media (max-width: 960px) {
@@ -662,36 +649,67 @@
                 <div class="scene">
                     <div class="scene-orb scene-orb--one"></div>
                     <div class="scene-orb scene-orb--two"></div>
-                    <div class="scene-card">
+                    <div class="scene-panel">
                         <div class="scene-header">
                             <div class="scene-logo"></div>
                             <div>SIMANSA</div>
                         </div>
-                        <div class="scene-copy">
-                            <div class="scene-copy__eyebrow">Layanan Madrasah</div>
-                            <div class="scene-copy__title">Belajar, tertib, dan terhubung kembali sebentar lagi.</div>
-                            <div class="scene-copy__text">
-                                Pembaruan sistem membantu layanan siswa, guru, dan wali kelas tetap berjalan rapi.
-                            </div>
-                        </div>
 
-                        <div class="students">
-                            <div class="student student--boy">
-                                <div class="student-head"></div>
-                                <div class="student-cap"></div>
-                                <div class="student-body"></div>
-                                <div class="student-book"></div>
+                        <div class="scene-console">
+                            <div class="scene-copy">
+                                <div class="scene-copy__eyebrow">Status Layanan</div>
+                                <div class="scene-copy__title">Sistem sedang distabilkan dan akan kembali online.</div>
+                                <div class="scene-copy__text">
+                                    Pembaruan ini membantu layanan siswa, presensi, dan administrasi berjalan lebih rapi dan konsisten.
+                                </div>
                             </div>
-                            <div class="student student--girl">
-                                <div class="student-head"></div>
-                                <div class="student-body"></div>
-                                <div class="student-book"></div>
+
+                            <div class="scene-monitor">
+                                <div class="scene-monitor__top">
+                                    <span>Monitoring maintenance</span>
+                                    <span class="scene-monitor__dots">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </span>
+                                </div>
+                                <div class="scene-wave"></div>
                             </div>
-                            <div class="student student--boy">
-                                <div class="student-head"></div>
-                                <div class="student-cap"></div>
-                                <div class="student-body"></div>
-                                <div class="student-book"></div>
+
+                                <div class="scene-cards">
+                                <div class="scene-mini-card">
+                                    <div class="scene-mini-card__icon">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <ellipse cx="12" cy="6" rx="6.5" ry="2.5"></ellipse>
+                                            <path d="M5.5 6v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5V6"></path>
+                                            <path d="M5.5 11v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="scene-mini-card__title">Sinkron data</div>
+                                    <div class="scene-mini-card__meta">Menjaga data tetap rapi dan aman.</div>
+                                </div>
+                                <div class="scene-mini-card">
+                                    <div class="scene-mini-card__icon">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 3.5 18.5 6v5.8c0 4-2.6 6.8-6.5 8.7-3.9-1.9-6.5-4.7-6.5-8.7V6L12 3.5Z"></path>
+                                            <path d="m9.6 12 1.7 1.8 3.2-3.5"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="scene-mini-card__title">Stabilitas akses</div>
+                                    <div class="scene-mini-card__meta">Memastikan layanan kembali lebih konsisten.</div>
+                                </div>
+                                <div class="scene-mini-card">
+                                    <div class="scene-mini-card__icon">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M20 7.5V4.5h-3"></path>
+                                            <path d="M4 16.5v3h3"></path>
+                                            <path d="M6.2 9.4A7 7 0 0 1 17 7.5L20 7.5"></path>
+                                            <path d="M17.8 14.6A7 7 0 0 1 7 16.5L4 16.5"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="scene-mini-card__title">Refresh otomatis</div>
+                                    <div class="scene-mini-card__meta">Halaman akan mencoba memuat ulang sendiri.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
