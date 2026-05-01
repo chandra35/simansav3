@@ -93,83 +93,6 @@
 <body class="@yield('classes_body')" @yield('body_data')>
 
     <style>
-        /* Global consistency: header and menu title style */
-        .main-sidebar .brand-text,
-        .main-header .navbar-nav .nav-link,
-        .nav-sidebar .nav-link > p,
-        .nav-sidebar .nav-treeview .nav-link > p,
-        .card-header .card-title {
-            font-weight: 700;
-        }
-
-        .nav-sidebar .nav-header {
-            color: rgba(255, 255, 255, 0.92) !important;
-            font-weight: 700;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-        }
-
-        /* Gradient header: berlaku untuk card biasa, KECUALI card-outline, bg-gradient-*, card-widget */
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header {
-            background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .88));
-            color: #fff;
-            border-bottom: 0;
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .card-title,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .card-tools,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn-tool i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .btn:not(.simansa-btn-contrast):not(.simansa-btn-muted):not(.simansa-btn-strong),
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .nav-link {
-            color: #fff !important;
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget) > .card-header .btn-outline-light {
-            border-color: rgba(255, 255, 255, 0.65);
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget) > .card-header .btn-light {
-            color: #1e3a8a !important;
-            font-weight: 700;
-        }
-
-        /* Pastikan card-outline tetap pakai warna AdminLTE default */
-        .card.card-outline > .card-header {
-            background: #fff;
-            color: inherit;
-            border-bottom: 1px solid rgba(0,0,0,.125);
-        }
-
-        .card.card-outline > .card-header .card-title,
-        .card.card-outline > .card-header .btn {
-            color: inherit !important;
-        }
-
-        .content-wrapper {
-            background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 180px, #f5f8ff 100%);
-        }
-
-        .content-header {
-            padding-bottom: .5rem;
-        }
-
-        .card {
-            border: 1px solid rgba(203, 213, 225, 0.72);
-            border-radius: 18px;
-            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
-            overflow: hidden;
-        }
-
-        .card-body,
-        .card-footer {
-            background: rgba(255, 255, 255, 0.96);
-        }
-
-        .card-footer {
-            border-top: 1px solid rgba(226, 232, 240, 0.9);
-        }
-
         .simansa-page-hero {
             border-radius: 22px;
             background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .9));
@@ -493,48 +416,6 @@
             color: #fff !important;
         }
 
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast span,
-        .card-header .simansa-btn-contrast,
-        .card-header .simansa-btn-contrast i,
-        .card-header .simansa-btn-contrast span {
-            color: #1d4ed8 !important;
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:hover span,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-contrast:focus span,
-        .card-header .simansa-btn-contrast:hover,
-        .card-header .simansa-btn-contrast:focus,
-        .card-header .simansa-btn-contrast:hover i,
-        .card-header .simansa-btn-contrast:focus i,
-        .card-header .simansa-btn-contrast:hover span,
-        .card-header .simansa-btn-contrast:focus span {
-            color: #fff !important;
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-muted span,
-        .card-header .simansa-btn-muted,
-        .card-header .simansa-btn-muted i,
-        .card-header .simansa-btn-muted span {
-            color: #334155 !important;
-        }
-
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong i,
-        .card:not(.card-outline):not([class*="bg-gradient"]):not(.card-widget):not(.card-secondary):not(.card-default) > .card-header .simansa-btn-strong span,
-        .card-header .simansa-btn-strong,
-        .card-header .simansa-btn-strong i,
-        .card-header .simansa-btn-strong span {
-            color: #fff !important;
-        }
-
         .simansa-mini-stat {
             padding: .75rem .9rem;
             border-radius: 14px;
@@ -720,10 +601,6 @@
             .simansa-menu-coach__pulse.show {
                 opacity: 1;
                 animation: simansaMenuPulse 1.8s ease-in-out infinite;
-            }
-
-            .card {
-                border-radius: 16px;
             }
 
             .simansa-filter-panel {

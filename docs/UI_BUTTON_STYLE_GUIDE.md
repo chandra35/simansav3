@@ -2,6 +2,42 @@
 
 Panduan singkat ini dibuat supaya tombol di SIMANSA tetap mudah dibaca, konsisten, dan tidak tenggelam di atas panel berwarna atau background gradient.
 
+## Kebijakan Fondasi UI
+
+Mulai sekarang, fondasi global tampilan SIMANSA harus mengikuti **AdminLTE default** sejauh mungkin.
+
+Artinya:
+
+- jangan override global untuk `.card`, `.card-header`, `.btn`, `.nav-link`, `.content-wrapper`, atau komponen shell utama lainnya
+- navbar, sidebar, pagination, form control, card dasar, dan table dasar dibiarkan mengikuti AdminLTE
+- styling khusus hanya boleh diterapkan lewat class lokal / namespace seperti:
+  - `simansa-dashboard-*`
+  - `simansa-student-*`
+  - `simansa-announcement-*`
+  - `simansa-filter-*`
+
+Tujuan kebijakan ini:
+
+- mencegah bentrok visual saat fitur baru dibuat
+- membuat halaman baru tampil stabil tanpa perlu perbaikan tambahan
+- mengurangi bug seperti tombol putih, card aneh, pagination rusak, atau teks tidak terbaca
+
+## Wajib Dibaca Saat Menambah atau Mengedit Fitur
+
+Dokumen ini **wajib dibaca** ketika:
+
+1. membuat fitur / halaman baru
+2. mengedit fitur lama
+3. merapikan UI/UX halaman yang sudah ada
+
+Saat sedang menyentuh satu fitur, sekalian cek apakah:
+
+- tombol di halaman itu sudah mengikuti guide ini
+- card / filter / toolbar masih terlalu bergantung pada override global lama
+- ada bagian kecil yang bisa langsung dirapikan sambil jalan
+
+Prinsipnya: **nyicil perbaikan UI saat menyentuh fitur**, tapi tetap pakai fondasi yang aman.
+
 ## Tujuan
 
 - Menjaga keterbacaan tombol pada semua halaman admin dan siswa
@@ -103,7 +139,15 @@ Saat menambah halaman baru:
 
 - prioritaskan `simansa-btn-strong` untuk CTA utama
 - gunakan `simansa-btn-contrast` jika tombol berada di dalam panel berwarna
+- gunakan pagination Bootstrap/AdminLTE, jangan biarkan view jatuh ke style bawaan yang tidak jelas
+- kalau butuh card/hero khusus, bungkus dengan class lokal halaman, jangan ubah `.card` global
 - evaluasi screenshot desktop dan mobile sebelum final
+
+Saat mengedit halaman lama:
+
+- hindari menambah override baru di `resources/views/vendor/adminlte/master.blade.php` kecuali benar-benar utilitas global yang aman
+- kalau menemukan style global yang bentrok, prioritaskan pindahkan ke style lokal halaman
+- untuk komponen baru, lebih baik mulai dari default AdminLTE lalu poles lokal seperlunya
 
 ## Toolbar & Filter
 
