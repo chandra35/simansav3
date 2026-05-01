@@ -748,19 +748,25 @@
         .profile-inline-search {
             display: flex;
             flex-direction: column;
+            align-items: stretch;
         }
 
         .profile-inline-search .form-control {
+            width: 100% !important;
+            min-width: 100%;
+            flex: 1 1 auto;
             border-radius: 12px 12px 0 0;
         }
 
         .profile-inline-search .input-group-append {
             width: 100%;
+            margin-left: 0;
         }
 
         .profile-inline-search .input-group-append .btn {
             width: 100%;
             border-radius: 0 0 12px 12px;
+            justify-content: center;
         }
 
         .sticky-submit-actions {

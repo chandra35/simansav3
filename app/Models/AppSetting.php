@@ -52,6 +52,7 @@ class AppSetting extends Model
         'smtp_from_name',
         'smtp_enabled',
         'activity_log_require_location',
+        'graduation_announcement_enabled',
     ];
 
     protected $casts = [
@@ -65,6 +66,7 @@ class AppSetting extends Model
         'smtp_port' => 'integer',
         'smtp_enabled' => 'boolean',
         'activity_log_require_location' => 'boolean',
+        'graduation_announcement_enabled' => 'boolean',
     ];
 
     protected $hidden = [
@@ -116,6 +118,7 @@ class AppSetting extends Model
                 'email' => 'info@sekolah.sch.id',
                 'kop_mode' => 'builder',
                 'activity_log_require_location' => false,
+                'graduation_announcement_enabled' => false,
             ]);
         }
         

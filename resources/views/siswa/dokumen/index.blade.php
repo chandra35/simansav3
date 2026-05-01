@@ -10,8 +10,8 @@
 <!-- Info Progress -->
 <div class="row">
     <div class="col-12">
-        <div class="callout callout-warning">
-            <h5><i class="fas fa-upload"></i> Langkah 3: Upload Dokumen</h5>
+        <div class="callout callout-warning student-doc-hero">
+            <h5><i class="fas fa-folder-open"></i> Dokumen Siswa</h5>
             <p class="mb-0">
                 Upload dokumen yang diperlukan untuk kelengkapan administrasi. Dokumen <strong>Kartu Keluarga</strong> dan <strong>Ijazah SMP</strong> adalah wajib, 
                 sedangkan <strong>KIP</strong> dan <strong>SKTM</strong> bersifat opsional (jika memiliki). 
@@ -563,6 +563,84 @@
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
     <style>
+        .student-doc-hero {
+            border-left: 0 !important;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+            padding: 1.15rem 1.25rem;
+        }
+
+        .student-doc-hero h5 {
+            color: #0f172a;
+            font-weight: 800;
+            margin-bottom: 0.55rem;
+        }
+
+        .student-doc-hero p,
+        .callout ul,
+        .callout li {
+            color: #64748b;
+        }
+
+        .small-box {
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .small-box .inner {
+            padding: 1rem 1rem 1.05rem;
+        }
+
+        .card {
+            border-radius: 14px;
+            border: 1px solid #dbe7f4;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .card-header {
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            border-bottom: 1px solid #dbe7f4;
+            color: #0f172a;
+            padding: 0.95rem 1.1rem;
+        }
+
+        .card-outline {
+            border-top-width: 0;
+        }
+
+        .btn-group.btn-block {
+            display: flex;
+            gap: 0.45rem;
+        }
+
+        .btn-group.btn-block > .btn,
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .btn-group.btn-block > .btn {
+            flex: 1 1 0;
+        }
+
+        .table thead th {
+            border-top: 0;
+            color: #475569;
+            font-size: .84rem;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+
+        .modal-content {
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
         #previewModal .modal-body { background: #f4f6f9; }
         #previewImage img { 
             border-radius: 8px; 

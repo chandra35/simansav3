@@ -48,6 +48,32 @@ class AuthServiceProvider extends ServiceProvider
                 ->exists();
         });
 
+        Gate::define('siswa-graduation-announcement-access', function ($user) {
+            if (!$user->siswa) {
+                return false;
+            }
+
+            $setting = \App\Models\AppSetting::query()->first();
+            if (!$setting || !$setting->graduation_announcement_enabled) {
+                return false;
+            }
+
+            $tahunAktif = \App\Models\TahunPelajaran::query()->where('is_active', true)->first();
+            if (!$tahunAktif) {
+                return false;
+            }
+
+            return \App\Models\SiswaKelas::query()
+                ->where('siswa_id', $user->siswa->id)
+                ->where('tahun_pelajaran_id', $tahunAktif->id)
+                ->where('status', 'aktif')
+                ->whereNull('deleted_at')
+                ->whereHas('kelas', function ($query) {
+                    $query->where('tingkat', 12);
+                })
+                ->exists();
+        });
+
         Gate::define('siswa-menu-only', function ($user) {
             return ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists()) &&
                 !$user->hasRole('GTK') &&

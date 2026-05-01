@@ -89,7 +89,7 @@
 <!-- Welcome Banner -->
 <div class="row mb-2">
     <div class="col-12">
-        <div class="callout callout-info" style="margin-bottom: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-left: 5px solid #fff; color: white;">
+        <div class="callout callout-info student-welcome-hero" style="margin-bottom: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-left: 5px solid #fff; color: white;">
             <div class="d-flex align-items-center">
                 <div class="mr-3">
                     <i class="fas fa-hand-peace" style="font-size: 3rem; opacity: 0.9;"></i>
@@ -696,6 +696,93 @@
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
+    .student-welcome-hero {
+        position: relative;
+        overflow: hidden;
+        border-left: 0 !important;
+        border-radius: 16px;
+        padding: 1.2rem 1.3rem;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+    }
+
+    .student-welcome-hero::after {
+        content: "";
+        position: absolute;
+        right: -70px;
+        bottom: -110px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+
+    .small-box {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .small-box .inner {
+        padding: 1rem 1rem 1.05rem;
+    }
+
+    .small-box .small-box-footer {
+        background: rgba(255,255,255,0.08);
+        font-weight: 600;
+    }
+
+    .card {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #dbe7f4;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+        background: #ffffff;
+    }
+
+    .card-header {
+        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+        border-bottom: 1px solid #dbe7f4;
+        color: #0f172a;
+    }
+
+    .card-primary:not(.card-outline) .card-header,
+    .card-success:not(.card-outline) .card-header,
+    .card-info:not(.card-outline) .card-header {
+        background: linear-gradient(135deg, #2b5fc7 0%, #1f7a72 100%);
+        color: #fff;
+    }
+
+    .card-outline {
+        border-top-width: 0;
+    }
+
+    .nav-pills .nav-link {
+        border-radius: 10px;
+        padding: 0.8rem 0.95rem;
+        font-weight: 600;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: #eef6ff;
+        color: #2563eb;
+    }
+
+    .list-group-item {
+        border-color: rgba(219, 231, 244, 0.9);
+        background: transparent;
+    }
+
+    .alert {
+        border-left-width: 0;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .progress {
+        background: #e8f0fb;
+    }
+
     /* Page Loading Overlay */
     .page-loader {
         position: fixed;

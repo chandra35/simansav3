@@ -10,8 +10,8 @@
 <!-- Info Progress -->
 <div class="row">
     <div class="col-12">
-        <div class="callout callout-info">
-            <h5><i class="fas fa-info-circle"></i> Petunjuk Pengisian</h5>
+        <div class="callout callout-info student-form-hero">
+            <h5><i class="fas fa-heart"></i> Data Orangtua & Wali</h5>
             <p class="mb-0">
                 <strong>Langkah 1:</strong> Lengkapi data orangtua Anda dengan benar dan lengkap. Data ini digunakan untuk keperluan administrasi dan komunikasi dengan pihak sekolah. 
                 Setelah selesai, Anda akan diarahkan untuk melengkapi <strong>Data Diri</strong> kemudian <strong>Upload Dokumen</strong>.
@@ -475,6 +475,65 @@
 
 @section('css')
     <style>
+        .student-form-hero {
+            border-left: 0 !important;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+            padding: 1.15rem 1.25rem;
+        }
+
+        .student-form-hero h5 {
+            color: #0f172a;
+            font-weight: 800;
+            margin-bottom: 0.55rem;
+        }
+
+        .student-form-hero p {
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        .card {
+            border-radius: 14px;
+            border: 1px solid #dbe7f4;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .card-header {
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            border-bottom: 1px solid #dbe7f4;
+            color: #0f172a;
+            padding: 0.95rem 1.1rem;
+        }
+
+        .card-body {
+            padding: 1.05rem 1.1rem;
+        }
+
+        .form-control,
+        select.form-control,
+        textarea.form-control {
+            min-height: 46px;
+            border-radius: 10px;
+            border-color: #d3dfef;
+        }
+
+        textarea.form-control {
+            min-height: 104px;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .card-footer {
+            background: #f8fbff;
+        }
+
         .callout {
             border-left: 5px solid #17a2b8;
             border-radius: 5px;

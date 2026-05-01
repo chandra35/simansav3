@@ -641,6 +641,82 @@
         }
 
         @media (max-width: 767.98px) {
+            .simansa-menu-coach {
+                position: fixed;
+                top: 58px;
+                left: 10px;
+                z-index: 1055;
+                display: none;
+                align-items: center;
+                gap: .55rem;
+                max-width: min(250px, calc(100vw - 20px));
+                padding: .65rem .85rem;
+                border-radius: 14px;
+                background: linear-gradient(135deg, rgba(30, 64, 175, 0.96), rgba(13, 148, 136, 0.94));
+                color: #fff;
+                box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+            }
+
+            .simansa-menu-coach.show {
+                display: flex;
+                animation: simansaCoachIn .28s ease;
+            }
+
+            .simansa-menu-coach__icon {
+                width: 34px;
+                height: 34px;
+                flex: 0 0 34px;
+                border-radius: 10px;
+                background: rgba(255,255,255,.16);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .95rem;
+            }
+
+            .simansa-menu-coach__text {
+                min-width: 0;
+                font-size: .8rem;
+                line-height: 1.45;
+                color: rgba(255,255,255,.92);
+            }
+
+            .simansa-menu-coach__text strong {
+                display: block;
+                font-size: .84rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: .08rem;
+            }
+
+            .simansa-menu-coach__close {
+                border: 0;
+                background: transparent;
+                color: rgba(255,255,255,.84);
+                font-size: 1rem;
+                padding: .1rem;
+                line-height: 1;
+            }
+
+            .simansa-menu-coach__pulse {
+                position: fixed;
+                top: 14px;
+                left: 14px;
+                width: 36px;
+                height: 36px;
+                border-radius: 12px;
+                border: 2px solid rgba(37, 99, 235, 0.35);
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.20);
+                pointer-events: none;
+                opacity: 0;
+                z-index: 1054;
+            }
+
+            .simansa-menu-coach__pulse.show {
+                opacity: 1;
+                animation: simansaMenuPulse 1.8s ease-in-out infinite;
+            }
+
             .card {
                 border-radius: 16px;
             }
@@ -657,6 +733,29 @@
                 position: static;
             }
         }
+
+        @keyframes simansaCoachIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes simansaMenuPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.24);
+            }
+            70% {
+                box-shadow: 0 0 0 12px rgba(37, 99, 235, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+            }
+        }
     </style>
 
     <div id="appGlobalOverlay" class="app-global-overlay" aria-hidden="true">
@@ -667,6 +766,18 @@
             <div class="app-global-overlay__subtitle" id="appGlobalOverlaySubtitle">Mohon tunggu sebentar</div>
         </div>
     </div>
+
+    <div id="simansaMenuCoach" class="simansa-menu-coach" aria-hidden="true">
+        <span class="simansa-menu-coach__icon"><i class="fas fa-bars"></i></span>
+        <div class="simansa-menu-coach__text">
+            <strong>Buka Menu Navigasi</strong>
+            Tap ikon garis tiga di kiri atas untuk melihat semua menu siswa.
+        </div>
+        <button type="button" class="simansa-menu-coach__close" id="simansaMenuCoachClose" aria-label="Tutup bantuan">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div id="simansaMenuCoachPulse" class="simansa-menu-coach__pulse" aria-hidden="true"></div>
 
     {{-- Body Content --}}
     @yield('body')
@@ -980,6 +1091,7 @@
                 }
 
                 if (!warning) {
+                    initMobileMenuCoach();
                     return;
                 }
 
@@ -1001,7 +1113,58 @@
                 } else {
                     container.prepend(alert);
                 }
+
+                initMobileMenuCoach();
             });
+
+            function initMobileMenuCoach() {
+                if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                    return;
+                }
+
+                const coach = document.getElementById('simansaMenuCoach');
+                const pulse = document.getElementById('simansaMenuCoachPulse');
+                const closeButton = document.getElementById('simansaMenuCoachClose');
+                const toggler = document.querySelector('[data-widget="pushmenu"]');
+                const storageKey = 'simansa_menu_coach_hidden';
+
+                if (!coach || !pulse || !toggler) {
+                    return;
+                }
+
+                const hideCoach = function () {
+                    coach.classList.remove('show');
+                    pulse.classList.remove('show');
+                    coach.setAttribute('aria-hidden', 'true');
+                    pulse.setAttribute('aria-hidden', 'true');
+
+                    try {
+                        localStorage.setItem(storageKey, '1');
+                    } catch (error) {}
+                };
+
+                if (closeButton) {
+                    closeButton.addEventListener('click', hideCoach, { once: true });
+                }
+
+                toggler.addEventListener('click', hideCoach, { once: true });
+
+                let hidden = false;
+                try {
+                    hidden = localStorage.getItem(storageKey) === '1';
+                } catch (error) {}
+
+                if (hidden) {
+                    return;
+                }
+
+                window.setTimeout(function () {
+                    coach.classList.add('show');
+                    pulse.classList.add('show');
+                    coach.setAttribute('aria-hidden', 'false');
+                    pulse.setAttribute('aria-hidden', 'false');
+                }, 700);
+            }
         })();
     </script>
 
