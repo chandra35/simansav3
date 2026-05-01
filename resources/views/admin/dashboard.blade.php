@@ -43,56 +43,76 @@
     <div class="row">
         <div class="col-lg-3 col-sm-6 mb-4">
             <div class="simansa-stat-card simansa-stat-card--indigo">
-                <div class="simansa-stat-card__icon">
-                    <i class="fas fa-user-graduate"></i>
+                <div class="simansa-stat-card__top">
+                    <div class="simansa-stat-card__icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="simansa-stat-card__label">Total Siswa</div>
                 </div>
-                <div class="simansa-stat-card__label">Total Siswa</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_siswa']) }}</div>
+                <div class="simansa-stat-card__metric">
+                    <div class="simansa-stat-card__value">{{ number_format($stats['total_siswa']) }}</div>
+                    <div class="simansa-stat-card__meta">Seluruh siswa terdaftar di SIMANSA</div>
+                </div>
                 <div class="simansa-stat-card__footer">
-                    <span>Seluruh siswa terdaftar</span>
-                    <a href="{{ route('admin.siswa.index') }}">Lihat data</a>
+                    <span class="simansa-stat-card__note">Data induk siswa aktif dan arsip berjalan</span>
+                    <a href="{{ route('admin.siswa.index') }}" class="simansa-stat-card__action">Lihat Data</a>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-sm-6 mb-4">
             <div class="simansa-stat-card simansa-stat-card--emerald">
-                <div class="simansa-stat-card__icon">
-                    <i class="fas fa-user-check"></i>
+                <div class="simansa-stat-card__top">
+                    <div class="simansa-stat-card__icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="simansa-stat-card__label">Siswa Aktif</div>
                 </div>
-                <div class="simansa-stat-card__label">Siswa Aktif</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['siswa_aktif']) }}</div>
+                <div class="simansa-stat-card__metric">
+                    <div class="simansa-stat-card__value">{{ number_format($stats['siswa_aktif']) }}</div>
+                    <div class="simansa-stat-card__meta">Sudah login dan menyelesaikan aktivasi akun</div>
+                </div>
                 <div class="simansa-stat-card__footer">
-                    <span>Sudah login dan aktif</span>
-                    <span>{{ $persenAktif }}% dari total siswa</span>
+                    <span class="simansa-stat-card__note">Cakupan aktivasi saat ini {{ $persenAktif }}% dari total siswa</span>
+                    <span class="simansa-stat-card__pill">{{ $persenAktif }}%</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-sm-6 mb-4">
             <div class="simansa-stat-card simansa-stat-card--amber">
-                <div class="simansa-stat-card__icon">
-                    <i class="fas fa-user-shield"></i>
+                <div class="simansa-stat-card__top">
+                    <div class="simansa-stat-card__icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="simansa-stat-card__label">Total Admin</div>
                 </div>
-                <div class="simansa-stat-card__label">Total Admin</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_admin']) }}</div>
+                <div class="simansa-stat-card__metric">
+                    <div class="simansa-stat-card__value">{{ number_format($stats['total_admin']) }}</div>
+                    <div class="simansa-stat-card__meta">Admin, operator, dan akun GTK non-siswa</div>
+                </div>
                 <div class="simansa-stat-card__footer">
-                    <span>Admin, operator, dan GTK</span>
-                    <a href="{{ route('admin.users.index') }}">Kelola akun</a>
+                    <span class="simansa-stat-card__note">Kontrol akses dan akun operasional sistem</span>
+                    <a href="{{ route('admin.users.index') }}" class="simansa-stat-card__action">Kelola Akun</a>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-sm-6 mb-4">
             <div class="simansa-stat-card simansa-stat-card--rose">
-                <div class="simansa-stat-card__icon">
-                    <i class="fas fa-user-clock"></i>
+                <div class="simansa-stat-card__top">
+                    <div class="simansa-stat-card__icon">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="simansa-stat-card__label">Belum Aktif</div>
                 </div>
-                <div class="simansa-stat-card__label">Belum Aktif</div>
-                <div class="simansa-stat-card__value">{{ number_format($siswaBelumAktif) }}</div>
+                <div class="simansa-stat-card__metric">
+                    <div class="simansa-stat-card__value">{{ number_format($siswaBelumAktif) }}</div>
+                    <div class="simansa-stat-card__meta">Masih perlu pendampingan untuk login awal</div>
+                </div>
                 <div class="simansa-stat-card__footer">
-                    <span>Perlu pendampingan login awal</span>
-                    <span>{{ max(0, 100 - $persenAktif) }}% dari total siswa</span>
+                    <span class="simansa-stat-card__note">Proporsi siswa belum aktif {{ max(0, 100 - $persenAktif) }}%</span>
+                    <span class="simansa-stat-card__pill">{{ number_format($siswaBelumAktif) }}</span>
                 </div>
             </div>
         </div>
@@ -280,11 +300,14 @@
         .simansa-stat-card {
             position: relative;
             overflow: hidden;
-            min-height: 210px;
-            border-radius: 1.5rem;
-            padding: 1.3rem 1.3rem 1rem;
+            min-height: 228px;
+            border-radius: 1.35rem;
+            padding: 1.25rem 1.25rem 1.1rem;
             color: #fff;
             box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .simansa-stat-card::before {
@@ -303,44 +326,76 @@
         .simansa-stat-card--rose { background: linear-gradient(135deg, #f4767d, #f99195); }
 
         .simansa-stat-card--amber .simansa-stat-card__label,
+        .simansa-stat-card--amber .simansa-stat-card__meta,
+        .simansa-stat-card--amber .simansa-stat-card__note,
         .simansa-stat-card--amber .simansa-stat-card__footer,
         .simansa-stat-card--amber .simansa-stat-card__footer a,
+        .simansa-stat-card--amber .simansa-stat-card__action,
+        .simansa-stat-card--amber .simansa-stat-card__pill,
         .simansa-stat-card--amber .simansa-stat-card__icon {
             color: #172554;
         }
 
+        .simansa-stat-card--amber .simansa-stat-card__action,
+        .simansa-stat-card--amber .simansa-stat-card__pill {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(23, 37, 84, 0.14);
+        }
+
         .simansa-stat-card__icon {
-            width: 58px;
-            height: 58px;
+            width: 54px;
+            height: 54px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 1.1rem;
-            font-size: 1.35rem;
+            border-radius: 1rem;
+            font-size: 1.2rem;
             background: rgba(255, 255, 255, 0.14);
-            margin-bottom: 1rem;
             position: relative;
             z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .simansa-stat-card__top {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            align-items: center;
+            gap: 0.9rem;
         }
 
         .simansa-stat-card__label {
             position: relative;
             z-index: 1;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.07em;
             font-weight: 700;
-            opacity: 0.88;
-            margin-bottom: 0.4rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+            line-height: 1.45;
+        }
+
+        .simansa-stat-card__metric {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 0.55rem;
         }
 
         .simansa-stat-card__value {
-            position: relative;
-            z-index: 1;
-            font-size: 2.2rem;
-            line-height: 1;
+            font-size: clamp(2rem, 2.8vw, 2.5rem);
+            line-height: 0.95;
             font-weight: 800;
-            margin-bottom: 1.6rem;
+            letter-spacing: -0.02em;
+        }
+
+        .simansa-stat-card__meta {
+            font-size: 0.92rem;
+            line-height: 1.65;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 24ch;
         }
 
         .simansa-stat-card__footer {
@@ -348,17 +403,48 @@
             z-index: 1;
             display: flex;
             justify-content: space-between;
-            gap: 1rem;
-            align-items: center;
-            font-size: 0.88rem;
-            padding-top: 0.95rem;
+            gap: 0.9rem;
+            align-items: flex-end;
+            margin-top: auto;
+            font-size: 0.84rem;
+            padding-top: 0.9rem;
             border-top: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        .simansa-stat-card__footer a {
+        .simansa-stat-card__note {
+            max-width: 26ch;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        .simansa-stat-card__footer a,
+        .simansa-stat-card__action {
             color: #fff;
             font-weight: 700;
             text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        .simansa-stat-card__pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0.55rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            font-weight: 800;
+            letter-spacing: 0.01em;
         }
 
         .simansa-panel {
@@ -498,10 +584,11 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .simansa-stat-card__meta,
+            .simansa-stat-card__note {
+                max-width: none;
+            }
         }
     </style>
-@stop
-
-@section('js')
-    <script>console.log('SIMANSA admin dashboard refreshed');</script>
 @stop
