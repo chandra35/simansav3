@@ -622,6 +622,11 @@
             color: rgba(255, 255, 255, 0.72);
         }
 
+        .simansa-menu-coach,
+        .simansa-menu-coach__pulse {
+            display: none !important;
+        }
+
         @keyframes appGlobalSpin {
             to {
                 transform: rotate(360deg);
@@ -767,17 +772,19 @@
         </div>
     </div>
 
-    <div id="simansaMenuCoach" class="simansa-menu-coach" aria-hidden="true">
-        <span class="simansa-menu-coach__icon"><i class="fas fa-bars"></i></span>
-        <div class="simansa-menu-coach__text">
-            <strong>Buka Menu Navigasi</strong>
-            Tap ikon garis tiga di kiri atas untuk melihat semua menu siswa.
+    @auth
+        <div id="simansaMenuCoach" class="simansa-menu-coach" aria-hidden="true">
+            <span class="simansa-menu-coach__icon"><i class="fas fa-bars"></i></span>
+            <div class="simansa-menu-coach__text">
+                <strong>Buka Menu Navigasi</strong>
+                Tap ikon garis tiga di kiri atas untuk melihat semua menu siswa.
+            </div>
+            <button type="button" class="simansa-menu-coach__close" id="simansaMenuCoachClose" aria-label="Tutup bantuan">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <button type="button" class="simansa-menu-coach__close" id="simansaMenuCoachClose" aria-label="Tutup bantuan">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div id="simansaMenuCoachPulse" class="simansa-menu-coach__pulse" aria-hidden="true"></div>
+        <div id="simansaMenuCoachPulse" class="simansa-menu-coach__pulse" aria-hidden="true"></div>
+    @endauth
 
     {{-- Body Content --}}
     @yield('body')
@@ -1119,6 +1126,10 @@
 
             function initMobileMenuCoach() {
                 if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                    return;
+                }
+
+                if (document.body.classList.contains('login-page') || !document.querySelector('.main-sidebar')) {
                     return;
                 }
 
