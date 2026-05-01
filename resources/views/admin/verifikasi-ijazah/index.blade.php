@@ -5,27 +5,107 @@
 @section('css')
 <style>
     .verif-hero {
-        background: linear-gradient(135deg, rgba(124, 58, 237, .90), rgba(79, 70, 229, .85));
+        background: linear-gradient(135deg, rgba(79, 70, 229, .94), rgba(59, 130, 246, .9));
         border-radius: 18px;
-        padding: 1rem 1.2rem;
-        margin-bottom: .75rem;
+        padding: 1.1rem 1.25rem;
+        margin-bottom: 1rem;
         color: #fff;
+        box-shadow: 0 16px 32px rgba(79, 70, 229, .16);
     }
-    .verif-hero h4 { font-weight: 800; margin: 0 0 .2rem 0; font-size: 1.3rem; }
-    .verif-hero p  { margin: 0; font-size: .85rem; opacity: .88; }
+    .verif-hero h4 { font-weight: 800; margin: 0 0 .22rem 0; font-size: 1.28rem; }
+    .verif-hero p  { margin: 0; font-size: .88rem; opacity: .9; max-width: 860px; line-height: 1.65; }
 
-    .stat-card .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; }
-    .stat-card .stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
-    .small-box { cursor: pointer; }
+    .small-box {
+        cursor: pointer;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
 
-    .filter-bar { background: #f8f9fa; border-radius: 10px; padding: .7rem 1rem; margin-bottom: 1rem; }
+    .verification-filter-card {
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    .verification-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: .75rem;
+        align-items: end;
+    }
+
+    .verification-filter-field label {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: .35rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .verification-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        align-items: end;
+    }
 
     .badge-belum   { background: #6c757d; }
     .badge-sesuai  { background: #28a745; }
     .badge-tidak   { background: #dc3545; }
     .badge-perlu   { background: #ffc107; color: #212529; }
 
+    .verification-table-card {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .verification-table-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: .95rem 1.15rem;
+    }
+
+    .verification-table-card .card-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .verification-table-card .card-footer {
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        padding: .9rem 1.15rem;
+    }
+
     #tbl-verifikasi tbody td { vertical-align: middle; }
+
+    .verification-pagination .pagination {
+        margin-bottom: 0;
+    }
+
+    .verification-pagination .page-link {
+        border-radius: 10px !important;
+        margin: 0 .15rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .verification-filter-actions {
+            grid-column: 1 / -1;
+        }
+
+        .verification-table-card .card-footer .d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: .75rem;
+        }
+    }
 </style>
 @endsection
 
@@ -46,7 +126,7 @@
         <p>Cocokkan data siswa di Simansa dengan data EMIS Kemenag / Kemdikbud. Tandai ketidaksesuaian sebagai acuan perbaikan di Vervalpd.</p>
     </div>
 
-    {{-- Stats — pakai small-box (komponen AdminLTE) karena bg-* bekerja di sini, tidak di .card biasa --}}
+    {{-- Stats: pakai small-box AdminLTE agar tetap stabil --}}
     <div class="row mb-3">
         <div class="col-6 col-md-3">
             <div class="small-box bg-secondary" onclick="filterByStatus('belum_diverifikasi')" style="cursor:pointer;">
@@ -83,19 +163,20 @@
     </div>
 
     {{-- Filter bar --}}
-    <div class="filter-bar" style="background:#f8f9fa;border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;">
+    <div class="card verification-filter-card mb-3">
+        <div class="card-body">
         <form method="GET" action="{{ route('admin.verifikasi-ijazah.index') }}" id="filterForm">
-            <div class="d-flex flex-wrap align-items-end" style="gap:.5rem;">
+            <div class="verification-filter-grid">
                 {{-- Cari --}}
-                <div>
-                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">CARI</label>
-                    <input type="text" name="search" class="form-control form-control-sm" style="width:200px;"
+                <div class="verification-filter-field">
+                    <label><i class="fas fa-search"></i> Cari</label>
+                    <input type="text" name="search" class="form-control form-control-sm"
                            placeholder="Nama / NISN / NIK..." value="{{ $search }}">
                 </div>
                 {{-- Tingkat --}}
-                <div>
-                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">TINGKAT</label>
-                    <select name="tingkat" id="selTingkat" class="form-control form-control-sm" style="width:100px;">
+                <div class="verification-filter-field">
+                    <label><i class="fas fa-layer-group"></i> Tingkat</label>
+                    <select name="tingkat" id="selTingkat" class="form-control form-control-sm">
                         <option value="">Semua</option>
                         @foreach($tingkatList as $t)
                             <option value="{{ $t }}" {{ $tingkatFilter == $t ? 'selected' : '' }}>
@@ -105,9 +186,9 @@
                     </select>
                 </div>
                 {{-- Jurusan --}}
-                <div>
-                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">JURUSAN</label>
-                    <select name="jurusan_id" id="selJurusan" class="form-control form-control-sm" style="width:140px;">
+                <div class="verification-filter-field">
+                    <label><i class="fas fa-project-diagram"></i> Jurusan</label>
+                    <select name="jurusan_id" id="selJurusan" class="form-control form-control-sm">
                         <option value="">Semua</option>
                         @foreach($jurusanAll as $j)
                             <option value="{{ $j->id }}" {{ $jurusanFilter == $j->id ? 'selected' : '' }}
@@ -118,9 +199,9 @@
                     </select>
                 </div>
                 {{-- Kelas --}}
-                <div>
-                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">KELAS</label>
-                    <select name="kelas_id" id="selKelas" class="form-control form-control-sm" style="width:160px;">
+                <div class="verification-filter-field">
+                    <label><i class="fas fa-school"></i> Kelas</label>
+                    <select name="kelas_id" id="selKelas" class="form-control form-control-sm">
                         <option value="">Semua Kelas</option>
                         @foreach($kelasAll as $kelas)
                             <option value="{{ $kelas->id }}"
@@ -133,9 +214,9 @@
                     </select>
                 </div>
                 {{-- Status --}}
-                <div>
-                    <label class="d-block" style="font-size:.7rem;font-weight:600;color:#6c757d;margin-bottom:2px;">STATUS</label>
-                    <select name="status" class="form-control form-control-sm" style="width:175px;" id="statusSelect">
+                <div class="verification-filter-field">
+                    <label><i class="fas fa-check-circle"></i> Status</label>
+                    <select name="status" class="form-control form-control-sm" id="statusSelect">
                         <option value="semua" {{ $statusFilter=='semua' ? 'selected' : '' }}>Semua Status</option>
                         <option value="belum_diverifikasi" {{ $statusFilter=='belum_diverifikasi' ? 'selected' : '' }}>Belum Diverifikasi</option>
                         <option value="sesuai" {{ $statusFilter=='sesuai' ? 'selected' : '' }}>Sesuai</option>
@@ -143,16 +224,23 @@
                         <option value="perlu_perbaikan" {{ $statusFilter=='perlu_perbaikan' ? 'selected' : '' }}>Perlu Perbaikan</option>
                     </select>
                 </div>
-                <div class="d-flex" style="gap:.3rem;padding-bottom:1px;">
+                <div class="verification-filter-actions">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search mr-1"></i>Filter</button>
                     <a href="{{ route('admin.verifikasi-ijazah.index') }}" class="btn btn-secondary btn-sm"><i class="fas fa-times mr-1"></i>Reset</a>
                 </div>
             </div>
         </form>
     </div>
+    </div>
 
     {{-- Table --}}
-    <div class="card shadow-sm">
+    <div class="card verification-table-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.75rem;">
+                <h3><i class="fas fa-table mr-2 text-primary"></i>Daftar Siswa</h3>
+                <span class="badge badge-light px-3 py-2">Total {{ number_format($siswaList->total()) }} siswa</span>
+            </div>
+        </div>
         <div class="card-body p-0">
             <table class="table table-hover table-sm mb-0" id="tbl-verifikasi">
                 <thead class="thead-light">
@@ -178,7 +266,7 @@
                                     <br><small class="text-muted">NIK: {{ $siswa->nik }}</small>
                                 @endif
                             </td>
-                            <td>{{ $siswa->nisn ?? '<span class="text-danger">-</span>' }}</td>
+                            <td>{!! $siswa->nisn ? e($siswa->nisn) : '<span class="text-danger">-</span>' !!}</td>
                             <td>{{ $siswa->kelasSaatIni?->nama_lengkap ?? $siswa->kelasSaatIni?->nama_kelas ?? '-' }}</td>
                             <td>
                                 @if(!$verif || $verif->status === 'belum_diverifikasi')
@@ -199,7 +287,7 @@
                             </td>
                             <td>
                                 <a href="{{ route('admin.verifikasi-ijazah.show', $siswa->id) }}"
-                                   class="btn btn-sm btn-primary btn-sm">
+                                   class="btn btn-sm btn-primary">
                                     <i class="fas fa-search"></i> Verifikasi
                                 </a>
                             </td>
@@ -219,9 +307,11 @@
         <div class="card-footer">
             <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">
-                    Menampilkan {{ $siswaList->firstItem() }}–{{ $siswaList->lastItem() }} dari {{ $siswaList->total() }} siswa
+                    Menampilkan {{ $siswaList->firstItem() }}-{{ $siswaList->lastItem() }} dari {{ $siswaList->total() }} siswa
                 </small>
-                {{ $siswaList->links() }}
+                <div class="verification-pagination">
+                    {{ $siswaList->onEachSide(1)->links('pagination::bootstrap-4') }}
+                </div>
             </div>
         </div>
         @endif
