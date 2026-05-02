@@ -163,6 +163,43 @@ class ActivityLogController extends Controller
                 ';
             })
             ->addColumn('location', function ($log) {
+                $locationMeta = is_array($log->properties['location_meta'] ?? null)
+                    ? $log->properties['location_meta']
+                    : [];
+                $requestMeta = is_array($log->properties['request_meta'] ?? null)
+                    ? $log->properties['request_meta']
+                    : [];
+                $source = $locationMeta['source'] ?? 'missing';
+                $status = $locationMeta['status'] ?? 'missing';
+                $accuracy = isset($locationMeta['accuracy']) && $locationMeta['accuracy'] !== null
+                    ? '±' . round((float) $locationMeta['accuracy']) . ' m'
+                    : null;
+
+                $sourceBadge = match ($source) {
+                    'payload', 'request', 'header', 'session' => '<span class="badge badge-success">GPS</span>',
+                    'geoip' => '<span class="badge badge-warning">GeoIP</span>',
+                    'private_ip' => '<span class="badge badge-secondary">IP Private</span>',
+                    default => '<span class="badge badge-light border">Tanpa Lokasi</span>',
+                };
+
+                $statusLabel = match ($status) {
+                    'device_location' => 'GPS perangkat',
+                    'geoip_fallback' => 'Fallback GeoIP',
+                    'private_ip_unresolvable' => 'Perlu GPS',
+                    'missing_required' => 'Lokasi belum ikut',
+                    'missing_optional' => 'Opsional',
+                    default => ucfirst(str_replace('_', ' ', $status)),
+                };
+
+                $ipSource = match ($requestMeta['ip_source'] ?? 'remote-addr') {
+                    'x-forwarded-for' => 'XFF',
+                    'x-real-ip' => 'X-Real-IP',
+                    'cf-connecting-ip' => 'Cloudflare',
+                    'true-client-ip' => 'True-Client-IP',
+                    'forwarded' => 'Forwarded',
+                    default => 'Remote Addr',
+                };
+
                 if ($log->city || $log->country) {
                     $location = [];
                     if ($log->city) $location[] = $log->city;
@@ -174,12 +211,19 @@ class ActivityLogController extends Controller
                     
                     return '
                         <div class="location-info">
-                            ' . $flag . e($locationStr) . '<br>
-                            <small class="text-muted">IP: ' . e($log->ip_address) . '</small>
+                            <div class="mb-1">' . $flag . e($locationStr) . '</div>
+                            <div class="mb-1">' . $sourceBadge . ' <span class="badge badge-light border">' . e($statusLabel) . '</span></div>
+                            ' . ($accuracy ? '<div><small class="text-success"><i class="fas fa-crosshairs mr-1"></i>' . e($accuracy) . '</small></div>' : '') . '
+                            <small class="text-muted">IP: ' . e($log->ip_address) . ' (' . e($ipSource) . ')</small>
                         </div>
                     ';
                 }
-                return '<small class="text-muted">IP: ' . e($log->ip_address) . '</small>';
+                return '
+                    <div class="location-info">
+                        <div class="mb-1">' . $sourceBadge . ' <span class="badge badge-light border">' . e($statusLabel) . '</span></div>
+                        <small class="text-muted">IP: ' . e($log->ip_address) . ' (' . e($ipSource) . ')</small>
+                    </div>
+                ';
             })
             ->addColumn('changes', function ($log) {
                 if ($log->changed_fields && !empty($log->changed_fields)) {
