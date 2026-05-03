@@ -359,6 +359,35 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Reset Password Siswa -->
+<div class="modal fade" id="resetPasswordSiswaModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordSiswaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetPasswordSiswaModalLabel">
+                    <i class="fas fa-key text-warning mr-2"></i>Reset Password Siswa
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Apakah Anda yakin ingin reset password siswa ini?</p>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Password akan direset ke NISN dan siswa diminta login ulang.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-warning" id="confirmResetPasswordSiswa">
+                    <i class="fas fa-key mr-1"></i> Ya, Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('css')
@@ -514,6 +543,7 @@
 <script>
 let siswaTable;
 let editingId = null;
+let resetPasswordSiswaId = null;
 const statsContextFilters = @json($contextQuery ?? []);
 
 $(document).ready(function() {
@@ -1157,29 +1187,47 @@ function deleteSiswa(id) {
   });
 
 function resetPassword(id) {
-    if (confirm('Apakah Anda yakin ingin reset password siswa ini?\n\nPassword akan direset ke NISN dan siswa diminta login ulang.')) {
-        $.ajax({
-            url: `{{ url('admin/siswa') }}/${id}/reset-password`,
-            type: 'PUT',
-            data: {
-                _token: '{{ csrf_token() }}'
-            }
-        })
-        .done(function(response) {
-            if (response.success) {
-                const info = response.default_password
-                    ? `${response.message}\nPassword default baru: ${response.default_password}`
-                    : response.message;
-                toastr.success(info, 'Berhasil!');
-            } else {
-                toastr.error(response.message, 'Gagal!');
-            }
-        })
-        .fail(function() {
-            toastr.error('Terjadi kesalahan saat reset password', 'Error!');
-        });
-    }
+    resetPasswordSiswaId = id;
+    $('#resetPasswordSiswaModal').modal('show');
 }
+
+$('#confirmResetPasswordSiswa').on('click', function () {
+    if (!resetPasswordSiswaId) {
+        $('#resetPasswordSiswaModal').modal('hide');
+        return;
+    }
+
+    const button = $(this);
+    const originalHtml = button.html();
+
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
+
+    $.ajax({
+        url: `{{ url('admin/siswa') }}/${resetPasswordSiswaId}/reset-password`,
+        type: 'PUT',
+        data: {
+            _token: '{{ csrf_token() }}'
+        }
+    })
+    .done(function(response) {
+        if (response.success) {
+            const info = response.default_password
+                ? `${response.message}\nPassword default baru: ${response.default_password}`
+                : response.message;
+            toastr.success(info, 'Berhasil!');
+            $('#resetPasswordSiswaModal').modal('hide');
+            resetPasswordSiswaId = null;
+        } else {
+            toastr.error(response.message, 'Gagal!');
+        }
+    })
+    .fail(function() {
+        toastr.error('Terjadi kesalahan saat reset password', 'Error!');
+    })
+    .always(function () {
+        button.prop('disabled', false).html(originalHtml);
+    });
+});
 
 function saveSiswa() {
     const formData = new FormData($('#siswaForm')[0]);
