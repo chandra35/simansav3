@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
+use App\Models\PengumumanKelulusan;
 use App\Models\Siswa;
 use App\Models\SnbpMenu;
 use App\Models\SnbpRegistration;
@@ -76,6 +78,28 @@ class DashboardController extends Controller
 
         // Get tahun pelajaran aktif
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
+        $graduationAnnouncementInfo = null;
+
+        if ($tahunPelajaranAktif && $kelasAktif && (int) ($kelasAktif->tingkat ?? 0) === 12) {
+            $setting = AppSetting::getInstance();
+
+            if ($setting->graduation_announcement_enabled) {
+                $startsAt = $setting->graduation_announcement_starts_at;
+                $announcement = PengumumanKelulusan::query()
+                    ->where('tahun_pelajaran_id', $tahunPelajaranAktif->id)
+                    ->where('siswa_id', $siswa->id)
+                    ->first();
+
+                $graduationAnnouncementInfo = [
+                    'starts_at' => $startsAt,
+                    'is_available' => !$startsAt || now()->greaterThanOrEqualTo($startsAt),
+                    'has_result' => (bool) $announcement,
+                    'opened_at' => $announcement?->opened_at,
+                    'status_label' => $announcement?->status_label,
+                    'route' => route('siswa.kelulusan-pengumuman.index'),
+                ];
+            }
+        }
 
         $snbpReminder = null;
         $snbpMenu = SnbpMenu::getActiveMenu();
@@ -105,7 +129,8 @@ class DashboardController extends Controller
             'tahunPelajaranAktif',
             'snbpReminder',
             'temanSekelas',
-            'temanSekelasOnline'
+            'temanSekelasOnline',
+            'graduationAnnouncementInfo'
         ));
     }
 }

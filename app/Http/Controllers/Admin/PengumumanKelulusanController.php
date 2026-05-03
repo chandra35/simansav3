@@ -41,7 +41,9 @@ class PengumumanKelulusanController extends Controller
             'lulus' => $announcementMap->where('status', PengumumanKelulusan::STATUS_LULUS)->count(),
             'lulus_bersyarat' => $announcementMap->where('status', PengumumanKelulusan::STATUS_LULUS_BERSYARAT)->count(),
             'tidak_lulus' => $announcementMap->where('status', PengumumanKelulusan::STATUS_TIDAK_LULUS)->count(),
+            'sudah_buka' => $announcementMap->filter(fn ($item) => filled($item->opened_at))->count(),
         ];
+        $stats['belum_buka'] = max($stats['total'] - $stats['sudah_buka'], 0);
 
         return view('admin.kelulusan-pengumuman.index', [
             'tahunAktif' => $tahunAktif,
@@ -59,17 +61,26 @@ class PengumumanKelulusanController extends Controller
     {
         $validated = $request->validate([
             'graduation_announcement_enabled' => ['required', 'boolean'],
+            'graduation_announcement_starts_at' => ['nullable', 'date'],
         ]);
 
         $setting = AppSetting::getInstance();
+        $wasEnabled = (bool) $setting->graduation_announcement_enabled;
+        $willBeEnabled = (bool) $validated['graduation_announcement_enabled'];
         $setting->update([
-            'graduation_announcement_enabled' => (bool) $validated['graduation_announcement_enabled'],
+            'graduation_announcement_enabled' => $willBeEnabled,
+            'graduation_announcement_starts_at' => $validated['graduation_announcement_starts_at'] ?? null,
         ]);
 
-        return redirect()->route('admin.kelulusan-pengumuman.index')
-            ->with('success', $setting->graduation_announcement_enabled
+        $message = 'Jadwal pengumuman kelulusan berhasil diperbarui.';
+        if ($wasEnabled !== $willBeEnabled) {
+            $message = $willBeEnabled
                 ? 'Pengumuman kelulusan untuk siswa kelas 12 sudah diaktifkan.'
-                : 'Pengumuman kelulusan untuk siswa kelas 12 sudah disembunyikan.');
+                : 'Pengumuman kelulusan untuk siswa kelas 12 sudah disembunyikan.';
+        }
+
+        return redirect()->route('admin.kelulusan-pengumuman.index')
+            ->with('success', $message);
     }
 
     public function save(Request $request)
@@ -90,8 +101,25 @@ class PengumumanKelulusanController extends Controller
             $statuses = $validated['statuses'] ?? [];
             $notes = $validated['notes'] ?? [];
 
+            $emptyStatuses = collect($statuses)
+                ->filter(fn ($status) => blank($status))
+                ->keys()
+                ->filter(fn ($siswaId) => $allowedBySiswaId->has($siswaId))
+                ->values();
+
+            if ($emptyStatuses->isNotEmpty()) {
+                PengumumanKelulusan::query()
+                    ->where('tahun_pelajaran_id', $tahunAktif->id)
+                    ->whereIn('siswa_id', $emptyStatuses->all())
+                    ->delete();
+            }
+
             foreach ($statuses as $siswaId => $status) {
                 if (!$allowedBySiswaId->has($siswaId)) {
+                    continue;
+                }
+
+                if (blank($status)) {
                     continue;
                 }
 
@@ -116,22 +144,72 @@ class PengumumanKelulusanController extends Controller
                     ]
                 );
             }
-
-            $emptyStatuses = collect($statuses)
-                ->filter(fn ($status) => blank($status))
-                ->keys();
-
-            if ($emptyStatuses->isNotEmpty()) {
-                PengumumanKelulusan::query()
-                    ->where('tahun_pelajaran_id', $tahunAktif->id)
-                    ->whereIn('siswa_id', $emptyStatuses->all())
-                    ->delete();
-            }
         });
 
         return redirect()->route('admin.kelulusan-pengumuman.index', [
             'kelas_id' => $request->input('kelas_filter'),
         ])->with('success', 'Data pengumuman kelulusan berhasil disimpan.');
+    }
+
+    public function resetOpened(Request $request)
+    {
+        $tahunAktif = TahunPelajaran::query()->where('is_active', true)->firstOrFail();
+        $kelasId = $request->string('kelas_filter')->toString();
+        $studentIds = $this->getClass12Students($tahunAktif->id, $kelasId ?: null)
+            ->pluck('siswa.id')
+            ->filter()
+            ->values();
+
+        if ($studentIds->isEmpty()) {
+            return redirect()->route('admin.kelulusan-pengumuman.index', [
+                'kelas_id' => $kelasId,
+            ])->with('warning', 'Tidak ada siswa kelas 12 yang bisa direset pada filter ini.');
+        }
+
+        $affected = PengumumanKelulusan::query()
+            ->where('tahun_pelajaran_id', $tahunAktif->id)
+            ->whereIn('siswa_id', $studentIds->all())
+            ->whereNotNull('opened_at')
+            ->update([
+                'opened_at' => null,
+                'opened_ip' => null,
+                'opened_user_agent' => null,
+            ]);
+
+        return redirect()->route('admin.kelulusan-pengumuman.index', [
+            'kelas_id' => $kelasId,
+        ])->with('success', "Riwayat buka amplop berhasil direset untuk {$affected} siswa.");
+    }
+
+    public function resetOpenedForStudent(Request $request, string $siswa)
+    {
+        $tahunAktif = TahunPelajaran::query()->where('is_active', true)->firstOrFail();
+        $kelasId = $request->string('kelas_filter')->toString();
+        $allowed = $this->getClass12Students($tahunAktif->id)
+            ->pluck('siswa.id')
+            ->contains($siswa);
+
+        if (!$allowed) {
+            return redirect()->route('admin.kelulusan-pengumuman.index', [
+                'kelas_id' => $kelasId,
+            ])->with('error', 'Siswa tidak termasuk kelas 12 pada tahun ajaran aktif.');
+        }
+
+        $affected = PengumumanKelulusan::query()
+            ->where('tahun_pelajaran_id', $tahunAktif->id)
+            ->where('siswa_id', $siswa)
+            ->whereNotNull('opened_at')
+            ->update([
+                'opened_at' => null,
+                'opened_ip' => null,
+                'opened_user_agent' => null,
+            ]);
+
+        return redirect()->route('admin.kelulusan-pengumuman.index', [
+            'kelas_id' => $kelasId,
+        ])->with($affected ? 'success' : 'info', $affected
+            ? 'Riwayat buka amplop siswa berhasil direset.'
+            : 'Siswa ini belum pernah membuka amplop, tidak ada yang perlu direset.');
     }
 
     private function getClass12Students(string $tahunPelajaranId, ?string $kelasId = null): Collection

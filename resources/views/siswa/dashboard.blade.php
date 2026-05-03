@@ -108,6 +108,39 @@
     </div>
 </div>
 
+@if($graduationAnnouncementInfo)
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="graduation-dashboard-alert">
+            <div class="graduation-dashboard-icon">
+                <i class="fas {{ $graduationAnnouncementInfo['is_available'] ? 'fa-envelope-open-text' : 'fa-hourglass-half' }}"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="text-uppercase small font-weight-bold mb-1">Pengumuman Kelulusan Kelas 12</div>
+                @if($graduationAnnouncementInfo['is_available'])
+                    <h4 class="mb-1">
+                        {{ $graduationAnnouncementInfo['opened_at'] ? 'Hasil kelulusan Anda sudah tersedia.' : 'Amplop pengumuman sudah bisa dibuka.' }}
+                    </h4>
+                    <p class="mb-0">
+                        @if($graduationAnnouncementInfo['opened_at'])
+                            Anda sudah membuka hasil pada {{ $graduationAnnouncementInfo['opened_at']->format('d M Y H:i') }}.
+                        @else
+                            Ketuk tombol di samping untuk membuka amplop pengumuman resmi.
+                        @endif
+                    </p>
+                @else
+                    <h4 class="mb-1">Amplop pengumuman akan tampil pada {{ $graduationAnnouncementInfo['starts_at']->format('d M Y H:i') }} WIB.</h4>
+                    <p class="mb-0">Hitung mundur tersedia di halaman pengumuman agar Anda tahu kapan amplop bisa dibuka.</p>
+                @endif
+            </div>
+            <a href="{{ $graduationAnnouncementInfo['route'] }}" class="btn btn-light font-weight-bold graduation-dashboard-button">
+                <i class="fas fa-arrow-right mr-1"></i> Lihat Pengumuman
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Statistics Cards at Top -->
 <div class="row">
     <div class="col-lg-3 col-md-6 col-sm-6">
@@ -740,6 +773,40 @@
         background: rgba(255,255,255,0.05);
     }
 
+    .graduation-dashboard-alert {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        color: #fff;
+        background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+    }
+
+    .graduation-dashboard-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        background: rgba(255,255,255,0.15);
+        font-size: 1.6rem;
+    }
+
+    .graduation-dashboard-alert h4,
+    .graduation-dashboard-alert p {
+        color: #fff;
+    }
+
+    .graduation-dashboard-button {
+        flex: 0 0 auto;
+        color: #1d4ed8 !important;
+        white-space: nowrap;
+    }
+
     .small-box {
         border-radius: 14px;
         overflow: hidden;
@@ -1213,6 +1280,16 @@
 
     /* Responsive Adjustments */
     @media (max-width: 768px) {
+        .graduation-dashboard-alert {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .graduation-dashboard-button {
+            width: 100%;
+            white-space: normal;
+        }
+
         .small-box h3 {
             font-size: 1.6rem;
         }

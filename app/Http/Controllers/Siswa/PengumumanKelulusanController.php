@@ -7,6 +7,7 @@ use App\Models\AppSetting;
 use App\Models\PengumumanKelulusan;
 use App\Models\SiswaKelas;
 use App\Models\TahunPelajaran;
+use App\Support\ClientRequest;
 use Illuminate\Http\Request;
 
 class PengumumanKelulusanController extends Controller
@@ -26,6 +27,8 @@ class PengumumanKelulusanController extends Controller
             return redirect()->route('siswa.dashboard')
                 ->with('warning', 'Pengumuman kelulusan belum dibuka oleh admin.');
         }
+        $startsAt = $setting->graduation_announcement_starts_at;
+        $isScheduledOpen = !$startsAt || now()->greaterThanOrEqualTo($startsAt);
 
         $tahunAktif = TahunPelajaran::query()->where('is_active', true)->first();
         if (!$tahunAktif) {
@@ -60,6 +63,9 @@ class PengumumanKelulusanController extends Controller
             'kelasAktif' => $kelasAktif,
             'tahunAktif' => $tahunAktif,
             'announcement' => $announcement,
+            'setting' => $setting,
+            'startsAt' => $startsAt,
+            'isScheduledOpen' => $isScheduledOpen,
         ]);
     }
 
@@ -80,6 +86,15 @@ class PengumumanKelulusanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Pengumuman kelulusan belum dibuka oleh admin.',
+            ], 403);
+        }
+
+        $startsAt = $setting->graduation_announcement_starts_at;
+        if ($startsAt && now()->lessThan($startsAt)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Amplop pengumuman belum dapat dibuka. Silakan tunggu sampai jadwal tayang.',
+                'starts_at' => $startsAt->format('d M Y H:i'),
             ], 403);
         }
 
@@ -106,7 +121,7 @@ class PengumumanKelulusanController extends Controller
         if (!$announcement->opened_at) {
             $announcement->update([
                 'opened_at' => now(),
-                'opened_ip' => $request->ip(),
+                'opened_ip' => ClientRequest::ip($request),
                 'opened_user_agent' => substr((string) $request->userAgent(), 0, 65535),
             ]);
         }

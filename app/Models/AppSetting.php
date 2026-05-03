@@ -53,6 +53,7 @@ class AppSetting extends Model
         'smtp_enabled',
         'activity_log_require_location',
         'graduation_announcement_enabled',
+        'graduation_announcement_starts_at',
     ];
 
     protected $casts = [
@@ -67,6 +68,7 @@ class AppSetting extends Model
         'smtp_enabled' => 'boolean',
         'activity_log_require_location' => 'boolean',
         'graduation_announcement_enabled' => 'boolean',
+        'graduation_announcement_starts_at' => 'datetime',
     ];
 
     protected $hidden = [
@@ -119,6 +121,7 @@ class AppSetting extends Model
                 'kop_mode' => 'builder',
                 'activity_log_require_location' => false,
                 'graduation_announcement_enabled' => false,
+                'graduation_announcement_starts_at' => null,
             ]);
         }
         

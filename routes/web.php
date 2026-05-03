@@ -121,6 +121,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
             Route::post('/kelulusan-pengumuman/publish', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'publish'])->name('kelulusan-pengumuman.publish');
             Route::post('/kelulusan-pengumuman/save', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'save'])->name('kelulusan-pengumuman.save');
+            Route::post('/kelulusan-pengumuman/reset-opened', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpened'])->name('kelulusan-pengumuman.reset-opened');
+            Route::post('/kelulusan-pengumuman/reset-opened/{siswa}', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpenedForStudent'])->name('kelulusan-pengumuman.reset-opened-student');
         });
     });
     Route::middleware(['permission:manage-settings'])->group(function () {
