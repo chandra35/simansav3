@@ -26,7 +26,310 @@
     </div>
 @stop
 
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bulkSelect = document.getElementById('bulkGraduationStatus');
+    const applyButton = document.getElementById('applyBulkGraduationStatus');
+    const clearButton = document.getElementById('clearBulkGraduationStatus');
+    const selectAllButton = document.getElementById('selectAllGraduationRows');
+    const unselectAllButton = document.getElementById('unselectAllGraduationRows');
+    const selectedCountText = document.getElementById('selectedGraduationCount');
+    const selectedCountFooter = document.getElementById('selectedGraduationCountFooter');
+    const saveButtonLabel = document.getElementById('saveGraduationButtonLabel');
+    const saveButton = document.getElementById('saveGraduationSubmit');
+    const saveModal = $('#confirmGraduationSaveModal');
+    const confirmSaveButton = document.getElementById('confirmGraduationSaveButton');
+    const form = document.getElementById('graduationAnnouncementForm');
+    const bulkNoteWrap = document.getElementById('bulkGraduationNoteWrap');
+    const bulkNote = document.getElementById('bulkGraduationNote');
+    const bulkFeedback = document.getElementById('bulkGraduationFeedback');
+    const statusSelects = Array.from(document.querySelectorAll('.graduation-status-select'));
+    const noteFields = Array.from(document.querySelectorAll('.graduation-note-field'));
+    const rowChecks = Array.from(document.querySelectorAll('.graduation-row-check'));
+    let saveConfirmed = false;
+
+    if (!bulkSelect || statusSelects.length === 0 || rowChecks.length === 0) {
+        return;
+    }
+
+    const updateSelectedCount = function () {
+        const count = rowChecks.filter(check => check.checked).length;
+        if (selectedCountText) {
+            selectedCountText.textContent = count + ' siswa dipilih';
+        }
+        if (selectedCountFooter) {
+            selectedCountFooter.textContent = count > 0
+                ? count + ' siswa dipilih untuk bulk action'
+                : 'Belum ada siswa dipilih untuk bulk action';
+        }
+        if (saveButtonLabel) {
+            saveButtonLabel.textContent = count > 0
+                ? 'Simpan Pengumuman (' + count + ' dipilih)'
+                : 'Simpan Pengumuman';
+        }
+        if (applyButton) applyButton.disabled = count === 0;
+        if (clearButton) clearButton.disabled = count === 0;
+    };
+
+    const selectedSiswaIds = function () {
+        return rowChecks
+            .filter(check => check.checked)
+            .map(check => check.value);
+    };
+
+    const selectedStatusSelects = function () {
+        return selectedSiswaIds()
+            .map(siswaId => document.querySelector('.graduation-status-select[data-siswa-id="' + siswaId + '"]'))
+            .filter(Boolean);
+    };
+
+    const applyStatus = function (value) {
+        const noteValue = bulkNote ? bulkNote.value : '';
+
+        selectedStatusSelects().forEach(function (select) {
+            select.value = value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        if (value === 'lulus_bersyarat') {
+            selectedSiswaIds().forEach(function (siswaId) {
+                const note = document.querySelector('.graduation-note-field[data-siswa-id="' + siswaId + '"]');
+                if (note) {
+                    note.value = noteValue;
+                    note.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+    };
+
+    const showBulkFeedback = function (message, type = 'info') {
+        if (!bulkFeedback) return;
+
+        bulkFeedback.className = 'graduation-bulk-feedback is-visible text-' + type;
+        bulkFeedback.textContent = message;
+    };
+
+    const toggleBulkNote = function () {
+        if (!bulkNoteWrap) return;
+        bulkNoteWrap.classList.toggle('is-visible', bulkSelect.value === 'lulus_bersyarat');
+        if (bulkSelect.value !== 'lulus_bersyarat' && bulkNote) {
+            bulkNote.classList.remove('is-invalid');
+        }
+    };
+
+    const validateConditionalNotes = function () {
+        let firstInvalid = null;
+
+        statusSelects.forEach(function (select) {
+            const siswaId = select.dataset.siswaId;
+            const note = document.querySelector('.graduation-note-field[data-siswa-id="' + siswaId + '"]');
+
+            if (!note) {
+                return;
+            }
+
+            const invalid = select.value === 'lulus_bersyarat' && note.value.trim() === '';
+            note.classList.toggle('is-invalid', invalid);
+
+            if (invalid && !firstInvalid) {
+                firstInvalid = note;
+            }
+        });
+
+        if (firstInvalid) {
+            showBulkFeedback('Masih ada siswa Lulus Bersyarat yang belum memiliki catatan.', 'danger');
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid.focus();
+            return false;
+        }
+
+        return true;
+    };
+
+    rowChecks.forEach(check => check.addEventListener('change', updateSelectedCount));
+    bulkSelect.addEventListener('change', toggleBulkNote);
+
+    if (selectAllButton) {
+        selectAllButton.addEventListener('click', function () {
+            rowChecks.forEach(check => check.checked = true);
+            updateSelectedCount();
+        });
+    }
+
+    if (unselectAllButton) {
+        unselectAllButton.addEventListener('click', function () {
+            rowChecks.forEach(check => check.checked = false);
+            updateSelectedCount();
+        });
+    }
+
+    if (applyButton) {
+        applyButton.addEventListener('click', function () {
+            const selectedCount = rowChecks.filter(check => check.checked).length;
+            if (selectedCount === 0) {
+                showBulkFeedback('Pilih minimal satu siswa terlebih dahulu.', 'warning');
+                return;
+            }
+
+            if (bulkSelect.value === 'lulus_bersyarat' && bulkNote && bulkNote.value.trim() === '') {
+                bulkNote.classList.add('is-invalid');
+                showBulkFeedback('Catatan wajib diisi untuk status Lulus Bersyarat.', 'danger');
+                bulkNote.focus();
+                return;
+            }
+
+            const selectedLabel = bulkSelect.options[bulkSelect.selectedIndex]?.text || 'status yang dipilih';
+            applyStatus(bulkSelect.value);
+
+            if (bulkNote) {
+                bulkNote.classList.remove('is-invalid');
+            }
+
+            showBulkFeedback(
+                bulkSelect.value
+                    ? 'Status "' + selectedLabel + '" diterapkan ke ' + selectedCount + ' siswa terpilih.'
+                    : 'Status dikosongkan untuk ' + selectedCount + ' siswa terpilih.',
+                'success'
+            );
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', function () {
+            const selectedCount = rowChecks.filter(check => check.checked).length;
+            if (selectedCount === 0) {
+                showBulkFeedback('Pilih minimal satu siswa terlebih dahulu.', 'warning');
+                return;
+            }
+
+            bulkSelect.value = '';
+            toggleBulkNote();
+            applyStatus('');
+            showBulkFeedback('Status dikosongkan untuk ' + selectedCount + ' siswa terpilih.', 'success');
+        });
+    }
+
+    if (bulkNote) {
+        bulkNote.addEventListener('input', function () {
+            bulkNote.classList.remove('is-invalid');
+        });
+    }
+
+    noteFields.forEach(function (note) {
+        note.addEventListener('input', function () {
+            note.classList.remove('is-invalid');
+        });
+    });
+
+    if (form && saveButton && confirmSaveButton) {
+        form.addEventListener('submit', function (event) {
+            const submitter = event.submitter;
+            const action = submitter?.getAttribute('formaction') || form.getAttribute('action');
+
+            if (saveConfirmed || action !== form.getAttribute('action')) {
+                return;
+            }
+
+            event.preventDefault();
+            if (!validateConditionalNotes()) {
+                return;
+            }
+
+            saveModal.modal('show');
+        });
+
+        confirmSaveButton.addEventListener('click', function () {
+            saveConfirmed = true;
+            saveModal.modal('hide');
+            if (form.requestSubmit) {
+                form.requestSubmit(saveButton);
+            } else {
+                form.submit();
+            }
+        });
+    }
+
+    updateSelectedCount();
+    toggleBulkNote();
+});
+</script>
+@stop
+
+@section('css')
+<style>
+    .graduation-bulk-panel {
+        border: 1px solid #dbe7f4;
+        border-radius: 10px;
+        background: #f8fbff;
+    }
+
+    .graduation-bulk-grid {
+        display: grid;
+        grid-template-columns: minmax(230px, 1fr) minmax(220px, 1fr) minmax(320px, 1.6fr);
+        gap: 14px;
+        align-items: end;
+    }
+
+    .graduation-bulk-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e4edf7;
+    }
+
+    .graduation-bulk-note textarea {
+        min-height: 62px;
+    }
+
+    .graduation-bulk-note {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transform: translateY(-4px);
+        transition: max-height .24s ease, opacity .18s ease, transform .18s ease;
+    }
+
+    .graduation-bulk-note.is-visible {
+        max-height: 120px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .graduation-bulk-feedback {
+        min-height: 20px;
+        opacity: 0;
+        transition: opacity .18s ease;
+    }
+
+    .graduation-bulk-feedback.is-visible {
+        opacity: 1;
+    }
+
+    @media (max-width: 992px) {
+        .graduation-bulk-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@stop
+
 @section('content')
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="font-weight-bold mb-1">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Data belum tersimpan
+            </div>
+            <div>{{ $errors->first() }}</div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Tutup">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm simansa-surface-card">
@@ -143,7 +446,7 @@
         <div class="card-header border-0">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div>
-                    <h3 class="card-title font-weight-bold mb-1">Data Pengumuman Kelulusan</h3>
+                    <h3 class="h5 font-weight-bold mb-1">Data Pengumuman Kelulusan</h3>
                     <div class="text-muted small">Isi status per siswa lalu simpan. Catatan hanya wajib untuk status Lulus Bersyarat.</div>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
@@ -178,10 +481,65 @@
             <form id="graduationAnnouncementForm" action="{{ route('admin.kelulusan-pengumuman.save') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kelas_filter" value="{{ $selectedKelasId }}">
+                @if($students->isNotEmpty())
+                    <div class="px-4 py-3 border-bottom">
+                        <div class="graduation-bulk-panel p-3">
+                            <div class="graduation-bulk-grid">
+                                <div>
+                                    <label class="small text-muted font-weight-bold mb-1 d-block">Pilih siswa</label>
+                                    <div class="btn-group w-100" role="group" aria-label="Pilih siswa">
+                                        <button type="button" class="btn btn-outline-primary flex-fill" id="selectAllGraduationRows">
+                                            <i class="fas fa-check-square mr-1"></i> Select Semua
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary flex-fill" id="unselectAllGraduationRows">
+                                            <i class="far fa-square mr-1"></i> Unselect Semua
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="bulkGraduationStatus" class="small text-muted font-weight-bold mb-1">
+                                        Status untuk siswa terpilih
+                                    </label>
+                                    <select id="bulkGraduationStatus" class="form-control">
+                                        <option value="">Belum Ditentukan</option>
+                                        @foreach($statusOptions as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="bulkGraduationNoteWrap" class="graduation-bulk-note">
+                                    <label for="bulkGraduationNote" class="small text-muted font-weight-bold mb-1">
+                                        Catatan Lulus Bersyarat
+                                    </label>
+                                    <textarea
+                                        id="bulkGraduationNote"
+                                        class="form-control"
+                                        rows="2"
+                                        placeholder="Catatan ini akan diisi ke siswa terpilih"
+                                    ></textarea>
+                                </div>
+                            </div>
+                            <div class="graduation-bulk-actions">
+                                <button type="button" class="btn btn-success" id="applyBulkGraduationStatus">
+                                    <i class="fas fa-check-double mr-1"></i> Terapkan Status
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="clearBulkGraduationStatus">
+                                    <i class="fas fa-times mr-1"></i> Kosongkan Status
+                                </button>
+                            </div>
+                            <div class="text-muted small">
+                                <span class="badge badge-info px-2 py-1" id="selectedGraduationCount">0 siswa dipilih</span>
+                                <span class="ml-2">Klik <strong>Simpan Pengumuman</strong> setelah menerapkan.</span>
+                            </div>
+                            <div class="graduation-bulk-feedback small font-weight-bold" id="bulkGraduationFeedback"></div>
+                        </div>
+                    </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="thead-light">
                             <tr>
+                                <th class="pl-4" style="width: 54px;">Pilih</th>
                                 <th class="pl-4">Siswa</th>
                                 <th>Rombel</th>
                                 <th style="width: 220px;">Status</th>
@@ -194,6 +552,17 @@
                                 @php($item = $announcementMap->get($row->siswa->id))
                                 <tr>
                                     <td class="pl-4">
+                                        <div class="custom-control custom-checkbox">
+                                            <input
+                                                type="checkbox"
+                                                class="custom-control-input graduation-row-check"
+                                                id="graduationCheck{{ $row->siswa->id }}"
+                                                value="{{ $row->siswa->id }}"
+                                            >
+                                            <label class="custom-control-label" for="graduationCheck{{ $row->siswa->id }}"></label>
+                                        </div>
+                                    </td>
+                                    <td>
                                         <div class="font-weight-bold">{{ $row->siswa->nama_lengkap }}</div>
                                         <div class="text-muted small">{{ $row->siswa->nisn }} @if($row->siswa->user?->username) | {{ $row->siswa->user->username }} @endif</div>
                                     </td>
@@ -201,7 +570,7 @@
                                         <span class="badge badge-light">{{ $row->kelas->nama_kelas }}</span>
                                     </td>
                                     <td>
-                                        <select name="statuses[{{ $row->siswa->id }}]" class="form-control">
+                                        <select name="statuses[{{ $row->siswa->id }}]" class="form-control graduation-status-select" data-siswa-id="{{ $row->siswa->id }}">
                                             <option value="">Belum Ditentukan</option>
                                             @foreach($statusOptions as $value => $label)
                                                 <option value="{{ $value }}" @selected(optional($item)->status === $value)>{{ $label }}</option>
@@ -209,7 +578,7 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <textarea name="notes[{{ $row->siswa->id }}]" rows="2" class="form-control" placeholder="Catatan tambahan, khususnya untuk Lulus Bersyarat">{{ old("notes.{$row->siswa->id}", optional($item)->catatan) }}</textarea>
+                                        <textarea name="notes[{{ $row->siswa->id }}]" rows="2" class="form-control graduation-note-field" data-siswa-id="{{ $row->siswa->id }}" placeholder="Catatan tambahan, khususnya untuk Lulus Bersyarat">{{ old("notes.{$row->siswa->id}", optional($item)->catatan) }}</textarea>
                                     </td>
                                     <td class="pr-4">
                                         @if(optional($item)->opened_at)
@@ -234,7 +603,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-5">
+                                    <td colspan="6" class="text-center text-muted py-5">
                                         Belum ada siswa kelas 12 pada tahun ajaran aktif.
                                     </td>
                                 </tr>
@@ -243,13 +612,41 @@
                     </table>
                 </div>
                 @if($students->isNotEmpty())
-                    <div class="card-footer bg-white border-0 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save mr-1"></i> Simpan Pengumuman
+                    <div class="card-footer bg-white border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="text-muted small">
+                            <span class="badge badge-light border px-2 py-1" id="selectedGraduationCountFooter">Belum ada siswa dipilih untuk bulk action</span>
+                            <span class="ml-2">Simpan akan menyimpan seluruh perubahan status dan catatan pada tabel ini.</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg" id="saveGraduationSubmit">
+                            <i class="fas fa-save mr-1"></i> <span id="saveGraduationButtonLabel">Simpan Pengumuman</span>
                         </button>
                     </div>
                 @endif
             </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmGraduationSaveModal" tabindex="-1" role="dialog" aria-labelledby="confirmGraduationSaveModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmGraduationSaveModalLabel">
+                        <i class="fas fa-save text-primary mr-2"></i> Simpan Pengumuman Kelulusan
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Pastikan status dan catatan siswa sudah benar. Perubahan ini akan disimpan ke data pengumuman kelulusan tahun ajaran aktif.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="confirmGraduationSaveButton">
+                        <i class="fas fa-check mr-1"></i> Ya, Simpan
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 @stop
