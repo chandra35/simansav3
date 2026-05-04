@@ -429,6 +429,7 @@ class PermissionSyncService
                 'permissions' => [
                     'siswa-access',
                     'siswa-menu-only',
+                    'siswa-graduation-announcement-access',
                 ],
             ],
         ];
