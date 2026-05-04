@@ -436,15 +436,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'destroy'])->name('kalender-akademik.destroy');
     
     // ==================== FITUR BARU: PRESTASI SISWA ====================
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);
-    Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify');
+    Route::middleware(['permission:view-prestasi-siswa'])->group(function () {
+        Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);
+        Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify');
+    });
     
     // ==================== FITUR BARU: EKSTRAKURIKULER ====================
-    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class);
-    Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota');
-    Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
-    Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
-    Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    Route::middleware(['permission:view-ekstrakurikuler'])->group(function () {
+        Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class);
+        Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota');
+        Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
+        Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
+        Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    });
     
     // ==================== FITUR BARU: JADWAL PELAJARAN ====================
     Route::get('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran.index');
@@ -456,8 +460,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
     
     // ==================== FITUR BARU: CATATAN KONSELING (BK) ====================
-    Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);
-    Route::get('/catatan-konseling-report/siswa', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'reportSiswa'])->name('catatan-konseling.report-siswa');
+    Route::middleware(['permission:view-catatan-konseling'])->group(function () {
+        Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);
+        Route::get('/catatan-konseling-report/siswa', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'reportSiswa'])->name('catatan-konseling.report-siswa');
+    });
     
     // ==================== FITUR BARU: PEMBAYARAN (SPP) ====================
     // Jenis Pembayaran
