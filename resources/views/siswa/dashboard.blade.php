@@ -108,6 +108,40 @@
     </div>
 </div>
 
+<!-- Peringatan Belum Punya Rombel -->
+@if(!$kelasAktif)
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert mb-0 shadow-sm" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-left: 5px solid #f97316; border-radius: 10px;">
+            <div class="d-flex align-items-start">
+                <div class="mr-3 mt-1" style="font-size:2rem; color:#f97316; line-height:1;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="mb-1 font-weight-bold" style="color:#7c2d12;">
+                        <i class="fas fa-door-closed mr-1"></i> Anda Belum Ditempatkan di Kelas (Rombel)
+                    </h5>
+                    <p class="mb-2" style="color:#92400e;">
+                        Akun Anda belum memiliki kelas aktif di sistem. Hal ini bisa terjadi karena penempatan rombel belum selesai diproses oleh admin madrasah.
+                    </p>
+                    <p class="mb-2" style="color:#92400e;">
+                        Silakan <strong>hubungi admin atau tata usaha madrasah</strong> agar segera ditempatkan ke kelas yang sesuai.
+                    </p>
+                    <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
+                        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.8rem;padding:.35rem .7rem;border:1px solid #f59e0b;">
+                            <i class="fas fa-info-circle mr-1"></i> NISN Anda: <strong>{{ $siswa->nisn }}</strong>
+                        </span>
+                        <span class="badge" style="background:#fef3c7;color:#92400e;font-size:.8rem;padding:.35rem .7rem;border:1px solid #f59e0b;">
+                            <i class="fas fa-user mr-1"></i> Nama: <strong>{{ $siswa->nama_lengkap }}</strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @if($graduationAnnouncementInfo)
 <div class="row mb-3">
     <div class="col-12">
