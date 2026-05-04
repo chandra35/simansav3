@@ -106,7 +106,19 @@ class ProfileController extends Controller
         $resetBy = $user->password_reset_by;
         $resetAt = $user->password_reset_at;
 
-        return view('siswa.profile.force-setup', compact('user', 'isAdminReset', 'resetBy', 'resetAt'));
+        // Email harus diganti jika: (a) masih default/kosong, atau (b) bukan admin reset
+        $emailMustChange = !$isAdminReset || $this->isDefaultEmail($user->email);
+
+        return view('siswa.profile.force-setup', compact('user', 'isAdminReset', 'resetBy', 'resetAt', 'emailMustChange'));
+    }
+
+    /**
+     * Cek apakah email masih email default sistem atau kosong.
+     */
+    private function isDefaultEmail(?string $email): bool
+    {
+        if (empty($email)) return true;
+        return str_ends_with(strtolower($email), '@siswa.simansa.sch.id');
     }
 
     /**
@@ -116,10 +128,20 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        $isAdminReset = !empty($user->password_reset_at);
+        $emailMustChange = !$isAdminReset || $this->isDefaultEmail($user->email);
+
+        // Aturan validasi email bergantung pada mode:
+        // - emailMustChange: email wajib diisi dan harus unik (kecuali user sendiri)
+        // - tidak emailMustChange: email boleh kosong (dipertahankan) atau diisi baru yang unik
+        $emailRule = $emailMustChange
+            ? 'required|email|unique:users,email,' . Auth::id()
+            : 'nullable|email|unique:users,email,' . Auth::id();
+
         $request->validate([
             'password' => 'required|string|min:8',
             'password_confirmation' => 'required|string|same:password',
-            'email' => 'required|email|unique:users,email,' . Auth::id(),
+            'email' => $emailRule,
         ], [
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 8 karakter.',
@@ -127,14 +149,14 @@ class ProfileController extends Controller
             'password_confirmation.same' => 'Konfirmasi password tidak sesuai.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah digunakan.',
+            'email.unique' => 'Email sudah digunakan oleh akun lain.',
         ]);
 
-        // Force user to provide a new email address on first setup.
         $currentEmail = strtolower(trim((string) $user->email));
         $newEmail = strtolower(trim((string) $request->email));
 
-        if ($currentEmail !== '' && $newEmail === $currentEmail) {
+        // Validasi email harus berbeda dari email lama — HANYA berlaku jika emailMustChange
+        if ($emailMustChange && $currentEmail !== '' && $newEmail === $currentEmail) {
             return back()
                 ->withErrors(['email' => 'Email wajib diganti. Gunakan email aktif milik Anda yang berbeda dari email lama.'])
                 ->withInput();
@@ -147,31 +169,40 @@ class ProfileController extends Controller
                 ->withInput();
         }
 
+        // Tentukan email final: pakai input baru jika diisi, atau pertahankan email lama
+        $finalEmail = ($newEmail !== '') ? $newEmail : $currentEmail;
+
         $user->password = Hash::make($request->password);
-        $user->email = $newEmail;
+        $user->email = $finalEmail;
         $user->is_first_login = false;
         $user->password_reset_at = null;
         $user->password_reset_by = null;
         $user->readable_password = $request->password;
         $user->save();
 
-        User::logCustomActivity('first_login_setup', 'Setup awal berhasil: password dan email diperbarui');
+        $activityLabel = $emailMustChange ? 'Setup awal berhasil: password dan email diperbarui' : 'Ganti password pasca-reset admin berhasil';
+        User::logCustomActivity('first_login_setup', $activityLabel);
 
         // Send email notification
-        try {
-            $emailService = new EmailService();
-            if ($emailService->isConfigured()) {
-                $emailService->sendPasswordChanged($request->email, $user->name);
+        if ($finalEmail) {
+            try {
+                $emailService = new EmailService();
+                if ($emailService->isConfigured()) {
+                    $emailService->sendPasswordChanged($finalEmail, $user->name);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to send password changed email', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::warning('Failed to send password changed email', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
         }
 
-        return redirect()->route('siswa.dashboard')
-            ->with('success', 'Password dan email berhasil disimpan. Selamat datang!');
+        $successMsg = $isAdminReset
+            ? 'Password berhasil diganti. Akun Anda telah diamankan kembali.'
+            : 'Password dan email berhasil disimpan. Selamat datang!';
+
+        return redirect()->route('siswa.dashboard')->with('success', $successMsg);
     }
 
     public function updatePassword(Request $request)

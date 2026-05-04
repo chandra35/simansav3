@@ -372,19 +372,34 @@
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
                                 <span class="badge badge-info mr-2">2</span>
-                                <i class="fas fa-envelope"></i> Email Wajib Diganti
-                                <span class="badge badge-danger ml-2">WAJIB</span>
+                                <i class="fas fa-envelope"></i>
+                                @if($emailMustChange)
+                                    Email Wajib Diganti
+                                    <span class="badge badge-danger ml-2">WAJIB</span>
+                                @else
+                                    Email
+                                    <small class="text-muted">(Opsional &mdash; email lama tetap dipertahankan)</small>
+                                @endif
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-warning mb-3 py-2">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>
-                                Demi keamanan, email lama tidak boleh dipakai lagi. Masukkan email aktif milik Anda.
-                            </div>
+                            @if($emailMustChange)
+                                <div class="alert alert-warning mb-3 py-2">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Demi keamanan, email lama tidak boleh dipakai lagi. Masukkan email aktif milik Anda.
+                                </div>
+                            @else
+                                <div class="alert alert-info mb-3 py-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Email Anda (<strong>{{ $user->email }}</strong>) tetap aktif. Anda boleh menggantinya atau biarkan kosong.
+                                </div>
+                            @endif
                             <div class="setup-requirement-list" id="setupRequirementList">
+                                @if($emailMustChange)
                                 <div class="setup-requirement-item invalid" id="reqEmailChanged">
                                     <i class="fas fa-times-circle"></i> Email harus berbeda dari email sebelumnya
                                 </div>
+                                @endif
                                 <div class="setup-requirement-item invalid" id="reqPasswordMatch">
                                     <i class="fas fa-times-circle"></i> Password dan konfirmasi harus sama
                                 </div>
@@ -392,15 +407,19 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="email"><i class="fas fa-envelope text-primary"></i> Email Aktif <span class="text-danger">*</span></label>
+                                        <label for="email"><i class="fas fa-envelope text-primary"></i>
+                                            Email Aktif
+                                            @if($emailMustChange)<span class="text-danger">*</span>@endif
+                                        </label>
                                         <input type="hidden" id="initialEmail" value="{{ strtolower((string) $user->email) }}">
+                                        <input type="hidden" id="emailMustChange" value="{{ $emailMustChange ? '1' : '0' }}">
                                         <input type="email" name="email" id="email"
                                                class="form-control @error('email') is-invalid @enderror"
-                                               value="{{ old('email', $user->email) }}"
-                                               placeholder="Masukkan email aktif Anda"
-                                               required>
+                                               value="{{ old('email', $emailMustChange ? '' : $user->email) }}"
+                                               placeholder="{{ $emailMustChange ? 'Masukkan email aktif Anda' : 'Kosongkan untuk mempertahankan email lama' }}"
+                                               {{ $emailMustChange ? 'required' : '' }}>
                                         <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting.</small>
-                                        @if(!empty($user->email))
+                                        @if(!empty($user->email) && $emailMustChange)
                                             <small class="text-danger d-block mt-1">
                                                 Email sebelumnya: <strong>{{ $user->email }}</strong>
                                             </small>
@@ -779,19 +798,30 @@ function setRequirementState(el, isValid, validText, invalidText) {
 function updateSetupValidationState() {
     const initialEmail = (document.getElementById('initialEmail')?.value || '').trim().toLowerCase();
     const currentEmail = (document.getElementById('email')?.value || '').trim().toLowerCase();
+    const emailMustChange = document.getElementById('emailMustChange')?.value === '1';
     const password = document.getElementById('password').value;
     const confirmation = document.getElementById('password_confirmation').value;
     const submitBtn = document.getElementById('submitBtn');
 
-    const isEmailValid = currentEmail !== '' && (initialEmail === '' || currentEmail !== initialEmail);
+    let isEmailValid;
+    if (emailMustChange) {
+        // Email wajib diisi, harus berbeda dari email lama
+        isEmailValid = currentEmail !== '' && (initialEmail === '' || currentEmail !== initialEmail);
+    } else {
+        // Email opsional; jika diisi harus berbeda dari email lama (cegah input salah)
+        isEmailValid = currentEmail === '' || currentEmail !== initialEmail;
+    }
+
     const isPasswordMatch = password.length >= 8 && confirmation !== '' && password === confirmation;
 
-    setRequirementState(
-        document.getElementById('reqEmailChanged'),
-        isEmailValid,
-        'Email baru sudah valid dan berbeda dari email lama',
-        'Email harus berbeda dari email sebelumnya'
-    );
+    if (emailMustChange) {
+        setRequirementState(
+            document.getElementById('reqEmailChanged'),
+            isEmailValid,
+            'Email baru sudah valid dan berbeda dari email lama',
+            'Email harus berbeda dari email sebelumnya'
+        );
+    }
     setRequirementState(
         document.getElementById('reqPasswordMatch'),
         isPasswordMatch,
