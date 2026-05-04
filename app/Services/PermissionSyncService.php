@@ -192,6 +192,7 @@ class PermissionSyncService
                 'description' => 'Manajemen absensi siswa',
                 'permissions' => [
                     'view-absensi',
+                    'create-absensi',
                     'input-absensi',
                     'edit-absensi',
                     'rekap-absensi',
