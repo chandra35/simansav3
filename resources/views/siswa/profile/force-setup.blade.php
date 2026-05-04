@@ -446,9 +446,7 @@
 
                     {{-- ==================== --}}
                     {{-- STEP 3: FOTO         --}}
-                    {{-- Tidak tampil untuk admin reset (cukup ganti password) --}}
                     {{-- ==================== --}}
-                    @if(!$isAdminReset)
                     <div class="card card-outline card-secondary mb-0">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
@@ -488,7 +486,6 @@
                             </div>
                         </div>
                     </div>
-                    @endif
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn" disabled>
