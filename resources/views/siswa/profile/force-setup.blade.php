@@ -367,7 +367,9 @@
 
                     {{-- ==================== --}}
                     {{-- STEP 2: EMAIL        --}}
+                    {{-- Tampil jika: first login asli, atau admin reset + email masih default --}}
                     {{-- ==================== --}}
+                    @if(!$isAdminReset || $emailMustChange)
                     <div class="card card-outline card-info mb-4">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
@@ -440,9 +442,13 @@
                         </div>
                     </div>
 
+                    @endif
+
                     {{-- ==================== --}}
                     {{-- STEP 3: FOTO         --}}
+                    {{-- Tidak tampil untuk admin reset (cukup ganti password) --}}
                     {{-- ==================== --}}
+                    @if(!$isAdminReset)
                     <div class="card card-outline card-secondary mb-0">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
@@ -482,6 +488,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn" disabled>
@@ -808,8 +815,8 @@ function updateSetupValidationState() {
         // Email wajib diisi, harus berbeda dari email lama
         isEmailValid = currentEmail !== '' && (initialEmail === '' || currentEmail !== initialEmail);
     } else {
-        // Email opsional; jika diisi harus berbeda dari email lama (cegah input salah)
-        isEmailValid = currentEmail === '' || currentEmail !== initialEmail;
+        // Email opsional — field mungkin tidak tampil atau boleh sama dengan email lama
+        isEmailValid = true;
     }
 
     const isPasswordMatch = password.length >= 8 && confirmation !== '' && password === confirmation;
