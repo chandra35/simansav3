@@ -324,6 +324,15 @@ document.addEventListener('DOMContentLoaded', function () {
         background-color: rgba(0, 0, 0, 0.25);
         font-weight: 600;
     }
+
+    tr.row-lulus-bersyarat {
+        background-color: #fff8e1 !important;
+        border-left: 3px solid #fd7e14;
+    }
+
+    tr.row-lulus-bersyarat td:first-child {
+        padding-left: calc(1rem + 1px) !important;
+    }
 </style>
 @stop
 
@@ -615,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <tbody>
                             @forelse($students as $row)
                                 @php($item = $announcementMap->get($row->siswa->id))
-                                <tr>
+                                <tr class="{{ optional($item)->status === 'lulus_bersyarat' ? 'row-lulus-bersyarat' : '' }}">
                                     <td class="pl-4">
                                         <div class="custom-control custom-checkbox">
                                             <input
