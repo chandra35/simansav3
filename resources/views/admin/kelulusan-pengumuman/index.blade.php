@@ -481,55 +481,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <div class="card border-0 shadow-sm">
         <div class="card-header border-0">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <div>
                     <h3 class="h5 font-weight-bold mb-1">Data Pengumuman Kelulusan</h3>
                     <div class="text-muted small">Isi status per siswa lalu simpan. Catatan hanya wajib untuk status Lulus Bersyarat.</div>
                 </div>
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <form action="{{ route('admin.kelulusan-pengumuman.index') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2">
-                        <select name="kelas_id" class="form-control" style="min-width: 170px;">
+                @if($stats['sudah_buka'] > 0)
+                    <button
+                        type="submit"
+                        form="graduationAnnouncementForm"
+                        formaction="{{ route('admin.kelulusan-pengumuman.reset-opened') }}"
+                        formmethod="POST"
+                        class="btn btn-outline-warning btn-sm"
+                        onclick="return confirm('Reset riwayat buka amplop untuk {{ $selectedKelasId ? 'siswa pada filter rombel ini' : 'semua siswa kelas 12' }}? Status kelulusan tidak akan berubah.')"
+                    >
+                        <i class="fas fa-undo mr-1"></i>
+                        Reset Buka {{ $selectedKelasId ? 'Filter Ini' : 'Semua' }}
+                    </button>
+                @endif
+            </div>
+            <form action="{{ route('admin.kelulusan-pengumuman.index') }}" method="GET">
+                <div class="row align-items-end no-gutters" style="gap: 0;">
+                    <div class="col-12 col-sm-6 col-lg-3 pr-2 mb-2">
+                        <label class="small text-muted font-weight-bold mb-1">Rombel</label>
+                        <select name="kelas_id" class="form-control form-control-sm">
                             <option value="">Semua Rombel Kelas 12</option>
                             @foreach($kelasList as $kelas)
                                 <option value="{{ $kelas->id }}" @selected($selectedKelasId === $kelas->id)>{{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
-                        <select name="status_filter" class="form-control" style="min-width: 160px;">
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 pr-2 mb-2">
+                        <label class="small text-muted font-weight-bold mb-1">Status Kelulusan</label>
+                        <select name="status_filter" class="form-control form-control-sm">
                             <option value="">Semua Status</option>
                             @foreach($statusOptions as $value => $label)
                                 <option value="{{ $value }}" @selected($selectedStatusFilter === $value)>{{ $label }}</option>
                             @endforeach
                             <option value="belum_ditentukan" @selected($selectedStatusFilter === 'belum_ditentukan')>Belum Ditentukan</option>
                         </select>
-                        <select name="opened_filter" class="form-control" style="min-width: 150px;">
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 pr-2 mb-2">
+                        <label class="small text-muted font-weight-bold mb-1">Status Amplop</label>
+                        <select name="opened_filter" class="form-control form-control-sm">
                             <option value="">Semua Amplop</option>
                             <option value="sudah" @selected($selectedOpenedFilter === 'sudah')>Sudah Dibuka</option>
                             <option value="belum" @selected($selectedOpenedFilter === 'belum')>Belum Dibuka</option>
                         </select>
-                        <button type="submit" class="btn btn-primary">
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3 mb-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             <i class="fas fa-filter mr-1"></i> Terapkan
                         </button>
                         @if($selectedKelasId || $selectedStatusFilter || $selectedOpenedFilter)
-                            <a href="{{ route('admin.kelulusan-pengumuman.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.kelulusan-pengumuman.index') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-times mr-1"></i> Reset
                             </a>
                         @endif
-                    </form>
-                    @if($stats['sudah_buka'] > 0)
-                        <button
-                            type="submit"
-                            form="graduationAnnouncementForm"
-                            formaction="{{ route('admin.kelulusan-pengumuman.reset-opened') }}"
-                            formmethod="POST"
-                            class="btn btn-outline-warning"
-                            onclick="return confirm('Reset riwayat buka amplop untuk {{ $selectedKelasId ? 'siswa pada filter rombel ini' : 'semua siswa kelas 12' }}? Status kelulusan tidak akan berubah.')"
-                        >
-                            <i class="fas fa-undo mr-1"></i>
-                            Reset Buka {{ $selectedKelasId ? 'Filter Ini' : 'Semua' }}
-                        </button>
-                    @endif
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
         <div class="card-body p-0">
             @if($selectedStatusFilter || $selectedOpenedFilter)
