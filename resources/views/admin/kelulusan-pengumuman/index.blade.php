@@ -314,6 +314,16 @@ document.addEventListener('DOMContentLoaded', function () {
             grid-template-columns: 1fr;
         }
     }
+
+    .stat-card-active {
+        outline: 3px solid rgba(255, 255, 255, 0.6);
+        outline-offset: -3px;
+    }
+
+    .stat-card-active .small-box-footer {
+        background-color: rgba(0, 0, 0, 0.25);
+        font-weight: 600;
+    }
 </style>
 @stop
 
@@ -387,57 +397,75 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <div class="row">
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-success shadow-sm">
+            <div class="small-box bg-gradient-success shadow-sm {{ $selectedStatusFilter === 'lulus' ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['lulus'] }}</h3>
                     <p>Lulus</p>
                 </div>
                 <div class="icon"><i class="fas fa-check-circle"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId, 'status_filter' => 'lulus'])) }}" class="small-box-footer">
+                    @if($selectedStatusFilter === 'lulus') <i class="fas fa-check mr-1"></i>Aktif @else Filter <i class="fas fa-arrow-circle-right"></i> @endif
+                </a>
             </div>
         </div>
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-warning shadow-sm">
+            <div class="small-box bg-gradient-warning shadow-sm {{ $selectedStatusFilter === 'lulus_bersyarat' ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['lulus_bersyarat'] }}</h3>
                     <p>Lulus Bersyarat</p>
                 </div>
                 <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId, 'status_filter' => 'lulus_bersyarat'])) }}" class="small-box-footer">
+                    @if($selectedStatusFilter === 'lulus_bersyarat') <i class="fas fa-check mr-1"></i>Aktif @else Filter <i class="fas fa-arrow-circle-right"></i> @endif
+                </a>
             </div>
         </div>
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-danger shadow-sm">
+            <div class="small-box bg-gradient-danger shadow-sm {{ $selectedStatusFilter === 'tidak_lulus' ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['tidak_lulus'] }}</h3>
                     <p>Tidak Lulus</p>
                 </div>
                 <div class="icon"><i class="fas fa-times-circle"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId, 'status_filter' => 'tidak_lulus'])) }}" class="small-box-footer">
+                    @if($selectedStatusFilter === 'tidak_lulus') <i class="fas fa-check mr-1"></i>Aktif @else Filter <i class="fas fa-arrow-circle-right"></i> @endif
+                </a>
             </div>
         </div>
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-info shadow-sm">
+            <div class="small-box bg-gradient-info shadow-sm {{ (!$selectedStatusFilter && !$selectedOpenedFilter) ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['total'] }}</h3>
                     <p>Total Siswa Kelas 12</p>
                 </div>
                 <div class="icon"><i class="fas fa-user-graduate"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId])) }}" class="small-box-footer">
+                    @if(!$selectedStatusFilter && !$selectedOpenedFilter) Semua Data @else Reset Filter <i class="fas fa-times-circle"></i> @endif
+                </a>
             </div>
         </div>
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-primary shadow-sm">
+            <div class="small-box bg-gradient-primary shadow-sm {{ $selectedOpenedFilter === 'sudah' ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['sudah_buka'] }}</h3>
                     <p>Sudah Buka</p>
                 </div>
                 <div class="icon"><i class="fas fa-envelope-open-text"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId, 'opened_filter' => 'sudah'])) }}" class="small-box-footer">
+                    @if($selectedOpenedFilter === 'sudah') <i class="fas fa-check mr-1"></i>Aktif @else Filter <i class="fas fa-arrow-circle-right"></i> @endif
+                </a>
             </div>
         </div>
         <div class="col-lg-2 col-md-4">
-            <div class="small-box bg-gradient-secondary shadow-sm">
+            <div class="small-box bg-gradient-secondary shadow-sm {{ $selectedOpenedFilter === 'belum' ? 'stat-card-active' : '' }}">
                 <div class="inner">
                     <h3>{{ $stats['belum_buka'] }}</h3>
                     <p>Belum Buka</p>
                 </div>
                 <div class="icon"><i class="fas fa-envelope"></i></div>
+                <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId, 'opened_filter' => 'belum'])) }}" class="small-box-footer">
+                    @if($selectedOpenedFilter === 'belum') <i class="fas fa-check mr-1"></i>Aktif @else Filter <i class="fas fa-arrow-circle-right"></i> @endif
+                </a>
             </div>
         </div>
     </div>
@@ -451,15 +479,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <form action="{{ route('admin.kelulusan-pengumuman.index') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2">
-                        <select name="kelas_id" class="form-control">
+                        <select name="kelas_id" class="form-control" style="min-width: 170px;">
                             <option value="">Semua Rombel Kelas 12</option>
                             @foreach($kelasList as $kelas)
                                 <option value="{{ $kelas->id }}" @selected($selectedKelasId === $kelas->id)>{{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
+                        <select name="status_filter" class="form-control" style="min-width: 160px;">
+                            <option value="">Semua Status</option>
+                            @foreach($statusOptions as $value => $label)
+                                <option value="{{ $value }}" @selected($selectedStatusFilter === $value)>{{ $label }}</option>
+                            @endforeach
+                            <option value="belum_ditentukan" @selected($selectedStatusFilter === 'belum_ditentukan')>Belum Ditentukan</option>
+                        </select>
+                        <select name="opened_filter" class="form-control" style="min-width: 150px;">
+                            <option value="">Semua Amplop</option>
+                            <option value="sudah" @selected($selectedOpenedFilter === 'sudah')>Sudah Dibuka</option>
+                            <option value="belum" @selected($selectedOpenedFilter === 'belum')>Belum Dibuka</option>
+                        </select>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-filter mr-1"></i> Terapkan
                         </button>
+                        @if($selectedKelasId || $selectedStatusFilter || $selectedOpenedFilter)
+                            <a href="{{ route('admin.kelulusan-pengumuman.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times mr-1"></i> Reset
+                            </a>
+                        @endif
                     </form>
                     @if($stats['sudah_buka'] > 0)
                         <button
@@ -478,9 +523,29 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
         <div class="card-body p-0">
+            @if($selectedStatusFilter || $selectedOpenedFilter)
+                <div class="alert alert-info alert-dismissible mb-0" style="border-radius: 0; border-left: none; border-right: none; border-top: none;">
+                    <i class="fas fa-filter mr-1"></i>
+                    Filter aktif:
+                    @if($selectedStatusFilter)
+                        <strong>Status: {{ $statusOptions[$selectedStatusFilter] ?? ucfirst(str_replace('_', ' ', $selectedStatusFilter)) }}</strong>
+                    @endif
+                    @if($selectedStatusFilter && $selectedOpenedFilter)  &amp;&amp;  @endif
+                    @if($selectedOpenedFilter)
+                        <strong>Amplop: {{ $selectedOpenedFilter === 'sudah' ? 'Sudah Dibuka' : 'Belum Dibuka' }}</strong>
+                    @endif
+                    — Menampilkan {{ $students->count() }} dari {{ $stats['total'] }} siswa.
+                    <a href="{{ route('admin.kelulusan-pengumuman.index', array_filter(['kelas_id' => $selectedKelasId])) }}" class="ml-2 font-weight-bold">
+                        <i class="fas fa-times mr-1"></i>Reset Filter
+                    </a>
+                    <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
+                </div>
+            @endif
             <form id="graduationAnnouncementForm" action="{{ route('admin.kelulusan-pengumuman.save') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kelas_filter" value="{{ $selectedKelasId }}">
+                <input type="hidden" name="status_filter_preserve" value="{{ $selectedStatusFilter }}">
+                <input type="hidden" name="opened_filter_preserve" value="{{ $selectedOpenedFilter }}">
                 @if($students->isNotEmpty())
                     <div class="px-4 py-3 border-bottom">
                         <div class="graduation-bulk-panel p-3">

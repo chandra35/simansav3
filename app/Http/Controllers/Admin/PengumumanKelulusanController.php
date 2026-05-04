@@ -33,6 +33,9 @@ class PengumumanKelulusanController extends Controller
             ->get();
 
         $selectedKelasId = $request->string('kelas_id')->toString();
+        $selectedStatusFilter = $request->string('status_filter')->toString();
+        $selectedOpenedFilter = $request->string('opened_filter')->toString();
+
         $students = $this->getClass12Students($tahunAktif->id, $selectedKelasId ?: null);
         $announcementMap = $this->getAnnouncementMap($tahunAktif->id, $students->pluck('siswa.id')->all());
 
@@ -45,12 +48,41 @@ class PengumumanKelulusanController extends Controller
         ];
         $stats['belum_buka'] = max($stats['total'] - $stats['sudah_buka'], 0);
 
+        // Apply status filter for display (stats remain unfiltered)
+        $displayStudents = $students;
+        if ($selectedStatusFilter === 'belum_ditentukan') {
+            $displayStudents = $displayStudents->filter(function ($row) use ($announcementMap) {
+                $item = $announcementMap->get($row->siswa->id);
+                return !$item || blank($item->status);
+            })->values();
+        } elseif ($selectedStatusFilter) {
+            $displayStudents = $displayStudents->filter(function ($row) use ($announcementMap, $selectedStatusFilter) {
+                $item = $announcementMap->get($row->siswa->id);
+                return optional($item)->status === $selectedStatusFilter;
+            })->values();
+        }
+
+        // Apply opened filter for display
+        if ($selectedOpenedFilter === 'sudah') {
+            $displayStudents = $displayStudents->filter(function ($row) use ($announcementMap) {
+                $item = $announcementMap->get($row->siswa->id);
+                return $item && filled($item->opened_at);
+            })->values();
+        } elseif ($selectedOpenedFilter === 'belum') {
+            $displayStudents = $displayStudents->filter(function ($row) use ($announcementMap) {
+                $item = $announcementMap->get($row->siswa->id);
+                return !$item || blank($item->opened_at);
+            })->values();
+        }
+
         return view('admin.kelulusan-pengumuman.index', [
             'tahunAktif' => $tahunAktif,
             'setting' => $setting,
             'kelasList' => $kelasList,
             'selectedKelasId' => $selectedKelasId,
-            'students' => $students,
+            'selectedStatusFilter' => $selectedStatusFilter,
+            'selectedOpenedFilter' => $selectedOpenedFilter,
+            'students' => $displayStudents,
             'announcementMap' => $announcementMap,
             'stats' => $stats,
             'statusOptions' => PengumumanKelulusan::STATUSES,
@@ -146,9 +178,11 @@ class PengumumanKelulusanController extends Controller
             }
         });
 
-        return redirect()->route('admin.kelulusan-pengumuman.index', [
+        return redirect()->route('admin.kelulusan-pengumuman.index', array_filter([
             'kelas_id' => $request->input('kelas_filter'),
-        ])->with('success', 'Data pengumuman kelulusan berhasil disimpan.');
+            'status_filter' => $request->input('status_filter_preserve'),
+            'opened_filter' => $request->input('opened_filter_preserve'),
+        ]))->with('success', 'Data pengumuman kelulusan berhasil disimpan.');
     }
 
     public function resetOpened(Request $request)
@@ -161,9 +195,11 @@ class PengumumanKelulusanController extends Controller
             ->values();
 
         if ($studentIds->isEmpty()) {
-            return redirect()->route('admin.kelulusan-pengumuman.index', [
+            return redirect()->route('admin.kelulusan-pengumuman.index', array_filter([
                 'kelas_id' => $kelasId,
-            ])->with('warning', 'Tidak ada siswa kelas 12 yang bisa direset pada filter ini.');
+                'status_filter' => $request->input('status_filter_preserve'),
+                'opened_filter' => $request->input('opened_filter_preserve'),
+            ]))->with('warning', 'Tidak ada siswa kelas 12 yang bisa direset pada filter ini.');
         }
 
         $affected = PengumumanKelulusan::query()
@@ -176,9 +212,11 @@ class PengumumanKelulusanController extends Controller
                 'opened_user_agent' => null,
             ]);
 
-        return redirect()->route('admin.kelulusan-pengumuman.index', [
+        return redirect()->route('admin.kelulusan-pengumuman.index', array_filter([
             'kelas_id' => $kelasId,
-        ])->with('success', "Riwayat buka amplop berhasil direset untuk {$affected} siswa.");
+            'status_filter' => $request->input('status_filter_preserve'),
+            'opened_filter' => $request->input('opened_filter_preserve'),
+        ]))->with('success', "Riwayat buka amplop berhasil direset untuk {$affected} siswa.");
     }
 
     public function resetOpenedForStudent(Request $request, string $siswa)
@@ -190,9 +228,11 @@ class PengumumanKelulusanController extends Controller
             ->contains($siswa);
 
         if (!$allowed) {
-            return redirect()->route('admin.kelulusan-pengumuman.index', [
+            return redirect()->route('admin.kelulusan-pengumuman.index', array_filter([
                 'kelas_id' => $kelasId,
-            ])->with('error', 'Siswa tidak termasuk kelas 12 pada tahun ajaran aktif.');
+                'status_filter' => $request->input('status_filter_preserve'),
+                'opened_filter' => $request->input('opened_filter_preserve'),
+            ]))->with('error', 'Siswa tidak termasuk kelas 12 pada tahun ajaran aktif.');
         }
 
         $affected = PengumumanKelulusan::query()
@@ -205,9 +245,11 @@ class PengumumanKelulusanController extends Controller
                 'opened_user_agent' => null,
             ]);
 
-        return redirect()->route('admin.kelulusan-pengumuman.index', [
+        return redirect()->route('admin.kelulusan-pengumuman.index', array_filter([
             'kelas_id' => $kelasId,
-        ])->with($affected ? 'success' : 'info', $affected
+            'status_filter' => $request->input('status_filter_preserve'),
+            'opened_filter' => $request->input('opened_filter_preserve'),
+        ]))->with($affected ? 'success' : 'info', $affected
             ? 'Riwayat buka amplop siswa berhasil direset.'
             : 'Siswa ini belum pernah membuka amplop, tidak ada yang perlu direset.');
     }
