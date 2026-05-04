@@ -179,18 +179,15 @@ class SiswaController extends Controller
             $orderDirection = $request->order[0]['dir'];
             
             // Map column index to actual column names
+            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=created_at, 8=actions
             $columns = [
-                1 => 'nisn',
-                2 => 'nama_lengkap', 
-                3 => 'jenis_kelamin',
-                4 => 'kelas_nama', // Kelas column (from join)
-                5 => 'username', // Will handle separately
-                8 => 'siswa.created_at'
+                1 => 'nama_lengkap',
+                2 => 'jenis_kelamin',
+                7 => 'siswa.created_at',
             ];
-            
-            // Handle Kelas ordering (needs join)
+
+            // Handle Kelas ordering (index 3, needs join)
             if ($orderColumnIndex == 3) {
-                // Join with kelas table for ordering
                 $siswa->leftJoin('siswa_kelas', function($join) {
                     $join->on('siswa.id', '=', 'siswa_kelas.siswa_id')
                          ->where('siswa_kelas.status', '=', 'aktif')
@@ -199,14 +196,7 @@ class SiswaController extends Controller
                 ->leftJoin('kelas', 'siswa_kelas.kelas_id', '=', 'kelas.id')
                 ->orderBy('kelas.nama_kelas', $orderDirection)
                 ->select('siswa.*')
-                ->distinct(); // Avoid duplicates from join
-            } 
-            // Handle Username ordering (needs user join)
-            elseif ($orderColumnIndex == 4) {
-                $siswa->leftJoin('users', 'siswa.user_id', '=', 'users.id')
-                      ->orderBy('users.username', $orderDirection)
-                      ->select('siswa.*')
-                      ->distinct();
+                ->distinct();
             }
             // Standard columns
             elseif (isset($columns[$orderColumnIndex])) {
@@ -221,20 +211,27 @@ class SiswaController extends Controller
         $data = $siswa->get()->map(function($item) {
             // Get kelas aktif
             $kelasAktif = $item->kelasAktif()->first();
-            $kelasNama = $kelasAktif ? $kelasAktif->nama_kelas : 'Tanpa Rombel';
-            
+            $kelasNama = $kelasAktif ? $kelasAktif->nama_kelas : '<span class="text-muted small">Tanpa Rombel</span>';
+
+            $jk = $item->jenis_kelamin;
+            $jkBadge = $jk === 'L'
+                ? '<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:.78rem;"><i class="fas fa-mars"></i></span>'
+                : '<span class="badge" style="background:#fce7f3;color:#be185d;font-size:.78rem;"><i class="fas fa-venus"></i></span>';
+
+            $namaNisn = '<div class="font-weight-600 text-dark" style="font-size:.88rem;line-height:1.3;">'
+                . e($item->nama_lengkap)
+                . '</div><small class="text-muted" style="font-size:.78rem;">' . e($item->nisn) . '</small>';
+
             return [
                 'id' => $item->id,
                 'foto' => $this->getFotoColumn($item),
-                'nisn' => $item->nisn,
-                'nama_lengkap' => $item->nama_lengkap,
-                'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+                'nama_nisn' => $namaNisn,
+                'jenis_kelamin' => $jkBadge,
                 'kelas' => $kelasNama,
-                'username' => $item->user->username ?? '-',
                 'status_ortu' => $this->getStatusOrtu($item),
-                'status_diri' => $item->data_diri_completed ? 
-                    '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-danger">Belum Lengkap</span>',
+                'status_diri' => $item->data_diri_completed
+                    ? '<span class="badge badge-success">Lengkap</span>'
+                    : '<span class="badge badge-danger">Belum</span>',
                 'verval_ijazah' => $this->getVervalIjazahBadge($item),
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item)
@@ -309,59 +306,40 @@ class SiswaController extends Controller
                 return '<span class="badge badge-success">Lengkap</span>';
             }
             // Flag true tapi field kritis kosong → dari import EMIS (hanya nama)
-            return '<span class="badge badge-warning text-dark">Terisi, Belum Lengkap</span>';
+            return '<span class="badge badge-warning text-dark">Sebagian</span>';
         }
 
         // Flag false tapi ada nama ayah/ibu → sebagian terisi (import EMIS)
         if (!empty($ortu->nama_ayah) || !empty($ortu->nama_ibu)) {
-            return '<span class="badge badge-warning text-dark">Terisi, Belum Lengkap</span>';
+            return '<span class="badge badge-warning text-dark">Sebagian</span>';
         }
 
-        return '<span class="badge badge-danger">Belum Lengkap</span>';
+        return '<span class="badge badge-danger">Belum</span>';
     }
 
     private function getFotoColumn(Siswa $siswa): string
     {
+        $fallbackUrl = e($this->buildFallbackAvatar($siswa));
+        $studentName = e($siswa->nama_lengkap);
+
         if (!$siswa->foto_profile) {
-            return '<span class="badge badge-light border text-muted">Belum ada</span>';
+            return '<img src="' . $fallbackUrl . '" class="img-circle" alt="' . $studentName . '"
+                style="width:36px;height:36px;object-fit:cover;opacity:.7;">';
         }
 
         $previewUrl = e($siswa->foto_profile_url);
         $downloadUrl = e(route('admin.siswa.download-foto', $siswa));
-        $studentName = e($siswa->nama_lengkap);
-        $fallbackUrl = e($this->buildFallbackAvatar($siswa));
 
-        return '
-            <div class="d-flex align-items-center">
-                <button type="button"
-                    class="btn btn-link p-0 mr-2 js-preview-foto"
-                    data-preview-url="' . $previewUrl . '"
-                    data-download-url="' . $downloadUrl . '"
-                    data-student-name="' . $studentName . '"
-                    title="Preview foto">
-                    <img src="' . $previewUrl . '"
-                        alt="Foto ' . $studentName . '"
-                        class="img-circle border"
-                        onerror="this.onerror=null;this.src=\'' . $fallbackUrl . '\';"
-                        style="width:40px;height:40px;object-fit:cover;">
-                </button>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button"
-                        class="btn btn-outline-info js-preview-foto"
-                        data-preview-url="' . $previewUrl . '"
-                        data-download-url="' . $downloadUrl . '"
-                        data-student-name="' . $studentName . '"
-                        title="Preview foto">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
-                    <a href="' . $downloadUrl . '" class="btn btn-outline-success" title="Download foto asli">
-                        <i class="fas fa-download"></i>
-                    </a>
-                </div>
-            </div>
-        ';
-    }
-
+        return '<button type="button" class="btn btn-link p-0 js-preview-foto border-0"
+            data-preview-url="' . $previewUrl . '"
+            data-download-url="' . $downloadUrl . '"
+            data-student-name="' . $studentName . '"
+            title="Klik untuk preview foto">
+            <img src="' . $previewUrl . '" alt="Foto ' . $studentName . '"
+                class="img-circle shadow-sm"
+                onerror="this.onerror=null;this.src=\'' . $fallbackUrl . '\';"    
+                style="width:36px;height:36px;object-fit:cover;">
+        </button>';
     private function getActionButtons($item)
     {
         $user = auth()->user();

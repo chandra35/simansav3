@@ -178,20 +178,18 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table id="siswa-table" class="table table-bordered table-striped">
+                    <table id="siswa-table" class="table table-hover table-sm simansa-siswa-table">
                         <thead>
                             <tr>
-                                <th>Foto</th>
-                                <th>NISN</th>
-                                <th>Nama Lengkap</th>
-                                <th>Jenis Kelamin</th>
+                                <th class="text-center" style="width:50px;">Foto</th>
+                                <th>Nama / NISN</th>
+                                <th class="text-center" style="width:44px;">JK</th>
                                 <th>Kelas</th>
-                                <th>Username</th>
-                                <th>Status Ortu</th>
-                                <th>Status Diri</th>
-                                <th>Verval Ijazah</th>
-                                <th>Tgl Dibuat</th>
-                                <th>Aksi</th>
+                                <th class="text-center">Ortu</th>
+                                <th class="text-center">Diri</th>
+                                <th class="text-center">Verval</th>
+                                <th class="text-center" style="width:85px;">Tgl Masuk</th>
+                                <th class="text-center" style="width:110px;">Aksi</th>
                             </tr>
                         </thead>
                     </table>
@@ -401,6 +399,42 @@
             font-size: 0.8em;
         }
 
+        /* Compact professional table */
+        .simansa-siswa-table thead th {
+            background: #f8fafc;
+            color: #374151;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e5e7eb;
+            padding: .55rem .6rem;
+            white-space: nowrap;
+        }
+        .simansa-siswa-table tbody td {
+            font-size: .85rem;
+            vertical-align: middle;
+            padding: .45rem .6rem;
+            border-bottom: 1px solid #f1f5f9;
+            border-top: none;
+        }
+        .simansa-siswa-table tbody tr:hover td {
+            background: #f0f7ff;
+        }
+        .simansa-siswa-table .btn-group .btn {
+            padding: .2rem .45rem;
+            font-size: .78rem;
+            line-height: 1.4;
+        }
+        .simansa-siswa-table .badge {
+            font-size: .76rem;
+        }
+        /* verval toggle button compact */
+        .simansa-siswa-table .btn-toggle-verval {
+            padding: .18rem .4rem;
+            font-size: .76rem;
+        }
+
         .simansa-btn-strong {
             background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
             border-color: #1e3a8a;
@@ -565,21 +599,19 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { data: 'foto', name: 'foto', orderable: false, searchable: false, className: 'foto-cell align-middle' },
-            { data: 'nisn', name: 'nisn' },
-            { data: 'nama_lengkap', name: 'nama_lengkap' },
-            { data: 'jenis_kelamin', name: 'jenis_kelamin' },
-            { data: 'kelas', name: 'kelas' },
-            { data: 'username', name: 'username' },
-            { data: 'status_ortu', name: 'status_ortu', orderable: false, searchable: false },
-            { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
-            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false },
-            { data: 'created_at', name: 'created_at' },
-            { data: 'actions', name: 'actions', orderable: false, searchable: false }
+            { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'nama_nisn',     name: 'nama_lengkap',  className: 'align-middle' },
+            { data: 'jenis_kelamin', name: 'jenis_kelamin', className: 'text-center align-middle' },
+            { data: 'kelas',         name: 'kelas',         className: 'align-middle' },
+            { data: 'status_ortu',   name: 'status_ortu',   orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle' },
+            { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle' }
         ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
-        order: [[8, 'desc']],
+        order: [[7, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",
