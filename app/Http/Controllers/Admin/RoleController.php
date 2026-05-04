@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
-use App\Models\ActivityLog;
 use App\Services\PermissionSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -64,7 +63,7 @@ class RoleController extends Controller
             $role->syncPermissions($validated['permissions']);
         }
 
-        ActivityLog::log('create', "Membuat role: {$role->name}", $role);
+        User::logCustomActivity('create', "Membuat role: {$role->name}", $role);
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Role berhasil dibuat');
@@ -131,7 +130,7 @@ class RoleController extends Controller
         $role->update(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
 
-        ActivityLog::log('update', "Mengupdate role: {$oldName} -> {$role->name}", $role);
+        User::logCustomActivity('update', "Mengupdate role: {$oldName} -> {$role->name}", $role);
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Role berhasil diupdate');
@@ -157,7 +156,7 @@ class RoleController extends Controller
         $roleName = $role->name;
         $role->delete();
 
-        ActivityLog::log('delete', "Menghapus role: {$roleName}");
+        User::logCustomActivity('delete', "Menghapus role: {$roleName}");
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Role berhasil dihapus');
@@ -175,7 +174,7 @@ class RoleController extends Controller
         $user = User::findOrFail($validated['user_id']);
         $user->assignRole($role);
 
-        ActivityLog::log('update', "Menambahkan user {$user->name} ke role {$role->name}", $role);
+        User::logCustomActivity('update', "Menambahkan user {$user->name} ke role {$role->name}", $role);
 
         return redirect()->route('admin.roles.show', $role)
             ->with('success', "User {$user->name} berhasil ditambahkan ke role {$role->name}");
@@ -193,7 +192,7 @@ class RoleController extends Controller
         $user = User::findOrFail($validated['user_id']);
         $user->removeRole($role);
 
-        ActivityLog::log('update', "Menghapus user {$user->name} dari role {$role->name}", $role);
+        User::logCustomActivity('update', "Menghapus user {$user->name} dari role {$role->name}", $role);
 
         return redirect()->route('admin.roles.show', $role)
             ->with('success', "User {$user->name} berhasil dihapus dari role {$role->name}");

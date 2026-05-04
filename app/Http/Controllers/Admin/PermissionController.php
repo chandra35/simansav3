@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -89,7 +89,7 @@ class PermissionController extends Controller
             'guard_name' => $validated['guard_name'] ?? 'web',
         ]);
 
-        ActivityLog::log('create', "Membuat permission: {$permission->name}", $permission);
+        User::logCustomActivity('create', "Membuat permission: {$permission->name}", $permission);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission berhasil dibuat');
@@ -134,7 +134,7 @@ class PermissionController extends Controller
         $oldName = $permission->name;
         $permission->update(['name' => $validated['name']]);
 
-        ActivityLog::log('update', "Mengupdate permission: {$oldName} -> {$permission->name}", $permission);
+        User::logCustomActivity('update', "Mengupdate permission: {$oldName} -> {$permission->name}", $permission);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission berhasil diupdate');
@@ -154,7 +154,7 @@ class PermissionController extends Controller
         $permissionName = $permission->name;
         $permission->delete();
 
-        ActivityLog::log('delete', "Menghapus permission: {$permissionName}");
+        User::logCustomActivity('delete', "Menghapus permission: {$permissionName}");
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission berhasil dihapus');
@@ -190,7 +190,7 @@ class PermissionController extends Controller
             $created++;
         }
 
-        ActivityLog::log('create', "Bulk create permissions: {$created} created, {$skipped} skipped");
+        User::logCustomActivity('create', "Bulk create permissions: {$created} created, {$skipped} skipped");
 
         return redirect()->route('admin.permissions.index')
             ->with('success', "{$created} permission berhasil dibuat, {$skipped} sudah ada");
