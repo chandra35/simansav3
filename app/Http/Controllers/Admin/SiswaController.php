@@ -340,6 +340,8 @@ class SiswaController extends Controller
                 onerror="this.onerror=null;this.src=\'' . $fallbackUrl . '\';"    
                 style="width:36px;height:36px;object-fit:cover;">
         </button>';
+    }
+
     private function getActionButtons($item)
     {
         $user = auth()->user();
