@@ -177,19 +177,19 @@
                     </p>
                 </div>
 
-                <div class="table-responsive">
+                <div class="simansa-table-scroll">
                     <table id="siswa-table" class="table table-hover table-sm simansa-siswa-table">
                         <thead>
                             <tr>
-                                <th class="text-center" style="width:50px;">Foto</th>
+                                <th class="text-center">Foto</th>
                                 <th>Nama / NISN</th>
-                                <th class="text-center" style="width:44px;">JK</th>
+                                <th class="text-center">JK</th>
                                 <th>Kelas</th>
                                 <th class="text-center">Ortu</th>
                                 <th class="text-center">Diri</th>
                                 <th class="text-center">Verval</th>
-                                <th class="text-center" style="width:85px;">Tgl Masuk</th>
-                                <th class="text-center" style="width:110px;">Aksi</th>
+                                <th class="text-center">Tgl Masuk</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                     </table>
@@ -429,10 +429,14 @@
         .simansa-siswa-table .badge {
             font-size: .76rem;
         }
-        /* verval toggle button compact */
-        .simansa-siswa-table .btn-toggle-verval {
-            padding: .18rem .4rem;
-            font-size: .76rem;
+        /* Table scroll wrapper — fills card, scrolls horizontally when needed */
+        .simansa-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .simansa-table-scroll > table {
+            min-width: 720px;
         }
 
         .simansa-btn-strong {
@@ -598,6 +602,18 @@ $(document).ready(function() {
                 }
             }
         },
+        autoWidth: false,
+        columnDefs: [
+            { targets: 0, width: '46px'  },   // foto
+            { targets: 1, width: '28%'   },   // nama/nisn
+            { targets: 2, width: '44px'  },   // jk
+            { targets: 3, width: '13%'   },   // kelas
+            { targets: 4, width: '76px'  },   // status ortu
+            { targets: 5, width: '68px'  },   // status diri
+            { targets: 6, width: '82px'  },   // verval
+            { targets: 7, width: '82px'  },   // tgl masuk
+            { targets: 8, width: '110px' },   // aksi
+        ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'nama_nisn',     name: 'nama_lengkap',  className: 'align-middle' },
