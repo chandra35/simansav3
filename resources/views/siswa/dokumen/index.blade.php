@@ -416,10 +416,11 @@
                     
                     <div class="form-group">
                         <label>File Dokumen <span class="text-danger">*</span></label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
-                            <label class="custom-file-label" for="file">Pilih file...</label>
-                        </div>
+                        <label for="file" class="btn btn-outline-secondary btn-block text-left font-weight-normal mb-1" style="cursor:pointer;">
+                            <i class="fas fa-folder-open mr-2 text-primary"></i>
+                            <span id="file_label">Pilih file...</span>
+                        </label>
+                        <input type="file" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="d-none">
                         <small class="form-text text-muted">
                             Format: PDF, JPG, JPEG, PNG (Max: 5MB - gambar akan di-compress otomatis)
                         </small>
@@ -471,11 +472,11 @@
                     
                     <div class="form-group">
                         <label>File Dokumen <span class="text-danger">*</span></label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file_lainnya" name="file" 
-                                   accept=".pdf,.jpg,.jpeg,.png" required>
-                            <label class="custom-file-label" for="file_lainnya">Pilih file...</label>
-                        </div>
+                        <label for="file_lainnya" class="btn btn-outline-secondary btn-block text-left font-weight-normal mb-1" style="cursor:pointer;">
+                            <i class="fas fa-folder-open mr-2 text-primary"></i>
+                            <span id="file_lainnya_label">Pilih file...</span>
+                        </label>
+                        <input type="file" id="file_lainnya" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="d-none">
                         <small class="form-text text-muted">
                             Format: PDF, JPG, JPEG, PNG (Max: 5MB - gambar akan di-compress otomatis)
                         </small>
@@ -743,12 +744,12 @@ function showUploadLainnyaModal() {
 // Handle file input change
 $('#file').on('change', function() {
     var fileName = $(this).val().split('\\').pop();
-    $(this).siblings('.custom-file-label').addClass('selected').html(fileName);
+    $('#file_label').html('<i class="fas fa-check-circle text-success mr-1"></i>' + (fileName || 'File dipilih'));
 });
 
 $('#file_lainnya').on('change', function() {
     var fileName = $(this).val().split('\\').pop();
-    $(this).siblings('.custom-file-label').addClass('selected').html(fileName);
+    $('#file_lainnya_label').html('<i class="fas fa-check-circle text-success mr-1"></i>' + (fileName || 'File dipilih'));
 });
 
 // Handle form submit
@@ -892,12 +893,12 @@ $('#uploadLainnyaForm').on('submit', function(e) {
 // Reset form when modal is closed
 $('#uploadModal').on('hidden.bs.modal', function() {
     $('#uploadForm')[0].reset();
-    $('.custom-file-label').removeClass('selected').html('Pilih file...');
+    $('#file_label').html('Pilih file...');
 });
 
 $('#uploadLainnyaModal').on('hidden.bs.modal', function() {
     $('#uploadLainnyaForm')[0].reset();
-    $('.custom-file-label').removeClass('selected').html('Pilih file...');
+    $('#file_lainnya_label').html('Pilih file...');
 });
 </script>
 @stop
