@@ -808,3 +808,17 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
         ->middleware(['exam.browser.client', 'throttle:exam-browser-session-end'])
         ->name('session.end');
 });
+
+// ─── Device Location & Client Runtime (global, no auth required) ──────────────
+Route::post('/device-location/sync', [App\Http\Controllers\DeviceLocationController::class, 'sync'])
+    ->middleware('throttle:60,1')
+    ->name('device-location.sync');
+
+Route::prefix('client-runtime')->name('client-runtime.')->group(function () {
+    Route::post('/heartbeat', [App\Http\Controllers\ClientRuntimeController::class, 'heartbeat'])
+        ->middleware(['auth', 'throttle:60,1'])
+        ->name('heartbeat');
+    Route::get('/server-time', [App\Http\Controllers\ClientRuntimeController::class, 'serverTime'])
+        ->middleware('throttle:60,1')
+        ->name('server-time');
+});
