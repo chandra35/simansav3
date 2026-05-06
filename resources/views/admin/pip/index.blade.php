@@ -2,6 +2,9 @@
 
 @section('title', 'Siswa Tidak Mampu / PIP - SIMANSA')
 
+@section('plugins.Datatables', true)
+@section('plugins.DatatablesPlugins', true)
+
 @section('content_header')
     <div class="simansa-hero">
         <div class="simansa-hero__main">
