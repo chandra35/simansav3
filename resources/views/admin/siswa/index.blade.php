@@ -85,7 +85,7 @@
                     </h3>
                     <div class="card-tools ml-0">
                         @can('view-siswa')
-                            <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-primary btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-secondary btn-sm mr-2">
                                 <i class="fas fa-chart-pie"></i> Statistik Siswa
                             </a>
                         @endcan
