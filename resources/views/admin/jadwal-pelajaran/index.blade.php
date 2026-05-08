@@ -31,7 +31,7 @@
         <div class="simansa-jadwal-hero__meta">
             <div class="simansa-jadwal-chip">
                 <span class="simansa-jadwal-chip__label">Tahun Aktif</span>
-                <strong>{{ $tahunAktif?->tahun_pelajaran ?? 'Belum diatur' }}</strong>
+                <strong>{{ $tahunAktif?->nama ?? 'Belum diatur' }}</strong>
             </div>
             <div class="simansa-jadwal-chip">
                 <span class="simansa-jadwal-chip__label">Total Kelas</span>
@@ -115,7 +115,7 @@
                         <option value="">-- Pilih Tahun --</option>
                         @foreach($tahunList as $t)
                             <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>
-                                {{ $t->tahun_pelajaran }}{{ $t->is_active ? ' ✓' : '' }}
+                                {{ $t->nama }}{{ $t->is_active ? ' ✓' : '' }}
                             </option>
                         @endforeach
                     </select>

@@ -45,10 +45,10 @@ class JadwalJamConfigController extends Controller
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
             'jam_mulai'          => 'required|date_format:H:i',
             'durasi_menit'       => 'required|integer|min:20|max:120',
-            'jumlah_jam'         => 'required|integer|min:1|max:15',
+            'jam_pulang'         => 'required|date_format:H:i',
             'istirahat'          => 'nullable|array',
             'istirahat.*.setelah_jam' => 'required_with:istirahat|integer|min:1',
-            'istirahat.*.durasi'      => 'required_with:istirahat|integer|min:5|max:60',
+            'istirahat.*.durasi'      => 'required_with:istirahat|integer|min:5|max:90',
             'istirahat.*.label'       => 'nullable|string|max:50',
         ]);
 
@@ -57,7 +57,7 @@ class JadwalJamConfigController extends Controller
             $request->jam_mulai,
             (int) $request->durasi_menit,
             $request->istirahat ?? [],
-            (int) $request->jumlah_jam
+            $request->jam_pulang
         );
 
         DB::transaction(function () use ($tahunId, $rows) {

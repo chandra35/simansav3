@@ -66,7 +66,7 @@
                     <select name="tahun_pelajaran_id" class="form-control form-control-sm select2" id="ftTahun">
                         @foreach($tahunList as $t)
                             <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>
-                                {{ $t->tahun_pelajaran }}{{ $t->is_active ? ' ✓' : '' }}
+                                {{ $t->nama }}{{ $t->is_active ? ' ✓' : '' }}
                             </option>
                         @endforeach
                     </select>

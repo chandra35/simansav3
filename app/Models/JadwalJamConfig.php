@@ -50,58 +50,70 @@ class JadwalJamConfig extends Model
 
     /**
      * Generate baris jam config dari parameter. Return array rows, tidak disimpan.
-     * @param string $jamMulai   "07:00"
+     *
+     * @param string $jamMulai    "07:00"
      * @param int    $durasiMenit  45
-     * @param array  $istirahat  [['setelah_jam' => 3, 'durasi' => 15, 'label' => 'Istirahat'], ...]
-     * @param int    $jumlahJam  awal minimal; rows setelah ini ditambah manual
+     * @param array  $istirahat   [["setelah_jam"=>3,"durasi"=>15,"label"=>"Istirahat"], ...]
+     * @param string $jamPulang   "14:30" — generate jam hingga tidak melebihi jam pulang
      */
-    public static function generateRows(string $jamMulai, int $durasiMenit, array $istirahat, int $jumlahJam): array
+    public static function generateRows(string $jamMulai, int $durasiMenit, array $istirahat, string $jamPulang): array
     {
         $rows   = [];
         $urutan = 1;
         $jamKe  = 1;
 
-        // parse jam mulai ke menit
-        [$h, $m]  = explode(':', $jamMulai);
-        $current  = (int)$h * 60 + (int)$m;
+        [$h,  $m]  = explode(':', $jamMulai);
+        $current   = (int)$h * 60 + (int)$m;
 
-        // index istirahat by setelah_jam
+        [$hp, $mp] = explode(':', $jamPulang);
+        $pulang    = (int)$hp * 60 + (int)$mp;
+
         $breakMap = [];
         foreach ($istirahat as $b) {
-            $breakMap[(int)$b['setelah_jam']] = $b;
+            if (!empty($b['setelah_jam']) && !empty($b['durasi'])) {
+                $breakMap[(int)$b['setelah_jam']] = $b;
+            }
         }
 
-        for ($i = 1; $i <= $jumlahJam; $i++) {
+        $iJam   = 1;
+        $maxJam = 20;
+
+        while ($iJam <= $maxJam) {
+            if ($current + $durasiMenit > $pulang) {
+                break;
+            }
+
             $mulai   = sprintf('%02d:%02d', intdiv($current, 60), $current % 60);
             $current += $durasiMenit;
             $selesai = sprintf('%02d:%02d', intdiv($current, 60), $current % 60);
 
             $rows[] = [
-                'urutan'      => $urutan++,
-                'jam_ke'      => $jamKe++,
-                'waktu_mulai' => $mulai,
+                'urutan'        => $urutan++,
+                'jam_ke'        => $jamKe++,
+                'waktu_mulai'   => $mulai,
                 'waktu_selesai' => $selesai,
-                'is_istirahat' => false,
-                'label'       => null,
+                'is_istirahat'  => false,
+                'label'         => null,
             ];
 
-            // Cek apakah ada istirahat setelah jam ini
-            if (isset($breakMap[$i])) {
-                $break   = $breakMap[$i];
-                $durasi  = (int)$break['durasi'];
-                $bMulai  = $selesai;
+            if (isset($breakMap[$iJam])) {
+                $break    = $breakMap[$iJam];
+                $durasi   = (int)$break['durasi'];
+                $bMulai   = $selesai;
                 $current += $durasi;
                 $bSelesai = sprintf('%02d:%02d', intdiv($current, 60), $current % 60);
 
                 $rows[] = [
-                    'urutan'       => $urutan++,
-                    'jam_ke'       => null,
-                    'waktu_mulai'  => $bMulai,
+                    'urutan'        => $urutan++,
+                    'jam_ke'        => null,
+                    'waktu_mulai'   => $bMulai,
                     'waktu_selesai' => $bSelesai,
-                    'is_istirahat' => true,
-                    'label'        => $break['label'] ?? 'Istirahat',
+                    'is_istirahat'  => true,
+                    'label'         => $break['label'] ?? 'Istirahat',
                 ];
             }
+
+            $iJam++;
         }
 
         return $rows;
