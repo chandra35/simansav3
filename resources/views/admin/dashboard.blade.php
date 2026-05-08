@@ -41,7 +41,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-lg-3 col-sm-6 mb-4">
+        <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--indigo">
                 <div class="simansa-stat-card__icon">
                     <i class="fas fa-user-graduate"></i>
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-sm-6 mb-4">
+        <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--emerald">
                 <div class="simansa-stat-card__icon">
                     <i class="fas fa-user-check"></i>
@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-sm-6 mb-4">
+        <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--amber">
                 <div class="simansa-stat-card__icon">
                     <i class="fas fa-user-shield"></i>
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-sm-6 mb-4">
+        <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--teal">
                 <div class="simansa-stat-card__icon">
                     <i class="fas fa-circle" style="font-size:0.85rem; color:#4ade80;"></i>
@@ -313,19 +313,24 @@
         .simansa-stat-card {
             position: relative;
             overflow: hidden;
-            min-height: 210px;
-            border-radius: 1.5rem;
-            padding: 1.3rem 1.3rem 1rem;
+            border-radius: 1.15rem;
+            padding: 1rem 1.1rem 0.85rem;
             color: #fff;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.13);
+            transition: box-shadow 0.22s ease, transform 0.22s ease;
+        }
+
+        .simansa-stat-card:hover {
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+            transform: translateY(-2px);
         }
 
         .simansa-stat-card::before {
             content: "";
             position: absolute;
-            inset: auto -45px -60px auto;
-            width: 180px;
-            height: 180px;
+            inset: auto -38px -48px auto;
+            width: 148px;
+            height: 148px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.08);
         }
@@ -344,15 +349,15 @@
         }
 
         .simansa-stat-card__icon {
-            width: 58px;
-            height: 58px;
+            width: 44px;
+            height: 44px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 1.1rem;
-            font-size: 1.35rem;
+            border-radius: 0.9rem;
+            font-size: 1.15rem;
             background: rgba(255, 255, 255, 0.14);
-            margin-bottom: 1rem;
+            margin-bottom: 0.65rem;
             position: relative;
             z-index: 1;
         }
@@ -360,21 +365,21 @@
         .simansa-stat-card__label {
             position: relative;
             z-index: 1;
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 0.07em;
             font-weight: 700;
             opacity: 0.88;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.18rem;
         }
 
         .simansa-stat-card__value {
             position: relative;
             z-index: 1;
-            font-size: 2.2rem;
+            font-size: 1.85rem;
             line-height: 1;
             font-weight: 800;
-            margin-bottom: 1.6rem;
+            margin-bottom: 0.85rem;
         }
 
         .simansa-stat-card__footer {
@@ -382,17 +387,27 @@
             z-index: 1;
             display: flex;
             justify-content: space-between;
-            gap: 1rem;
             align-items: center;
-            font-size: 0.88rem;
-            padding-top: 0.95rem;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            padding-top: 0.7rem;
             border-top: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+        }
+
+        .simansa-stat-card__footer > span:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1 1 0;
+            min-width: 0;
         }
 
         .simansa-stat-card__footer a {
             color: #fff;
             font-weight: 700;
             text-decoration: none;
+            flex-shrink: 0;
         }
 
         .simansa-panel {
@@ -524,14 +539,23 @@
         }
 
         @media (max-width: 767.98px) {
-            .simansa-stat-card {
-                min-height: auto;
-            }
+            .simansa-stat-card__value { font-size: 1.6rem; }
+        }
 
-            .simansa-stat-card__footer {
-                flex-direction: column;
-                align-items: flex-start;
+        @media (max-width: 575.98px) {
+            .simansa-stat-card {
+                padding: 0.8rem 0.9rem 0.7rem;
+                border-radius: 0.95rem;
             }
+            .simansa-stat-card__icon {
+                width: 36px; height: 36px;
+                font-size: 0.95rem;
+                border-radius: 0.7rem;
+                margin-bottom: 0.5rem;
+            }
+            .simansa-stat-card__value { font-size: 1.45rem; margin-bottom: 0.65rem; }
+            .simansa-stat-card__label { font-size: 0.66rem; }
+            .simansa-stat-card__footer { font-size: 0.74rem; padding-top: 0.55rem; }
         }
 
         /* ── Online Panel ── */
@@ -542,14 +566,11 @@
 
         .simansa-pulse-dot {
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             background: #22c55e;
             margin-right: 8px;
-            position: relative;
-            top: -1px;
-            box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+            position: relative; top: -1px;
             animation: simansa-pulse 2s infinite;
         }
 
@@ -562,93 +583,187 @@
         .simansa-online-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.85rem;
+            gap: 0.6rem;
         }
 
+        /* Card base */
         .simansa-online-user {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.65rem 0.9rem;
+            gap: 0.62rem;
+            padding: 0.52rem 0.78rem;
             background: #f8fbff;
             border: 1px solid #dce7f5;
-            border-radius: 1rem;
-            min-width: 200px;
-            max-width: 260px;
-            flex: 1 1 200px;
-            transition: box-shadow 0.18s, transform 0.18s;
-            animation: simansa-fadein 0.3s ease both;
+            border-radius: 0.85rem;
+            min-width: 170px;
+            max-width: 225px;
+            flex: 1 1 170px;
+            cursor: default;
+            /* Base transition — hover + exit */
+            transition: box-shadow 0.22s ease, transform 0.22s ease, opacity 0.32s ease;
         }
 
-        .simansa-online-user:hover {
-            box-shadow: 0 6px 18px rgba(37,99,235,0.12);
+        /* Enter: start hidden so transition can play */
+        .simansa-online-user.entering {
+            opacity: 0;
+            transform: scale(0.88) translateY(10px);
+            transition: none !important;
+        }
+
+        /* Exit: fade + shrink up */
+        .simansa-online-user.exiting {
+            opacity: 0 !important;
+            transform: scale(0.84) translateY(-8px) !important;
+            pointer-events: none;
+        }
+
+        .simansa-online-user:hover:not(.exiting) {
+            box-shadow: 0 6px 20px rgba(37,99,235,0.14);
             transform: translateY(-2px);
         }
 
-        @keyframes simansa-fadein {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
         .simansa-online-user__photo {
-            width: 46px;
-            height: 46px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
             border: 2px solid #e2eaf5;
+            transition: border-color 0.2s;
         }
+
+        .simansa-online-user:hover .simansa-online-user__photo { border-color: #93c5fd; }
 
         .simansa-online-user__name {
             font-weight: 700;
-            font-size: 0.875rem;
+            font-size: 0.82rem;
             color: #0f172a;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 130px;
+            max-width: 115px;
         }
 
         .simansa-online-user__meta {
             display: flex;
             align-items: center;
-            gap: 0.45rem;
-            margin-top: 0.15rem;
+            gap: 0.35rem;
+            margin-top: 0.08rem;
         }
 
         .simansa-online-user__role {
-            font-size: 0.72rem;
+            font-size: 0.65rem;
             font-weight: 700;
-            padding: 0.18rem 0.5rem;
+            padding: 0.12rem 0.4rem;
             border-radius: 999px;
-            background: #eef4ff;
-            color: #3359d4;
         }
 
         .simansa-online-user__device {
-            font-size: 0.72rem;
+            font-size: 0.66rem;
             color: #94a3b8;
         }
 
         .simansa-online-user__time {
-            font-size: 0.72rem;
+            font-size: 0.65rem;
             color: #94a3b8;
-            margin-top: 0.1rem;
+            margin-top: 0.06rem;
+            transition: opacity 0.25s;
         }
 
+        /* ── Tooltip ── */
+        .simansa-online-tt {
+            position: absolute;
+            bottom: calc(100% + 11px);
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            background: #1e293b;
+            border-radius: 14px;
+            padding: 12px 14px 10px;
+            min-width: 200px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1050;
+            box-shadow: 0 14px 38px rgba(0,0,0,0.28);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            white-space: nowrap;
+        }
+
+        .simansa-online-tt::after {
+            content: '';
+            position: absolute;
+            top: 100%; left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .simansa-online-user:hover .simansa-online-tt {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .simansa-online-tt__head {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .simansa-online-tt__photo {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.22);
+            flex-shrink: 0;
+        }
+
+        .simansa-online-tt__name {
+            font-weight: 700;
+            font-size: 0.83rem;
+            color: #f1f5f9;
+            line-height: 1.25;
+        }
+
+        .simansa-online-tt__role {
+            font-size: 0.7rem;
+            color: #7dd3fc;
+            margin-top: 1px;
+        }
+
+        .simansa-online-tt__row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.72rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .simansa-online-tt__row i {
+            width: 13px;
+            text-align: center;
+            color: #7dd3fc;
+            flex-shrink: 0;
+        }
+
+        .simansa-online-tt__row + .simansa-online-tt__row { margin-top: 2px; }
+
+        /* Skeleton */
         .simansa-online-skeleton {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.85rem;
+            gap: 0.6rem;
             width: 100%;
         }
 
         .simansa-online-skeleton__item {
-            min-width: 200px;
-            max-width: 260px;
-            flex: 1 1 200px;
-            height: 72px;
-            border-radius: 1rem;
+            min-width: 170px;
+            max-width: 225px;
+            flex: 1 1 170px;
+            height: 60px;
+            border-radius: 0.85rem;
             background: linear-gradient(90deg, #f0f5fc 25%, #e2ecf9 50%, #f0f5fc 75%);
             background-size: 200% 100%;
             animation: shimmer 1.4s infinite;
@@ -665,24 +780,12 @@
             color: #94a3b8;
         }
 
-        .simansa-online-empty i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
+        .simansa-online-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .simansa-online-empty p { margin: 0; font-size: 0.9rem; }
 
-        .simansa-online-empty p {
-            margin: 0;
-            font-size: 0.9rem;
-        }
+        #btn-refresh-online.spinning i { animation: spin 0.7s linear infinite; }
 
-        #btn-refresh-online.spinning i {
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 @endsection
 
@@ -690,35 +793,107 @@
     <script>
         const onlineApiUrl = '{{ route('admin.dashboard.online-users') }}';
 
+        // Role badge hidden in card for these roles (still visible in tooltip)
+        const HIDE_BADGE = ['Super Admin', 'Admin'];
+
+        // Persistent state: userId (string) → card DOM element
+        const onlineState = new Map();
+
         function roleColor(role) {
             const map = {
-                'Super Admin': 'background:#ede9fe;color:#5b21b6',
-                'Admin':       'background:#dbeafe;color:#1e40af',
-                'Operator':    'background:#e0f2fe;color:#0369a1',
-                'GTK':         'background:#d1fae5;color:#065f46',
-                'Siswa':       'background:#fce7f3;color:#9d174d',
+                'Operator': 'background:#e0f2fe;color:#0369a1',
+                'GTK':      'background:#d1fae5;color:#065f46',
+                'Siswa':    'background:#fce7f3;color:#9d174d',
+                'WAKA':     'background:#fef9c3;color:#854d0e',
             };
             return map[role] || 'background:#f1f5f9;color:#334155';
         }
 
-        function buildCard(u, delay) {
-            return `<div class="simansa-online-user" style="animation-delay:${delay}ms">
-                <img src="${u.photo}" alt="${u.name}" class="simansa-online-user__photo"
-                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=80&background=64748b&color=fff&bold=true'">
-                <div style="min-width:0">
-                    <div class="simansa-online-user__name" title="${u.name}">${u.name}</div>
+        function esc(s) {
+            return String(s ?? '')
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function buildCard(u) {
+            const el = document.createElement('div');
+            el.className = 'simansa-online-user entering';
+            el.dataset.uid = String(u.id);
+
+            const showBadge = !HIDE_BADGE.includes(u.role);
+            const badge = showBadge
+                ? `<span class="simansa-online-user__role" style="${esc(roleColor(u.role))}">${esc(u.role)}</span>`
+                : '';
+            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=80&background=64748b&color=fff&bold=true`;
+
+            el.innerHTML = `
+                <img src="${esc(u.photo)}" alt="${esc(u.name)}" class="simansa-online-user__photo"
+                     onerror="this.onerror=null;this.src='${fallback}'">
+                <div style="min-width:0;flex:1">
+                    <div class="simansa-online-user__name">${esc(u.name)}</div>
                     <div class="simansa-online-user__meta">
-                        <span class="simansa-online-user__role" style="${roleColor(u.role)}">${u.role}</span>
-                        <span class="simansa-online-user__device"><i class="${u.device_icon}"></i> <i class="${u.browser_icon}"></i></span>
+                        ${badge}
+                        <span class="simansa-online-user__device">
+                            <i class="${esc(u.device_icon)}"></i>
+                            <i class="${esc(u.browser_icon)}"></i>
+                        </span>
                     </div>
-                    <div class="simansa-online-user__time"><i class="fas fa-clock" style="font-size:.65rem;margin-right:3px"></i>${u.last_activity}</div>
+                    <div class="simansa-online-user__time">
+                        <i class="fas fa-clock" style="font-size:.58rem;margin-right:2px"></i>
+                        <span class="ou-time">${esc(u.last_activity)}</span>
+                    </div>
                 </div>
-            </div>`;
+                <div class="simansa-online-tt">
+                    <div class="simansa-online-tt__head">
+                        <img src="${esc(u.photo)}" class="simansa-online-tt__photo"
+                             onerror="this.onerror=null;this.src='${fallback}'">
+                        <div>
+                            <div class="simansa-online-tt__name">${esc(u.name)}</div>
+                            <div class="simansa-online-tt__role">${esc(u.role)}</div>
+                        </div>
+                    </div>
+                    <div class="simansa-online-tt__row">
+                        <i class="${esc(u.device_icon)}"></i>
+                        <i class="${esc(u.browser_icon)}"></i>
+                        <span>Perangkat &amp; Browser</span>
+                    </div>
+                    <div class="simansa-online-tt__row">
+                        <i class="fas fa-clock"></i>
+                        <span class="tt-time">${esc(u.last_activity)}</span>
+                    </div>
+                </div>`;
+            return el;
+        }
+
+        function updateCard(el, u) {
+            // Smoothly update last_activity text
+            const timeEl = el.querySelector('.ou-time');
+            if (timeEl && timeEl.textContent !== u.last_activity) {
+                timeEl.style.opacity = '0';
+                setTimeout(() => {
+                    timeEl.textContent = u.last_activity;
+                    timeEl.style.opacity = '1';
+                }, 220);
+            }
+            const ttTime = el.querySelector('.tt-time');
+            if (ttTime) ttTime.textContent = u.last_activity;
+        }
+
+        function removeCard(el) {
+            el.classList.add('exiting');
+            setTimeout(() => el.remove(), 380);
+        }
+
+        function animateIn(el) {
+            // Double rAF: paint 'entering' state first, then remove it so CSS transition plays
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => { el.classList.remove('entering'); });
+            });
         }
 
         function loadOnlineUsers() {
-            const grid   = document.getElementById('online-users-grid');
-            const empty  = document.getElementById('online-empty');
+            const grid    = document.getElementById('online-users-grid');
+            const empty   = document.getElementById('online-empty');
             const loading = document.getElementById('online-loading');
             const btnRef  = document.getElementById('btn-refresh-online');
             const updEl   = document.getElementById('online-updated-at');
@@ -731,27 +906,39 @@
                 .then(data => {
                     if (loading) loading.remove();
 
-                    const users = data.users || [];
-                    if (updEl) updEl.textContent = data.updated_at || '';
-                    if (statEl) statEl.textContent = data.total || '0';
+                    const users   = data.users || [];
+                    const newIdSet = new Set(users.map(u => String(u.id)));
 
-                    // Fade out existing cards
-                    const existingCards = grid.querySelectorAll('.simansa-online-user');
-                    existingCards.forEach(c => c.style.opacity = '0');
+                    if (updEl)  updEl.textContent  = data.updated_at || '';
+                    if (statEl) statEl.textContent = String(data.total || 0);
 
-                    setTimeout(() => {
-                        existingCards.forEach(c => c.remove());
-
-                        if (users.length === 0) {
-                            empty.classList.remove('d-none');
-                        } else {
-                            empty.classList.add('d-none');
-                            const html = users.map((u, i) => buildCard(u, i * 40)).join('');
-                            grid.insertAdjacentHTML('beforeend', html);
+                    // Animate out users that went offline
+                    for (const [uid, el] of onlineState) {
+                        if (!newIdSet.has(uid)) {
+                            removeCard(el);
+                            onlineState.delete(uid);
                         }
+                    }
 
-                        if (btnRef) btnRef.classList.remove('spinning');
-                    }, existingCards.length ? 200 : 0);
+                    // Add new users / update existing ones
+                    users.forEach(u => {
+                        const uid = String(u.id);
+                        if (onlineState.has(uid)) {
+                            updateCard(onlineState.get(uid), u);
+                        } else {
+                            const el = buildCard(u);
+                            grid.appendChild(el);
+                            onlineState.set(uid, el);
+                            animateIn(el);
+                        }
+                    });
+
+                    // Empty state
+                    (onlineState.size === 0)
+                        ? empty.classList.remove('d-none')
+                        : empty.classList.add('d-none');
+
+                    if (btnRef) btnRef.classList.remove('spinning');
                 })
                 .catch(() => {
                     if (btnRef) btnRef.classList.remove('spinning');
@@ -760,8 +947,7 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             loadOnlineUsers();
-            setInterval(loadOnlineUsers, 30000);
-
+            setInterval(loadOnlineUsers, 15000);
             const btnRef = document.getElementById('btn-refresh-online');
             if (btnRef) btnRef.addEventListener('click', loadOnlineUsers);
         });
