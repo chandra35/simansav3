@@ -38,7 +38,7 @@ class DashboardController extends Controller
     public function onlineUsers()
     {
         $sessions = UserSession::online()
-            ->with('user')
+            ->with(['user.siswa', 'user.gtk'])
             ->orderByDesc('last_activity')
             ->get()
             ->unique('user_id')
@@ -48,19 +48,23 @@ class DashboardController extends Controller
             $user = $session->user;
             if (!$user) return null;
 
-            // Resolve photo
-            $photo = null;
-            if ($user->role === 'siswa' && $user->siswa) {
+            // Resolve photo — same priority as profile page:
+            // 1. users.avatar (uploaded via /admin/profile)
+            // 2. siswa.foto_profile (for siswa accounts)
+            // 3. gtk.foto_profile (for GTK accounts)
+            // 4. ui-avatars fallback
+            if ($user->avatar) {
+                $photo = asset('storage/avatars/' . $user->avatar);
+            } elseif ($user->role === 'siswa' && $user->siswa?->foto_profile) {
                 $photo = $user->siswa->foto_profile_url;
-            } elseif ($user->gtk) {
-                $photo = $user->gtk->foto_profile_url ?? null;
-            }
-            if (!$photo) {
+            } elseif ($user->gtk?->foto_profile) {
+                $photo = $user->gtk->foto_profile_url;
+            } else {
                 $bg = match(true) {
                     in_array($user->role, ['super_admin', 'admin']) => '5b63f1',
-                    $user->role === 'guru' || $user->role === 'gtk' => '2dc38b',
-                    $user->role === 'siswa' => 'f4767d',
-                    default => '64748b',
+                    in_array($user->role, ['guru', 'gtk'])           => '2dc38b',
+                    $user->role === 'siswa'                          => 'f4767d',
+                    default                                          => '64748b',
                 };
                 $photo = 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&size=80&background=' . $bg . '&color=fff&bold=true';
             }
