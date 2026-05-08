@@ -42,36 +42,19 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('siswa-smartq-access', function ($user) {
+            // Admin/staff roles jangan tampil meski punya data siswa
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
             if (!$user->siswa) return false;
             return \App\Models\SmartqPeserta::where('siswa_id', $user->siswa->id)
                 ->whereIn('status', ['lulus', 'cadangan'])
                 ->exists();
         });
 
+        // Gate override — cegah Super Admin/Admin lihat menu siswa kelulusan
+        // (tanpa ini, Super Admin lolos karena punya Spatie permission ini)
         Gate::define('siswa-graduation-announcement-access', function ($user) {
-            if (!$user->siswa) {
-                return false;
-            }
-
-            $setting = \App\Models\AppSetting::query()->first();
-            if (!$setting || !$setting->graduation_announcement_enabled) {
-                return false;
-            }
-
-            $tahunAktif = \App\Models\TahunPelajaran::query()->where('is_active', true)->first();
-            if (!$tahunAktif) {
-                return false;
-            }
-
-            return \App\Models\SiswaKelas::query()
-                ->where('siswa_id', $user->siswa->id)
-                ->where('tahun_pelajaran_id', $tahunAktif->id)
-                ->where('status', 'aktif')
-                ->whereNull('deleted_at')
-                ->whereHas('kelas', function ($query) {
-                    $query->where('tingkat', 12);
-                })
-                ->exists();
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            return $user->hasRole('Siswa') || $user->role === 'siswa';
         });
 
         Gate::define('siswa-menu-only', function ($user) {
@@ -111,17 +94,9 @@ class AuthServiceProvider extends ServiceProvider
             return !$user->hasRole('Siswa') &&
                 !$user->siswa()->exists() &&
                 (
-                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Wali Kelas', 'Kepala Madrasah', 'WAKA']) ||
+                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Madrasah', 'WAKA']) ||
                     in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk'])
                 );
-        });
-
-        Gate::define('kesiswaan-lulusan-access', function ($user) {
-            if ($user->hasRole('Wali Kelas') && !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])) {
-                return false;
-            }
-
-            return $user->can('view-siswa');
         });
     }
 }
