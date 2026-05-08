@@ -24,18 +24,32 @@ class JadwalPelajaranController extends Controller
 
         $kelasList = $tahunId
             ? Kelas::where('tahun_pelajaran_id', $tahunId)
-                ->with('jurusan')
+                ->with(['jurusan', 'waliKelas'])
                 ->orderBy('tingkat')
                 ->orderBy('nama_kelas')
                 ->get()
             : collect();
 
-        $hasJamConfig = $tahunId
-            ? JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->exists()
-            : false;
+        $jamConfig = $tahunId
+            ? JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->get()
+            : collect();
+        $hasJamConfig = $jamConfig->isNotEmpty();
+
+        // Stats for UI
+        $stats = ['kelas_ids_with_jadwal' => [], 'total_slots' => 0, 'jam_count' => $jamConfig->count()];
+        if ($tahunId && $kelasList->isNotEmpty()) {
+            $jadwalStats = JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+                ->where('is_active', true)
+                ->select('kelas_id', DB::raw('count(*) as slot_count'))
+                ->groupBy('kelas_id')
+                ->get();
+            $stats['kelas_ids_with_jadwal'] = $jadwalStats->pluck('kelas_id')->toArray();
+            $stats['total_slots'] = $jadwalStats->sum('slot_count');
+        }
+        $stats['kelas_with_jadwal'] = count($stats['kelas_ids_with_jadwal']);
 
         return view('admin.jadwal-pelajaran.index', compact(
-            'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'hasJamConfig'
+            'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'hasJamConfig', 'stats'
         ));
     }
 
