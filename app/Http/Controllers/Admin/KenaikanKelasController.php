@@ -101,88 +101,135 @@ class KenaikanKelasController extends Controller
     }
 
     /**
-     * POST: proses kelulusan batch — semua siswa aktif kelas 12
-     * di tahun pelajaran aktif yang belum punya record PengumumanKelulusan.
+     * AJAX GET: cek status pengumuman kelulusan kelas XII di tahun tertentu.
+     * Digunakan wizard untuk menampilkan progress sebelum finalisasi.
+     */
+    public function statusKelulusan(Request $request)
+    {
+        $tahunId = $request->string('tahun_pelajaran_id')->toString()
+            ?: optional(TahunPelajaran::where('is_active', true)->first())->id;
+
+        if (!$tahunId) {
+            return response()->json(['error' => 'Tidak ada tahun pelajaran aktif.'], 422);
+        }
+
+        $kelas12Ids = Kelas::where('tahun_pelajaran_id', $tahunId)
+            ->where('tingkat', 12)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        $siswaKelasRows = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
+            ->whereIn('kelas_id', $kelas12Ids)
+            ->where('status', 'aktif')
+            ->pluck('siswa_id');
+
+        $total = $siswaKelasRows->count();
+
+        $pengumumanMap = PengumumanKelulusan::where('tahun_pelajaran_id', $tahunId)
+            ->whereIn('siswa_id', $siswaKelasRows)
+            ->pluck('status', 'siswa_id');
+
+        $sudah_lulus          = $pengumumanMap->filter(fn($s) => in_array($s, ['lulus', 'lulus_bersyarat']))->count();
+        $sudah_tidak_lulus    = $pengumumanMap->filter(fn($s) => $s === 'tidak_lulus')->count();
+        $belum_ada_pengumuman = $total - $pengumumanMap->count();
+
+        // Cek berapa yang siswa_kelas.status sudah di-finalisasi
+        $sudah_finalisasi = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
+            ->whereIn('kelas_id', $kelas12Ids)
+            ->whereIn('status', ['lulus', 'tinggal_kelas'])
+            ->count();
+
+        return response()->json([
+            'total'                => $total,
+            'sudah_lulus'          => $sudah_lulus,
+            'sudah_tidak_lulus'    => $sudah_tidak_lulus,
+            'belum_ada_pengumuman' => $belum_ada_pengumuman,
+            'sudah_finalisasi'     => $sudah_finalisasi,
+        ]);
+    }
+
+    /**
+     * POST: finalisasi kelulusan batch — baca PengumumanKelulusan yang sudah ada,
+     * update siswa_kelas.status berdasarkan hasil tersebut.
+     * - lulus / lulus_bersyarat → siswa_kelas.status = 'lulus'
+     * - tidak_lulus             → siswa_kelas.status = 'tinggal_kelas'
+     * Siswa tanpa record pengumuman kelulusan DILEWATI (harus di-set dulu via halaman Pengumuman Kelulusan).
      */
     public function prosesKelulusan(Request $request)
     {
         $request->validate([
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'kelas_ids'          => 'required|array|min:1',
-            'kelas_ids.*'        => 'exists:kelas,id',
-            'status_default'     => 'required|in:lulus,lulus_bersyarat,tidak_lulus',
-            'catatan'            => 'nullable|string|max:500',
             'tandai_siswa_lulus' => 'boolean',
         ]);
 
-        $tahun = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
+        $tahun       = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
         $tandaiLulus = (bool) $request->input('tandai_siswa_lulus', true);
-        $statusDefault = $request->status_default;
-        $catatan = $request->catatan;
 
-        // Validasi: kelas harus bertingkat 12
-        $kelas = Kelas::whereIn('id', $request->kelas_ids)
+        $kelas12Ids = Kelas::where('tahun_pelajaran_id', $tahun->id)
             ->where('tingkat', 12)
-            ->where('tahun_pelajaran_id', $tahun->id)
-            ->get();
+            ->where('is_active', true)
+            ->pluck('id');
 
-        if ($kelas->isEmpty()) {
-            return response()->json(['error' => 'Tidak ada kelas 12 valid yang dipilih.'], 422);
+        if ($kelas12Ids->isEmpty()) {
+            return response()->json(['error' => 'Tidak ada kelas XII aktif di tahun ini.'], 422);
         }
 
-        $diproses = 0;
-        $dilewati = 0;
+        // Ambil semua siswa aktif kelas XII + PengumumanKelulusan mereka
+        $siswaKelasRows = SiswaKelas::with('siswa')
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->whereIn('kelas_id', $kelas12Ids)
+            ->where('status', 'aktif')
+            ->get();
 
-        DB::transaction(function () use ($tahun, $kelas, $statusDefault, $catatan, $tandaiLulus, &$diproses, &$dilewati) {
-            foreach ($kelas as $k) {
-                $siswaKelasRows = SiswaKelas::with('siswa')
-                    ->where('kelas_id', $k->id)
-                    ->where('tahun_pelajaran_id', $tahun->id)
-                    ->where('status', 'aktif')
-                    ->get();
+        $pengumumanMap = PengumumanKelulusan::where('tahun_pelajaran_id', $tahun->id)
+            ->whereIn('siswa_id', $siswaKelasRows->pluck('siswa_id'))
+            ->pluck('status', 'siswa_id');
 
-                foreach ($siswaKelasRows as $sk) {
-                    // Cek apakah sudah ada record pengumuman kelulusan
-                    $existing = PengumumanKelulusan::where('tahun_pelajaran_id', $tahun->id)
-                        ->where('siswa_id', $sk->siswa_id)
-                        ->first();
+        $diproses_lulus   = 0;
+        $diproses_tinggal = 0;
+        $belum_diproses   = 0;
 
-                    if ($existing) {
-                        $dilewati++;
-                        continue;
-                    }
+        DB::transaction(function () use ($tahun, $siswaKelasRows, $pengumumanMap, $tandaiLulus, &$diproses_lulus, &$diproses_tinggal, &$belum_diproses) {
+            foreach ($siswaKelasRows as $sk) {
+                $statusPengumuman = $pengumumanMap->get($sk->siswa_id);
 
-                    // Buat record PengumumanKelulusan
-                    PengumumanKelulusan::create([
-                        'tahun_pelajaran_id' => $tahun->id,
-                        'siswa_id'           => $sk->siswa_id,
-                        'kelas_id'           => $k->id,
-                        'status'             => $statusDefault,
-                        'catatan'            => $catatan,
-                    ]);
+                if (!$statusPengumuman) {
+                    $belum_diproses++;
+                    continue;
+                }
 
-                    // Update status di siswa_kelas → lulus
+                if (in_array($statusPengumuman, ['lulus', 'lulus_bersyarat'])) {
                     $sk->update([
                         'status'              => 'lulus',
                         'tanggal_keluar'      => now()->toDateString(),
-                        'catatan_perpindahan' => 'Proses kelulusan tahun ' . $tahun->nama,
+                        'catatan_perpindahan' => 'Finalisasi kelulusan tahun ' . $tahun->nama,
                     ]);
-
-                    // Update status_siswa di tabel siswa (opsional)
                     if ($tandaiLulus && $sk->siswa) {
                         $sk->siswa->update(['status_siswa' => 'lulus']);
                     }
-
-                    $diproses++;
+                    $diproses_lulus++;
+                } elseif ($statusPengumuman === 'tidak_lulus') {
+                    $sk->update([
+                        'status'              => 'tinggal_kelas',
+                        'catatan_perpindahan' => 'Tidak lulus, tinggal kelas — tahun ' . $tahun->nama,
+                    ]);
+                    $diproses_tinggal++;
                 }
             }
         });
 
+        $total = $diproses_lulus + $diproses_tinggal + $belum_diproses;
+        $parts = [];
+        if ($diproses_lulus > 0)   $parts[] = "{$diproses_lulus} siswa lulus";
+        if ($diproses_tinggal > 0) $parts[] = "{$diproses_tinggal} siswa tinggal kelas";
+        if ($belum_diproses > 0)   $parts[] = "{$belum_diproses} siswa belum ada pengumuman kelulusan (dilewati)";
+
         return response()->json([
-            'success'  => true,
-            'diproses' => $diproses,
-            'dilewati' => $dilewati,
-            'message'  => "Berhasil memproses {$diproses} siswa. {$dilewati} siswa dilewati (sudah ada data kelulusan).",
+            'success'          => true,
+            'diproses_lulus'   => $diproses_lulus,
+            'diproses_tinggal' => $diproses_tinggal,
+            'belum_diproses'   => $belum_diproses,
+            'message'          => 'Finalisasi selesai: ' . implode(', ', $parts) . '.',
         ]);
     }
 

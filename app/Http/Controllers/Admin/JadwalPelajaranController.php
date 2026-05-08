@@ -9,6 +9,7 @@ use App\Models\Mapel;
 use App\Models\Gtk;
 use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class JadwalPelajaranController extends Controller
@@ -229,5 +230,79 @@ class JadwalPelajaranController extends Controller
             'tahunPelajaran', 'kelas', 'hariList', 'jadwal',
             'selectedKelas', 'selectedTahunPelajaran', 'selectedSemester', 'kelasNama'
         ));
+    }
+
+    /**
+     * POST: copy semua jadwal dari satu tahun pelajaran ke tahun lain.
+     * Mencocokkan kelas berdasarkan `nama_kelas` yang sama.
+     * Jadwal yang sudah ada di tahun tujuan (kelas+hari+jam_ke+semester sama) di-skip.
+     */
+    public function copyJadwal(Request $request)
+    {
+        $request->validate([
+            'tahun_asal_id'   => 'required|exists:tahun_pelajaran,id',
+            'tahun_tujuan_id' => 'required|exists:tahun_pelajaran,id|different:tahun_asal_id',
+        ]);
+
+        $tahunAsal   = TahunPelajaran::findOrFail($request->tahun_asal_id);
+        $tahunTujuan = TahunPelajaran::findOrFail($request->tahun_tujuan_id);
+
+        // Ambil semua kelas di tahun tujuan, index by nama_kelas (lowercase)
+        $kelasTujuanMap = Kelas::where('tahun_pelajaran_id', $tahunTujuan->id)
+            ->get()
+            ->keyBy(fn($k) => strtolower(trim($k->nama_kelas)));
+
+        $jadwalAsal = JadwalPelajaran::where('tahun_pelajaran_id', $tahunAsal->id)
+            ->get();
+
+        $disalin   = 0;
+        $dilewati  = 0;
+        $no_target = 0;
+
+        DB::transaction(function () use ($jadwalAsal, $kelasTujuanMap, $tahunTujuan, &$disalin, &$dilewati, &$no_target) {
+            foreach ($jadwalAsal as $j) {
+                // Cari kelas di tahun tujuan berdasarkan nama_kelas yang sama
+                $kelasAsal = Kelas::find($j->kelas_id);
+                if (!$kelasAsal) { $no_target++; continue; }
+
+                $kelasTujuan = $kelasTujuanMap->get(strtolower(trim($kelasAsal->nama_kelas)));
+                if (!$kelasTujuan) { $no_target++; continue; }
+
+                // Skip jika jadwal sudah ada (kelas+hari+jam_ke+semester)
+                $exists = JadwalPelajaran::where('tahun_pelajaran_id', $tahunTujuan->id)
+                    ->where('kelas_id', $kelasTujuan->id)
+                    ->where('hari', $j->hari)
+                    ->where('jam_ke', $j->jam_ke)
+                    ->where('semester', $j->semester)
+                    ->exists();
+
+                if ($exists) { $dilewati++; continue; }
+
+                JadwalPelajaran::create([
+                    'tahun_pelajaran_id' => $tahunTujuan->id,
+                    'kelas_id'           => $kelasTujuan->id,
+                    'mapel_id'           => $j->mapel_id,
+                    'gtk_id'             => $j->gtk_id,
+                    'hari'               => $j->hari,
+                    'jam_ke'             => $j->jam_ke,
+                    'waktu_mulai'        => $j->getRawOriginal('waktu_mulai'),
+                    'waktu_selesai'      => $j->getRawOriginal('waktu_selesai'),
+                    'ruangan'            => $j->ruangan,
+                    'semester'           => $j->semester,
+                    'is_aktif'           => $j->is_aktif,
+                ]);
+                $disalin++;
+            }
+        });
+
+        return response()->json([
+            'success'   => true,
+            'disalin'   => $disalin,
+            'dilewati'  => $dilewati,
+            'no_target' => $no_target,
+            'message'   => "Berhasil menyalin {$disalin} jadwal dari {$tahunAsal->nama} ke {$tahunTujuan->nama}."
+                . ($dilewati  > 0 ? " {$dilewati} jadwal dilewati (sudah ada)." : '')
+                . ($no_target > 0 ? " {$no_target} jadwal tidak disalin (kelas tidak ditemukan di tahun tujuan)." : ''),
+        ]);
     }
 }

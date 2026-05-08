@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -249,6 +249,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/kenaikan-kelas/data', [KenaikanKelasController::class, 'getData'])->name('kenaikan-kelas.data');
         Route::get('/kenaikan-kelas/preview', [KenaikanKelasController::class, 'previewSiswaKelas'])->name('kenaikan-kelas.preview');
         Route::get('/kenaikan-kelas/kelas-by-tahun', [KenaikanKelasController::class, 'getKelasByTahun'])->name('kenaikan-kelas.kelas-by-tahun');
+        Route::get('/kenaikan-kelas/status-kelulusan', [KenaikanKelasController::class, 'statusKelulusan'])->name('kenaikan-kelas.status-kelulusan');
         Route::post('/kenaikan-kelas/proses-kelulusan', [KenaikanKelasController::class, 'prosesKelulusan'])->name('kenaikan-kelas.proses-kelulusan');
         Route::post('/kenaikan-kelas/proses-naik-kelas', [KenaikanKelasController::class, 'prosesNaikKelas'])->name('kenaikan-kelas.proses-naik-kelas');
     });
@@ -465,6 +466,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/jadwal-pelajaran/create', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'create'])->name('jadwal-pelajaran.create');
     Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
     Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
+    Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
     Route::get('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
     Route::put('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'update'])->name('jadwal-pelajaran.update');
     Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');

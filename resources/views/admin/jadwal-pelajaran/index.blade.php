@@ -6,6 +6,9 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-clock mr-2"></i>Jadwal Pelajaran</h1>
         <div>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal-copy-jadwal">
+                <i class="fas fa-copy mr-1"></i> Copy Jadwal
+            </button>
             <a href="{{ route('admin.jadwal-pelajaran.timetable') }}" class="btn btn-info">
                 <i class="fas fa-calendar-alt mr-1"></i> View Timetable
             </a>
@@ -186,6 +189,47 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Copy Jadwal --}}
+    <div class="modal fade" id="modal-copy-jadwal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-copy mr-1"></i> Copy Jadwal dari Tahun Lain</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Menyalin semua jadwal dari tahun asal ke tahun tujuan. Kelas dicocokkan berdasarkan <strong>nama kelas yang sama</strong>. Jadwal yang sudah ada di tahun tujuan akan dilewati.</p>
+                    <div class="form-group">
+                        <label>Tahun Pelajaran Asal <span class="text-danger">*</span></label>
+                        <select id="copy-tahun-asal" class="form-control">
+                            <option value="">-- Pilih Tahun Asal --</option>
+                            @foreach($tahunPelajaran as $tp)
+                                <option value="{{ $tp->id }}">{{ $tp->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tahun Pelajaran Tujuan <span class="text-danger">*</span></label>
+                        <select id="copy-tahun-tujuan" class="form-control">
+                            <option value="">-- Pilih Tahun Tujuan --</option>
+                            @foreach($tahunPelajaran as $tp)
+                                <option value="{{ $tp->id }}">{{ $tp->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div id="copy-result"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" id="btn-copy-jadwal" class="btn btn-success">
+                        <i class="fas fa-copy mr-1"></i> Salin Jadwal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @stop
 
 @section('css')
@@ -311,6 +355,39 @@
                         }
                     });
                 }
+            });
+
+            // Copy jadwal handler
+            $('#btn-copy-jadwal').click(function() {
+                var asalId   = $('#copy-tahun-asal').val();
+                var tujuanId = $('#copy-tahun-tujuan').val();
+                if (!asalId || !tujuanId) { toastr.warning('Pilih tahun asal dan tujuan.'); return; }
+                if (asalId === tujuanId) { toastr.warning('Tahun asal dan tujuan tidak boleh sama.'); return; }
+                if (!confirm('Salin jadwal dari tahun asal ke tahun tujuan? Jadwal yang sudah ada di tahun tujuan akan dilewati.')) return;
+
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyalin...');
+                $('#copy-result').html('');
+
+                $.ajax({
+                    url: '{{ route("admin.jadwal-pelajaran.copy") }}',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}', tahun_asal_id: asalId, tahun_tujuan_id: tujuanId },
+                    success: function(response) {
+                        var type = response.success ? 'success' : 'warning';
+                        $('#copy-result').html('<div class="alert alert-' + type + '">' + response.message + '</div>');
+                        table.ajax.reload();
+                        toastr.success(response.message);
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON?.message || 'Terjadi kesalahan.';
+                        $('#copy-result').html('<div class="alert alert-danger">' + msg + '</div>');
+                        toastr.error(msg);
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="fas fa-copy mr-1"></i> Salin Jadwal');
+                    }
+                });
             });
         });
     </script>

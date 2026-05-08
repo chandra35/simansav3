@@ -59,7 +59,7 @@
     </div>
     <div class="col-lg-3 col-6 mb-3">
         <div class="small-box bg-success">
-            <div class="inner"><h3 id="stat-lulus">-</h3><p>Sudah Diproses Lulus</p></div>
+            <div class="inner"><h3 id="stat-lulus">-</h3><p>Sudah Finalisasi Lulus</p></div>
             <div class="icon"><i class="fas fa-check-circle"></i></div>
         </div>
     </div>
@@ -76,46 +76,34 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="text-muted">
-            Proses ini akan membuat record <code>PengumumanKelulusan</code> untuk semua siswa kelas XII yang belum diproses,
-            menandai <code>siswa_kelas.status = lulus</code>, dan mengubah <code>siswa.status_siswa = lulus</code>.
-            Siswa yang sudah memiliki record pengumuman kelulusan akan dilewati secara otomatis.
-        </p>
+        <div class="callout callout-info mb-3">
+            <h6><i class="fas fa-info-circle mr-1"></i> Cara kerja</h6>
+            <p class="mb-1">Langkah ini membaca status yang sudah di-set di halaman <strong>Pengumuman Kelulusan</strong>, lalu memfinalisasi record <code>siswa_kelas</code>:</p>
+            <ul class="mb-0">
+                <li><strong>Lulus / Lulus Bersyarat</strong> &rarr; <code>siswa_kelas.status = lulus</code></li>
+                <li><strong>Tidak Lulus</strong> &rarr; <code>siswa_kelas.status = tinggal_kelas</code></li>
+                <li>Siswa yang belum ada pengumuman kelulusan-nya <strong>dilewati</strong> — set dulu via halaman Pengumuman Kelulusan.</li>
+            </ul>
+        </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <div class="form-group">
-                    <label>Pilih Kelas XII yang akan diproses</label>
-                    <div id="kelas12-list" class="d-flex flex-wrap" style="gap:.5rem;">
-                        <span class="text-muted small"><i class="fas fa-spinner fa-spin"></i> Memuat...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label>Status Kelulusan Default</label>
-                    <select id="status-default" class="form-control">
-                        <option value="lulus">Lulus</option>
-                        <option value="lulus_bersyarat">Lulus Bersyarat</option>
-                        <option value="tidak_lulus">Tidak Lulus</option>
-                    </select>
-                    <small class="text-muted">Dapat diubah per-siswa nanti di halaman Pengumuman Kelulusan.</small>
-                </div>
-                <div class="form-group">
-                    <label>Catatan (opsional)</label>
-                    <input type="text" id="catatan-kelulusan" class="form-control" placeholder="Contoh: Kelulusan TP 2024/2025" maxlength="200">
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="tandai-siswa-lulus" checked>
-                    <label class="form-check-label" for="tandai-siswa-lulus">
-                        Update <code>status_siswa</code> siswa menjadi <strong>lulus</strong>
-                    </label>
-                </div>
-            </div>
+        {{-- Status summary --}}
+        <div id="kelulusan-status" class="mb-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat status...
+        </div>
+
+        <a href="{{ route('admin.kelulusan-pengumuman.index') }}" class="btn btn-outline-danger mb-3" target="_blank">
+            <i class="fas fa-external-link-alt mr-1"></i> Buka Halaman Pengumuman Kelulusan
+        </a>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="tandai-siswa-lulus" checked>
+            <label class="form-check-label" for="tandai-siswa-lulus">
+                Update <code>status_siswa</code> siswa menjadi <strong>lulus</strong>
+            </label>
         </div>
 
         <button id="btn-proses-kelulusan" class="btn btn-danger" disabled>
-            <i class="fas fa-graduation-cap mr-1"></i> Proses Kelulusan Kelas XII
+            <i class="fas fa-graduation-cap mr-1"></i> Finalisasi Kelulusan Kelas XII
         </button>
         <div id="result-kelulusan" class="mt-3"></div>
     </div>
@@ -219,8 +207,10 @@
                 set status tahun lama menjadi <code>selesai</code>, dan aktifkan tahun baru.
             </li>
             <li>
-                <strong>Jadwal pelajaran</strong> — Buat jadwal baru di tahun pelajaran baru melalui halaman Jadwal Pelajaran.
-                <span class="badge badge-warning">Belum ada fitur copy jadwal otomatis</span>
+                <strong>Jadwal pelajaran</strong> — Salin jadwal dari tahun sebelumnya via tombol
+                <strong>Copy Jadwal</strong> di halaman
+                <a href="{{ route('admin.jadwal-pelajaran.index') }}">Jadwal Pelajaran</a>,
+                atau buat jadwal baru secara manual.
             </li>
             <li>
                 <strong>Wali kelas</strong> — Assign ulang wali kelas di halaman
@@ -295,36 +285,42 @@
                 document.getElementById('stat-11').textContent    = d.siswa_11 ?? '-';
                 document.getElementById('stat-12').textContent    = d.siswa_12 ?? '-';
                 document.getElementById('stat-lulus').textContent = d.siswa_12_lulus ?? '-';
+            })
+            .catch(() => {});
+    }
 
-                // Render checkbox kelas 12
-                const container = document.getElementById('kelas12-list');
-                if (!d.kelas_12 || d.kelas_12.length === 0) {
-                    container.innerHTML = '<span class="text-muted small">Tidak ada kelas XII aktif.</span>';
-                    return;
+    // --- STATUS KELULUSAN (Step 1) ---
+    function loadStatusKelulusan(tahunId) {
+        if (!tahunId) return;
+        fetch(`{{ route('admin.kenaikan-kelas.status-kelulusan') }}?tahun_pelajaran_id=${tahunId}`)
+            .then(r => r.json())
+            .then(d => {
+                const belum = d.belum_ada_pengumuman;
+                let html = `<div class="row">`;
+                html += `<div class="col-sm-3"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-users"></i></span><div class="info-box-content"><span class="info-box-text">Total Kelas XII</span><span class="info-box-number">${d.total}</span></div></div></div>`;
+                html += `<div class="col-sm-3"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-check"></i></span><div class="info-box-content"><span class="info-box-text">Sudah Lulus/Lulus Bersyarat</span><span class="info-box-number">${d.sudah_lulus}</span></div></div></div>`;
+                html += `<div class="col-sm-3"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-times"></i></span><div class="info-box-content"><span class="info-box-text">Tidak Lulus</span><span class="info-box-number">${d.sudah_tidak_lulus}</span></div></div></div>`;
+                html += `<div class="col-sm-3"><div class="info-box ${belum > 0 ? 'bg-danger' : ''}"><span class="info-box-icon ${belum > 0 ? 'bg-danger' : 'bg-secondary'}"><i class="fas fa-question"></i></span><div class="info-box-content"><span class="info-box-text">Belum Ada Pengumuman</span><span class="info-box-number ${belum > 0 ? 'text-white' : ''}">${belum}</span></div></div></div>`;
+                html += `</div>`;
+                if (belum > 0) {
+                    html += `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-1"></i> <strong>${belum} siswa</strong> belum memiliki record pengumuman kelulusan. Set status mereka terlebih dahulu di halaman Pengumuman Kelulusan sebelum finalisasi.</div>`;
                 }
-                container.innerHTML = d.kelas_12.map(k => `
-                    <label class="kelas-checkbox-label">
-                        <input type="checkbox" class="kelas12-check" value="${esc(k.id)}" checked>
-                        <span>${esc(k.nama_kelas)}</span>
-                    </label>
-                `).join('');
-                document.getElementById('btn-proses-kelulusan').disabled = false;
+                if (d.sudah_finalisasi > 0) {
+                    html += `<div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i> ${d.sudah_finalisasi} siswa sudah difinalisasi (siswa_kelas.status bukan aktif).</div>`;
+                }
+                document.getElementById('kelulusan-status').innerHTML = html;
+                document.getElementById('btn-proses-kelulusan').disabled = (d.sudah_lulus + d.sudah_tidak_lulus) === 0;
             })
             .catch(() => {
-                document.getElementById('kelas12-list').innerHTML = '<span class="text-danger small">Gagal memuat data.</span>';
+                document.getElementById('kelulusan-status').innerHTML = '<span class="text-danger">Gagal memuat status kelulusan.</span>';
             });
     }
 
-    if (tahunAktifId) loadStats(tahunAktifId);
+    if (tahunAktifId) { loadStats(tahunAktifId); loadStatusKelulusan(tahunAktifId); }
 
-    // --- STEP 1: KELULUSAN ---
+    // --- STEP 1: FINALISASI KELULUSAN ---
     document.getElementById('btn-proses-kelulusan').addEventListener('click', function () {
-        const checked = [...document.querySelectorAll('.kelas12-check:checked')].map(el => el.value);
-        if (checked.length === 0) {
-            alert('Pilih minimal satu kelas XII.');
-            return;
-        }
-        if (!confirm(`Proses kelulusan ${checked.length} kelas XII?\nTindakan ini tidak dapat dibatalkan secara otomatis.`)) return;
+        if (!confirm('Finalisasi kelulusan kelas XII?\nSiswa dengan status Lulus/Lulus Bersyarat akan ditandai lulus, Tidak Lulus akan ditandai tinggal kelas.\nTindakan ini tidak dapat dibatalkan secara otomatis.')) return;
 
         const btn = this;
         btn.disabled = true;
@@ -335,9 +331,6 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
             body: JSON.stringify({
                 tahun_pelajaran_id: tahunAktifId,
-                kelas_ids: checked,
-                status_default: document.getElementById('status-default').value,
-                catatan: document.getElementById('catatan-kelulusan').value,
                 tandai_siswa_lulus: document.getElementById('tandai-siswa-lulus').checked,
             })
         })
@@ -348,13 +341,14 @@
                 `<i class="fas fa-check-circle mr-1"></i> ${esc(d.message)}`, type
             );
             loadStats(tahunAktifId);
+            loadStatusKelulusan(tahunAktifId);
         })
         .catch(() => {
             document.getElementById('result-kelulusan').innerHTML = alertBox('Terjadi kesalahan. Coba lagi.', 'danger');
         })
         .finally(() => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-graduation-cap mr-1"></i> Proses Kelulusan Kelas XII';
+            btn.innerHTML = '<i class="fas fa-graduation-cap mr-1"></i> Finalisasi Kelulusan Kelas XII';
         });
     });
 
