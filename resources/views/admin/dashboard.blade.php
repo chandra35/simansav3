@@ -310,89 +310,97 @@
             color: #0f172a;
         }
 
+        /* ── Stat Cards ── */
         .simansa-stat-card {
             position: relative;
             overflow: hidden;
-            border-radius: 1.15rem;
-            padding: 1rem 1.1rem 0.85rem;
+            display: grid;
+            grid-template-columns: 46px 1fr;
+            grid-template-rows: auto auto auto;
+            grid-template-areas:
+                "icon label"
+                "icon value"
+                "footer footer";
+            column-gap: 0.8rem;
+            border-radius: 1rem;
+            padding: 0.85rem 1rem;
             color: #fff;
-            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.13);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.13);
             transition: box-shadow 0.22s ease, transform 0.22s ease;
         }
 
         .simansa-stat-card:hover {
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
             transform: translateY(-2px);
         }
 
         .simansa-stat-card::before {
             content: "";
             position: absolute;
-            inset: auto -38px -48px auto;
-            width: 148px;
-            height: 148px;
+            right: -30px; bottom: -36px;
+            width: 120px; height: 120px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
         }
 
-        .simansa-stat-card--indigo { background: linear-gradient(135deg, #5b63f1, #6875f5); }
+        .simansa-stat-card--indigo  { background: linear-gradient(135deg, #5b63f1, #6875f5); }
         .simansa-stat-card--emerald { background: linear-gradient(135deg, #2dc38b, #56d9a2); }
-        .simansa-stat-card--amber { background: linear-gradient(135deg, #f0a700, #ffc233); color: #172554; }
-        .simansa-stat-card--rose { background: linear-gradient(135deg, #f4767d, #f99195); }
-        .simansa-stat-card--teal { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+        .simansa-stat-card--amber   { background: linear-gradient(135deg, #f0a700, #ffc233); color: #172554; }
+        .simansa-stat-card--rose    { background: linear-gradient(135deg, #f4767d, #f99195); }
+        .simansa-stat-card--teal    { background: linear-gradient(135deg, #0891b2, #22d3ee); }
 
         .simansa-stat-card--amber .simansa-stat-card__label,
         .simansa-stat-card--amber .simansa-stat-card__footer,
         .simansa-stat-card--amber .simansa-stat-card__footer a,
-        .simansa-stat-card--amber .simansa-stat-card__icon {
-            color: #172554;
-        }
+        .simansa-stat-card--amber .simansa-stat-card__icon { color: #172554; }
 
         .simansa-stat-card__icon {
-            width: 44px;
-            height: 44px;
+            grid-area: icon;
+            align-self: center;
+            width: 46px; height: 46px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.9rem;
-            font-size: 1.15rem;
-            background: rgba(255, 255, 255, 0.14);
-            margin-bottom: 0.65rem;
-            position: relative;
-            z-index: 1;
+            border-radius: 0.85rem;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.15);
+            position: relative; z-index: 1;
+            flex-shrink: 0;
         }
 
         .simansa-stat-card__label {
-            position: relative;
-            z-index: 1;
-            font-size: 0.72rem;
+            grid-area: label;
+            align-self: end;
+            position: relative; z-index: 1;
+            font-size: 0.67rem;
             text-transform: uppercase;
             letter-spacing: 0.07em;
             font-weight: 700;
-            opacity: 0.88;
-            margin-bottom: 0.18rem;
+            opacity: 0.82;
+            line-height: 1;
+            padding-bottom: 0.12rem;
         }
 
         .simansa-stat-card__value {
-            position: relative;
-            z-index: 1;
-            font-size: 1.85rem;
-            line-height: 1;
+            grid-area: value;
+            align-self: start;
+            position: relative; z-index: 1;
+            font-size: 1.8rem;
+            line-height: 1.05;
             font-weight: 800;
-            margin-bottom: 0.85rem;
         }
 
         .simansa-stat-card__footer {
-            position: relative;
-            z-index: 1;
+            grid-area: footer;
+            position: relative; z-index: 1;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.82rem;
-            padding-top: 0.7rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.18);
-            overflow: hidden;
+            font-size: 0.76rem;
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .simansa-stat-card__footer > span:first-child {
@@ -401,6 +409,7 @@
             white-space: nowrap;
             flex: 1 1 0;
             min-width: 0;
+            opacity: 0.88;
         }
 
         .simansa-stat-card__footer a {
@@ -408,7 +417,11 @@
             font-weight: 700;
             text-decoration: none;
             flex-shrink: 0;
+            white-space: nowrap;
+            opacity: 0.95;
         }
+
+        .simansa-stat-card__footer a:hover { opacity: 1; text-decoration: underline; }
 
         .simansa-panel {
             border: 1px solid #d8e3f4 !important;
@@ -539,30 +552,30 @@
         }
 
         @media (max-width: 767.98px) {
-            .simansa-stat-card__value { font-size: 1.6rem; }
+            .simansa-stat-card__value { font-size: 1.55rem; }
         }
 
         @media (max-width: 575.98px) {
             .simansa-stat-card {
-                padding: 0.8rem 0.9rem 0.7rem;
-                border-radius: 0.95rem;
+                grid-template-columns: 38px 1fr;
+                column-gap: 0.6rem;
+                padding: 0.7rem 0.8rem;
+                border-radius: 0.85rem;
             }
-            .simansa-stat-card__icon {
-                width: 36px; height: 36px;
-                font-size: 0.95rem;
-                border-radius: 0.7rem;
-                margin-bottom: 0.5rem;
-            }
-            .simansa-stat-card__value { font-size: 1.45rem; margin-bottom: 0.65rem; }
-            .simansa-stat-card__label { font-size: 0.66rem; }
-            .simansa-stat-card__footer { font-size: 0.74rem; padding-top: 0.55rem; }
+            .simansa-stat-card__icon { width: 38px; height: 38px; font-size: 0.9rem; border-radius: 0.65rem; }
+            .simansa-stat-card__value { font-size: 1.35rem; }
+            .simansa-stat-card__label { font-size: 0.6rem; }
+            .simansa-stat-card__footer { font-size: 0.68rem; margin-top: 0.45rem; padding-top: 0.45rem; }
         }
 
         /* ── Online Panel ── */
         .simansa-online-card {
             border: 1px solid #d8e3f4 !important;
             box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06) !important;
+            overflow: visible !important;
         }
+
+        .simansa-online-card .card-body { overflow: visible !important; }
 
         .simansa-pulse-dot {
             display: inline-block;
@@ -623,16 +636,33 @@
             transform: translateY(-2px);
         }
 
+        /* photo wrapper for green dot */
+        .simansa-online-user__photo-wrap {
+            position: relative;
+            flex-shrink: 0;
+            width: 40px; height: 40px;
+        }
+
         .simansa-online-user__photo {
             width: 40px; height: 40px;
             border-radius: 50%;
             object-fit: cover;
-            flex-shrink: 0;
+            display: block;
             border: 2px solid #e2eaf5;
             transition: border-color 0.2s;
         }
 
         .simansa-online-user:hover .simansa-online-user__photo { border-color: #93c5fd; }
+
+        .simansa-online-dot {
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 2px solid #fff;
+            animation: simansa-pulse 2.2s ease infinite;
+        }
 
         .simansa-online-user__name {
             font-weight: 700;
@@ -827,8 +857,11 @@
             const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=80&background=64748b&color=fff&bold=true`;
 
             el.innerHTML = `
-                <img src="${esc(u.photo)}" alt="${esc(u.name)}" class="simansa-online-user__photo"
-                     onerror="this.onerror=null;this.src='${fallback}'">
+                <div class="simansa-online-user__photo-wrap">
+                    <img src="${esc(u.photo)}" alt="${esc(u.name)}" class="simansa-online-user__photo"
+                         onerror="this.onerror=null;this.src='${fallback}'">
+                    <span class="simansa-online-dot"></span>
+                </div>
                 <div style="min-width:0;flex:1">
                     <div class="simansa-online-user__name">${esc(u.name)}</div>
                     <div class="simansa-online-user__meta">
