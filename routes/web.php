@@ -110,6 +110,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
         Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
         Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
+            Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
+            Route::post('/kelulusan-pengumuman/publish', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'publish'])->name('kelulusan-pengumuman.publish');
+            Route::post('/kelulusan-pengumuman/save', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'save'])->name('kelulusan-pengumuman.save');
+            Route::post('/kelulusan-pengumuman/reset-opened', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpened'])->name('kelulusan-pengumuman.reset-opened');
+            Route::post('/kelulusan-pengumuman/{siswa}/reset-opened', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpenedForStudent'])->name('kelulusan-pengumuman.reset-opened-student');
     });
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'index'])->name('referensi-perguruan-tinggi.index');
@@ -399,6 +404,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/email-templates/{emailTemplate}/reset-default', [App\Http\Controllers\Admin\EmailTemplateController::class, 'resetToDefault'])->name('email-templates.reset-default');
     });
     
+    Route::middleware(['permission:view-kelas'])->group(function () {
+        Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
+        Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
+    });
+
     // Cetak (Print Reports)
     Route::middleware(['permission:view-kelas'])->group(function () {
         Route::get('/cetak', [App\Http\Controllers\Admin\CetakController::class, 'index'])->name('cetak.index');
@@ -764,6 +774,9 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::post('/lulusan', [App\Http\Controllers\Siswa\LulusanController::class, 'store'])->name('lulusan.store');
     Route::get('/lulusan/referensi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchReferences'])->name('lulusan.referensi.search');
     Route::get('/lulusan/prodi/search', [App\Http\Controllers\Siswa\LulusanController::class, 'searchStudyPrograms'])->name('lulusan.prodi.search');
+    Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Siswa\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
+    Route::post('/kelulusan-pengumuman/open-envelope', [App\Http\Controllers\Siswa\PengumumanKelulusanController::class, 'openEnvelope'])->name('kelulusan-pengumuman.open-envelope');
+
 
     // Registrasi wajah mandiri siswa
     Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
