@@ -917,7 +917,7 @@ return [
             'text' => 'Dashboard',
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
         ],
 
         [
@@ -942,7 +942,7 @@ return [
         [
             'text' => 'Profil & Data',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-profil-data',
             'submenu' => [
                 [
@@ -967,7 +967,7 @@ return [
         [
             'text' => 'Pengaturan Akun',
             'icon' => 'fas fa-fw fa-user-cog',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-pengaturan-akun',
             'submenu' => [
                 [
@@ -981,7 +981,7 @@ return [
         [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-jalur-ptn',
             'active' => ['siswa/snbp*', 'siswa/span-ptkin*'],
             'submenu' => [
@@ -989,7 +989,7 @@ return [
                     'text' => 'SNBP',
                     'route' => 'siswa.snbp.index',
                     'icon' => 'fas fa-fw fa-graduation-cap',
-                    'can' => 'siswa-access',
+                    'can' => 'siswa-menu-only',
                     'key' => 'siswa-snbp',
                     'active' => ['siswa/snbp*'],
                 ],
@@ -997,7 +997,7 @@ return [
                     'text' => 'SPAN-PTKIN',
                     'route' => 'siswa.span-ptkin.index',
                     'icon' => 'fas fa-fw fa-mosque',
-                    'can' => 'siswa-access',
+                    'can' => 'siswa-menu-only',
                     'key' => 'siswa-span-ptkin',
                     'active' => ['siswa/span-ptkin*'],
                 ],
@@ -1015,7 +1015,7 @@ return [
             'text' => 'Data Lulusan',
             'route' => 'siswa.lulusan.index',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'siswa-access',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-lulusan',
         ],
     ],
