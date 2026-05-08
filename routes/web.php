@@ -461,15 +461,28 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
     Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
     
-    // ==================== FITUR BARU: JADWAL PELAJARAN ====================
-    Route::get('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran.index');
-    Route::get('/jadwal-pelajaran/create', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'create'])->name('jadwal-pelajaran.create');
-    Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
-    Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
-    Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
-    Route::get('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
-    Route::put('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'update'])->name('jadwal-pelajaran.update');
-    Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
+// ==================== FITUR BARU: JADWAL PELAJARAN ====================
+    Route::middleware(['permission:view-jadwal-pelajaran'])->group(function () {
+        Route::get('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran.index');
+        Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
+        Route::get('/jadwal-pelajaran/timetable-data', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetableData'])->name('jadwal-pelajaran.timetable-data');
+        Route::get('/jadwal-pelajaran/guru-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruOptions'])->name('jadwal-pelajaran.guru-options');
+        Route::get('/jadwal-pelajaran/mapel-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'mapelOptions'])->name('jadwal-pelajaran.mapel-options');
+    });
+    Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
+        Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
+        Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
+        Route::get('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
+        Route::put('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'update'])->name('jadwal-pelajaran.update');
+        Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
+    });
+    // Jadwal Jam Config (per tahun pelajaran)
+    Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
+        Route::get('/jadwal-jam-config', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'index'])->name('jadwal-jam-config.index');
+        Route::post('/jadwal-jam-config/generate', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'generate'])->name('jadwal-jam-config.generate');
+        Route::post('/jadwal-jam-config', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'store'])->name('jadwal-jam-config.store');
+        Route::delete('/jadwal-jam-config/{jamConfig}', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'destroy'])->name('jadwal-jam-config.destroy');
+    });
     
     // ==================== FITUR BARU: CATATAN KONSELING (BK) ====================
     Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);

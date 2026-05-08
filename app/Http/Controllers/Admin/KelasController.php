@@ -100,6 +100,19 @@ class KelasController extends Controller
                                     </a>';
                     }
                     
+                    // Jadwal Pelajaran button
+                    if (auth()->user()->can('view-jadwal-pelajaran')) {
+                        $tahunAktifJadwal = TahunPelajaran::where('is_active', true)->first();
+                        $jadwalUrl = route('admin.jadwal-pelajaran.timetable', [
+                            'kelas_id'           => $row->id,
+                            'tahun_pelajaran_id' => $tahunAktifJadwal?->id ?? $row->tahun_pelajaran_id,
+                            'semester'           => 1,
+                        ]);
+                        $actions .= '<a href="' . $jadwalUrl . '" class="btn btn-sm btn-primary" title="Jadwal Pelajaran">
+                                        <i class="fas fa-table"></i>
+                                    </a>';
+                    }
+
                     // Cetak Absensi button
                     if (auth()->user()->can('view-kelas')) {
                         $actions .= '<a href="' . route('admin.kelas.cetak-absensi', $row->id) . '" class="btn btn-sm btn-success" title="Cetak Absensi" target="_blank">

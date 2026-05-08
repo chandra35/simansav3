@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Models;
 
@@ -20,28 +20,28 @@ class JadwalPelajaran extends Model
         'gtk_id',
         'hari',
         'jam_ke',
-        'waktu_mulai',
-        'waktu_selesai',
+        'jam_mulai',
+        'jam_selesai',
         'ruangan',
         'semester',
-        'is_aktif',
+        'catatan',
+        'is_active',
+        'created_by',
     ];
 
     protected $casts = [
-        'jam_ke' => 'integer',
-        'waktu_mulai' => 'datetime:H:i',
-        'waktu_selesai' => 'datetime:H:i',
-        'semester' => 'integer',
-        'is_aktif' => 'boolean',
+        'jam_ke'    => 'integer',
+        'semester'  => 'integer',
+        'is_active' => 'boolean',
     ];
 
     const HARI = [
-        'senin' => 'Senin',
+        'senin'  => 'Senin',
         'selasa' => 'Selasa',
-        'rabu' => 'Rabu',
-        'kamis' => 'Kamis',
-        'jumat' => 'Jumat',
-        'sabtu' => 'Sabtu',
+        'rabu'   => 'Rabu',
+        'kamis'  => 'Kamis',
+        'jumat'  => 'Jumat',
+        'sabtu'  => 'Sabtu',
     ];
 
     // Relations
@@ -55,9 +55,9 @@ class JadwalPelajaran extends Model
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
-    public function mapel()
+    public function mataPelajaran()
     {
-        return $this->belongsTo(Mapel::class, 'mapel_id');
+        return $this->belongsTo(MataPelajaran::class, 'mapel_id');
     }
 
     public function gtk()
@@ -68,7 +68,7 @@ class JadwalPelajaran extends Model
     // Scopes
     public function scopeAktif($query)
     {
-        return $query->where('is_aktif', true);
+        return $query->where('is_active', true);
     }
 
     public function scopeHari($query, $hari)
@@ -82,15 +82,15 @@ class JadwalPelajaran extends Model
     }
 
     // Accessors
-    public function getHariLabelAttribute()
+    public function getHariLabelAttribute(): string
     {
         return self::HARI[$this->hari] ?? $this->hari;
     }
 
-    public function getJamAttribute()
+    public function getJamAttribute(): string
     {
-        $mulai = $this->waktu_mulai ? $this->waktu_mulai->format('H:i') : '';
-        $selesai = $this->waktu_selesai ? $this->waktu_selesai->format('H:i') : '';
-        return "{$mulai} - {$selesai}";
+        $mulai   = $this->jam_mulai   ? substr($this->jam_mulai, 0, 5)   : '';
+        $selesai = $this->jam_selesai ? substr($this->jam_selesai, 0, 5) : '';
+        return $mulai && $selesai ? "{$mulai} - {$selesai}" : ($mulai ?: '-');
     }
 }

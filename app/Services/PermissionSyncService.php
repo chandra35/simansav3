@@ -284,12 +284,10 @@ class PermissionSyncService
                 'label' => 'Jadwal Pelajaran',
                 'icon' => 'clock',
                 'color' => 'secondary',
-                'description' => 'Manajemen jadwal pembelajaran',
+                'description' => 'Manajemen jadwal pembelajaran per kelas',
                 'permissions' => [
                     'view-jadwal-pelajaran',
-                    'create-jadwal-pelajaran',
-                    'edit-jadwal-pelajaran',
-                    'delete-jadwal-pelajaran',
+                    'manage-jadwal-pelajaran',
                 ],
             ],
             'kalender-akademik' => [
