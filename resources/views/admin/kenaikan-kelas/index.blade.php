@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', 'Proses Akhir Tahun')
 
@@ -292,8 +292,10 @@
     // --- STATUS KELULUSAN (Step 1) ---
     function loadStatusKelulusan(tahunId) {
         if (!tahunId) return;
-        fetch(`{{ route('admin.kenaikan-kelas.status-kelulusan') }}?tahun_pelajaran_id=${tahunId}`)
-            .then(r => r.json())
+        fetch(`{{ route('admin.kenaikan-kelas.status-kelulusan') }}?tahun_pelajaran_id=${tahunId}`, {
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(d => {
                 const belum = d.belum_ada_pengumuman;
                 let html = `<div class="row">`;
@@ -311,8 +313,9 @@
                 document.getElementById('kelulusan-status').innerHTML = html;
                 document.getElementById('btn-proses-kelulusan').disabled = (d.sudah_lulus + d.sudah_tidak_lulus) === 0;
             })
-            .catch(() => {
-                document.getElementById('kelulusan-status').innerHTML = '<span class="text-danger">Gagal memuat status kelulusan.</span>';
+            .catch(err => {
+                console.error('statusKelulusan error:', err);
+                document.getElementById('kelulusan-status').innerHTML = '<span class="text-danger">Gagal memuat status kelulusan: ' + (err.message || 'Cek Console browser.') + '</span>';
             });
     }
 
