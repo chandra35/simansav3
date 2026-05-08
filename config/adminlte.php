@@ -529,6 +529,13 @@ return [
                     'active' => ['admin/lulusan*'],
                 ],
                 [
+                    'text' => 'Pengumuman Kelulusan',
+                    'route' => 'admin.kelulusan-pengumuman.index',
+                    'icon' => 'fas fa-fw fa-envelope-open-text',
+                    'can' => 'kesiswaan-lulusan-access',
+                    'active' => ['admin/kelulusan-pengumuman*'],
+                ],
+                [
                     'text' => 'Siswa Tidak Mampu / PIP',
                     'route' => 'admin.pip.index',
                     'icon' => 'fas fa-fw fa-hand-holding-heart',
@@ -1010,6 +1017,14 @@ return [
             'can' => 'siswa-smartq-access',
             'key' => 'siswa-smartq',
             'active' => ['siswa/smartq*'],
+        ],
+        [
+            'text' => 'Pengumuman Kelulusan',
+            'route' => 'siswa.kelulusan-pengumuman.index',
+            'icon' => 'fas fa-fw fa-envelope-open-text',
+            'can' => 'siswa-graduation-announcement-access',
+            'key' => 'siswa-kelulusan-pengumuman',
+            'active' => ['siswa/kelulusan-pengumuman*'],
         ],
         [
             'text' => 'Data Lulusan',
