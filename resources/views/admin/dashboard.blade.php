@@ -634,6 +634,7 @@
         .simansa-online-user:hover:not(.exiting) {
             box-shadow: 0 6px 20px rgba(37,99,235,0.14);
             transform: translateY(-2px);
+            z-index: 200;
         }
 
         /* photo wrapper for green dot */
