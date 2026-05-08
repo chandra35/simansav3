@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 return [
 
@@ -430,6 +430,13 @@ return [
                     'icon' => 'fas fa-fw fa-school',
                     'can' => 'manage-kelas',
                     'active' => ['admin/kelas*'],
+                ],
+                [
+                    'text' => 'Proses Akhir Tahun',
+                    'route' => 'admin.kenaikan-kelas.index',
+                    'icon' => 'fas fa-fw fa-graduation-cap',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/kenaikan-kelas*'],
                 ],
                 [
                     'text' => 'Jadwal Pelajaran',

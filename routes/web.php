@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\KurikulumController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RdmSyncController;
 use App\Http\Controllers\Admin\RdmMapelMappingController;
+use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
@@ -242,6 +243,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/rdm-mapel-mapping/{mapping}', [RdmMapelMappingController::class, 'destroy'])->name('rdm-mapel-mapping.destroy');
     });
     
+    // Proses Akhir Tahun (Naik Kelas & Kelulusan)
+    Route::middleware(['permission:manage-settings'])->group(function () {
+        Route::get('/kenaikan-kelas', [KenaikanKelasController::class, 'index'])->name('kenaikan-kelas.index');
+        Route::get('/kenaikan-kelas/data', [KenaikanKelasController::class, 'getData'])->name('kenaikan-kelas.data');
+        Route::get('/kenaikan-kelas/preview', [KenaikanKelasController::class, 'previewSiswaKelas'])->name('kenaikan-kelas.preview');
+        Route::get('/kenaikan-kelas/kelas-by-tahun', [KenaikanKelasController::class, 'getKelasByTahun'])->name('kenaikan-kelas.kelas-by-tahun');
+        Route::post('/kenaikan-kelas/proses-kelulusan', [KenaikanKelasController::class, 'prosesKelulusan'])->name('kenaikan-kelas.proses-kelulusan');
+        Route::post('/kenaikan-kelas/proses-naik-kelas', [KenaikanKelasController::class, 'prosesNaikKelas'])->name('kenaikan-kelas.proses-naik-kelas');
+    });
+
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
     Route::post('/kelas/{id}/restore', [KelasController::class, 'restore'])->name('kelas.restore')->middleware('permission:create-kelas');
