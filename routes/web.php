@@ -55,6 +55,7 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordControll
 // Admin Routes (Super Admin, Admin, GTK, Operator)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
     
     // Under Development Placeholder
     Route::get('/under-development', function () {
