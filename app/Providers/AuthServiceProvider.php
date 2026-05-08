@@ -50,9 +50,23 @@ class AuthServiceProvider extends ServiceProvider
                 ->exists();
         });
 
-        // Gate override — cegah Super Admin/Admin lihat menu siswa kelulusan
-        // (tanpa ini, Super Admin lolos karena punya Spatie permission ini)
+        // Sidebar gates — pakai nama berbeda agar tidak dioverride Spatie Gate::before
+        // (Spatie Gate::before return true jika user punya Spatie permission dengan nama sama)
+        Gate::define('sidebar-siswa-smartq', function ($user) {
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if (!$user->siswa) return false;
+            return \App\Models\SmartqPeserta::where('siswa_id', $user->siswa->id)
+                ->whereIn('status', ['lulus', 'cadangan'])
+                ->exists();
+        });
+
         Gate::define('siswa-graduation-announcement-access', function ($user) {
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            return $user->hasRole('Siswa') || $user->role === 'siswa';
+        });
+
+        // Sidebar gate — nama berbeda agar tidak dioverride Spatie Gate::before
+        Gate::define('sidebar-siswa-graduation', function ($user) {
             if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
             return $user->hasRole('Siswa') || $user->role === 'siswa';
         });
