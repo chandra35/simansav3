@@ -324,14 +324,14 @@ return [
             'text' => 'Dashboard Saya',
             'route' => 'admin.gtk.dashboard',
             'icon' => 'fas fa-fw fa-home',
-            'can' => 'gtk-menu-only',
+            'can' => 'sidebar-gtk-menu-only',
         ],
         [
             'key' => 'gtk-profile',
             'text' => 'Profil Saya',
             'route' => 'admin.gtk.profile',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'gtk-menu-only',
+            'can' => 'sidebar-gtk-menu-only',
         ],
         
         // MANAJEMEN DATA - Collapsible
@@ -498,7 +498,7 @@ return [
             'text' => 'SMART-Q Unggulan',
             'icon' => 'fas fa-fw fa-star text-warning',
             'route' => 'admin.smartq.index',
-            'can' => 'admin-menu-only',
+            'can' => 'sidebar-admin-menu-only',
             'active' => ['admin/smartq*'],
         ],
         

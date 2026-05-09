@@ -93,17 +93,24 @@ class AuthServiceProvider extends ServiceProvider
 
         // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
         // Only show to users with GTK role, excluding Super Admin and Admin
-        Gate::define('gtk-menu-only', function ($user) {
+        // PAKAI sidebar- prefix agar tidak bentrok dengan Spatie permission 'gtk-menu-only'
+        Gate::define('sidebar-gtk-menu-only', function ($user) {
             return $user->hasRole('GTK') && 
                    !$user->hasRole('Siswa') &&
-                   !$user->hasRole('Super Admin') && 
-                   !$user->hasRole('Admin') &&
+                   !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
                    !$user->siswa()->exists();
         });
 
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator']);
+        });
+
+        // Gate for admin-only menu items (e.g. SMART-Q Unggulan di menu admin)
+        // PAKAI sidebar- prefix agar tidak bentrok dengan Spatie permission 'admin-menu-only'
+        Gate::define('sidebar-admin-menu-only', function ($user) {
             return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
                 in_array($user->role, ['super_admin', 'admin', 'operator']);
         });
