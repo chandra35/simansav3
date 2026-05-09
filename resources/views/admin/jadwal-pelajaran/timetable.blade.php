@@ -475,6 +475,13 @@
 @endsection
 
 @section('js')
+<!-- SweetAlert2 Fallback (jika plugin AdminLTE belum load) -->
+<script>
+if (typeof Swal === 'undefined') {
+    document.write('<script src="https:\/\/cdn.jsdelivr.net\/npm\/sweetalert2@11\/dist\/sweetalert2.all.min.js"><\/script>');
+}
+</script>
+
 <script>
 const CSRF = '{{ csrf_token() }}';
 const TAHUN_ID = '{{ $tahunId }}';
