@@ -38,6 +38,8 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('siswa-access', function ($user) {
+            // Staff/admin roles jangan tampil meski punya relasi siswa
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
