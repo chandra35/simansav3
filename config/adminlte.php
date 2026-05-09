@@ -931,13 +931,13 @@ return [
             'text' => 'Dashboard',
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
         ],
 
         [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-presensi',
             'active' => ['siswa/face-register*'],
             'submenu' => [
@@ -946,7 +946,7 @@ return [
                     'text' => 'Registrasi Wajah',
                     'route' => 'siswa.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'siswa-menu-only',
+                    'can' => 'sidebar-siswa-menu-only',
                     'active' => ['siswa/face-register*'],
                 ],
             ],
@@ -956,7 +956,7 @@ return [
         [
             'text' => 'Profil & Data',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-profil-data',
             'submenu' => [
                 [
@@ -981,7 +981,7 @@ return [
         [
             'text' => 'Pengaturan Akun',
             'icon' => 'fas fa-fw fa-user-cog',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-pengaturan-akun',
             'submenu' => [
                 [
@@ -995,7 +995,7 @@ return [
         [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-jalur-ptn',
             'active' => ['siswa/snbp*', 'siswa/span-ptkin*'],
             'submenu' => [
@@ -1003,7 +1003,7 @@ return [
                     'text' => 'SNBP',
                     'route' => 'siswa.snbp.index',
                     'icon' => 'fas fa-fw fa-graduation-cap',
-                    'can' => 'siswa-menu-only',
+                    'can' => 'sidebar-siswa-menu-only',
                     'key' => 'siswa-snbp',
                     'active' => ['siswa/snbp*'],
                 ],
@@ -1011,7 +1011,7 @@ return [
                     'text' => 'SPAN-PTKIN',
                     'route' => 'siswa.span-ptkin.index',
                     'icon' => 'fas fa-fw fa-mosque',
-                    'can' => 'siswa-menu-only',
+                    'can' => 'sidebar-siswa-menu-only',
                     'key' => 'siswa-span-ptkin',
                     'active' => ['siswa/span-ptkin*'],
                 ],
@@ -1037,7 +1037,7 @@ return [
             'text' => 'Data Lulusan',
             'route' => 'siswa.lulusan.index',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'siswa-menu-only',
+            'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-lulusan',
         ],
     ],

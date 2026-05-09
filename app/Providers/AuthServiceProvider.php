@@ -54,6 +54,18 @@ class AuthServiceProvider extends ServiceProvider
 
         // Sidebar gates — pakai nama berbeda agar tidak dioverride Spatie Gate::before
         // (Spatie Gate::before return true jika user punya Spatie permission dengan nama sama)
+        // JANGAN gunakan 'siswa-access' atau 'siswa-menu-only' sebagai gate di menu config
+        // karena nama itu juga ada sebagai Spatie permission → Gate::before intercept duluan
+        Gate::define('sidebar-siswa-access', function ($user) {
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
+        });
+
+        Gate::define('sidebar-siswa-menu-only', function ($user) {
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
+        });
+
         Gate::define('sidebar-siswa-smartq', function ($user) {
             if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
             if (!$user->siswa) return false;
