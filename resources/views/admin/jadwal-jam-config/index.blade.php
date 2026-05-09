@@ -2,6 +2,8 @@
 
 @section('title', 'Konfigurasi Jam Pelajaran')
 
+@section('plugins.Sweetalert2', true)
+
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
@@ -412,13 +414,25 @@ $(function () {
     // Generate form submit
     $('#formGenerate').on('submit', function (e) {
         e.preventDefault();
-        if (!$('#ist1Active').is(':checked')) {
-            $('input[name^="istirahat[0]"]').removeAttr('name');
+        // Build data object explicitly — avoid removeAttr() which breaks jQuery selectors
+        // containing brackets, and prevents permanent attribute loss on cancel
+        const data = {
+            _token: '{{ csrf_token() }}',
+            tahun_pelajaran_id: $('#formGenerate input[name="tahun_pelajaran_id"]').val(),
+            jam_mulai:    $('#inpJamMasuk').val(),
+            jam_pulang:   $('#inpJamPulang').val(),
+            durasi_menit: $('#inpDurasi').val(),
+        };
+        if ($('#ist1Active').is(':checked')) {
+            data['istirahat[0][setelah_jam]'] = $('#ist1Setelah').val();
+            data['istirahat[0][durasi]']      = $('#ist1Durasi').val();
+            data['istirahat[0][label]']       = $('#ist1Body input[type=text]').val();
         }
-        if (!$('#ist2Active').is(':checked')) {
-            $('input[name^="istirahat[1]"]').removeAttr('name');
+        if ($('#ist2Active').is(':checked')) {
+            data['istirahat[1][setelah_jam]'] = $('#ist2Setelah').val();
+            data['istirahat[1][durasi]']      = $('#ist2Durasi').val();
+            data['istirahat[1][label]']       = $('#ist2Body input[type=text]').val();
         }
-        const data = $(this).serialize();
         Swal.fire({
             title: 'Generate ulang?',
             text: 'Konfigurasi jam lama untuk tahun ini akan dihapus.',
@@ -431,7 +445,6 @@ $(function () {
                 url: '{{ route("admin.jadwal-jam-config.generate") }}',
                 method: 'POST',
                 data: data,
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 success: function (res) {
                     if (res.success) {
                         toastr.success(res.message);

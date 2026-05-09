@@ -2,6 +2,8 @@
 
 @section('title', 'Timetable Jadwal' . ($kelasObj ? ' – ' . $kelasObj->nama_kelas : ''))
 
+@section('plugins.Sweetalert2', true)
+
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-7">
