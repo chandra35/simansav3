@@ -96,7 +96,7 @@ class JadwalPelajaranController extends Controller
             $jadwalMap[$j->hari][$j->jam_ke] = $j;
         }
 
-        $hariList = JadwalPelajaran::HARI;
+        $hariList = array_keys(JadwalPelajaran::HARI);
 
         return view('admin.jadwal-pelajaran.timetable', compact(
             'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'kelasObj',
