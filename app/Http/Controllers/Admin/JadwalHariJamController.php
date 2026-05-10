@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\JadwalHariJam;
+use App\Models\TahunPelajaran;
+use Illuminate\Http\Request;
+
+class JadwalHariJamController extends Controller
+{
+    /**
+     * GET /admin/jadwal-hari-jam
+     * Kembalikan daftar slot jam untuk hari+semester+tahun tertentu.
+     */
+    public function index(Request $request)
+    {
+        $this->authorize('view-jadwal-pelajaran');
+
+        $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+            'hari'               => 'required|in:senin,selasa,rabu,kamis,jumat,sabtu',
+        ]);
+
+        $slots = JadwalHariJam::where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
+            ->where('semester', $request->semester)
+            ->where('hari', $request->hari)
+            ->orderBy('urutan')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $slots->map(fn($s) => $this->formatSlot($s)),
+        ]);
+    }
+
+    /**
+     * POST /admin/jadwal-hari-jam
+     * Tambah slot jam ke hari tertentu.
+     */
+    public function store(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+            'hari'               => 'required|in:senin,selasa,rabu,kamis,jumat,sabtu',
+            'tipe'               => 'required|in:pelajaran,istirahat,upacara,khusus',
+            'waktu_mulai'        => 'nullable|date_format:H:i',
+            'waktu_selesai'      => 'nullable|date_format:H:i',
+            'label'              => 'nullable|string|max:60',
+        ]);
+
+        // Cari urutan berikutnya
+        $maxUrutan = JadwalHariJam::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+            ->where('semester', $validated['semester'])
+            ->where('hari', $validated['hari'])
+            ->max('urutan') ?? 0;
+
+        // Tentukan jam_ke (hanya untuk tipe pelajaran)
+        $jamKe = null;
+        if ($validated['tipe'] === 'pelajaran') {
+            $maxJamKe = JadwalHariJam::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+                ->where('semester', $validated['semester'])
+                ->where('hari', $validated['hari'])
+                ->whereNotNull('jam_ke')
+                ->max('jam_ke') ?? 0;
+            $jamKe = $maxJamKe + 1;
+        }
+
+        $slot = JadwalHariJam::create([
+            'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+            'semester'           => $validated['semester'],
+            'hari'               => $validated['hari'],
+            'urutan'             => $maxUrutan + 1,
+            'jam_ke'             => $jamKe,
+            'waktu_mulai'        => $validated['waktu_mulai'] ?? null,
+            'waktu_selesai'      => $validated['waktu_selesai'] ?? null,
+            'tipe'               => $validated['tipe'],
+            'label'              => $validated['label'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Slot jam berhasil ditambahkan.',
+            'data'    => $this->formatSlot($slot),
+        ]);
+    }
+
+    /**
+     * DELETE /admin/jadwal-hari-jam/{hariJam}
+     * Hapus slot jam dari hari tertentu.
+     * Juga hapus jadwal pelajaran yang ada di slot ini.
+     */
+    public function destroy(JadwalHariJam $hariJam)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        // Hapus jadwal pelajaran yang terkait dengan slot ini (jika pelajaran)
+        if ($hariJam->tipe === 'pelajaran' && $hariJam->jam_ke) {
+            \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $hariJam->tahun_pelajaran_id)
+                ->where('semester', $hariJam->semester)
+                ->where('hari', $hariJam->hari)
+                ->where('jam_ke', $hariJam->jam_ke)
+                ->delete();
+        }
+
+        $hariJam->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Slot jam berhasil dihapus.',
+        ]);
+    }
+
+    private function formatSlot(JadwalHariJam $s): array
+    {
+        return [
+            'id'           => $s->id,
+            'hari'         => $s->hari,
+            'semester'     => $s->semester,
+            'urutan'       => $s->urutan,
+            'jam_ke'       => $s->jam_ke,
+            'waktu_mulai'  => $s->waktu_mulai,
+            'waktu_selesai'=> $s->waktu_selesai,
+            'tipe'         => $s->tipe,
+            'label'        => $s->label,
+            'display_label'=> $s->displayLabel(),
+            'is_pelajaran' => $s->isPelajaran(),
+        ];
+    }
+}

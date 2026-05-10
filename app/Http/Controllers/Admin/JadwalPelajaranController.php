@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalPelajaran;
 use App\Models\JadwalJamConfig;
+use App\Models\JadwalHariJam;
 use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\Gtk;
@@ -30,13 +31,8 @@ class JadwalPelajaranController extends Controller
                 ->get()
             : collect();
 
-        $jamConfig = $tahunId
-            ? JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->get()
-            : collect();
-        $hasJamConfig = $jamConfig->isNotEmpty();
-
         // Stats for UI
-        $stats = ['kelas_ids_with_jadwal' => [], 'total_slots' => 0, 'jam_count' => $jamConfig->count()];
+        $stats = ['kelas_ids_with_jadwal' => [], 'total_slots' => 0, 'jam_count' => 0];
         if ($tahunId && $kelasList->isNotEmpty()) {
             $jadwalStats = JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
                 ->where('is_active', true)
@@ -49,7 +45,7 @@ class JadwalPelajaranController extends Controller
         $stats['kelas_with_jadwal'] = count($stats['kelas_ids_with_jadwal']);
 
         return view('admin.jadwal-pelajaran.index', compact(
-            'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'hasJamConfig', 'stats'
+            'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'stats'
         ));
     }
 
@@ -73,13 +69,18 @@ class JadwalPelajaranController extends Controller
 
         $kelasObj = $kelasId ? Kelas::with(['jurusan', 'tahunPelajaran'])->find($kelasId) : null;
 
-        $jamConfig = $tahunId
-            ? JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)
+        // Ambil slot jam per hari dari jadwal_hari_jam
+        $hariJamMap = [];
+        if ($tahunId) {
+            $allSlots = JadwalHariJam::where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->orderBy('hari')
                 ->orderBy('urutan')
-                ->get()
-            : collect();
-
-        $hasJamConfig = $jamConfig->isNotEmpty();
+                ->get();
+            foreach ($allSlots as $slot) {
+                $hariJamMap[$slot->hari][] = $slot;
+            }
+        }
 
         $jadwalRaw = ($kelasId && $tahunId)
             ? JadwalPelajaran::with(['mataPelajaran', 'gtk'])
@@ -99,7 +100,7 @@ class JadwalPelajaranController extends Controller
 
         return view('admin.jadwal-pelajaran.timetable', compact(
             'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'kelasObj',
-            'kelasId', 'semester', 'jamConfig', 'hasJamConfig',
+            'kelasId', 'semester', 'hariJamMap',
             'jadwalMap', 'hariList'
         ));
     }
@@ -202,6 +203,44 @@ class JadwalPelajaranController extends Controller
         return response()->json(['success' => true, 'data' => $mapels]);
     }
 
+    /**
+     * GET /admin/jadwal-pelajaran/guru-mapel-in-kelas
+     * Kembalikan mapel yang diajarkan guru tertentu di kelas tertentu
+     * (berdasarkan jadwal yang sudah ada). Untuk auto-fill mapel saat pilih guru.
+     */
+    public function guruMapelInKelas(Request $request)
+    {
+        $this->authorize('view-jadwal-pelajaran');
+
+        $request->validate([
+            'gtk_id'             => 'required|exists:gtks,id',
+            'kelas_id'           => 'required|exists:kelas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'nullable|integer|in:1,2',
+        ]);
+
+        $jadwal = JadwalPelajaran::with('mataPelajaran')
+            ->where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
+            ->where('kelas_id', $request->kelas_id)
+            ->where('gtk_id', $request->gtk_id)
+            ->where('is_active', true)
+            ->when($request->semester, fn($q) => $q->where('semester', $request->semester))
+            ->first();
+
+        if (!$jadwal || !$jadwal->mataPelajaran) {
+            return response()->json(['success' => true, 'data' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'mapel_id'   => $jadwal->mapel_id,
+                'mapel_nama' => $jadwal->mataPelajaran->nama_mapel,
+                'mapel_kode' => $jadwal->mataPelajaran->kode_mapel ?? '',
+            ],
+        ]);
+    }
+
     public function store(Request $request)
     {
         $this->authorize('manage-jadwal-pelajaran');
@@ -247,13 +286,16 @@ class JadwalPelajaranController extends Controller
             ], 422);
         }
 
-        $jamConfig = JadwalJamConfig::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        // Ambil waktu dari jadwal_hari_jam jika ada
+        $hariJam = JadwalHariJam::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+            ->where('semester', $validated['semester'])
+            ->where('hari', $validated['hari'])
             ->where('jam_ke', $validated['jam_ke'])
             ->first();
 
         $jadwal = JadwalPelajaran::create(array_merge($validated, [
-            'jam_mulai'   => $jamConfig?->waktu_mulai,
-            'jam_selesai' => $jamConfig?->waktu_selesai,
+            'jam_mulai'   => $hariJam?->waktu_mulai,
+            'jam_selesai' => $hariJam?->waktu_selesai,
             'is_active'   => true,
             'created_by'  => auth()->id(),
         ]));
@@ -349,6 +391,31 @@ class JadwalPelajaranController extends Controller
         $this->authorize('manage-jadwal-pelajaran');
         $jadwalPelajaran->delete();
         return response()->json(['success' => true, 'message' => 'Jadwal berhasil dihapus.']);
+    }
+
+    /**
+     * POST /admin/jadwal-pelajaran/clear-all
+     * Hapus semua slot jadwal kelas tertentu dalam semester tertentu.
+     */
+    public function clearAll(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $request->validate([
+            'kelas_id'           => 'required|exists:kelas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+        ]);
+
+        $deleted = JadwalPelajaran::where('kelas_id', $request->kelas_id)
+            ->where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
+            ->where('semester', $request->semester)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$deleted} slot jadwal berhasil dihapus.",
+        ]);
     }
 
     public function copyJadwal(Request $request)

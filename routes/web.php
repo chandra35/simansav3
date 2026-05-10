@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -468,15 +468,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/jadwal-pelajaran/timetable-data', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetableData'])->name('jadwal-pelajaran.timetable-data');
         Route::get('/jadwal-pelajaran/guru-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruOptions'])->name('jadwal-pelajaran.guru-options');
         Route::get('/jadwal-pelajaran/mapel-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'mapelOptions'])->name('jadwal-pelajaran.mapel-options');
+        Route::get('/jadwal-pelajaran/guru-mapel-in-kelas', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruMapelInKelas'])->name('jadwal-pelajaran.guru-mapel-in-kelas');
+        Route::get('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'index'])->name('jadwal-hari-jam.index');
     });
     Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
         Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
         Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
+        Route::post('/jadwal-pelajaran/clear-all', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'clearAll'])->name('jadwal-pelajaran.clear-all');
         Route::get('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
         Route::put('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'update'])->name('jadwal-pelajaran.update');
         Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
+        // Jadwal Hari Jam (slot jam per hari, gantikan jadwal-jam-config)
+        Route::post('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'store'])->name('jadwal-hari-jam.store');
+        Route::delete('/jadwal-hari-jam/{hariJam}', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'destroy'])->name('jadwal-hari-jam.destroy');
     });
-    // Jadwal Jam Config (per tahun pelajaran)
+    // Jadwal Jam Config (dipertahankan untuk backward compat)
     Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
         Route::get('/jadwal-jam-config', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'index'])->name('jadwal-jam-config.index');
         Route::post('/jadwal-jam-config/generate', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'generate'])->name('jadwal-jam-config.generate');

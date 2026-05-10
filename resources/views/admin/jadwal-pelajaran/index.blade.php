@@ -38,8 +38,8 @@
                 <strong>{{ $kelasList->count() }}</strong>
             </div>
             <div class="simansa-jadwal-chip">
-                <span class="simansa-jadwal-chip__label">Konfigurasi Jam</span>
-                <strong>{{ $hasJamConfig ? ($stats['jam_count'] . ' jam') : 'Belum diatur' }}</strong>
+                <span class="simansa-jadwal-chip__label">Slot Jadwal</span>
+                <strong>{{ $stats['total_slots'] ?? 0 }}</strong>
             </div>
         </div>
     </div>
@@ -69,29 +69,16 @@
         </div>
     </div>
     <div class="col-lg-3 col-md-6">
-        <div class="simansa-jadwal-stat {{ $hasJamConfig ? 'simansa-jadwal-stat--info' : 'simansa-jadwal-stat--danger' }}">
-            <span class="simansa-jadwal-stat__label">Konfigurasi Jam</span>
-            <strong>{{ $hasJamConfig ? ($stats['jam_count'] . ' jam') : '—' }}</strong>
-            <small>{{ $hasJamConfig ? 'Jam pelajaran terkonfigurasi' : 'Belum dikonfigurasi' }}</small>
+        <div class="simansa-jadwal-stat simansa-jadwal-stat--info">
+            <span class="simansa-jadwal-stat__label">Total Slot</span>
+            <strong>{{ $stats['total_slots'] ?? 0 }}</strong>
+            <small>Slot jadwal yang sudah terisi</small>
         </div>
     </div>
 </div>
 
 {{-- ===== ALERT jam config kosong ===== --}}
-@if(!$hasJamConfig && $tahunId)
-<div class="simansa-jadwal-alert">
-    <div class="simansa-jadwal-alert__icon"><i class="fas fa-exclamation-triangle"></i></div>
-    <div>
-        <strong>Konfigurasi jam belum ada</strong><br>
-        <span class="text-muted">Jadwal tidak dapat ditampilkan sebelum konfigurasi jam pelajaran dibuat untuk tahun ini.</span>
-    </div>
-    @can('manage-jadwal-pelajaran')
-    <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-warning btn-sm ml-3 flex-shrink-0">
-        <i class="fas fa-clock"></i> Atur Jam Sekarang
-    </a>
-    @endcan
-</div>
-@endif
+
 
 {{-- ===== PANEL FILTER ===== --}}
 <div class="simansa-jadwal-panel">

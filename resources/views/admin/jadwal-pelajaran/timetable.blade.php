@@ -10,12 +10,7 @@
             <h1><i class="fas fa-table"></i> Timetable Jadwal</h1>
         </div>
         <div class="col-sm-5">
-            <div class="float-sm-right d-flex gap-2" style="gap:.5rem">
-                @can('manage-jadwal-pelajaran')
-                <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-sliders-h"></i> Konfigurasi Jam
-                </a>
-                @endcan
+            <div class="float-sm-right">
                 <a href="{{ route('admin.jadwal-pelajaran.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Daftar Kelas
                 </a>
@@ -45,10 +40,6 @@
         <div class="simansa-tt-chip">
             <span class="simansa-tt-chip__label">Slot Terisi</span>
             <strong>{{ $totalSlotKelas }}</strong>
-        </div>
-        <div class="simansa-tt-chip">
-            <span class="simansa-tt-chip__label">Jam Tersedia</span>
-            <strong>{{ $jamConfig->where('is_istirahat', false)->count() }}</strong>
         </div>
         <div class="simansa-tt-chip simansa-tt-chip--sem">
             <span class="simansa-tt-chip__label">Semester</span>
@@ -95,7 +86,7 @@
                         <option value="2" {{ $semester == 2 ? 'selected' : '' }}>2 — Genap</option>
                     </select>
                 </div>
-                <div class="form-group col-md-2 mb-md-0 d-flex gap-2" style="gap:.5rem">
+                <div class="form-group col-md-2 mb-md-0 d-flex" style="gap:.5rem">
                     <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                         <i class="fas fa-sync-alt"></i> Tampilkan
                     </button>
@@ -117,34 +108,30 @@
     <i class="fas fa-mouse-pointer"></i>
     <p>Pilih kelas di atas untuk menampilkan timetable jadwal pelajaran.</p>
 </div>
-@elseif(!$hasJamConfig)
-<div class="simansa-jadwal-alert">
-    <div class="simansa-jadwal-alert__icon"><i class="fas fa-exclamation-triangle"></i></div>
-    <div>
-        <strong>Konfigurasi jam belum ada</strong><br>
-        <span class="text-muted">Jadwal tidak dapat ditampilkan sebelum konfigurasi jam dibuat untuk tahun ini.</span>
-    </div>
-    @can('manage-jadwal-pelajaran')
-    <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-warning btn-sm ml-3 flex-shrink-0">
-        <i class="fas fa-clock"></i> Atur Jam
-    </a>
-    @endcan
-</div>
 @else
 
-{{-- ===== COPY JADWAL BUTTON ===== --}}
+{{-- ===== ACTION BAR ===== --}}
 @can('manage-jadwal-pelajaran')
-<div class="simansa-jadwal-panel mb-3" id="copyJadwalSection">
-    <div class="simansa-jadwal-panel__body d-flex align-items-center justify-content-between" style="padding:.75rem 1.35rem">
-        <span class="text-muted small"><i class="fas fa-copy mr-1"></i> Salin semua jadwal dari tahun lain ke tahun ini (matching nama kelas)</span>
-        <button class="btn btn-outline-secondary btn-sm" id="btnCopyJadwal">
-            <i class="fas fa-copy"></i> Salin dari Tahun Lain
-        </button>
+<div class="simansa-jadwal-panel mb-3">
+    <div class="simansa-jadwal-panel__body d-flex align-items-center justify-content-between flex-wrap" style="padding:.65rem 1.35rem;gap:.5rem">
+        <span class="text-muted small">
+            <i class="fas fa-info-circle mr-1"></i>
+            Klik slot terisi untuk <strong>edit/hapus</strong>. Ikon <i class="fas fa-plus-circle text-success"></i> untuk tambah jadwal.
+            Ikon <i class="fas fa-clock text-primary"></i> di header hari untuk <strong>tambah/hapus baris jam</strong>.
+        </span>
+        <div class="d-flex" style="gap:.5rem">
+            <button class="btn btn-sm btn-outline-secondary" id="btnCopyJadwal">
+                <i class="fas fa-copy"></i> Salin dari Tahun Lain
+            </button>
+            <button class="btn btn-sm btn-outline-danger" id="btnClearAll">
+                <i class="fas fa-trash-alt"></i> Kosongkan
+            </button>
+        </div>
     </div>
 </div>
 @endcan
 
-{{-- ===== TIMETABLE GRID ===== --}}
+{{-- ===== TIMETABLE FLEX GRID ===== --}}
 <div class="simansa-jadwal-panel" id="timetablePanel">
     <div class="simansa-jadwal-panel__header">
         <div>
@@ -152,76 +139,97 @@
                 {{ $kelasObj->nama_kelas }}{{ $kelasObj->jurusan ? ' – '.$kelasObj->jurusan->nama_jurusan : '' }}
                 &mdash; Semester {{ $semester }}
             </h3>
-            <p class="text-muted small">
-                @can('manage-jadwal-pelajaran')Klik sel kosong untuk <strong>tambah</strong>, klik sel terisi untuk <strong>edit/hapus</strong>.@else Jadwal pelajaran (read-only).@endcan
-            </p>
+            <p class="text-muted small">Tiap hari bisa punya jumlah jam berbeda. Scroll horizontal jika perlu.</p>
         </div>
-        @can('manage-jadwal-pelajaran')
-        <div class="d-flex" style="gap:.5rem">
-            <button class="btn btn-sm btn-outline-danger" id="btnClearAll" title="Hapus semua slot jadwal kelas ini">
-                <i class="fas fa-trash-alt"></i> Kosongkan
-            </button>
-        </div>
-        @endcan
     </div>
-    <div class="simansa-tt-wrap">
-        <table class="simansa-tt-table" id="timetableGrid">
-            <thead>
-                <tr>
-                    <th class="simansa-tt-th-jam">Jam</th>
-                    @foreach($hariList as $hari)
-                        <th class="simansa-tt-th-hari">{{ ucfirst($hari) }}</th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($jamConfig as $jam)
-                    @if($jam->is_istirahat)
-                    <tr class="simansa-tt-row-istirahat">
-                        <td class="simansa-tt-jam-cell simansa-tt-jam-cell--break">
-                            <div class="simansa-tt-jam-label"><i class="fas fa-coffee"></i></div>
-                            <div class="simansa-tt-jam-time">{{ $jam->waktu_mulai }}</div>
-                            <div class="simansa-tt-jam-time simansa-tt-jam-time--end">{{ $jam->waktu_selesai }}</div>
-                        </td>
-                        <td colspan="{{ count($hariList) }}" class="simansa-tt-break-cell">
-                            <i class="fas fa-coffee mr-1"></i> {{ $jam->label ?? 'Istirahat' }}
-                        </td>
-                    </tr>
-                    @else
-                    <tr data-jam-ke="{{ $jam->jam_ke }}">
-                        <td class="simansa-tt-jam-cell">
-                            <div class="simansa-tt-jam-label">Jam <strong>{{ $jam->jam_ke }}</strong></div>
-                            <div class="simansa-tt-jam-time">{{ $jam->waktu_mulai }}</div>
-                            <div class="simansa-tt-jam-time simansa-tt-jam-time--end">{{ $jam->waktu_selesai }}</div>
-                        </td>
-                        @foreach($hariList as $hari)
-                            @php $slot = $jadwalMap[$hari][$jam->jam_ke] ?? null; @endphp
-                            <td class="simansa-tt-cell {{ $slot ? 'has-jadwal' : 'empty-cell' }}"
-                                data-hari="{{ $hari }}"
-                                data-jam-ke="{{ $jam->jam_ke }}"
-                                data-jadwal-id="{{ $slot?->id ?? '' }}"
-                                @can('manage-jadwal-pelajaran') onclick="handleCellClick(this)" @endcan>
-                                @if($slot)
-                                    @php $colorIdx = ((abs(crc32($slot->mapel_id)) % 12) + 1); @endphp
-                                    <div class="simansa-tt-slot mc-{{ $colorIdx }}" data-id="{{ $slot->id }}">
-                                        <div class="simansa-tt-slot__mapel">{{ $slot->mataPelajaran?->kode_mapel ?? $slot->mataPelajaran?->nama_mapel ?? '?' }}</div>
-                                        <div class="simansa-tt-slot__guru">{{ $slot->gtk?->nama_lengkap ?? '-' }}</div>
-                                        @if($slot->ruangan)
-                                        <div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> {{ $slot->ruangan }}</div>
-                                        @endif
+    <div class="simansa-tt-flex-wrap">
+        @foreach($hariList as $hari)
+        @php $daySlots = $hariJamMap[$hari] ?? []; @endphp
+        <div class="simansa-tt-day-col" data-hari="{{ $hari }}">
+            {{-- Day header --}}
+            <div class="simansa-tt-day-header">
+                <span>{{ ucfirst($hari) }}</span>
+                @can('manage-jadwal-pelajaran')
+                <button class="simansa-tt-btn-addslot" title="Tambah baris jam ke {{ ucfirst($hari) }}"
+                    onclick="openAddSlotModal('{{ $hari }}')">
+                    <i class="fas fa-clock"></i>
+                </button>
+                @endcan
+            </div>
+
+            {{-- Slot rows --}}
+            <div class="simansa-tt-slot-list" id="slotList-{{ $hari }}">
+                @forelse($daySlots as $slot)
+                    @if($slot->tipe === 'pelajaran')
+                        @php $jadwal = $jadwalMap[$hari][$slot->jam_ke] ?? null; @endphp
+                        <div class="simansa-tt-row simansa-tt-row--pelajaran {{ $jadwal ? 'has-jadwal' : 'empty' }}"
+                            data-slot-id="{{ $slot->id }}"
+                            data-jam-ke="{{ $slot->jam_ke }}"
+                            data-hari="{{ $hari }}"
+                            data-jadwal-id="{{ $jadwal?->id ?? '' }}"
+                            @can('manage-jadwal-pelajaran') onclick="handleCellClick(this)" @endcan>
+                            <div class="simansa-tt-row__header">
+                                <span class="simansa-tt-row__jam">Jam {{ $slot->jam_ke }}</span>
+                                <span class="simansa-tt-row__time">
+                                    {{ $slot->waktu_mulai ? substr($slot->waktu_mulai,0,5) : '' }}
+                                    {{ $slot->waktu_selesai ? '–'.substr($slot->waktu_selesai,0,5) : '' }}
+                                </span>
+                                @can('manage-jadwal-pelajaran')
+                                <button class="simansa-tt-row__del-slot" title="Hapus baris jam ini"
+                                    onclick="deleteSlot(event, '{{ $slot->id }}', '{{ $hari }}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                @endcan
+                            </div>
+                            <div class="simansa-tt-row__body">
+                                @if($jadwal)
+                                    @php $ci = ((abs(crc32($jadwal->mapel_id)) % 12) + 1); @endphp
+                                    <div class="simansa-tt-slot mc-{{ $ci }}">
+                                        <div class="simansa-tt-slot__mapel">{{ $jadwal->mataPelajaran?->kode_mapel ?? $jadwal->mataPelajaran?->nama_mapel ?? '?' }}</div>
+                                        <div class="simansa-tt-slot__guru">{{ $jadwal->gtk?->nama_lengkap ?? '-' }}</div>
+                                        @if($jadwal->ruangan)<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> {{ $jadwal->ruangan }}</div>@endif
                                     </div>
                                 @else
                                     @can('manage-jadwal-pelajaran')
-                                    <div class="simansa-tt-add-btn"><i class="fas fa-plus"></i></div>
+                                    <div class="simansa-tt-add-btn"><i class="fas fa-plus-circle"></i></div>
                                     @endcan
                                 @endif
-                            </td>
-                        @endforeach
-                    </tr>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Non-pelajaran: istirahat, upacara, khusus --}}
+                        <div class="simansa-tt-row simansa-tt-row--special simansa-tt-row--{{ $slot->tipe }}"
+                            data-slot-id="{{ $slot->id }}"
+                            data-hari="{{ $hari }}">
+                            <div class="simansa-tt-row__header">
+                                <span class="simansa-tt-row__icon">
+                                    @if($slot->tipe === 'istirahat')<i class="fas fa-coffee"></i>
+                                    @elseif($slot->tipe === 'upacara')<i class="fas fa-flag"></i>
+                                    @else<i class="fas fa-star"></i>
+                                    @endif
+                                </span>
+                                <span class="simansa-tt-row__time">
+                                    {{ $slot->waktu_mulai ? substr($slot->waktu_mulai,0,5) : '' }}
+                                    {{ $slot->waktu_selesai ? '–'.substr($slot->waktu_selesai,0,5) : '' }}
+                                </span>
+                                @can('manage-jadwal-pelajaran')
+                                <button class="simansa-tt-row__del-slot" title="Hapus baris ini"
+                                    onclick="deleteSlot(event, '{{ $slot->id }}', '{{ $hari }}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                @endcan
+                            </div>
+                            <div class="simansa-tt-row__special-label">{{ $slot->displayLabel() }}</div>
+                        </div>
                     @endif
-                @endforeach
-            </tbody>
-        </table>
+                @empty
+                    <div class="simansa-tt-day-empty">
+                        <span>Belum ada jam</span>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+        @endforeach
     </div>
 </div>
 
@@ -237,7 +245,7 @@
 @if(!empty($mapelSet))
 <div class="simansa-jadwal-panel">
     <div class="simansa-jadwal-panel__header">
-        <div><h3><i class="fas fa-palette"></i> Legenda Mata Pelajaran</h3><p>Warna berdasarkan kode mapel</p></div>
+        <div><h3><i class="fas fa-palette"></i> Legenda Mata Pelajaran</h3></div>
     </div>
     <div class="simansa-jadwal-panel__body simansa-tt-legenda">
         @foreach($mapelSet as $mid => $slot)
@@ -250,9 +258,10 @@
     </div>
 </div>
 @endif
-@endif {{-- end if kelasObj && hasJamConfig --}}
 
-{{-- ===== MODAL SLOT ===== --}}
+@endif {{-- end if kelasObj --}}
+
+{{-- ===== MODAL: ASSIGN JADWAL ===== --}}
 @can('manage-jadwal-pelajaran')
 <div class="modal fade" id="modalSlot" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -273,20 +282,25 @@
                     <input type="hidden" id="slotTahunId" name="tahun_pelajaran_id" value="{{ $tahunId }}">
                     <input type="hidden" id="slotSemester" name="semester" value="{{ $semester }}">
 
-                    <div class="form-group">
-                        <label class="simansa-jadwal-label">Mata Pelajaran <span class="text-danger">*</span></label>
-                        <select class="form-control select2" id="selMapel" name="mapel_id" required>
-                            <option value="">— Memuat… —</option>
-                        </select>
-                    </div>
-
+                    {{-- GURU DULU --}}
                     <div class="form-group">
                         <label class="simansa-jadwal-label">Guru / GTK <span class="text-danger">*</span></label>
                         <select class="form-control select2" id="selGuru" name="gtk_id" required>
-                            <option value="">— Memuat… —</option>
+                            <option value="">— Pilih Guru —</option>
                         </select>
                         <div id="konflikGuruNote" class="simansa-tt-konflik d-none">
                             <i class="fas fa-exclamation-triangle"></i> <span></span>
+                        </div>
+                    </div>
+
+                    {{-- MAPEL (auto-fill dari guru) --}}
+                    <div class="form-group">
+                        <label class="simansa-jadwal-label">Mata Pelajaran <span class="text-danger">*</span></label>
+                        <select class="form-control select2" id="selMapel" name="mapel_id" required>
+                            <option value="">— Pilih Mapel —</option>
+                        </select>
+                        <div id="autoFillNote" class="d-none mt-1">
+                            <small class="text-success"><i class="fas fa-magic"></i> Mapel diisi otomatis dari jadwal guru di kelas ini.</small>
                         </div>
                     </div>
 
@@ -317,6 +331,53 @@
     </div>
 </div>
 
+{{-- MODAL: TAMBAH BARIS JAM KE HARI --}}
+<div class="modal fade" id="modalAddSlot" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content simansa-tt-modal">
+            <div class="simansa-tt-modal__header">
+                <div>
+                    <div class="simansa-tt-modal__eyebrow">Tambah Baris Jam</div>
+                    <div class="simansa-tt-modal__title" id="addSlotHariLabel">Hari</div>
+                </div>
+                <button type="button" class="simansa-tt-modal__close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="simansa-tt-modal__body">
+                <input type="hidden" id="addSlotHari">
+                <div class="form-group">
+                    <label class="simansa-jadwal-label">Jenis Slot</label>
+                    <select class="form-control" id="addSlotTipe">
+                        <option value="pelajaran">Jam Pelajaran</option>
+                        <option value="istirahat">Istirahat</option>
+                        <option value="upacara">Upacara</option>
+                        <option value="khusus">Khusus</option>
+                    </select>
+                </div>
+                <div class="form-group" id="addSlotLabelWrap">
+                    <label class="simansa-jadwal-label">Label <small class="text-muted">(opsional)</small></label>
+                    <input type="text" class="form-control" id="addSlotLabel" maxlength="60" placeholder="cth: Istirahat Sholat">
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label class="simansa-jadwal-label">Mulai</label>
+                        <input type="time" class="form-control" id="addSlotMulai">
+                    </div>
+                    <div class="form-group col-6">
+                        <label class="simansa-jadwal-label">Selesai</label>
+                        <input type="time" class="form-control" id="addSlotSelesai">
+                    </div>
+                </div>
+            </div>
+            <div class="simansa-tt-modal__footer">
+                <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary ml-2" id="btnDoAddSlot">
+                    <i class="fas fa-plus"></i> Tambahkan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL COPY JADWAL --}}
 <div class="modal fade" id="modalCopy" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -334,7 +395,7 @@
                     <label class="simansa-jadwal-label">Tahun Sumber</label>
                     <select class="form-control select2" id="copyAsal">
                         @foreach($tahunList as $t)
-                            <option value="{{ $t->id }}" {{ $tahunId != $t->id ? '' : 'selected' }}>{{ $t->tahun_pelajaran }}</option>
+                            <option value="{{ $t->id }}">{{ $t->nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -342,7 +403,7 @@
                     <label class="simansa-jadwal-label">Tahun Tujuan</label>
                     <select class="form-control select2" id="copyTujuan">
                         @foreach($tahunList as $t)
-                            <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>{{ $t->tahun_pelajaran }}</option>
+                            <option value="{{ $t->id }}" {{ $tahunId == $t->id ? 'selected' : '' }}>{{ $t->nama }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -378,39 +439,53 @@
 /* ===== EMPTY STATE ===== */
 .simansa-tt-empty{text-align:center;padding:3rem 1rem;color:#94a3b8}
 .simansa-tt-empty i{font-size:2.5rem;display:block;margin-bottom:.75rem;color:#cbd5e1}
-.simansa-tt-empty p{font-size:1rem;margin:0}
 
-/* ===== TIMETABLE TABLE ===== */
-.simansa-tt-wrap{overflow-x:auto;padding:1rem 1.25rem}
-.simansa-tt-table{min-width:680px;width:100%;border-collapse:separate;border-spacing:0 0}
-.simansa-tt-table th,.simansa-tt-table td{border:1px solid #e2e8f0}
-.simansa-tt-th-jam{width:80px;background:#f1f5f9;text-align:center;font-size:.72rem;font-weight:700;color:#64748b;letter-spacing:.04em;text-transform:uppercase;padding:8px 4px}
-.simansa-tt-th-hari{text-align:center;background:#f8fafc;font-size:.78rem;font-weight:700;color:#475569;letter-spacing:.04em;text-transform:uppercase;padding:8px 6px}
+/* ===== FLEX GRID ===== */
+.simansa-tt-flex-wrap{display:flex;overflow-x:auto;padding:1rem 1.25rem 1.5rem;gap:.75rem;min-height:200px}
+.simansa-tt-day-col{flex:1;min-width:130px;max-width:220px;display:flex;flex-direction:column}
 
-/* Jam cell */
-.simansa-tt-jam-cell{background:#f8fafc;text-align:center;padding:6px 4px;border-right:2px solid #e2e8f0;white-space:nowrap;vertical-align:middle}
-.simansa-tt-jam-cell--break{background:#fef9c3}
-.simansa-tt-jam-label{font-size:.7rem;color:#64748b;margin-bottom:2px}
-.simansa-tt-jam-label strong{color:#1e293b}
-.simansa-tt-jam-time{font-size:.72rem;color:#475569}
-.simansa-tt-jam-time--end{color:#94a3b8}
+/* Day header */
+.simansa-tt-day-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem .65rem;background:linear-gradient(135deg,#1f4fd1,#2f8ca3);border-radius:10px 10px 0 0;color:#fff;font-weight:700;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.simansa-tt-btn-addslot{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:6px;color:#fff;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;cursor:pointer;transition:background .12s;padding:0}
+.simansa-tt-btn-addslot:hover{background:rgba(255,255,255,.28)}
 
-/* Break row */
-.simansa-tt-row-istirahat td{border-top:1px solid #fde68a}
-.simansa-tt-break-cell{background:#fef9c3;text-align:center;font-size:.8rem;color:#92400e;font-weight:600;padding:6px;letter-spacing:.03em}
+/* Slot list */
+.simansa-tt-slot-list{flex:1;display:flex;flex-direction:column;gap:0;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:#f8fafc}
 
-/* Slot cell */
-.simansa-tt-cell{min-height:64px;padding:4px 5px;cursor:pointer;vertical-align:top;position:relative;transition:background .12s}
-.simansa-tt-cell.empty-cell:hover{background:rgba(99,102,241,.05)}
-.simansa-tt-cell.empty-cell:hover .simansa-tt-add-btn{color:#6366f1}
-.simansa-tt-add-btn{height:62px;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:.9rem;transition:color .12s}
+/* Day empty */
+.simansa-tt-day-empty{padding:1.2rem .5rem;text-align:center;color:#94a3b8;font-size:.8rem;font-style:italic;flex:1;display:flex;align-items:center;justify-content:center}
 
-/* Slot card */
-.simansa-tt-slot{border-radius:8px;padding:5px 7px;font-size:.76rem;line-height:1.35;height:100%;min-height:56px}
+/* Row (each jam) */
+.simansa-tt-row{border-bottom:1px solid #e2e8f0;background:#fff}
+.simansa-tt-row:last-child{border-bottom:none}
+.simansa-tt-row--pelajaran{cursor:pointer;transition:background .1s}
+.simansa-tt-row--pelajaran:hover{background:#f0f4ff}
+.simansa-tt-row__header{display:flex;align-items:center;padding:.25rem .5rem;background:#f8fafc;border-bottom:1px solid #f1f5f9;gap:.3rem}
+.simansa-tt-row__jam{font-size:.68rem;font-weight:700;color:#475569;white-space:nowrap}
+.simansa-tt-row__icon{font-size:.75rem;color:#64748b}
+.simansa-tt-row__time{font-size:.63rem;color:#94a3b8;flex:1;text-align:right;white-space:nowrap}
+.simansa-tt-row__del-slot{background:none;border:none;color:transparent;padding:0 2px;cursor:pointer;font-size:.68rem;line-height:1;transition:color .12s;flex-shrink:0}
+.simansa-tt-row:hover .simansa-tt-row__del-slot{color:#dc3545}
+.simansa-tt-row__body{padding:.35rem .45rem;min-height:48px}
+.simansa-tt-row__special-label{padding:.3rem .5rem;font-size:.78rem;font-weight:600;text-align:center}
+
+/* Special rows */
+.simansa-tt-row--istirahat .simansa-tt-row__header{background:#fef9c3}
+.simansa-tt-row--istirahat .simansa-tt-row__special-label{color:#92400e}
+.simansa-tt-row--upacara .simansa-tt-row__header{background:#dbeafe}
+.simansa-tt-row--upacara .simansa-tt-row__special-label{color:#1d4ed8}
+.simansa-tt-row--khusus .simansa-tt-row__header{background:#ede9fe}
+.simansa-tt-row--khusus .simansa-tt-row__special-label{color:#6d28d9}
+
+/* Add button (empty pelajaran slot) */
+.simansa-tt-add-btn{height:42px;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:1rem;transition:color .12s}
+.simansa-tt-row--pelajaran:hover .simansa-tt-add-btn{color:#6366f1}
+
+/* Slot card (filled) */
+.simansa-tt-slot{border-radius:7px;padding:4px 6px;font-size:.76rem;line-height:1.3}
 .simansa-tt-slot__mapel{font-weight:700;font-size:.78rem;margin-bottom:1px}
 .simansa-tt-slot__guru{color:rgba(0,0,0,.62);font-size:.72rem}
-.simansa-tt-slot__room{color:rgba(0,0,0,.45);font-size:.68rem;margin-top:2px}
-.simansa-tt-slot__room i{font-size:.6rem}
+.simansa-tt-slot__room{color:rgba(0,0,0,.45);font-size:.65rem;margin-top:2px}
 
 /* Mapel colors */
 .mc-1{background:#dbeafe;border-left:3px solid #3b82f6}
@@ -444,24 +519,21 @@
 .simansa-tt-konflik{display:flex;align-items:center;gap:.4rem;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:.45rem .75rem;margin-top:.4rem;font-size:.82rem;color:#92400e}
 .simansa-tt-konflik i{color:#f59e0b}
 
-/* ===== PANEL (shared) ===== */
+/* ===== PANEL ===== */
 .simansa-jadwal-panel{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);margin-bottom:1.5rem;overflow:hidden}
 .simansa-jadwal-panel__header{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:1.15rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
 .simansa-jadwal-panel__header h3{margin:0 0 .15rem;font-size:1rem;font-weight:700;color:#1f2a44}
 .simansa-jadwal-panel__header p{margin:0;color:#60708b;font-size:.85rem}
 .simansa-jadwal-panel__body{padding:1rem 1.35rem}
 .simansa-jadwal-label{font-size:.82rem;font-weight:600;color:#475569;margin-bottom:.35rem;display:block}
-.simansa-jadwal-alert{display:flex;align-items:center;gap:1rem;background:#fff8e1;border:1px solid #ffe082;border-left:4px solid #f4ac08;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.92rem}
-.simansa-jadwal-alert__icon{font-size:1.4rem;color:#f4ac08;flex-shrink:0}
 
 /* ===== PRINT ===== */
 @media print{
     .simansa-tt-infobar,.simansa-jadwal-panel__header .d-flex,
-    #formFilter,#copyJadwalSection,.simansa-tt-modal,
-    .simansa-tt-add-btn,.btn,.modal,
-    .sidebar,.navbar,.main-header,.main-footer,
-    .simansa-tt-slot__room .fa-door-open{display:none!important}
-    .simansa-tt-cell{cursor:default}
+    #formFilter,.simansa-tt-modal,.modal,
+    .simansa-tt-add-btn,.simansa-tt-btn-addslot,.simansa-tt-row__del-slot,.btn,
+    .sidebar,.navbar,.main-header,.main-footer{display:none!important}
+    .simansa-tt-row--pelajaran{cursor:default}
     .simansa-tt-slot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .simansa-jadwal-panel{box-shadow:none;border:1px solid #e2e8f0;border-radius:8px}
 }
@@ -469,7 +541,7 @@
 @media(max-width:768px){
     .simansa-tt-infobar{flex-direction:column;align-items:stretch}
     .simansa-tt-infobar__chips{justify-content:space-between}
-    .simansa-jadwal-panel__header{flex-direction:column;align-items:stretch}
+    .simansa-tt-day-col{min-width:110px}
 }
 </style>
 @endsection
@@ -483,61 +555,67 @@ if (typeof Swal === 'undefined') {
 </script>
 
 <script>
-const CSRF = '{{ csrf_token() }}';
-const TAHUN_ID = '{{ $tahunId }}';
-const KELAS_ID = '{{ $kelasId }}';
-const SEMESTER = {{ $semester }};
+const CSRF         = '{{ csrf_token() }}';
+const TAHUN_ID     = '{{ $tahunId }}';
+const KELAS_ID     = '{{ $kelasId }}';
+const SEMESTER     = {{ $semester }};
+const URL_GURU     = '{{ route("admin.jadwal-pelajaran.guru-options") }}';
+const URL_MAPEL    = '{{ route("admin.jadwal-pelajaran.mapel-options") }}';
+const URL_AUTOFILL = '{{ route("admin.jadwal-pelajaran.guru-mapel-in-kelas") }}';
+const URL_STORE    = '{{ route("admin.jadwal-pelajaran.store") }}';
+const URL_COPY     = '{{ route("admin.jadwal-pelajaran.copy") }}';
+const URL_CLEARALL = '{{ route("admin.jadwal-pelajaran.clear-all") }}';
+const URL_HARI_JAM = '{{ route("admin.jadwal-hari-jam.store") }}';
+const URL_HARI_DEL = '/admin/jadwal-hari-jam/';
 
 $(function () {
     $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
 
-    $('#btnPrint').on('click', function () { window.print(); });
+    $('#btnPrint').on('click', () => window.print());
+    $('#btnCopyJadwal').on('click', () => $('#modalCopy').modal('show'));
 
-    $('#btnCopyJadwal').on('click', function () { $('#modalCopy').modal('show'); });
-
+    // Copy jadwal dari tahun lain
     $('#btnDoCopy').on('click', function () {
-        const asal = $('#copyAsal').val();
-        const tujuan = $('#copyTujuan').val();
-        if (!asal || !tujuan || asal === tujuan) {
-            toastr.warning('Pilih tahun sumber dan tujuan yang berbeda.'); return;
-        }
-        $('#btnDoCopy').prop('disabled', true);
-        $.post('{{ route("admin.jadwal-pelajaran.copy") }}', {
-            tahun_asal_id: asal, tahun_tujuan_id: tujuan, _token: CSRF
-        }).done(function (res) {
-            toastr.success(res.message);
-            $('#modalCopy').modal('hide');
-            if (res.disalin > 0) setTimeout(() => location.reload(), 800);
-        }).fail(function (xhr) {
-            toastr.error(xhr.responseJSON?.message || 'Gagal menyalin.');
-        }).always(() => $('#btnDoCopy').prop('disabled', false));
+        const asal = $('#copyAsal').val(), tujuan = $('#copyTujuan').val();
+        if (!asal || !tujuan || asal === tujuan) { toastr.warning('Pilih tahun sumber dan tujuan berbeda.'); return; }
+        $(this).prop('disabled', true);
+        $.post(URL_COPY, { tahun_asal_id: asal, tahun_tujuan_id: tujuan, _token: CSRF })
+            .done(res => {
+                toastr.success(res.message);
+                $('#modalCopy').modal('hide');
+                if (res.disalin > 0) setTimeout(() => location.reload(), 800);
+            })
+            .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal.'))
+            .always(() => $(this).prop('disabled', false));
     });
 
+    // Kosongkan semua
     $('#btnClearAll').on('click', function () {
         Swal.fire({
             title: 'Kosongkan semua slot?',
-            html: 'Semua jadwal kelas ini (semester ' + SEMESTER + ') akan dihapus.<br><br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>',
+            html: 'Semua jadwal kelas ini (semester ' + SEMESTER + ') akan dihapus.<br><small class="text-muted">Tidak dapat dibatalkan.</small>',
             icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545',
             confirmButtonText: '<i class="fas fa-trash-alt"></i> Ya, Kosongkan', cancelButtonText: 'Batal'
         }).then(result => {
             if (!result.isConfirmed) return;
-            $.ajax({
-                url: '{{ route("admin.jadwal-pelajaran.store") }}',
-                method: 'DELETE',
-                data: { kelas_id: KELAS_ID, tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER, _token: CSRF, _method: 'DELETE', bulk: 1 },
-                success: function () { location.reload(); },
-                error: function (xhr) { toastr.error(xhr.responseJSON?.message || 'Gagal.'); }
-            });
+            $.post(URL_CLEARALL, { kelas_id: KELAS_ID, tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER, _token: CSRF })
+                .done(res => { toastr.success(res.message); setTimeout(() => location.reload(), 600); })
+                .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal.'));
         });
     });
+
+    // Tipe slot toggle label field
+    $('#addSlotTipe').on('change', function () {
+        $('#addSlotLabelWrap').toggle($(this).val() !== 'pelajaran');
+    }).trigger('change');
 });
 
-// ===== CELL CLICK =====
-function handleCellClick(cell) {
-    const $cell = $(cell);
-    const hari    = $cell.data('hari');
-    const jamKe   = $cell.data('jam-ke');
-    const jadwalId = $cell.data('jadwal-id') || null;
+// ===== KLIK ROW PELAJARAN (assign jadwal) =====
+function handleCellClick(row) {
+    const $row     = $(row);
+    const hari     = $row.data('hari');
+    const jamKe    = $row.data('jam-ke');
+    const jadwalId = $row.data('jadwal-id') || null;
 
     $('#slotHari').val(hari);
     $('#slotJamKe').val(jamKe);
@@ -546,81 +624,101 @@ function handleCellClick(cell) {
     $('#modalHariJam').text(capitalize(hari) + ', Jam ke-' + jamKe);
     $('#btnHapusSlot').toggleClass('d-none', !jadwalId);
     $('#konflikGuruNote').addClass('d-none');
+    $('#autoFillNote').addClass('d-none');
     $('#slotRuangan').val('');
     $('#slotCatatan').val('');
 
-    Promise.all([loadMapelOptions(), loadGuruOptions(hari, jamKe, jadwalId)])
-        .then(() => {
-            if (jadwalId) {
-                $.get('{{ route("admin.jadwal-pelajaran.show", ":id") }}'.replace(':id', jadwalId))
-                    .done(function (res) {
-                        if (res.success) {
-                            const d = res.data;
-                            setSelect2Val('#selMapel', d.mapel_id, d.mapel_nama);
-                            setSelect2Val('#selGuru', d.gtk_id, d.gtk_nama);
-                            $('#slotRuangan').val(d.ruangan || '');
-                            $('#slotCatatan').val(d.catatan || '');
-                        }
-                    });
-            } else {
-                setSelect2Val('#selMapel', null, '');
-                setSelect2Val('#selGuru', null, '');
-            }
-        });
+    loadGuruOptions(hari, jamKe, jadwalId).then(() => {
+        if (jadwalId) {
+            $.get('/admin/jadwal-pelajaran/' + jadwalId).done(res => {
+                if (!res.success) return;
+                const d = res.data;
+                setSelect2Val('#selGuru', d.gtk_id, d.gtk_nama);
+                loadMapelOptions(d.gtk_id, false).then(() => {
+                    setSelect2Val('#selMapel', d.mapel_id, d.mapel_nama);
+                });
+                $('#slotRuangan').val(d.ruangan || '');
+                $('#slotCatatan').val(d.catatan || '');
+            });
+        } else {
+            setSelect2Val('#selGuru', null, '');
+            setSelect2Val('#selMapel', null, '');
+        }
+    });
 
     $('#modalSlot').modal('show');
 }
 
-function loadMapelOptions() {
-    return $.get('{{ route("admin.jadwal-pelajaran.mapel-options") }}', {
-        tahun_pelajaran_id: TAHUN_ID, kelas_id: KELAS_ID
-    }).done(function (res) {
-        const sel = $('#selMapel');
-        sel.empty().append('<option value="">— Pilih Mapel —</option>');
-        if (res.success) {
-            const groups = {};
-            res.data.forEach(m => {
-                const grp = m.kelompok || 'Lainnya';
-                if (!groups[grp]) groups[grp] = [];
-                groups[grp].push(m);
-            });
-            Object.entries(groups).forEach(([grp, items]) => {
-                let html = `<optgroup label="${grp}">`;
-                items.forEach(m => { html += `<option value="${m.id}" data-kode="${m.kode}">[${m.kode || '-'}] ${m.nama}</option>`; });
-                html += '</optgroup>';
-                sel.append(html);
-            });
-        }
-        sel.trigger('change');
-    });
-}
-
 function loadGuruOptions(hari, jamKe, excludeId) {
-    return $.get('{{ route("admin.jadwal-pelajaran.guru-options") }}', {
-        tahun_pelajaran_id: TAHUN_ID, hari: hari, jam_ke: jamKe,
-        semester: SEMESTER, exclude_id: excludeId || ''
-    }).done(function (res) {
+    return $.get(URL_GURU, {
+        tahun_pelajaran_id: TAHUN_ID, hari: hari,
+        jam_ke: jamKe, semester: SEMESTER, exclude_id: excludeId || ''
+    }).done(res => {
         const sel = $('#selGuru');
         sel.empty().append('<option value="">— Pilih Guru —</option>');
         if (res.success) {
             res.data.forEach(g => {
                 const label = g.kode ? `[${g.kode}] ${g.nama}` : g.nama;
-                const suffix = g.konflik ? ' ⚠ (jadwal bentrok)' : '';
-                sel.append(`<option value="${g.id}" data-konflik="${g.konflik ? 1 : 0}">${label}${suffix}</option>`);
+                const suf = g.konflik ? ' ⚠ (jadwal bentrok)' : '';
+                sel.append(`<option value="${g.id}" data-konflik="${g.konflik ? 1 : 0}">${label}${suf}</option>`);
             });
         }
         sel.trigger('change');
     });
 }
 
+function loadMapelOptions(gtkId, doAutoFill) {
+    return $.get(URL_MAPEL, { tahun_pelajaran_id: TAHUN_ID, kelas_id: KELAS_ID })
+        .done(res => {
+            const sel = $('#selMapel');
+            sel.empty().append('<option value="">— Pilih Mapel —</option>');
+            if (res.success) {
+                const groups = {};
+                res.data.forEach(m => {
+                    const grp = m.kelompok || 'Lainnya';
+                    if (!groups[grp]) groups[grp] = [];
+                    groups[grp].push(m);
+                });
+                Object.entries(groups).forEach(([grp, items]) => {
+                    let html = `<optgroup label="${grp}">`;
+                    items.forEach(m => { html += `<option value="${m.id}" data-kode="${m.kode}">[${m.kode||'-'}] ${m.nama}</option>`; });
+                    html += '</optgroup>';
+                    sel.append(html);
+                });
+            }
+            sel.trigger('change');
+
+            // Auto-fill mapel berdasarkan jadwal guru di kelas ini
+            if (doAutoFill && gtkId) {
+                $.get(URL_AUTOFILL, {
+                    gtk_id: gtkId, kelas_id: KELAS_ID,
+                    tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER
+                }).done(r => {
+                    if (r.success && r.data) {
+                        setSelect2Val('#selMapel', r.data.mapel_id, `[${r.data.mapel_kode||'-'}] ${r.data.mapel_nama}`);
+                        $('#autoFillNote').removeClass('d-none');
+                    }
+                });
+            }
+        });
+}
+
+// Guru change → load mapel + auto-fill
 $('#selGuru').on('change', function () {
-    const isBentrok = $(this).find('option:selected').data('konflik') == 1;
-    const $note = $('#konflikGuruNote');
-    if (isBentrok) {
+    const gtkId   = $(this).val();
+    const konflik = $(this).find('option:selected').data('konflik') == 1;
+    const isEdit  = !!$('#slotId').val();
+    const $note   = $('#konflikGuruNote');
+
+    if (konflik) {
         $note.find('span').text('Guru sudah mengajar di kelas lain pada jam ini. Lanjutkan hanya jika yakin.');
         $note.removeClass('d-none');
-    } else {
-        $note.addClass('d-none');
+    } else { $note.addClass('d-none'); }
+
+    if (!isEdit) {
+        $('#autoFillNote').addClass('d-none');
+        setSelect2Val('#selMapel', null, '');
+        if (gtkId) loadMapelOptions(gtkId, true);
     }
 });
 
@@ -631,67 +729,113 @@ function setSelect2Val(selector, val, text) {
     $sel.val(val).trigger('change');
 }
 
+// ===== SIMPAN JADWAL =====
 $('#btnSimpanSlot').on('click', function () {
     const jadwalId = $('#slotId').val();
-    const isEdit   = !!jadwalId;
-    const url = isEdit ? `/admin/jadwal-pelajaran/${jadwalId}` : '{{ route("admin.jadwal-pelajaran.store") }}';
-    const method = isEdit ? 'PUT' : 'POST';
+    const url    = jadwalId ? `/admin/jadwal-pelajaran/${jadwalId}` : URL_STORE;
+    const method = jadwalId ? 'PUT' : 'POST';
 
-    $('#btnSimpanSlot').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan…');
-    $.ajax({
-        url, method, data: $('#formSlot').serialize(),
-        headers: { 'X-CSRF-TOKEN': CSRF },
-        success: function (res) {
+    $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    $.ajax({ url, method, data: $('#formSlot').serialize(), headers: { 'X-CSRF-TOKEN': CSRF } })
+        .done(res => {
             if (res.success) {
                 toastr.success(res.message);
                 $('#modalSlot').modal('hide');
-                refreshCell(res.data, $('#slotHari').val(), $('#slotJamKe').val());
-            } else { toastr.error(res.message || 'Gagal menyimpan.'); }
-        },
-        error: function (xhr) { toastr.error(xhr.responseJSON?.message || 'Terjadi kesalahan.'); },
-        complete: function () { $('#btnSimpanSlot').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan'); }
-    });
+                refreshRow(res.data, $('#slotHari').val(), $('#slotJamKe').val());
+            } else { toastr.error(res.message || 'Gagal.'); }
+        })
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Terjadi kesalahan.'))
+        .always(() => $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Simpan'));
 });
 
+// ===== HAPUS JADWAL (slot assignment) =====
 $('#btnHapusSlot').on('click', function () {
     const jadwalId = $('#slotId').val();
     if (!jadwalId) return;
-    Swal.fire({
-        title: 'Hapus slot ini?', icon: 'question',
-        showCancelButton: true, confirmButtonColor: '#dc3545',
-        confirmButtonText: 'Hapus', cancelButtonText: 'Batal'
-    }).then(result => {
-        if (!result.isConfirmed) return;
-        $.ajax({
-            url: `/admin/jadwal-pelajaran/${jadwalId}`, method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': CSRF },
-            success: function (res) {
-                if (res.success) {
-                    toastr.success(res.message);
-                    $('#modalSlot').modal('hide');
-                    clearCell($('#slotHari').val(), $('#slotJamKe').val());
-                }
-            },
-            error: function (xhr) { toastr.error(xhr.responseJSON?.message || 'Gagal.'); }
-        });
+    Swal.fire({ title: 'Hapus assignment ini?', icon: 'question', showCancelButton: true,
+        confirmButtonColor: '#dc3545', confirmButtonText: 'Hapus', cancelButtonText: 'Batal'
+    }).then(res => {
+        if (!res.isConfirmed) return;
+        $.ajax({ url: `/admin/jadwal-pelajaran/${jadwalId}`, method: 'DELETE', headers: { 'X-CSRF-TOKEN': CSRF } })
+            .done(r => {
+                if (r.success) { toastr.success(r.message); $('#modalSlot').modal('hide'); clearRow($('#slotHari').val(), $('#slotJamKe').val()); }
+            })
+            .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal.'));
     });
 });
 
-function refreshCell(data, hari, jamKe) {
-    const $cell = $(`[data-hari="${hari}"][data-jam-ke="${jamKe}"]`);
-    $cell.attr('data-jadwal-id', data.id).addClass('has-jadwal').removeClass('empty-cell');
+// ===== UPDATE DOM setelah simpan =====
+function refreshRow(data, hari, jamKe) {
+    const $row = $(`[data-hari="${hari}"][data-jam-ke="${jamKe}"]`);
+    $row.attr('data-jadwal-id', data.id).removeClass('empty').addClass('has-jadwal');
     const ci = hashStr(data.id);
-    $cell.html(`<div class="simansa-tt-slot mc-${ci}" data-id="${data.id}">
-        <div class="simansa-tt-slot__mapel">${data.mapel_kode || data.mapel_nama}</div>
-        <div class="simansa-tt-slot__guru">${data.gtk_nama}</div>
-        ${data.ruangan ? `<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> ${data.ruangan}</div>` : ''}
-    </div>`);
+    $row.find('.simansa-tt-row__body').html(`
+        <div class="simansa-tt-slot mc-${ci}">
+            <div class="simansa-tt-slot__mapel">${data.mapel_kode || data.mapel_nama}</div>
+            <div class="simansa-tt-slot__guru">${data.gtk_nama}</div>
+            ${data.ruangan ? `<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> ${data.ruangan}</div>` : ''}
+        </div>`);
 }
 
-function clearCell(hari, jamKe) {
-    const $cell = $(`[data-hari="${hari}"][data-jam-ke="${jamKe}"]`);
-    $cell.attr('data-jadwal-id', '').removeClass('has-jadwal').addClass('empty-cell');
-    $cell.html('<div class="simansa-tt-add-btn"><i class="fas fa-plus"></i></div>');
+function clearRow(hari, jamKe) {
+    const $row = $(`[data-hari="${hari}"][data-jam-ke="${jamKe}"]`);
+    $row.attr('data-jadwal-id', '').removeClass('has-jadwal').addClass('empty');
+    $row.find('.simansa-tt-row__body').html('<div class="simansa-tt-add-btn"><i class="fas fa-plus-circle"></i></div>');
+}
+
+// ===== TAMBAH BARIS JAM KE HARI =====
+function openAddSlotModal(hari) {
+    $('#addSlotHari').val(hari);
+    $('#addSlotHariLabel').text(capitalize(hari));
+    $('#addSlotTipe').val('pelajaran').trigger('change');
+    $('#addSlotLabel').val('');
+    $('#addSlotMulai').val('');
+    $('#addSlotSelesai').val('');
+    $('#modalAddSlot').modal('show');
+}
+
+$('#btnDoAddSlot').on('click', function () {
+    const hari = $('#addSlotHari').val();
+    const data = {
+        _token:             CSRF,
+        tahun_pelajaran_id: TAHUN_ID,
+        semester:           SEMESTER,
+        hari:               hari,
+        tipe:               $('#addSlotTipe').val(),
+        label:              $('#addSlotLabel').val() || null,
+        waktu_mulai:        $('#addSlotMulai').val() || null,
+        waktu_selesai:      $('#addSlotSelesai').val() || null,
+    };
+
+    $(this).prop('disabled', true);
+    $.post(URL_HARI_JAM, data)
+        .done(res => {
+            if (res.success) {
+                toastr.success(res.message);
+                $('#modalAddSlot').modal('hide');
+                setTimeout(() => location.reload(), 500);
+            } else { toastr.error(res.message || 'Gagal.'); }
+        })
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal menambah slot.'))
+        .always(() => $(this).prop('disabled', false));
+});
+
+// ===== HAPUS BARIS JAM (slot hari_jam) =====
+function deleteSlot(event, slotId, hari) {
+    event.stopPropagation();
+    Swal.fire({
+        title: 'Hapus baris jam ini?',
+        text: 'Jadwal yang ada di slot ini juga akan dihapus.',
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
+    }).then(res => {
+        if (!res.isConfirmed) return;
+        $.ajax({ url: URL_HARI_DEL + slotId, method: 'DELETE', headers: { 'X-CSRF-TOKEN': CSRF } })
+            .done(r => {
+                if (r.success) { toastr.success(r.message); setTimeout(() => location.reload(), 400); }
+            })
+            .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal.'));
+    });
 }
 
 function hashStr(str) { let h=0; for(let i=0;i<str.length;i++){h=Math.imul(31,h)+str.charCodeAt(i)|0;} return Math.abs(h)%12+1; }
