@@ -676,6 +676,7 @@ $(function () {
 
     // Generate Jam Default
     $('#btnGenerateDefault').on('click', function () {
+        const btn = $(this);
         Swal.fire({
             title: 'Generate jam default?',
             html: 'Akan dibuat slot jam per hari:<br>' +
@@ -689,7 +690,7 @@ $(function () {
             cancelButtonText: 'Batal'
         }).then(r => {
             if (!r.isConfirmed) return;
-            const btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
             $.post(URL_GENERATE, { _token: CSRF, tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER })
                 .done(res => {
                     toastr.success(res.message);
