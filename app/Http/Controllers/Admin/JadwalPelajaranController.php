@@ -306,12 +306,21 @@ class JadwalPelajaranController extends Controller
             ->where('jam_ke', $validated['jam_ke'])
             ->first();
 
-        $jadwal = JadwalPelajaran::create(array_merge($validated, [
-            'jam_mulai'   => $hariJam?->waktu_mulai,
-            'jam_selesai' => $hariJam?->waktu_selesai,
-            'is_active'   => true,
-            'created_by'  => auth()->id(),
-        ]));
+        $jadwal = JadwalPelajaran::updateOrCreate(
+            [
+                'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+                'kelas_id'           => $validated['kelas_id'],
+                'hari'               => $validated['hari'],
+                'jam_ke'             => $validated['jam_ke'],
+                'semester'           => $validated['semester'],
+            ],
+            array_merge($validated, [
+                'jam_mulai'   => $hariJam?->waktu_mulai,
+                'jam_selesai' => $hariJam?->waktu_selesai,
+                'is_active'   => true,
+                'created_by'  => auth()->id(),
+            ])
+        );
 
         $jadwal->load(['mataPelajaran', 'gtk']);
 
