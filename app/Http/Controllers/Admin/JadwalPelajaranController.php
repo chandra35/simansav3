@@ -270,7 +270,8 @@ class JadwalPelajaranController extends Controller
             'catatan'            => 'nullable|string|max:255',
         ]);
 
-        $conflictKelas = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictKelas = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('kelas_id', $validated['kelas_id'])
             ->where('hari', $validated['hari'])
             ->where('jam_ke', $validated['jam_ke'])
@@ -282,7 +283,8 @@ class JadwalPelajaranController extends Controller
             return response()->json(['success' => false, 'message' => 'Kelas sudah memiliki jadwal di jam ini.'], 422);
         }
 
-        $conflictGuru = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictGuru = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $validated['hari'])
             ->where('jam_ke', $validated['jam_ke'])
@@ -300,7 +302,8 @@ class JadwalPelajaranController extends Controller
         }
 
         // Cegah 1 guru mengajar mapel berbeda di hari yang sama
-        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictMapelGuru = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $validated['hari'])
             ->where('semester', $validated['semester'])
@@ -403,7 +406,8 @@ class JadwalPelajaranController extends Controller
             'catatan'   => 'nullable|string|max:255',
         ]);
 
-        $conflictGuru = JadwalPelajaran::where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
+        $conflictGuru = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $jadwalPelajaran->hari)
             ->where('jam_ke', $jadwalPelajaran->jam_ke)
@@ -421,7 +425,8 @@ class JadwalPelajaranController extends Controller
         }
 
         // Cegah 1 guru mengajar mapel berbeda di hari yang sama
-        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
+        $conflictMapelGuru = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $jadwalPelajaran->hari)
             ->where('semester', $jadwalPelajaran->semester)
