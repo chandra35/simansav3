@@ -191,10 +191,13 @@
                             </div>
                             <div class="simansa-tt-row__body">
                                 @if($jadwal)
-                                    @php $ci = ((abs(crc32($jadwal->mapel_id)) % 12) + 1); @endphp
+                                    @php $ci = ((abs(crc32(($jadwal->gtk_id ?? '').'|'.($jadwal->mapel_id ?? ''))) % 12) + 1); @endphp
                                     <div class="simansa-tt-slot mc-{{ $ci }}">
-                                        <div class="simansa-tt-slot__mapel">{{ $jadwal->mataPelajaran?->kode_mapel ?? $jadwal->mataPelajaran?->nama_mapel ?? '?' }}</div>
-                                        <div class="simansa-tt-slot__guru">{{ $jadwal->gtk?->nama_lengkap ?? '-' }}</div>
+                                        <div class="simansa-tt-slot__mapel">{{ $jadwal->mataPelajaran?->nama_mapel ?? '?' }}</div>
+                                        <div class="simansa-tt-slot__guru">
+                                            <img src="{{ $jadwal->gtk?->foto_profile_url }}" alt="" class="simansa-tt-guru-foto" loading="lazy">
+                                            <span>{{ $jadwal->gtk?->nama_lengkap ?? '-' }}</span>
+                                        </div>
                                         @if($jadwal->ruangan)<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> {{ $jadwal->ruangan }}</div>@endif
                                     </div>
                                 @else
@@ -251,21 +254,25 @@
     $mapelSet = [];
     foreach($jadwalMap as $hariData) {
         foreach($hariData as $slot) {
-            if ($slot->mapel_id && !isset($mapelSet[$slot->mapel_id])) { $mapelSet[$slot->mapel_id] = $slot; }
+            $key = ($slot->gtk_id ?? '').'-'.($slot->mapel_id ?? '');
+            if (!isset($mapelSet[$key])) { $mapelSet[$key] = $slot; }
         }
     }
 @endphp
 @if(!empty($mapelSet))
 <div class="simansa-jadwal-panel">
     <div class="simansa-jadwal-panel__header">
-        <div><h3><i class="fas fa-palette"></i> Legenda Mata Pelajaran</h3></div>
+        <div><h3><i class="fas fa-palette"></i> Legenda Guru &amp; Mata Pelajaran</h3></div>
     </div>
     <div class="simansa-jadwal-panel__body simansa-tt-legenda">
-        @foreach($mapelSet as $mid => $slot)
-            @php $ci = ((abs(crc32($mid)) % 12) + 1); @endphp
+        @foreach($mapelSet as $key => $slot)
+            @php $ci = ((abs(crc32($key)) % 12) + 1); @endphp
             <div class="simansa-tt-legenda-item mc-{{ $ci }}">
-                <strong>{{ $slot->mataPelajaran?->kode_mapel ?? '?' }}</strong>
-                <span>{{ $slot->mataPelajaran?->nama_mapel }}</span>
+                <img src="{{ $slot->gtk?->foto_profile_url }}" alt="" class="simansa-tt-guru-foto simansa-tt-guru-foto--lg" loading="lazy">
+                <div>
+                    <div style="font-weight:700;font-size:.78rem">{{ $slot->mataPelajaran?->nama_mapel }}</div>
+                    <div style="font-size:.7rem;color:rgba(0,0,0,.55)">{{ $slot->gtk?->nama_lengkap }}</div>
+                </div>
             </div>
         @endforeach
     </div>
@@ -527,8 +534,10 @@
 
 /* Slot card (filled) */
 .simansa-tt-slot{border-radius:7px;padding:4px 6px;font-size:.76rem;line-height:1.3}
-.simansa-tt-slot__mapel{font-weight:700;font-size:.78rem;margin-bottom:1px}
-.simansa-tt-slot__guru{color:rgba(0,0,0,.62);font-size:.72rem}
+.simansa-tt-slot__mapel{font-weight:700;font-size:.78rem;margin-bottom:2px}
+.simansa-tt-slot__guru{color:rgba(0,0,0,.65);font-size:.7rem;display:flex;align-items:center;gap:4px}
+.simansa-tt-guru-foto{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,.12)}
+.simansa-tt-guru-foto--lg{width:30px;height:30px}
 .simansa-tt-slot__room{color:rgba(0,0,0,.45);font-size:.65rem;margin-top:2px}
 
 /* Mapel colors */
