@@ -115,6 +115,94 @@ class JadwalHariJamController extends Controller
         ]);
     }
 
+    /**
+     * POST /admin/jadwal-hari-jam/generate-default
+     * Generate slot jam default untuk semua hari dalam satu semester.
+     * Senin: Upacara + 8 jam pelajaran
+     * Selasa–Jumat: 8 jam pelajaran
+     * Sabtu: 6 jam pelajaran
+     * Hari yang sudah punya slot akan dilewati (tidak dioverwrite).
+     */
+    public function generateDefault(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+        ]);
+
+        $jamPerHari = [
+            'senin'  => 8,
+            'selasa' => 8,
+            'rabu'   => 8,
+            'kamis'  => 8,
+            'jumat'  => 8,
+            'sabtu'  => 6,
+        ];
+
+        $created = 0;
+        $skipped = [];
+
+        foreach ($jamPerHari as $hari => $jumlahJam) {
+            $existing = JadwalHariJam::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+                ->where('semester', $validated['semester'])
+                ->where('hari', $hari)
+                ->count();
+
+            if ($existing > 0) {
+                $skipped[] = ucfirst($hari);
+                continue;
+            }
+
+            $urutan = 1;
+            $jamKe  = 1;
+
+            // Senin selalu mulai dengan Upacara Bendera
+            if ($hari === 'senin') {
+                JadwalHariJam::create([
+                    'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+                    'semester'           => $validated['semester'],
+                    'hari'               => $hari,
+                    'urutan'             => $urutan++,
+                    'jam_ke'             => null,
+                    'waktu_mulai'        => null,
+                    'waktu_selesai'      => null,
+                    'tipe'               => 'upacara',
+                    'label'              => 'Upacara Bendera',
+                ]);
+                $created++;
+            }
+
+            for ($i = 0; $i < $jumlahJam; $i++) {
+                JadwalHariJam::create([
+                    'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+                    'semester'           => $validated['semester'],
+                    'hari'               => $hari,
+                    'urutan'             => $urutan++,
+                    'jam_ke'             => $jamKe++,
+                    'waktu_mulai'        => null,
+                    'waktu_selesai'      => null,
+                    'tipe'               => 'pelajaran',
+                    'label'              => null,
+                ]);
+                $created++;
+            }
+        }
+
+        $msg = "Berhasil generate {$created} slot jam.";
+        if (!empty($skipped)) {
+            $msg .= ' Dilewati (sudah ada): ' . implode(', ', $skipped) . '.';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $msg,
+            'created' => $created,
+            'skipped' => $skipped,
+        ]);
+    }
+
     private function formatSlot(JadwalHariJam $s): array
     {
         return [

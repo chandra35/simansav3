@@ -469,6 +469,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/jadwal-pelajaran/guru-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruOptions'])->name('jadwal-pelajaran.guru-options');
         Route::get('/jadwal-pelajaran/mapel-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'mapelOptions'])->name('jadwal-pelajaran.mapel-options');
         Route::get('/jadwal-pelajaran/guru-mapel-in-kelas', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruMapelInKelas'])->name('jadwal-pelajaran.guru-mapel-in-kelas');
+        Route::get('/jadwal-pelajaran/guru-jtm-summary', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruJtmSummary'])->name('jadwal-pelajaran.guru-jtm-summary');
         Route::get('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'index'])->name('jadwal-hari-jam.index');
     });
     Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
@@ -480,6 +481,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
         // Jadwal Hari Jam (slot jam per hari, gantikan jadwal-jam-config)
         Route::post('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'store'])->name('jadwal-hari-jam.store');
+        Route::post('/jadwal-hari-jam/generate-default', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'generateDefault'])->name('jadwal-hari-jam.generate-default');
         Route::delete('/jadwal-hari-jam/{hariJam}', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'destroy'])->name('jadwal-hari-jam.destroy');
     });
     // Jadwal Jam Config (dipertahankan untuk backward compat)

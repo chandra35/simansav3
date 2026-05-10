@@ -120,6 +120,9 @@
             Ikon <i class="fas fa-clock text-primary"></i> di header hari untuk <strong>tambah/hapus baris jam</strong>.
         </span>
         <div class="d-flex" style="gap:.5rem">
+            <button class="btn btn-sm btn-success" id="btnGenerateDefault">
+                <i class="fas fa-magic"></i> Generate Jam Default
+            </button>
             <button class="btn btn-sm btn-outline-secondary" id="btnCopyJadwal">
                 <i class="fas fa-copy"></i> Salin dari Tahun Lain
             </button>
@@ -259,6 +262,31 @@
 </div>
 @endif
 
+@endif
+
+{{-- ===== JTM REKAP GURU ===== --}}
+<div class="simansa-jadwal-panel">
+    <div class="simansa-jadwal-panel__header">
+        <div>
+            <h3><i class="fas fa-chart-bar"></i> Rekap JTM Guru</h3>
+            <p class="text-muted small">
+                JTM = Jam Tatap Muka per minggu. MA/MAN: 1 slot = 45 menit = 1 JTM.
+                Min sertifikasi: <strong>24 JTM</strong>, Maks: <strong>40 JTM</strong>.
+                Ekuivalensi: Wali Kelas +6, Wakasek +12, Ka. Lab/Perpus +12.
+            </p>
+        </div>
+        <button class="btn btn-sm btn-outline-primary" id="btnLoadJtm">
+            <i class="fas fa-sync-alt"></i> Tampilkan
+        </button>
+    </div>
+    <div id="jtmPanel" class="simansa-jadwal-panel__body" style="display:none">
+        <div id="jtmLoading" class="text-center py-3 text-muted d-none">
+            <i class="fas fa-spinner fa-spin"></i> Memuat data JTM...
+        </div>
+        <div id="jtmContent"></div>
+    </div>
+</div>
+
 @endif {{-- end if kelasObj --}}
 
 {{-- ===== MODAL: ASSIGN JADWAL ===== --}}
@@ -290,6 +318,11 @@
                         </select>
                         <div id="konflikGuruNote" class="simansa-tt-konflik d-none">
                             <i class="fas fa-exclamation-triangle"></i> <span></span>
+                        </div>
+                        <div id="jtmGuruInfo" class="simansa-tt-jtm-info d-none mt-2">
+                            <span class="simansa-tt-jtm-info__label">JTM minggu ini:</span>
+                            <span class="simansa-tt-jtm-badge" id="jtmBadge">0</span>
+                            <span class="simansa-tt-jtm-info__note" id="jtmNote"></span>
                         </div>
                     </div>
 
@@ -527,6 +560,38 @@
 .simansa-jadwal-panel__body{padding:1rem 1.35rem}
 .simansa-jadwal-label{font-size:.82rem;font-weight:600;color:#475569;margin-bottom:.35rem;display:block}
 
+/* ===== JTM INFO IN MODAL ===== */
+.simansa-tt-jtm-info{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.simansa-tt-jtm-info__label{font-size:.78rem;color:#64748b}
+.simansa-tt-jtm-badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:24px;border-radius:12px;padding:0 8px;font-size:.78rem;font-weight:700;background:#e2e8f0;color:#475569}
+.simansa-tt-jtm-badge.kurang{background:#fee2e2;color:#b91c1c}
+.simansa-tt-jtm-badge.normal{background:#dcfce7;color:#166534}
+.simansa-tt-jtm-badge.lebih{background:#fef3c7;color:#92400e}
+.simansa-tt-jtm-info__note{font-size:.73rem;color:#94a3b8}
+
+/* ===== JTM REKAP TABLE ===== */
+.simansa-jtm-row{display:flex;align-items:center;padding:.45rem .75rem;border-bottom:1px solid #f1f5f9;gap:.75rem;flex-wrap:wrap}
+.simansa-jtm-row:last-child{border-bottom:none}
+.simansa-jtm-row:hover{background:#f8fafc}
+.simansa-jtm-nama{flex:1;min-width:140px}
+.simansa-jtm-nama strong{font-size:.83rem;display:block}
+.simansa-jtm-nama small{font-size:.72rem;color:#94a3b8}
+.simansa-jtm-bar-wrap{flex:2;min-width:120px}
+.simansa-jtm-bar-track{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.simansa-jtm-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.simansa-jtm-bar-fill.kurang{background:#ef4444}
+.simansa-jtm-bar-fill.normal{background:#22c55e}
+.simansa-jtm-bar-fill.lebih{background:#f59e0b}
+.simansa-jtm-nums{display:flex;flex-direction:column;align-items:flex-end;min-width:64px}
+.simansa-jtm-nums .total{font-size:.9rem;font-weight:700;line-height:1}
+.simansa-jtm-nums .detail{font-size:.68rem;color:#94a3b8}
+.simansa-jtm-status{min-width:60px;text-align:center}
+.simansa-jtm-badge{display:inline-block;padding:.2rem .55rem;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.03em}
+.simansa-jtm-badge.kurang{background:#fee2e2;color:#b91c1c}
+.simansa-jtm-badge.normal{background:#dcfce7;color:#166534}
+.simansa-jtm-badge.lebih{background:#fef3c7;color:#92400e}
+.simansa-jtm-tugas{font-size:.7rem;color:#6366f1;max-width:160px}
+
 /* ===== PRINT ===== */
 @media print{
     .simansa-tt-infobar,.simansa-jadwal-panel__header .d-flex,
@@ -567,6 +632,8 @@ const URL_COPY     = '{{ route("admin.jadwal-pelajaran.copy") }}';
 const URL_CLEARALL = '{{ route("admin.jadwal-pelajaran.clear-all") }}';
 const URL_HARI_JAM = '{{ route("admin.jadwal-hari-jam.store") }}';
 const URL_HARI_DEL = '/admin/jadwal-hari-jam/';
+const URL_GENERATE = '{{ route("admin.jadwal-hari-jam.generate-default") }}';
+const URL_JTM      = '{{ route("admin.jadwal-pelajaran.guru-jtm-summary") }}';
 
 $(function () {
     $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
@@ -608,6 +675,86 @@ $(function () {
     $('#addSlotTipe').on('change', function () {
         $('#addSlotLabelWrap').toggle($(this).val() !== 'pelajaran');
     }).trigger('change');
+
+    // Generate Jam Default
+    $('#btnGenerateDefault').on('click', function () {
+        Swal.fire({
+            title: 'Generate jam default?',
+            html: 'Akan dibuat slot jam per hari:<br>' +
+                  '<ul style="text-align:left;margin:.5rem 0 0 1rem">' +
+                  '<li><strong>Senin</strong>: Upacara + 8 jam pelajaran</li>' +
+                  '<li><strong>Selasa–Jumat</strong>: 8 jam pelajaran</li>' +
+                  '<li><strong>Sabtu</strong>: 6 jam pelajaran</li></ul>' +
+                  '<small class="text-muted">Hari yang sudah punya slot akan dilewati.</small>',
+            icon: 'question', showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-magic"></i> Ya, Generate',
+            cancelButtonText: 'Batal'
+        }).then(r => {
+            if (!r.isConfirmed) return;
+            const btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+            $.post(URL_GENERATE, { _token: CSRF, tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER })
+                .done(res => {
+                    toastr.success(res.message);
+                    if (res.created > 0) setTimeout(() => location.reload(), 800);
+                })
+                .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal generate jam.'))
+                .always(() => btn.prop('disabled', false).html('<i class="fas fa-magic"></i> Generate Jam Default'));
+        });
+    });
+
+    // JTM Rekap Panel
+    let jtmLoaded = false;
+    $('#btnLoadJtm').on('click', function () {
+        const panel = $('#jtmPanel');
+        if (panel.is(':visible') && jtmLoaded) { panel.slideUp(); $(this).html('<i class="fas fa-sync-alt"></i> Tampilkan'); return; }
+        panel.slideDown();
+        $(this).html('<i class="fas fa-sync-alt fa-spin"></i> Memuat...');
+        $('#jtmLoading').removeClass('d-none');
+        $.get(URL_JTM, { tahun_pelajaran_id: TAHUN_ID, semester: SEMESTER })
+            .done(res => {
+                jtmLoaded = true;
+                $('#btnLoadJtm').html('<i class="fas fa-times"></i> Tutup');
+                renderJtmPanel(res.data || []);
+            })
+            .fail(xhr => {
+                $('#btnLoadJtm').html('<i class="fas fa-sync-alt"></i> Tampilkan');
+                toastr.error(xhr.responseJSON?.message || 'Gagal memuat data JTM.');
+                panel.slideUp();
+            })
+            .always(() => $('#jtmLoading').addClass('d-none'));
+    });
+
+    function renderJtmPanel(data) {
+        if (!data.length) { $('#jtmContent').html('<p class="text-muted p-3">Belum ada data JTM.</p>'); return; }
+        let html = '<div class="simansa-jadwal-panel__body-inner">';
+        data.forEach(g => {
+            const pct = Math.min(100, Math.round(g.jtm_total / 40 * 100));
+            const tugasStr = g.tugas_tambahan.join(', ');
+            html += `<div class="simansa-jtm-row">
+                <div class="simansa-jtm-nama">
+                    <strong>${g.nama}</strong>
+                    <small>${g.kode || ''}${tugasStr ? ' — ' + tugasStr : ''}</small>
+                </div>
+                <div class="simansa-jtm-bar-wrap">
+                    <div class="simansa-jtm-bar-track">
+                        <div class="simansa-jtm-bar-fill ${g.status}" style="width:${pct}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size:.65rem;color:#94a3b8;margin-top:2px">
+                        <span>0</span><span>24</span><span>40</span>
+                    </div>
+                </div>
+                <div class="simansa-jtm-nums">
+                    <span class="total">${g.jtm_total}</span>
+                    <span class="detail">${g.jtm_mengajar}+${g.jtm_ekuivalensi}</span>
+                </div>
+                <div class="simansa-jtm-status">
+                    <span class="simansa-jtm-badge ${g.status}">${g.status === 'kurang' ? 'Kurang' : (g.status === 'lebih' ? 'Lebih' : 'Normal')}</span>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        $('#jtmContent').html(html);
+    }
 });
 
 // ===== KLIK ROW PELAJARAN (assign jadwal) =====
@@ -624,6 +771,7 @@ function handleCellClick(row) {
     $('#modalHariJam').text(capitalize(hari) + ', Jam ke-' + jamKe);
     $('#btnHapusSlot').toggleClass('d-none', !jadwalId);
     $('#konflikGuruNote').addClass('d-none');
+    $('#jtmGuruInfo').addClass('d-none');
     $('#autoFillNote').addClass('d-none');
     $('#slotRuangan').val('');
     $('#slotCatatan').val('');
@@ -660,7 +808,7 @@ function loadGuruOptions(hari, jamKe, excludeId) {
             res.data.forEach(g => {
                 const label = g.kode ? `[${g.kode}] ${g.nama}` : g.nama;
                 const suf = g.konflik ? ' ⚠ (jadwal bentrok)' : '';
-                sel.append(`<option value="${g.id}" data-konflik="${g.konflik ? 1 : 0}">${label}${suf}</option>`);
+                sel.append(`<option value="${g.id}" data-konflik="${g.konflik ? 1 : 0}" data-jtm="${g.jtm ?? 0}" data-jtm-status="${g.jtm_status ?? ''}">${label}${suf}</option>`);
             });
         }
         sel.trigger('change');
@@ -714,6 +862,18 @@ $('#selGuru').on('change', function () {
         $note.find('span').text('Guru sudah mengajar di kelas lain pada jam ini. Lanjutkan hanya jika yakin.');
         $note.removeClass('d-none');
     } else { $note.addClass('d-none'); }
+
+    // JTM badge
+    const $opt = $(this).find('option:selected');
+    const jtm = parseInt($opt.data('jtm') ?? 0);
+    const jtmSt = $opt.data('jtm-status') || '';
+    if (gtkId) {
+        const $badge = $('#jtmBadge');
+        $badge.attr('class', 'simansa-tt-jtm-badge' + (jtmSt ? ' ' + jtmSt : '')).text(jtm + ' JTM');
+        const notes = { kurang: 'Di bawah minimum sertifikasi (24 JTM)', lebih: 'Melebihi batas maksimum (40 JTM)', normal: 'Dalam batas normal' };
+        $('#jtmNote').text(notes[jtmSt] || '');
+        $('#jtmGuruInfo').removeClass('d-none');
+    } else { $('#jtmGuruInfo').addClass('d-none'); }
 
     if (!isEdit) {
         $('#autoFillNote').addClass('d-none');

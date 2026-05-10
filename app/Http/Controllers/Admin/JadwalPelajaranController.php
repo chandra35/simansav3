@@ -156,15 +156,27 @@ class JadwalPelajaranController extends Controller
         }
         $konflikGtkIds = $konflikQuery->pluck('gtk_id')->toArray();
 
+        // Hitung JTM per guru untuk semester ini (lintas semua kelas)
+        $jtmCounts = JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+            ->where('semester', $semester)
+            ->where('is_active', true)
+            ->select('gtk_id', DB::raw('count(*) as jtm'))
+            ->groupBy('gtk_id')
+            ->pluck('jtm', 'gtk_id')
+            ->toArray();
+
         $gtks = Gtk::orderBy('nama_lengkap')
             ->get(['id', 'nama_lengkap', 'nip', 'kode_gtk'])
-            ->map(function ($g) use ($konflikGtkIds) {
+            ->map(function ($g) use ($konflikGtkIds, $jtmCounts) {
+                $jtm = $jtmCounts[$g->id] ?? 0;
                 return [
                     'id'      => $g->id,
                     'nama'    => $g->nama_lengkap,
                     'nip'     => $g->nip ?? '',
                     'kode'    => $g->kode_gtk ?? '',
                     'konflik' => in_array($g->id, $konflikGtkIds),
+                    'jtm'     => $jtm,
+                    'jtm_status' => $jtm < 24 ? 'kurang' : ($jtm > 40 ? 'lebih' : 'normal'),
                 ];
             });
 
@@ -391,6 +403,92 @@ class JadwalPelajaranController extends Controller
         $this->authorize('manage-jadwal-pelajaran');
         $jadwalPelajaran->delete();
         return response()->json(['success' => true, 'message' => 'Jadwal berhasil dihapus.']);
+    }
+
+    /**
+     * GET /admin/jadwal-pelajaran/guru-jtm-summary
+     * Rekap JTM per guru (Jam Tatap Muka) untuk tahun pelajaran + semester.
+     * JTM untuk MA/MAN: 1 slot jadwal = 1 JTM (45 menit).
+     * Min sertifikasi: 24 JTM/minggu, Maks: 40 JTM/minggu.
+     * Tugas tambahan dihitung ekuivalensi: Wali Kelas +6, Wakasek +12, Ka.Lab/Perpus +12.
+     */
+    public function guruJtmSummary(Request $request)
+    {
+        $this->authorize('view-jadwal-pelajaran');
+
+        $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+        ]);
+
+        $tahunId  = $request->tahun_pelajaran_id;
+        $semester = (int) $request->semester;
+
+        // JTM mengajar per guru (lintas semua kelas)
+        $jtmRows = JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+            ->where('semester', $semester)
+            ->where('is_active', true)
+            ->select('gtk_id', DB::raw('count(*) as jtm_mengajar'))
+            ->groupBy('gtk_id')
+            ->get()
+            ->keyBy('gtk_id');
+
+        if ($jtmRows->isEmpty()) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $gtkIds = $jtmRows->keys()->toArray();
+        $gtks   = Gtk::whereIn('id', $gtkIds)
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'user_id', 'nama_lengkap', 'kode_gtk', 'jabatan']);
+
+        // Guru yang menjadi wali kelas di tahun pelajaran ini
+        $waliKelasUserIds = Kelas::where('tahun_pelajaran_id', $tahunId)
+            ->whereNotNull('wali_kelas_id')
+            ->pluck('wali_kelas_id')
+            ->toArray();
+
+        $result = $gtks->map(function ($gtk) use ($jtmRows, $waliKelasUserIds, $tahunId) {
+            $jtmMengajar    = (int) ($jtmRows[$gtk->id]->jtm_mengajar ?? 0);
+            $jtmEkuivalensi = 0;
+            $tugasTambahan  = [];
+
+            // Ekuivalensi Wali Kelas: +6 JTM
+            if (in_array($gtk->user_id, $waliKelasUserIds)) {
+                $jtmEkuivalensi += 6;
+                $tugasTambahan[] = ['label' => 'Wali Kelas', 'jtm' => 6];
+            }
+
+            // Ekuivalensi dari jabatan struktural
+            $jabatan = strtolower($gtk->jabatan ?? '');
+            if (str_contains($jabatan, 'wakil kepala') || str_contains($jabatan, 'waka') || str_contains($jabatan, 'wakasek')) {
+                $jtmEkuivalensi += 12;
+                $tugasTambahan[] = ['label' => 'Wakasek', 'jtm' => 12];
+            } elseif (str_contains($jabatan, 'kepala lab')) {
+                $jtmEkuivalensi += 12;
+                $tugasTambahan[] = ['label' => 'Ka. Laboratorium', 'jtm' => 12];
+            } elseif (str_contains($jabatan, 'kepala perpus')) {
+                $jtmEkuivalensi += 12;
+                $tugasTambahan[] = ['label' => 'Ka. Perpustakaan', 'jtm' => 12];
+            }
+
+            $jtmTotal = $jtmMengajar + $jtmEkuivalensi;
+
+            return [
+                'gtk_id'          => $gtk->id,
+                'nama'            => $gtk->nama_lengkap,
+                'kode'            => $gtk->kode_gtk ?? '',
+                'jabatan'         => $gtk->jabatan ?? '',
+                'jtm_mengajar'    => $jtmMengajar,
+                'jtm_ekuivalensi' => $jtmEkuivalensi,
+                'jtm_total'       => $jtmTotal,
+                'tugas_tambahan'  => $tugasTambahan,
+                // Status: kurang (<24), normal (24-40), lebih (>40)
+                'status'          => $jtmTotal < 24 ? 'kurang' : ($jtmTotal > 40 ? 'lebih' : 'normal'),
+            ];
+        })->sortByDesc('jtm_total')->values();
+
+        return response()->json(['success' => true, 'data' => $result]);
     }
 
     /**
