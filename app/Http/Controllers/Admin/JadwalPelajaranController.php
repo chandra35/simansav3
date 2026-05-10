@@ -166,6 +166,7 @@ class JadwalPelajaranController extends Controller
             ->toArray();
 
         $gtks = Gtk::orderBy('nama_lengkap')
+            ->where('jenis_ptk', 'like', '%Guru%')
             ->get(['id', 'nama_lengkap', 'nip', 'kode_gtk'])
             ->map(function ($g) use ($konflikGtkIds, $jtmCounts) {
                 $jtm = $jtmCounts[$g->id] ?? 0;
@@ -201,7 +202,7 @@ class JadwalPelajaranController extends Controller
         }
 
         if ($tingkat) {
-            $query->where('tingkat', $tingkat);
+            $query->whereJsonContains('tingkat', (int) $tingkat);
         }
 
         $mapels = $query->get(['id', 'kode_mapel', 'nama_mapel', 'kelompok'])
