@@ -342,21 +342,13 @@ class JadwalPelajaranController extends Controller
         ]);
 
         if ($existing) {
-            // Jika soft-deleted, hanya restore jika mapel sama (restore assignment lama yang dihapus)
+            // Selalu reuse record lama (restore jika trashed) karena unique constraint
+            // MySQL mencakup soft-deleted rows — INSERT baru akan selalu conflict
             if ($existing->trashed()) {
-                if ($existing->mapel_id !== $validated['mapel_id']) {
-                    // Mapel berbeda → don't restore, create new instead
-                    $jadwal = JadwalPelajaran::create($fillData);
-                } else {
-                    $existing->restore();
-                    $existing->fill($fillData)->save();
-                    $jadwal = $existing;
-                }
-            } else {
-                // Sudah aktif → update
-                $existing->fill($fillData)->save();
-                $jadwal = $existing;
+                $existing->restore();
             }
+            $existing->fill($fillData)->save();
+            $jadwal = $existing;
         } else {
             $jadwal = JadwalPelajaran::create($fillData);
         }
