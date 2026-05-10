@@ -262,8 +262,6 @@
 </div>
 @endif
 
-@endif
-
 {{-- ===== JTM REKAP GURU ===== --}}
 <div class="simansa-jadwal-panel">
     <div class="simansa-jadwal-panel__header">
