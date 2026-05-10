@@ -270,8 +270,7 @@ class JadwalPelajaranController extends Controller
             'catatan'            => 'nullable|string|max:255',
         ]);
 
-        $conflictKelas = JadwalPelajaran::withTrashed()
-            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictKelas = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('kelas_id', $validated['kelas_id'])
             ->where('hari', $validated['hari'])
             ->where('jam_ke', $validated['jam_ke'])
@@ -283,8 +282,7 @@ class JadwalPelajaranController extends Controller
             return response()->json(['success' => false, 'message' => 'Kelas sudah memiliki jadwal di jam ini.'], 422);
         }
 
-        $conflictGuru = JadwalPelajaran::withTrashed()
-            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictGuru = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $validated['hari'])
             ->where('jam_ke', $validated['jam_ke'])
@@ -302,8 +300,7 @@ class JadwalPelajaranController extends Controller
         }
 
         // Cegah 1 guru mengajar mapel berbeda di hari yang sama
-        $conflictMapelGuru = JadwalPelajaran::withTrashed()
-            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $validated['hari'])
             ->where('semester', $validated['semester'])
@@ -345,11 +342,21 @@ class JadwalPelajaranController extends Controller
         ]);
 
         if ($existing) {
+            // Jika soft-deleted, hanya restore jika mapel sama (restore assignment lama yang dihapus)
             if ($existing->trashed()) {
-                $existing->restore();
+                if ($existing->mapel_id !== $validated['mapel_id']) {
+                    // Mapel berbeda → don't restore, create new instead
+                    $jadwal = JadwalPelajaran::create($fillData);
+                } else {
+                    $existing->restore();
+                    $existing->fill($fillData)->save();
+                    $jadwal = $existing;
+                }
+            } else {
+                // Sudah aktif → update
+                $existing->fill($fillData)->save();
+                $jadwal = $existing;
             }
-            $existing->fill($fillData)->save();
-            $jadwal = $existing;
         } else {
             $jadwal = JadwalPelajaran::create($fillData);
         }
@@ -406,8 +413,7 @@ class JadwalPelajaranController extends Controller
             'catatan'   => 'nullable|string|max:255',
         ]);
 
-        $conflictGuru = JadwalPelajaran::withTrashed()
-            ->where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
+        $conflictGuru = JadwalPelajaran::where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $jadwalPelajaran->hari)
             ->where('jam_ke', $jadwalPelajaran->jam_ke)
@@ -425,8 +431,7 @@ class JadwalPelajaranController extends Controller
         }
 
         // Cegah 1 guru mengajar mapel berbeda di hari yang sama
-        $conflictMapelGuru = JadwalPelajaran::withTrashed()
-            ->where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
+        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
             ->where('gtk_id', $validated['gtk_id'])
             ->where('hari', $jadwalPelajaran->hari)
             ->where('semester', $jadwalPelajaran->semester)
