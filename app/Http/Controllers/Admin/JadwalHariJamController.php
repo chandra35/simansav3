@@ -98,16 +98,47 @@ class JadwalHariJamController extends Controller
     {
         $this->authorize('manage-jadwal-pelajaran');
 
+        $tahunId  = $hariJam->tahun_pelajaran_id;
+        $semester = $hariJam->semester;
+        $hari     = $hariJam->hari;
+        $oldJamKe = $hariJam->jam_ke;
+
         // Hapus jadwal pelajaran yang terkait dengan slot ini (jika pelajaran)
-        if ($hariJam->tipe === 'pelajaran' && $hariJam->jam_ke) {
-            \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $hariJam->tahun_pelajaran_id)
-                ->where('semester', $hariJam->semester)
-                ->where('hari', $hariJam->hari)
-                ->where('jam_ke', $hariJam->jam_ke)
+        if ($hariJam->tipe === 'pelajaran' && $oldJamKe) {
+            \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->where('hari', $hari)
+                ->where('jam_ke', $oldJamKe)
                 ->delete();
         }
 
         $hariJam->delete();
+
+        // Renumber: geser semua jam_ke yang lebih besar ke bawah 1
+        if ($oldJamKe) {
+            // Update jadwal_hari_jam
+            JadwalHariJam::where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->where('hari', $hari)
+                ->where('tipe', 'pelajaran')
+                ->where('jam_ke', '>', $oldJamKe)
+                ->orderBy('jam_ke')
+                ->get()
+                ->each(function ($slot) {
+                    $slot->decrement('jam_ke');
+                });
+
+            // Sync jadwal_pelajaran yang ada
+            \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->where('hari', $hari)
+                ->where('jam_ke', '>', $oldJamKe)
+                ->orderBy('jam_ke')
+                ->get()
+                ->each(function ($j) {
+                    $j->decrement('jam_ke');
+                });
+        }
 
         return response()->json([
             'success' => true,

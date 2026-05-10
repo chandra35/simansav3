@@ -325,7 +325,7 @@
                     </div>
 
                     {{-- MAPEL (auto-fill dari guru) --}}
-                    <div class="form-group">
+                    <div class="form-group" id="mapelWrap" style="display:none">
                         <label class="simansa-jadwal-label">Mata Pelajaran <span class="text-danger">*</span></label>
                         <select class="form-control select2" id="selMapel" name="mapel_id" required>
                             <option value="">— Pilih Mapel —</option>
@@ -348,8 +348,8 @@
                 </form>
             </div>
             <div class="simansa-tt-modal__footer">
-                <button type="button" class="btn btn-outline-danger d-none" id="btnHapusSlot">
-                    <i class="fas fa-trash"></i> Hapus Slot
+                <button type="button" class="btn btn-outline-danger d-none" id="btnHapusAssignment" title="Hapus guru/mapel dari slot ini (slot jam tetap ada)">
+                    <i class="fas fa-user-times"></i> Hapus Assignment
                 </button>
                 <div class="ml-auto d-flex" style="gap:.5rem">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -771,10 +771,12 @@ function handleCellClick(row) {
     $('#slotId').val(jadwalId || '');
     $('#modalEyebrow').text(jadwalId ? 'Edit Jadwal' : 'Tambah Jadwal');
     $('#modalHariJam').text(capitalize(hari) + ', Jam ke-' + jamKe);
-    $('#btnHapusSlot').toggleClass('d-none', !jadwalId);
+    $('#btnHapusAssignment').toggleClass('d-none', !jadwalId);
     $('#konflikGuruNote').addClass('d-none');
     $('#jtmGuruInfo').addClass('d-none');
     $('#autoFillNote').addClass('d-none');
+    $('#mapelWrap').hide();
+    setSelect2Val('#selMapel', null, '');
     $('#slotRuangan').val('');
     $('#slotCatatan').val('');
 
@@ -784,6 +786,7 @@ function handleCellClick(row) {
                 if (!res.success) return;
                 const d = res.data;
                 setSelect2Val('#selGuru', d.gtk_id, d.gtk_nama);
+                $('#mapelWrap').show();
                 loadMapelOptions(d.gtk_id, false).then(() => {
                     setSelect2Val('#selMapel', d.mapel_id, d.mapel_nama);
                 });
@@ -870,6 +873,7 @@ $('#selGuru').on('change', function () {
     const jtm = parseInt($opt.data('jtm') ?? 0);
     const jtmSt = $opt.data('jtm-status') || '';
     if (gtkId) {
+        $('#mapelWrap').show();
         const $badge = $('#jtmBadge');
         $badge.attr('class', 'simansa-tt-jtm-badge' + (jtmSt ? ' ' + jtmSt : '')).text(jtm + ' JTM');
         const notes = { kurang: 'Di bawah minimum sertifikasi (24 JTM)', lebih: 'Melebihi batas maksimum (40 JTM)', normal: 'Dalam batas normal' };
@@ -881,6 +885,8 @@ $('#selGuru').on('change', function () {
         $('#autoFillNote').addClass('d-none');
         setSelect2Val('#selMapel', null, '');
         if (gtkId) loadMapelOptions(gtkId, true);
+    } else {
+        $('#mapelWrap').show();
     }
 });
 
@@ -910,11 +916,13 @@ $('#btnSimpanSlot').on('click', function () {
         .always(() => $(this).prop('disabled', false).html('<i class="fas fa-save"></i> Simpan'));
 });
 
-// ===== HAPUS JADWAL (slot assignment) =====
-$('#btnHapusSlot').on('click', function () {
+// ===== HAPUS ASSIGNMENT (hanya hapus guru+mapel, slot jam tetap) =====
+$('#btnHapusAssignment').on('click', function () {
     const jadwalId = $('#slotId').val();
     if (!jadwalId) return;
-    Swal.fire({ title: 'Hapus assignment ini?', icon: 'question', showCancelButton: true,
+    Swal.fire({ title: 'Hapus assignment ini?',
+        html: 'Guru dan mapel di slot ini akan dihapus.<br><small class="text-muted">Slot jam tetap ada, bisa diisi ulang.</small>',
+        icon: 'question', showCancelButton: true,
         confirmButtonColor: '#dc3545', confirmButtonText: 'Hapus', cancelButtonText: 'Batal'
     }).then(res => {
         if (!res.isConfirmed) return;
