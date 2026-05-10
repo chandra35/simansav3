@@ -234,6 +234,60 @@ class JadwalHariJamController extends Controller
         ]);
     }
 
+    /**
+     * POST /admin/jadwal-hari-jam/reorder
+     * Simpan urutan baru slot jam setelah drag-and-drop.
+     * Juga renumber jam_ke sesuai urutan pelajaran terbaru.
+     */
+    public function reorder(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'semester'           => 'required|integer|in:1,2',
+            'hari'               => 'required|in:senin,selasa,rabu,kamis,jumat,sabtu',
+            'order'              => 'required|array',
+            'order.*'            => 'required|exists:jadwal_hari_jam,id',
+        ]);
+
+        $tahunId  = $validated['tahun_pelajaran_id'];
+        $semester = $validated['semester'];
+        $hari     = $validated['hari'];
+        $order    = $validated['order']; // array of slot IDs in new order
+
+        // Ambil semua slot hari ini
+        $slots = JadwalHariJam::where('tahun_pelajaran_id', $tahunId)
+            ->where('semester', $semester)
+            ->where('hari', $hari)
+            ->get()
+            ->keyBy('id');
+
+        $jamKe = 1;
+        foreach ($order as $urutan => $slotId) {
+            $slot = $slots[$slotId] ?? null;
+            if (!$slot) continue;
+
+            $newJamKe = $slot->tipe === 'pelajaran' ? $jamKe++ : null;
+
+            // Jika jam_ke berubah, sync jadwal_pelajaran
+            if ($slot->tipe === 'pelajaran' && $slot->jam_ke !== null && $slot->jam_ke !== $newJamKe) {
+                \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
+                    ->where('semester', $semester)
+                    ->where('hari', $hari)
+                    ->where('jam_ke', $slot->jam_ke)
+                    ->update(['jam_ke' => $newJamKe]);
+            }
+
+            $slot->update([
+                'urutan' => $urutan + 1,
+                'jam_ke' => $newJamKe,
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Urutan berhasil disimpan.']);
+    }
+
     private function formatSlot(JadwalHariJam $s): array
     {
         return [

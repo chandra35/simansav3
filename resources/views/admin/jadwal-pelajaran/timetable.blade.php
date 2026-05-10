@@ -171,6 +171,11 @@
                             data-hari="{{ $hari }}"
                             data-jadwal-id="{{ $jadwal?->id ?? '' }}"
                             @can('manage-jadwal-pelajaran') onclick="handleCellClick(this)" @endcan>
+                            @can('manage-jadwal-pelajaran')
+                            <div class="simansa-tt-drag-handle" title="Seret untuk ubah urutan" onclick="event.stopPropagation()">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                            @endcan
                             <div class="simansa-tt-row__header">
                                 <span class="simansa-tt-row__jam">Jam {{ $slot->jam_ke }}</span>
                                 <span class="simansa-tt-row__time">
@@ -204,6 +209,11 @@
                         <div class="simansa-tt-row simansa-tt-row--special simansa-tt-row--{{ $slot->tipe }}"
                             data-slot-id="{{ $slot->id }}"
                             data-hari="{{ $hari }}">
+                            @can('manage-jadwal-pelajaran')
+                            <div class="simansa-tt-drag-handle" title="Seret untuk ubah urutan" onclick="event.stopPropagation()">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                            @endcan
                             <div class="simansa-tt-row__header">
                                 <span class="simansa-tt-row__icon">
                                     @if($slot->tipe === 'istirahat')<i class="fas fa-coffee"></i>
@@ -593,6 +603,16 @@
 .simansa-jtm-badge.lebih{background:#fef3c7;color:#92400e}
 .simansa-jtm-tugas{font-size:.7rem;color:#6366f1;max-width:160px}
 
+/* ===== DRAG & DROP ===== */
+.simansa-tt-drag-handle{display:none;position:absolute;left:0;top:0;bottom:0;width:22px;align-items:center;justify-content:center;cursor:grab;color:#94a3b8;font-size:.75rem;border-right:1px solid #e2e8f0;z-index:1}
+.simansa-tt-drag-handle:hover{color:#475569;background:#f1f5f9}
+.simansa-tt-drag-handle:active{cursor:grabbing}
+body.can-manage .simansa-tt-drag-handle{display:flex}
+body.can-manage .simansa-tt-row{padding-left:26px;position:relative}
+.sortable-ghost{opacity:.35;background:#dbeafe !important;border:2px dashed #3b82f6 !important}
+.sortable-chosen{box-shadow:0 4px 16px rgba(59,130,246,.25)}
+.sortable-drag{opacity:0}
+
 /* ===== PRINT ===== */
 @media print{
     .simansa-tt-infobar,.simansa-jadwal-panel__header .d-flex,
@@ -616,6 +636,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
 toastr.options = { positionClass: 'toast-top-right', timeOut: 3000, progressBar: true };
 </script>
@@ -634,9 +655,56 @@ const URL_CLEARALL = '{{ route("admin.jadwal-pelajaran.clear-all") }}';
 const URL_HARI_JAM = '{{ route("admin.jadwal-hari-jam.store") }}';
 const URL_HARI_DEL = '/admin/jadwal-hari-jam/';
 const URL_GENERATE = '{{ route("admin.jadwal-hari-jam.generate-default") }}';
+const URL_REORDER  = '{{ route("admin.jadwal-hari-jam.reorder") }}';
 const URL_JTM      = '{{ route("admin.jadwal-pelajaran.guru-jtm-summary") }}';
+const CAN_MANAGE   = {{ auth()->user()->can('manage-jadwal-pelajaran') ? 'true' : 'false' }};
 
 $(function () {
+    // Tandai body agar CSS drag-handle aktif hanya untuk user yg bisa manage
+    if (CAN_MANAGE) $('body').addClass('can-manage');
+
+    // Init SortableJS pada setiap slot-list
+    if (CAN_MANAGE) {
+        document.querySelectorAll('.simansa-tt-slot-list').forEach(function (listEl) {
+            new Sortable(listEl, {
+                animation: 150,
+                handle: '.simansa-tt-drag-handle',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onEnd: function (evt) {
+                    // Kumpulkan urutan ID terbaru
+                    const rows = Array.from(evt.to.querySelectorAll(':scope > .simansa-tt-row'));
+                    const order = rows.map(r => r.dataset.slotId).filter(Boolean);
+                    const hari  = rows[0]?.dataset.hari || '';
+
+                    $.post(URL_REORDER, {
+                        _token: CSRF,
+                        tahun_pelajaran_id: TAHUN_ID,
+                        semester: SEMESTER,
+                        hari: hari,
+                        order: order
+                    }).done(function (res) {
+                        // Renumber label jam di DOM
+                        let jamKe = 1;
+                        rows.forEach(function (row) {
+                            if (row.classList.contains('simansa-tt-row--pelajaran')) {
+                                const lbl = row.querySelector('.simansa-tt-row__jam');
+                                if (lbl) lbl.textContent = 'Jam ' + jamKe;
+                                row.dataset.jamKe = jamKe;
+                                jamKe++;
+                            }
+                        });
+                        toastr.success('Urutan jam disimpan.', '', { timeOut: 1200, positionClass: 'toast-bottom-right' });
+                    }).fail(function () {
+                        toastr.error('Gagal menyimpan urutan — halaman akan dimuat ulang.');
+                        setTimeout(() => location.reload(), 1800);
+                    });
+                }
+            });
+        });
+    }
+
     $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
 
     $('#btnPrint').on('click', () => window.print());

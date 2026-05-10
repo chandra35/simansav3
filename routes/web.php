@@ -482,6 +482,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Jadwal Hari Jam (slot jam per hari, gantikan jadwal-jam-config)
         Route::post('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'store'])->name('jadwal-hari-jam.store');
         Route::post('/jadwal-hari-jam/generate-default', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'generateDefault'])->name('jadwal-hari-jam.generate-default');
+        Route::post('/jadwal-hari-jam/reorder', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'reorder'])->name('jadwal-hari-jam.reorder');
         Route::delete('/jadwal-hari-jam/{hariJam}', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'destroy'])->name('jadwal-hari-jam.destroy');
     });
     // Jadwal Jam Config (dipertahankan untuk backward compat)
