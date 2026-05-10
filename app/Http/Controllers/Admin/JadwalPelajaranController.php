@@ -306,21 +306,31 @@ class JadwalPelajaranController extends Controller
             ->where('jam_ke', $validated['jam_ke'])
             ->first();
 
-        $jadwal = JadwalPelajaran::updateOrCreate(
-            [
-                'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
-                'kelas_id'           => $validated['kelas_id'],
-                'hari'               => $validated['hari'],
-                'jam_ke'             => $validated['jam_ke'],
-                'semester'           => $validated['semester'],
-            ],
-            array_merge($validated, [
-                'jam_mulai'   => $hariJam?->waktu_mulai,
-                'jam_selesai' => $hariJam?->waktu_selesai,
-                'is_active'   => true,
-                'created_by'  => auth()->id(),
-            ])
-        );
+        // Cari termasuk soft-deleted — updateOrCreate tidak cukup karena SoftDeletes
+        $existing = JadwalPelajaran::withTrashed()
+            ->where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+            ->where('kelas_id', $validated['kelas_id'])
+            ->where('hari', $validated['hari'])
+            ->where('jam_ke', $validated['jam_ke'])
+            ->where('semester', $validated['semester'])
+            ->first();
+
+        $fillData = array_merge($validated, [
+            'jam_mulai'   => $hariJam?->waktu_mulai,
+            'jam_selesai' => $hariJam?->waktu_selesai,
+            'is_active'   => true,
+            'created_by'  => auth()->id(),
+        ]);
+
+        if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+            }
+            $existing->fill($fillData)->save();
+            $jadwal = $existing;
+        } else {
+            $jadwal = JadwalPelajaran::create($fillData);
+        }
 
         $jadwal->load(['mataPelajaran', 'gtk']);
 
