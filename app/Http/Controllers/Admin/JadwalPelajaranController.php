@@ -299,6 +299,25 @@ class JadwalPelajaranController extends Controller
             ], 422);
         }
 
+        // Cegah 1 guru mengajar mapel berbeda di hari yang sama
+        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
+            ->where('gtk_id', $validated['gtk_id'])
+            ->where('hari', $validated['hari'])
+            ->where('semester', $validated['semester'])
+            ->where('mapel_id', '!=', $validated['mapel_id'])
+            ->where('is_active', true)
+            ->with('mataPelajaran')
+            ->first();
+
+        if ($conflictMapelGuru) {
+            $mapelLain = $conflictMapelGuru->mataPelajaran?->nama_mapel ?? 'mapel lain';
+            $hariLabel = ucfirst($validated['hari']);
+            return response()->json([
+                'success' => false,
+                'message' => "Guru sudah mengajar {$mapelLain} di hari {$hariLabel} ini. Satu guru hanya boleh mengajar satu mapel per hari.",
+            ], 422);
+        }
+
         // Ambil waktu dari jadwal_hari_jam jika ada
         $hariJam = JadwalHariJam::where('tahun_pelajaran_id', $validated['tahun_pelajaran_id'])
             ->where('semester', $validated['semester'])
@@ -398,6 +417,26 @@ class JadwalPelajaranController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => "Guru sudah mengajar di {$kelasLain} pada jam ini.",
+            ], 422);
+        }
+
+        // Cegah 1 guru mengajar mapel berbeda di hari yang sama
+        $conflictMapelGuru = JadwalPelajaran::where('tahun_pelajaran_id', $jadwalPelajaran->tahun_pelajaran_id)
+            ->where('gtk_id', $validated['gtk_id'])
+            ->where('hari', $jadwalPelajaran->hari)
+            ->where('semester', $jadwalPelajaran->semester)
+            ->where('mapel_id', '!=', $validated['mapel_id'])
+            ->where('is_active', true)
+            ->where('id', '!=', $jadwalPelajaran->id)
+            ->with('mataPelajaran')
+            ->first();
+
+        if ($conflictMapelGuru) {
+            $mapelLain = $conflictMapelGuru->mataPelajaran?->nama_mapel ?? 'mapel lain';
+            $hariLabel = ucfirst($jadwalPelajaran->hari);
+            return response()->json([
+                'success' => false,
+                'message' => "Guru sudah mengajar {$mapelLain} di hari {$hariLabel} ini. Satu guru hanya boleh mengajar satu mapel per hari.",
             ], 422);
         }
 
