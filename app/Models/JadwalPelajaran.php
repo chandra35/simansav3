@@ -93,4 +93,15 @@ class JadwalPelajaran extends Model
         $selesai = $this->jam_selesai ? substr($this->jam_selesai, 0, 5) : '';
         return $mulai && $selesai ? "{$mulai} - {$selesai}" : ($mulai ?: '-');
     }
+
+    /**
+     * Override resolveRouteBinding untuk include soft-deleted records.
+     * Penting karena model pakai SoftDeletes, tapi implicit binding hanya cari non-deleted.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where($field ?? $this->getRouteKeyName(), $value)
+            ->withTrashed()
+            ->firstOrFail();
+    }
 }
