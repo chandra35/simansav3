@@ -455,6 +455,7 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
 <style>
 /* ===== INFO BAR ===== */
 .simansa-tt-infobar{display:flex;justify-content:space-between;align-items:center;gap:1rem;background:linear-gradient(135deg,#1f4fd1 0%,#2f8ca3 100%);border-radius:20px;padding:1.2rem 1.5rem;color:#fff;margin-bottom:1.25rem;box-shadow:0 16px 38px rgba(31,79,209,.18)}
@@ -613,11 +614,10 @@
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- SweetAlert2 Fallback (jika plugin AdminLTE belum load) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
 <script>
-if (typeof Swal === 'undefined') {
-    document.write('<script src="https:\/\/cdn.jsdelivr.net\/npm\/sweetalert2@11\/dist\/sweetalert2.all.min.js"><\/script>');
-}
+toastr.options = { positionClass: 'toast-top-right', timeOut: 3000, progressBar: true };
 </script>
 
 <script>
