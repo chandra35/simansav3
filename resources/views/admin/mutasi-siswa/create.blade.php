@@ -106,33 +106,34 @@
                         </div>
                     </div>
                     <div class="wz-card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="wz-label">NPSN Sekolah Asal</label>
-                                    <div class="input-group">
-                                        <input type="text" id="npsn_sekolah_asal" name="npsn_sekolah_asal" class="form-control" maxlength="8"
-                                            placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_asal') }}" autocomplete="off">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text" id="npsn-asal-spinner" style="display:none;">
-                                                <i class="fas fa-spinner fa-spin text-primary"></i>
-                                            </span>
-                                            <span class="input-group-text" id="npsn-asal-ok" style="display:none;">
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <small class="text-muted d-block mt-1"><i class="fas fa-magic mr-1"></i>Isi 8 digit untuk auto-isi nama &amp; kota</small>
+                        {{-- NPSN + Cari --}}
+                        <div class="form-group">
+                            <label class="wz-label">NPSN Sekolah Asal</label>
+                            <div class="input-group">
+                                <input type="text" id="npsn_sekolah_asal" name="npsn_sekolah_asal"
+                                    class="form-control" maxlength="8" placeholder="Contoh: 10648374"
+                                    value="{{ old('npsn_sekolah_asal') }}" autocomplete="off"
+                                    style="text-transform:uppercase;">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" id="btnCariAsal">
+                                        <i class="fas fa-search"></i> Cari
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label class="wz-label">Nama Sekolah Asal <span class="text-danger">*</span></label>
-                                    <input type="text" name="sekolah_asal" id="sekolah_asal" class="form-control"
-                                        placeholder="Nama lengkap sekolah asal" value="{{ old('sekolah_asal') }}">
-                                    <div class="invalid-feedback">Nama sekolah asal wajib diisi</div>
-                                </div>
-                            </div>
+                            <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Masukkan 8 digit NPSN, pencarian otomatis atau klik Cari</small>
+                        </div>
+                        <div id="alertAsalFound" class="alert alert-success py-2 d-none">
+                            <i class="fas fa-check-circle mr-1"></i> <strong>Data ditemukan:</strong> <span id="asal-found-nama"></span>
+                        </div>
+                        <div id="alertAsalNotFound" class="alert alert-warning py-2 d-none">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Data tidak ditemukan.</strong> Periksa kembali NPSN atau isi nama sekolah secara manual.
+                        </div>
+                        {{-- Auto-filled + manual --}}
+                        <div class="form-group">
+                            <label class="wz-label">Nama Sekolah Asal <span class="text-danger">*</span></label>
+                            <input type="text" name="sekolah_asal" id="sekolah_asal" class="form-control"
+                                placeholder="Nama lengkap sekolah asal" value="{{ old('sekolah_asal') }}">
+                            <div class="invalid-feedback">Nama sekolah asal wajib diisi</div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
@@ -144,7 +145,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="wz-label">Kota / Alamat Sekolah</label>
+                                    <label class="wz-label">Kota / Kabupaten</label>
                                     <input type="text" id="alamat_sekolah_asal" name="alamat_sekolah_asal" class="form-control"
                                         placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_asal') }}">
                                 </div>
@@ -258,36 +259,37 @@
                         </div>
                     </div>
                     <div class="wz-card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="wz-label">NPSN Sekolah Tujuan</label>
-                                    <div class="input-group">
-                                        <input type="text" id="npsn_sekolah_tujuan" name="npsn_sekolah_tujuan" class="form-control" maxlength="8"
-                                            placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_tujuan') }}" autocomplete="off">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text" id="npsn-tujuan-spinner" style="display:none;">
-                                                <i class="fas fa-spinner fa-spin text-primary"></i>
-                                            </span>
-                                            <span class="input-group-text" id="npsn-tujuan-ok" style="display:none;">
-                                                <i class="fas fa-check-circle text-success"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <small class="text-muted d-block mt-1"><i class="fas fa-magic mr-1"></i>Isi 8 digit untuk auto-isi nama &amp; kota</small>
+                        {{-- NPSN + Cari --}}
+                        <div class="form-group">
+                            <label class="wz-label">NPSN Sekolah Tujuan</label>
+                            <div class="input-group">
+                                <input type="text" id="npsn_sekolah_tujuan" name="npsn_sekolah_tujuan"
+                                    class="form-control" maxlength="8" placeholder="Contoh: 10648374"
+                                    value="{{ old('npsn_sekolah_tujuan') }}" autocomplete="off"
+                                    style="text-transform:uppercase;">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-danger" id="btnCariTujuan">
+                                        <i class="fas fa-search"></i> Cari
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label class="wz-label">Nama Sekolah Tujuan <span class="text-danger">*</span></label>
-                                    <input type="text" name="sekolah_tujuan" id="sekolah_tujuan" class="form-control"
-                                        placeholder="Nama lengkap sekolah tujuan" value="{{ old('sekolah_tujuan') }}">
-                                    <div class="invalid-feedback">Nama sekolah tujuan wajib diisi</div>
-                                </div>
-                            </div>
+                            <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Masukkan 8 digit NPSN, pencarian otomatis atau klik Cari</small>
+                        </div>
+                        <div id="alertTujuanFound" class="alert alert-success py-2 d-none">
+                            <i class="fas fa-check-circle mr-1"></i> <strong>Data ditemukan:</strong> <span id="tujuan-found-nama"></span>
+                        </div>
+                        <div id="alertTujuanNotFound" class="alert alert-warning py-2 d-none">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Data tidak ditemukan.</strong> Periksa kembali NPSN atau isi nama sekolah secara manual.
+                        </div>
+                        {{-- Auto-filled + manual --}}
+                        <div class="form-group">
+                            <label class="wz-label">Nama Sekolah Tujuan <span class="text-danger">*</span></label>
+                            <input type="text" name="sekolah_tujuan" id="sekolah_tujuan" class="form-control"
+                                placeholder="Nama lengkap sekolah tujuan" value="{{ old('sekolah_tujuan') }}">
+                            <div class="invalid-feedback">Nama sekolah tujuan wajib diisi</div>
                         </div>
                         <div class="form-group">
-                            <label class="wz-label">Kota / Alamat Sekolah Tujuan</label>
+                            <label class="wz-label">Kota / Kabupaten</label>
                             <input type="text" id="alamat_sekolah_tujuan" name="alamat_sekolah_tujuan" class="form-control"
                                 placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_tujuan') }}">
                         </div>
@@ -820,44 +822,66 @@
         el.addEventListener('input', function () { this.classList.remove('is-invalid'); });
     });
 
-    // ── NPSN Autocomplete ─────────────────────────────────────────────────
-    function setupNpsnAutoComplete(npsnId, namaId, kotaId, spinnerId, okId) {
-        var timer;
-        document.getElementById(npsnId).addEventListener('input', function () {
-            var val = this.value.replace(/\D/g, '').slice(0, 8);
-            this.value = val;
-            document.getElementById(spinnerId).style.display = 'none';
-            document.getElementById(okId).style.display = 'none';
-            clearTimeout(timer);
-            if (val.length !== 8) return;
-            document.getElementById(spinnerId).style.display = '';
-            timer = setTimeout(function () {
-                fetch('{{ route("admin.mutasi-siswa.lookup-npsn") }}?npsn=' + val, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (d) {
-                    document.getElementById(spinnerId).style.display = 'none';
-                    if (d.success) {
-                        document.getElementById(namaId).value = d.nama;
-                        if (kotaId && d.kota) document.getElementById(kotaId).value = d.kota;
-                        document.getElementById(okId).style.display = '';
-                        document.getElementById(namaId).classList.remove('is-invalid');
-                    } else {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({ icon: 'warning', title: d.message || 'NPSN tidak ditemukan', toast: true,
-                                position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true });
-                        }
-                    }
-                })
-                .catch(function () {
-                    document.getElementById(spinnerId).style.display = 'none';
-                });
-            }, 500);
+    // ── NPSN Autocomplete (pola diri.blade.php) ─────────────────────────
+    var NPSN_URL = '{{ route("admin.mutasi-siswa.lookup-npsn") }}';
+
+    function cariNpsn(npsnInputId, btnId, alertFoundId, alertNotFoundId, foundNamaId, namaInputId, kotaInputId) {
+        var npsn = $('#' + npsnInputId).val().trim().toUpperCase();
+        if (npsn.length !== 8 || !/^[A-Z0-9]+$/.test(npsn)) {
+            showToast('warning', 'NPSN harus 8 karakter (huruf/angka)');
+            return;
+        }
+        var $btn = $('#' + btnId);
+        var origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mencari...');
+        $('#' + alertFoundId + ', #' + alertNotFoundId).addClass('d-none');
+
+        $.get(NPSN_URL, { npsn: npsn })
+            .done(function (d) {
+                if (d.success) {
+                    $('#' + namaInputId).val(d.nama);
+                    if (kotaInputId && d.kota) $('#' + kotaInputId).val(d.kota);
+                    $('#' + namaInputId).removeClass('is-invalid');
+                    $('#' + foundNamaId).text(d.nama + (d.kota ? ' — ' + d.kota : ''));
+                    $('#' + alertFoundId).removeClass('d-none');
+                    $btn.removeClass('btn-info btn-danger').addClass('btn-success')
+                        .html('<i class="fas fa-check-circle"></i> Ditemukan');
+                    setTimeout(function () {
+                        $btn.removeClass('btn-success').addClass(npsnInputId === 'npsn_sekolah_asal' ? 'btn-info' : 'btn-danger')
+                            .prop('disabled', false).html(origHtml);
+                    }, 2000);
+                } else {
+                    $('#' + alertNotFoundId).removeClass('d-none');
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+            })
+            .fail(function () {
+                $('#' + alertNotFoundId).removeClass('d-none');
+                $btn.prop('disabled', false).html(origHtml);
+            });
+    }
+
+    // Debounce auto-search on input
+    var npsnTimer = {};
+    function bindNpsnInput(npsnInputId, btnId, alertFoundId, alertNotFoundId, foundNamaId, namaInputId, kotaInputId) {
+        $('#' + npsnInputId).on('input', function () {
+            var val = $(this).val().replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8);
+            $(this).val(val);
+            $('#' + alertFoundId + ', #' + alertNotFoundId).addClass('d-none');
+            clearTimeout(npsnTimer[npsnInputId]);
+            if (val.length === 8) {
+                npsnTimer[npsnInputId] = setTimeout(function () {
+                    cariNpsn(npsnInputId, btnId, alertFoundId, alertNotFoundId, foundNamaId, namaInputId, kotaInputId);
+                }, 500);
+            }
+        });
+        $('#' + btnId).on('click', function () {
+            cariNpsn(npsnInputId, btnId, alertFoundId, alertNotFoundId, foundNamaId, namaInputId, kotaInputId);
         });
     }
-    setupNpsnAutoComplete('npsn_sekolah_asal',   'sekolah_asal',   'alamat_sekolah_asal',   'npsn-asal-spinner',   'npsn-asal-ok');
-    setupNpsnAutoComplete('npsn_sekolah_tujuan',  'sekolah_tujuan', 'alamat_sekolah_tujuan', 'npsn-tujuan-spinner', 'npsn-tujuan-ok');
+
+    bindNpsnInput('npsn_sekolah_asal',   'btnCariAsal',   'alertAsalFound',   'alertAsalNotFound',   'asal-found-nama',   'sekolah_asal',   'alamat_sekolah_asal');
+    bindNpsnInput('npsn_sekolah_tujuan', 'btnCariTujuan', 'alertTujuanFound', 'alertTujuanNotFound', 'tujuan-found-nama', 'sekolah_tujuan', 'alamat_sekolah_tujuan');
 
     // ── Recover from validation error (old()) ────────────────────────────
     @if(old('jenis_mutasi'))
