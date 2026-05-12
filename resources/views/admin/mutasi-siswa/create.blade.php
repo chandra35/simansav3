@@ -110,8 +110,19 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="wz-label">NPSN Sekolah Asal</label>
-                                    <input type="text" name="npsn_sekolah_asal" class="form-control" maxlength="8"
-                                        placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_asal') }}">
+                                    <div class="input-group">
+                                        <input type="text" id="npsn_sekolah_asal" name="npsn_sekolah_asal" class="form-control" maxlength="8"
+                                            placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_asal') }}" autocomplete="off">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="npsn-asal-spinner" style="display:none;">
+                                                <i class="fas fa-spinner fa-spin text-primary"></i>
+                                            </span>
+                                            <span class="input-group-text" id="npsn-asal-ok" style="display:none;">
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1"><i class="fas fa-magic mr-1"></i>Isi 8 digit untuk auto-isi nama &amp; kota</small>
                                 </div>
                             </div>
                             <div class="col-md-8">
@@ -134,7 +145,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="wz-label">Kota / Alamat Sekolah</label>
-                                    <input type="text" name="alamat_sekolah_asal" class="form-control"
+                                    <input type="text" id="alamat_sekolah_asal" name="alamat_sekolah_asal" class="form-control"
                                         placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_asal') }}">
                                 </div>
                             </div>
@@ -251,8 +262,19 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="wz-label">NPSN Sekolah Tujuan</label>
-                                    <input type="text" name="npsn_sekolah_tujuan" class="form-control" maxlength="8"
-                                        placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_tujuan') }}">
+                                    <div class="input-group">
+                                        <input type="text" id="npsn_sekolah_tujuan" name="npsn_sekolah_tujuan" class="form-control" maxlength="8"
+                                            placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_tujuan') }}" autocomplete="off">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="npsn-tujuan-spinner" style="display:none;">
+                                                <i class="fas fa-spinner fa-spin text-primary"></i>
+                                            </span>
+                                            <span class="input-group-text" id="npsn-tujuan-ok" style="display:none;">
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1"><i class="fas fa-magic mr-1"></i>Isi 8 digit untuk auto-isi nama &amp; kota</small>
                                 </div>
                             </div>
                             <div class="col-md-8">
@@ -266,7 +288,7 @@
                         </div>
                         <div class="form-group">
                             <label class="wz-label">Kota / Alamat Sekolah Tujuan</label>
-                            <input type="text" name="alamat_sekolah_tujuan" class="form-control"
+                            <input type="text" id="alamat_sekolah_tujuan" name="alamat_sekolah_tujuan" class="form-control"
                                 placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_tujuan') }}">
                         </div>
                         <div class="form-group mb-0">
@@ -797,6 +819,45 @@
     document.querySelectorAll('.form-control').forEach(function (el) {
         el.addEventListener('input', function () { this.classList.remove('is-invalid'); });
     });
+
+    // ── NPSN Autocomplete ─────────────────────────────────────────────────
+    function setupNpsnAutoComplete(npsnId, namaId, kotaId, spinnerId, okId) {
+        var timer;
+        document.getElementById(npsnId).addEventListener('input', function () {
+            var val = this.value.replace(/\D/g, '').slice(0, 8);
+            this.value = val;
+            document.getElementById(spinnerId).style.display = 'none';
+            document.getElementById(okId).style.display = 'none';
+            clearTimeout(timer);
+            if (val.length !== 8) return;
+            document.getElementById(spinnerId).style.display = '';
+            timer = setTimeout(function () {
+                fetch('{{ route("admin.mutasi-siswa.lookup-npsn") }}?npsn=' + val, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    document.getElementById(spinnerId).style.display = 'none';
+                    if (d.success) {
+                        document.getElementById(namaId).value = d.nama;
+                        if (kotaId && d.kota) document.getElementById(kotaId).value = d.kota;
+                        document.getElementById(okId).style.display = '';
+                        document.getElementById(namaId).classList.remove('is-invalid');
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'warning', title: d.message || 'NPSN tidak ditemukan', toast: true,
+                                position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true });
+                        }
+                    }
+                })
+                .catch(function () {
+                    document.getElementById(spinnerId).style.display = 'none';
+                });
+            }, 500);
+        });
+    }
+    setupNpsnAutoComplete('npsn_sekolah_asal',   'sekolah_asal',   'alamat_sekolah_asal',   'npsn-asal-spinner',   'npsn-asal-ok');
+    setupNpsnAutoComplete('npsn_sekolah_tujuan',  'sekolah_tujuan', 'alamat_sekolah_tujuan', 'npsn-tujuan-spinner', 'npsn-tujuan-ok');
 
     // ── Recover from validation error (old()) ────────────────────────────
     @if(old('jenis_mutasi'))

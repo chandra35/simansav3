@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MutasiSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Services\KemendikbudApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,41 @@ class MutasiSiswaController extends Controller
             ]);
 
         return response()->json($results);
+    }
+
+    /**
+     * Lookup data sekolah berdasarkan NPSN (via KemendikbudApiService)
+     */
+    public function lookupNpsn(Request $request)
+    {
+        $npsn = trim($request->get('npsn', ''));
+
+        if (!preg_match('/^\d{8}$/', $npsn)) {
+            return response()->json(['success' => false, 'message' => 'NPSN harus 8 digit angka']);
+        }
+
+        $service = new KemendikbudApiService();
+        $result  = $service->getSekolah($npsn);
+
+        if (!$result['success']) {
+            return response()->json(['success' => false, 'message' => $result['message'] ?? 'Data tidak ditemukan']);
+        }
+
+        $s = $result['data'];
+
+        return response()->json([
+            'success' => true,
+            'nama'    => $s->nama            ?? '',
+            'alamat'  => implode(', ', array_filter([
+                $s->alamat_jalan      ?? null,
+                $s->desa_kelurahan    ?? null,
+                $s->kecamatan         ?? null,
+                $s->kabupaten_kota    ?? null,
+                $s->provinsi          ?? null,
+            ])),
+            'kota'    => $s->kabupaten_kota  ?? '',
+            'provinsi'=> $s->provinsi        ?? '',
+        ]);
     }
 
     /**
