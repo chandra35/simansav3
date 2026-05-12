@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -260,6 +260,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [MutasiSiswaController::class, 'index'])->name('index');
         Route::get('/create', [MutasiSiswaController::class, 'create'])->name('create');
         Route::post('/', [MutasiSiswaController::class, 'store'])->name('store');
+        Route::get('/search-siswa', [MutasiSiswaController::class, 'searchSiswa'])->name('search-siswa');
         Route::get('/{mutasiSiswa}', [MutasiSiswaController::class, 'show'])->name('show');
         Route::get('/{mutasiSiswa}/edit', [MutasiSiswaController::class, 'edit'])->name('edit');
         Route::put('/{mutasiSiswa}', [MutasiSiswaController::class, 'update'])->name('update');
@@ -302,7 +303,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/api/villages/{kecamatan}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getVillages'])->name('gtk.api.villages');
     });
     
-    // â”€â”€â”€ Verifikasi Ijazah SMP/MTs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Verifikasi Ijazah SMP/MTs ─────────────────────────────────────────────
     Route::middleware(['permission:verifikasi-ijazah'])->prefix('verifikasi-ijazah')->name('verifikasi-ijazah.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'index'])->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'data'])->name('data');
@@ -311,7 +312,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{siswa}/refresh-emis', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'refreshEmis'])->name('refresh-emis');
     });
 
-    // â”€â”€â”€ Siswa Tidak Mampu / PIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Siswa Tidak Mampu / PIP ───────────────────────────────────────────────
     Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SiswaPipController::class, 'index'])->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
@@ -874,7 +875,7 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
         ->name('session.end');
 });
 
-// â”€â”€â”€ Device Location & Client Runtime (global, no auth required) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Device Location & Client Runtime (global, no auth required) ──────────────
 Route::post('/device-location/sync', [App\Http\Controllers\DeviceLocationController::class, 'sync'])
     ->middleware('throttle:60,1')
     ->name('device-location.sync');
