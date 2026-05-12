@@ -60,23 +60,49 @@ class MutasiSiswaController extends Controller
     }
 
     /**
+     * AJAX: cari siswa untuk Select2
+     */
+    public function searchSiswa(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $results = Siswa::where(function ($query) use ($q) {
+                $query->where('nama_lengkap', 'like', "%{$q}%")
+                      ->orWhere('nisn', 'like', "%{$q}%");
+            })
+            ->limit(25)
+            ->get(['id', 'nama_lengkap', 'nisn', 'status_siswa'])
+            ->map(fn ($s) => [
+                'id'           => $s->id,
+                'nama_lengkap' => $s->nama_lengkap,
+                'nisn'         => $s->nisn ?? '-',
+                'status_siswa' => $s->status_siswa ?? 'aktif',
+            ]);
+
+        return response()->json($results);
+    }
+
+    /**
      * Form tambah mutasi
      */
     public function create(Request $request)
     {
         $this->authorize('create-mutasi');
 
-        $siswaList = Siswa::orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'status_siswa']);
+        // Siswa dicari via AJAX (searchSiswa), tidak load semua
         $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
 
         // Jika ada siswa_id di query string (dari halaman siswa)
         $selectedSiswa = null;
         if ($request->filled('siswa_id')) {
-            $selectedSiswa = Siswa::find($request->siswa_id);
+            $selectedSiswa = Siswa::select('id', 'nama_lengkap', 'nisn', 'status_siswa')->find($request->siswa_id);
         }
 
-        return view('admin.mutasi-siswa.create', compact('siswaList', 'tahunPelajarans', 'tahunAktif', 'selectedSiswa'));
+        return view('admin.mutasi-siswa.create', compact('tahunPelajarans', 'tahunAktif', 'selectedSiswa'));
     }
 
     /**
