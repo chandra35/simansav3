@@ -57,7 +57,7 @@
     {{-- ── STEP 0: Pilih Jenis ──────────────────────────────────────────── --}}
     <div id="step-0" class="wz-pane">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6 text-center">
+            <div class="col-md-8 col-lg-6 text-center wz-box pt-4 pb-3">
                 <div class="wz-icon-top mb-3">
                     <i class="fas fa-exchange-alt"></i>
                 </div>
@@ -92,7 +92,7 @@
     {{-- ── STEP 1 MASUK: Sekolah Asal ──────────────────────────────────── --}}
     <div id="step-1-masuk" class="wz-pane d-none">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
+            <div class="col-md-8 col-lg-7 wz-box">
                 <div class="wz-section-title text-info">
                     <i class="fas fa-school"></i>
                     <div>
@@ -155,7 +155,7 @@
     {{-- ── STEP 1 KELUAR: Cari Siswa ───────────────────────────────────── --}}
     <div id="step-1-keluar" class="wz-pane d-none">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
+            <div class="col-md-8 col-lg-7 wz-box">
                 <div class="wz-section-title text-primary">
                     <i class="fas fa-search"></i>
                     <div>
@@ -190,7 +190,7 @@
     {{-- ── STEP 2 MASUK: Data Siswa Baru ─────────────────────────────────── --}}
     <div id="step-2-masuk" class="wz-pane d-none">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
+            <div class="col-md-8 col-lg-7 wz-box">
                 <div class="wz-section-title text-primary">
                     <i class="fas fa-user-plus"></i>
                     <div>
@@ -236,7 +236,7 @@
     {{-- ── STEP 2 KELUAR: Sekolah Tujuan ───────────────────────────────── --}}
     <div id="step-2-keluar" class="wz-pane d-none">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
+            <div class="col-md-8 col-lg-7 wz-box">
                 <div class="wz-section-title text-danger">
                     <i class="fas fa-school"></i>
                     <div>
@@ -288,7 +288,7 @@
     {{-- ── STEP 3: Dokumen & Ringkasan ─────────────────────────────────── --}}
     <div id="step-3" class="wz-pane d-none">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
+            <div class="col-md-8 col-lg-7 wz-box">
                 {{-- Ringkasan --}}
                 <div class="wz-section-title" style="color:#495057;">
                     <i class="fas fa-clipboard-check"></i>
@@ -398,6 +398,15 @@
 
 @section('css')
 <style>
+/* ── Content Box ─────────────────────────────────── */
+.wz-box {
+    background: #fdfdfe;
+    border: 1px solid #e6e9ef;
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 4px;
+}
+
 /* ── Labels ───────────────────────────────────────── */
 .wz-label { font-weight: 600; font-size: .83rem; color: #495057; margin-bottom: 5px; display: block; }
 
