@@ -23,72 +23,66 @@
 <div class="alert alert-danger alert-dismissible">
     <button type="button" class="close" data-dismiss="alert">&times;</button>
     <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Terdapat kesalahan:</strong>
-    <ul class="mb-0 mt-1">
-        @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-    </ul>
+    <ul class="mb-0 mt-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
 
 <form action="{{ route('admin.mutasi-siswa.store') }}" method="POST" enctype="multipart/form-data" id="formMutasi">
     @csrf
-    {{-- Hidden fields: final submitted values --}}
-    <input type="hidden" name="jenis_mutasi"     id="final_jenis">
-    <input type="hidden" name="siswa_id"         id="final_siswa_id">
+    <input type="hidden" name="jenis_mutasi" id="final_jenis">
+    <input type="hidden" name="siswa_id"     id="final_siswa_id">
 
-    {{-- ── Step Indicator (hidden on step 0) ─────────────────────────────── --}}
+    {{-- ── Progress Bar ──────────────────────────────────────────────────── --}}
     <div id="wizard-header" class="d-none mb-4">
-        <div class="card mb-0">
-            <div class="card-body py-3 px-4">
-                <div class="d-flex align-items-center">
-                    <div class="step-indicator">
-                        <div class="step-circle" id="si-1">1</div>
-                        <div class="step-label" id="sl-1">—</div>
-                    </div>
-                    <div class="step-line flex-grow-1 mx-2" id="line-1"></div>
-                    <div class="step-indicator">
-                        <div class="step-circle" id="si-2">2</div>
-                        <div class="step-label" id="sl-2">—</div>
-                    </div>
-                    <div class="step-line flex-grow-1 mx-2" id="line-2"></div>
-                    <div class="step-indicator">
-                        <div class="step-circle" id="si-3">3</div>
-                        <div class="step-label" id="sl-3">Dokumen</div>
-                    </div>
+        <div class="wz-progress-wrap">
+            <div class="wz-steps">
+                <div class="wz-step-item" id="wsi-1">
+                    <div class="wz-step-num">1</div>
+                    <div class="wz-step-lbl" id="wsl-1">—</div>
+                </div>
+                <div class="wz-connector" id="wsc-1"></div>
+                <div class="wz-step-item" id="wsi-2">
+                    <div class="wz-step-num">2</div>
+                    <div class="wz-step-lbl" id="wsl-2">—</div>
+                </div>
+                <div class="wz-connector" id="wsc-2"></div>
+                <div class="wz-step-item" id="wsi-3">
+                    <div class="wz-step-num">3</div>
+                    <div class="wz-step-lbl" id="wsl-3">Dokumen</div>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- ── STEP 0: Pilih Jenis ──────────────────────────────────────────── --}}
-    <div id="step-0" class="wizard-step">
+    <div id="step-0" class="wz-pane">
         <div class="row justify-content-center">
-            <div class="col-md-7 col-lg-6">
-                <div class="card">
-                    <div class="card-header text-center" style="border-top:3px solid #007bff;">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-exchange-alt mr-2"></i>Pilih Jenis Mutasi
-                        </h3>
-                        <small class="text-muted">Tentukan arah perpindahan siswa</small>
+            <div class="col-md-8 col-lg-6">
+                <div class="wz-card text-center mb-4">
+                    <div class="wz-card-icon-top">
+                        <i class="fas fa-exchange-alt"></i>
                     </div>
-                    <div class="card-body py-4">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="jenis-card" id="jcard-masuk" onclick="selectJenis('masuk')">
-                                    <div class="jenis-icon" style="background:#17a2b8;">
-                                        <i class="fas fa-sign-in-alt"></i>
-                                    </div>
-                                    <h5 class="mt-3 mb-1 font-weight-bold">Mutasi Masuk</h5>
-                                    <p class="text-muted small mb-0">Siswa dari sekolah lain masuk ke sini</p>
+                    <h4 class="font-weight-bold mt-3 mb-1">Pilih Jenis Mutasi</h4>
+                    <p class="text-muted small mb-4">Tentukan arah perpindahan siswa terlebih dahulu</p>
+                    <div class="row">
+                        <div class="col-6 pr-2">
+                            <div class="jcard" id="jcard-masuk" onclick="selectJenis('masuk')">
+                                <div class="jcard-circle jcard-circle-info">
+                                    <i class="fas fa-sign-in-alt"></i>
                                 </div>
+                                <h5 class="mt-3 mb-1">Mutasi Masuk</h5>
+                                <p class="text-muted small mb-0">Siswa dari sekolah lain masuk ke sini</p>
+                                <div class="jcard-check d-none"><i class="fas fa-check-circle text-info fa-lg"></i></div>
                             </div>
-                            <div class="col-6">
-                                <div class="jenis-card" id="jcard-keluar" onclick="selectJenis('keluar')">
-                                    <div class="jenis-icon" style="background:#dc3545;">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                    </div>
-                                    <h5 class="mt-3 mb-1 font-weight-bold">Mutasi Keluar</h5>
-                                    <p class="text-muted small mb-0">Siswa dari sini pindah ke sekolah lain</p>
+                        </div>
+                        <div class="col-6 pl-2">
+                            <div class="jcard" id="jcard-keluar" onclick="selectJenis('keluar')">
+                                <div class="jcard-circle jcard-circle-danger">
+                                    <i class="fas fa-sign-out-alt"></i>
                                 </div>
+                                <h5 class="mt-3 mb-1">Mutasi Keluar</h5>
+                                <p class="text-muted small mb-0">Siswa dari sini pindah ke sekolah lain</p>
+                                <div class="jcard-check d-none"><i class="fas fa-check-circle text-danger fa-lg"></i></div>
                             </div>
                         </div>
                     </div>
@@ -98,32 +92,33 @@
     </div>
 
     {{-- ── STEP 1 MASUK: Sekolah Asal ──────────────────────────────────── --}}
-    <div id="step-1-masuk" class="wizard-step d-none">
+    <div id="step-1-masuk" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-info" style="border-top:3px solid #17a2b8;">
-                        <h3 class="card-title text-white">
-                            <i class="fas fa-school mr-2"></i>Data Sekolah Asal
-                        </h3>
-                        <small class="text-white-50">Dari mana siswa ini berasal?</small>
+                <div class="wz-card wz-card-info">
+                    <div class="wz-card-header wz-header-info">
+                        <div class="d-flex align-items-center">
+                            <div class="wz-header-icon mr-3"><i class="fas fa-school"></i></div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold">Data Sekolah Asal</h5>
+                                <small class="opacity-75">Dari mana siswa ini berasal?</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="wz-card-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>NPSN Sekolah Asal</label>
-                                    <input type="text" name="npsn_sekolah_asal" class="form-control"
-                                        maxlength="8" placeholder="8 digit NPSN"
-                                        value="{{ old('npsn_sekolah_asal') }}">
+                                    <label class="wz-label">NPSN Sekolah Asal</label>
+                                    <input type="text" name="npsn_sekolah_asal" class="form-control" maxlength="8"
+                                        placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_asal') }}">
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <label>Nama Sekolah Asal <span class="text-danger">*</span></label>
-                                    <input type="text" name="sekolah_asal" id="sekolah_asal"
-                                        class="form-control" placeholder="Nama lengkap sekolah asal"
-                                        value="{{ old('sekolah_asal') }}">
+                                    <label class="wz-label">Nama Sekolah Asal <span class="text-danger">*</span></label>
+                                    <input type="text" name="sekolah_asal" id="sekolah_asal" class="form-control"
+                                        placeholder="Nama lengkap sekolah asal" value="{{ old('sekolah_asal') }}">
                                     <div class="invalid-feedback">Nama sekolah asal wajib diisi</div>
                                 </div>
                             </div>
@@ -131,24 +126,23 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Kelas Asal</label>
+                                    <label class="wz-label">Kelas Asal</label>
                                     <input type="text" name="kelas_asal" class="form-control"
-                                        placeholder="Contoh: VII-A, 10 IPA 1"
-                                        value="{{ old('kelas_asal') }}">
+                                        placeholder="Contoh: VII-A, 10 IPA 1" value="{{ old('kelas_asal') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Kota / Alamat Sekolah</label>
+                                    <label class="wz-label">Kota / Alamat Sekolah</label>
                                     <input type="text" name="alamat_sekolah_asal" class="form-control"
                                         placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_asal') }}">
                                 </div>
                             </div>
                         </div>
                         <div class="form-group mb-0">
-                            <label>Alasan Mutasi Masuk</label>
+                            <label class="wz-label">Alasan Mutasi Masuk <small class="text-muted font-weight-normal">(opsional)</small></label>
                             <textarea name="alasan_mutasi_masuk" class="form-control" rows="2"
-                                placeholder="Alasan pindah ke sekolah ini (opsional)">{{ old('alasan_mutasi_masuk') }}</textarea>
+                                placeholder="Alasan pindah ke sekolah ini...">{{ old('alasan_mutasi_masuk') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -157,39 +151,37 @@
     </div>
 
     {{-- ── STEP 1 KELUAR: Cari Siswa ───────────────────────────────────── --}}
-    <div id="step-1-keluar" class="wizard-step d-none">
+    <div id="step-1-keluar" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header" style="border-top:3px solid #007bff;">
-                        <h3 class="card-title">
-                            <i class="fas fa-search mr-2"></i>Cari Siswa
-                        </h3>
-                        <small class="text-muted">Siswa mana yang akan dimutasi keluar?</small>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>Nama / NISN / NIK Siswa <span class="text-danger">*</span></label>
-                            <select id="siswa_id_keluar" class="form-control" style="width:100%;"></select>
-                            <small class="text-muted"><i class="fas fa-search mr-1"></i>Ketik minimal 2 karakter</small>
+                <div class="wz-card wz-card-primary">
+                    <div class="wz-card-header wz-header-primary">
+                        <div class="d-flex align-items-center">
+                            <div class="wz-header-icon mr-3"><i class="fas fa-search"></i></div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold">Cari Siswa</h5>
+                                <small class="opacity-75">Siswa mana yang akan dimutasi keluar?</small>
+                            </div>
                         </div>
-                        <div id="siswa-info-keluar" class="d-none">
-                            <div class="student-info-card">
-                                <div class="d-flex align-items-center">
-                                    <div class="student-avatar mr-3">
-                                        <i class="fas fa-user-graduate fa-2x text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1" id="sk-nama">—</h5>
-                                        <div class="row">
-                                            <div class="col-auto">
-                                                <small class="text-muted">NISN: <strong id="sk-nisn">—</strong></small>
-                                            </div>
-                                            <div class="col-auto">
-                                                <small class="text-muted">Status: <span id="sk-status" class="badge badge-secondary">—</span></small>
-                                            </div>
-                                        </div>
-                                    </div>
+                    </div>
+                    <div class="wz-card-body">
+                        <div class="form-group mb-2">
+                            <label class="wz-label">Nama / NISN Siswa <span class="text-danger">*</span></label>
+                            <select id="siswa_id_keluar" style="width:100%;"></select>
+                            <small class="text-muted mt-1 d-block"><i class="fas fa-keyboard mr-1"></i>Ketik minimal 2 karakter nama atau NISN</small>
+                        </div>
+                        <div id="siswa-info-keluar" class="d-none siswa-found-card">
+                            <div class="d-flex align-items-center">
+                                <div class="siswa-avatar mr-3">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold" id="sk-nama"></div>
+                                    <small class="text-muted">NISN: <strong id="sk-nisn"></strong></small>
+                                    &nbsp;<span id="sk-status" class="badge badge-info"></span>
+                                </div>
+                                <div class="ml-auto">
+                                    <i class="fas fa-check-circle fa-2x text-success"></i>
                                 </div>
                             </div>
                         </div>
@@ -200,39 +192,37 @@
     </div>
 
     {{-- ── STEP 2 MASUK: Tautkan Siswa ─────────────────────────────────── --}}
-    <div id="step-2-masuk" class="wizard-step d-none">
+    <div id="step-2-masuk" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header" style="border-top:3px solid #007bff;">
-                        <h3 class="card-title">
-                            <i class="fas fa-user-plus mr-2"></i>Data Siswa
-                        </h3>
-                        <small class="text-muted">Tautkan ke data siswa dalam sistem</small>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>Nama / NISN Siswa <span class="text-danger">*</span></label>
-                            <select id="siswa_id_masuk" class="form-control" style="width:100%;"></select>
-                            <small class="text-muted"><i class="fas fa-search mr-1"></i>Ketik minimal 2 karakter</small>
+                <div class="wz-card wz-card-primary">
+                    <div class="wz-card-header wz-header-primary">
+                        <div class="d-flex align-items-center">
+                            <div class="wz-header-icon mr-3"><i class="fas fa-user-plus"></i></div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold">Tautkan Data Siswa</h5>
+                                <small class="opacity-75">Hubungkan ke data siswa dalam sistem</small>
+                            </div>
                         </div>
-                        <div id="siswa-info-masuk" class="d-none">
-                            <div class="student-info-card">
-                                <div class="d-flex align-items-center">
-                                    <div class="student-avatar mr-3">
-                                        <i class="fas fa-user-graduate fa-2x text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1" id="sm-nama">—</h5>
-                                        <div class="row">
-                                            <div class="col-auto">
-                                                <small class="text-muted">NISN: <strong id="sm-nisn">—</strong></small>
-                                            </div>
-                                            <div class="col-auto">
-                                                <small class="text-muted">Status: <span id="sm-status" class="badge badge-secondary">—</span></small>
-                                            </div>
-                                        </div>
-                                    </div>
+                    </div>
+                    <div class="wz-card-body">
+                        <div class="form-group mb-2">
+                            <label class="wz-label">Nama / NISN Siswa <span class="text-danger">*</span></label>
+                            <select id="siswa_id_masuk" style="width:100%;"></select>
+                            <small class="text-muted mt-1 d-block"><i class="fas fa-keyboard mr-1"></i>Ketik minimal 2 karakter nama atau NISN</small>
+                        </div>
+                        <div id="siswa-info-masuk" class="d-none siswa-found-card">
+                            <div class="d-flex align-items-center">
+                                <div class="siswa-avatar mr-3">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold" id="sm-nama"></div>
+                                    <small class="text-muted">NISN: <strong id="sm-nisn"></strong></small>
+                                    &nbsp;<span id="sm-status" class="badge badge-info"></span>
+                                </div>
+                                <div class="ml-auto">
+                                    <i class="fas fa-check-circle fa-2x text-success"></i>
                                 </div>
                             </div>
                         </div>
@@ -243,45 +233,46 @@
     </div>
 
     {{-- ── STEP 2 KELUAR: Sekolah Tujuan ───────────────────────────────── --}}
-    <div id="step-2-keluar" class="wizard-step d-none">
+    <div id="step-2-keluar" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-danger" style="border-top:3px solid #dc3545;">
-                        <h3 class="card-title text-white">
-                            <i class="fas fa-school mr-2"></i>Sekolah Tujuan
-                        </h3>
-                        <small class="text-white-50">Ke mana siswa ini akan pindah?</small>
+                <div class="wz-card wz-card-danger">
+                    <div class="wz-card-header wz-header-danger">
+                        <div class="d-flex align-items-center">
+                            <div class="wz-header-icon mr-3"><i class="fas fa-school"></i></div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold">Sekolah Tujuan</h5>
+                                <small class="opacity-75">Ke mana siswa ini akan pindah?</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="wz-card-body">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>NPSN Sekolah Tujuan</label>
-                                    <input type="text" name="npsn_sekolah_tujuan" class="form-control"
-                                        maxlength="8" placeholder="8 digit NPSN"
-                                        value="{{ old('npsn_sekolah_tujuan') }}">
+                                    <label class="wz-label">NPSN Sekolah Tujuan</label>
+                                    <input type="text" name="npsn_sekolah_tujuan" class="form-control" maxlength="8"
+                                        placeholder="8 digit NPSN" value="{{ old('npsn_sekolah_tujuan') }}">
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <label>Nama Sekolah Tujuan <span class="text-danger">*</span></label>
-                                    <input type="text" name="sekolah_tujuan" id="sekolah_tujuan"
-                                        class="form-control" placeholder="Nama lengkap sekolah tujuan"
-                                        value="{{ old('sekolah_tujuan') }}">
+                                    <label class="wz-label">Nama Sekolah Tujuan <span class="text-danger">*</span></label>
+                                    <input type="text" name="sekolah_tujuan" id="sekolah_tujuan" class="form-control"
+                                        placeholder="Nama lengkap sekolah tujuan" value="{{ old('sekolah_tujuan') }}">
                                     <div class="invalid-feedback">Nama sekolah tujuan wajib diisi</div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Kota / Alamat Sekolah Tujuan</label>
+                            <label class="wz-label">Kota / Alamat Sekolah Tujuan</label>
                             <input type="text" name="alamat_sekolah_tujuan" class="form-control"
                                 placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_tujuan') }}">
                         </div>
                         <div class="form-group mb-0">
-                            <label>Alasan Mutasi Keluar</label>
+                            <label class="wz-label">Alasan Mutasi Keluar <small class="text-muted font-weight-normal">(opsional)</small></label>
                             <textarea name="alasan_mutasi_keluar" class="form-control" rows="2"
-                                placeholder="Alasan pindah (opsional)">{{ old('alasan_mutasi_keluar') }}</textarea>
+                                placeholder="Alasan pindah...">{{ old('alasan_mutasi_keluar') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -289,45 +280,47 @@
         </div>
     </div>
 
-    {{-- ── STEP 3: Tanggal + Dokumen (Shared) ──────────────────────────── --}}
-    <div id="step-3" class="wizard-step d-none">
+    {{-- ── STEP 3: Dokumen & Ringkasan ─────────────────────────────────── --}}
+    <div id="step-3" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                {{-- Summary --}}
-                <div class="card card-outline card-primary mb-3">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-clipboard-list mr-1"></i>Ringkasan</h3>
+                {{-- Ringkasan --}}
+                <div class="wz-summary-card mb-3">
+                    <div class="wz-summary-header">
+                        <i class="fas fa-clipboard-check mr-2"></i>Ringkasan Data
                     </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm mb-0">
-                            <tr>
-                                <td class="text-muted pl-3" width="36%">Jenis Mutasi</td>
-                                <td id="sum-jenis">—</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted pl-3">Siswa</td>
-                                <td id="sum-siswa">—</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted pl-3" id="sum-sekolah-label">Sekolah</td>
-                                <td id="sum-sekolah">—</td>
-                            </tr>
-                        </table>
+                    <div class="wz-summary-body">
+                        <div class="wz-summary-row">
+                            <span class="wz-summary-key">Jenis Mutasi</span>
+                            <span id="sum-jenis">—</span>
+                        </div>
+                        <div class="wz-summary-row">
+                            <span class="wz-summary-key">Siswa</span>
+                            <span id="sum-siswa" class="font-weight-bold">—</span>
+                        </div>
+                        <div class="wz-summary-row">
+                            <span class="wz-summary-key" id="sum-sekolah-lbl">Sekolah</span>
+                            <span id="sum-sekolah">—</span>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Tanggal + Tahun --}}
-                <div class="card">
-                    <div class="card-header" style="border-top:3px solid #28a745;">
-                        <h3 class="card-title">
-                            <i class="fas fa-calendar-alt mr-2"></i>Waktu &amp; Dokumen
-                        </h3>
+                {{-- Waktu + Dokumen --}}
+                <div class="wz-card">
+                    <div class="wz-card-header" style="background: linear-gradient(135deg,#28a745,#20c997); color:#fff; border-left:4px solid #1e7e34;">
+                        <div class="d-flex align-items-center">
+                            <div class="wz-header-icon mr-3"><i class="fas fa-calendar-check"></i></div>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold">Waktu &amp; Dokumen</h5>
+                                <small class="opacity-75">Lengkapi data waktu dan upload surat</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="wz-card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Tahun Pelajaran <span class="text-danger">*</span></label>
+                                    <label class="wz-label">Tahun Pelajaran <span class="text-danger">*</span></label>
                                     <select name="tahun_pelajaran_id" id="tahun_pelajaran_id" class="form-control">
                                         <option value="">-- Pilih --</option>
                                         @foreach($tahunPelajarans as $tp)
@@ -342,40 +335,39 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Tanggal Mutasi <span class="text-danger">*</span></label>
+                                    <label class="wz-label">Tanggal Mutasi <span class="text-danger">*</span></label>
                                     <input type="date" name="tanggal_mutasi" id="tanggal_mutasi"
                                         class="form-control" value="{{ old('tanggal_mutasi', date('Y-m-d')) }}">
                                 </div>
                             </div>
                         </div>
-                        <hr>
+                        <hr class="my-3">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Nomor Surat Mutasi <small class="text-muted">(opsional)</small></label>
+                                    <label class="wz-label">Nomor Surat <small class="text-muted font-weight-normal">(opsional)</small></label>
                                     <input type="text" name="nomor_surat_mutasi" class="form-control"
                                         placeholder="No. surat..." value="{{ old('nomor_surat_mutasi') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>File Surat <small class="text-muted">(PDF, maks 5MB)</small></label>
+                                    <label class="wz-label">File Surat PDF <small class="text-muted font-weight-normal">(maks 5MB)</small></label>
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input" id="file_surat_mutasi"
                                             name="file_surat_mutasi" accept=".pdf">
                                         <label class="custom-file-label" for="file_surat_mutasi">Pilih file PDF...</label>
                                     </div>
                                     <div id="file-preview" class="mt-2 d-none">
-                                        <div class="alert alert-success py-2 mb-0">
-                                            <i class="fas fa-file-pdf mr-1 text-danger"></i>
-                                            <span id="file-name" class="small"></span>
-                                        </div>
+                                        <span class="badge badge-success py-2 px-3">
+                                            <i class="fas fa-file-pdf mr-1"></i><span id="file-name"></span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group mb-0">
-                            <label>Catatan <small class="text-muted">(opsional)</small></label>
+                            <label class="wz-label">Catatan <small class="text-muted font-weight-normal">(opsional)</small></label>
                             <textarea name="catatan" class="form-control" rows="3"
                                 placeholder="Catatan tambahan...">{{ old('catatan') }}</textarea>
                         </div>
@@ -385,19 +377,19 @@
         </div>
     </div>
 
-    {{-- ── Navigation ───────────────────────────────────────────────────── --}}
-    <div id="wizard-nav" class="row justify-content-center mt-2 d-none">
+    {{-- ── Navigasi ─────────────────────────────────────────────────────── --}}
+    <div id="wizard-nav" class="row justify-content-center mt-3 d-none">
         <div class="col-md-8">
             <div class="d-flex justify-content-between align-items-center">
-                <button type="button" id="btn-prev" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left mr-1"></i>Kembali
+                <button type="button" id="btn-prev" class="btn btn-outline-secondary">
+                    <i class="fas fa-chevron-left mr-1"></i><span id="btn-prev-lbl">Kembali</span>
                 </button>
-                <div>
-                    <a href="{{ route('admin.mutasi-siswa.index') }}" class="btn btn-link text-muted mr-2">Batal</a>
-                    <button type="button" id="btn-next" class="btn btn-primary">
-                        Selanjutnya <i class="fas fa-arrow-right ml-1"></i>
+                <div class="d-flex align-items-center">
+                    <a href="{{ route('admin.mutasi-siswa.index') }}" class="btn btn-link text-muted mr-3">Batal</a>
+                    <button type="button" id="btn-next" class="btn btn-primary px-4">
+                        Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
                     </button>
-                    <button type="submit" id="btn-submit" class="btn btn-success d-none">
+                    <button type="submit" id="btn-submit" class="btn btn-success px-4 d-none">
                         <i class="fas fa-save mr-1"></i>Simpan Mutasi
                     </button>
                 </div>
@@ -410,132 +402,181 @@
 
 @section('css')
 <style>
-/* ── Jenis Cards ─────────────────────────────────────── */
-.jenis-card {
-    border: 2px solid #dee2e6;
+/* ── Wizard Cards ─────────────────────────────────── */
+.wz-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+.wz-card-header {
+    padding: 18px 24px;
+    color: #fff;
+}
+.wz-card-header.wz-header-primary { background: linear-gradient(135deg,#007bff,#0056d6); border-left: 4px solid #004ab5; }
+.wz-card-header.wz-header-info    { background: linear-gradient(135deg,#17a2b8,#117a8b); border-left: 4px solid #0f6674; }
+.wz-card-header.wz-header-danger  { background: linear-gradient(135deg,#dc3545,#c0392b); border-left: 4px solid #a93226; }
+.wz-header-icon {
+    width: 42px; height: 42px;
+    background: rgba(255,255,255,.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.wz-card-body { padding: 24px; }
+.wz-label { font-weight: 600; font-size: .83rem; color: #495057; margin-bottom: 5px; }
+
+/* Step 0 welcome card */
+.wz-card-icon-top {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #007bff, #6610f2);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: #fff;
+    margin: 0 auto;
+    box-shadow: 0 8px 20px rgba(0,123,255,.35);
+}
+
+/* ── Jenis Cards ──────────────────────────────────── */
+.jcard {
+    border: 2px solid #e9ecef;
     border-radius: 14px;
     padding: 28px 16px 20px;
-    text-align: center;
     cursor: pointer;
-    transition: all .25s cubic-bezier(.4,0,.2,1);
-    user-select: none;
+    transition: all .25s ease;
+    position: relative;
+    background: #fff;
 }
-.jenis-card:hover {
-    border-color: #adb5bd;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,.1);
-}
-.jenis-card.selected-masuk {
-    border-color: #17a2b8 !important;
-    background: linear-gradient(135deg, #e8f7fb, #fff);
-    box-shadow: 0 6px 20px rgba(23,162,184,.2);
-    transform: translateY(-4px);
-}
-.jenis-card.selected-keluar {
-    border-color: #dc3545 !important;
-    background: linear-gradient(135deg, #fdf0f1, #fff);
-    box-shadow: 0 6px 20px rgba(220,53,69,.2);
-    transform: translateY(-4px);
-}
-.jenis-icon {
-    width: 68px; height: 68px;
-    border-radius: 50%;
+.jcard:hover { border-color: #adb5bd; transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.10); }
+.jcard.sel-masuk  { border-color: #17a2b8; background: linear-gradient(160deg,#e8f7fb 0%,#fff 70%); transform: translateY(-4px); box-shadow: 0 10px 28px rgba(23,162,184,.18); }
+.jcard.sel-keluar { border-color: #dc3545; background: linear-gradient(160deg,#fdf0f1 0%,#fff 70%); transform: translateY(-4px); box-shadow: 0 10px 28px rgba(220,53,69,.18); }
+.jcard-circle {
+    width: 72px; height: 72px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto;
-    font-size: 1.6rem; color: white;
+    font-size: 1.7rem; color: #fff; margin: 0 auto;
     transition: transform .25s;
 }
-.jenis-card:hover .jenis-icon,
-.jenis-card.selected-masuk .jenis-icon,
-.jenis-card.selected-keluar .jenis-icon {
-    transform: scale(1.1);
-}
+.jcard-circle-info   { background: linear-gradient(135deg,#17a2b8,#0f6674); box-shadow: 0 6px 16px rgba(23,162,184,.4); }
+.jcard-circle-danger { background: linear-gradient(135deg,#dc3545,#a93226); box-shadow: 0 6px 16px rgba(220,53,69,.4); }
+.jcard:hover .jcard-circle, .jcard.sel-masuk .jcard-circle, .jcard.sel-keluar .jcard-circle { transform: scale(1.08) rotate(-4deg); }
+.jcard-check { position: absolute; top: 10px; right: 12px; transition: all .2s; }
 
-/* ── Step Indicator ──────────────────────────────────── */
-.step-indicator { text-align: center; flex-shrink: 0; }
-.step-circle {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    background: #dee2e6; color: #adb5bd;
+/* ── Progress Indicator ──────────────────────────── */
+.wz-progress-wrap {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+.wz-steps {
+    display: flex; align-items: center;
+}
+.wz-step-item { text-align: center; flex-shrink: 0; }
+.wz-step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #e9ecef; color: #adb5bd;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .875rem;
-    margin: 0 auto 4px;
-    transition: all .35s cubic-bezier(.4,0,.2,1);
+    font-weight: 700; font-size: .875rem; margin: 0 auto 6px;
+    transition: all .35s ease; border: 2px solid #dee2e6;
 }
-.step-circle.active  { background: #007bff; color: #fff; box-shadow: 0 0 0 4px rgba(0,123,255,.2); }
-.step-circle.done    { background: #28a745; color: #fff; }
-.step-label          { font-size: .7rem; color: #adb5bd; white-space: nowrap; transition: color .3s; }
-.step-label.active   { color: #007bff; font-weight: 600; }
-.step-label.done     { color: #28a745; }
-.step-line           { height: 2px; background: #dee2e6; margin-bottom: 22px; transition: background .4s; }
-.step-line.done      { background: #28a745; }
+.wz-step-item.wz-active .wz-step-num  { background: #007bff; color: #fff; border-color: #007bff; box-shadow: 0 0 0 5px rgba(0,123,255,.15); }
+.wz-step-item.wz-done   .wz-step-num  { background: #28a745; color: #fff; border-color: #28a745; }
+.wz-step-lbl { font-size: .72rem; color: #adb5bd; white-space: nowrap; transition: color .3s; }
+.wz-step-item.wz-active .wz-step-lbl { color: #007bff; font-weight: 600; }
+.wz-step-item.wz-done   .wz-step-lbl { color: #28a745; }
+.wz-connector { flex-grow: 1; height: 3px; background: #e9ecef; margin: 0 8px 24px; border-radius: 2px; transition: background .4s; }
+.wz-connector.wz-done { background: #28a745; }
 
-/* ── Wizard Transitions ───────────────────────────────── */
-.wizard-step.d-none  { display: none !important; }
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(32px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-32px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-.wizard-step.anim-fwd  { animation: slideInRight .3s cubic-bezier(.4,0,.2,1) forwards; }
-.wizard-step.anim-back { animation: slideInLeft  .3s cubic-bezier(.4,0,.2,1) forwards; }
-
-/* ── Student Info Card ───────────────────────────────── */
-.student-info-card {
-    background: #f0f7ff;
-    border: 1px solid #b8daff;
+/* ── Siswa Found Card ─────────────────────────────── */
+.siswa-found-card {
+    background: linear-gradient(135deg,#f0fff4,#e6ffed);
+    border: 1.5px solid #b7dfc0;
     border-radius: 10px;
     padding: 14px 16px;
-    margin-top: 8px;
+    margin-top: 10px;
 }
-.student-avatar {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    background: #ddeeff;
+.siswa-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg,#007bff,#6610f2);
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    color: #fff; font-size: 1.3rem; flex-shrink: 0;
 }
+
+/* ── Summary Card ─────────────────────────────────── */
+.wz-summary-card {
+    background: linear-gradient(135deg,#f8f9fc,#fff);
+    border: 1px solid #d0d7e2;
+    border-radius: 12px; overflow: hidden;
+}
+.wz-summary-header {
+    background: linear-gradient(135deg,#495057,#343a40);
+    color: #fff; padding: 12px 20px;
+    font-size: .875rem; font-weight: 600;
+}
+.wz-summary-body { padding: 4px 0; }
+.wz-summary-row { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid #f0f2f5; }
+.wz-summary-row:last-child { border-bottom: none; }
+.wz-summary-key { width: 36%; color: #6c757d; font-size: .82rem; flex-shrink: 0; }
+
+/* ── Wizard Transitions ─────────────────────────── */
+.wz-pane { }
+.wz-pane.d-none { display: none !important; }
+@keyframes wzIn  { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:none; } }
+@keyframes wzOut { from { opacity:0; transform:translateX(-24px); } to { opacity:1; transform:none; } }
+.wz-anim-fwd  { animation: wzIn  .28s ease forwards; }
+.wz-anim-back { animation: wzOut .28s ease forwards; }
+
+/* ── Select2 overrides ─────────────────────────── */
+.select2-container--default .select2-selection--single {
+    height: 38px; border: 1px solid #ced4da; border-radius: .25rem;
+    padding: 5px 12px; font-size: .875rem;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 26px; color: #495057; }
+.select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
+.select2-container--default.select2-container--open .select2-selection--single { border-color: #80bdff; box-shadow: 0 0 0 .2rem rgba(0,123,255,.25); }
+.select2-results__option { padding: 8px 12px; }
+.select2-container--default .select2-results__option--highlighted[aria-selected] { background: #007bff; }
+
+/* ── Misc ──────────────────────────────────────── */
+.opacity-75 { opacity: .75; }
 </style>
 @endsection
 
 @section('js')
 <script>
-(function() {
-    // ── State ────────────────────────────────────────────────────────────────
-    var step       = 0;
-    var jenis      = null;
-    var siswaData  = null;
-    var STEPS      = 3;
+(function () {
+    var step      = 0;
+    var jenis     = null;
+    var siswaData = null;
+    var STEPS     = 3;
+    var s2Inited  = {};
     var stepLabels = {
         masuk:  ['Sekolah Asal', 'Data Siswa',     'Dokumen'],
         keluar: ['Cari Siswa',   'Sekolah Tujuan', 'Dokumen'],
     };
 
-    // ── Get step element ID ──────────────────────────────────────────────────
-    function stepId(s) {
+    function paneId(s) {
         if (s === 0) return 'step-0';
         if (s === 3) return 'step-3';
         return 'step-' + s + '-' + jenis;
     }
 
-    // ── Show step with animation ─────────────────────────────────────────────
-    function showStep(newStep, dir) {
-        document.querySelectorAll('.wizard-step').forEach(function(el) {
+    function showStep(n, dir) {
+        document.querySelectorAll('.wz-pane').forEach(function (el) {
             el.classList.add('d-none');
-            el.classList.remove('anim-fwd', 'anim-back');
+            el.classList.remove('wz-anim-fwd', 'wz-anim-back');
         });
-        var el = document.getElementById(stepId(newStep));
+        var el = document.getElementById(paneId(n));
         if (!el) return;
         el.classList.remove('d-none');
-        el.classList.add(dir === 'back' ? 'anim-back' : 'anim-fwd');
-        step = newStep;
+        void el.offsetWidth; // reflow to restart animation
+        el.classList.add(dir === 'back' ? 'wz-anim-back' : 'wz-anim-fwd');
+        step = n;
 
         var header = document.getElementById('wizard-header');
         var nav    = document.getElementById('wizard-nav');
-        if (newStep === 0) {
+        if (n === 0) {
             header.classList.add('d-none');
             nav.classList.add('d-none');
         } else {
@@ -543,16 +584,11 @@
             nav.classList.remove('d-none');
         }
 
-        // Prev label
-        document.getElementById('btn-prev').innerHTML =
-            newStep === 1
-                ? '<i class="fas fa-arrow-left mr-1"></i>Ubah Jenis'
-                : '<i class="fas fa-arrow-left mr-1"></i>Kembali';
+        document.getElementById('btn-prev-lbl').textContent = (n === 1) ? 'Ubah Jenis' : 'Kembali';
 
-        // Next vs Submit
         var btnN = document.getElementById('btn-next');
         var btnS = document.getElementById('btn-submit');
-        if (newStep === STEPS) {
+        if (n === STEPS) {
             btnN.classList.add('d-none');
             btnS.classList.remove('d-none');
             updateSummary();
@@ -561,186 +597,192 @@
             btnS.classList.add('d-none');
         }
 
-        updateIndicator(newStep);
+        updateIndicator(n);
 
-        // Lazy init select2 on relevant steps
-        if (newStep === 1 && jenis === 'keluar') initSelect2('keluar');
-        if (newStep === 2 && jenis === 'masuk')  initSelect2('masuk');
-    }
-
-    // ── Step indicator ───────────────────────────────────────────────────────
-    function updateIndicator(s) {
-        if (!jenis) return;
-        var labels = stepLabels[jenis];
-        for (var i = 1; i <= STEPS; i++) {
-            var circle = document.getElementById('si-' + i);
-            var label  = document.getElementById('sl-' + i);
-            var line   = document.getElementById('line-' + i);
-            label.textContent = labels[i - 1] || 'Dokumen';
-            circle.classList.remove('active', 'done');
-            label.classList.remove('active', 'done');
-            if (i < s) {
-                circle.classList.add('done');
-                circle.innerHTML = '<i class="fas fa-check" style="font-size:.65rem"></i>';
-                label.classList.add('done');
-            } else if (i === s) {
-                circle.classList.add('active');
-                circle.textContent = i;
-                label.classList.add('active');
-            } else {
-                circle.textContent = i;
-            }
-            if (line) line.classList.toggle('done', i < s);
+        // Init Select2 AFTER pane is visible + animation frame (critical fix)
+        if (n === 1 && jenis === 'keluar') {
+            requestAnimationFrame(function () { initS2('keluar'); });
+        }
+        if (n === 2 && jenis === 'masuk') {
+            requestAnimationFrame(function () { initS2('masuk'); });
         }
     }
 
-    // ── Select jenis ─────────────────────────────────────────────────────────
-    window.selectJenis = function(j) {
+    function updateIndicator(s) {
+        if (!jenis) return;
+        var lbl = stepLabels[jenis];
+        [1, 2, 3].forEach(function (i) {
+            var item = document.getElementById('wsi-' + i);
+            var num  = item.querySelector('.wz-step-num');
+            var con  = document.getElementById('wsc-' + i);
+            document.getElementById('wsl-' + i).textContent = lbl[i - 1];
+            item.classList.remove('wz-active', 'wz-done');
+            if (con) con.classList.remove('wz-done');
+            if (i < s) {
+                item.classList.add('wz-done');
+                num.innerHTML = '<i class="fas fa-check" style="font-size:.6rem"></i>';
+                if (con) con.classList.add('wz-done');
+            } else if (i === s) {
+                item.classList.add('wz-active');
+                num.textContent = i;
+            } else {
+                num.textContent = i;
+            }
+        });
+    }
+
+    window.selectJenis = function (j) {
         jenis = j;
         document.getElementById('final_jenis').value = j;
-        document.getElementById('jcard-masuk').classList.remove('selected-masuk', 'selected-keluar');
-        document.getElementById('jcard-keluar').classList.remove('selected-masuk', 'selected-keluar');
-        document.getElementById('jcard-' + j).classList.add('selected-' + j);
-        setTimeout(function() { showStep(1, 'fwd'); }, 220);
+        ['masuk', 'keluar'].forEach(function (x) {
+            document.getElementById('jcard-' + x).classList.remove('sel-masuk', 'sel-keluar');
+            document.getElementById('jcard-' + x).querySelector('.jcard-check').classList.add('d-none');
+        });
+        document.getElementById('jcard-' + j).classList.add('sel-' + j);
+        document.getElementById('jcard-' + j).querySelector('.jcard-check').classList.remove('d-none');
+        setTimeout(function () { showStep(1, 'fwd'); }, 260);
     };
 
-    // ── Navigation ───────────────────────────────────────────────────────────
-    document.getElementById('btn-next').addEventListener('click', function() {
-        if (!validate(step)) return;
-        showStep(step + 1, 'fwd');
+    document.getElementById('btn-next').addEventListener('click', function () {
+        if (validate(step)) showStep(step + 1, 'fwd');
     });
-    document.getElementById('btn-prev').addEventListener('click', function() {
+    document.getElementById('btn-prev').addEventListener('click', function () {
         if (step === 1) {
-            step = 0; showStep(0, 'back');
-            document.getElementById('jcard-masuk').classList.remove('selected-masuk');
-            document.getElementById('jcard-keluar').classList.remove('selected-keluar');
+            showStep(0, 'back');
         } else {
             showStep(step - 1, 'back');
         }
     });
 
-    // ── Validation ───────────────────────────────────────────────────────────
     function validate(s) {
         if (s === 1 && jenis === 'masuk') {
             var f = document.getElementById('sekolah_asal');
-            if (!f.value.trim()) { f.classList.add('is-invalid'); f.focus(); return false; }
+            if (!f.value.trim()) {
+                f.classList.add('is-invalid'); f.focus(); return false;
+            }
             f.classList.remove('is-invalid');
         }
         if (s === 1 && jenis === 'keluar') {
             if (!document.getElementById('final_siswa_id').value) {
-                Swal.fire({ icon: 'warning', title: 'Pilih siswa terlebih dahulu', timer: 2000, showConfirmButton: false });
-                return false;
+                showToast('warning', 'Pilih siswa terlebih dahulu'); return false;
             }
         }
         if (s === 2 && jenis === 'masuk') {
             if (!document.getElementById('final_siswa_id').value) {
-                Swal.fire({ icon: 'warning', title: 'Pilih siswa terlebih dahulu', timer: 2000, showConfirmButton: false });
-                return false;
+                showToast('warning', 'Pilih siswa terlebih dahulu'); return false;
             }
         }
         if (s === 2 && jenis === 'keluar') {
             var f = document.getElementById('sekolah_tujuan');
-            if (!f.value.trim()) { f.classList.add('is-invalid'); f.focus(); return false; }
+            if (!f.value.trim()) {
+                f.classList.add('is-invalid'); f.focus(); return false;
+            }
             f.classList.remove('is-invalid');
-        }
-        if (s === 3) {
-            var tp = document.getElementById('tahun_pelajaran_id');
-            var tg = document.getElementById('tanggal_mutasi');
-            var ok = true;
-            if (!tp.value) { tp.classList.add('is-invalid'); ok = false; }
-            if (!tg.value) { tg.classList.add('is-invalid'); ok = false; }
-            if (!ok) { Swal.fire({ icon: 'warning', title: 'Lengkapi tahun pelajaran dan tanggal', timer: 2000, showConfirmButton: false }); return false; }
-            tp.classList.remove('is-invalid');
-            tg.classList.remove('is-invalid');
         }
         return true;
     }
 
-    // ── Select2 AJAX ─────────────────────────────────────────────────────────
-    var s2Init = {};
-    function initSelect2(j) {
-        if (s2Init[j]) return;
-        s2Init[j] = true;
-        var sel    = j === 'keluar' ? '#siswa_id_keluar' : '#siswa_id_masuk';
-        var card   = j === 'keluar' ? '#siswa-info-keluar' : '#siswa-info-masuk';
-        var prefix = j === 'keluar' ? 'sk' : 'sm';
+    function showToast(icon, msg) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: icon, title: msg, toast: true, position: 'top-end',
+                showConfirmButton: false, timer: 2500, timerProgressBar: true });
+        } else { alert(msg); }
+    }
 
-        $(sel).select2({
-            placeholder: 'Ketik nama, NISN siswa...',
+    // ── Select2 AJAX ─────────────────────────────────────────────────────
+    function initS2(j) {
+        if (s2Inited[j]) return;
+        s2Inited[j] = true;
+        var elId   = j === 'keluar' ? '#siswa_id_keluar' : '#siswa_id_masuk';
+        var cardId = j === 'keluar' ? 'siswa-info-keluar' : 'siswa-info-masuk';
+        var pfx    = j === 'keluar' ? 'sk' : 'sm';
+
+        // Destroy any existing instance first
+        if ($(elId).hasClass('select2-hidden-accessible')) {
+            $(elId).select2('destroy');
+        }
+
+        $(elId).select2({
+            placeholder: 'Ketik nama atau NISN siswa...',
             minimumInputLength: 2,
+            allowClear: true,
             width: '100%',
+            dropdownParent: $(elId).parent(),   // fixes focus-in-animation issue
             language: {
-                inputTooShort: function() { return 'Ketik minimal 2 karakter...'; },
-                searching:     function() { return 'Mencari...'; },
-                noResults:     function() { return 'Siswa tidak ditemukan'; },
+                inputTooShort: function () { return 'Ketik minimal 2 karakter...'; },
+                searching:     function () { return 'Mencari...'; },
+                noResults:     function () { return 'Siswa tidak ditemukan'; },
             },
             ajax: {
                 url: '{{ route("admin.mutasi-siswa.search-siswa") }}',
                 dataType: 'json',
                 delay: 350,
-                data: function(p) { return { q: p.term }; },
-                processResults: function(data) {
+                data: function (p) { return { q: p.term }; },
+                processResults: function (data) {
                     return {
-                        results: data.map(function(s) {
-                            return { id: s.id, text: s.nama_lengkap, nisn: s.nisn, status: s.status_siswa };
+                        results: data.map(function (s) {
+                            return { id: s.id, text: s.nama_lengkap, nisn: s.nisn || '-', status: s.status_siswa || '' };
                         })
                     };
                 },
                 cache: true,
             },
-            templateResult: function(s) {
-                if (s.loading) return s.text;
-                return $('<div class="py-1"><strong>' + s.text + '</strong><br>'
-                    + '<small class="text-muted">NISN: ' + (s.nisn || '-') + ' &bull; ' + (s.status || '') + '</small></div>');
+            templateResult: function (s) {
+                if (s.loading) { return $('<span><i class="fas fa-spinner fa-spin mr-2 text-muted"></i>' + s.text + '</span>'); }
+                return $('<div style="padding:6px 2px">'
+                    + '<strong style="font-size:.875rem">' + s.text + '</strong>'
+                    + '<div style="font-size:.78rem;color:#6c757d;margin-top:2px">'
+                    + '<i class="fas fa-id-card mr-1"></i>NISN: ' + s.nisn
+                    + '&nbsp;&bull;&nbsp;' + s.status + '</div></div>');
             },
-            templateSelection: function(s) { return s.text || s.id; },
+            templateSelection: function (s) { return s.text || s.id; },
         });
 
-        $(sel).on('select2:select', function(e) {
+        $(elId).on('select2:select', function (e) {
             var d = e.params.data;
             siswaData = d;
             document.getElementById('final_siswa_id').value = d.id;
-            document.getElementById(prefix + '-nama').textContent   = d.text;
-            document.getElementById(prefix + '-nisn').textContent   = d.nisn  || '-';
-            document.getElementById(prefix + '-status').textContent = d.status || '-';
-            $(card).removeClass('d-none').addClass('anim-fwd');
-        }).on('select2:unselect', function() {
+            document.getElementById(pfx + '-nama').textContent   = d.text;
+            document.getElementById(pfx + '-nisn').textContent   = d.nisn   || '-';
+            document.getElementById(pfx + '-status').textContent = d.status || '-';
+            document.getElementById(cardId).classList.remove('d-none');
+        }).on('select2:unselect', function () {
             siswaData = null;
             document.getElementById('final_siswa_id').value = '';
-            $(card).addClass('d-none');
+            document.getElementById(cardId).classList.add('d-none');
         });
 
         @if($selectedSiswa)
         if (j === 'keluar') {
             var opt = new Option('{{ addslashes($selectedSiswa->nama_lengkap) }}', '{{ $selectedSiswa->id }}', true, true);
-            $(sel).append(opt).trigger('change');
+            $(elId).append(opt).trigger('change');
             siswaData = { text: '{{ addslashes($selectedSiswa->nama_lengkap) }}', nisn: '{{ $selectedSiswa->nisn ?? "" }}', status: '{{ $selectedSiswa->status_siswa ?? "" }}' };
             document.getElementById('final_siswa_id').value = '{{ $selectedSiswa->id }}';
-            document.getElementById(prefix + '-nama').textContent   = siswaData.text;
-            document.getElementById(prefix + '-nisn').textContent   = siswaData.nisn   || '-';
-            document.getElementById(prefix + '-status').textContent = siswaData.status || '-';
-            $(card).removeClass('d-none');
+            document.getElementById(pfx + '-nama').textContent   = siswaData.text;
+            document.getElementById(pfx + '-nisn').textContent   = siswaData.nisn   || '-';
+            document.getElementById(pfx + '-status').textContent = siswaData.status || '-';
+            document.getElementById(cardId).classList.remove('d-none');
         }
         @endif
     }
 
-    // ── Summary ───────────────────────────────────────────────────────────────
+    // ── Summary ───────────────────────────────────────────────────────────
     function updateSummary() {
         document.getElementById('sum-jenis').innerHTML = jenis === 'masuk'
-            ? '<span class="badge badge-info"><i class="fas fa-sign-in-alt mr-1"></i>Masuk</span>'
-            : '<span class="badge badge-danger"><i class="fas fa-sign-out-alt mr-1"></i>Keluar</span>';
+            ? '<span class="badge badge-info px-2 py-1"><i class="fas fa-sign-in-alt mr-1"></i>Mutasi Masuk</span>'
+            : '<span class="badge badge-danger px-2 py-1"><i class="fas fa-sign-out-alt mr-1"></i>Mutasi Keluar</span>';
         document.getElementById('sum-siswa').textContent = siswaData ? siswaData.text : '—';
         if (jenis === 'masuk') {
-            document.getElementById('sum-sekolah-label').textContent = 'Sekolah Asal';
-            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name="sekolah_asal"]') || {}).value || '—';
+            document.getElementById('sum-sekolah-lbl').textContent = 'Sekolah Asal';
+            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_asal]') || {}).value || '—';
         } else {
-            document.getElementById('sum-sekolah-label').textContent = 'Sekolah Tujuan';
-            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name="sekolah_tujuan"]') || {}).value || '—';
+            document.getElementById('sum-sekolah-lbl').textContent = 'Sekolah Tujuan';
+            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_tujuan]') || {}).value || '—';
         }
     }
 
-    // ── File preview ─────────────────────────────────────────────────────────
-    document.getElementById('file_surat_mutasi').addEventListener('change', function() {
+    // ── File preview ──────────────────────────────────────────────────────
+    document.getElementById('file_surat_mutasi').addEventListener('change', function () {
         var file = this.files[0];
         if (file) {
             this.nextElementSibling.textContent = file.name;
@@ -749,21 +791,21 @@
         }
     });
 
-    // ── Clear invalid on input ────────────────────────────────────────────────
-    document.querySelectorAll('.form-control').forEach(function(el) {
-        el.addEventListener('input', function() { this.classList.remove('is-invalid'); });
+    // ── Clear invalid on input ────────────────────────────────────────────
+    document.querySelectorAll('.form-control').forEach(function (el) {
+        el.addEventListener('input', function () { this.classList.remove('is-invalid'); });
     });
 
-    // ── Recovery from old() on validation error ───────────────────────────────
+    // ── Recover from validation error (old()) ────────────────────────────
     @if(old('jenis_mutasi'))
     selectJenis('{{ old("jenis_mutasi") }}');
-    setTimeout(function() { showStep(3, 'fwd'); }, 50);
+    setTimeout(function () { showStep(3, 'fwd'); }, 100);
     @if($selectedSiswa)
     siswaData = { text: '{{ addslashes($selectedSiswa->nama_lengkap) }}', nisn: '', status: '' };
     document.getElementById('final_siswa_id').value = '{{ $selectedSiswa->id }}';
     @endif
     @endif
 
-})();
+}());
 </script>
 @endsection
