@@ -203,7 +203,7 @@
         </div>
     </div>
 
-    {{-- ── STEP 2 MASUK: Tautkan Siswa ─────────────────────────────────── --}}
+    {{-- ── STEP 2 MASUK: Data Siswa Baru ─────────────────────────────────── --}}
     <div id="step-2-masuk" class="wz-pane d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -212,31 +212,43 @@
                         <div class="d-flex align-items-center">
                             <div class="wz-header-icon mr-3"><i class="fas fa-user-plus"></i></div>
                             <div>
-                                <h5 class="mb-0 font-weight-bold">Tautkan Data Siswa</h5>
-                                <small class="opacity-75">Hubungkan ke data siswa dalam sistem</small>
+                                <h5 class="mb-0 font-weight-bold">Data Siswa Baru</h5>
+                                <small class="opacity-75">Isi data siswa yang akan masuk</small>
                             </div>
                         </div>
                     </div>
                     <div class="wz-card-body">
-                        <div class="form-group mb-2">
-                            <label class="wz-label">Nama / NISN Siswa <span class="text-danger">*</span></label>
-                            <select id="siswa_id_masuk" style="width:100%;"></select>
-                            <small class="text-muted mt-1 d-block"><i class="fas fa-keyboard mr-1"></i>Ketik minimal 2 karakter nama atau NISN</small>
+                        <div class="form-group">
+                            <label class="wz-label">NISN <span class="text-danger">*</span></label>
+                            <input type="text" name="nisn_siswa_baru" id="nisn_siswa_baru" class="form-control"
+                                maxlength="10" placeholder="10 digit NISN" value="{{ old('nisn_siswa_baru') }}"
+                                autocomplete="off">
+                            <small class="text-muted">NISN akan digunakan sebagai username dan password default</small>
+                            <div class="invalid-feedback">NISN wajib diisi (10 digit angka)</div>
                         </div>
-                        <div id="siswa-info-masuk" class="d-none siswa-found-card">
-                            <div class="d-flex align-items-center">
-                                <div class="siswa-avatar mr-3">
-                                    <i class="fas fa-user-graduate"></i>
-                                </div>
-                                <div>
-                                    <div class="font-weight-bold" id="sm-nama"></div>
-                                    <small class="text-muted">NISN: <strong id="sm-nisn"></strong></small>
-                                    &nbsp;<span id="sm-status" class="badge badge-info"></span>
-                                </div>
-                                <div class="ml-auto">
-                                    <i class="fas fa-check-circle fa-2x text-success"></i>
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <label class="wz-label">Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_lengkap_baru" id="nama_lengkap_baru" class="form-control"
+                                placeholder="Nama lengkap siswa" value="{{ old('nama_lengkap_baru') }}">
+                            <div class="invalid-feedback">Nama lengkap wajib diisi</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="wz-label">Jenis Kelamin <span class="text-danger">*</span></label>
+                            <select name="jenis_kelamin_baru" id="jenis_kelamin_baru" class="form-control">
+                                <option value="">Pilih Jenis Kelamin</option>
+                                <option value="L" {{ old('jenis_kelamin_baru') === 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="P" {{ old('jenis_kelamin_baru') === 'P' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                            <div class="invalid-feedback">Jenis kelamin wajib dipilih</div>
+                        </div>
+                        <div class="alert alert-info mb-0">
+                            <h6 class="mb-1"><i class="fas fa-info-circle mr-1"></i>Informasi Akun</h6>
+                            <ul class="mb-0 pl-3 small">
+                                <li>Username siswa: NISN</li>
+                                <li>Password default: NISN</li>
+                                <li>Email: NISN@student.man1metro.sch.id</li>
+                                <li>Siswa akan diminta mengganti password saat login pertama</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -629,9 +641,6 @@
         if (n === 1 && jenis === 'keluar') {
             setTimeout(function () { initS2('keluar'); }, 350);
         }
-        if (n === 2 && jenis === 'masuk') {
-            setTimeout(function () { initS2('masuk'); }, 350);
-        }
     }
 
     function updateIndicator(s) {
@@ -694,9 +703,20 @@
             }
         }
         if (s === 2 && jenis === 'masuk') {
-            if (!document.getElementById('final_siswa_id').value) {
-                showToast('warning', 'Pilih siswa terlebih dahulu'); return false;
-            }
+            var nisn = document.getElementById('nisn_siswa_baru');
+            var nama = document.getElementById('nama_lengkap_baru');
+            var jk   = document.getElementById('jenis_kelamin_baru');
+            var valid = true;
+            if (!/^\d{10}$/.test(nisn.value.trim())) {
+                nisn.classList.add('is-invalid'); nisn.focus(); valid = false;
+            } else { nisn.classList.remove('is-invalid'); }
+            if (!nama.value.trim()) {
+                nama.classList.add('is-invalid'); if (valid) nama.focus(); valid = false;
+            } else { nama.classList.remove('is-invalid'); }
+            if (!jk.value) {
+                jk.classList.add('is-invalid'); valid = false;
+            } else { jk.classList.remove('is-invalid'); }
+            if (!valid) return false;
         }
         if (s === 2 && jenis === 'keluar') {
             var f = document.getElementById('sekolah_tujuan');
@@ -797,7 +817,9 @@
         document.getElementById('sum-jenis').innerHTML = jenis === 'masuk'
             ? '<span class="badge badge-info px-2 py-1"><i class="fas fa-sign-in-alt mr-1"></i>Mutasi Masuk</span>'
             : '<span class="badge badge-danger px-2 py-1"><i class="fas fa-sign-out-alt mr-1"></i>Mutasi Keluar</span>';
-        document.getElementById('sum-siswa').textContent = siswaData ? siswaData.text : '—';
+        document.getElementById('sum-siswa').textContent = jenis === 'masuk'
+            ? (document.getElementById('nama_lengkap_baru').value || '—')
+            : (siswaData ? siswaData.text : '—');
         if (jenis === 'masuk') {
             document.getElementById('sum-sekolah-lbl').textContent = 'Sekolah Asal';
             document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_asal]') || {}).value || '—';

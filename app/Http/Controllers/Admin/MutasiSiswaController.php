@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\MutasiSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Models\User;
 use App\Services\KemendikbudApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class MutasiSiswaController extends Controller
@@ -151,32 +153,62 @@ class MutasiSiswaController extends Controller
         $jenis = $request->jenis_mutasi;
 
         $rules = [
-            'siswa_id'         => 'required|exists:siswa,id',
-            'jenis_mutasi'     => 'required|in:masuk,keluar',
+            'jenis_mutasi'       => 'required|in:masuk,keluar',
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'tanggal_mutasi'   => 'required|date',
+            'tanggal_mutasi'     => 'required|date',
             'nomor_surat_mutasi' => 'nullable|string|max:100',
-            'catatan'          => 'nullable|string',
-            'file_surat_mutasi' => 'nullable|file|mimes:pdf|max:5120',
+            'catatan'            => 'nullable|string',
+            'file_surat_mutasi'  => 'nullable|file|mimes:pdf|max:5120',
         ];
 
         if ($jenis === 'masuk') {
-            $rules['sekolah_asal']       = 'required|string|max:200';
-            $rules['npsn_sekolah_asal']  = 'nullable|string|max:20';
+            $rules['nisn_siswa_baru']     = 'required|string|digits:10|unique:siswa,nisn|unique:users,username';
+            $rules['nama_lengkap_baru']   = 'required|string|max:255';
+            $rules['jenis_kelamin_baru']  = 'required|in:L,P';
+            $rules['sekolah_asal']        = 'required|string|max:200';
+            $rules['npsn_sekolah_asal']   = 'nullable|string|max:20';
             $rules['alamat_sekolah_asal'] = 'nullable|string';
-            $rules['kelas_asal']         = 'nullable|string|max:50';
+            $rules['kelas_asal']          = 'nullable|string|max:50';
             $rules['alasan_mutasi_masuk'] = 'nullable|string';
         } else {
-            $rules['sekolah_tujuan']       = 'required|string|max:200';
-            $rules['npsn_sekolah_tujuan']  = 'nullable|string|max:20';
+            $rules['siswa_id']              = 'required|exists:siswa,id';
+            $rules['sekolah_tujuan']        = 'required|string|max:200';
+            $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
-            $rules['alasan_mutasi_keluar'] = 'nullable|string';
+            $rules['alasan_mutasi_keluar']  = 'nullable|string';
         }
 
         $validated = $request->validate($rules);
 
         DB::beginTransaction();
         try {
+            // Mutasi Masuk: buat siswa baru terlebih dahulu
+            if ($jenis === 'masuk') {
+                $user = User::create([
+                    'name'           => $validated['nama_lengkap_baru'],
+                    'username'       => $validated['nisn_siswa_baru'],
+                    'email'          => $validated['nisn_siswa_baru'] . '@student.man1metro.sch.id',
+                    'password'       => Hash::make($validated['nisn_siswa_baru']),
+                    'role'           => 'siswa',
+                    'is_first_login' => true,
+                ]);
+                $user->readable_password = $validated['nisn_siswa_baru'];
+                $user->save();
+
+                $siswa = Siswa::create([
+                    'user_id'       => $user->id,
+                    'nisn'          => $validated['nisn_siswa_baru'],
+                    'nama_lengkap'  => $validated['nama_lengkap_baru'],
+                    'jenis_kelamin' => $validated['jenis_kelamin_baru'],
+                ]);
+
+                \App\Models\Ortu::create(['siswa_id' => $siswa->id]);
+
+                // Ganti field siswa-baru dengan siswa_id yang baru dibuat
+                unset($validated['nisn_siswa_baru'], $validated['nama_lengkap_baru'], $validated['jenis_kelamin_baru']);
+                $validated['siswa_id'] = $siswa->id;
+            }
+
             $filePath = null;
             if ($request->hasFile('file_surat_mutasi')) {
                 $filePath = $request->file('file_surat_mutasi')->store('mutasi-siswa/surat', 'public');
