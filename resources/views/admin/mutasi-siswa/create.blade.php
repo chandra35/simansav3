@@ -836,9 +836,9 @@
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mencari...');
         $('#' + alertFoundId + ', #' + alertNotFoundId).addClass('d-none');
 
-        $.get(NPSN_URL, { npsn: npsn })
+        $.get(NPSN_URL, { npsn: npsn }, null, 'json')
             .done(function (d) {
-                if (d.success) {
+                if (d && d.success) {
                     $('#' + namaInputId).val(d.nama);
                     if (kotaInputId && d.kota) $('#' + kotaInputId).val(d.kota);
                     $('#' + namaInputId).removeClass('is-invalid');
@@ -855,7 +855,8 @@
                     $btn.prop('disabled', false).html(origHtml);
                 }
             })
-            .fail(function () {
+            .fail(function (jqXHR) {
+                console.warn('NPSN lookup failed:', jqXHR.status, jqXHR.responseText);
                 $('#' + alertNotFoundId).removeClass('d-none');
                 $btn.prop('disabled', false).html(origHtml);
             });

@@ -71,10 +71,10 @@ class KemendikbudApiService
                 ];
             }
             
-            // Save to database
-            $sekolah = Sekolah::create($data);
+            // Save to database (updateOrCreate agar tidak error duplicate key saat refresh data stale)
+            $sekolah = Sekolah::updateOrCreate(['npsn' => $npsn], $data);
             
-            Log::info("Sekolah NPSN {$npsn} successfully saved to database from API");
+            Log::info("Sekolah NPSN {$npsn} successfully saved/updated to database from API");
             
             return [
                 'success' => true,
