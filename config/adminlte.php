@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 return [
 
@@ -483,11 +483,9 @@ return [
                 ],
                 [
                     'text' => 'Mutasi Siswa',
-                    'route' => 'admin.under-development',
+                    'route' => 'admin.mutasi-siswa.index',
                     'icon' => 'fas fa-fw fa-exchange-alt',
                     'can' => 'view-mutasi',
-                    'label' => 'Soon',
-                    'label_color' => 'warning',
                     'active' => ['admin/mutasi*'],
                 ],
             ],
@@ -1219,3 +1217,4 @@ return [
 
     'livewire' => false,
 ];
+

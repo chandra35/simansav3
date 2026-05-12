@@ -1,0 +1,361 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\MutasiSiswa;
+use App\Models\Siswa;
+use App\Models\TahunPelajaran;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
+class MutasiSiswaController extends Controller
+{
+    /**
+     * Daftar mutasi siswa
+     */
+    public function index(Request $request)
+    {
+        $this->authorize('view-mutasi');
+
+        $query = MutasiSiswa::with(['siswa', 'tahunPelajaran', 'verifikator'])
+            ->orderByDesc('created_at');
+
+        if ($request->filled('jenis')) {
+            $query->where('jenis_mutasi', $request->jenis);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status_verifikasi', $request->status);
+        }
+
+        if ($request->filled('tahun_pelajaran_id')) {
+            $query->where('tahun_pelajaran_id', $request->tahun_pelajaran_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('siswa', function ($q) use ($search) {
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+
+        $mutasiList = $query->paginate(20)->withQueryString();
+
+        $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+
+        $stats = [
+            'total'    => MutasiSiswa::count(),
+            'masuk'    => MutasiSiswa::masuk()->count(),
+            'keluar'   => MutasiSiswa::keluar()->count(),
+            'pending'  => MutasiSiswa::pending()->count(),
+            'approved' => MutasiSiswa::approved()->count(),
+            'rejected' => MutasiSiswa::rejected()->count(),
+        ];
+
+        return view('admin.mutasi-siswa.index', compact('mutasiList', 'tahunPelajarans', 'stats'));
+    }
+
+    /**
+     * Form tambah mutasi
+     */
+    public function create(Request $request)
+    {
+        $this->authorize('create-mutasi');
+
+        $siswaList = Siswa::orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'status_siswa']);
+        $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+
+        // Jika ada siswa_id di query string (dari halaman siswa)
+        $selectedSiswa = null;
+        if ($request->filled('siswa_id')) {
+            $selectedSiswa = Siswa::find($request->siswa_id);
+        }
+
+        return view('admin.mutasi-siswa.create', compact('siswaList', 'tahunPelajarans', 'tahunAktif', 'selectedSiswa'));
+    }
+
+    /**
+     * Simpan mutasi baru
+     */
+    public function store(Request $request)
+    {
+        $this->authorize('create-mutasi');
+
+        $jenis = $request->jenis_mutasi;
+
+        $rules = [
+            'siswa_id'         => 'required|exists:siswa,id',
+            'jenis_mutasi'     => 'required|in:masuk,keluar',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'tanggal_mutasi'   => 'required|date',
+            'nomor_surat_mutasi' => 'nullable|string|max:100',
+            'catatan'          => 'nullable|string',
+            'file_surat_mutasi' => 'nullable|file|mimes:pdf|max:5120',
+        ];
+
+        if ($jenis === 'masuk') {
+            $rules['sekolah_asal']       = 'required|string|max:200';
+            $rules['npsn_sekolah_asal']  = 'nullable|string|max:20';
+            $rules['alamat_sekolah_asal'] = 'nullable|string';
+            $rules['kelas_asal']         = 'nullable|string|max:50';
+            $rules['alasan_mutasi_masuk'] = 'nullable|string';
+        } else {
+            $rules['sekolah_tujuan']       = 'required|string|max:200';
+            $rules['npsn_sekolah_tujuan']  = 'nullable|string|max:20';
+            $rules['alamat_sekolah_tujuan'] = 'nullable|string';
+            $rules['alasan_mutasi_keluar'] = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            $filePath = null;
+            if ($request->hasFile('file_surat_mutasi')) {
+                $filePath = $request->file('file_surat_mutasi')->store('mutasi-siswa/surat', 'public');
+            }
+
+            $mutasi = MutasiSiswa::create(array_merge(
+                $validated,
+                ['file_surat_mutasi' => $filePath, 'status_verifikasi' => 'pending']
+            ));
+
+            activity()
+                ->performedOn($mutasi)
+                ->causedBy(Auth::user())
+                ->log('Menambahkan mutasi ' . $mutasi->jenisMutasiText . ' untuk siswa: ' . $mutasi->siswa->nama_lengkap);
+
+            DB::commit();
+
+            return redirect()->route('admin.mutasi-siswa.show', $mutasi)
+                ->with('success', 'Data mutasi berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal menyimpan mutasi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Detail mutasi
+     */
+    public function show(MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('view-mutasi');
+        $mutasiSiswa->load(['siswa', 'tahunPelajaran', 'verifikator']);
+        return view('admin.mutasi-siswa.show', compact('mutasiSiswa'));
+    }
+
+    /**
+     * Form edit mutasi (hanya pending)
+     */
+    public function edit(MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('edit-mutasi');
+
+        if (!$mutasiSiswa->isPending()) {
+            return redirect()->route('admin.mutasi-siswa.show', $mutasiSiswa)
+                ->with('error', 'Mutasi yang sudah diverifikasi tidak dapat diedit.');
+        }
+
+        $siswaList = Siswa::orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'status_siswa']);
+        $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+
+        return view('admin.mutasi-siswa.edit', compact('mutasiSiswa', 'siswaList', 'tahunPelajarans'));
+    }
+
+    /**
+     * Update mutasi
+     */
+    public function update(Request $request, MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('edit-mutasi');
+
+        if (!$mutasiSiswa->isPending()) {
+            return response()->json(['success' => false, 'message' => 'Mutasi yang sudah diverifikasi tidak dapat diedit.'], 422);
+        }
+
+        $jenis = $mutasiSiswa->jenis_mutasi;
+
+        $rules = [
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'tanggal_mutasi'     => 'required|date',
+            'nomor_surat_mutasi' => 'nullable|string|max:100',
+            'catatan'            => 'nullable|string',
+            'file_surat_mutasi'  => 'nullable|file|mimes:pdf|max:5120',
+        ];
+
+        if ($jenis === 'masuk') {
+            $rules['sekolah_asal']        = 'required|string|max:200';
+            $rules['npsn_sekolah_asal']   = 'nullable|string|max:20';
+            $rules['alamat_sekolah_asal'] = 'nullable|string';
+            $rules['kelas_asal']          = 'nullable|string|max:50';
+            $rules['alasan_mutasi_masuk'] = 'nullable|string';
+        } else {
+            $rules['sekolah_tujuan']        = 'required|string|max:200';
+            $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
+            $rules['alamat_sekolah_tujuan'] = 'nullable|string';
+            $rules['alasan_mutasi_keluar']  = 'nullable|string';
+        }
+
+        $validated = $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            if ($request->hasFile('file_surat_mutasi')) {
+                // Hapus file lama
+                if ($mutasiSiswa->file_surat_mutasi) {
+                    Storage::disk('public')->delete($mutasiSiswa->file_surat_mutasi);
+                }
+                $validated['file_surat_mutasi'] = $request->file('file_surat_mutasi')
+                    ->store('mutasi-siswa/surat', 'public');
+            }
+
+            $mutasiSiswa->update($validated);
+
+            activity()
+                ->performedOn($mutasiSiswa)
+                ->causedBy(Auth::user())
+                ->log('Mengubah data mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+
+            DB::commit();
+
+            return redirect()->route('admin.mutasi-siswa.show', $mutasiSiswa)
+                ->with('success', 'Data mutasi berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal memperbarui mutasi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus mutasi (hanya pending)
+     */
+    public function destroy(MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('delete-mutasi');
+
+        if (!$mutasiSiswa->isPending()) {
+            return response()->json(['success' => false, 'message' => 'Mutasi yang sudah diverifikasi tidak dapat dihapus.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $siswaName = $mutasiSiswa->siswa->nama_lengkap ?? '-';
+
+            if ($mutasiSiswa->file_surat_mutasi) {
+                Storage::disk('public')->delete($mutasiSiswa->file_surat_mutasi);
+            }
+
+            $mutasiSiswa->delete();
+
+            activity()
+                ->causedBy(Auth::user())
+                ->log('Menghapus data mutasi untuk siswa: ' . $siswaName);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Data mutasi berhasil dihapus.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Approve mutasi
+     */
+    public function approve(Request $request, MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('approve-mutasi');
+
+        if (!$mutasiSiswa->isPending()) {
+            return response()->json(['success' => false, 'message' => 'Mutasi ini sudah diverifikasi.'], 422);
+        }
+
+        $request->validate(['catatan' => 'nullable|string']);
+
+        DB::beginTransaction();
+        try {
+            $mutasiSiswa->approveMutasi(Auth::user(), $request->catatan);
+
+            activity()
+                ->performedOn($mutasiSiswa)
+                ->causedBy(Auth::user())
+                ->log('Menyetujui mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Mutasi berhasil disetujui.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menyetujui: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject mutasi
+     */
+    public function reject(Request $request, MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('reject-mutasi');
+
+        if (!$mutasiSiswa->isPending()) {
+            return response()->json(['success' => false, 'message' => 'Mutasi ini sudah diverifikasi.'], 422);
+        }
+
+        $request->validate(['alasan' => 'required|string|min:10']);
+
+        DB::beginTransaction();
+        try {
+            $mutasiSiswa->rejectMutasi(Auth::user(), $request->alasan);
+
+            activity()
+                ->performedOn($mutasiSiswa)
+                ->causedBy(Auth::user())
+                ->log('Menolak mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Mutasi berhasil ditolak.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menolak: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Upload dokumen surat mutasi
+     */
+    public function uploadDokumen(Request $request, MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('upload-dokumen-mutasi');
+
+        $request->validate([
+            'file_surat_mutasi' => 'required|file|mimes:pdf|max:5120',
+        ]);
+
+        try {
+            if ($mutasiSiswa->file_surat_mutasi) {
+                Storage::disk('public')->delete($mutasiSiswa->file_surat_mutasi);
+            }
+
+            $path = $request->file('file_surat_mutasi')->store('mutasi-siswa/surat', 'public');
+            $mutasiSiswa->update(['file_surat_mutasi' => $path]);
+
+            return response()->json(['success' => true, 'message' => 'Dokumen berhasil diunggah.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengunggah: ' . $e->getMessage()], 500);
+        }
+    }
+}

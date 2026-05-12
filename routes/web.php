@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RdmSyncController;
 use App\Http\Controllers\Admin\RdmMapelMappingController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
+use App\Http\Controllers\Admin\MutasiSiswaController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
@@ -254,6 +255,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/kenaikan-kelas/proses-naik-kelas', [KenaikanKelasController::class, 'prosesNaikKelas'])->name('kenaikan-kelas.proses-naik-kelas');
     });
 
+    // Mutasi Siswa
+    Route::prefix('mutasi-siswa')->name('mutasi-siswa.')->group(function () {
+        Route::get('/', [MutasiSiswaController::class, 'index'])->name('index');
+        Route::get('/create', [MutasiSiswaController::class, 'create'])->name('create');
+        Route::post('/', [MutasiSiswaController::class, 'store'])->name('store');
+        Route::get('/{mutasiSiswa}', [MutasiSiswaController::class, 'show'])->name('show');
+        Route::get('/{mutasiSiswa}/edit', [MutasiSiswaController::class, 'edit'])->name('edit');
+        Route::put('/{mutasiSiswa}', [MutasiSiswaController::class, 'update'])->name('update');
+        Route::delete('/{mutasiSiswa}', [MutasiSiswaController::class, 'destroy'])->name('destroy');
+        Route::post('/{mutasiSiswa}/approve', [MutasiSiswaController::class, 'approve'])->name('approve');
+        Route::post('/{mutasiSiswa}/reject', [MutasiSiswaController::class, 'reject'])->name('reject');
+        Route::post('/{mutasiSiswa}/upload-dokumen', [MutasiSiswaController::class, 'uploadDokumen'])->name('upload-dokumen');
+    });
+
     // Kelas Management
     Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
     Route::post('/kelas/{id}/restore', [KelasController::class, 'restore'])->name('kelas.restore')->middleware('permission:create-kelas');
@@ -287,7 +302,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/api/villages/{kecamatan}', [App\Http\Controllers\Admin\GtkProfileController::class, 'getVillages'])->name('gtk.api.villages');
     });
     
-    // ─── Verifikasi Ijazah SMP/MTs ─────────────────────────────────────────────
+    // â”€â”€â”€ Verifikasi Ijazah SMP/MTs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Route::middleware(['permission:verifikasi-ijazah'])->prefix('verifikasi-ijazah')->name('verifikasi-ijazah.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'index'])->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'data'])->name('data');
@@ -296,7 +311,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{siswa}/refresh-emis', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'refreshEmis'])->name('refresh-emis');
     });
 
-    // ─── Siswa Tidak Mampu / PIP ───────────────────────────────────────────────
+    // â”€â”€â”€ Siswa Tidak Mampu / PIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SiswaPipController::class, 'index'])->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
@@ -859,7 +874,7 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
         ->name('session.end');
 });
 
-// ─── Device Location & Client Runtime (global, no auth required) ──────────────
+// â”€â”€â”€ Device Location & Client Runtime (global, no auth required) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::post('/device-location/sync', [App\Http\Controllers\DeviceLocationController::class, 'sync'])
     ->middleware('throttle:60,1')
     ->name('device-location.sync');
