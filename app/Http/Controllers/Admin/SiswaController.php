@@ -674,22 +674,41 @@ class SiswaController extends Controller
         try {
             $nama = $siswa->nama_lengkap;
             $nisn = $siswa->nisn;
+            $siswaId = $siswa->id;
 
-            // Delete user (will cascade delete siswa and ortu)
-            $siswa->user->delete();
+            // Keluarkan dari semua kelas aktif
+            \App\Models\SiswaKelas::where('siswa_id', $siswaId)
+                ->where('status', 'aktif')
+                ->update([
+                    'status' => 'keluar',
+                    'tanggal_keluar' => now()->toDateString(),
+                    'catatan_perpindahan' => 'Siswa dihapus dari sistem',
+                ]);
 
-            DB::commit();
+            // Clear kelas_saat_ini_id
+            $siswa->kelas_saat_ini_id = null;
+            $siswa->save();
 
-            // Log activity
+            // Soft-delete user jika ada
+            if ($siswa->user) {
+                $siswa->user->delete();
+            }
+
+            // Soft-delete siswa
+            $siswa->delete();
+
+            // Log activity (di dalam transaksi agar rollback jika gagal)
             \App\Models\ActivityLog::create([
                 'user_id' => Auth::id(),
                 'activity_type' => 'delete',
                 'model_type' => 'App\\Models\\Siswa',
-                'model_id' => $siswa->id,
+                'model_id' => $siswaId,
                 'description' => "Menghapus data siswa: {$nama} (NISN: {$nisn})",
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,

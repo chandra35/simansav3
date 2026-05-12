@@ -535,46 +535,23 @@
     <div class="modal fade" id="modalRemoveSiswa" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="formRemoveSiswa">
-                    @csrf
-                    <input type="hidden" id="remove_siswa_id" name="siswa_id">
-                    <div class="modal-header bg-danger">
-                        <h5 class="modal-title"><i class="fas fa-user-minus"></i> Keluarkan Siswa dari Kelas</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white"><i class="fas fa-user-minus"></i> Keluarkan Siswa dari Kelas</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Anda akan mengeluarkan <strong id="siswa-nama-display"></strong> dari kelas ini.
                     </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i> 
-                            Anda akan mengeluarkan <strong id="siswa-nama-display"></strong> dari kelas ini.
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="tanggal_keluar">Tanggal Keluar <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="tanggal_keluar" name="tanggal_keluar" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="status">Status <span class="text-danger">*</span></label>
-                            <select class="form-control" id="status" name="status" required>
-                                <option value="">Pilih Status</option>
-                                <option value="naik_kelas">Naik Kelas</option>
-                                <option value="tinggal_kelas">Tinggal Kelas</option>
-                                <option value="lulus">Lulus</option>
-                                <option value="keluar">Keluar</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="catatan">Catatan</label>
-                            <textarea class="form-control" id="catatan" name="catatan" rows="3" 
-                                placeholder="Alasan atau catatan perpindahan..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Keluarkan</button>
-                    </div>
-                </form>
+                    <p class="text-muted">Siswa dapat langsung di-assign ke kelas lain setelah dikeluarkan.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" id="btnConfirmRemoveSiswa" class="btn btn-danger">
+                        <i class="fas fa-user-minus"></i> Keluarkan
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1239,25 +1216,23 @@
             });
 
             // Remove Siswa - Show Modal
+            let _removeSiswaId = null;
             $('.btn-remove-siswa').on('click', function() {
-                let siswaId = $(this).data('siswa-id');
+                _removeSiswaId = $(this).data('siswa-id');
                 let siswaNama = $(this).data('siswa-nama');
-                
-                $('#remove_siswa_id').val(siswaId);
                 $('#siswa-nama-display').text(siswaNama);
-                $('#tanggal_keluar').val('{{ date("Y-m-d") }}');
                 $('#modalRemoveSiswa').modal('show');
             });
 
-            // Remove Siswa - Submit
-            $('#formRemoveSiswa').on('submit', function(e) {
-                e.preventDefault();
-                let siswaId = $('#remove_siswa_id').val();
-                
+            // Remove Siswa - Confirm
+            $('#btnConfirmRemoveSiswa').on('click', function() {
+                if (!_removeSiswaId) return;
+                let $btn = $(this).prop('disabled', true).text('Memproses...');
+
                 $.ajax({
-                    url: "{{ route('admin.kelas.siswa.remove', ['kelas' => $kelas->id, 'siswa' => ':siswa']) }}".replace(':siswa', siswaId),
+                    url: "{{ route('admin.kelas.siswa.remove', ['kelas' => $kelas->id, 'siswa' => ':siswa']) }}".replace(':siswa', _removeSiswaId),
                     type: 'DELETE',
-                    data: $(this).serialize(),
+                    data: { _token: '{{ csrf_token() }}' },
                     success: function(response) {
                         $('#modalRemoveSiswa').modal('hide');
                         Swal.fire({
@@ -1267,6 +1242,7 @@
                         }).then(() => location.reload());
                     },
                     error: function(xhr) {
+                        $btn.prop('disabled', false).html('<i class="fas fa-user-minus"></i> Keluarkan');
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal!',

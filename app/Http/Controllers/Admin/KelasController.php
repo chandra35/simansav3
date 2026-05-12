@@ -958,28 +958,16 @@ class KelasController extends Controller
      */
     public function removeSiswa(Request $request, Kelas $kelas, Siswa $siswa)
     {
-        $validator = Validator::make($request->all(), [
-            'tanggal_keluar' => 'required|date',
-            'status' => 'required|in:naik_kelas,tinggal_kelas,lulus,keluar',
-            'catatan' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         DB::beginTransaction();
         try {
-            $siswaName = $siswa->user->name ?? $siswa->nisn;
-            
-            // Update pivot table
+            $siswaName = $siswa->nama_lengkap;
+
+            // Langsung keluarkan dari kelas (tanpa pilihan status/tanggal)
+            // Siswa bisa langsung di-assign ke kelas lain setelah ini
             $kelas->siswas()->updateExistingPivot($siswa->id, [
-                'tanggal_keluar' => $request->tanggal_keluar,
-                'status' => $request->status,
-                'catatan_perpindahan' => $request->catatan,
+                'tanggal_keluar' => now()->toDateString(),
+                'status' => 'keluar',
+                'catatan_perpindahan' => 'Dikeluarkan dari kelas',
             ]);
 
             $this->syncSiswaCurrentClassFromPivot($siswa, $kelas->tahun_pelajaran_id);
@@ -993,11 +981,9 @@ class KelasController extends Controller
                     'nama_kelas' => $kelas->nama_lengkap,
                     'siswa_name' => $siswaName,
                     'siswa_nisn' => $siswa->nisn,
-                    'tanggal_keluar' => $request->tanggal_keluar,
-                    'status' => $request->status,
-                    'catatan' => $request->catatan,
+                    'tanggal_keluar' => now()->toDateString(),
                 ])
-                ->log('Mengeluarkan siswa ' . $siswaName . ' dari kelas: ' . $kelas->nama_lengkap . ' - Status: ' . $request->status);
+                ->log('Mengeluarkan siswa ' . $siswaName . ' dari kelas: ' . $kelas->nama_lengkap);
 
             DB::commit();
 
