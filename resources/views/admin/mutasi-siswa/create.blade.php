@@ -541,9 +541,11 @@
 /* ── Misc ──────────────────────────────────────── */
 .opacity-75 { opacity: .75; }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 @endsection
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
 <script>
 (function () {
     var step      = 0;
@@ -599,12 +601,12 @@
 
         updateIndicator(n);
 
-        // Init Select2 AFTER pane is visible + animation frame (critical fix)
+        // Init Select2 setelah animasi selesai (animasi = 280ms, tunggu 350ms)
         if (n === 1 && jenis === 'keluar') {
-            requestAnimationFrame(function () { initS2('keluar'); });
+            setTimeout(function () { initS2('keluar'); }, 350);
         }
         if (n === 2 && jenis === 'masuk') {
-            requestAnimationFrame(function () { initS2('masuk'); });
+            setTimeout(function () { initS2('masuk'); }, 350);
         }
     }
 
@@ -707,7 +709,7 @@
             minimumInputLength: 2,
             allowClear: true,
             width: '100%',
-            dropdownParent: $(elId).parent(),   // fixes focus-in-animation issue
+            dropdownParent: $('body'),
             language: {
                 inputTooShort: function () { return 'Ketik minimal 2 karakter...'; },
                 searching:     function () { return 'Mencari...'; },
