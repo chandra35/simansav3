@@ -363,23 +363,27 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content bg-dark border-0">
             <div class="modal-header border-0 py-2 px-3" style="background:#2d2d2d;">
-                <h6 class="modal-title text-white mb-0" id="imagePreviewTitle">
+                <h6 class="modal-title text-white mb-0" id="imagePreviewTitle" style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                     <i class="fas fa-image mr-1"></i> <span id="imagePreviewTitleText"></span>
                 </h6>
-                <div class="d-flex align-items-center flex-wrap">
-                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(0)" title="Reset Zoom"><i class="fas fa-compress"></i></button>
-                    <button class="btn btn-sm btn-outline-light mr-2" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                    <button class="btn btn-sm btn-info mr-1" id="btnOcrExtract" onclick="startOcr()" title="Ekstrak & cari teks dari gambar (OCR)"><i class="fas fa-font mr-1"></i>Teks</button>
-                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success mr-1" title="Download original"><i class="fas fa-download"></i></a>
-                    <a id="imagePreviewDownloadJpg" href="#" class="btn btn-sm btn-warning mr-2" title="Download sebagai JPG"><i class="fas fa-file-image mr-1"></i>JPG</a>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup" style="opacity:1;">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                <div class="d-flex align-items-center ml-2" style="gap:4px; flex-shrink:0;">
+                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom"><i class="fas fa-compress"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    <button class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
+                    <button class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="OCR seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
+                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download original"><i class="fas fa-download"></i></a>
+                    <a id="imagePreviewDownloadJpg" href="#" class="btn btn-sm btn-warning" title="Download sebagai JPG"><i class="fas fa-file-image"></i> JPG</a>
+                    <button type="button" data-dismiss="modal" aria-label="Tutup"
+                            style="background:none;border:none;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;padding:0 4px;opacity:.9;flex-shrink:0;"
+                            title="Tutup">&times;</button>
                 </div>
             </div>
             <div class="modal-body p-0 text-center" style="background:#1a1a1a; min-height:400px; overflow:auto; cursor:grab;" id="imagePreviewContainer">
-                <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:72vh; object-fit:contain; transition:transform 0.2s; user-select:none; display:block; margin:auto;">
+                <div id="imgWrapper" style="position:relative; display:inline-block; max-width:100%; line-height:0;">
+                    <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:72vh; object-fit:contain; transition:transform 0.2s; user-select:none; display:block;">
+                    <canvas id="ocrSelCanvas" style="position:absolute; top:0; left:0; display:none; cursor:crosshair;"></canvas>
+                </div>
             </div>
             <!-- OCR / Smart Text Search Panel -->
             <div id="ocrPanel" style="display:none; background:#1e1e2e; border-top:1px solid #444; padding:12px 16px;">
@@ -396,7 +400,7 @@
                 <div id="ocrStatus" class="text-muted small mb-2"></div>
                 <div id="ocrResultText" class="p-2 rounded"
                      style="background:#111827; color:#d1d5db; font-size:0.82rem; max-height:180px; overflow-y:auto;
-                            white-space:pre-wrap; font-family:monospace; line-height:1.7; border:1px solid #374151;"></div>
+                            white-space:pre-wrap; font-family:monospace; line-height:1.7; border:1px solid #374151; user-select:text; cursor:text;"></div>
             </div>
         </div>
     </div>
@@ -630,6 +634,8 @@ let imgScale = 1;
 let currentPreviewUrl = '';
 let currentDownloadJpgUrl = '#';
 let ocrText = '';
+let selectMode = false;
+let selDown = false, selSX = 0, selSY = 0, selEX = 0, selEY = 0;
 const statsContextFilters = @json($contextQuery ?? []);
 
 // Buka gambar di modal preview
@@ -642,6 +648,9 @@ function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     $('#imagePreviewDownload').attr('href', downloadUrl || url);
     $('#imagePreviewDownloadJpg').attr('href', currentDownloadJpgUrl);
     ocrText = '';
+    selectMode = false;
+    $('#ocrSelCanvas').hide();
+    $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
     $('#ocrPanel').hide();
     $('#ocrResultText').html('');
     $('#ocrStatus').text('');
@@ -651,23 +660,121 @@ function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     $('#imagePreviewModal').modal('show');
 }
 
-// Zoom fungsi untuk modal preview gambar
+// Zoom
 function imgZoom(delta) {
+    if (selectMode) return; // jangan zoom saat mode seleksi
     const img = document.getElementById('imagePreviewImg');
     if (!img) return;
-    if (delta === 0) {
-        imgScale = 1;
-    } else {
-        imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5);
-    }
+    if (delta === 0) { imgScale = 1; }
+    else { imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5); }
     img.style.transform = 'scale(' + imgScale + ')';
     img.style.transformOrigin = 'top center';
 }
 
-// OCR: ekstrak teks dari gambar menggunakan Tesseract.js
+// ---- Region Selection Mode ----
+function toggleSelectMode() {
+    selectMode = !selectMode;
+    const canvas = document.getElementById('ocrSelCanvas');
+    const img = document.getElementById('imagePreviewImg');
+    if (selectMode) {
+        imgZoom(0); // reset zoom agar koordinat akurat
+        canvas.width  = img.offsetWidth;
+        canvas.height = img.offsetHeight;
+        canvas.style.width  = img.offsetWidth  + 'px';
+        canvas.style.height = img.offsetHeight + 'px';
+        canvas.style.display = 'block';
+        $('#btnSelectRegion').html('<i class="fas fa-times-circle mr-1"></i>Batal').removeClass('btn-secondary').addClass('btn-danger');
+        $('#imagePreviewContainer').css('cursor', 'default');
+    } else {
+        canvas.style.display = 'none';
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
+        $('#imagePreviewContainer').css('cursor', 'grab');
+    }
+}
+
+// Canvas mouse events untuk menggambar seleksi
+(function() {
+    function getCanvasCoords(canvas, e) {
+        const r = canvas.getBoundingClientRect();
+        const scaleX = canvas.width  / r.width;
+        const scaleY = canvas.height / r.height;
+        return {
+            x: (e.clientX - r.left) * scaleX,
+            y: (e.clientY - r.top)  * scaleY
+        };
+    }
+    function drawSelection(canvas, x1, y1, x2, y2) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const rx = Math.min(x1,x2), ry = Math.min(y1,y2);
+        const rw = Math.abs(x2-x1), rh = Math.abs(y2-y1);
+        ctx.clearRect(rx, ry, rw, rh);
+        ctx.strokeStyle = '#4af';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(rx, ry, rw, rh);
+    }
+
+    document.addEventListener('mousedown', function(e) {
+        if (!selectMode) return;
+        const canvas = document.getElementById('ocrSelCanvas');
+        if (e.target !== canvas) return;
+        e.preventDefault();
+        selDown = true;
+        const c = getCanvasCoords(canvas, e);
+        selSX = selEX = c.x; selSY = selEY = c.y;
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (!selectMode || !selDown) return;
+        const canvas = document.getElementById('ocrSelCanvas');
+        const c = getCanvasCoords(canvas, e);
+        selEX = c.x; selEY = c.y;
+        drawSelection(canvas, selSX, selSY, selEX, selEY);
+    });
+    document.addEventListener('mouseup', async function(e) {
+        if (!selectMode || !selDown) return;
+        selDown = false;
+        const canvas = document.getElementById('ocrSelCanvas');
+        const c = getCanvasCoords(canvas, e);
+        selEX = c.x; selEY = c.y;
+        const rw = Math.abs(selEX - selSX), rh = Math.abs(selEY - selSY);
+        if (rw < 10 || rh < 10) return; // terlalu kecil
+        // Crop dari gambar asli dengan skala natural
+        const img = document.getElementById('imagePreviewImg');
+        const scaleX = img.naturalWidth  / canvas.width;
+        const scaleY = img.naturalHeight / canvas.height;
+        const rx = Math.min(selSX, selEX) * scaleX;
+        const ry = Math.min(selSY, selEY) * scaleY;
+        const cropW = rw * scaleX, cropH = rh * scaleY;
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width  = cropW;
+        cropCanvas.height = cropH;
+        const cctx = cropCanvas.getContext('2d');
+        cctx.drawImage(img, rx, ry, cropW, cropH, 0, 0, cropW, cropH);
+        // keluar mode seleksi
+        toggleSelectMode();
+        // jalankan OCR pada crop
+        await runOcrOnCanvas(cropCanvas, 'seleksi area');
+    });
+})();
+
+// OCR seluruh gambar
 async function startOcr() {
     const url = currentPreviewUrl;
     if (!url) return;
+    const img = document.getElementById('imagePreviewImg');
+    const fullCanvas = document.createElement('canvas');
+    fullCanvas.width  = img.naturalWidth;
+    fullCanvas.height = img.naturalHeight;
+    fullCanvas.getContext('2d').drawImage(img, 0, 0);
+    await runOcrOnCanvas(fullCanvas, 'seluruh gambar');
+}
+
+// Core OCR runner — menerima canvas element
+async function runOcrOnCanvas(canvas, label) {
     $('#ocrPanel').show();
     $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat mesin OCR...');
     $('#ocrResultText').html('');
@@ -681,11 +788,12 @@ async function startOcr() {
                 document.head.appendChild(s);
             });
         }
-        const result = await Tesseract.recognize(url, 'ind+eng', {
+        const dataUrl = canvas.toDataURL('image/png');
+        const result = await Tesseract.recognize(dataUrl, 'ind+eng', {
             logger: m => {
                 if (m.status === 'recognizing text') {
                     const pct = Math.round((m.progress || 0) * 100);
-                    $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses... ' + pct + '%');
+                    $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses ' + label + '... ' + pct + '%');
                 } else if (m.status) {
                     $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> ' + m.status + '...');
                 }
@@ -694,7 +802,7 @@ async function startOcr() {
         ocrText = result.data.text.trim();
         if (ocrText) {
             const lines = ocrText.split('\n').filter(l => l.trim()).length;
-            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks ditemukan');
+            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks — <small class="text-muted">teks bisa di-select/copy</small>');
             renderOcrText(ocrText, $('#ocrSearchInput').val());
         } else {
             $('#ocrStatus').html('<i class="fas fa-info-circle text-warning mr-1"></i> Tidak ada teks yang terdeteksi');
@@ -718,7 +826,6 @@ function renderOcrText(text, search) {
     const count = matches ? matches.length : 0;
     $('#ocrSearchCount').text(count > 0 ? count + ' ditemukan' : 'Tidak ditemukan');
     const safe = text.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-    const safeEsc = s.replace(/[.*+?^${}()|[\]\\&<>"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c] || '\\' + c));
     const highlighted = safe.replace(new RegExp(esc, 'gi'), m =>
         '<mark style="background:#ffd700;color:#111;border-radius:2px;padding:0 1px;">' + m + '</mark>');
     $('#ocrResultText').html(highlighted.replace(/\n/g, '<br>'));
@@ -730,13 +837,18 @@ $('#ocrSearchInput').on('input', function () { renderOcrText(ocrText, $(this).va
 $('#imagePreviewModal').on('hidden.bs.modal', function () {
     imgScale = 1;
     currentPreviewUrl = '';
+    selectMode = false;
+    selDown = false;
     ocrText = '';
     $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1)');
+    $('#ocrSelCanvas').hide();
     $('#ocrPanel').hide();
     $('#ocrResultText').html('');
     $('#ocrStatus').text('');
     $('#ocrSearchInput').val('');
     $('#ocrSearchCount').text('');
+    $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
+    $('#imagePreviewContainer').css('cursor', 'grab');
 });
 
 $(document).ready(function() {
