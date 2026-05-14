@@ -358,6 +358,31 @@
     </div>
 </div>
 
+<!-- Modal Preview Gambar Dokumen -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 py-2 px-3" style="background:#2d2d2d;">
+                <h6 class="modal-title text-white mb-0" id="imagePreviewTitle">
+                    <i class="fas fa-image mr-1"></i> <span id="imagePreviewTitleText"></span>
+                </h6>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(0)" title="Reset"><i class="fas fa-compress"></i></button>
+                    <button class="btn btn-sm btn-outline-light mr-2" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success mr-2"><i class="fas fa-download"></i></a>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup" style="opacity:1;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-0 text-center" style="background:#1a1a1a; min-height:400px; overflow:auto; cursor:grab;" id="imagePreviewContainer">
+                <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:75vh; object-fit:contain; transition:transform 0.2s; user-select:none;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Reset Password Siswa -->
 <div class="modal fade" id="resetPasswordSiswaModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordSiswaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -582,7 +607,26 @@
 let siswaTable;
 let editingId = null;
 let resetPasswordSiswaId = null;
+let imgScale = 1;
 const statsContextFilters = @json($contextQuery ?? []);
+
+// Zoom fungsi untuk modal preview gambar
+function imgZoom(delta) {
+    const img = document.getElementById('imagePreviewImg');
+    if (!img) return;
+    if (delta === 0) {
+        imgScale = 1;
+    } else {
+        imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5);
+    }
+    img.style.transform = 'scale(' + imgScale + ')';
+}
+
+// Reset zoom saat modal ditutup
+$('#imagePreviewModal').on('hidden.bs.modal', function () {
+    imgScale = 1;
+    $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1)');
+});
 
 $(document).ready(function() {
     // Auto-open edit modal jika URL mengandung ?edit={id} (dari show.blade.php)
@@ -1087,59 +1131,17 @@ function loadDokumenTab(siswaId) {
                     const title = $(this).data('title');
                     
                     if (type === 'image') {
-                        // Open image in new window with zoom functionality
-                        const win = window.open('', 'ImagePreview', 'width=1000,height=800,scrollbars=yes,resizable=yes');
-                        win.document.write('<!DOCTYPE html><html><head><title>' + title + '</title>');
-                        win.document.write('<style>');
-                        win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
-                        win.document.write('body { background: #1a1a1a; font-family: Arial, sans-serif; overflow: hidden; }');
-                        win.document.write('.header { background: #2d2d2d; padding: 15px 20px; color: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }');
-                        win.document.write('.header h3 { margin: 0; font-size: 18px; font-weight: 500; }');
-                        win.document.write('.controls { display: flex; gap: 10px; }');
-                        win.document.write('.btn { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.3s; }');
-                        win.document.write('.btn:hover { background: #0056b3; }');
-                        win.document.write('.btn-success { background: #28a745; }');
-                        win.document.write('.btn-success:hover { background: #1e7e34; }');
-                        win.document.write('.btn-danger { background: #dc3545; }');
-                        win.document.write('.btn-danger:hover { background: #c82333; }');
-                        win.document.write('.image-container { width: 100%; height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; overflow: auto; cursor: grab; position: relative; }');
-                        win.document.write('.image-container.dragging { cursor: grabbing; }');
-                        win.document.write('.image-container img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.3s; user-select: none; }');
-                        win.document.write('.zoom-info { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; }');
-                        win.document.write('</style></head><body>');
-                        win.document.write('<div class="header"><h3>' + title + '</h3>');
-                        win.document.write('<div class="controls">');
-                        win.document.write('<button class="btn" onclick="zoomOut()">ðŸ” Zoom Out</button>');
-                        win.document.write('<button class="btn" onclick="resetZoom()">â†º Reset</button>');
-                        win.document.write('<button class="btn" onclick="zoomIn()">ðŸ” Zoom In</button>');
-                        win.document.write('<a href="' + url + '" download class="btn btn-success" style="text-decoration:none;">â¬‡ Download</a>');
-                        win.document.write('<button class="btn btn-danger" onclick="window.close()">âœ• Close</button>');
-                        win.document.write('</div></div>');
-                        win.document.write('<div class="image-container" id="imageContainer">');
-                        win.document.write('<img src="' + url + '" id="previewImage" alt="' + title + '">');
-                        win.document.write('<div class="zoom-info" id="zoomInfo">100%</div></div>');
-                        win.document.write('<scr' + 'ipt>');
-                        win.document.write('let scale = 1;');
-                        win.document.write('const img = document.getElementById("previewImage");');
-                        win.document.write('const container = document.getElementById("imageContainer");');
-                        win.document.write('const zoomInfo = document.getElementById("zoomInfo");');
-                        win.document.write('let isDragging = false;');
-                        win.document.write('let startX, startY, scrollLeft, scrollTop;');
-                        win.document.write('function updateZoom() { img.style.transform = "scale(" + scale + ")"; zoomInfo.textContent = Math.round(scale * 100) + "%"; }');
-                        win.document.write('function zoomIn() { scale = Math.min(scale + 0.2, 5); updateZoom(); }');
-                        win.document.write('function zoomOut() { scale = Math.max(scale - 0.2, 0.2); updateZoom(); }');
-                        win.document.write('function resetZoom() { scale = 1; updateZoom(); container.scrollTop = 0; container.scrollLeft = 0; }');
-                        win.document.write('container.addEventListener("wheel", function(e) { e.preventDefault(); if (e.deltaY < 0) { zoomIn(); } else { zoomOut(); } });');
-                        win.document.write('container.addEventListener("mousedown", function(e) { isDragging = true; container.classList.add("dragging"); startX = e.pageX - container.offsetLeft; startY = e.pageY - container.offsetTop; scrollLeft = container.scrollLeft; scrollTop = container.scrollTop; });');
-                        win.document.write('container.addEventListener("mouseleave", function() { isDragging = false; container.classList.remove("dragging"); });');
-                        win.document.write('container.addEventListener("mouseup", function() { isDragging = false; container.classList.remove("dragging"); });');
-                        win.document.write('container.addEventListener("mousemove", function(e) { if (!isDragging) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const y = e.pageY - container.offsetTop; const walkX = (x - startX) * 2; const walkY = (y - startY) * 2; container.scrollLeft = scrollLeft - walkX; container.scrollTop = scrollTop - walkY; });');
-                        win.document.write('document.addEventListener("keydown", function(e) { if (e.key === "+" || e.key === "=") zoomIn(); if (e.key === "-") zoomOut(); if (e.key === "0") resetZoom(); if (e.key === "Escape") window.close(); });');
-                        win.document.write('</scr' + 'ipt></body></html>');
-                        win.document.close();
+                        // Tampilkan gambar di modal dalam halaman yang sama
+                        // (menghindari masalah cookies saat load di popup window terpisah)
+                        $('#imagePreviewTitleText').text(title);
+                        $('#imagePreviewImg').attr('src', url).attr('alt', title);
+                        $('#imagePreviewDownload').attr('href', url);
+                        imgScale = 1;
+                        $('#imagePreviewImg').css('transform', 'scale(1)');
+                        $('#imagePreviewModal').modal('show');
                     } else {
-                        // For PDF and other files, open in new tab
-                        window.open(url, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+                        // Untuk PDF dan file lain, buka di tab baru
+                        window.open(url, '_blank');
                     }
                 });
             }
