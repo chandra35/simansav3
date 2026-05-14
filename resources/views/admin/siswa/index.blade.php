@@ -368,8 +368,10 @@
                 </h6>
                 <div class="d-flex align-items-center ml-2" style="gap:4px; flex-shrink:0;">
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom"><i class="fas fa-compress"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom & Rotasi"><i class="fas fa-compress"></i></button>
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90°"><i class="fas fa-undo"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90°"><i class="fas fa-redo"></i></button>
                     <button class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
                     <button class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="OCR seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
                     <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download original"><i class="fas fa-download"></i></a>
@@ -631,6 +633,7 @@ let siswaTable;
 let editingId = null;
 let resetPasswordSiswaId = null;
 let imgScale = 1;
+let imgRotation = 0;
 let currentPreviewUrl = '';
 let currentDownloadJpgUrl = '#';
 let ocrText = '';
@@ -641,10 +644,11 @@ const statsContextFilters = @json($contextQuery ?? []);
 // Buka gambar di modal preview
 function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     imgScale = 1;
+    imgRotation = 0;
     currentPreviewUrl = url;
     currentDownloadJpgUrl = downloadJpgUrl || '#';
     $('#imagePreviewTitleText').text(title);
-    $('#imagePreviewImg').attr('src', url).css('transform', 'scale(1)');
+    $('#imagePreviewImg').attr('src', url).css('transform', 'scale(1) rotate(0deg)');
     $('#imagePreviewDownload').attr('href', downloadUrl || url);
     $('#imagePreviewDownloadJpg').attr('href', currentDownloadJpgUrl);
     ocrText = '';
@@ -660,15 +664,27 @@ function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     $('#imagePreviewModal').modal('show');
 }
 
-// Zoom
-function imgZoom(delta) {
-    if (selectMode) return; // jangan zoom saat mode seleksi
+// Terapkan transform gabungan scale + rotate
+function applyImgTransform() {
     const img = document.getElementById('imagePreviewImg');
     if (!img) return;
-    if (delta === 0) { imgScale = 1; }
+    img.style.transform = 'scale(' + imgScale + ') rotate(' + imgRotation + 'deg)';
+    img.style.transformOrigin = 'center center';
+}
+
+// Zoom
+function imgZoom(delta) {
+    if (selectMode) return;
+    if (delta === 0) { imgScale = 1; imgRotation = 0; }
     else { imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5); }
-    img.style.transform = 'scale(' + imgScale + ')';
-    img.style.transformOrigin = 'top center';
+    applyImgTransform();
+}
+
+// Rotate
+function imgRotate(deg) {
+    if (selectMode) return;
+    imgRotation = (imgRotation + deg + 360) % 360;
+    applyImgTransform();
 }
 
 // ---- Region Selection Mode ----
@@ -836,11 +852,12 @@ $('#ocrSearchInput').on('input', function () { renderOcrText(ocrText, $(this).va
 // Reset saat modal ditutup
 $('#imagePreviewModal').on('hidden.bs.modal', function () {
     imgScale = 1;
+    imgRotation = 0;
     currentPreviewUrl = '';
     selectMode = false;
     selDown = false;
     ocrText = '';
-    $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1)');
+    $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1) rotate(0deg)');
     $('#ocrSelCanvas').hide();
     $('#ocrPanel').hide();
     $('#ocrResultText').html('');
