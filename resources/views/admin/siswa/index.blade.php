@@ -1131,14 +1131,9 @@ function loadDokumenTab(siswaId) {
                     const title = $(this).data('title');
                     
                     if (type === 'image') {
-                        // Tampilkan gambar di modal dalam halaman yang sama
-                        // (menghindari masalah cookies saat load di popup window terpisah)
-                        $('#imagePreviewTitleText').text(title);
-                        $('#imagePreviewImg').attr('src', url).attr('alt', title);
-                        $('#imagePreviewDownload').attr('href', url);
-                        imgScale = 1;
-                        $('#imagePreviewImg').css('transform', 'scale(1)');
-                        $('#imagePreviewModal').modal('show');
+                        // Buka langsung di tab baru — browser kirim session cookie
+                        // sehingga preview controller bisa autentikasi (sama seperti PDF)
+                        window.open(url, '_blank');
                     } else {
                         // Untuk PDF dan file lain, buka di tab baru
                         window.open(url, '_blank');
