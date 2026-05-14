@@ -335,7 +335,7 @@
                 </ul>
 
                 @can('edit-siswa')
-                <a href="{{ route('admin.siswa.edit', $siswa->id) }}" class="btn btn-primary btn-block">
+                <a href="{{ route('admin.siswa.index') }}" class="btn btn-primary btn-block">
                     <i class="fas fa-edit"></i> Edit Siswa
                 </a>
                 @endcan
