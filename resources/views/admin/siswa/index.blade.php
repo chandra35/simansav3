@@ -366,18 +366,37 @@
                 <h6 class="modal-title text-white mb-0" id="imagePreviewTitle">
                     <i class="fas fa-image mr-1"></i> <span id="imagePreviewTitleText"></span>
                 </h6>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center flex-wrap">
                     <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(0)" title="Reset"><i class="fas fa-compress"></i></button>
+                    <button class="btn btn-sm btn-outline-light mr-1" onclick="imgZoom(0)" title="Reset Zoom"><i class="fas fa-compress"></i></button>
                     <button class="btn btn-sm btn-outline-light mr-2" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success mr-2"><i class="fas fa-download"></i></a>
+                    <button class="btn btn-sm btn-info mr-1" id="btnOcrExtract" onclick="startOcr()" title="Ekstrak & cari teks dari gambar (OCR)"><i class="fas fa-font mr-1"></i>Teks</button>
+                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success mr-1" title="Download original"><i class="fas fa-download"></i></a>
+                    <a id="imagePreviewDownloadJpg" href="#" class="btn btn-sm btn-warning mr-2" title="Download sebagai JPG"><i class="fas fa-file-image mr-1"></i>JPG</a>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup" style="opacity:1;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
             </div>
             <div class="modal-body p-0 text-center" style="background:#1a1a1a; min-height:400px; overflow:auto; cursor:grab;" id="imagePreviewContainer">
-                <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:75vh; object-fit:contain; transition:transform 0.2s; user-select:none;">
+                <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:72vh; object-fit:contain; transition:transform 0.2s; user-select:none; display:block; margin:auto;">
+            </div>
+            <!-- OCR / Smart Text Search Panel -->
+            <div id="ocrPanel" style="display:none; background:#1e1e2e; border-top:1px solid #444; padding:12px 16px;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-search text-info mr-2"></i>
+                    <input type="text" id="ocrSearchInput" class="form-control form-control-sm"
+                           style="max-width:300px; background:#2d2d3d; color:#e0e0e0; border-color:#555; border-radius:4px;"
+                           placeholder="Ketik untuk mencari teks...">
+                    <span id="ocrSearchCount" class="text-muted ml-2 small"></span>
+                    <button class="btn btn-sm btn-outline-secondary ml-auto" onclick="$('#ocrPanel').hide()" title="Tutup">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="ocrStatus" class="text-muted small mb-2"></div>
+                <div id="ocrResultText" class="p-2 rounded"
+                     style="background:#111827; color:#d1d5db; font-size:0.82rem; max-height:180px; overflow-y:auto;
+                            white-space:pre-wrap; font-family:monospace; line-height:1.7; border:1px solid #374151;"></div>
             </div>
         </div>
     </div>
@@ -608,7 +627,29 @@ let siswaTable;
 let editingId = null;
 let resetPasswordSiswaId = null;
 let imgScale = 1;
+let currentPreviewUrl = '';
+let currentDownloadJpgUrl = '#';
+let ocrText = '';
 const statsContextFilters = @json($contextQuery ?? []);
+
+// Buka gambar di modal preview
+function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
+    imgScale = 1;
+    currentPreviewUrl = url;
+    currentDownloadJpgUrl = downloadJpgUrl || '#';
+    $('#imagePreviewTitleText').text(title);
+    $('#imagePreviewImg').attr('src', url).css('transform', 'scale(1)');
+    $('#imagePreviewDownload').attr('href', downloadUrl || url);
+    $('#imagePreviewDownloadJpg').attr('href', currentDownloadJpgUrl);
+    ocrText = '';
+    $('#ocrPanel').hide();
+    $('#ocrResultText').html('');
+    $('#ocrStatus').text('');
+    $('#ocrSearchInput').val('');
+    $('#ocrSearchCount').text('');
+    $('#btnOcrExtract').prop('disabled', false);
+    $('#imagePreviewModal').modal('show');
+}
 
 // Zoom fungsi untuk modal preview gambar
 function imgZoom(delta) {
@@ -620,12 +661,82 @@ function imgZoom(delta) {
         imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5);
     }
     img.style.transform = 'scale(' + imgScale + ')';
+    img.style.transformOrigin = 'top center';
 }
 
-// Reset zoom saat modal ditutup
+// OCR: ekstrak teks dari gambar menggunakan Tesseract.js
+async function startOcr() {
+    const url = currentPreviewUrl;
+    if (!url) return;
+    $('#ocrPanel').show();
+    $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat mesin OCR...');
+    $('#ocrResultText').html('');
+    $('#btnOcrExtract').prop('disabled', true);
+    try {
+        if (typeof Tesseract === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                s.onload = resolve; s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+        const result = await Tesseract.recognize(url, 'ind+eng', {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    const pct = Math.round((m.progress || 0) * 100);
+                    $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses... ' + pct + '%');
+                } else if (m.status) {
+                    $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> ' + m.status + '...');
+                }
+            }
+        });
+        ocrText = result.data.text.trim();
+        if (ocrText) {
+            const lines = ocrText.split('\n').filter(l => l.trim()).length;
+            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks ditemukan');
+            renderOcrText(ocrText, $('#ocrSearchInput').val());
+        } else {
+            $('#ocrStatus').html('<i class="fas fa-info-circle text-warning mr-1"></i> Tidak ada teks yang terdeteksi');
+        }
+    } catch (err) {
+        $('#ocrStatus').html('<i class="fas fa-exclamation-triangle text-danger mr-1"></i> Gagal: ' + err.message);
+    } finally {
+        $('#btnOcrExtract').prop('disabled', false);
+    }
+}
+
+function renderOcrText(text, search) {
+    const s = (search || '').trim();
+    if (!s) {
+        $('#ocrResultText').text(text);
+        $('#ocrSearchCount').text('');
+        return;
+    }
+    const esc = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const matches = text.match(new RegExp(esc, 'gi'));
+    const count = matches ? matches.length : 0;
+    $('#ocrSearchCount').text(count > 0 ? count + ' ditemukan' : 'Tidak ditemukan');
+    const safe = text.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    const safeEsc = s.replace(/[.*+?^${}()|[\]\\&<>"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c] || '\\' + c));
+    const highlighted = safe.replace(new RegExp(esc, 'gi'), m =>
+        '<mark style="background:#ffd700;color:#111;border-radius:2px;padding:0 1px;">' + m + '</mark>');
+    $('#ocrResultText').html(highlighted.replace(/\n/g, '<br>'));
+}
+
+$('#ocrSearchInput').on('input', function () { renderOcrText(ocrText, $(this).val()); });
+
+// Reset saat modal ditutup
 $('#imagePreviewModal').on('hidden.bs.modal', function () {
     imgScale = 1;
+    currentPreviewUrl = '';
+    ocrText = '';
     $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1)');
+    $('#ocrPanel').hide();
+    $('#ocrResultText').html('');
+    $('#ocrStatus').text('');
+    $('#ocrSearchInput').val('');
+    $('#ocrSearchCount').text('');
 });
 
 $(document).ready(function() {
@@ -1095,6 +1206,7 @@ function loadDokumenTab(siswaId) {
                                                data-url="${dok.file_url}"
                                                data-type="${isImage ? 'image' : isPdf ? 'pdf' : 'other'}"
                                                data-title="${dok.jenis_dokumen_label}"
+                                               data-download-jpg-url="${dok.download_jpg_url}"
                                                title="${isImage ? 'Preview & Zoom' : 'Lihat File'}">
                                                 <i class="fas ${isImage ? 'fa-search-plus' : 'fa-eye'}"></i>
                                             </a>
@@ -1129,11 +1241,9 @@ function loadDokumenTab(siswaId) {
                     const url = $(this).data('url');
                     const type = $(this).data('type');
                     const title = $(this).data('title');
-                    
+                    const dlJpgUrl = $(this).data('download-jpg-url');
                     if (type === 'image') {
-                        // Buka langsung di tab baru — browser kirim session cookie
-                        // sehingga preview controller bisa autentikasi (sama seperti PDF)
-                        window.open(url, '_blank');
+                        openImagePreview(url, title, url, dlJpgUrl);
                     } else {
                         // Untuk PDF dan file lain, buka di tab baru
                         window.open(url, '_blank');

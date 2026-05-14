@@ -839,6 +839,18 @@ class SiswaController extends Controller
         $tmpInput = tempnam(sys_get_temp_dir(), 'simansa_in_');
         file_put_contents($tmpInput, Storage::disk($disk)->get($dokumen->file_path));
 
+        // Helper: flush buffer + stream file as attachment, then cleanup
+        $streamAndExit = function (string $outPath) use ($filename) {
+            while (ob_get_level() > 0) ob_end_clean();
+            header('Content-Type: image/jpeg');
+            header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
+            header('Content-Length: ' . filesize($outPath));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            readfile($outPath);
+            @unlink($outPath);
+            exit;
+        };
+
         if (str_contains($mime, 'pdf')) {
             $tmpPrefix = sys_get_temp_dir() . '/simansa_' . uniqid();
             $cmd = sprintf(
@@ -847,7 +859,7 @@ class SiswaController extends Controller
                 escapeshellarg($tmpPrefix)
             );
             exec($cmd, $output, $retCode);
-            unlink($tmpInput);
+            @unlink($tmpInput);
 
             $generated = glob($tmpPrefix . '*.jpg');
             if (empty($generated)) {
@@ -855,13 +867,12 @@ class SiswaController extends Controller
                 abort(500, 'Gagal konversi PDF ke JPG');
             }
 
-            return response()->download($generated[0], $filename, ['Content-Type' => 'image/jpeg'])
-                ->deleteFileAfterSend(true);
+            $streamAndExit($generated[0]);
         }
 
         if (in_array($mime, ['image/png', 'image/webp', 'image/gif', 'image/bmp'])) {
             $image = @imagecreatefromstring(file_get_contents($tmpInput));
-            unlink($tmpInput);
+            @unlink($tmpInput);
             if (!$image) {
                 abort(422, 'Format gambar tidak dapat diproses');
             }
@@ -869,15 +880,13 @@ class SiswaController extends Controller
             imagejpeg($image, $tmpOut, 90);
             imagedestroy($image);
 
-            return response()->download($tmpOut, $filename, ['Content-Type' => 'image/jpeg'])
-                ->deleteFileAfterSend(true);
+            $streamAndExit($tmpOut);
         }
 
         // Already JPEG — rename temp dan serve
         $tmpJpg = $tmpInput . '.jpg';
         rename($tmpInput, $tmpJpg);
-        return response()->download($tmpJpg, $filename, ['Content-Type' => 'image/jpeg'])
-            ->deleteFileAfterSend(true);
+        $streamAndExit($tmpJpg);
     }
 
     /**
