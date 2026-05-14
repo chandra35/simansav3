@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ClientRuntimeController;
+use App\Http\Controllers\DeviceLocationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SiswaController as AdminSiswaController;
@@ -43,6 +45,11 @@ Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController:
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::post('/device-location/sync', [DeviceLocationController::class, 'sync'])->name('device-location.sync');
+Route::middleware('auth')->group(function () {
+    Route::post('/client-runtime/heartbeat', [ClientRuntimeController::class, 'heartbeat'])->name('client-runtime.heartbeat');
+    Route::get('/client-runtime/server-time', [ClientRuntimeController::class, 'serverTime'])->name('client-runtime.server-time');
+});
 
 // Forgot Password Routes
 Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -57,7 +64,6 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordControll
 // Admin Routes (Super Admin, Admin, GTK, Operator)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
     
     // Under Development Placeholder
     Route::get('/under-development', function () {
@@ -89,8 +95,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/tamu/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'destroyTamu'])->name('tamu.destroy');
     });
 
-    // Siswa Management
-    Route::resource('siswa', AdminSiswaController::class);
+    // Siswa Management (edit method tidak ada — semua edit via modal AJAX)
+    Route::resource('siswa', AdminSiswaController::class)->except(['edit']);
     Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
     Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
     Route::get('/siswa-statistik', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'index'])->name('siswa.statistics');
@@ -107,17 +113,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/sekolah-asal', [App\Http\Controllers\Admin\SekolahAsalController::class, 'index'])->name('sekolah-asal.index');
         Route::get('/sekolah-asal/{npsn}', [App\Http\Controllers\Admin\SekolahAsalController::class, 'show'])->name('sekolah-asal.show');
         Route::get('/sekolah-asal/{npsn}/siswa-data', [App\Http\Controllers\Admin\SekolahAsalController::class, 'getSiswaData'])->name('sekolah-asal.siswa-data');
-        Route::get('/lulusan', [App\Http\Controllers\Admin\LulusanController::class, 'index'])->name('lulusan.index');
-        Route::get('/lulusan/data', [App\Http\Controllers\Admin\LulusanController::class, 'data'])->name('lulusan.data');
-        Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
-        Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
-        Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
-        Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
+        Route::middleware(['can:kesiswaan-lulusan-access'])->group(function () {
+            Route::get('/lulusan', [App\Http\Controllers\Admin\LulusanController::class, 'index'])->name('lulusan.index');
+            Route::get('/lulusan/data', [App\Http\Controllers\Admin\LulusanController::class, 'data'])->name('lulusan.data');
+            Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
+            Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
+            Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
+            Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
             Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
             Route::post('/kelulusan-pengumuman/publish', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'publish'])->name('kelulusan-pengumuman.publish');
             Route::post('/kelulusan-pengumuman/save', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'save'])->name('kelulusan-pengumuman.save');
             Route::post('/kelulusan-pengumuman/reset-opened', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpened'])->name('kelulusan-pengumuman.reset-opened');
-            Route::post('/kelulusan-pengumuman/{siswa}/reset-opened', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpenedForStudent'])->name('kelulusan-pengumuman.reset-opened-student');
+            Route::post('/kelulusan-pengumuman/reset-opened/{siswa}', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'resetOpenedForStudent'])->name('kelulusan-pengumuman.reset-opened-student');
+        });
     });
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/referensi-perguruan-tinggi', [App\Http\Controllers\Admin\ReferensiPerguruanTinggiController::class, 'index'])->name('referensi-perguruan-tinggi.index');
@@ -158,10 +166,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/custom-menu/{customMenu}/get-siswa-by-kelas', [App\Http\Controllers\Admin\CustomMenuController::class, 'getSiswaByKelas'])->name('custom-menu.get-siswa-by-kelas');
     
     // User Monitoring
-    Route::get('/monitoring/users', [App\Http\Controllers\Admin\UserMonitoringController::class, 'index'])->name('monitoring.users');
-    Route::get('/monitoring/users/{user}', [App\Http\Controllers\Admin\UserMonitoringController::class, 'show'])->name('monitoring.users.show');
+    Route::middleware(['permission:view-monitoring-users'])->group(function () {
+        Route::get('/monitoring/users', [App\Http\Controllers\Admin\UserMonitoringController::class, 'index'])->name('monitoring.users');
+        Route::get('/monitoring/users/{user}', [App\Http\Controllers\Admin\UserMonitoringController::class, 'show'])->name('monitoring.users.show');
+        Route::post('/monitoring/users/{user}/force-logout', [App\Http\Controllers\Admin\UserMonitoringController::class, 'forceLogout'])->name('monitoring.users.force-logout');
+    });
     Route::get('/monitoring/online-count', [App\Http\Controllers\Admin\UserMonitoringController::class, 'getOnlineCount'])->name('monitoring.online-count');
-    Route::post('/monitoring/users/{user}/force-logout', [App\Http\Controllers\Admin\UserMonitoringController::class, 'forceLogout'])->name('monitoring.users.force-logout');
     
     // Pengaturan - Cek NIP (Super Admin Only)
     Route::get('/pengaturan/cek-nip', [App\Http\Controllers\Admin\NipCheckerController::class, 'index'])->name('pengaturan.cek-nip.index');
@@ -250,7 +260,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/kenaikan-kelas/data', [KenaikanKelasController::class, 'getData'])->name('kenaikan-kelas.data');
         Route::get('/kenaikan-kelas/preview', [KenaikanKelasController::class, 'previewSiswaKelas'])->name('kenaikan-kelas.preview');
         Route::get('/kenaikan-kelas/kelas-by-tahun', [KenaikanKelasController::class, 'getKelasByTahun'])->name('kenaikan-kelas.kelas-by-tahun');
-        Route::get('/kenaikan-kelas/status-kelulusan', [KenaikanKelasController::class, 'statusKelulusan'])->name('kenaikan-kelas.status-kelulusan');
         Route::post('/kenaikan-kelas/proses-kelulusan', [KenaikanKelasController::class, 'prosesKelulusan'])->name('kenaikan-kelas.proses-kelulusan');
         Route::post('/kenaikan-kelas/proses-naik-kelas', [KenaikanKelasController::class, 'prosesNaikKelas'])->name('kenaikan-kelas.proses-naik-kelas');
     });
@@ -311,12 +320,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{siswa}', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'show'])->name('show');
         Route::post('/{siswa}', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'store'])->name('store');
         Route::post('/{siswa}/refresh-emis', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'refreshEmis'])->name('refresh-emis');
-    });
-
-    // ─── Siswa Tidak Mampu / PIP ───────────────────────────────────────────────
-    Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\SiswaPipController::class, 'index'])->name('index');
-        Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
     });
 
     // GTK Management (for Admin/Super Admin)
@@ -398,11 +401,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/tugas-tambahan/{tugasTambahan}', [App\Http\Controllers\Admin\UserController::class, 'deleteTugasTambahan'])->name('tugas-tambahan.delete');
     
     // Activity Logs
-    Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
-    Route::get('/activity-logs/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'getData'])->name('activity-logs.data');
-    Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
-    Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
-    Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+    Route::middleware(['permission:view-activity-log'])->group(function () {
+        Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'getData'])->name('activity-logs.data');
+        Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
+        Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
+        Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+    });
     
     // App Settings
     Route::middleware(['permission:manage-settings'])->group(function () {
@@ -434,11 +439,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/email-templates/{emailTemplate}/reset-default', [App\Http\Controllers\Admin\EmailTemplateController::class, 'resetToDefault'])->name('email-templates.reset-default');
     });
     
-    Route::middleware(['permission:view-kelas'])->group(function () {
-        Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
-        Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
-    });
-
     // Cetak (Print Reports)
     Route::middleware(['permission:view-kelas'])->group(function () {
         Route::get('/cetak', [App\Http\Controllers\Admin\CetakController::class, 'index'])->name('cetak.index');
@@ -456,100 +456,90 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/cetak/gtk-by-filter', [App\Http\Controllers\Admin\CetakController::class, 'getGtkByFilter'])->name('cetak.gtk-by-filter')->middleware('permission:view-gtk');
     
     // ==================== FITUR BARU: PENGUMUMAN ====================
-    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class);
+    Route::middleware(['permission:view-pengumuman'])->group(function () {
+        Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class);
+    });
     
     // ==================== FITUR BARU: KALENDER AKADEMIK ====================
-    Route::get('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'index'])->name('kalender-akademik.index');
-    Route::get('/kalender-akademik/events', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'getEvents'])->name('kalender-akademik.events');
-    Route::post('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'store'])->name('kalender-akademik.store');
-    Route::get('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'show'])->name('kalender-akademik.show');
-    Route::put('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'update'])->name('kalender-akademik.update');
-    Route::patch('/kalender-akademik/{kalenderAkademik}/dates', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'updateDates'])->name('kalender-akademik.update-dates');
-    Route::delete('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'destroy'])->name('kalender-akademik.destroy');
+    Route::middleware(['permission:view-kalender-akademik'])->group(function () {
+        Route::get('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'index'])->name('kalender-akademik.index');
+        Route::get('/kalender-akademik/events', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'getEvents'])->name('kalender-akademik.events');
+        Route::post('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'store'])->name('kalender-akademik.store');
+        Route::get('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'show'])->name('kalender-akademik.show');
+        Route::put('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'update'])->name('kalender-akademik.update');
+        Route::patch('/kalender-akademik/{kalenderAkademik}/dates', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'updateDates'])->name('kalender-akademik.update-dates');
+        Route::delete('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'destroy'])->name('kalender-akademik.destroy');
+    });
     
     // ==================== FITUR BARU: PRESTASI SISWA ====================
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);
-    Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify');
+    Route::middleware(['permission:view-prestasi-siswa'])->group(function () {
+        Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);
+        Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify');
+    });
     
     // ==================== FITUR BARU: EKSTRAKURIKULER ====================
-    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class);
-    Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota');
-    Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
-    Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
-    Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    Route::middleware(['permission:view-ekstrakurikuler'])->group(function () {
+        Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class);
+        Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota');
+        Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
+        Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
+        Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    });
     
-// ==================== FITUR BARU: JADWAL PELAJARAN ====================
+    // ==================== FITUR BARU: JADWAL PELAJARAN ====================
     Route::middleware(['permission:view-jadwal-pelajaran'])->group(function () {
         Route::get('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran.index');
-        Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
-        Route::get('/jadwal-pelajaran/timetable-data', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetableData'])->name('jadwal-pelajaran.timetable-data');
-        Route::get('/jadwal-pelajaran/guru-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruOptions'])->name('jadwal-pelajaran.guru-options');
-        Route::get('/jadwal-pelajaran/mapel-options', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'mapelOptions'])->name('jadwal-pelajaran.mapel-options');
-        Route::get('/jadwal-pelajaran/guru-mapel-in-kelas', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruMapelInKelas'])->name('jadwal-pelajaran.guru-mapel-in-kelas');
-        Route::get('/jadwal-pelajaran/guru-jtm-summary', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruJtmSummary'])->name('jadwal-pelajaran.guru-jtm-summary');
-        Route::get('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'index'])->name('jadwal-hari-jam.index');
-    });
-    Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
+        Route::get('/jadwal-pelajaran/create', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'create'])->name('jadwal-pelajaran.create');
         Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
-        Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
-        Route::post('/jadwal-pelajaran/clear-all', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'clearAll'])->name('jadwal-pelajaran.clear-all');
+        Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
         Route::get('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
         Route::put('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'update'])->name('jadwal-pelajaran.update');
         Route::delete('/jadwal-pelajaran/{jadwalPelajaran}', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'destroy'])->name('jadwal-pelajaran.destroy');
-        // Jadwal Hari Jam (slot jam per hari, gantikan jadwal-jam-config)
-        Route::post('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'store'])->name('jadwal-hari-jam.store');
-        Route::post('/jadwal-hari-jam/generate-default', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'generateDefault'])->name('jadwal-hari-jam.generate-default');
-        Route::post('/jadwal-hari-jam/reorder', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'reorder'])->name('jadwal-hari-jam.reorder');
-        Route::delete('/jadwal-hari-jam/{hariJam}', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'destroy'])->name('jadwal-hari-jam.destroy');
-    });
-    // Jadwal Jam Config (dipertahankan untuk backward compat)
-    Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
-        Route::get('/jadwal-jam-config', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'index'])->name('jadwal-jam-config.index');
-        Route::post('/jadwal-jam-config/generate', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'generate'])->name('jadwal-jam-config.generate');
-        Route::post('/jadwal-jam-config', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'store'])->name('jadwal-jam-config.store');
-        Route::delete('/jadwal-jam-config/{jamConfig}', [App\Http\Controllers\Admin\JadwalJamConfigController::class, 'destroy'])->name('jadwal-jam-config.destroy');
     });
     
     // ==================== FITUR BARU: CATATAN KONSELING (BK) ====================
-    Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);
-    Route::get('/catatan-konseling-report/siswa', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'reportSiswa'])->name('catatan-konseling.report-siswa');
+    Route::middleware(['permission:view-catatan-konseling'])->group(function () {
+        Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);
+        Route::get('/catatan-konseling-report/siswa', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'reportSiswa'])->name('catatan-konseling.report-siswa');
+    });
     
     // ==================== FITUR BARU: PEMBAYARAN (SPP) ====================
-    // Jenis Pembayaran
-    Route::get('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'jenisPembayaran'])->name('pembayaran.jenis');
-    Route::post('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'storeJenisPembayaran'])->name('pembayaran.jenis.store');
-    Route::get('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'showJenisPembayaran'])->name('pembayaran.jenis.show');
-    Route::put('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'updateJenisPembayaran'])->name('pembayaran.jenis.update');
-    Route::delete('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyJenisPembayaran'])->name('pembayaran.jenis.destroy');
-    
-    // Tagihan
-    Route::get('/pembayaran/tagihan', [App\Http\Controllers\Admin\PembayaranController::class, 'tagihan'])->name('pembayaran.tagihan');
-    Route::post('/pembayaran/tagihan/generate', [App\Http\Controllers\Admin\PembayaranController::class, 'generateTagihan'])->name('pembayaran.tagihan.generate');
-    Route::get('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'showTagihan'])->name('pembayaran.tagihan.show');
-    Route::delete('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyTagihan'])->name('pembayaran.tagihan.destroy');
-    
-    // Pembayaran
-    Route::get('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('pembayaran.index');
-    Route::post('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'store'])->name('pembayaran.store');
-    Route::get('/pembayaran/laporan', [App\Http\Controllers\Admin\PembayaranController::class, 'laporan'])->name('pembayaran.laporan');
-    Route::get('/pembayaran/{pembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'show'])->name('pembayaran.show');
-    Route::post('/pembayaran/{pembayaran}/verify', [App\Http\Controllers\Admin\PembayaranController::class, 'verify'])->name('pembayaran.verify');
-    Route::post('/pembayaran/{pembayaran}/reject', [App\Http\Controllers\Admin\PembayaranController::class, 'reject'])->name('pembayaran.reject');
+    Route::middleware(['permission:view-keuangan'])->group(function () {
+        // Jenis Pembayaran
+        Route::get('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'jenisPembayaran'])->name('pembayaran.jenis');
+        Route::post('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'storeJenisPembayaran'])->name('pembayaran.jenis.store');
+        Route::get('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'showJenisPembayaran'])->name('pembayaran.jenis.show');
+        Route::put('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'updateJenisPembayaran'])->name('pembayaran.jenis.update');
+        Route::delete('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyJenisPembayaran'])->name('pembayaran.jenis.destroy');
+        // Tagihan
+        Route::get('/pembayaran/tagihan', [App\Http\Controllers\Admin\PembayaranController::class, 'tagihan'])->name('pembayaran.tagihan');
+        Route::post('/pembayaran/tagihan/generate', [App\Http\Controllers\Admin\PembayaranController::class, 'generateTagihan'])->name('pembayaran.tagihan.generate');
+        Route::get('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'showTagihan'])->name('pembayaran.tagihan.show');
+        Route::delete('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyTagihan'])->name('pembayaran.tagihan.destroy');
+        // Pembayaran
+        Route::get('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::post('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'store'])->name('pembayaran.store');
+        Route::get('/pembayaran/laporan', [App\Http\Controllers\Admin\PembayaranController::class, 'laporan'])->name('pembayaran.laporan');
+        Route::get('/pembayaran/{pembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'show'])->name('pembayaran.show');
+        Route::post('/pembayaran/{pembayaran}/verify', [App\Http\Controllers\Admin\PembayaranController::class, 'verify'])->name('pembayaran.verify');
+        Route::post('/pembayaran/{pembayaran}/reject', [App\Http\Controllers\Admin\PembayaranController::class, 'reject'])->name('pembayaran.reject');
+    });
     
     // ==================== FITUR BARU: SURAT KETERANGAN ====================
-    // Template Surat
-    Route::get('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'template'])->name('surat-keterangan.template');
-    Route::get('/surat-keterangan/template/create', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'createTemplate'])->name('surat-keterangan.template.create');
-    Route::post('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'storeTemplate'])->name('surat-keterangan.template.store');
-    Route::get('/surat-keterangan/template/{template}/edit', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'editTemplate'])->name('surat-keterangan.template.edit');
-    Route::put('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'updateTemplate'])->name('surat-keterangan.template.update');
-    Route::delete('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroyTemplate'])->name('surat-keterangan.template.destroy');
-    
-    // Surat Keterangan
-    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class);
-    Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve');
-    Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject');
-    Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print');
+    Route::middleware(['permission:view-layanan-surat'])->group(function () {
+        // Template Surat
+        Route::get('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'template'])->name('surat-keterangan.template');
+        Route::get('/surat-keterangan/template/create', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'createTemplate'])->name('surat-keterangan.template.create');
+        Route::post('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'storeTemplate'])->name('surat-keterangan.template.store');
+        Route::get('/surat-keterangan/template/{template}/edit', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'editTemplate'])->name('surat-keterangan.template.edit');
+        Route::put('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'updateTemplate'])->name('surat-keterangan.template.update');
+        Route::delete('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroyTemplate'])->name('surat-keterangan.template.destroy');
+        // Surat Keterangan
+        Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class);
+        Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve');
+        Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject');
+        Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print');
+    });
     
     // ==================== FITUR BARU: MENU SNBP (Eligibility Kelas 12) ====================
     Route::resource('snbp-menu', App\Http\Controllers\Admin\SnbpMenuController::class);
@@ -698,6 +688,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/absensi/manual', [App\Http\Controllers\Admin\AbsensiController::class, 'manualInput'])->name('absensi.manual');
     });
 
+    Route::middleware(['permission:view-kelas'])->group(function () {
+        Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
+        Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
+    });
+
     Route::middleware(['permission:edit-absensi'])->group(function () {
         Route::put('/absensi/{absensi}', [App\Http\Controllers\Admin\AbsensiController::class, 'update'])->name('absensi.update');
     });
@@ -830,7 +825,6 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Siswa\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
     Route::post('/kelulusan-pengumuman/open-envelope', [App\Http\Controllers\Siswa\PengumumanKelulusanController::class, 'openEnvelope'])->name('kelulusan-pengumuman.open-envelope');
 
-
     // Registrasi wajah mandiri siswa
     Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
     Route::post('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('face-register.store');
@@ -874,18 +868,4 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
     Route::post('/session/end', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionEnd'])
         ->middleware(['exam.browser.client', 'throttle:exam-browser-session-end'])
         ->name('session.end');
-});
-
-// ─── Device Location & Client Runtime (global, no auth required) ──────────────
-Route::post('/device-location/sync', [App\Http\Controllers\DeviceLocationController::class, 'sync'])
-    ->middleware('throttle:60,1')
-    ->name('device-location.sync');
-
-Route::prefix('client-runtime')->name('client-runtime.')->group(function () {
-    Route::post('/heartbeat', [App\Http\Controllers\ClientRuntimeController::class, 'heartbeat'])
-        ->middleware(['auth', 'throttle:60,1'])
-        ->name('heartbeat');
-    Route::get('/server-time', [App\Http\Controllers\ClientRuntimeController::class, 'serverTime'])
-        ->middleware('throttle:60,1')
-        ->name('server-time');
 });
