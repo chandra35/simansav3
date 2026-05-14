@@ -292,16 +292,19 @@ class DokumenController extends Controller
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
-            // Get file content
-            $fileContent = Storage::disk($disk)->get($dokumen->file_path);
+            // Get absolute filesystem path (stream file — avoids loading binary to memory string)
+            $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
-            
-            return response($fileContent, 200, [
+
+            // Suppress any PHP notices/warnings that would corrupt binary response
+            @ini_set('display_errors', '0');
+
+            return response()->file($absolutePath, [
                 'Content-Type' => $dokumen->mime_type,
-                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'Pragma' => 'no-cache',
-                'Expires' => '0'
+                'Expires' => '0',
             ]);
 
         } catch (\Throwable $e) {
@@ -325,9 +328,10 @@ class DokumenController extends Controller
             
             // Check ownership or admin permission
             $user = Auth::user();
-            $isOwner = $dokumen->siswa->user_id == $user->id;
+            $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
+            $isOwner = $siswaDok && $siswaDok->user_id == $user->id;
             $isAdmin = $user->can('view-siswa');
-            
+
             if (!$isOwner && !$isAdmin) {
                 abort(403, 'Anda tidak memiliki akses untuk mengunduh dokumen ini');
             }
@@ -338,21 +342,21 @@ class DokumenController extends Controller
 
             // Get disk and file path
             $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
-            
+
             if (!Storage::disk($disk)->exists($dokumen->file_path)) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
-            // Download file with original name
+            $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
-            $fileContent = Storage::disk($disk)->get($dokumen->file_path);
-            
-            return response($fileContent, 200, [
+
+            @ini_set('display_errors', '0');
+
+            return response()->download($absolutePath, $fileName, [
                 'Content-Type' => $dokumen->mime_type,
-                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error downloading dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),
