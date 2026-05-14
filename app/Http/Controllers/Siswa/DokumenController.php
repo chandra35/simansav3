@@ -272,11 +272,13 @@ class DokumenController extends Controller
             
             // Check ownership or admin permission
             $user = Auth::user();
-            $isOwner = $dokumen->siswa->user_id == $user->id;
             $isAdmin = $user->can('view-siswa');
-            
-            if (!$isOwner && !$isAdmin) {
-                abort(403, 'Anda tidak memiliki akses untuk melihat dokumen ini');
+            if (!$isAdmin) {
+                // Gunakan withTrashed agar tidak null meski siswa sudah dihapus
+                $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
+                if (!$siswaDok || $siswaDok->user_id != $user->id) {
+                    abort(403, 'Anda tidak memiliki akses untuk melihat dokumen ini');
+                }
             }
 
             // Update audit trail
@@ -302,7 +304,7 @@ class DokumenController extends Controller
                 'Expires' => '0'
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error previewing dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),

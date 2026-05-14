@@ -816,7 +816,11 @@ class SiswaController extends Controller
             ->where('siswa_id', $siswaId)
             ->firstOrFail();
 
-        $siswa = $dokumen->siswa;
+        // Gunakan withTrashed agar tetap bisa ambil nama meski siswa sudah di-soft-delete
+        $siswa = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
+        if (!$siswa) {
+            abort(404, 'Data siswa tidak ditemukan');
+        }
 
         // Gunakan disk yang sama seperti preview — bukan getSecureFilePath()
         $disk = $dokumen->storage_disk ?? \App\Helpers\StorageHelper::getDiskFromPath($dokumen->file_path);
