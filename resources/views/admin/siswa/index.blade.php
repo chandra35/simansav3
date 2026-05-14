@@ -585,6 +585,18 @@ let resetPasswordSiswaId = null;
 const statsContextFilters = @json($contextQuery ?? []);
 
 $(document).ready(function() {
+    // Auto-open edit modal jika URL mengandung ?edit={id} (dari show.blade.php)
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    if (editId) {
+        // Tunggu DataTable selesai load baru buka modal
+        $(document).one('init.dt', function() {
+            setTimeout(function() { editSiswa(editId); }, 400);
+        });
+        // Bersihkan query string dari URL tanpa reload
+        history.replaceState(null, '', window.location.pathname);
+    }
+
     // Initialize DataTable
     siswaTable = $('#siswa-table').DataTable({
         processing: true,
