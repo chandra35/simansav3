@@ -1013,8 +1013,10 @@ function loadDokumenTab(siswaId) {
                     html = '<div class="row">';
                     dokumen.forEach(dok => {
                         const uploadDate = new Date(dok.created_at).toLocaleDateString('id-ID');
-                        const isPdf = dok.file_url.toLowerCase().endsWith('.pdf');
-                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(dok.file_url);
+                        // Deteksi tipe dari mime_type (tersedia untuk file baru); fallback ke ekstensi URL (file lama)
+                        const mimeType = dok.mime_type || '';
+                        const isPdf = mimeType ? mimeType === 'application/pdf' : dok.file_url.toLowerCase().endsWith('.pdf');
+                        const isImage = mimeType ? mimeType.startsWith('image/') : /\.(jpg|jpeg|png|gif|webp)$/i.test(dok.file_url);
                         
                         html += `
                             <div class="col-md-6 mb-3">

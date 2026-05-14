@@ -782,6 +782,7 @@ class SiswaController extends Controller
                     'jenis_dokumen_label' => $dok->getJenisDokumenLabel(),
                     'nama_file' => $dok->nama_file,
                     'file_url' => $dok->getFileUrl(),
+                    'mime_type' => $dok->mime_type,
                     'file_size' => $dok->file_size,
                     'file_size_formatted' => $dok->getFileSizeFormatted(),
                     'keterangan' => $dok->keterangan,
