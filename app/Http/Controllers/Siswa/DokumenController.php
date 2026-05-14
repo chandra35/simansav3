@@ -292,20 +292,25 @@ class DokumenController extends Controller
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
-            // Get absolute filesystem path (stream file — avoids loading binary to memory string)
+            // Get absolute filesystem path
             $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
 
-            // Suppress any PHP notices/warnings that would corrupt binary response
-            @ini_set('display_errors', '0');
+            // Clear ALL output buffers — PHP startup warnings (e.g. "mbstring already loaded")
+            // are buffered before any user code runs; they would corrupt binary streaming.
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
 
-            return response()->file($absolutePath, [
-                'Content-Type' => $dokumen->mime_type,
-                'Content-Disposition' => 'inline; filename="' . addslashes($fileName) . '"',
-                'Cache-Control' => 'no-cache, no-store, must-revalidate',
-                'Pragma' => 'no-cache',
-                'Expires' => '0',
-            ]);
+            // Stream directly — bypass all Laravel/Symfony response abstractions
+            header('Content-Type: ' . $dokumen->mime_type);
+            header('Content-Disposition: inline; filename="' . addslashes($fileName) . '"');
+            header('Content-Length: ' . filesize($absolutePath));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            readfile($absolutePath);
+            exit;
 
         } catch (\Throwable $e) {
             Log::error('Error previewing dokumen', [
@@ -350,11 +355,16 @@ class DokumenController extends Controller
             $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $fileName = $dokumen->original_name ?? $dokumen->nama_file;
 
-            @ini_set('display_errors', '0');
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
 
-            return response()->download($absolutePath, $fileName, [
-                'Content-Type' => $dokumen->mime_type,
-            ]);
+            header('Content-Type: ' . $dokumen->mime_type);
+            header('Content-Disposition: attachment; filename="' . addslashes($fileName) . '"');
+            header('Content-Length: ' . filesize($absolutePath));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            readfile($absolutePath);
+            exit;
 
         } catch (\Throwable $e) {
             Log::error('Error downloading dokumen', [
