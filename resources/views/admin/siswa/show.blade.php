@@ -750,7 +750,7 @@
             </div>
             <div class="col-md-6 text-right">
                 @can('edit-siswa')
-                <a href="{{ route('admin.siswa.edit', $siswa->id) }}" class="btn btn-primary">
+                <a href="{{ route('admin.siswa.index') }}?edit={{ $siswa->id }}" class="btn btn-primary">
                     <i class="fas fa-edit"></i> Edit Siswa
                 </a>
                 @endcan
