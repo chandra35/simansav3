@@ -88,13 +88,14 @@
                 <table id="monitoring-table" class="table table-bordered table-striped table-hover">
                     <thead>
                         <tr>
-                            <th width="5%">No</th>
-                            <th width="20%">User</th>
-                            <th width="10%">Status</th>
-                            <th width="20%">Device & Browser</th>
-                            <th width="20%">IP & Location</th>
-                            <th width="15%">Last Activity</th>
-                            <th width="10%">Action</th>
+                            <th width="4%">No</th>
+                            <th width="18%">User</th>
+                            <th width="8%">Status</th>
+                            <th width="18%">Device & Browser</th>
+                            <th width="15%">IP & Lokasi</th>
+                            <th width="18%">Halaman Diakses</th>
+                            <th width="11%">Last Activity</th>
+                            <th width="8%">Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -401,6 +402,11 @@ $(document).ready(function() {
                 {
                     data: 'location_info',
                     name: 'location_info',
+                    orderable: false
+                },
+                {
+                    data: 'current_page',
+                    name: 'current_page',
                     orderable: false
                 },
                 {

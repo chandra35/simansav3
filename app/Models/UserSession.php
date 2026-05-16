@@ -24,6 +24,8 @@ class UserSession extends Model
         'platform',
         'country',
         'city',
+        'current_url',
+        'current_route',
         'last_activity',
         'is_online'
     ];
@@ -108,6 +110,8 @@ class UserSession extends Model
                     'platform' => $deviceInfo['platform'],
                     'country' => $geoLocation['country'],
                     'city' => $geoLocation['city'],
+                    'current_url' => $request->url(),
+                    'current_route' => $request->route()?->getName(),
                     'last_activity' => Carbon::now(),
                     'is_online' => true
                 ]

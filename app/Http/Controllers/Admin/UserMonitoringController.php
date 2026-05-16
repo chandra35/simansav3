@@ -91,6 +91,23 @@ class UserMonitoringController extends Controller
                         </div>
                     ";
                 })
+                ->addColumn('current_page', function ($session) {
+                    if (!$session->current_url && !$session->current_route) {
+                        return '<span class="text-muted"><i class="fas fa-minus"></i></span>';
+                    }
+
+                    $pageLabel = $this->getPageLabel($session->current_route, $session->current_url);
+                    $urlPath = $session->current_url ? parse_url($session->current_url, PHP_URL_PATH) : '-';
+
+                    return "
+                        <div>
+                            <span class='badge badge-light text-dark border' style='font-size:.82rem;max-width:180px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' title='{$urlPath}'>
+                                {$pageLabel}
+                            </span><br>
+                            <small class='text-muted' style='font-size:.75rem;'>{$urlPath}</small>
+                        </div>
+                    ";
+                })
                 ->addColumn('last_activity', function ($session) {
                     if (!$session->last_activity) return '-';
                     
@@ -110,7 +127,7 @@ class UserMonitoringController extends Controller
                         </button>
                     ";
                 })
-                ->rawColumns(['user_info', 'status', 'device_info', 'location_info', 'last_activity', 'action'])
+                ->rawColumns(['user_info', 'status', 'device_info', 'location_info', 'current_page', 'last_activity', 'action'])
                 ->make(true);
         }
 
@@ -191,6 +208,57 @@ class UserMonitoringController extends Controller
             'success' => true,
             'message' => 'User berhasil di-logout'
         ]);
+    }
+
+    /**
+     * Map route name / URL to friendly Indonesian page label
+     */
+    private function getPageLabel(?string $routeName, ?string $url): string
+    {
+        if ($routeName) {
+            $map = [
+                'dashboard'                        => 'Dashboard',
+                'admin.siswa.index'                => 'Data Siswa',
+                'admin.siswa.create'               => 'Tambah Siswa',
+                'admin.siswa.edit'                 => 'Edit Siswa',
+                'admin.siswa.show'                 => 'Detail Siswa',
+                'admin.gtk.index'                  => 'Data GTK',
+                'admin.gtk.create'                 => 'Tambah GTK',
+                'admin.gtk.edit'                   => 'Edit GTK',
+                'admin.jadwal.index'               => 'Jadwal Pelajaran',
+                'admin.absensi.index'              => 'Absensi',
+                'admin.nilai.index'                => 'Nilai Siswa',
+                'admin.kelas.index'                => 'Data Kelas',
+                'admin.mapel.index'                => 'Mata Pelajaran',
+                'admin.users.index'                => 'Manajemen User',
+                'admin.roles.index'                => 'Roles & Permissions',
+                'admin.monitoring.users'           => 'Monitoring Users',
+                'admin.rapor.index'                => 'Rapor',
+                'admin.surat.index'                => 'Surat',
+                'admin.settings.index'             => 'Pengaturan',
+                'login'                            => 'Login',
+                'profile.edit'                     => 'Edit Profil',
+            ];
+
+            if (isset($map[$routeName])) {
+                return $map[$routeName];
+            }
+
+            // Derive readable label from route name pattern
+            $parts = explode('.', $routeName);
+            $last = end($parts);
+            $module = count($parts) > 1 ? $parts[count($parts) - 2] : '';
+            $labelMap = ['index' => 'Daftar', 'create' => 'Tambah', 'edit' => 'Edit', 'show' => 'Detail', 'store' => 'Simpan', 'update' => 'Update', 'destroy' => 'Hapus'];
+            $action = $labelMap[$last] ?? ucfirst($last);
+            return trim(ucfirst($module) . ' / ' . $action, ' /');
+        }
+
+        if ($url) {
+            $path = parse_url($url, PHP_URL_PATH);
+            return $path ?: '-';
+        }
+
+        return '-';
     }
 
     /**
