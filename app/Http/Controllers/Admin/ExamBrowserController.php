@@ -8,7 +8,6 @@ use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ExamBrowserController extends Controller
 {
@@ -170,33 +169,33 @@ class ExamBrowserController extends Controller
     }
 
     /**
-     * Generate SEB Config Key
+     * Generate a Browser Exam Key.
+     *
+     * Random 64-char hex. The ExaManmet app sends
+     * X-SafeExamBrowser-RequestHash = SHA256(pageUrl + this key) on every
+     * quiz page; the admin pastes this key into the Moodle quiz setting
+     * "Allowed browser exam keys" so only ExaManmet can open the quiz.
      */
     public function generateSebKey()
     {
         $setting = ExamBrowserSetting::getActive();
-        
+
         if (!$setting) {
             return response()->json(['error' => 'Setting tidak ditemukan'], 404);
         }
 
-        // Generate SEB-compatible config key hash
-        $configData = json_encode([
-            'url' => $setting->moodle_url,
-            'user_agent' => $setting->user_agent,
-            'timestamp' => now()->timestamp,
-        ]);
-        
-        $sebConfigKey = hash('sha256', $configData);
+        $browserExamKey = bin2hex(random_bytes(32));
+
+        // Persisting triggers the model's saved() hook → static config rebuilt.
         $setting->update([
-            'seb_config_key' => $sebConfigKey,
+            'seb_exam_key' => $browserExamKey,
             'updated_by' => Auth::id(),
         ]);
 
         return response()->json([
             'success' => true,
-            'seb_config_key' => $sebConfigKey,
-            'message' => 'SEB Config Key berhasil di-generate!',
+            'seb_exam_key' => $browserExamKey,
+            'message' => 'Browser Exam Key berhasil dibuat. Klik Simpan, lalu tempel ke pengaturan kuis Moodle.',
         ]);
     }
 

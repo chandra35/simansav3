@@ -436,48 +436,43 @@
             <!-- SEB Configuration -->
             <div class="card card-info">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-key"></i> Safe Exam Browser (SEB) Configuration</h3>
+                    <h3 class="card-title"><i class="fas fa-key"></i> Penguncian SEB (Browser Exam Key)</h3>
                 </div>
                 <div class="card-body">
                     <div class="info-callout">
-                        <strong>Cara Kerja SEB di Moodle:</strong>
+                        <strong>Mengunci kuis hanya untuk aplikasi ExamAnmet:</strong>
                         <ol class="mb-0 mt-1">
-                            <li>Di Moodle, buka Quiz → Edit settings → Extra restrictions → Safe Exam Browser</li>
-                            <li>Pilih "Yes – Use SEB client config" atau "Yes – Configure manually"</li>
-                            <li>Masukkan <strong>Browser Exam Key</strong> dari SEB Config Key di bawah</li>
-                            <li>Aplikasi ExamAnmet akan mengirim User-Agent dan key yang sesuai</li>
+                            <li><strong>Generate</strong> Browser Exam Key di bawah, lalu <strong>Simpan</strong> halaman ini.</li>
+                            <li>Di Moodle: buka Quiz &rarr; <em>Edit settings</em> &rarr; <em>Safe Exam Browser</em>.</li>
+                            <li><em>Require the use of Safe Exam Browser</em> &rarr; pilih <strong>"Yes &ndash; Configure manually"</strong>.</li>
+                            <li>Di kolom <strong>"Allowed browser exam keys"</strong>, tempel (paste) Browser Exam Key di bawah ini.</li>
+                            <li>Simpan kuis. Kuis kini hanya bisa dibuka aplikasi ExamAnmet yang membawa key tersebut.</li>
                         </ol>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>SEB Config Key</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control font-monospace" name="seb_config_key" id="seb_config_key"
-                                        value="{{ old('seb_config_key', $setting->seb_config_key) }}" 
-                                        placeholder="Klik 'Generate' untuk membuat key baru">
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-info" onclick="generateSebKey()">
-                                            <i class="fas fa-sync-alt"></i> Generate
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary" onclick="copyToClipboard(document.getElementById('seb_config_key').value)">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <small class="text-muted">Key ini digunakan sebagai Browser Exam Key di pengaturan Quiz Moodle</small>
+                    <div class="form-group">
+                        <label>Browser Exam Key</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-monospace" name="seb_exam_key" id="seb_exam_key"
+                                value="{{ old('seb_exam_key', $setting->seb_exam_key) }}"
+                                placeholder="Klik 'Generate' untuk membuat key baru">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-info" onclick="generateSebKey()">
+                                    <i class="fas fa-sync-alt"></i> Generate
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="copyToClipboard(document.getElementById('seb_exam_key').value)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </div>
                         </div>
+                        <small class="text-muted">
+                            Key inilah yang ditempel ke kolom <strong>"Allowed browser exam keys"</strong> pada pengaturan kuis Moodle.
+                            Aplikasi mengirimnya sebagai header <code>X-SafeExamBrowser-RequestHash</code> di tiap halaman kuis.
+                            <strong>Kosongkan</strong> bila penguncian SEB tidak dipakai (aplikasi tetap jalan normal).
+                        </small>
                     </div>
 
-                    <div class="form-group">
-                        <label>SEB Exam Key (Opsional)</label>
-                        <input type="text" class="form-control font-monospace" name="seb_exam_key" 
-                            value="{{ old('seb_exam_key', $setting->seb_exam_key) }}" 
-                            placeholder="Opsional - untuk validasi tambahan">
-                        <small class="text-muted">Key tambahan jika Moodle dikonfigurasi memerlukan Exam Key</small>
-                    </div>
+                    <input type="hidden" name="seb_config_key" value="{{ old('seb_config_key', $setting->seb_config_key) }}">
                 </div>
             </div>
 
@@ -591,8 +586,8 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
                             <td>{!! $setting->exit_password ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-secondary">Tidak Ada</span>' !!}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">SEB Key</td>
-                            <td>{!! $setting->seb_config_key ? '<span class="badge badge-info">Tersedia</span>' : '<span class="badge badge-warning">Belum Generate</span>' !!}</td>
+                            <td class="text-muted">Browser Exam Key</td>
+                            <td>{!! $setting->seb_exam_key ? '<span class="badge badge-info">Aktif (kuis terkunci)</span>' : '<span class="badge badge-secondary">Nonaktif</span>' !!}</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Screenshot</td>
@@ -712,8 +707,8 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
 
     function generateSebKey() {
         Swal.fire({
-            title: 'Generate SEB Config Key?',
-            text: 'Key lama akan diganti dengan key baru. Pastikan untuk update di Moodle juga.',
+            title: 'Generate Browser Exam Key?',
+            text: 'Key lama akan diganti. Setelah ini klik Simpan, lalu update juga di pengaturan kuis Moodle.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Ya, Generate!',
@@ -731,7 +726,7 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById('seb_config_key').value = data.seb_config_key;
+                        document.getElementById('seb_exam_key').value = data.seb_exam_key;
                         Swal.fire('Berhasil!', data.message, 'success');
                     } else {
                         Swal.fire('Error!', data.message || 'Gagal generate key', 'error');
