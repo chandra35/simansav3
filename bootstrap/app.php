@@ -22,7 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
-            'exam.browser.client' => \App\Http\Middleware\EnsureSupportedExamBrowserClient::class,
             'activity.location.required' => \App\Http\Middleware\EnsureDeviceLocationForActivity::class,
         ]);
         

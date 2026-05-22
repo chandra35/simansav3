@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamBrowserSetting;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -99,9 +100,57 @@ class ExamBrowserController extends Controller
         unset($validated['app_logo']);
 
         $setting->update($validated);
+        // The model's saved() hook rewrites the static config snapshot.
+
+        // Tell devices that are currently running the exam to re-fetch.
+        $pushed = $this->pushConfigUpdate();
+
+        $message = 'Pengaturan Exam Browser berhasil diperbarui!';
+        $message .= $pushed
+            ? ' Perangkat yang sedang ujian akan menerima pembaruan otomatis.'
+            : ' (Push FCM tidak aktif — perangkat memuat config terbaru saat aplikasi dibuka berikutnya.)';
+
+        return redirect()->route('admin.exam-browser.index')->with('success', $message);
+    }
+
+    /**
+     * Manually rebuild the static config snapshot file and notify devices.
+     */
+    public function regenerateConfig()
+    {
+        $setting = ExamBrowserSetting::getActive();
+
+        if (!$setting) {
+            return redirect()->route('admin.exam-browser.index')
+                ->with('error', 'Pengaturan tidak ditemukan.');
+        }
+
+        $written = $setting->generateStaticConfigFile();
+        if (!$written) {
+            return redirect()->route('admin.exam-browser.index')
+                ->with('error', 'Gagal menulis file config statis. Periksa izin folder storage.');
+        }
+
+        $this->pushConfigUpdate();
 
         return redirect()->route('admin.exam-browser.index')
-            ->with('success', 'Pengaturan Exam Browser berhasil diperbarui!');
+            ->with('success', 'File config statis berhasil dibuat ulang.');
+    }
+
+    /**
+     * Send a silent FCM "config_updated" push so running devices re-fetch.
+     */
+    private function pushConfigUpdate(): bool
+    {
+        try {
+            $fcm = new FcmService();
+            if ($fcm->isConfigured()) {
+                return $fcm->sendConfigUpdate();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[ExamBrowser] FCM config update gagal: ' . $e->getMessage());
+        }
+        return false;
     }
 
     /**
@@ -152,16 +201,17 @@ class ExamBrowserController extends Controller
     }
 
     /**
-     * Preview config as JSON (for debugging)
+     * Preview the static config snapshot as JSON (for debugging).
+     * Passwords appear as bcrypt hashes only — never plaintext.
      */
     public function previewConfig()
     {
         $setting = ExamBrowserSetting::getActive();
-        
+
         if (!$setting) {
             return response()->json(['error' => 'Tidak ada konfigurasi aktif'], 404);
         }
 
-        return response()->json($setting->toApiConfig());
+        return response()->json($setting->toStaticConfig());
     }
 }

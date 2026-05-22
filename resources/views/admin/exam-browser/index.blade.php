@@ -124,8 +124,8 @@
         <button type="button" class="btn btn-outline-info btn-sm" onclick="previewConfig()">
             <i class="fas fa-eye"></i> Preview Config
         </button>
-        <a href="{{ url('/api/exam-browser/ping') }}" target="_blank" class="btn btn-outline-success btn-sm">
-            <i class="fas fa-satellite-dish"></i> Test API
+        <a href="{{ \App\Models\ExamBrowserSetting::staticConfigUrl() }}" target="_blank" class="btn btn-outline-success btn-sm">
+            <i class="fas fa-file-code"></i> Buka File Config
         </a>
     </div>
 </div>
@@ -152,43 +152,53 @@
     <p class="mb-0 mt-1">ExamAnmet adalah aplikasi exam browser (mirip Safe Exam Browser) untuk Android & iOS. Aplikasi ini mengunci perangkat siswa selama ujian agar tidak bisa menyontek, membuka aplikasi lain, screenshot, atau floating window. Konfigurasi di bawah ini akan otomatis tersinkronisasi dengan aplikasi mobile siswa.</p>
 </div>
 
-<!-- API Endpoint Info -->
-<div class="card card-secondary collapsed-card">
-    <div class="card-header" data-card-widget="collapse" style="cursor: pointer;">
-        <h3 class="card-title"><i class="fas fa-code"></i> API Endpoint untuk Mobile App</h3>
-        <div class="card-tools">
-            <button type="button" class="btn btn-tool"><i class="fas fa-plus"></i></button>
-        </div>
+<!-- Static Config Snapshot Info -->
+<div class="card card-secondary">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-code"></i> Config Statis untuk Mobile App</h3>
     </div>
     <div class="card-body">
+        <p class="text-muted mb-3">
+            Aplikasi ExamAnmet membaca <strong>file config statis</strong> ini secara langsung
+            (disajikan web server tanpa proses PHP/database, sehingga aman dari overload saat
+            ratusan perangkat membuka aplikasi bersamaan). File diperbarui otomatis setiap kali
+            pengaturan di bawah disimpan. Password disimpan dalam bentuk <strong>hash bcrypt</strong> —
+            tidak pernah dikirim dalam bentuk teks asli.
+        </p>
         <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="text-muted">Config Endpoint</label>
+            <div class="col-md-8 mb-3">
+                <label class="text-muted">URL Config Statis (dipakai aplikasi)</label>
                 <div class="api-url-box">
-                    GET {{ url('/api/exam-browser/config') }}
-                    <button class="btn btn-xs btn-outline-light copy-btn" onclick="copyToClipboard('{{ url('/api/exam-browser/config') }}')">
+                    GET {{ \App\Models\ExamBrowserSetting::staticConfigUrl() }}
+                    <button class="btn btn-xs btn-outline-light copy-btn" type="button" onclick="copyToClipboard('{{ \App\Models\ExamBrowserSetting::staticConfigUrl() }}')">
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="text-muted">Verify Password</label>
-                <div class="api-url-box">
-                    POST {{ url('/api/exam-browser/verify-password') }}
-                    <button class="btn btn-xs btn-outline-light copy-btn" onclick="copyToClipboard('{{ url('/api/exam-browser/verify-password') }}')">
-                        <i class="fas fa-copy"></i>
-                    </button>
+                <label class="text-muted">Status File</label>
+                <div>
+                    @php($generatedAt = \App\Models\ExamBrowserSetting::staticConfigGeneratedAt())
+                    @if($generatedAt)
+                        <span class="badge badge-success">Tersedia</span>
+                        <small class="text-muted d-block mt-1">Dibuat: {{ $generatedAt->translatedFormat('d M Y H:i:s') }}</small>
+                    @else
+                        <span class="badge badge-warning">Belum dibuat</span>
+                        <small class="text-muted d-block mt-1">Klik "Buat Ulang" atau simpan pengaturan.</small>
+                    @endif
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="text-muted">Ping / Health Check</label>
-                <div class="api-url-box">
-                    GET {{ url('/api/exam-browser/ping') }}
-                    <button class="btn btn-xs btn-outline-light copy-btn" onclick="copyToClipboard('{{ url('/api/exam-browser/ping') }}')">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-            </div>
+        </div>
+        <div class="d-flex flex-wrap" style="gap:.5rem;">
+            <form action="{{ route('admin.exam-browser.regenerate-config') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Buat Ulang File Config
+                </button>
+            </form>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="previewConfig()">
+                <i class="fas fa-eye"></i> Pratinjau Isi Config
+            </button>
         </div>
     </div>
 </div>

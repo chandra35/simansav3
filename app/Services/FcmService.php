@@ -145,4 +145,56 @@ class FcmService
             'id' => $notificationId,
         ]);
     }
+
+    /**
+     * Send a silent data-only message telling devices to re-fetch the
+     * static config snapshot. No visible notification is shown — the app
+     * handles the 'config_updated' action in the background.
+     */
+    public function sendConfigUpdate(string $topic = 'examanmet_all'): bool
+    {
+        if (!$this->isConfigured()) {
+            Log::warning('[FCM] Cannot send config update — not configured');
+            return false;
+        }
+
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            Log::error('[FCM] Cannot send config update — failed to get access token');
+            return false;
+        }
+
+        $payload = [
+            'message' => [
+                'topic' => $topic,
+                // Data-only payload — no 'notification' block = silent push.
+                'data' => [
+                    'action' => 'config_updated',
+                    'sent_at' => now()->toIso8601String(),
+                ],
+                'android' => [
+                    'priority' => 'HIGH',
+                ],
+            ],
+        ];
+
+        try {
+            $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
+
+            $response = Http::withToken($accessToken)
+                ->timeout(10)
+                ->post($url, $payload);
+
+            if ($response->successful()) {
+                Log::info("[FCM] Sent config_updated to topic '{$topic}'");
+                return true;
+            }
+
+            Log::error('[FCM] config update API error: ' . $response->body());
+            return false;
+        } catch (\Exception $e) {
+            Log::error('[FCM] config update send failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
