@@ -63,7 +63,7 @@ class ExamNotificationController extends Controller
         if ($fcmSent) {
             $successMsg = 'Notifikasi berhasil dikirim secara REALTIME ke semua device via push notification.';
         } else {
-            $successMsg = 'Notifikasi berhasil disimpan. (Push FCM tidak aktif — device akan menerima saat polling berikutnya)';
+            $successMsg = 'Notifikasi berhasil disimpan, tetapi push FCM belum aktif sehingga device tidak akan menerima notifikasi realtime.';
         }
 
         return redirect()->route('admin.exam-notifications.index')

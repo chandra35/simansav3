@@ -93,10 +93,10 @@
                 @else
                     <h6><i class="fas fa-exclamation-triangle text-warning"></i> Push Notification Belum Dikonfigurasi</h6>
                     <ul class="mb-0 pl-3">
-                        <li><strong>Saat app terbuka:</strong> Notifikasi muncul dalam <strong>~30 detik</strong> (polling)</li>
-                        <li><strong>Saat app tertutup:</strong> Notifikasi muncul dalam <strong>~15 menit</strong> (polling)</li>
+                        <li><strong>Saat app terbuka:</strong> Notifikasi tidak akan terkirim sebelum FCM aktif</li>
+                        <li><strong>Saat app tertutup:</strong> Notifikasi tidak akan terkirim sebelum FCM aktif</li>
                         <li class="text-info mt-1">Konfigurasi Firebase untuk push notification realtime</li>
-                        <li class="text-muted"><small>Letakkan <code>service-account.json</code> di <code>storage/app/firebase/</code></small></li>
+                        <li class="text-muted"><small>Letakkan satu file service account Firebase <code>.json</code> di <code>storage/app/firebase/</code> atau set <code>FIREBASE_CREDENTIALS</code> ke path yang benar</small></li>
                     </ul>
                 @endif
             </div>

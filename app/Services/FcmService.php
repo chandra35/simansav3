@@ -17,26 +17,69 @@ class FcmService
 {
     protected ?string $projectId = null;
     protected ?ServiceAccountCredentials $credentials = null;
+    protected ?string $credentialsPath = null;
+    protected ?string $configurationError = null;
 
     public function __construct()
     {
-        $credentialsPath = config('firebase.credentials');
+        $configuredPath = config('firebase.credentials');
+        $credentialsPath = $this->resolveCredentialsPath($configuredPath);
 
-        if ($credentialsPath && file_exists($credentialsPath)) {
-            try {
-                $json = json_decode(file_get_contents($credentialsPath), true);
-                $this->projectId = $json['project_id'] ?? null;
+        if (!$credentialsPath) {
+            $this->configurationError = 'Firebase service account file not found.';
+            Log::warning('[FCM] Service account file not found', [
+                'configured_path' => $configuredPath,
+                'firebase_dir' => storage_path('app/firebase'),
+            ]);
 
-                $this->credentials = new ServiceAccountCredentials(
-                    'https://www.googleapis.com/auth/firebase.messaging',
-                    $json
-                );
-            } catch (\Exception $e) {
-                Log::error('[FCM] Failed to initialize: ' . $e->getMessage());
-            }
-        } else {
-            Log::debug('[FCM] Service account file not found at: ' . ($credentialsPath ?? 'null'));
+            return;
         }
+
+        $this->credentialsPath = $credentialsPath;
+
+        try {
+            $json = json_decode(file_get_contents($credentialsPath), true);
+
+            if (!is_array($json)) {
+                throw new \RuntimeException('Invalid Firebase credential JSON.');
+            }
+
+            $this->projectId = $json['project_id'] ?? null;
+
+            if (!$this->projectId) {
+                throw new \RuntimeException('Missing Firebase project_id in credentials file.');
+            }
+
+            $this->credentials = new ServiceAccountCredentials(
+                'https://www.googleapis.com/auth/firebase.messaging',
+                $json
+            );
+        } catch (\Exception $e) {
+            $this->configurationError = $e->getMessage();
+            Log::error('[FCM] Failed to initialize: ' . $e->getMessage(), [
+                'credentials_path' => $credentialsPath,
+            ]);
+        }
+    }
+
+    protected function resolveCredentialsPath(?string $configuredPath): ?string
+    {
+        if ($configuredPath && file_exists($configuredPath)) {
+            return $configuredPath;
+        }
+
+        $firebaseDir = storage_path('app/firebase');
+        $jsonFiles = glob($firebaseDir . DIRECTORY_SEPARATOR . '*.json') ?: [];
+
+        if (count($jsonFiles) === 1) {
+            Log::info('[FCM] Using fallback Firebase credentials file', [
+                'credentials_path' => $jsonFiles[0],
+            ]);
+
+            return $jsonFiles[0];
+        }
+
+        return null;
     }
 
     /**
@@ -45,6 +88,16 @@ class FcmService
     public function isConfigured(): bool
     {
         return $this->credentials !== null && $this->projectId !== null;
+    }
+
+    public function getResolvedCredentialsPath(): ?string
+    {
+        return $this->credentialsPath;
+    }
+
+    public function getConfigurationError(): ?string
+    {
+        return $this->configurationError;
     }
 
     /**
