@@ -5,6 +5,18 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
+    .exam-page-intro {
+        margin-bottom: 1rem;
+    }
+    .exam-page-intro .lead {
+        margin-bottom: 0;
+    }
+    .top-actions .btn {
+        margin-left: .35rem;
+    }
+    .static-config-meta {
+        font-size: .92rem;
+    }
     .card {
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border-radius: 8px;
@@ -115,16 +127,16 @@
 @endsection
 
 @section('content_header')
-<div class="d-flex justify-content-between align-items-center">
-    <div>
-        <h1><i class="fas fa-desktop text-primary"></i> Exam Browser <small class="text-muted">ExamAnmet</small></h1>
-        <p class="text-muted mb-0">Kelola konfigurasi aplikasi exam browser untuk siswa</p>
+<div class="row mb-2">
+    <div class="col-sm-7">
+        <h1><i class="fas fa-desktop"></i> Exam Browser <small class="text-muted">ExamAnmet</small></h1>
+        <p class="text-muted exam-page-intro">Kelola konfigurasi aplikasi exam browser untuk siswa</p>
     </div>
-    <div>
-        <button type="button" class="btn btn-outline-info btn-sm" onclick="previewConfig()">
+    <div class="col-sm-5 text-sm-right top-actions">
+        <button type="button" class="btn btn-info btn-sm" onclick="previewConfig()">
             <i class="fas fa-eye"></i> Preview Config
         </button>
-        <a href="{{ \App\Models\ExamBrowserSetting::staticConfigUrl() }}" target="_blank" class="btn btn-outline-success btn-sm">
+        <a href="{{ \App\Models\ExamBrowserSetting::staticConfigUrl() }}" target="_blank" class="btn btn-primary btn-sm">
             <i class="fas fa-file-code"></i> Buka File Config
         </a>
     </div>
@@ -177,7 +189,7 @@
             </div>
             <div class="col-md-4 mb-3">
                 <label class="text-muted">Status File</label>
-                <div>
+                <div class="static-config-meta">
                     @php($generatedAt = \App\Models\ExamBrowserSetting::staticConfigGeneratedAt())
                     @if($generatedAt)
                         <span class="badge badge-success">Tersedia</span>
@@ -189,14 +201,14 @@
                 </div>
             </div>
         </div>
-        <div class="d-flex flex-wrap" style="gap:.5rem;">
+        <div class="d-flex flex-wrap align-items-center">
             <form action="{{ route('admin.exam-browser.regenerate-config') }}" method="POST" class="d-inline">
                 @csrf
-                <button type="submit" class="btn btn-sm btn-secondary">
+                <button type="submit" class="btn btn-sm btn-secondary mr-2 mb-2">
                     <i class="fas fa-sync-alt"></i> Buat Ulang File Config
                 </button>
             </form>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="previewConfig()">
+            <button type="button" class="btn btn-sm btn-secondary mb-2" onclick="previewConfig()">
                 <i class="fas fa-eye"></i> Pratinjau Isi Config
             </button>
         </div>
@@ -282,7 +294,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label><i class="fas fa-sign-in-alt text-success"></i> Password Masuk Aplikasi</label>
                                 <div class="input-group">
@@ -298,7 +310,7 @@
                                 <small class="text-muted">Password yang harus dimasukkan siswa untuk membuka aplikasi</small>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label><i class="fas fa-sign-out-alt text-danger"></i> Password Keluar Aplikasi</label>
                                 <div class="input-group">
@@ -314,9 +326,7 @@
                                 <small class="text-muted">Password yang harus dimasukkan untuk keluar dari mode exam (hanya guru/admin yang tahu)</small>
                             </div>
                         </div>
-                    </div>
-
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label><i class="fas fa-user-shield text-warning"></i> Password Pengawas (Unlock Offline)</label>
                                 <div class="input-group">
@@ -557,8 +567,8 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
             </div>
 
             <!-- Status -->
-            <div class="card">
-                <div class="card-header bg-dark text-white">
+            <div class="card card-outline card-dark">
+                <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-info-circle"></i> Status Konfigurasi</h3>
                 </div>
                 <div class="card-body">
@@ -602,8 +612,8 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
             </div>
 
             <!-- Quick Features -->
-            <div class="card">
-                <div class="card-header bg-gradient-indigo text-white">
+            <div class="card card-outline card-info">
+                <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-shield-alt"></i> Fitur Keamanan App</h3>
                 </div>
                 <div class="card-body p-0">
@@ -649,7 +659,7 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
     <!-- Save Button -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card card-outline card-primary">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <span class="text-muted">
                         <i class="fas fa-exclamation-triangle text-warning"></i>
