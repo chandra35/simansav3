@@ -576,6 +576,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // ==================== FITUR BARU: NOTIFIKASI EXAM BROWSER ====================
     Route::get('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'index'])->name('exam-notifications.index');
     Route::post('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'store'])->name('exam-notifications.store');
+    Route::post('/exam-notifications/bulk-action', [App\Http\Controllers\Admin\ExamNotificationController::class, 'bulkAction'])->name('exam-notifications.bulk-action');
     Route::post('/exam-notifications/{examNotification}/resend', [App\Http\Controllers\Admin\ExamNotificationController::class, 'resend'])->name('exam-notifications.resend');
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
     Route::delete('/exam-notifications/{id}/force-delete', [App\Http\Controllers\Admin\ExamNotificationController::class, 'forceDelete'])->name('exam-notifications.force-delete');

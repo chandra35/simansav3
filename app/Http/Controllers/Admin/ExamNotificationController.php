@@ -81,6 +81,30 @@ class ExamNotificationController extends Controller
             );
     }
 
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:resend,deactivate,force_delete',
+            'notification_ids' => 'required|array|min:1',
+            'notification_ids.*' => 'required|uuid|exists:exam_notifications,id',
+        ]);
+
+        $notifications = ExamNotification::withTrashed()
+            ->whereIn('id', $validated['notification_ids'])
+            ->get();
+
+        if ($notifications->isEmpty()) {
+            return redirect()->route('admin.exam-notifications.index')
+                ->with('warning', 'Tidak ada notifikasi yang dipilih.');
+        }
+
+        return match ($validated['action']) {
+            'resend' => $this->bulkResend($notifications),
+            'deactivate' => $this->bulkDeactivate($notifications),
+            'force_delete' => $this->bulkForceDelete($notifications),
+        };
+    }
+
     /**
      * Deactivate a notification
      */
@@ -130,5 +154,59 @@ class ExamNotificationController extends Controller
 
             return false;
         }
+    }
+
+    protected function bulkResend($notifications): RedirectResponse
+    {
+        $resentCount = 0;
+        $pushSuccessCount = 0;
+
+        foreach ($notifications as $notification) {
+            $resent = $notification->replicate(['created_at', 'updated_at', 'deleted_at']);
+            $resent->sent_by = auth()->id();
+            $resent->is_active = true;
+            $resent->scheduled_at = null;
+            $resent->expires_at = $notification->expires_at && $notification->expires_at->isPast()
+                ? now()->addMinutes(15)
+                : $notification->expires_at;
+            $resent->save();
+
+            $resentCount++;
+            if ($this->pushNotification($resent)) {
+                $pushSuccessCount++;
+            }
+        }
+
+        return redirect()->route('admin.exam-notifications.index')
+            ->with(
+                $pushSuccessCount > 0 ? 'success' : 'warning',
+                $pushSuccessCount > 0
+                    ? "{$resentCount} notifikasi berhasil dikirim ulang. {$pushSuccessCount} terkirim realtime ke aplikasi."
+                    : "{$resentCount} notifikasi berhasil diduplikasi, tetapi push realtime belum berhasil dikirim."
+            );
+    }
+
+    protected function bulkDeactivate($notifications): RedirectResponse
+    {
+        $updated = ExamNotification::query()
+            ->whereIn('id', $notifications->pluck('id'))
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
+
+        return redirect()->route('admin.exam-notifications.index')
+            ->with('success', "{$updated} notifikasi berhasil dinonaktifkan.");
+    }
+
+    protected function bulkForceDelete($notifications): RedirectResponse
+    {
+        $deletedCount = 0;
+
+        foreach ($notifications as $notification) {
+            $notification->forceDelete();
+            $deletedCount++;
+        }
+
+        return redirect()->route('admin.exam-notifications.index')
+            ->with('success', "{$deletedCount} notifikasi berhasil dihapus permanen.");
     }
 }
