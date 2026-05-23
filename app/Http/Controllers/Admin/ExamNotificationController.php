@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamNotification;
 use App\Services\FcmService;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
 class ExamNotificationController extends Controller
@@ -15,7 +16,8 @@ class ExamNotificationController extends Controller
      */
     public function index()
     {
-        $notifications = ExamNotification::orderBy('created_at', 'desc')
+        $notifications = ExamNotification::with('sender')
+            ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         // Check if FCM is configured
@@ -28,11 +30,12 @@ class ExamNotificationController extends Controller
     /**
      * Store a new notification and push via FCM
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
+            'display_seconds' => 'required|integer|min:3|max:60',
             'type' => 'required|in:info,warning,urgent',
             'target' => 'required|in:all,exam_active',
             'expires_at' => 'nullable|date|after:now',
@@ -43,21 +46,7 @@ class ExamNotificationController extends Controller
 
         $notification = ExamNotification::create($validated);
 
-        // Send real-time push notification via FCM
-        $fcmSent = false;
-        try {
-            $fcm = new FcmService();
-            if ($fcm->isConfigured()) {
-                $fcmSent = $fcm->sendToAllDevices(
-                    $validated['title'],
-                    $validated['message'],
-                    $validated['type'],
-                    $notification->id,
-                );
-            }
-        } catch (\Exception $e) {
-            Log::warning('[ExamNotification] FCM push failed: ' . $e->getMessage());
-        }
+        $fcmSent = $this->pushNotification($notification);
 
         $successMsg = 'Notifikasi berhasil dikirim ke semua device.';
         if ($fcmSent) {
@@ -70,10 +59,32 @@ class ExamNotificationController extends Controller
             ->with('success', $successMsg);
     }
 
+    public function resend(ExamNotification $examNotification): RedirectResponse
+    {
+        $resent = $examNotification->replicate(['created_at', 'updated_at', 'deleted_at']);
+        $resent->sent_by = auth()->id();
+        $resent->is_active = true;
+        $resent->scheduled_at = null;
+        $resent->expires_at = $examNotification->expires_at && $examNotification->expires_at->isPast()
+            ? now()->addMinutes(15)
+            : $examNotification->expires_at;
+        $resent->save();
+
+        $fcmSent = $this->pushNotification($resent);
+
+        return redirect()->route('admin.exam-notifications.index')
+            ->with(
+                $fcmSent ? 'success' : 'warning',
+                $fcmSent
+                    ? 'Notifikasi berhasil dikirim ulang ke aplikasi.'
+                    : 'Riwayat notifikasi berhasil diduplikasi, tetapi push realtime belum berhasil dikirim.'
+            );
+    }
+
     /**
      * Deactivate a notification
      */
-    public function destroy(ExamNotification $examNotification)
+    public function destroy(ExamNotification $examNotification): RedirectResponse
     {
         $examNotification->update(['is_active' => false]);
 
@@ -84,12 +95,40 @@ class ExamNotificationController extends Controller
     /**
      * Permanently delete a notification
      */
-    public function forceDelete(string $id)
+    public function forceDelete(string $id): RedirectResponse
     {
         $notification = ExamNotification::withTrashed()->findOrFail($id);
         $notification->forceDelete();
 
-        return redirect()->route('exam-notifications.index')
+        return redirect()->route('admin.exam-notifications.index')
             ->with('success', 'Notifikasi berhasil dihapus permanen.');
+    }
+
+    protected function pushNotification(ExamNotification $notification): bool
+    {
+        try {
+            $fcm = new FcmService();
+
+            if (!$fcm->isConfigured()) {
+                return false;
+            }
+
+            return $fcm->sendToAllDevices(
+                $notification->title,
+                $notification->message,
+                $notification->type,
+                $notification->id,
+                [
+                    'display_seconds' => $notification->display_seconds,
+                    'target' => $notification->target,
+                ],
+            );
+        } catch (\Exception $e) {
+            Log::warning('[ExamNotification] FCM push failed: ' . $e->getMessage(), [
+                'notification_id' => $notification->id,
+            ]);
+
+            return false;
+        }
     }
 }

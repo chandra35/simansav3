@@ -192,11 +192,17 @@ class FcmService
     /**
      * Send notification to all ExaManmet devices.
      */
-    public function sendToAllDevices(string $title, string $message, string $type = 'info', string $notificationId = ''): bool
+    public function sendToAllDevices(
+        string $title,
+        string $message,
+        string $type = 'info',
+        string $notificationId = '',
+        array $extraData = []
+    ): bool
     {
         return $this->sendToTopic('examanmet_all', $title, $message, $type, [
             'id' => $notificationId,
-        ]);
+        ] + $extraData);
     }
 
     /**

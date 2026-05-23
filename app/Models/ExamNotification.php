@@ -19,6 +19,7 @@ class ExamNotification extends Model
     protected $fillable = [
         'title',
         'message',
+        'display_seconds',
         'type',
         'target',
         'sent_by',
@@ -28,6 +29,7 @@ class ExamNotification extends Model
     ];
 
     protected $casts = [
+        'display_seconds' => 'integer',
         'scheduled_at' => 'datetime',
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
@@ -101,6 +103,7 @@ class ExamNotification extends Model
             'id' => $this->id,
             'title' => $this->title,
             'message' => $this->message,
+            'display_seconds' => $this->display_seconds,
             'type' => $this->type,
             'target' => $this->target,
             'created_at' => $this->created_at->toIso8601String(),
