@@ -226,7 +226,7 @@
                         </div>
                         <div class="actions">
                             <small style="color:#64748b;"><i class="far fa-clock"></i> {{ optional($item->published_at)->format('d M Y') }}</small>
-                            <a class="btn" href="{{ route('downloads.download', $item) }}"><i class="fas fa-arrow-down"></i> Download</a>
+                            <a class="btn" href="{{ route('downloads.download', ['download' => $item, 'filename' => $item->download_route_filename]) }}"><i class="fas fa-arrow-down"></i> Download</a>
                         </div>
                     </article>
                 @endforeach

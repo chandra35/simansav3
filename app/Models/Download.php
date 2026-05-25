@@ -7,6 +7,7 @@ use App\Models\DownloadCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Download extends Model
 {
@@ -74,6 +75,17 @@ class Download extends Model
         $value = $bytes / (1024 ** $power);
 
         return number_format($value, $power === 0 ? 0 : 1, ',', '.') . ' ' . $units[$power];
+    }
+
+    public function getDownloadRouteFilenameAttribute(): string
+    {
+        $baseName = pathinfo($this->file_name_original ?: $this->slug, PATHINFO_FILENAME);
+        $safeBaseName = Str::slug($baseName ?: $this->slug ?: 'download-file');
+        $extension = strtolower((string) $this->file_extension);
+
+        return $extension !== ''
+            ? $safeBaseName . '.' . $extension
+            : $safeBaseName;
     }
 
     public function scopePublished($query)

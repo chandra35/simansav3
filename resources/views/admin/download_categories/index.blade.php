@@ -95,7 +95,8 @@
                                         <form
                                             action="{{ route('admin.download-categories.destroy', $item) }}"
                                             method="POST"
-                                            class="d-inline js-confirm-submit"
+                                            class="d-inline js-confirm-delete-category"
+                                            data-no-overlay
                                             data-title="Hapus Kategori?"
                                             data-text="Kategori {{ addslashes($item->name) }} akan dihapus permanen."
                                             data-confirm="Ya, Hapus"
@@ -159,6 +160,62 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
+    $(document).on('submit', '.js-confirm-delete-category', function (event) {
+        const form = this;
+
+        event.preventDefault();
+
+        Swal.fire({
+            title: $(form).data('title') || 'Hapus Kategori?',
+            text: $(form).data('text') || 'Kategori akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: $(form).data('confirm') || 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545'
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            Swal.fire({
+                title: 'Menghapus kategori...',
+                text: 'Mohon tunggu, kategori sedang dihapus.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: function () {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: $(form).attr('action'),
+                method: 'POST',
+                data: $(form).serialize(),
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Dihapus',
+                        text: response.message || 'Kategori berhasil dihapus.'
+                    }).then(function () {
+                        window.location.reload();
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menghapus',
+                        text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus kategori.'
+                    });
+                }
+            });
+        });
+    });
+
     $(document).on('submit', '.js-confirm-submit', function (event) {
         const form = this;
         if ($(form).data('confirmed')) {

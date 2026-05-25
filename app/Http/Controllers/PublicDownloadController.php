@@ -58,7 +58,7 @@ class PublicDownloadController extends Controller
         return view('downloads.index', compact('downloads', 'categories', 'stats', 'sort'));
     }
 
-    public function download(Download $download)
+    public function download(Download $download, ?string $filename = null)
     {
         if (!$download->is_published) {
             abort(404);
@@ -74,6 +74,7 @@ class PublicDownloadController extends Controller
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
                 'Content-Length' => (string) strlen($fileContent),
+                'X-Content-Type-Options' => 'nosniff',
             ]);
         }
 
@@ -86,6 +87,7 @@ class PublicDownloadController extends Controller
         return response()->download($absolutePath, $download->file_name_original, [
             'Content-Type' => $mimeType,
             'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 }

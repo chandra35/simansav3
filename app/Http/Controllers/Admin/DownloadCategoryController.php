@@ -73,13 +73,27 @@ class DownloadCategoryController extends Controller
         return back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
-    public function destroy(DownloadCategory $downloadCategory)
+    public function destroy(Request $request, DownloadCategory $downloadCategory)
     {
         if ($downloadCategory->downloads()->count() > 0) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Kategori tidak bisa dihapus karena masih digunakan file download.',
+                ], 422);
+            }
+
             return back()->with('error', 'Kategori tidak bisa dihapus karena masih digunakan file download.');
         }
 
         $downloadCategory->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kategori berhasil dihapus.',
+            ]);
+        }
 
         return back()->with('success', 'Kategori berhasil dihapus.');
     }

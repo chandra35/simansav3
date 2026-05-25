@@ -115,7 +115,7 @@
                             </td>
                             <td>{{ number_format($item->download_count, 0, ',', '.') }}</td>
                             <td>
-                                <a href="{{ route('downloads.download', $item) }}" class="btn btn-xs btn-info" target="_blank">
+                                <a href="{{ route('downloads.download', ['download' => $item, 'filename' => $item->download_route_filename]) }}" class="btn btn-xs btn-info" target="_blank">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('admin.downloads.edit', $item) }}" class="btn btn-xs btn-warning">
@@ -125,6 +125,7 @@
                                     action="{{ route('admin.downloads.destroy', $item) }}"
                                     method="POST"
                                     class="d-inline js-confirm-delete-download"
+                                    data-no-overlay
                                     data-title="Hapus File?"
                                     data-text="File {{ addslashes($item->title) }} akan dihapus permanen."
                                 >
@@ -371,10 +372,6 @@ $(function () {
 
     $(document).on('submit', '.js-confirm-delete-download', function (event) {
         const form = this;
-        if ($(form).data('confirmed')) {
-            return;
-        }
-
         event.preventDefault();
         Swal.fire({
             title: $(form).data('title') || 'Hapus Data?',
@@ -386,8 +383,41 @@ $(function () {
             confirmButtonColor: '#dc3545'
         }).then(function (result) {
             if (result.isConfirmed) {
-                $(form).data('confirmed', true);
-                form.submit();
+                Swal.fire({
+                    title: 'Menghapus file...',
+                    text: 'Mohon tunggu, file sedang dihapus.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: function () {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: $(form).attr('action'),
+                    method: 'POST',
+                    data: $(form).serialize(),
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function (response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil Dihapus',
+                            text: response.message || 'File download berhasil dihapus.'
+                        }).then(function () {
+                            window.location.reload();
+                        });
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menghapus',
+                            text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus file.'
+                        });
+                    }
+                });
             }
         });
     });
