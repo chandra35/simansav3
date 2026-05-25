@@ -50,8 +50,9 @@ class DownloadController extends Controller
 
         $downloads = $query->paginate(15)->withQueryString();
         $categories = DownloadCategory::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+        $settings = DownloadSetting::getInstance();
 
-        return view('admin.downloads.index', compact('downloads', 'categories'));
+        return view('admin.downloads.index', compact('downloads', 'categories', 'settings'));
     }
 
     public function create()
@@ -80,7 +81,7 @@ class DownloadController extends Controller
 
         $slug = $this->makeUniqueSlug($validated['title']);
 
-        Download::create([
+        $download = Download::create([
             'category_id' => $validated['category_id'] ?? null,
             'title' => $validated['title'],
             'slug' => $slug,
@@ -100,6 +101,17 @@ class DownloadController extends Controller
             'created_by' => Auth::id(),
             'updated_by' => Auth::id(),
         ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File download berhasil ditambahkan.',
+                'data' => [
+                    'id' => $download->id,
+                    'title' => $download->title,
+                ],
+            ]);
+        }
 
         return redirect()->route('admin.downloads.index')->with('success', 'File download berhasil ditambahkan.');
     }
@@ -166,10 +178,17 @@ class DownloadController extends Controller
 
         $download->update($payload);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File download berhasil diperbarui.',
+            ]);
+        }
+
         return redirect()->route('admin.downloads.index')->with('success', 'File download berhasil diperbarui.');
     }
 
-    public function destroy(Download $download)
+    public function destroy(Request $request, Download $download)
     {
         $meta = [
             'source' => $download->source,
@@ -180,6 +199,13 @@ class DownloadController extends Controller
 
         $this->storageService->deleteByMeta($meta, DownloadSetting::getInstance());
         $download->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File download berhasil dihapus.',
+            ]);
+        }
 
         return redirect()->route('admin.downloads.index')->with('success', 'File download berhasil dihapus.');
     }

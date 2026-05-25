@@ -29,7 +29,7 @@
                 <span class="badge badge-info">{{ $download->formatted_size }}</span>
             </div>
 
-            <form action="{{ route('admin.downloads.update', $download) }}" method="POST" enctype="multipart/form-data">
+            <form id="editDownloadForm" action="{{ route('admin.downloads.update', $download) }}" method="POST" enctype="multipart/form-data">
                 @method('PUT')
                 @include('admin.downloads.form')
                 <div class="mt-3">
@@ -39,4 +39,33 @@
             </form>
         </div>
     </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    $('#editDownloadForm').on('submit', function (event) {
+        if ($(this).data('confirmed')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Update File Download?',
+            text: 'Perubahan data file akan disimpan.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Update',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(this).data('confirmed', true);
+                this.submit();
+            }
+        });
+    });
+});
+</script>
 @endsection

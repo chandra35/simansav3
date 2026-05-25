@@ -26,7 +26,7 @@
             <h3 class="card-title"><i class="fas fa-hdd"></i> Storage & Google Drive</h3>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.download-settings.update') }}" enctype="multipart/form-data">
+            <form id="downloadSettingsForm" method="POST" action="{{ route('admin.download-settings.update') }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -97,10 +97,61 @@
                 </div>
             </form>
 
-            <form method="POST" action="{{ route('admin.download-settings.test-connection') }}" class="mt-2">
+            <form id="testConnectionForm" method="POST" action="{{ route('admin.download-settings.test-connection') }}" class="mt-2">
                 @csrf
                 <button class="btn btn-info" type="submit"><i class="fas fa-plug"></i> Test Koneksi GDrive</button>
             </form>
         </div>
     </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    $('#downloadSettingsForm').on('submit', function (event) {
+        if ($(this).data('confirmed')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Simpan Pengaturan Storage?',
+            text: 'Perubahan pengaturan akan langsung diterapkan untuk upload berikutnya.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Simpan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(this).data('confirmed', true);
+                this.submit();
+            }
+        });
+    });
+
+    $('#testConnectionForm').on('submit', function (event) {
+        if ($(this).data('confirmed')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Test Koneksi Google Drive?',
+            text: 'Sistem akan mencoba autentikasi dan cek akses folder Google Drive.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Test Sekarang',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $(this).data('confirmed', true);
+                this.submit();
+            }
+        });
+    });
+});
+</script>
 @endsection

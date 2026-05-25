@@ -26,7 +26,14 @@
             <div class="card simansa-management-card">
                 <div class="card-header"><h3 class="card-title"><i class="fas fa-plus"></i> Tambah Kategori</h3></div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.download-categories.store') }}">
+                    <form
+                        method="POST"
+                        action="{{ route('admin.download-categories.store') }}"
+                        class="js-confirm-submit"
+                        data-title="Simpan Kategori Baru?"
+                        data-text="Kategori baru akan ditambahkan ke Download Center."
+                        data-confirm="Ya, Simpan"
+                    >
                         @csrf
                         <div class="form-group">
                             <label>Nama</label>
@@ -85,7 +92,15 @@
                                     <td>{!! $item->is_active ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-secondary">Nonaktif</span>' !!}</td>
                                     <td>
                                         <button class="btn btn-xs btn-warning" data-toggle="modal" data-target="#editModal{{ $item->id }}"><i class="fas fa-edit"></i></button>
-                                        <form action="{{ route('admin.download-categories.destroy', $item) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus kategori ini?')">
+                                        <form
+                                            action="{{ route('admin.download-categories.destroy', $item) }}"
+                                            method="POST"
+                                            class="d-inline js-confirm-submit"
+                                            data-title="Hapus Kategori?"
+                                            data-text="Kategori {{ addslashes($item->name) }} akan dihapus permanen."
+                                            data-confirm="Ya, Hapus"
+                                            data-icon="warning"
+                                        >
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-xs btn-danger" type="submit"><i class="fas fa-trash"></i></button>
@@ -96,7 +111,14 @@
                                 <div class="modal fade" id="editModal{{ $item->id }}" tabindex="-1">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
-                                            <form method="POST" action="{{ route('admin.download-categories.update', $item) }}">
+                                            <form
+                                                method="POST"
+                                                action="{{ route('admin.download-categories.update', $item) }}"
+                                                class="js-confirm-submit"
+                                                data-title="Update Kategori?"
+                                                data-text="Perubahan kategori {{ addslashes($item->name) }} akan disimpan."
+                                                data-confirm="Ya, Update"
+                                            >
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="modal-header">
@@ -131,4 +153,35 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    $(document).on('submit', '.js-confirm-submit', function (event) {
+        const form = this;
+        if ($(form).data('confirmed')) {
+            return;
+        }
+
+        event.preventDefault();
+
+        Swal.fire({
+            title: $(form).data('title') || 'Lanjutkan proses?',
+            text: $(form).data('text') || 'Perubahan akan diproses.',
+            icon: $(form).data('icon') || 'question',
+            showCancelButton: true,
+            confirmButtonText: $(form).data('confirm') || 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: $(form).data('icon') === 'warning' ? '#dc3545' : '#007bff'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $(form).data('confirmed', true);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
 @endsection

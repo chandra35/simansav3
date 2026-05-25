@@ -15,9 +15,9 @@
                 <a href="{{ route('admin.download-categories.index') }}" class="btn btn-info">
                     <i class="fas fa-folder"></i> Kategori
                 </a>
-                <a href="{{ route('admin.downloads.create') }}" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadDownloadModal">
                     <i class="fas fa-plus"></i> Tambah File
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -121,7 +121,13 @@
                                 <a href="{{ route('admin.downloads.edit', $item) }}" class="btn btn-xs btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('admin.downloads.destroy', $item) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus file ini?')">
+                                <form
+                                    action="{{ route('admin.downloads.destroy', $item) }}"
+                                    method="POST"
+                                    class="d-inline js-confirm-delete-download"
+                                    data-title="Hapus File?"
+                                    data-text="File {{ addslashes($item->title) }} akan dihapus permanen."
+                                >
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-xs btn-danger" type="submit"><i class="fas fa-trash"></i></button>
@@ -140,4 +146,251 @@
             {{ $downloads->links() }}
         </div>
     </div>
+
+    <div class="modal fade" id="uploadDownloadModal" tabindex="-1" role="dialog" aria-labelledby="uploadDownloadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="uploadDownloadForm" action="{{ route('admin.downloads.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header bg-gradient-primary">
+                        <h5 class="modal-title" id="uploadDownloadModalLabel">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload File Download
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="uploadValidationAlert" class="alert alert-danger d-none mb-3"></div>
+
+                        <div class="form-group">
+                            <label for="upload_title">Judul</label>
+                            <input type="text" id="upload_title" name="title" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload_category_id">Kategori</label>
+                            <select id="upload_category_id" name="category_id" class="form-control">
+                                <option value="">Tanpa Kategori</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload_description">Deskripsi</label>
+                            <textarea id="upload_description" name="description" rows="3" class="form-control"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload_source">Upload Ke</label>
+                            <select id="upload_source" name="source" class="form-control" required>
+                                <option value="local" {{ $settings->default_storage === 'local' ? 'selected' : '' }}>Local Simansa</option>
+                                <option value="gdrive" {{ $settings->default_storage === 'gdrive' ? 'selected' : '' }}>Google Drive</option>
+                            </select>
+                            <small class="text-muted">Gunakan Google Drive untuk meringankan penyimpanan dan bandwidth VM.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="upload_file">File</label>
+                            <input type="file" id="upload_file" name="file" class="form-control-file" required>
+                            <small class="text-muted">Maksimal 150MB per file.</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="custom-control custom-switch mb-2 mb-md-0">
+                                    <input type="checkbox" id="upload_is_published" name="is_published" value="1" class="custom-control-input" checked>
+                                    <label class="custom-control-label" for="upload_is_published">Published</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="custom-control custom-switch mb-2 mb-md-0">
+                                    <input type="checkbox" id="upload_is_featured" name="is_featured" value="1" class="custom-control-input">
+                                    <label class="custom-control-label" for="upload_is_featured">Featured</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="datetime-local" name="published_at" class="form-control" value="{{ now()->format('Y-m-d\\TH:i') }}">
+                            </div>
+                        </div>
+
+                        <div class="upload-progress-wrap d-none mt-3" id="uploadProgressWrap">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted" id="uploadProgressText">Mempersiapkan upload...</small>
+                                <small class="font-weight-bold" id="uploadProgressPercent">0%</small>
+                            </div>
+                            <div class="progress progress-sm">
+                                <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitUpload">
+                            <i class="fas fa-upload"></i> Upload Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('css')
+<style>
+    .upload-progress-wrap {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: .75rem;
+    }
+</style>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    const $uploadModal = $('#uploadDownloadModal');
+    const $uploadForm = $('#uploadDownloadForm');
+    const $uploadAlert = $('#uploadValidationAlert');
+    const $progressWrap = $('#uploadProgressWrap');
+    const $progressBar = $('#uploadProgressBar');
+    const $progressText = $('#uploadProgressText');
+    const $progressPercent = $('#uploadProgressPercent');
+    const $submitBtn = $('#btnSubmitUpload');
+
+    function resetUploadState() {
+        $uploadAlert.addClass('d-none').empty();
+        $progressWrap.addClass('d-none');
+        $progressBar.css('width', '0%');
+        $progressText.text('Mempersiapkan upload...');
+        $progressPercent.text('0%');
+        $submitBtn.prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Sekarang');
+    }
+
+    function renderValidationErrors(errors) {
+        const messages = [];
+        Object.keys(errors || {}).forEach(function (key) {
+            (errors[key] || []).forEach(function (message) {
+                messages.push('<li>' + message + '</li>');
+            });
+        });
+
+        if (!messages.length) {
+            messages.push('<li>Data tidak valid. Silakan cek form upload.</li>');
+        }
+
+        $uploadAlert.removeClass('d-none').html('<strong>Periksa input berikut:</strong><ul class="mb-0 mt-2">' + messages.join('') + '</ul>');
+    }
+
+    $uploadModal.on('hidden.bs.modal', function () {
+        $uploadForm[0].reset();
+        $('#upload_source').val('{{ $settings->default_storage }}');
+        $('#upload_is_published').prop('checked', true);
+        $('#upload_is_featured').prop('checked', false);
+        $('input[name="published_at"]').val('{{ now()->format('Y-m-d\\TH:i') }}');
+        resetUploadState();
+    });
+
+    $uploadForm.on('submit', function (event) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Konfirmasi Upload?',
+            text: 'File akan diproses dan disimpan sesuai storage yang dipilih.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Upload',
+            cancelButtonText: 'Batal'
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const formData = new FormData($uploadForm[0]);
+            resetUploadState();
+            $progressWrap.removeClass('d-none');
+            $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengupload...');
+
+            $.ajax({
+                url: $uploadForm.attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'Accept': 'application/json'
+                },
+                xhr: function () {
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function (e) {
+                        if (!e.lengthComputable) {
+                            return;
+                        }
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        $progressBar.css('width', percent + '%');
+                        $progressPercent.text(percent + '%');
+                        $progressText.text('Mengupload file...');
+                    });
+                    return xhr;
+                },
+                success: function (response) {
+                    $progressBar.css('width', '100%');
+                    $progressPercent.text('100%');
+                    $progressText.text('Upload selesai, menyimpan data...');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Upload Berhasil',
+                        text: response.message || 'File download berhasil ditambahkan.'
+                    }).then(function () {
+                        window.location.reload();
+                    });
+                },
+                error: function (xhr) {
+                    if (xhr.status === 422) {
+                        renderValidationErrors(xhr.responseJSON && xhr.responseJSON.errors ? xhr.responseJSON.errors : {});
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Gagal',
+                        text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Terjadi kesalahan saat upload file.'
+                    });
+                },
+                complete: function () {
+                    $submitBtn.prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Sekarang');
+                }
+            });
+        });
+    });
+
+    $(document).on('submit', '.js-confirm-delete-download', function (event) {
+        const form = this;
+        if ($(form).data('confirmed')) {
+            return;
+        }
+
+        event.preventDefault();
+        Swal.fire({
+            title: $(form).data('title') || 'Hapus Data?',
+            text: $(form).data('text') || 'Data akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $(form).data('confirmed', true);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
 @endsection
