@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -43,6 +42,8 @@ class PermissionController extends Controller
             'rapor'        => 'Nilai & Rapor',
             'wali'         => 'Kelas',
             'dokumen'      => 'Dokumen',
+            'downloads'    => 'Download Center',
+            'download'     => 'Download Center',
             'password'     => 'Akun',
         ];
 

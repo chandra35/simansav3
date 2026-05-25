@@ -499,6 +499,35 @@ return [
             'can' => 'sidebar-admin-menu-only',
             'active' => ['admin/smartq*'],
         ],
+
+        // DOWNLOAD CENTER
+        [
+            'text' => 'Download Center',
+            'icon' => 'fas fa-fw fa-download',
+            'submenu' => [
+                [
+                    'text' => 'File Download',
+                    'route' => 'admin.downloads.index',
+                    'icon' => 'fas fa-fw fa-file-download',
+                    'can' => 'view-downloads',
+                    'active' => ['admin/downloads*'],
+                ],
+                [
+                    'text' => 'Kategori Download',
+                    'route' => 'admin.download-categories.index',
+                    'icon' => 'fas fa-fw fa-folder-open',
+                    'can' => 'manage-download-settings',
+                    'active' => ['admin/download-categories*'],
+                ],
+                [
+                    'text' => 'Pengaturan Storage',
+                    'route' => 'admin.download-settings.edit',
+                    'icon' => 'fas fa-fw fa-cog',
+                    'can' => 'manage-download-settings',
+                    'active' => ['admin/download-settings*'],
+                ],
+            ],
+        ],
         
         // KESISWAAN - Collapsible
         [

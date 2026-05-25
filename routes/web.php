@@ -39,6 +39,10 @@ Route::get('/', function () {
 Route::get('/verifikasi/gtk/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiGtk'])->name('verifikasi.gtk');
 Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiSiswa'])->name('verifikasi.siswa');
 
+// Public Download Center
+Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
+Route::get('/downloads/{download:slug}/file', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
+
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -403,6 +407,36 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
     Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
     Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+
+    // Download Center
+    Route::middleware(['permission:view-downloads'])->group(function () {
+        Route::get('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'index'])->name('downloads.index');
+    });
+
+    Route::middleware(['permission:create-downloads'])->group(function () {
+        Route::get('/downloads/create', [App\Http\Controllers\Admin\DownloadController::class, 'create'])->name('downloads.create');
+        Route::post('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'store'])->name('downloads.store');
+    });
+
+    Route::middleware(['permission:edit-downloads'])->group(function () {
+        Route::get('/downloads/{download}/edit', [App\Http\Controllers\Admin\DownloadController::class, 'edit'])->name('downloads.edit');
+        Route::put('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'update'])->name('downloads.update');
+    });
+
+    Route::middleware(['permission:delete-downloads'])->group(function () {
+        Route::delete('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'destroy'])->name('downloads.destroy');
+    });
+
+    Route::middleware(['permission:manage-download-settings'])->group(function () {
+        Route::get('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'index'])->name('download-categories.index');
+        Route::post('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'store'])->name('download-categories.store');
+        Route::put('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'update'])->name('download-categories.update');
+        Route::delete('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'destroy'])->name('download-categories.destroy');
+
+        Route::get('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'edit'])->name('download-settings.edit');
+        Route::put('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'update'])->name('download-settings.update');
+        Route::post('/download-settings/test-connection', [App\Http\Controllers\Admin\DownloadSettingController::class, 'testConnection'])->name('download-settings.test-connection');
+    });
     
     // App Settings
     Route::middleware(['permission:manage-settings'])->group(function () {

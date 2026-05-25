@@ -392,6 +392,19 @@ class PermissionSyncService
                     'view-activity-log',
                 ],
             ],
+            'downloads' => [
+                'label' => 'Download Center',
+                'icon' => 'download',
+                'color' => 'info',
+                'description' => 'Manajemen file unduhan publik dan storage',
+                'permissions' => [
+                    'view-downloads',
+                    'create-downloads',
+                    'edit-downloads',
+                    'delete-downloads',
+                    'manage-download-settings',
+                ],
+            ],
             'tools' => [
                 'label' => 'Tools',
                 'icon' => 'tools',
