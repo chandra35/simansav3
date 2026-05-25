@@ -217,7 +217,7 @@ class DownloadController extends Controller
         $counter = 1;
 
         while (
-            Download::query()
+            Download::withTrashed()
                 ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
                 ->where('slug', $slug)
                 ->exists()
