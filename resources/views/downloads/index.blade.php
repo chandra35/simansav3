@@ -219,7 +219,7 @@
                             <small style="color:#64748b;"><i class="fas fa-download"></i> {{ number_format($item->download_count, 0, ',', '.') }}</small>
                         </div>
                         <h2 class="title">{{ $item->title }}</h2>
-                        <p class="desc">{{ \Illuminate\Support\Str::limit($item->description ?: 'File resmi dari SIMANSA Download Center.', 90) }}</p>
+                        <p class="desc">{{ $item->description ?: 'File resmi dari SIMANSA Download Center.' }}</p>
                         <div class="meta">
                             <span><i class="fas fa-folder"></i> {{ $item->category->name ?? 'Umum' }}</span>
                             <span><i class="fas fa-weight-hanging"></i> {{ $item->formatted_size }}</span>
