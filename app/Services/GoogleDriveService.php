@@ -75,6 +75,24 @@ class GoogleDriveService
         }
     }
 
+    public function downloadFile(array $credentials, string $fileId): string
+    {
+        $token = $this->getAccessToken($credentials);
+
+        $response = Http::withToken($token)
+            ->withOptions(['stream' => false])
+            ->get(self::DRIVE_API_BASE . '/files/' . $fileId, [
+                'alt' => 'media',
+                'supportsAllDrives' => 'true',
+            ]);
+
+        if (!$response->successful()) {
+            throw new RuntimeException('Gagal mengunduh file Google Drive: ' . $response->body());
+        }
+
+        return $response->body();
+    }
+
     public function testConnection(array $credentials, string $rootFolderId): array
     {
         $token = $this->getAccessToken($credentials);

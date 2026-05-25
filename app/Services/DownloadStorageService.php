@@ -69,6 +69,18 @@ class DownloadStorageService
         return $this->googleDriveService->testConnection($credentials, $setting->gdrive_root_folder_id);
     }
 
+    public function downloadFromGoogleDrive(string $fileId, ?DownloadSetting $setting = null): string
+    {
+        $setting = $setting ?? DownloadSetting::getInstance();
+        $credentials = $this->loadGoogleDriveCredentials($setting);
+
+        if (!$credentials) {
+            throw new RuntimeException('Credential Google Drive belum dikonfigurasi.');
+        }
+
+        return $this->googleDriveService->downloadFile($credentials, $fileId);
+    }
+
     private function storeToLocal(UploadedFile $file): array
     {
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');

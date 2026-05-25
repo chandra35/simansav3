@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Download;
 use App\Models\DownloadCategory;
+use App\Services\DownloadStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PublicDownloadController extends Controller
 {
+    public function __construct(private DownloadStorageService $storageService)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = Download::query()
@@ -61,8 +66,14 @@ class PublicDownloadController extends Controller
 
         $download->increment('download_count');
 
-        if ($download->source === 'gdrive' && !empty($download->gdrive_file_url)) {
-            return redirect()->away($download->gdrive_file_url);
+        if ($download->source === 'gdrive' && !empty($download->gdrive_file_id)) {
+            $fileContent = $this->storageService->downloadFromGoogleDrive($download->gdrive_file_id);
+
+            return response($fileContent, 200, [
+                'Content-Type' => $download->mime_type ?: 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"',
+                'Content-Length' => (string) strlen($fileContent),
+            ]);
         }
 
         if (!$download->local_path || !Storage::disk($download->local_disk)->exists($download->local_path)) {
