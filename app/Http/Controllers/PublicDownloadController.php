@@ -65,13 +65,14 @@ class PublicDownloadController extends Controller
         }
 
         $download->increment('download_count');
+        $mimeType = $this->storageService->resolveMimeType($download->file_extension, $download->mime_type);
 
         if ($download->source === 'gdrive' && !empty($download->gdrive_file_id)) {
             $fileContent = $this->storageService->downloadFromGoogleDrive($download->gdrive_file_id);
 
             return response($fileContent, 200, [
-                'Content-Type' => $download->mime_type ?: 'application/octet-stream',
-                'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"',
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
                 'Content-Length' => (string) strlen($fileContent),
             ]);
         }
@@ -82,6 +83,9 @@ class PublicDownloadController extends Controller
 
         $absolutePath = Storage::disk($download->local_disk)->path($download->local_path);
 
-        return response()->download($absolutePath, $download->file_name_original);
+        return response()->download($absolutePath, $download->file_name_original, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
+        ]);
     }
 }

@@ -10,6 +10,10 @@ use RuntimeException;
 
 class DownloadStorageService
 {
+    private const MIME_TYPE_MAP = [
+        'apk' => 'application/vnd.android.package-archive',
+    ];
+
     public function __construct(private GoogleDriveService $googleDriveService)
     {
     }
@@ -87,6 +91,7 @@ class DownloadStorageService
         $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeName = Str::slug($baseName ?: 'file-download');
         $fileName = $safeName . '-' . time() . '-' . Str::lower(Str::random(6)) . '.' . $extension;
+        $mimeType = $this->resolveMimeType($extension, $file->getMimeType());
 
         $path = $file->storeAs('downloads/' . now()->format('Y/m'), $fileName, 'public');
 
@@ -98,7 +103,7 @@ class DownloadStorageService
             'gdrive_file_url' => null,
             'file_name_original' => $file->getClientOriginalName(),
             'file_extension' => $extension,
-            'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+            'mime_type' => $mimeType,
             'file_size' => $file->getSize() ?: 0,
         ];
     }
@@ -118,13 +123,14 @@ class DownloadStorageService
         $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeName = Str::slug($baseName ?: 'file-download');
         $fileName = $safeName . '-' . time() . '.' . $extension;
+        $mimeType = $this->resolveMimeType($extension, $file->getMimeType());
 
         $upload = $this->googleDriveService->uploadFile(
             credentials: $credentials,
             rootFolderId: $setting->gdrive_root_folder_id,
             folderSegments: ['Simansa-Downloads', now()->format('Y-m')],
             fileName: $fileName,
-            mimeType: $file->getMimeType() ?: 'application/octet-stream',
+            mimeType: $mimeType,
             content: $file->get(),
             makePublic: (bool) $setting->gdrive_make_public
         );
@@ -137,9 +143,20 @@ class DownloadStorageService
             'gdrive_file_url' => $upload['remote_file_url'] ?? null,
             'file_name_original' => $file->getClientOriginalName(),
             'file_extension' => $extension,
-            'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+            'mime_type' => $mimeType,
             'file_size' => $file->getSize() ?: 0,
         ];
+    }
+
+    public function resolveMimeType(?string $extension, ?string $detectedMimeType = null): string
+    {
+        $normalizedExtension = strtolower((string) $extension);
+
+        if ($normalizedExtension !== '' && isset(self::MIME_TYPE_MAP[$normalizedExtension])) {
+            return self::MIME_TYPE_MAP[$normalizedExtension];
+        }
+
+        return $detectedMimeType ?: 'application/octet-stream';
     }
 
     private function loadGoogleDriveCredentials(DownloadSetting $setting): ?array
