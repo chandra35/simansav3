@@ -287,6 +287,18 @@ $(function () {
         $uploadAlert.removeClass('d-none').html('<strong>Periksa input berikut:</strong><ul class="mb-0 mt-2">' + messages.join('') + '</ul>');
     }
 
+    function resolveUploadErrorMessage(xhr) {
+        if (xhr.status === 413) {
+            return 'Ukuran file melebihi batas server. Maksimal upload saat ini 220MB per file.';
+        }
+
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+
+        return 'Terjadi kesalahan saat upload file.';
+    }
+
     $uploadModal.on('hidden.bs.modal', function () {
         $uploadForm[0].reset();
         $('#upload_source').val('{{ $settings->default_storage }}');
@@ -360,7 +372,7 @@ $(function () {
                     Swal.fire({
                         icon: 'error',
                         title: 'Upload Gagal',
-                        text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Terjadi kesalahan saat upload file.'
+                        text: resolveUploadErrorMessage(xhr)
                     });
                 },
                 complete: function () {
