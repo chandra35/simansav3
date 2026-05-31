@@ -39,6 +39,24 @@ class GoogleDriveService
             ->post(self::DRIVE_UPLOAD_BASE . '?uploadType=multipart&fields=id,name&supportsAllDrives=true');
 
         if (!$response->successful()) {
+            $boundary = 'simansa-' . bin2hex(random_bytes(12));
+            $body = "--{$boundary}\r\n";
+            $body .= "Content-Type: application/json; charset=UTF-8\r\n\r\n";
+            $body .= json_encode($metadata, JSON_UNESCAPED_SLASHES) . "\r\n";
+            $body .= "--{$boundary}\r\n";
+            $body .= "Content-Type: {$mimeType}\r\n\r\n";
+            $body .= $content . "\r\n";
+            $body .= "--{$boundary}--";
+
+            $response = Http::withToken($token)
+                ->withHeaders([
+                    'Content-Type' => "multipart/related; boundary={$boundary}",
+                ])
+                ->withBody($body, "multipart/related; boundary={$boundary}")
+                ->post(self::DRIVE_UPLOAD_BASE . '?uploadType=multipart&fields=id,name&supportsAllDrives=true');
+        }
+
+        if (!$response->successful()) {
             throw new RuntimeException('Upload Google Drive gagal: ' . $response->body());
         }
 
