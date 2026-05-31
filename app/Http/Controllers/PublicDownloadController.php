@@ -69,13 +69,19 @@ class PublicDownloadController extends Controller
 
         if ($download->source === 'gdrive' && !empty($download->gdrive_file_id)) {
             $fileContent = $this->storageService->downloadFromGoogleDrive($download->gdrive_file_id);
+            $tempFile = tempnam(sys_get_temp_dir(), 'simansa-download-');
 
-            return response($fileContent, 200, [
+            if ($tempFile === false) {
+                abort(500, 'Gagal menyiapkan file unduhan sementara.');
+            }
+
+            file_put_contents($tempFile, $fileContent);
+
+            return response()->download($tempFile, $download->file_name_original, [
                 'Content-Type' => $mimeType,
-                'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
-                'Content-Length' => (string) strlen($fileContent),
+                'Content-Transfer-Encoding' => 'binary',
                 'X-Content-Type-Options' => 'nosniff',
-            ]);
+            ])->deleteFileAfterSend(true);
         }
 
         if (!$download->local_path || !Storage::disk($download->local_disk)->exists($download->local_path)) {
@@ -86,7 +92,7 @@ class PublicDownloadController extends Controller
 
         return response()->download($absolutePath, $download->file_name_original, [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => 'attachment; filename="' . addslashes($download->file_name_original) . '"; filename*=UTF-8\'\'' . rawurlencode($download->file_name_original),
+            'Content-Transfer-Encoding' => 'binary',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
