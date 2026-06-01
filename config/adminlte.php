@@ -324,14 +324,14 @@ return [
             'text' => 'Dashboard Saya',
             'route' => 'admin.gtk.dashboard',
             'icon' => 'fas fa-fw fa-home',
-            'can' => 'sidebar-gtk-menu-only',
+            'can' => 'gtk-menu-only',
         ],
         [
             'key' => 'gtk-profile',
             'text' => 'Profil Saya',
             'route' => 'admin.gtk.profile',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'sidebar-gtk-menu-only',
+            'can' => 'gtk-menu-only',
         ],
         
         // MANAJEMEN DATA - Collapsible
@@ -404,6 +404,20 @@ return [
                     'active' => ['admin/mapel*'],
                 ],
                 [
+                    'text' => 'Jadwal Pelajaran',
+                    'route' => 'admin.jadwal-pelajaran.index',
+                    'icon' => 'fas fa-fw fa-clock',
+                    'can' => 'view-jadwal-pelajaran',
+                    'active' => ['admin/jadwal-pelajaran*'],
+                ],
+                [
+                    'text' => 'Manajemen Kelas',
+                    'route' => 'admin.kelas.index',
+                    'icon' => 'fas fa-fw fa-school',
+                    'can' => 'manage-kelas',
+                    'active' => ['admin/kelas*'],
+                ],
+                [
                     'text' => 'Nilai Siswa',
                     'route' => 'admin.nilai.index',
                     'icon' => 'fas fa-fw fa-chart-line',
@@ -425,13 +439,6 @@ return [
                     'active' => ['admin/rdm-mapel-mapping*'],
                 ],
                 [
-                    'text' => 'Manajemen Kelas',
-                    'route' => 'admin.kelas.index',
-                    'icon' => 'fas fa-fw fa-school',
-                    'can' => 'manage-kelas',
-                    'active' => ['admin/kelas*'],
-                ],
-                [
                     'text' => 'Proses Akhir Tahun',
                     'route' => 'admin.kenaikan-kelas.index',
                     'icon' => 'fas fa-fw fa-graduation-cap',
@@ -439,17 +446,10 @@ return [
                     'active' => ['admin/kenaikan-kelas*'],
                 ],
                 [
-                    'text' => 'Jadwal Pelajaran',
-                    'route' => 'admin.jadwal-pelajaran.index',
-                    'icon' => 'fas fa-fw fa-clock',
-                    'can' => 'admin-access',
-                    'active' => ['admin/jadwal-pelajaran*'],
-                ],
-                [
                     'text' => 'Kalender Akademik',
                     'route' => 'admin.kalender-akademik.index',
                     'icon' => 'fas fa-fw fa-calendar',
-                    'can' => 'admin-access',
+                    'can' => 'view-kalender-akademik',
                     'active' => ['admin/kalender-akademik*'],
                 ],
                 [
@@ -496,10 +496,10 @@ return [
             'text' => 'SMART-Q Unggulan',
             'icon' => 'fas fa-fw fa-star text-warning',
             'route' => 'admin.smartq.index',
-            'can' => 'sidebar-admin-menu-only',
+            'can' => 'admin-menu-only',
             'active' => ['admin/smartq*'],
         ],
-
+        
         // DOWNLOAD CENTER
         [
             'text' => 'Download Center',
@@ -528,7 +528,7 @@ return [
                 ],
             ],
         ],
-        
+
         // KESISWAAN - Collapsible
         [
             'text' => 'Kesiswaan',
@@ -538,28 +538,28 @@ return [
                     'text' => 'Prestasi Siswa',
                     'route' => 'admin.prestasi-siswa.index',
                     'icon' => 'fas fa-fw fa-trophy',
-                    'can' => 'admin-access',
+                    'can' => 'view-prestasi-siswa',
                     'active' => ['admin/prestasi-siswa*'],
                 ],
                 [
                     'text' => 'Ekstrakurikuler',
                     'route' => 'admin.ekstrakurikuler.index',
                     'icon' => 'fas fa-fw fa-futbol',
-                    'can' => 'admin-access',
+                    'can' => 'view-ekstrakurikuler',
                     'active' => ['admin/ekstrakurikuler*'],
                 ],
                 [
                     'text' => 'Catatan Konseling',
                     'route' => 'admin.catatan-konseling.index',
                     'icon' => 'fas fa-fw fa-comments',
-                    'can' => 'admin-access',
+                    'can' => 'view-catatan-konseling',
                     'active' => ['admin/catatan-konseling*'],
                 ],
                 [
                     'text' => 'Lulusan',
                     'route' => 'admin.lulusan.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
-                    'can' => 'view-siswa',
+                    'can' => 'kesiswaan-lulusan-access',
                     'active' => ['admin/lulusan*'],
                 ],
                 [
@@ -568,13 +568,6 @@ return [
                     'icon' => 'fas fa-fw fa-envelope-open-text',
                     'can' => 'kesiswaan-lulusan-access',
                     'active' => ['admin/kelulusan-pengumuman*'],
-                ],
-                [
-                    'text' => 'Siswa Tidak Mampu / PIP',
-                    'route' => 'admin.pip.index',
-                    'icon' => 'fas fa-fw fa-hand-holding-heart',
-                    'can' => 'view-pip',
-                    'active' => ['admin/pip*'],
                 ],
             ],
         ],
@@ -615,6 +608,13 @@ return [
                     'active' => ['admin/absensi/face-register*'],
                 ],
                 [
+                    'text' => 'Absensi Siswa',
+                    'route' => 'admin.absensi-siswa.index',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'view-kelas',
+                    'active' => ['admin/absensi-siswa*'],
+                ],
+                [
                     'text' => 'Verifikasi Wajah',
                     'route' => 'admin.absensi.face-verification',
                     'icon' => 'fas fa-fw fa-user-check',
@@ -635,7 +635,7 @@ return [
         [
             'text' => 'Hotspot',
             'icon' => 'fas fa-fw fa-wifi',
-            'can' => 'admin-access',
+            'can' => 'view-hotspot',
             'active' => ['admin/hotspot*'],
             'route' => 'admin.hotspot.index',
         ],
@@ -649,28 +649,28 @@ return [
                     'text' => 'Jenis Pembayaran',
                     'route' => 'admin.pembayaran.jenis',
                     'icon' => 'fas fa-fw fa-list',
-                    'can' => 'admin-access',
+                    'can' => 'view-keuangan',
                     'active' => ['admin/pembayaran/jenis*'],
                 ],
                 [
                     'text' => 'Tagihan',
                     'route' => 'admin.pembayaran.tagihan',
                     'icon' => 'fas fa-fw fa-file-invoice',
-                    'can' => 'admin-access',
+                    'can' => 'view-keuangan',
                     'active' => ['admin/pembayaran/tagihan*'],
                 ],
                 [
                     'text' => 'Pembayaran',
                     'route' => 'admin.pembayaran.index',
                     'icon' => 'fas fa-fw fa-cash-register',
-                    'can' => 'admin-access',
+                    'can' => 'view-keuangan',
                     'active' => ['admin/pembayaran'],
                 ],
                 [
                     'text' => 'Laporan Keuangan',
                     'route' => 'admin.pembayaran.laporan',
                     'icon' => 'fas fa-fw fa-chart-pie',
-                    'can' => 'admin-access',
+                    'can' => 'view-keuangan',
                     'active' => ['admin/pembayaran/laporan*'],
                 ],
             ],
@@ -685,14 +685,14 @@ return [
                     'text' => 'Template Surat',
                     'route' => 'admin.surat-keterangan.template',
                     'icon' => 'fas fa-fw fa-file-alt',
-                    'can' => 'admin-access',
+                    'can' => 'view-layanan-surat',
                     'active' => ['admin/surat-keterangan/template*'],
                 ],
                 [
                     'text' => 'Surat Keterangan',
                     'route' => 'admin.surat-keterangan.index',
                     'icon' => 'fas fa-fw fa-file-signature',
-                    'can' => 'admin-access',
+                    'can' => 'view-layanan-surat',
                     'active' => ['admin/surat-keterangan'],
                 ],
             ],
@@ -707,7 +707,7 @@ return [
                     'text' => 'Pengumuman',
                     'route' => 'admin.pengumuman.index',
                     'icon' => 'fas fa-fw fa-bell',
-                    'can' => 'admin-access',
+                    'can' => 'view-pengumuman',
                     'active' => ['admin/pengumuman*'],
                 ],
             ],
@@ -722,14 +722,14 @@ return [
                     'text' => 'Activity Log',
                     'route' => 'admin.activity-logs.index',
                     'icon' => 'fas fa-fw fa-history',
-                    'can' => 'admin-access',
+                    'can' => 'view-activity-log',
                     'active' => ['admin/activity-logs*'],
                 ],
                 [
                     'text' => 'Monitoring Users',
                     'route' => 'admin.monitoring.users',
                     'icon' => 'fas fa-fw fa-users-cog',
-                    'can' => 'admin-access',
+                    'can' => 'view-monitoring-users',
                     'active' => ['admin/monitoring*'],
                 ],
             ],
@@ -958,13 +958,13 @@ return [
             'text' => 'Dashboard',
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-access',
         ],
 
         [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-menu-only',
             'key' => 'siswa-presensi',
             'active' => ['siswa/face-register*'],
             'submenu' => [
@@ -973,7 +973,7 @@ return [
                     'text' => 'Registrasi Wajah',
                     'route' => 'siswa.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'sidebar-siswa-menu-only',
+                    'can' => 'siswa-menu-only',
                     'active' => ['siswa/face-register*'],
                 ],
             ],
@@ -983,7 +983,7 @@ return [
         [
             'text' => 'Profil & Data',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-access',
             'key' => 'siswa-profil-data',
             'submenu' => [
                 [
@@ -1008,7 +1008,7 @@ return [
         [
             'text' => 'Pengaturan Akun',
             'icon' => 'fas fa-fw fa-user-cog',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-access',
             'key' => 'siswa-pengaturan-akun',
             'submenu' => [
                 [
@@ -1022,7 +1022,7 @@ return [
         [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-access',
             'key' => 'siswa-jalur-ptn',
             'active' => ['siswa/snbp*', 'siswa/span-ptkin*'],
             'submenu' => [
@@ -1030,7 +1030,7 @@ return [
                     'text' => 'SNBP',
                     'route' => 'siswa.snbp.index',
                     'icon' => 'fas fa-fw fa-graduation-cap',
-                    'can' => 'sidebar-siswa-menu-only',
+                    'can' => 'siswa-access',
                     'key' => 'siswa-snbp',
                     'active' => ['siswa/snbp*'],
                 ],
@@ -1038,7 +1038,7 @@ return [
                     'text' => 'SPAN-PTKIN',
                     'route' => 'siswa.span-ptkin.index',
                     'icon' => 'fas fa-fw fa-mosque',
-                    'can' => 'sidebar-siswa-menu-only',
+                    'can' => 'siswa-access',
                     'key' => 'siswa-span-ptkin',
                     'active' => ['siswa/span-ptkin*'],
                 ],
@@ -1064,7 +1064,7 @@ return [
             'text' => 'Data Lulusan',
             'route' => 'siswa.lulusan.index',
             'icon' => 'fas fa-fw fa-university',
-            'can' => 'sidebar-siswa-menu-only',
+            'can' => 'siswa-access',
             'key' => 'siswa-lulusan',
         ],
     ],
@@ -1092,6 +1092,7 @@ return [
         App\Menu\Filters\SnbpMenuFilter::class,
         App\Menu\Filters\SpanPtkinMenuFilter::class,
         App\Menu\Filters\LulusanMenuFilter::class,
+        App\Menu\Filters\GtkPersonalMenuFilter::class,
     ],
 
     /*
@@ -1176,9 +1177,14 @@ return [
             'active' => false,
             'files' => [
                 [
+                    'type' => 'css',
+                    'asset' => false,
+                    'location' => '//cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+                ],
+                [
                     'type' => 'js',
                     'asset' => false,
-                    'location' => '//cdn.jsdelivr.net/npm/sweetalert2@8',
+                    'location' => '//cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js',
                 ],
             ],
         ],
@@ -1246,4 +1252,3 @@ return [
 
     'livewire' => false,
 ];
-
