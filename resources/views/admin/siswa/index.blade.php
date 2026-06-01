@@ -157,7 +157,7 @@
                             <i class="fas fa-redo"></i> Reset Filter
                         </button>
                         @can('view-siswa')
-                        <a id="btnExportSiswa" href="{{ route('admin.siswa.export') }}" class="btn btn-sm btn-success">
+                        <a id="btnExportSiswa" href="{{ route('admin.siswa.export') }}" class="btn btn-sm btn-success" data-no-overlay>
                             <i class="fas fa-file-excel"></i> Export Excel
                         </a>
                         @endcan
