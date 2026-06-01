@@ -39,6 +39,10 @@ Route::get('/', function () {
 Route::get('/verifikasi/gtk/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiGtk'])->name('verifikasi.gtk');
 Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiSiswa'])->name('verifikasi.siswa');
 
+// Public Download Center
+Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
+Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
+
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -571,12 +575,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'update'])->name('exam-browser.update');
     Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
     Route::post('/exam-browser/generate-seb-key', [App\Http\Controllers\Admin\ExamBrowserController::class, 'generateSebKey'])->name('exam-browser.generate-seb-key');
+    Route::post('/exam-browser/regenerate-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'regenerateConfig'])->name('exam-browser.regenerate-config');
     Route::get('/exam-browser/preview-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'previewConfig'])->name('exam-browser.preview-config');
 
     // ==================== FITUR BARU: NOTIFIKASI EXAM BROWSER ====================
     Route::get('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'index'])->name('exam-notifications.index');
     Route::post('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'store'])->name('exam-notifications.store');
+    Route::post('/exam-notifications/bulk-action', [App\Http\Controllers\Admin\ExamNotificationController::class, 'bulkAction'])->name('exam-notifications.bulk-action');
+    Route::post('/exam-notifications/{examNotification}/resend', [App\Http\Controllers\Admin\ExamNotificationController::class, 'resend'])->name('exam-notifications.resend');
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
+    Route::delete('/exam-notifications/{id}/force-delete', [App\Http\Controllers\Admin\ExamNotificationController::class, 'forceDelete'])->name('exam-notifications.force-delete');
 
     // ==================== FITUR BARU: MONITORING UJIAN (ExamAnmet) ====================
     // Monitoring admin dinonaktifkan sementara untuk mengurangi beban saat ujian.
