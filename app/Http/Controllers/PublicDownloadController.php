@@ -67,6 +67,12 @@ class PublicDownloadController extends Controller
         $download->increment('download_count');
         $mimeType = $this->storageService->resolveMimeType($download->file_extension, $download->mime_type);
 
+        // Bersihkan semua output buffer (termasuk UTF-8 BOM dari file PHP
+        // yang ter-save dengan BOM encoding) agar tidak mencemari binary response.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         if ($download->source === 'gdrive' && !empty($download->gdrive_file_id)) {
             $fileContent = $this->storageService->downloadFromGoogleDrive($download->gdrive_file_id);
             $tempFile = tempnam(sys_get_temp_dir(), 'simansa-download-');
