@@ -777,6 +777,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{smartq}/kelulusan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanConfirm'])->name('kelulusan.import.confirm');
         Route::get('/{smartq}/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportExcel'])->name('export');
     });
+
+    // ==================== DOWNLOAD CENTER ====================
+    Route::middleware(['permission:view-downloads'])->group(function () {
+        Route::get('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'index'])->name('downloads.index');
+    });
+    Route::middleware(['permission:create-downloads'])->group(function () {
+        Route::get('/downloads/create', [App\Http\Controllers\Admin\DownloadController::class, 'create'])->name('downloads.create');
+        Route::post('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'store'])->name('downloads.store');
+    });
+    Route::middleware(['permission:edit-downloads'])->group(function () {
+        Route::get('/downloads/{download}/edit', [App\Http\Controllers\Admin\DownloadController::class, 'edit'])->name('downloads.edit');
+        Route::put('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'update'])->name('downloads.update');
+    });
+    Route::middleware(['permission:delete-downloads'])->group(function () {
+        Route::delete('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'destroy'])->name('downloads.destroy');
+    });
+    Route::middleware(['permission:manage-download-settings'])->group(function () {
+        Route::get('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'index'])->name('download-categories.index');
+        Route::post('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'store'])->name('download-categories.store');
+        Route::put('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'update'])->name('download-categories.update');
+        Route::delete('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'destroy'])->name('download-categories.destroy');
+        Route::get('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'edit'])->name('download-settings.edit');
+        Route::put('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'update'])->name('download-settings.update');
+        Route::post('/download-settings/test-connection', [App\Http\Controllers\Admin\DownloadSettingController::class, 'testConnection'])->name('download-settings.test-connection');
+    });
 });
 
 // Siswa Routes
