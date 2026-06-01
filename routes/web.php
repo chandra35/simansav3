@@ -39,10 +39,6 @@ Route::get('/', function () {
 Route::get('/verifikasi/gtk/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiGtk'])->name('verifikasi.gtk');
 Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiSiswa'])->name('verifikasi.siswa');
 
-// Public Download Center
-Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
-Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
-
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -94,6 +90,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Siswa Management (edit method tidak ada — semua edit via modal AJAX)
+    Route::get('/siswa/export', [AdminSiswaController::class, 'export'])->name('siswa.export');
     Route::resource('siswa', AdminSiswaController::class)->except(['edit']);
     Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
     Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
@@ -407,36 +404,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
     Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
     Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
-
-    // Download Center
-    Route::middleware(['permission:view-downloads'])->group(function () {
-        Route::get('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'index'])->name('downloads.index');
-    });
-
-    Route::middleware(['permission:create-downloads'])->group(function () {
-        Route::get('/downloads/create', [App\Http\Controllers\Admin\DownloadController::class, 'create'])->name('downloads.create');
-        Route::post('/downloads', [App\Http\Controllers\Admin\DownloadController::class, 'store'])->name('downloads.store');
-    });
-
-    Route::middleware(['permission:edit-downloads'])->group(function () {
-        Route::get('/downloads/{download}/edit', [App\Http\Controllers\Admin\DownloadController::class, 'edit'])->name('downloads.edit');
-        Route::put('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'update'])->name('downloads.update');
-    });
-
-    Route::middleware(['permission:delete-downloads'])->group(function () {
-        Route::delete('/downloads/{download}', [App\Http\Controllers\Admin\DownloadController::class, 'destroy'])->name('downloads.destroy');
-    });
-
-    Route::middleware(['permission:manage-download-settings'])->group(function () {
-        Route::get('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'index'])->name('download-categories.index');
-        Route::post('/download-categories', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'store'])->name('download-categories.store');
-        Route::put('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'update'])->name('download-categories.update');
-        Route::delete('/download-categories/{downloadCategory}', [App\Http\Controllers\Admin\DownloadCategoryController::class, 'destroy'])->name('download-categories.destroy');
-
-        Route::get('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'edit'])->name('download-settings.edit');
-        Route::put('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'update'])->name('download-settings.update');
-        Route::post('/download-settings/test-connection', [App\Http\Controllers\Admin\DownloadSettingController::class, 'testConnection'])->name('download-settings.test-connection');
-    });
     
     // App Settings
     Route::middleware(['permission:manage-settings'])->group(function () {
@@ -604,16 +571,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'update'])->name('exam-browser.update');
     Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
     Route::post('/exam-browser/generate-seb-key', [App\Http\Controllers\Admin\ExamBrowserController::class, 'generateSebKey'])->name('exam-browser.generate-seb-key');
-    Route::post('/exam-browser/regenerate-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'regenerateConfig'])->name('exam-browser.regenerate-config');
     Route::get('/exam-browser/preview-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'previewConfig'])->name('exam-browser.preview-config');
 
     // ==================== FITUR BARU: NOTIFIKASI EXAM BROWSER ====================
     Route::get('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'index'])->name('exam-notifications.index');
     Route::post('/exam-notifications', [App\Http\Controllers\Admin\ExamNotificationController::class, 'store'])->name('exam-notifications.store');
-    Route::post('/exam-notifications/bulk-action', [App\Http\Controllers\Admin\ExamNotificationController::class, 'bulkAction'])->name('exam-notifications.bulk-action');
-    Route::post('/exam-notifications/{examNotification}/resend', [App\Http\Controllers\Admin\ExamNotificationController::class, 'resend'])->name('exam-notifications.resend');
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
-    Route::delete('/exam-notifications/{id}/force-delete', [App\Http\Controllers\Admin\ExamNotificationController::class, 'forceDelete'])->name('exam-notifications.force-delete');
 
     // ==================== FITUR BARU: MONITORING UJIAN (ExamAnmet) ====================
     // Monitoring admin dinonaktifkan sementara untuk mengurangi beban saat ujian.
@@ -885,15 +848,33 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
 });
 
 // ==================== PUBLIC API: EXAM BROWSER (ExamAnmet App) ====================
-// The app reads the STATIC config snapshot directly at
-// /storage/exam-browser/config.json (served by the web server, no PHP/DB).
-// This route is only a dynamic fallback for that snapshot.
-// Session/heartbeat/violation/notification endpoints were removed —
-// they overloaded the server during exams.
+// These endpoints are consumed by the mobile ExamAnmet app
+// No authentication required - data is non-sensitive config
 Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () {
+    Route::get('/ping', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'ping'])->name('ping');
     Route::get('/config', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'config'])
         ->middleware('throttle:exam-browser-config')
         ->name('config');
+    Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-password'])
+        ->name('verify-password');
+    Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-notifications'])
+        ->name('notifications');
+
+    // Session & Violation reporting (from ExaManmet app)
+    Route::post('/session/start', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionStart'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-session-start'])
+        ->name('session.start');
+    Route::post('/session/heartbeat', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionHeartbeat'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-heartbeat'])
+        ->name('session.heartbeat');
+    Route::post('/session/violation', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionViolation'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-violation'])
+        ->name('session.violation');
+    Route::post('/session/end', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'sessionEnd'])
+        ->middleware(['exam.browser.client', 'throttle:exam-browser-session-end'])
+        ->name('session.end');
 });
 
 // ─── Device Location & Client Runtime (global, no auth required) ──────────────

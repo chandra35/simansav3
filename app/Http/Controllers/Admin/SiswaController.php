@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SiswaExport;
 use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiswaController extends Controller
 {
@@ -98,6 +100,51 @@ class SiswaController extends Controller
             'perempuan' => (clone $query)->where('jenis_kelamin', 'P')->count(),
             'data_lengkap' => (clone $query)->where('data_diri_completed', true)->where('data_ortu_completed', true)->count(),
         ]);
+    }
+
+    /**
+     * Export siswa data to Excel
+     */
+    public function export(Request $request)
+    {
+        $this->authorize('view-siswa');
+
+        $query = $this->baseSiswaQuery();
+        $this->applyStatisticsDrilldownFilters($query, $request);
+
+        // Apply same filters as DataTable
+        if ($request->filled('jenis_kelamin')) {
+            $query->where('siswa.jenis_kelamin', $request->jenis_kelamin);
+        }
+
+        if ($request->filled('tingkat') && $request->tingkat !== 'tanpa_rombel') {
+            $query->whereHas('kelasAktif', function ($q) use ($request) {
+                $q->where('kelas.tingkat', $request->tingkat);
+            });
+        } elseif ($request->tingkat === 'tanpa_rombel') {
+            $query->whereDoesntHave('kelasAktif');
+        }
+
+        if ($request->filled('kelas_id')) {
+            $query->whereHas('kelasAktif', function ($q) use ($request) {
+                $q->where('kelas.id', $request->kelas_id);
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'lengkap') {
+                $query->where('siswa.data_diri_completed', true)->where('siswa.data_ortu_completed', true);
+            } elseif ($request->status === 'belum') {
+                $query->where(function ($q) {
+                    $q->where('siswa.data_diri_completed', false)->orWhere('siswa.data_ortu_completed', false);
+                });
+            }
+        }
+
+        $rows = $query->with(['user', 'ortu', 'kelasAktif'])->get();
+        $filename = 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
+
+        return Excel::download(new SiswaExport($rows), $filename);
     }
 
     /**

@@ -152,10 +152,15 @@
                             </select>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end">
+                    <div class="d-flex justify-content-end" style="gap:.5rem;">
                         <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-redo"></i> Reset Filter
                         </button>
+                        @can('view-siswa')
+                        <a id="btnExportSiswa" href="{{ route('admin.siswa.export') }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -1654,6 +1659,11 @@ $(document).ready(function() {
             return $.extend({}, d, filterParams);
         };
         siswaTable.ajax.reload();
+
+        // Update export URL with active filters
+        let exportBase = '{{ route("admin.siswa.export") }}';
+        let exportParams = new URLSearchParams(filterParams);
+        $('#btnExportSiswa').attr('href', exportBase + (exportParams.toString() ? '?' + exportParams.toString() : ''));
 
         // Update stats cards
         $.get('{{ route("admin.siswa.stats") }}', filterParams, function(data) {
