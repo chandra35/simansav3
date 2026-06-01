@@ -1677,5 +1677,20 @@ $(document).ready(function() {
     }
 });
 
+    // Export: beforeunload fires saat browser navigasi ke URL download, tapi pageshow tidak fire
+    // Sembunyikan overlay via focus event atau timeout fallback
+    $('#btnExportSiswa').on('click', function () {
+        var hideOverlay = function () {
+            if (typeof appHideGlobalOverlay === 'function') {
+                appHideGlobalOverlay();
+            }
+        };
+        var t = setTimeout(hideOverlay, 2000);
+        $(window).one('focus.exportHide', function () {
+            clearTimeout(t);
+            setTimeout(hideOverlay, 200);
+        });
+    });
+
 </script>
 @stop
