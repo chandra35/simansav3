@@ -137,21 +137,13 @@ class FcmService
             return false;
         }
 
-        // Set Android priority based on notification type
-        $priority = in_array($type, ['urgent', 'warning']) ? 'HIGH' : 'NORMAL';
-        $channelId = match ($type) {
-            'urgent' => 'exam_urgent',
-            'warning' => 'exam_warning',
-            default => 'exam_info',
-        };
+        // Exam notifications are sent as data-only payloads so the app can
+        // render them internally even while Android DND is active.
+        $priority = 'HIGH';
 
         $payload = [
             'message' => [
                 'topic' => $topic,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $message,
-                ],
                 'data' => array_merge([
                     'title' => $title,
                     'message' => $message,
@@ -161,10 +153,6 @@ class FcmService
                 ], array_map('strval', $extraData)),
                 'android' => [
                     'priority' => $priority,
-                    'notification' => [
-                        'channel_id' => $channelId,
-                        'sound' => 'default',
-                    ],
                 ],
             ],
         ];
