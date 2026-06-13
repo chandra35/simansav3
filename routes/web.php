@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\KurikulumController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RdmSyncController;
 use App\Http\Controllers\Admin\RdmMapelMappingController;
+use App\Http\Controllers\Admin\RdmMatchingController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\MutasiSiswaController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
@@ -247,6 +248,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/rdm-mapel-mapping/auto-map', [RdmMapelMappingController::class, 'autoMap'])->name('rdm-mapel-mapping.auto-map');
         Route::post('/rdm-mapel-mapping/bulk', [RdmMapelMappingController::class, 'bulkStore'])->name('rdm-mapel-mapping.bulk-store');
         Route::delete('/rdm-mapel-mapping/{mapping}', [RdmMapelMappingController::class, 'destroy'])->name('rdm-mapel-mapping.destroy');
+
+        // Matching Siswa RDM vs SIMANSA
+        Route::get('/rdm-matching', [RdmMatchingController::class, 'index'])->name('rdm-matching.index');
+        Route::post('/rdm-matching/run', [RdmMatchingController::class, 'run'])->name('rdm-matching.run');
     });
     
     // Proses Akhir Tahun (Naik Kelas & Kelulusan)

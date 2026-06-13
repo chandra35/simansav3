@@ -439,6 +439,13 @@ return [
                     'active' => ['admin/rdm-mapel-mapping*'],
                 ],
                 [
+                    'text' => 'Matching Siswa RDM',
+                    'route' => 'admin.rdm-matching.index',
+                    'icon' => 'fas fa-fw fa-random',
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/rdm-matching*'],
+                ],
+                [
                     'text' => 'Proses Akhir Tahun',
                     'route' => 'admin.kenaikan-kelas.index',
                     'icon' => 'fas fa-fw fa-graduation-cap',
