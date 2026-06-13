@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Siswa;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * RdmMatchingService
@@ -194,7 +194,7 @@ class RdmMatchingService
         $toDecrypt  = [];  // index => encrypted value (hanya yang belum di-cache)
 
         foreach ($encValues as $i => $val) {
-            $hit = Cache::get('rdm_dec_' . md5((string) $val));
+            $hit = $this->fileCache($val);
             if ($hit !== null) {
                 $cached[$i] = $hit;
             } else {
@@ -224,8 +224,8 @@ class RdmMatchingService
             foreach ($results as $j => $decVal) {
                 $origIdx = $chunkKeys[$chunkIdx][$j];
                 $cached[$origIdx] = $decVal;
-                // Simpan ke cache 24 jam — cipher value sama selalu hasilkan hasil sama
-                Cache::put('rdm_dec_' . md5((string) $chunks[$chunkIdx][$j]), $decVal, now()->addHours(24));
+                // Simpan ke file cache permanen — tidak terhapus oleh artisan cache:clear
+                $this->fileCachePut((string) $chunks[$chunkIdx][$j], (string) $decVal);
             }
         }
 
@@ -296,6 +296,38 @@ class RdmMatchingService
         curl_multi_close($mh);
 
         return $results;
+    }
+
+    // ─── File-based Decrypt Cache ─────────────────────────────────────────────
+    // Disimpan di storage/app/rdm_cache/ — TIDAK terhapus oleh artisan cache:clear
+    // atau optimize:clear. Persistent across deploys.
+
+    private function fileCachePath(string $encVal): string
+    {
+        $hash = md5($encVal);
+        // Simpan dalam subfolder 2-char pertama hash untuk hindari too many files per dir
+        return 'rdm_cache/' . substr($hash, 0, 2) . '/' . $hash;
+    }
+
+    private function fileCache(string $encVal): ?string
+    {
+        if (trim($encVal) === '') {
+            return '';
+        }
+        $path = $this->fileCachePath($encVal);
+        if (Storage::disk('local')->exists($path)) {
+            return Storage::disk('local')->get($path);
+        }
+        return null;
+    }
+
+    private function fileCachePut(string $encVal, string $decVal): void
+    {
+        if (trim($encVal) === '') {
+            return;
+        }
+        $path = $this->fileCachePath($encVal);
+        Storage::disk('local')->put($path, $decVal);
     }
 
 
