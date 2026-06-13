@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+ï»¿@extends('adminlte::page')
 
 @section('title', 'Matching Siswa RDM - SIMANSA')
 
@@ -48,7 +48,7 @@
               dan <strong>Smart Fuzzy Name</strong> (Levenshtein + Jaccard + Subset detection).
             </div>
             <div class="rdm-info-banner__tags mt-2">
-              <span class="rdm-tag rdm-tag--blue"><i class="fas fa-bolt mr-1"></i>NIS — paling cepat</span>
+              <span class="rdm-tag rdm-tag--blue"><i class="fas fa-bolt mr-1"></i>NIS - paling cepat</span>
               <span class="rdm-tag rdm-tag--purple"><i class="fas fa-fingerprint mr-1"></i>NISN exact match</span>
               <span class="rdm-tag rdm-tag--amber"><i class="fas fa-magic mr-1"></i>Fuzzy nama = 60%</span>
             </div>
@@ -71,7 +71,7 @@
             </button>
           </div>
           <div class="col-auto text-muted" style="font-size:.82rem; padding-bottom:.45rem;">
-            <i class="fas fa-clock mr-1"></i>Estimasi: <strong>5–60 detik</strong> (cache aktif setelah run pertama)
+            <i class="fas fa-clock mr-1"></i>Estimasi: <strong>560 detik</strong> (cache aktif setelah run pertama)
           </div>
         </div>
 
@@ -80,7 +80,7 @@
           <div class="rdm-loading-card">
             <div class="rdm-loading-card__spinner"><div class="rdm-spinner"></div></div>
             <div class="rdm-loading-card__body">
-              <div class="rdm-loading-card__title" id="loadingTitle">Menyiapkan proses…</div>
+              <div class="rdm-loading-card__title" id="loadingTitle">Menyiapkan proses...</div>
               <div class="rdm-loading-card__sub">Mohon tunggu, jangan refresh halaman</div>
               <div class="rdm-loading-steps mt-3">
                 <div class="rdm-step" id="step1"><span class="rdm-step__dot"></span><span>Mengambil data RDM</span></div>
@@ -168,9 +168,9 @@
                   Siswa RDM yang <strong>tidak cocok via NISN/NIS</strong> tetapi ada kandidat nama mirip di SIMANSA.
                   Klik chip untuk buka detail siswa.
                   <span class="ml-1">
-                    <span class="fuzzy-chip fuzzy-chip--high" style="pointer-events:none;font-size:.72rem;">? =88%</span>
-                    <span class="fuzzy-chip fuzzy-chip--medium" style="pointer-events:none;font-size:.72rem;">?? =72%</span>
-                    <span class="fuzzy-chip fuzzy-chip--low" style="pointer-events:none;font-size:.72rem;">? =60%</span>
+                    <span class="fuzzy-chip fuzzy-chip--high" style="pointer-events:none;font-size:.72rem;">&#10003; Sangat Mirip &ge;88%</span>
+                    <span class="fuzzy-chip fuzzy-chip--medium" style="pointer-events:none;font-size:.72rem;">&#128269; Mirip &ge;72%</span>
+                    <span class="fuzzy-chip fuzzy-chip--low" style="pointer-events:none;font-size:.72rem;">? Potensi &ge;60%</span>
                   </span>
                 </div>
                 <div class="table-responsive">
@@ -341,7 +341,7 @@ function startLoadingAnim(){
         const t=setTimeout(()=>{
             if(i>0) $('#'+loadingSteps[i-1].id).removeClass('active').addClass('done');
             $('#'+s.id).addClass('active');
-            $('#loadingTitle').text(s.label+'…');
+            $('#loadingTitle').text(s.label+'...');
         },s.delay);
         stepTimers.push(t);
     });
@@ -355,7 +355,7 @@ $(function(){
 function runMatching(){
     const tingkatId=$('#selectTingkat').val();
     $('#resultArea').hide(); $('#errorArea').hide(); $('#loadingArea').show();
-    $('#btnRunMatching').prop('disabled',true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Memproses…');
+    $('#btnRunMatching').prop('disabled',true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...');
     startLoadingAnim();
     $.ajax({
         url:'{{ route("admin.rdm-matching.run") }}',method:'POST',
@@ -370,7 +370,7 @@ function runMatching(){
         error:function(xhr){
             const m=xhr.responseJSON?.message
                 ||(xhr.status===0?'Koneksi terputus atau request timeout. Coba lagi.':null)
-                ||(xhr.status===504?'Gateway timeout — server tidak merespons tepat waktu.':null)
+                ||(xhr.status===504?'Gateway timeout - server tidak merespons tepat waktu.':null)
                 ||(xhr.status===500?'Server error (500). Cek log Laravel.':null)
                 ||'Gagal (HTTP '+xhr.status+'). Coba lagi.';
             showError(m);
@@ -390,7 +390,7 @@ function renderResult(data){
     $('#summaryCards').html(`
         <div class="col-6 col-md-4 col-xl-2 mb-3"><div class="rdm-kpi rdm-kpi--blue">
             <div class="rdm-kpi__icon"><i class="fas fa-database"></i></div>
-            <div><div class="rdm-kpi__value">${fmt(s.total_rdm)}</div><div class="rdm-kpi__label">Total RDM<br><small>${data.tahun_rdm||''} · ${data.tingkat_label}</small></div></div>
+            <div><div class="rdm-kpi__value">${fmt(s.total_rdm)}</div><div class="rdm-kpi__label">Total RDM<br><small>${data.tahun_rdm||''} &middot; ${data.tingkat_label}</small></div></div>
         </div></div>
         <div class="col-6 col-md-4 col-xl-2 mb-3"><div class="rdm-kpi rdm-kpi--purple">
             <div class="rdm-kpi__icon"><i class="fas fa-users"></i></div>
@@ -430,13 +430,13 @@ function renderResult(data){
         <td><span class="badge badge-secondary">${esc(r.rdm_kelas)}</span></td>
         <td>${r.rdm_gender==='L'?'<span class="badge-match-nisn">L</span>':'<span style="background:#fce7f3;color:#9d174d;font-size:.75rem;padding:.22em .6em;border-radius:6px;font-weight:700;">P</span>'}</td>
         <td class="text-muted">${esc(r.rdm_tgllahir||'-')}</td>
-    </tr>`).join('')||emptyRow(8,'Tidak ada — semua siswa RDM sudah terdeteksi di SIMANSA ??'));
+    </tr>`).join('')||emptyRow(8,'Tidak ada data â€” semua siswa RDM sudah terdeteksi di SIMANSA'));
 
     // Tab: Fuzzy
     $('#bodyFuzzy').html(data.fuzzy_candidates.map((r,i)=>{
         const chips=r.candidates.map(c=>{
             const cls=c.score>=88?'fuzzy-chip--high':(c.score>=72?'fuzzy-chip--medium':'fuzzy-chip--low');
-            const icon=c.score>=88?'?':(c.score>=72?'??':'?');
+            const icon=c.score>=88?'&#10003;':(c.score>=72?'&#128269;':'?');
             return `<a class="fuzzy-chip ${cls}" href="/admin/siswa/${c.simansa_id}" target="_blank" title="Kelas:${esc(c.simansa_kelas||'-')} NISN:${esc(c.simansa_nisn||'-')}">${icon} ${esc(c.simansa_nama)} <span class="score-pct">${c.score}%</span></a>`;
         }).join('');
         return `<tr>
@@ -485,6 +485,6 @@ function badgeDL(ok){ return ok?'<span class="badge-data-ok"><i class="fas fa-ch
 function emptyRow(n,msg){ return `<tr><td colspan="${n}" class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x d-block mb-2" style="opacity:.3"></i>${msg}</td></tr>`; }
 function esc(s){ if(!s&&s!==0)return'-'; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmt(n){ return new Intl.NumberFormat('id-ID').format(n); }
-function dtLang(){ return{search:'Cari:',lengthMenu:'Tampilkan _MENU_ data',info:'_START_–_END_ dari _TOTAL_ data',infoEmpty:'0 data',paginate:{previous:'‹',next:'›'},zeroRecords:'Tidak ada data.'}; }
+function dtLang(){ return{search:'Cari:',lengthMenu:'Tampilkan _MENU_ data',info:'_START_-_END_ dari _TOTAL_ data',infoEmpty:'0 data',paginate:{previous:'&laquo;',next:'&raquo;'},zeroRecords:'Tidak ada data.'}; }
 </script>
 @endsection
