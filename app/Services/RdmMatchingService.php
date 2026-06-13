@@ -196,10 +196,7 @@ class RdmMatchingService
 
         $query = Siswa::query()
             ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'data_diri_completed', 'data_ortu_completed'])
-            ->with([
-                'user:id,username',
-                'kelasAktif:id,nama_kelas,tingkat',
-            ]);
+            ->with(['user:id,username', 'kelasAktif']);
 
         if ($simanaTingkat) {
             $query->whereHas('kelasAktif', fn ($q) => $q->where('kelas.tingkat', $simanaTingkat));
@@ -215,7 +212,6 @@ class RdmMatchingService
             if ($nisn !== '') {
                 $byNisn[$nisn] = $s;
             }
-
             $nis = trim((string) ($s->user->username ?? ''));
             if ($nis !== '') {
                 $byNis[$nis] = $s;
@@ -235,9 +231,32 @@ class RdmMatchingService
         ?object    $activeTahun,
         ?int       $tingkatId,
     ): array {
-        $matched      = [];
-        $rdmOnly      = [];
-        $matchedIds   = [];
+        // ── Pre-build SIMANSA name indexes for efficient fuzzy lookup ──
+        $simansaNorm       = [];   // id => normalized_name
+        $simansaTokenIdx   = [];   // token => [id, ...]
+        $simansaFirstChar  = [];   // firstChar => [id, ...]
+        $simansaById       = $simansaAll->keyBy('id');
+
+        foreach ($simansaAll as $s) {
+            $norm = $this->normalizeName($s->nama_lengkap ?? '');
+            $simansaNorm[$s->id] = $norm;
+
+            foreach ($this->nameTokens($norm) as $token) {
+                if (mb_strlen($token) >= 3) {
+                    $simansaTokenIdx[$token][] = $s->id;
+                }
+            }
+
+            $fc = mb_substr($norm, 0, 1, 'UTF-8');
+            if ($fc !== '') {
+                $simansaFirstChar[$fc][] = $s->id;
+            }
+        }
+
+        $matched         = [];
+        $rdmOnly         = [];
+        $fuzzyCandidates = [];
+        $matchedIds      = [];
 
         foreach ($rdmRows as $row) {
             $nisn = trim($row->siswa_nisn_plain ?? '');
@@ -246,12 +265,12 @@ class RdmMatchingService
             $simansaSiswa = null;
             $matchBy      = null;
 
-            // Priority 1: NISN
+            // Priority 1: NISN exact
             if ($nisn !== '' && isset($simansaByNisn[$nisn])) {
                 $simansaSiswa = $simansaByNisn[$nisn];
                 $matchBy = 'nisn';
             }
-            // Priority 2: NIS (username)
+            // Priority 2: NIS/username exact
             elseif ($nis !== '' && isset($simansaByNis[$nis])) {
                 $simansaSiswa = $simansaByNis[$nis];
                 $matchBy = 'nis';
@@ -259,8 +278,7 @@ class RdmMatchingService
 
             if ($simansaSiswa) {
                 $matchedIds[] = $simansaSiswa->id;
-                $kelasAktif   = $simansaSiswa->kelasAktif?->first();
-
+                $kelas = $simansaSiswa->kelasAktif->first();
                 $matched[] = [
                     'rdm_nis'              => $nis,
                     'rdm_nisn'             => $nisn,
@@ -270,30 +288,89 @@ class RdmMatchingService
                     'simansa_id'           => $simansaSiswa->id,
                     'simansa_nisn'         => $simansaSiswa->nisn,
                     'simansa_nama'         => $simansaSiswa->nama_lengkap,
-                    'simansa_kelas'        => $kelasAktif?->nama_kelas,
+                    'simansa_kelas'        => $kelas?->nama_kelas,
                     'simansa_data_lengkap' => ($simansaSiswa->data_diri_completed && $simansaSiswa->data_ortu_completed),
                     'match_by'             => $matchBy,
                 ];
+                continue;
+            }
+
+            // ── Priority 3: Smart Fuzzy Name Matching ──
+            $rdmNorm   = $this->normalizeName($row->siswa_nama_plain ?? '');
+            $rdmTokens = $this->nameTokens($rdmNorm);
+
+            // Gather candidate SIMANSA IDs via token index (exact token overlap)
+            $candidateIds = [];
+            foreach ($rdmTokens as $token) {
+                if (mb_strlen($token) >= 3 && isset($simansaTokenIdx[$token])) {
+                    foreach ($simansaTokenIdx[$token] as $sid) {
+                        $candidateIds[$sid] = true;
+                    }
+                }
+            }
+
+            // Also add first-char candidates to catch spelling variations
+            // (e.g. "MUHAMAD" vs "MUHAMMAD" share no exact tokens)
+            $fc = mb_substr($rdmNorm, 0, 1, 'UTF-8');
+            foreach ($simansaFirstChar[$fc] ?? [] as $sid) {
+                $candidateIds[$sid] = true;
+            }
+
+            // Cap at 200 for performance safety
+            $candidateIds = array_slice(array_keys($candidateIds), 0, 200);
+
+            // Score each candidate
+            $candidates = [];
+            foreach ($candidateIds as $sid) {
+                $s = $simansaById[$sid] ?? null;
+                if (!$s) {
+                    continue;
+                }
+                $score = $this->nameSimilarity($rdmNorm, $simansaNorm[$sid] ?? '');
+                if ($score >= 60.0) {
+                    $kelas = $s->kelasAktif->first();
+                    $candidates[] = [
+                        'simansa_id'           => $s->id,
+                        'simansa_nama'         => $s->nama_lengkap,
+                        'simansa_nisn'         => $s->nisn,
+                        'simansa_kelas'        => $kelas?->nama_kelas,
+                        'simansa_tingkat'      => $kelas ? 'Kelas ' . $kelas->tingkat : '-',
+                        'simansa_data_lengkap' => ($s->data_diri_completed && $s->data_ortu_completed),
+                        'score'                => $score,
+                        'score_label'          => $this->scoreLabel($score),
+                        'score_color'          => $this->scoreColor($score),
+                    ];
+                }
+            }
+
+            // Sort by score desc, keep top 3
+            usort($candidates, fn ($a, $b) => $b['score'] <=> $a['score']);
+            $candidates = array_slice($candidates, 0, 3);
+
+            $rdmInfo = [
+                'rdm_siswa_id' => $row->siswa_id,
+                'rdm_nis'      => $nis,
+                'rdm_nisn'     => $nisn,
+                'rdm_nama'     => $row->siswa_nama_plain,
+                'rdm_tingkat'  => $this->tingkatLabel($row->tingkat_id),
+                'rdm_kelas'    => $row->kelas_nama,
+                'rdm_gender'   => $row->siswa_gender,
+                'rdm_tgllahir' => $row->siswa_tgllahir,
+                'sekolah_asal' => $row->sekolah_asal,
+            ];
+
+            if (!empty($candidates)) {
+                $fuzzyCandidates[] = array_merge($rdmInfo, ['candidates' => $candidates]);
             } else {
-                $rdmOnly[] = [
-                    'rdm_siswa_id' => $row->siswa_id,
-                    'rdm_nis'      => $nis,
-                    'rdm_nisn'     => $nisn,
-                    'rdm_nama'     => $row->siswa_nama_plain,
-                    'rdm_tingkat'  => $this->tingkatLabel($row->tingkat_id),
-                    'rdm_kelas'    => $row->kelas_nama,
-                    'rdm_gender'   => $row->siswa_gender,
-                    'rdm_tgllahir' => $row->siswa_tgllahir,
-                    'sekolah_asal' => $row->sekolah_asal,
-                ];
+                $rdmOnly[] = $rdmInfo;
             }
         }
 
-        // SIMANSA-only: ada di SIMANSA, tidak ditemukan di RDM
+        // SIMANSA-only: tidak ditemukan via exact match manapun
         $simansaOnly = $simansaAll
             ->filter(fn ($s) => !in_array($s->id, $matchedIds, true))
             ->map(function ($s) {
-                $kelas = $s->kelasAktif?->first();
+                $kelas = $s->kelasAktif->first();
                 return [
                     'simansa_id'           => $s->id,
                     'simansa_nisn'         => $s->nisn,
@@ -307,19 +384,134 @@ class RdmMatchingService
             ->toArray();
 
         return [
-            'tahun_rdm'     => $activeTahun?->tahunajaran_nama,
-            'tingkat_label' => $tingkatId ? (self::TINGKAT_LABELS[$tingkatId] ?? 'Semua Tingkat') : 'Semua Tingkat',
-            'matched'       => $matched,
-            'rdm_only'      => $rdmOnly,
-            'simansa_only'  => $simansaOnly,
-            'stats'         => [
-                'total_rdm'       => count($rdmRows),
-                'total_simansa'   => $simansaAll->count(),
-                'total_matched'   => count($matched),
-                'total_rdm_only'  => count($rdmOnly),
+            'tahun_rdm'        => $activeTahun?->tahunajaran_nama,
+            'tingkat_label'    => $tingkatId ? (self::TINGKAT_LABELS[$tingkatId] ?? 'Semua Tingkat') : 'Semua Tingkat',
+            'matched'          => $matched,
+            'rdm_only'         => $rdmOnly,
+            'fuzzy_candidates' => $fuzzyCandidates,
+            'simansa_only'     => $simansaOnly,
+            'stats'            => [
+                'total_rdm'          => count($rdmRows),
+                'total_simansa'      => $simansaAll->count(),
+                'total_matched'      => count($matched),
+                'total_fuzzy'        => count($fuzzyCandidates),
+                'total_rdm_only'     => count($rdmOnly),
                 'total_simansa_only' => count($simansaOnly),
             ],
         ];
+    }
+
+    // ─── Smart Name Similarity ────────────────────────────────────────────────
+
+    /**
+     * Normalize name for comparison:
+     * uppercase, remove dots/commas, collapse whitespace.
+     */
+    private function normalizeName(string $name): string
+    {
+        $name = mb_strtoupper(trim($name), 'UTF-8');
+        $name = str_replace(['.', ',', "'", '\u2019', '`', '-', '_'], ' ', $name);
+        $name = (string) preg_replace('/\s+/', ' ', $name);
+        return trim($name);
+    }
+
+    /** Split normalized name into word tokens. */
+    private function nameTokens(string $normalized): array
+    {
+        return array_values(array_filter(
+            explode(' ', $normalized),
+            fn ($t) => mb_strlen($t) > 0
+        ));
+    }
+
+    /**
+     * Combined smart similarity score (0–100).
+     *
+     * Uses:
+     * 1. similar_text() percentage
+     * 2. Levenshtein distance (normalized)
+     * 3. Jaccard token similarity
+     * 4. Subset bonus: all words of shorter name in longer name (abbreviation)
+     * 5. Initial-letter bonus: "M." matching "MUHAMMAD"
+     */
+    private function nameSimilarity(string $normA, string $normB): float
+    {
+        if ($normA === $normB) {
+            return 100.0;
+        }
+        if ($normA === '' || $normB === '') {
+            return 0.0;
+        }
+
+        // 1. similar_text
+        similar_text($normA, $normB, $simPct);
+
+        // 2. Levenshtein (cap at 255 chars)
+        $a255   = substr($normA, 0, 255);
+        $b255   = substr($normB, 0, 255);
+        $maxLen = max(strlen($a255), strlen($b255));
+        $lev    = levenshtein($a255, $b255);
+        $levScore = max(0.0, (1 - $lev / $maxLen) * 100);
+
+        // 3. Jaccard token similarity
+        $tokA      = $this->nameTokens($normA);
+        $tokB      = $this->nameTokens($normB);
+        $intersect = count(array_intersect($tokA, $tokB));
+        $union     = count(array_unique(array_merge($tokA, $tokB)));
+        $jaccard   = $union > 0 ? ($intersect / $union) * 100 : 0.0;
+
+        // 4. Subset bonus: all tokens of shorter name found in longer name
+        //    → catches abbreviations like "SITI AISYAH" in "SITI AISYAH RAHMAWATI"
+        $subsetBonus = 0.0;
+        $shorter = count($tokA) <= count($tokB) ? $tokA : $tokB;
+        $longer  = count($tokA) <= count($tokB) ? $tokB : $tokA;
+        if (count($shorter) >= 2) {
+            $matchedInLonger = count(array_intersect($shorter, $longer));
+            if ($matchedInLonger === count($shorter)) {
+                $subsetBonus = 20.0;
+            } elseif ($matchedInLonger >= count($shorter) - 1) {
+                $subsetBonus = 10.0;
+            }
+        }
+
+        // 5. Initial-letter bonus: single letter token matching start of longer token
+        //    → catches "M." or "M" matching "MUHAMMAD"
+        $initialBonus = 0.0;
+        if (!empty($tokA) && !empty($tokB)) {
+            $fA = $tokA[0];
+            $fB = $tokB[0];
+            if (mb_strlen($fA) === 1 && mb_strpos($fB, $fA) === 0) {
+                $initialBonus = 8.0;
+            } elseif (mb_strlen($fB) === 1 && mb_strpos($fA, $fB) === 0) {
+                $initialBonus = 8.0;
+            }
+        }
+
+        $base = ($simPct * 0.35) + ($levScore * 0.25) + ($jaccard * 0.40);
+
+        return min(100.0, round($base + $subsetBonus + $initialBonus, 1));
+    }
+
+    private function scoreLabel(float $score): string
+    {
+        if ($score >= 88) {
+            return 'Sangat Mirip';
+        }
+        if ($score >= 72) {
+            return 'Mirip';
+        }
+        return 'Potensi Mirip';
+    }
+
+    private function scoreColor(float $score): string
+    {
+        if ($score >= 88) {
+            return 'success';
+        }
+        if ($score >= 72) {
+            return 'warning';
+        }
+        return 'secondary';
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -332,15 +524,17 @@ class RdmMatchingService
     private function emptyResult(?object $activeTahun, ?int $tingkatId): array
     {
         return [
-            'tahun_rdm'     => $activeTahun?->tahunajaran_nama,
-            'tingkat_label' => $tingkatId ? (self::TINGKAT_LABELS[$tingkatId] ?? 'Semua') : 'Semua Tingkat',
-            'matched'       => [],
-            'rdm_only'      => [],
-            'simansa_only'  => [],
-            'stats'         => [
+            'tahun_rdm'        => $activeTahun?->tahunajaran_nama,
+            'tingkat_label'    => $tingkatId ? (self::TINGKAT_LABELS[$tingkatId] ?? 'Semua') : 'Semua Tingkat',
+            'matched'          => [],
+            'rdm_only'         => [],
+            'fuzzy_candidates' => [],
+            'simansa_only'     => [],
+            'stats'            => [
                 'total_rdm'          => 0,
                 'total_simansa'      => 0,
                 'total_matched'      => 0,
+                'total_fuzzy'        => 0,
                 'total_rdm_only'     => 0,
                 'total_simansa_only' => 0,
             ],

@@ -35,10 +35,8 @@
                 <div class="alert alert-info mb-3">
                     <i class="fas fa-info-circle mr-1"></i>
                     Fitur ini membandingkan data siswa dari <strong>RDM (Rapor Digital Madrasah)</strong> dengan data di <strong>SIMANSA</strong>.
-                    Proses dekripsi nama siswa dilakukan otomatis. Estimasi waktu proses: <strong>30–60 detik</strong> untuk semua tingkat.
-                </div>
-
-                {{-- Filter & Run --}}
+                        Proses dekripsi nama siswa dilakukan otomatis. Estimasi waktu proses: <strong>30–90 detik</strong> untuk semua tingkat.
+                        <br><small class="text-muted">Smart Matching: selain NISN dan NIS, nama yang mirip/singkatan/variasi ejaan juga dideteksi otomatis.</small>
                 <div class="d-flex align-items-center flex-wrap mb-4" style="gap: .75rem;">
                     <div>
                         <label class="mb-0 mr-2 font-weight-bold text-muted" style="font-size:.87rem;">Filter Tingkat:</label>
@@ -78,6 +76,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#tabFuzzy" role="tab" style="color: #856404; font-weight:600;">
+                                <i class="fas fa-magic mr-1"></i>
+                                Perlu Verifikasi Nama
+                                <span class="badge badge-warning ml-1" id="badgeFuzzy">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" data-toggle="tab" href="#tabSimansaOnly" role="tab" style="color: #fd7e14; font-weight:600;">
                                 <i class="fas fa-user-slash mr-1"></i>
                                 Tidak Ada di RDM
@@ -97,7 +102,7 @@
                         {{-- Tab: Belum Ada di SIMANSA (RDM Only) --}}
                         <div class="tab-pane fade show active" id="tabRdmOnly" role="tabpanel">
                             <p class="text-muted small mb-2">
-                                Siswa yang tercatat di RDM (tahun ajaran aktif) tetapi <strong>tidak ditemukan</strong> di SIMANSA berdasarkan NISN atau NIS.
+                                Siswa yang tercatat di RDM (tahun ajaran aktif) tetapi <strong>tidak ditemukan sama sekali</strong> di SIMANSA — baik via NISN, NIS, maupun nama.
                                 Perlu segera diverifikasi dan ditambahkan ke SIMANSA.
                             </p>
                             <div class="simansa-table-scroll">
@@ -115,6 +120,31 @@
                                         </tr>
                                     </thead>
                                     <tbody id="bodyRdmOnly"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- Tab: Perlu Verifikasi Nama (Fuzzy) --}}
+                        <div class="tab-pane fade" id="tabFuzzy" role="tabpanel">
+                            <p class="text-muted small mb-2">
+                                Siswa RDM yang <strong>tidak cocok via NISN/NIS</strong> tetapi ditemukan kandidat nama mirip di SIMANSA.
+                                Admin perlu memverifikasi secara manual apakah ini siswa yang sama.
+                                <span class="badge badge-success">Sangat Mirip ≥ 88%</span>
+                                <span class="badge badge-warning text-dark">Mirip ≥ 72%</span>
+                                <span class="badge badge-secondary">Potensi Mirip ≥ 60%</span>
+                            </p>
+                            <div class="simansa-table-scroll">
+                                <table id="tableFuzzy" class="table table-sm table-hover simansa-match-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama Siswa (RDM)</th>
+                                            <th>NIS</th>
+                                            <th>Tingkat / Kelas RDM</th>
+                                            <th>Kandidat di SIMANSA <small class="text-muted">(klik untuk detail)</small></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyFuzzy"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -247,6 +277,28 @@
     .badge-match-nis  { background: #e9d5ff; color: #7c3aed; font-size: .78rem; padding: .25em .6em; border-radius: 6px; font-weight: 600; }
     .badge-data-ok    { background: #dcfce7; color: #16a34a; font-size: .78rem; padding: .25em .6em; border-radius: 6px; }
     .badge-data-no    { background: #fee2e2; color: #dc2626; font-size: .78rem; padding: .25em .6em; border-radius: 6px; }
+
+    /* Fuzzy candidate chips */
+    .fuzzy-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        padding: .3rem .65rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin: .15rem .1rem;
+        text-decoration: none;
+        transition: opacity .15s, transform .1s;
+        border: none;
+        line-height: 1.4;
+    }
+    .fuzzy-chip:hover { opacity: .82; transform: translateY(-1px); text-decoration: none; }
+    .fuzzy-chip--high   { background: #d1fae5; color: #065f46; }
+    .fuzzy-chip--medium { background: #fef3c7; color: #92400e; }
+    .fuzzy-chip--low    { background: #f1f5f9; color: #475569; }
+    .fuzzy-chip .score-pct { font-size: .72rem; opacity: .8; font-weight: 700; margin-left: .1rem; }
 </style>
 @endsection
 
@@ -255,6 +307,7 @@
 <script src="//cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
 <script>
 let dtRdmOnly = null;
+let dtFuzzy = null;
 let dtSimansaOnly = null;
 let dtMatched = null;
 
@@ -328,13 +381,19 @@ function renderResult(data) {
         <div class="col-6 col-xl mb-3">
             <div class="rdm-kpi rdm-kpi--green">
                 <div class="rdm-kpi__icon"><i class="fas fa-check-double"></i></div>
-                <div><div class="rdm-kpi__value">${fmt(s.total_matched)}</div><div class="rdm-kpi__label">Cocok<br><small>${matchPct}% dari RDM</small></div></div>
+                <div><div class="rdm-kpi__value">${fmt(s.total_matched)}</div><div class="rdm-kpi__label">Cocok (Pasti)<br><small>${matchPct}% dari RDM</small></div></div>
+            </div>
+        </div>
+        <div class="col-6 col-xl mb-3">
+            <div class="rdm-kpi" style="border:1px solid #fde68a; background:#fffbeb; box-shadow:0 8px 20px rgba(180,83,9,.07);">
+                <div class="rdm-kpi__icon" style="background:#fef3c7; color:#b45309;"><i class="fas fa-magic"></i></div>
+                <div><div class="rdm-kpi__value" style="color:#92400e;">${fmt(s.total_fuzzy)}</div><div class="rdm-kpi__label">Perlu Verifikasi Nama<br><small>nama mirip, belum pasti</small></div></div>
             </div>
         </div>
         <div class="col-6 col-xl mb-3">
             <div class="rdm-kpi rdm-kpi--red">
                 <div class="rdm-kpi__icon"><i class="fas fa-exclamation-circle"></i></div>
-                <div><div class="rdm-kpi__value">${fmt(s.total_rdm_only)}</div><div class="rdm-kpi__label">Di RDM, Belum di SIMANSA<br><small>perlu verifikasi</small></div></div>
+                <div><div class="rdm-kpi__value">${fmt(s.total_rdm_only)}</div><div class="rdm-kpi__label">Belum Ada di SIMANSA<br><small>tidak ada kandidat</small></div></div>
             </div>
         </div>
         <div class="col-6 col-xl mb-3">
@@ -347,13 +406,15 @@ function renderResult(data) {
 
     // Badge counts
     $('#badgeRdmOnly').text(s.total_rdm_only);
+    $('#badgeFuzzy').text(s.total_fuzzy);
     $('#badgeSimansaOnly').text(s.total_simansa_only);
     $('#badgeMatched').text(s.total_matched);
 
     // Destroy existing DataTables
-    if (dtRdmOnly)      { dtRdmOnly.destroy(); }
-    if (dtSimansaOnly)  { dtSimansaOnly.destroy(); }
-    if (dtMatched)      { dtMatched.destroy(); }
+    if (dtRdmOnly)     { dtRdmOnly.destroy(); }
+    if (dtFuzzy)       { dtFuzzy.destroy(); }
+    if (dtSimansaOnly) { dtSimansaOnly.destroy(); }
+    if (dtMatched)     { dtMatched.destroy(); }
 
     // ── Tab: RDM Only ──
     const rowsRdmOnly = data.rdm_only.map((r, i) => `
@@ -368,7 +429,27 @@ function renderResult(data) {
             <td>${esc(r.rdm_tgllahir || '-')}</td>
         </tr>
     `).join('');
-    $('#bodyRdmOnly').html(rowsRdmOnly || '<tr><td colspan="8" class="text-center text-muted py-3">Tidak ada data — semua siswa RDM sudah ada di SIMANSA 🎉</td></tr>');
+    $('#bodyRdmOnly').html(rowsRdmOnly || '<tr><td colspan="8" class="text-center text-muted py-3">Tidak ada — semua siswa RDM sudah ada/terdeteksi di SIMANSA 🎉</td></tr>');
+
+    // ── Tab: Fuzzy Candidates ──
+    const rowsFuzzy = data.fuzzy_candidates.map((r, i) => {
+        const chips = r.candidates.map(c => {
+            const chipClass = c.score >= 88 ? 'fuzzy-chip--high' : (c.score >= 72 ? 'fuzzy-chip--medium' : 'fuzzy-chip--low');
+            const icon = c.score >= 88 ? '✔️' : (c.score >= 72 ? '🔍' : '❓');
+            return `<a class="fuzzy-chip ${chipClass}" href="/admin/siswa/${c.simansa_id}" target="_blank" title="Kelas: ${esc(c.simansa_kelas || '-')} | NISN: ${esc(c.simansa_nisn || '-')}">
+                ${icon} ${esc(c.simansa_nama)}
+                <span class="score-pct">${c.score}%</span>
+            </a>`;
+        }).join('');
+        return `<tr>
+            <td class="text-center text-muted">${i+1}</td>
+            <td><strong>${esc(r.rdm_nama)}</strong><br><small class="text-muted">NIS: ${esc(r.rdm_nis)}</small></td>
+            <td>${esc(r.rdm_nisn || '-')}</td>
+            <td><span class="badge badge-secondary">${esc(r.rdm_tingkat)}</span> ${esc(r.rdm_kelas)}</td>
+            <td>${chips}</td>
+        </tr>`;
+    }).join('');
+    $('#bodyFuzzy').html(rowsFuzzy || '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada kandidat fuzzy.</td></tr>');
 
     // ── Tab: SIMANSA Only ──
     const rowsSimansaOnly = data.simansa_only.map((r, i) => `
@@ -415,6 +496,12 @@ function renderResult(data) {
         order: [[4,'asc'],[5,'asc']],
         pageLength: 25,
     });
+    dtFuzzy = $('#tableFuzzy').DataTable({
+        language: dtLang(),
+        order: [[3,'asc']],
+        pageLength: 25,
+        columnDefs: [{ orderable: false, targets: 4 }],
+    });
     dtSimansaOnly = $('#tableSimansaOnly').DataTable({
         language: dtLang(),
         order: [[3,'asc']],
@@ -427,6 +514,11 @@ function renderResult(data) {
     });
 
     $('#resultArea').show();
+
+    // Auto-switch ke tab Fuzzy jika ada hasil fuzzy dan rdm_only kosong
+    if (data.stats.total_fuzzy > 0 && data.stats.total_rdm_only === 0) {
+        $('[href="#tabFuzzy"]').tab('show');
+    }
 
     // Scroll ke hasil
     $('html, body').animate({ scrollTop: $('#resultArea').offset().top - 80 }, 400);
