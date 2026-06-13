@@ -158,13 +158,12 @@
                                 <table id="tableSimansaOnly" class="table table-sm table-hover simansa-match-table">
                                     <thead>
                                         <tr>
-                                            <th>No</th>
+                                            <th style="width:3rem">No</th>
                                             <th>Nama Siswa (SIMANSA)</th>
-                                            <th>NISN</th>
-                                            <th>Kelas SIMANSA</th>
-                                            <th>Tingkat</th>
-                                            <th>Data Lengkap</th>
-                                            <th>Aksi</th>
+                                            <th style="width:8rem">NISN</th>
+                                            <th style="width:7rem">Kelas</th>
+                                            <th style="width:8rem">Data Lengkap</th>
+                                            <th style="width:5rem">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bodySimansaOnly"></tbody>
@@ -181,16 +180,16 @@
                                 <table id="tableMatched" class="table table-sm table-hover simansa-match-table">
                                     <thead>
                                         <tr>
-                                            <th>No</th>
+                                            <th style="width:3rem">No</th>
                                             <th>Nama (RDM)</th>
                                             <th>Nama (SIMANSA)</th>
-                                            <th>NISN</th>
-                                            <th>NIS</th>
-                                            <th>Kelas RDM</th>
-                                            <th>Kelas SIMANSA</th>
-                                            <th>Match Via</th>
-                                            <th>Data Lengkap</th>
-                                            <th>Aksi</th>
+                                            <th style="width:8rem">NISN</th>
+                                            <th style="width:6rem">NIS</th>
+                                            <th style="width:7rem">Kelas RDM</th>
+                                            <th style="width:7rem">Kelas SIMANSA</th>
+                                            <th style="width:6rem">Match Via</th>
+                                            <th style="width:8rem">Data Lengkap</th>
+                                            <th style="width:5rem">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bodyMatched"></tbody>
@@ -457,11 +456,10 @@ function renderResult(data) {
             <td class="text-center text-muted">${i+1}</td>
             <td><strong>${esc(r.simansa_nama)}</strong></td>
             <td>${esc(r.simansa_nisn || '-')}</td>
-            <td>${esc(r.simansa_kelas || '-')}</td>
-            <td>${esc(r.simansa_tingkat || '-')}</td>
+            <td><span class="badge badge-secondary">${esc(r.simansa_kelas || '-')}</span></td>
             <td>${badgeDataLengkap(r.simansa_data_lengkap)}</td>
-            <td>
-                <a href="/admin/siswa/${r.simansa_id}" class="btn btn-xs btn-outline-primary" title="Detail Siswa" target="_blank">
+            <td class="text-center">
+                <a href="/admin/siswa/${r.simansa_id}" class="btn btn-sm btn-primary" title="Detail Siswa" target="_blank">
                     <i class="fas fa-eye"></i>
                 </a>
             </td>
@@ -481,8 +479,8 @@ function renderResult(data) {
             <td>${esc(r.simansa_kelas || '-')}</td>
             <td>${r.match_by === 'nisn' ? '<span class="badge-match-nisn">NISN</span>' : '<span class="badge-match-nis">NIS</span>'}</td>
             <td>${badgeDataLengkap(r.simansa_data_lengkap)}</td>
-            <td>
-                <a href="/admin/siswa/${r.simansa_id}" class="btn btn-xs btn-outline-primary" title="Detail Siswa" target="_blank">
+            <td class="text-center">
+                <a href="/admin/siswa/${r.simansa_id}" class="btn btn-sm btn-primary" title="Detail Siswa" target="_blank">
                     <i class="fas fa-eye"></i>
                 </a>
             </td>
@@ -506,6 +504,7 @@ function renderResult(data) {
         language: dtLang(),
         order: [[3,'asc']],
         pageLength: 25,
+        columnDefs: [{ orderable: false, targets: 5 }],
     });
     dtMatched = $('#tableMatched').DataTable({
         language: dtLang(),

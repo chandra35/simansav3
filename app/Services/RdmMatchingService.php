@@ -144,74 +144,115 @@ class RdmMatchingService
             return [];
         }
 
-        $result = [];
+        // Step 1: Pisahkan nilai yang sudah ada di cache vs yang perlu dikirim
+        $cached     = [];  // index => decrypted value
+        $toDecrypt  = [];  // index => encrypted value (hanya yang belum di-cache)
 
-        // Kirim dalam chunk 50 (lebih kecil agar setiap HTTP call lebih cepat)
-        foreach (array_chunk($encValues, 50) as $chunk) {
-            $chunkResult = [];
-            $toDecrypt   = [];
-            $indexMap    = []; // posisi di $toDecrypt → posisi asli di $chunk
-
-            // Cek cache per nilai terlebih dahulu
-            foreach ($chunk as $i => $val) {
-                $cacheKey = 'rdm_dec_' . md5((string) $val);
-                $cached   = Cache::get($cacheKey);
-                if ($cached !== null) {
-                    $chunkResult[$i] = $cached;
-                } else {
-                    $indexMap[count($toDecrypt)] = $i;
-                    $toDecrypt[] = $val;
-                }
+        foreach ($encValues as $i => $val) {
+            $hit = Cache::get('rdm_dec_' . md5((string) $val));
+            if ($hit !== null) {
+                $cached[$i] = $hit;
+            } else {
+                $toDecrypt[$i] = $val;
             }
-
-            // Hanya kirim ke endpoint jika ada nilai yang belum di-cache
-            if (!empty($toDecrypt)) {
-                $decoded = $this->postToCipherEndpoint($toDecrypt);
-                foreach ($decoded as $j => $decVal) {
-                    $origIdx = $indexMap[$j];
-                    $chunkResult[$origIdx] = $decVal;
-                    // Simpan ke cache 24 jam — nilai enkripsi sama selalu → hasil sama
-                    Cache::put('rdm_dec_' . md5((string) $toDecrypt[$j]), $decVal, now()->addHours(24));
-                }
-            }
-
-            ksort($chunkResult);
-            $result = array_merge($result, array_values($chunkResult));
         }
 
-        return $result;
+        if (empty($toDecrypt)) {
+            // Semua sudah di-cache, tidak perlu HTTP call
+            ksort($cached);
+            return array_values($cached);
+        }
+
+        // Step 2: Bagi menjadi chunk 50, lalu kirim SEMUA chunk secara PARALEL (curl_multi)
+        $chunks      = [];   // chunkIdx => [origIndex => encValue]
+        $chunkKeys   = [];   // chunkIdx => [origIndex, ...]
+
+        foreach (array_chunk($toDecrypt, 50, true) as $chunk) {
+            $chunks[]    = array_values($chunk);
+            $chunkKeys[] = array_keys($chunk);
+        }
+
+        $decoded = $this->parallelPostToCipherEndpoint($chunks);
+
+        // Step 3: Gabungkan hasil decrypt ke indeks aslinya
+        foreach ($decoded as $chunkIdx => $results) {
+            foreach ($results as $j => $decVal) {
+                $origIdx = $chunkKeys[$chunkIdx][$j];
+                $cached[$origIdx] = $decVal;
+                // Simpan ke cache 24 jam — cipher value sama selalu hasilkan hasil sama
+                Cache::put('rdm_dec_' . md5((string) $chunks[$chunkIdx][$j]), $decVal, now()->addHours(24));
+            }
+        }
+
+        ksort($cached);
+        return array_values($cached);
     }
 
-    private function postToCipherEndpoint(array $chunk): array
+    /**
+     * Kirim beberapa chunk ke cipher endpoint secara paralel menggunakan curl_multi.
+     * Jauh lebih cepat daripada sequential — semua chunk selesai dalam waktu satu timeout.
+     *
+     * @param  array[]  $chunks  Array of arrays, each being one batch of encrypted values
+     * @return array[]           Array of arrays (decoded results per chunk), indexed same as $chunks
+     */
+    private function parallelPostToCipherEndpoint(array $chunks): array
     {
         $url   = rtrim(env('RDM_CIPHER_URL', 'https://rapor.man1metro.sch.id/periksasiswa/dec.php'), '/');
         $token = env('RDM_CIPHER_TOKEN', 'mascan_code');
+        $endpoint = $url . '?token=' . $token;
 
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL            => $url . '?token=' . $token,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($chunk),
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_TIMEOUT        => 20,
-        ]);
+        $mh      = curl_multi_init();
+        $handles = [];
 
-        $response = curl_exec($ch);
-        $error    = curl_error($ch);
-        curl_close($ch);
-
-        if ($error || !$response) {
-            // Fallback: kembalikan nilai asli (tetap terenkripsi) agar tidak crash
-            return $chunk;
+        foreach ($chunks as $i => $chunk) {
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL            => $endpoint,
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => json_encode($chunk),
+                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_TIMEOUT        => 30,
+            ]);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$i] = $ch;
         }
 
-        $decoded = json_decode($response, true);
+        // Execute all handles in parallel
+        do {
+            $status = curl_multi_exec($mh, $running);
+            if ($running) {
+                curl_multi_select($mh, 1.0);
+            }
+        } while ($running > 0 && $status === CURLM_OK);
 
-        return (is_array($decoded) && count($decoded) === count($chunk)) ? $decoded : $chunk;
+        // Collect results
+        $results = [];
+        foreach ($handles as $i => $ch) {
+            $response = curl_multi_getcontent($ch);
+            $error    = curl_error($ch);
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+
+            if ($error || !$response) {
+                // Fallback: kembalikan nilai asli (tetap terenkripsi)
+                $results[$i] = $chunks[$i];
+                continue;
+            }
+
+            $decoded = json_decode($response, true);
+            $results[$i] = (is_array($decoded) && count($decoded) === count($chunks[$i]))
+                ? $decoded
+                : $chunks[$i];
+        }
+
+        curl_multi_close($mh);
+
+        return $results;
     }
+
 
     // ─── SIMANSA Data ─────────────────────────────────────────────────────────
 
