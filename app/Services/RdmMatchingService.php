@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Siswa;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -145,10 +146,37 @@ class RdmMatchingService
 
         $result = [];
 
-        // Kirim dalam chunk 200 agar tidak melebihi batas ukuran body HTTP
-        foreach (array_chunk($encValues, 200) as $chunk) {
-            $decoded = $this->postToCipherEndpoint($chunk);
-            $result  = array_merge($result, $decoded);
+        // Kirim dalam chunk 50 (lebih kecil agar setiap HTTP call lebih cepat)
+        foreach (array_chunk($encValues, 50) as $chunk) {
+            $chunkResult = [];
+            $toDecrypt   = [];
+            $indexMap    = []; // posisi di $toDecrypt → posisi asli di $chunk
+
+            // Cek cache per nilai terlebih dahulu
+            foreach ($chunk as $i => $val) {
+                $cacheKey = 'rdm_dec_' . md5((string) $val);
+                $cached   = Cache::get($cacheKey);
+                if ($cached !== null) {
+                    $chunkResult[$i] = $cached;
+                } else {
+                    $indexMap[count($toDecrypt)] = $i;
+                    $toDecrypt[] = $val;
+                }
+            }
+
+            // Hanya kirim ke endpoint jika ada nilai yang belum di-cache
+            if (!empty($toDecrypt)) {
+                $decoded = $this->postToCipherEndpoint($toDecrypt);
+                foreach ($decoded as $j => $decVal) {
+                    $origIdx = $indexMap[$j];
+                    $chunkResult[$origIdx] = $decVal;
+                    // Simpan ke cache 24 jam — nilai enkripsi sama selalu → hasil sama
+                    Cache::put('rdm_dec_' . md5((string) $toDecrypt[$j]), $decVal, now()->addHours(24));
+                }
+            }
+
+            ksort($chunkResult);
+            $result = array_merge($result, array_values($chunkResult));
         }
 
         return $result;
@@ -168,7 +196,7 @@ class RdmMatchingService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_TIMEOUT        => 20,
         ]);
 
         $response = curl_exec($ch);
