@@ -57,6 +57,8 @@ class SiswaController extends Controller
             'address_scope',
             'address_name',
             'province_name',
+            'status',
+            'login_status',
         ]))->filter(fn ($value) => filled($value))->all();
 
         return view('admin.siswa.index', compact('stats', 'tingkatOptions', 'contextScope', 'contextQuery'));
@@ -194,6 +196,25 @@ class SiswaController extends Controller
                 $siswa->where(function($q) {
                     $q->where('data_diri_completed', false)
                       ->orWhere('data_ortu_completed', false);
+                });
+            }
+        }
+
+        // Filter by Login Status
+        if ($request->filled('login_status')) {
+            if ($request->login_status === 'sudah') {
+                $siswa->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('activity_logs')
+                        ->whereColumn('activity_logs.user_id', 'siswa.user_id')
+                        ->where('activity_logs.activity_type', 'login');
+                });
+            } elseif ($request->login_status === 'belum') {
+                $siswa->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('activity_logs')
+                        ->whereColumn('activity_logs.user_id', 'siswa.user_id')
+                        ->where('activity_logs.activity_type', 'login');
                 });
             }
         }
@@ -1093,6 +1114,22 @@ class SiswaController extends Controller
 
     private function buildStatisticsContext(Request $request): ?array
     {
+        if ($request->filled('login_status')) {
+            $label = $request->login_status === 'sudah' ? 'Sudah Pernah Login' : 'Belum Pernah Login';
+            return [
+                'title' => 'Filter Statistik: Status Login',
+                'description' => $label,
+            ];
+        }
+
+        if ($request->filled('status')) {
+            $label = $request->status === 'lengkap' ? 'Data Lengkap' : 'Belum Lengkap';
+            return [
+                'title' => 'Filter Statistik: Status Data',
+                'description' => $label,
+            ];
+        }
+
         if ($request->filled('school_npsn') || $request->filled('school_name')) {
             return [
                 'title' => 'Filter Statistik: Sekolah Asal',

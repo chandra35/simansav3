@@ -874,6 +874,11 @@ $('#imagePreviewModal').on('hidden.bs.modal', function () {
 });
 
 $(document).ready(function() {
+    // Pre-fill filter selects saat datang dari link statistik
+    @if(!empty($contextQuery['status']))
+        $('#filterStatus').val('{{ $contextQuery["status"] }}');
+    @endif
+
     // Auto-open edit modal jika URL mengandung ?edit={id} (dari show.blade.php)
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');

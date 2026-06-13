@@ -30,44 +30,56 @@
 @section('content')
 <div class="row">
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-kpi simansa-kpi--blue">
-            <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
-            <div class="simansa-kpi__body">
-                <div class="simansa-kpi__label">Total Siswa</div>
-                <div class="simansa-kpi__value">{{ number_format($kpi['total_siswa']) }}</div>
-                <div class="simansa-kpi__desc">Seluruh siswa yang saat ini tercatat di SIMANSA.</div>
+        <a href="{{ route('admin.siswa.index') }}" class="simansa-kpi-link">
+            <div class="simansa-kpi simansa-kpi--blue">
+                <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
+                <div class="simansa-kpi__body">
+                    <div class="simansa-kpi__label">Total Siswa</div>
+                    <div class="simansa-kpi__value">{{ number_format($kpi['total_siswa']) }}</div>
+                    <div class="simansa-kpi__desc">Seluruh siswa yang saat ini tercatat di SIMANSA.</div>
+                    <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Semua Siswa</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-kpi simansa-kpi--green">
-            <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="simansa-kpi__body">
-                <div class="simansa-kpi__label">Data Lengkap</div>
-                <div class="simansa-kpi__value">{{ number_format($kpi['data_lengkap']) }}</div>
-                <div class="simansa-kpi__desc">Data diri dan data orang tua sudah lengkap.</div>
+        <a href="{{ route('admin.siswa.index', ['status' => 'lengkap']) }}" class="simansa-kpi-link">
+            <div class="simansa-kpi simansa-kpi--green">
+                <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
+                <div class="simansa-kpi__body">
+                    <div class="simansa-kpi__label">Data Lengkap</div>
+                    <div class="simansa-kpi__value">{{ number_format($kpi['data_lengkap']) }}</div>
+                    <div class="simansa-kpi__desc">Data diri dan data orang tua sudah lengkap.</div>
+                    <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-kpi simansa-kpi--amber">
-            <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
-            <div class="simansa-kpi__body">
-                <div class="simansa-kpi__label">Sudah Login</div>
-                <div class="simansa-kpi__value">{{ number_format($kpi['sudah_login']) }}</div>
-                <div class="simansa-kpi__desc">Sudah pernah tercatat login ke sistem.</div>
+        <a href="{{ route('admin.siswa.index', ['login_status' => 'sudah']) }}" class="simansa-kpi-link">
+            <div class="simansa-kpi simansa-kpi--amber">
+                <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
+                <div class="simansa-kpi__body">
+                    <div class="simansa-kpi__label">Sudah Login</div>
+                    <div class="simansa-kpi__value">{{ number_format($kpi['sudah_login']) }}</div>
+                    <div class="simansa-kpi__desc">Sudah pernah tercatat login ke sistem.</div>
+                    <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-kpi simansa-kpi--rose">
-            <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
-            <div class="simansa-kpi__body">
-                <div class="simansa-kpi__label">Belum Pernah Login</div>
-                <div class="simansa-kpi__value">{{ number_format($kpi['belum_pernah_login']) }}</div>
-                <div class="simansa-kpi__desc">Akun aktif tetapi belum pernah punya riwayat login.</div>
+        <a href="{{ route('admin.siswa.index', ['login_status' => 'belum']) }}" class="simansa-kpi-link">
+            <div class="simansa-kpi simansa-kpi--rose">
+                <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
+                <div class="simansa-kpi__body">
+                    <div class="simansa-kpi__label">Belum Pernah Login</div>
+                    <div class="simansa-kpi__value">{{ number_format($kpi['belum_pernah_login']) }}</div>
+                    <div class="simansa-kpi__desc">Akun aktif tetapi belum pernah punya riwayat login.</div>
+                    <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -417,6 +429,36 @@
         .simansa-kpi--green .simansa-kpi__icon { background: #dcfce7; color: #15803d; }
         .simansa-kpi--amber .simansa-kpi__icon { background: #fef3c7; color: #b45309; }
         .simansa-kpi--rose .simansa-kpi__icon { background: #ffe4e6; color: #be123c; }
+
+        a.simansa-kpi-link {
+            display: block;
+            text-decoration: none !important;
+            color: inherit;
+        }
+        a.simansa-kpi-link .simansa-kpi {
+            transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+        }
+        a.simansa-kpi-link:hover .simansa-kpi,
+        a.simansa-kpi-link:focus .simansa-kpi {
+            box-shadow: 0 20px 44px rgba(15, 23, 42, 0.13);
+            transform: translateY(-3px);
+            border-color: #c7d8f5;
+        }
+        a.simansa-kpi-link .simansa-kpi__view-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0.55;
+            letter-spacing: 0.02em;
+        }
+        a.simansa-kpi-link:hover .simansa-kpi__view-link {
+            opacity: 1;
+        }
+        .simansa-kpi--blue  .simansa-kpi__view-link { color: #1d4ed8; }
+        .simansa-kpi--green .simansa-kpi__view-link { color: #15803d; }
+        .simansa-kpi--amber .simansa-kpi__view-link { color: #b45309; }
+        .simansa-kpi--rose  .simansa-kpi__view-link { color: #be123c; }
 
         .simansa-analytics-section {
             padding: 1.1rem;
