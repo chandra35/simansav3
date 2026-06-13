@@ -70,13 +70,34 @@ class RdmMatchingService
             return $this->emptyResult($activeTahun, $tingkatId);
         }
 
-        // 2. Dekripsi nama & NISN via endpoint cipher di VM rapor (read-only HTTP call)
-        $rdmRows = $this->decryptFields($rdmRows);
-
-        // 3. Ambil siswa SIMANSA
+        // 2. Ambil siswa SIMANSA (no HTTP calls)
         [$simansaByNisn, $simansaByNis, $simansaAll] = $this->buildSimansaMaps($tingkatId);
 
-        // 4. Bandingkan
+        // 3. Pre-match by NIS (plaintext — zero HTTP calls needed).
+        //    Pisahkan: NIS-matched vs belum cocok (perlu decrypt penuh).
+        $nisMatched   = [];   // rows yang sudah pasti cocok via NIS
+        $needsDecrypt = [];   // rows yang belum cocok, perlu decrypt nama+nisn
+
+        foreach ($rdmRows as $row) {
+            $nis = trim((string) ($row->siswa_nis ?? ''));
+            if ($nis !== '' && isset($simansaByNis[$nis])) {
+                $nisMatched[] = $row;
+            } else {
+                $needsDecrypt[] = $row;
+            }
+        }
+
+        // 4. Decrypt:
+        //    - Untuk yg belum cocok: decrypt nama + nisn (untuk NISN match + fuzzy)
+        //    - Untuk yg sudah NIS-matched: decrypt nama saja (untuk tampilan)
+        //    Ini jauh mengurangi jumlah HTTP call vs decrypt semua di awal.
+        $decryptedUnmatched = $this->decryptFields(collect($needsDecrypt));
+        $decryptedMatched   = $this->decryptNamesOnly(collect($nisMatched));
+
+        // Gabung: NIS-matched di depan agar compare() memprosesnya lebih dulu
+        $rdmRows = $decryptedMatched->concat($decryptedUnmatched);
+
+        // 5. Bandingkan
         return $this->compare($rdmRows, $simansaByNisn, $simansaByNis, $simansaAll, $activeTahun, $tingkatId);
     }
 
@@ -117,16 +138,19 @@ class RdmMatchingService
 
     // ─── Decrypt via Cipher Endpoint ──────────────────────────────────────────
 
+    /** Decrypt nama + nisn (untuk siswa yang belum cocok via NIS). */
     private function decryptFields(Collection $rows): Collection
     {
+        if ($rows->isEmpty()) {
+            return $rows;
+        }
+
         $namaEnc = $rows->pluck('siswa_nama')->toArray();
         $nisnEnc = $rows->pluck('siswa_nisn')->toArray();
 
-        // Kirim semua sekaligus dalam satu batch (nama dulu, lalu nisn)
-        $allEnc = array_merge($namaEnc, $nisnEnc);
-        $allDec = $this->batchDecrypt($allEnc);
-
-        $count    = count($namaEnc);
+        $allEnc    = array_merge($namaEnc, $nisnEnc);
+        $allDec    = $this->batchDecrypt($allEnc);
+        $count     = count($namaEnc);
         $namaPlain = array_slice($allDec, 0, $count);
         $nisnPlain = array_slice($allDec, $count);
 
@@ -134,6 +158,27 @@ class RdmMatchingService
             $arr = (array) $row;
             $arr['siswa_nama_plain'] = trim((string) ($namaPlain[$i] ?? $arr['siswa_nama']));
             $arr['siswa_nisn_plain'] = trim((string) ($nisnPlain[$i] ?? $arr['siswa_nisn']));
+            return (object) $arr;
+        });
+    }
+
+    /**
+     * Decrypt hanya nama (untuk siswa yang sudah cocok via NIS — tidak perlu NISN).
+     * Menghemat separuh HTTP call untuk siswa yang pasti sudah cocok.
+     */
+    private function decryptNamesOnly(Collection $rows): Collection
+    {
+        if ($rows->isEmpty()) {
+            return $rows;
+        }
+
+        $namaEnc   = $rows->pluck('siswa_nama')->toArray();
+        $namaPlain = $this->batchDecrypt($namaEnc);
+
+        return $rows->values()->map(function ($row, int $i) use ($namaPlain) {
+            $arr = (array) $row;
+            $arr['siswa_nama_plain'] = trim((string) ($namaPlain[$i] ?? $arr['siswa_nama']));
+            $arr['siswa_nisn_plain'] = '';   // tidak perlu — sudah cocok via NIS
             return (object) $arr;
         });
     }
