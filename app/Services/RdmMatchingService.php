@@ -208,24 +208,43 @@ class RdmMatchingService
             return array_values($cached);
         }
 
-        // Step 2: Bagi menjadi chunk 50, lalu kirim SEMUA chunk secara PARALEL (curl_multi)
+        // Step 2: Bagi menjadi chunk 25, dikirim 5 concurrent per batch
         $chunks      = [];   // chunkIdx => [origIndex => encValue]
         $chunkKeys   = [];   // chunkIdx => [origIndex, ...]
 
-        foreach (array_chunk($toDecrypt, 50, true) as $chunk) {
+        foreach (array_chunk($toDecrypt, 25, true) as $chunk) {
             $chunks[]    = array_values($chunk);
             $chunkKeys[] = array_keys($chunk);
         }
 
-        $decoded = $this->parallelPostToCipherEndpoint($chunks);
+        // Step 2b: Kirim dalam batch 5 concurrent (hindari overwhelming cipher endpoint)
+        $allDecoded = [];
+        foreach (array_chunk($chunks, 5, true) as $batchChunks) {
+            $batchResult = $this->parallelPostToCipherEndpoint($batchChunks);
+            foreach ($batchResult as $origChunkIdx => $res) {
+                $allDecoded[$origChunkIdx] = $res;
+            }
+        }
 
         // Step 3: Gabungkan hasil decrypt ke indeks aslinya
-        foreach ($decoded as $chunkIdx => $results) {
+        // Hanya cache jika decrypt berhasil (hasil berbeda dari input atau hasil valid string)
+        foreach ($allDecoded as $chunkIdx => $results) {
+            if ($results === null) {
+                // Chunk gagal total — gunakan encrypted value tapi jangan cache
+                foreach ($chunkKeys[$chunkIdx] as $j => $origIdx) {
+                    $cached[$origIdx] = $chunks[$chunkIdx][$j];
+                }
+                continue;
+            }
             foreach ($results as $j => $decVal) {
-                $origIdx = $chunkKeys[$chunkIdx][$j];
-                $cached[$origIdx] = $decVal;
-                // Simpan ke file cache permanen — tidak terhapus oleh artisan cache:clear
-                $this->fileCachePut((string) $chunks[$chunkIdx][$j], (string) $decVal);
+                $origIdx  = $chunkKeys[$chunkIdx][$j];
+                $encVal   = (string) $chunks[$chunkIdx][$j];
+                $decStr   = (string) $decVal;
+                $cached[$origIdx] = $decStr;
+                // Cache hanya jika decrypt mengubah nilai (hindari cache salah saat endpoint error)
+                if ($decStr !== $encVal && $decStr !== '') {
+                    $this->fileCachePut($encVal, $decStr);
+                }
             }
         }
 
@@ -282,15 +301,15 @@ class RdmMatchingService
             curl_close($ch);
 
             if ($error || !$response) {
-                // Fallback: kembalikan nilai asli (tetap terenkripsi)
-                $results[$i] = $chunks[$i];
+                // Chunk gagal — kembalikan null agar tidak di-cache
+                $results[$i] = null;
                 continue;
             }
 
             $decoded = json_decode($response, true);
             $results[$i] = (is_array($decoded) && count($decoded) === count($chunks[$i]))
                 ? $decoded
-                : $chunks[$i];
+                : null;  // JSON tidak valid atau panjang mismatch — jangan cache
         }
 
         curl_multi_close($mh);
