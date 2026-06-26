@@ -144,7 +144,7 @@
                 <button type="button" id="adminDokumenPreviewFitToggle" class="btn btn-outline-primary" style="display: none;">
                     <i class="fas fa-search-plus mr-1"></i> Ukuran Asli
                 </button>
-                <a href="#" id="adminDokumenPreviewDownload" class="btn btn-success">
+                <a href="#" id="adminDokumenPreviewDownload" class="btn btn-success" data-no-overlay download>
                     <i class="fas fa-download mr-1"></i> Download Dokumen
                 </a>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
@@ -277,6 +277,21 @@
         if (modal) modal.style.display = 'none';
     }
 
+    function downloadWithoutLeavingPage(url) {
+        if (!url || url === '#') return;
+
+        let frame = document.getElementById('adminDokumenDownloadFrame');
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'adminDokumenDownloadFrame';
+            frame.name = 'adminDokumenDownloadFrame';
+            frame.style.display = 'none';
+            document.body.appendChild(frame);
+        }
+
+        frame.src = url;
+    }
+
     document.addEventListener('click', function (event) {
         const button = event.target.closest('.js-preview-admin-dokumen');
         if (!button) return;
@@ -406,6 +421,8 @@
         const downloadButton = event.target.closest('#adminDokumenPreviewDownload');
         if (!downloadButton) return;
 
+        event.preventDefault();
+        downloadWithoutLeavingPage(downloadButton.getAttribute('href'));
         window.setTimeout(function () {
             hidePreviewModal();
         }, 150);

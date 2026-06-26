@@ -569,7 +569,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="#" id="btnDownloadDoc" class="btn btn-success" download>
+                <a href="#" id="btnDownloadDoc" class="btn btn-success" data-no-overlay download>
                     <i class="fas fa-download"></i> Download
                 </a>
                 <a href="#" id="btnOpenNewTab" class="btn btn-primary" target="_blank">
@@ -769,7 +769,26 @@ $('#previewModal').on('hidden.bs.modal', function() {
     $('#previewPdf').hide();
 });
 
-$('#btnDownloadDoc').on('click', function() {
+function downloadDokumenTanpaPindahHalaman(url) {
+    if (!url || url === '#') {
+        return;
+    }
+
+    var frame = document.getElementById('siswaDokumenDownloadFrame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'siswaDokumenDownloadFrame';
+        frame.name = 'siswaDokumenDownloadFrame';
+        frame.style.display = 'none';
+        document.body.appendChild(frame);
+    }
+
+    frame.src = url;
+}
+
+$('#btnDownloadDoc').on('click', function(e) {
+    e.preventDefault();
+    downloadDokumenTanpaPindahHalaman($(this).attr('href'));
     setTimeout(function() {
         $('#previewModal').modal('hide');
     }, 150);
