@@ -268,6 +268,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::middleware(['permission:manage-kelas'])->prefix('matrikulasi-ppdb')->name('matrikulasi-ppdb.')->group(function () {
         Route::get('/', [MatrikulasiPpdbController::class, 'index'])->name('index');
+        Route::post('/kelompok', [MatrikulasiPpdbController::class, 'storeKelompok'])->name('kelompok.store');
         Route::get('/candidates', [MatrikulasiPpdbController::class, 'candidates'])->name('candidates');
         Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');
         Route::post('/import', [MatrikulasiPpdbController::class, 'import'])->name('import');

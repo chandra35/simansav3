@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kelas;
 use App\Models\TahunPelajaran;
 use App\Services\PpdbMatrikulasiImportService;
 use Illuminate\Http\Request;
@@ -19,13 +18,43 @@ class MatrikulasiPpdbController extends Controller
     {
         $tahunPelajaran = TahunPelajaran::orderByDesc('tahun_mulai')->get();
         $selectedTahunId = $request->get('tahun_pelajaran_id') ?: optional(TahunPelajaran::active()->first())->id;
-        $kelasMatrikulasi = $this->service->matrikulasiClasses($selectedTahunId);
+        $kelompokMatrikulasi = $this->service->kelompokFor($selectedTahunId);
+        $stats = $this->service->stats($selectedTahunId);
 
         return view('admin.matrikulasi-ppdb.index', compact(
             'tahunPelajaran',
             'selectedTahunId',
-            'kelasMatrikulasi'
+            'kelompokMatrikulasi',
+            'stats'
         ));
+    }
+
+    public function storeKelompok(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'nama' => 'required|string|max:120',
+            'kode' => 'nullable|string|max:30',
+            'kapasitas' => 'nullable|integer|min:1|max:500',
+        ]);
+
+        try {
+            $kelompok = $this->service->storeKelompok($validated['tahun_pelajaran_id'], $validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kelompok matrikulasi berhasil dibuat.',
+                'data' => [
+                    'id' => $kelompok->id,
+                    'text' => $kelompok->nama,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat kelompok: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function candidates(Request $request)
@@ -108,22 +137,14 @@ class MatrikulasiPpdbController extends Controller
             'calon_siswa_ids' => 'required|array|min:1',
             'calon_siswa_ids.*' => 'required|string',
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'kelas_id' => 'required|exists:kelas,id',
+            'kelompok_id' => 'required|exists:matrikulasi_kelompoks,id',
             'include_documents' => 'nullable|boolean',
         ]);
 
         try {
-            $kelas = Kelas::findOrFail($validated['kelas_id']);
-            if ($kelas->tahun_pelajaran_id !== $validated['tahun_pelajaran_id']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Kelas matrikulasi tidak berada pada tahun pelajaran yang dipilih.',
-                ], 422);
-            }
-
             $result = $this->service->import(
                 $validated['calon_siswa_ids'],
-                $validated['kelas_id'],
+                $validated['kelompok_id'],
                 (bool) ($validated['include_documents'] ?? false),
                 $validated['tahun_pelajaran_id']
             );

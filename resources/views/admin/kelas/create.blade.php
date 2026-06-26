@@ -380,19 +380,6 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="jenis_kelas">Jenis Kelas <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('jenis_kelas') is-invalid @enderror"
-                                        id="jenis_kelas" name="jenis_kelas" required>
-                                        <option value="reguler" {{ old('jenis_kelas', 'reguler') === 'reguler' ? 'selected' : '' }}>Reguler</option>
-                                        <option value="matrikulasi" {{ old('jenis_kelas') === 'matrikulasi' ? 'selected' : '' }}>Matrikulasi PPDB</option>
-                                    </select>
-                                    @error('jenis_kelas')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
 
                         <div class="row">
