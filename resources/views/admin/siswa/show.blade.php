@@ -582,7 +582,8 @@
                                                     data-preview-url="{{ route('siswa.dokumen.preview', $dokumen->id) }}"
                                                     data-download-url="{{ route('siswa.dokumen.download', $dokumen->id) }}"
                                                     data-title="{{ $dokumen->original_name ?? $dokumen->nama_file ?? $dokumen->getJenisDokumenLabel() }}"
-                                                    data-extension="{{ $dokumen->getFileExtension() }}">
+                                                    data-extension="{{ $dokumen->getFileExtension() }}"
+                                                    data-mime-type="{{ $dokumen->mime_type }}">
                                                 <i class="fas fa-eye"></i> Lihat
                                             </button>
                                             <a href="{{ route('siswa.dokumen.download', $dokumen->id) }}" class="btn btn-secondary btn-xs">

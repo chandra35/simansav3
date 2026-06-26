@@ -141,6 +141,26 @@ class DokumenSiswa extends Model
         return 'unknown';
     }
 
+    public function getDownloadFileName(?string $siswaName = null): string
+    {
+        $extension = $this->getFileExtension();
+        $extension = $extension && $extension !== 'unknown' ? $extension : 'file';
+
+        $jenisDokumen = $this->sanitizeFileNamePart($this->getJenisDokumenLabel());
+        $namaSiswa = $this->sanitizeFileNamePart($siswaName ?: ($this->siswa?->nama_lengkap ?? 'Siswa'));
+
+        return "{$jenisDokumen}_{$namaSiswa}.{$extension}";
+    }
+
+    private function sanitizeFileNamePart(?string $value): string
+    {
+        $value = trim((string) $value);
+        $value = preg_replace('/[^A-Za-z0-9]+/', '_', $value);
+        $value = trim($value, '_');
+
+        return $value !== '' ? $value : 'Dokumen';
+    }
+
     // Delete file when model is deleted
     protected static function boot()
     {

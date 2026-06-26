@@ -294,7 +294,8 @@ class DokumenController extends Controller
 
             // Get absolute filesystem path
             $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
-            $fileName = $dokumen->original_name ?? $dokumen->nama_file;
+            $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
+            $fileName = $dokumen->getDownloadFileName($siswaDok?->nama_lengkap);
 
             // Clear ALL output buffers — PHP startup warnings (e.g. "mbstring already loaded")
             // are buffered before any user code runs; they would corrupt binary streaming.
@@ -353,7 +354,7 @@ class DokumenController extends Controller
             }
 
             $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
-            $fileName = $dokumen->original_name ?? $dokumen->nama_file;
+            $fileName = $dokumen->getDownloadFileName($siswaDok?->nama_lengkap);
 
             while (ob_get_level() > 0) {
                 ob_end_clean();

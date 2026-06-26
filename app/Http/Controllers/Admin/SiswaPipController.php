@@ -220,6 +220,7 @@ class SiswaPipController extends Controller
                         data-download-url="' . e($downloadUrl) . '"
                         data-title="' . e($label) . '"
                         data-extension="' . e($extension) . '"
+                        data-mime-type="' . e($item->mime_type) . '"
                         title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
                     </button>';
