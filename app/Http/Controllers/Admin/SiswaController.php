@@ -575,7 +575,8 @@ class SiswaController extends Controller
             'creator', 
             'updater', 
             'sekolahAsal',
-            'kelasAktif'
+            'kelasAktif',
+            'dokumen' => fn($query) => $query->latest(),
         ]);
 
         $riwayatPerubahan = $this->getStudentActivityLogs($siswa);

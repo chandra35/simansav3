@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 class SiswaPipController extends Controller
 {
     /**
-     * Kata kunci yang dianggap dokumen PIP/SKTM
+     * Kata kunci yang dianggap dokumen KIP/SKTM.
      */
-    private const KEYWORDS_PIP  = ['pip', 'kip', 'kartu indonesia pintar'];
+    private const KEYWORDS_KIP  = ['kip', 'kartu indonesia pintar'];
     private const KEYWORDS_SKTM = ['sktm', 'tidak mampu', 'keterangan tidak mampu', 'keterangan kurang mampu'];
 
     /**
@@ -21,11 +21,11 @@ class SiswaPipController extends Controller
      */
     private function allKeywords(): array
     {
-        return array_merge(self::KEYWORDS_PIP, self::KEYWORDS_SKTM);
+        return array_merge(self::KEYWORDS_KIP, self::KEYWORDS_SKTM);
     }
 
     /**
-     * Query dasar: siswa yang punya dokumen PIP/SKTM
+     * Query dasar: siswa yang punya dokumen KIP/SKTM
      */
     private function baseQuery()
     {
@@ -41,7 +41,7 @@ class SiswaPipController extends Controller
     }
 
     /**
-     * Halaman utama daftar siswa PIP/SKTM
+     * Halaman utama daftar siswa KIP/SKTM
      */
     public function index()
     {
@@ -51,7 +51,7 @@ class SiswaPipController extends Controller
 
         $stats = [
             'total'      => (clone $base)->count(),
-            'pip'        => (clone $base)->whereHas('dokumen', fn($q) => $this->filterByType($q, 'pip'))->count(),
+            'kip'        => (clone $base)->whereHas('dokumen', fn($q) => $this->filterByType($q, 'kip'))->count(),
             'sktm'       => (clone $base)->whereHas('dokumen', fn($q) => $this->filterByType($q, 'sktm'))->count(),
             'laki_laki'  => (clone $base)->where('jenis_kelamin', 'L')->count(),
             'perempuan'  => (clone $base)->where('jenis_kelamin', 'P')->count(),
@@ -74,14 +74,14 @@ class SiswaPipController extends Controller
         $this->authorize('view-pip');
 
         $query = Siswa::with(['kelasAktif', 'dokumen'])
-            ->withCount(['dokumen as pip_count' => function ($q) {
-                $this->filterByType($q, 'pip');
+            ->withCount(['dokumen as kip_count' => function ($q) {
+                $this->filterByType($q, 'kip');
             }])
             ->withCount(['dokumen as sktm_count' => function ($q) {
                 $this->filterByType($q, 'sktm');
             }]);
 
-        // Hanya siswa yang punya dokumen PIP/SKTM
+        // Hanya siswa yang punya dokumen KIP/SKTM
         $keywords = $this->allKeywords();
         $query->whereHas('dokumen', function ($q) use ($keywords) {
             $q->where(function ($inner) use ($keywords) {
@@ -92,7 +92,7 @@ class SiswaPipController extends Controller
         });
 
         // Filter jenis dokumen
-        if ($request->filled('jenis')) {
+        if ($request->filled('jenis') && in_array($request->jenis, ['kip', 'sktm'], true)) {
             $query->whereHas('dokumen', fn($q) => $this->filterByType($q, $request->jenis));
         }
 
@@ -130,18 +130,11 @@ class SiswaPipController extends Controller
             $kelas      = $siswa->kelasAktif()->first();
             $kelasNama  = $kelas ? $kelas->nama_kelas : '<em class="text-muted">Tanpa Rombel</em>';
 
-            // Kumpulkan dokumen PIP/SKTM milik siswa ini
-            $allKw      = $this->allKeywords();
-            $dokumenPip = $siswa->dokumen->filter(fn($d) => $this->isDokumenType($d->jenis_dokumen, 'pip'));
+            // Kumpulkan dokumen KIP/SKTM milik siswa ini
+            $dokumenKip = $siswa->dokumen->filter(fn($d) => $this->isDokumenType($d->jenis_dokumen, 'kip'));
             $dokumenSktm= $siswa->dokumen->filter(fn($d) => $this->isDokumenType($d->jenis_dokumen, 'sktm'));
 
-            $badges = '';
-            if ($dokumenPip->isNotEmpty()) {
-                $badges .= '<span class="badge badge-success mr-1"><i class="fas fa-check-circle mr-1"></i>PIP/KIP (' . $dokumenPip->count() . ')</span>';
-            }
-            if ($dokumenSktm->isNotEmpty()) {
-                $badges .= '<span class="badge badge-warning text-dark mr-1"><i class="fas fa-file-alt mr-1"></i>SKTM (' . $dokumenSktm->count() . ')</span>';
-            }
+            $dokumenHtml = $this->renderDokumenList($dokumenKip, $dokumenSktm);
 
             return [
                 'id'             => $siswa->id,
@@ -149,8 +142,8 @@ class SiswaPipController extends Controller
                 'nama_lengkap'   => e($siswa->nama_lengkap),
                 'jenis_kelamin'  => $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
                 'kelas'          => $kelasNama,
-                'dokumen'        => $badges ?: '-',
-                'total_dokumen'  => $dokumenPip->count() + $dokumenSktm->count(),
+                'dokumen'        => $dokumenHtml ?: '-',
+                'total_dokumen'  => $dokumenKip->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
             ];
         });
@@ -171,7 +164,7 @@ class SiswaPipController extends Controller
 
     private function filterByType($query, string $type)
     {
-        $keywords = $type === 'pip' ? self::KEYWORDS_PIP : self::KEYWORDS_SKTM;
+        $keywords = $type === 'kip' ? self::KEYWORDS_KIP : self::KEYWORDS_SKTM;
         $query->where(function ($inner) use ($keywords) {
             foreach ($keywords as $kw) {
                 $inner->orWhere('jenis_dokumen', 'like', "%{$kw}%");
@@ -183,7 +176,7 @@ class SiswaPipController extends Controller
 
     private function isDokumenType(string $jenisDokumen, string $type): bool
     {
-        $keywords = $type === 'pip' ? self::KEYWORDS_PIP : self::KEYWORDS_SKTM;
+        $keywords = $type === 'kip' ? self::KEYWORDS_KIP : self::KEYWORDS_SKTM;
         $lower    = strtolower($jenisDokumen);
         foreach ($keywords as $kw) {
             if (str_contains($lower, $kw)) {
@@ -194,12 +187,43 @@ class SiswaPipController extends Controller
         return false;
     }
 
+    private function renderDokumenList($dokumenKip, $dokumenSktm): string
+    {
+        $html = '';
+
+        if ($dokumenKip->isNotEmpty()) {
+            $html .= '<div class="mb-1"><span class="badge badge-success mr-1"><i class="fas fa-id-card mr-1"></i>KIP (' . $dokumenKip->count() . ')</span>';
+            $html .= $this->renderDokumenLinks($dokumenKip);
+            $html .= '</div>';
+        }
+
+        if ($dokumenSktm->isNotEmpty()) {
+            $html .= '<div><span class="badge badge-warning text-dark mr-1"><i class="fas fa-file-alt mr-1"></i>SKTM (' . $dokumenSktm->count() . ')</span>';
+            $html .= $this->renderDokumenLinks($dokumenSktm);
+            $html .= '</div>';
+        }
+
+        return $html;
+    }
+
+    private function renderDokumenLinks($dokumen): string
+    {
+        return $dokumen->values()->map(function (DokumenSiswa $item, int $index) {
+            $label = $item->original_name ?: $item->nama_file ?: ('Dokumen ' . ($index + 1));
+            $url = route('siswa.dokumen.preview', $item->id);
+
+            return '<a href="' . $url . '" target="_blank" class="btn btn-outline-info btn-xs mr-1" title="' . e($label) . '">
+                        <i class="fas fa-eye"></i> Lihat
+                    </a>';
+        })->implode('');
+    }
+
     private function getActionButtons(Siswa $siswa): string
     {
         $detailUrl = route('admin.siswa.show', $siswa);
 
         return '<a href="' . $detailUrl . '" class="btn btn-info btn-xs" title="Detail Siswa">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-user"></i> Detail
                 </a>';
     }
 }

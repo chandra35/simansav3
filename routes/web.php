@@ -323,9 +323,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{siswa}/refresh-emis', [App\Http\Controllers\Admin\VerifikasiIjazahController::class, 'refreshEmis'])->name('refresh-emis');
     });
 
-    // ─── Siswa Tidak Mampu / PIP ───────────────────────────────────────────────
-    Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {
+    // Data Siswa KIP/SKTM
+    Route::middleware(['permission:view-pip'])->prefix('kip-sktm')->name('kip-sktm.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SiswaPipController::class, 'index'])->name('index');
+        Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
+    });
+
+    Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {
+        Route::get('/', fn() => redirect()->route('admin.kip-sktm.index'))->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
     });
 

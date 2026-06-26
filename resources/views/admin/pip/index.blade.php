@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Siswa Tidak Mampu / PIP - SIMANSA')
+@section('title', 'Data Siswa KIP/SKTM - SIMANSA')
 
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
@@ -12,9 +12,9 @@
                 <i class="fas fa-hand-holding-heart"></i>
                 Manajemen Kesiswaan
             </div>
-            <h1 class="simansa-hero__title">Siswa Tidak Mampu / PIP</h1>
+            <h1 class="simansa-hero__title">Data Siswa KIP/SKTM</h1>
             <p class="simansa-hero__subtitle">
-                Daftar siswa yang memiliki dokumen PIP/KIP atau Surat Keterangan Tidak Mampu (SKTM).
+                Daftar siswa yang memiliki dokumen Kartu Indonesia Pintar (KIP) atau Surat Keterangan Tidak Mampu (SKTM).
             </p>
         </div>
         <div class="simansa-hero__side">
@@ -23,8 +23,8 @@
                 <span class="simansa-hero-chip__value">{{ number_format($stats['total']) }}</span>
             </div>
             <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">PIP / KIP</span>
-                <span class="simansa-hero-chip__value">{{ number_format($stats['pip']) }}</span>
+                <span class="simansa-hero-chip__label">KIP</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['kip']) }}</span>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
             <div class="simansa-stat-card__body">
                 <div class="simansa-stat-card__label">Total Siswa</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['total']) }}</div>
-                <div class="simansa-stat-card__desc">Siswa dengan dokumen PIP atau SKTM.</div>
+                <div class="simansa-stat-card__desc">Siswa dengan dokumen KIP atau SKTM.</div>
             </div>
         </div>
     </div>
@@ -48,9 +48,9 @@
         <div class="simansa-stat-card simansa-stat-card--green">
             <div class="simansa-stat-card__icon"><i class="fas fa-id-card"></i></div>
             <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">PIP / KIP</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['pip']) }}</div>
-                <div class="simansa-stat-card__desc">Punya dokumen kartu PIP atau KIP.</div>
+                <div class="simansa-stat-card__label">KIP</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['kip']) }}</div>
+                <div class="simansa-stat-card__desc">Punya dokumen Kartu Indonesia Pintar.</div>
             </div>
         </div>
     </div>
@@ -83,7 +83,7 @@
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                     <h3 class="card-title mb-3 mb-lg-0">
                         <i class="fas fa-hand-holding-heart mr-2"></i>
-                        Daftar Siswa Tidak Mampu / PIP
+                        Daftar Siswa KIP/SKTM
                     </h3>
                     <div class="card-tools ml-0">
                         <button type="button" id="btnExportExcel" class="btn btn-success btn-sm">
@@ -101,8 +101,8 @@
                                 <i class="fas fa-folder-open mr-1"></i> Jenis Dokumen
                             </label>
                             <select id="filterJenis" class="form-control form-control-sm">
-                                <option value="">Semua (PIP + SKTM)</option>
-                                <option value="pip">PIP / KIP saja</option>
+                                <option value="">Semua (KIP + SKTM)</option>
+                                <option value="kip">KIP saja</option>
                                 <option value="sktm">SKTM saja</option>
                             </select>
                         </div>
@@ -134,8 +134,8 @@
                 </div>
 
                 <p class="text-muted small mb-3">
-                    Menampilkan siswa yang telah mengupload dokumen PIP/KIP atau SKTM ke sistem.
-                    Klik tombol detail untuk melihat dokumen lengkap.
+                    Menampilkan siswa yang telah mengupload dokumen KIP atau SKTM ke sistem.
+                    Gunakan tombol lihat pada kolom dokumen untuk membuka file, atau tombol detail untuk membuka profil siswa lengkap.
                 </p>
 
                 <div class="table-responsive">
@@ -170,7 +170,7 @@ $(function () {
         processing : true,
         serverSide : true,
         ajax: {
-            url: '{{ route("admin.pip.data") }}',
+            url: '{{ route("admin.kip-sktm.data") }}',
             data: function (d) {
                 d.jenis    = $('#filterJenis').val();
                 d.tingkat  = $('#filterTingkat').val();
@@ -189,7 +189,7 @@ $(function () {
         order: [[2, 'asc']],
         language: {
             processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
-            emptyTable:  'Tidak ada siswa dengan dokumen PIP / SKTM.',
+            emptyTable:  'Tidak ada siswa dengan dokumen KIP / SKTM.',
             zeroRecords: 'Tidak ada siswa yang cocok dengan filter.',
             lengthMenu:  'Tampilkan _MENU_ data per halaman',
             info:        'Menampilkan _START_–_END_ dari _TOTAL_ siswa',
@@ -241,7 +241,7 @@ $(function () {
             kelas_id: $('#filterKelas').val(),
             export:   'excel',
         });
-        window.open('{{ route("admin.pip.data") }}?' + params.toString(), '_blank');
+        window.open('{{ route("admin.kip-sktm.data") }}?' + params.toString(), '_blank');
     });
 });
 </script>

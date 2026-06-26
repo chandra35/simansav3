@@ -347,6 +347,13 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
+                    'text' => 'Data Siswa KIP/SKTM',
+                    'route' => 'admin.kip-sktm.index',
+                    'icon' => 'fas fa-fw fa-hand-holding-heart',
+                    'can' => 'view-pip',
+                    'active' => ['admin/kip-sktm*', 'admin/pip*'],
+                ],
+                [
                     'text' => 'Statistik Siswa',
                     'route' => 'admin.siswa.statistics',
                     'icon' => 'fas fa-fw fa-chart-pie',

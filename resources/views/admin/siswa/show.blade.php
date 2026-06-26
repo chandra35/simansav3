@@ -538,6 +538,66 @@
             </div>
         </div>
 
+        <!-- Dokumen Siswa -->
+        <div class="card student-show-card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title"><i class="fas fa-folder-open"></i> Dokumen Siswa</h3>
+            </div>
+            <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Daftar Dokumen Terupload</h4>
+                        <p>Gunakan bagian ini untuk membuka dokumen administrasi siswa tanpa meninggalkan halaman detail.</p>
+                    </div>
+                    <span class="badge badge-light border px-3 py-2">{{ $siswa->dokumen->count() }} dokumen</span>
+                </div>
+
+                @if($siswa->dokumen->isNotEmpty())
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Jenis Dokumen</th>
+                                    <th>Nama File</th>
+                                    <th>Ukuran</th>
+                                    <th>Upload</th>
+                                    <th width="150">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($siswa->dokumen as $dokumen)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $dokumen->getJenisDokumenLabel() }}</strong>
+                                            @if($dokumen->keterangan)
+                                                <div class="small text-muted">{{ $dokumen->keterangan }}</div>
+                                            @endif
+                                        </td>
+                                        <td>{{ $dokumen->original_name ?? $dokumen->nama_file ?? '-' }}</td>
+                                        <td>{{ $dokumen->getFileSizeFormatted() }}</td>
+                                        <td>{{ $dokumen->created_at?->format('d M Y H:i') ?? '-' }}</td>
+                                        <td>
+                                            <a href="{{ route('siswa.dokumen.preview', $dokumen->id) }}" target="_blank" class="btn btn-info btn-xs">
+                                                <i class="fas fa-eye"></i> Lihat
+                                            </a>
+                                            <a href="{{ route('siswa.dokumen.download', $dokumen->id) }}" class="btn btn-secondary btn-xs">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-light border mb-0">
+                        <i class="fas fa-info-circle text-info"></i>
+                        Belum ada dokumen yang diupload oleh siswa ini.
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Data Orang Tua -->
         @if($siswa->ortu)
         <div class="card student-show-card">
