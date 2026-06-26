@@ -40,51 +40,109 @@
 
 <script>
 (function () {
-    function resetAdminDokumenPreview() {
-        $('#adminDokumenPreviewLoading').show();
-        $('#adminDokumenPreviewImage').hide().find('img').attr('src', '');
-        $('#adminDokumenPreviewPdf').hide().find('iframe').attr('src', '');
-        $('#adminDokumenPreviewUnsupported').hide();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+    function showElement(id) {
+        const element = document.getElementById(id);
+        if (element) element.style.display = '';
     }
 
-    $(document).on('click', '.js-preview-admin-dokumen', function () {
-        const $button = $(this);
-        const previewUrl = $button.data('preview-url');
-        const downloadUrl = $button.data('download-url') || previewUrl;
-        const title = $button.data('title') || 'Preview Dokumen';
-        const extension = String($button.data('extension') || '').toLowerCase();
+    function hideElement(id) {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    }
 
-        resetAdminDokumenPreview();
-        $('#adminDokumenPreviewTitle').html('<i class="fas fa-eye mr-1"></i> ' + title);
-        $('#adminDokumenPreviewDownload').attr('href', downloadUrl);
-        $('#adminDokumenPreviewModal').modal('show');
+    function setHtml(id, html) {
+        const element = document.getElementById(id);
+        if (element) element.innerHTML = html;
+    }
 
-        if (extension === 'pdf') {
-            $('#adminDokumenPreviewPdf iframe').attr('src', previewUrl);
-            $('#adminDokumenPreviewLoading').hide();
-            $('#adminDokumenPreviewPdf').show();
+    function setAttr(selector, attr, value) {
+        const element = document.querySelector(selector);
+        if (element) element.setAttribute(attr, value || '');
+    }
+
+    function resetAdminDokumenPreview() {
+        showElement('adminDokumenPreviewLoading');
+        hideElement('adminDokumenPreviewImage');
+        hideElement('adminDokumenPreviewPdf');
+        hideElement('adminDokumenPreviewUnsupported');
+        setAttr('#adminDokumenPreviewImage img', 'src', '');
+        setAttr('#adminDokumenPreviewPdf iframe', 'src', '');
+    }
+
+    function showPreviewModal() {
+        if (window.jQuery && typeof window.jQuery.fn.modal === 'function') {
+            window.jQuery('#adminDokumenPreviewModal').modal('show');
             return;
         }
 
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+        const modal = document.getElementById('adminDokumenPreviewModal');
+        if (modal) modal.style.display = 'block';
+    }
+
+    function hidePreviewModal() {
+        if (window.jQuery && typeof window.jQuery.fn.modal === 'function') {
+            window.jQuery('#adminDokumenPreviewModal').modal('hide');
+            return;
+        }
+
+        const modal = document.getElementById('adminDokumenPreviewModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    document.addEventListener('click', function (event) {
+        const button = event.target.closest('.js-preview-admin-dokumen');
+        if (!button) return;
+
+        const previewUrl = button.dataset.previewUrl;
+        const downloadUrl = button.dataset.downloadUrl || previewUrl;
+        const title = button.dataset.title || 'Preview Dokumen';
+        const extension = String(button.dataset.extension || '').toLowerCase();
+
+        resetAdminDokumenPreview();
+        setHtml('adminDokumenPreviewTitle', '<i class="fas fa-eye mr-1"></i> ' + title);
+        setAttr('#adminDokumenPreviewDownload', 'href', downloadUrl);
+        showPreviewModal();
+
+        if (extension === 'pdf') {
+            setAttr('#adminDokumenPreviewPdf iframe', 'src', previewUrl);
+            hideElement('adminDokumenPreviewLoading');
+            showElement('adminDokumenPreviewPdf');
+            return;
+        }
+
+        if (imageExtensions.includes(extension)) {
             const image = new Image();
             image.onload = function () {
-                $('#adminDokumenPreviewImage img').attr('src', previewUrl);
-                $('#adminDokumenPreviewLoading').hide();
-                $('#adminDokumenPreviewImage').show();
+                setAttr('#adminDokumenPreviewImage img', 'src', previewUrl);
+                hideElement('adminDokumenPreviewLoading');
+                showElement('adminDokumenPreviewImage');
             };
             image.onerror = function () {
-                $('#adminDokumenPreviewLoading').hide();
-                $('#adminDokumenPreviewUnsupported').show();
+                hideElement('adminDokumenPreviewLoading');
+                showElement('adminDokumenPreviewUnsupported');
             };
             image.src = previewUrl;
             return;
         }
 
-        $('#adminDokumenPreviewLoading').hide();
-        $('#adminDokumenPreviewUnsupported').show();
+        hideElement('adminDokumenPreviewLoading');
+        showElement('adminDokumenPreviewUnsupported');
     });
 
-    $('#adminDokumenPreviewModal').on('hidden.bs.modal', resetAdminDokumenPreview);
+    document.addEventListener('click', function (event) {
+        const closeButton = event.target.closest('#adminDokumenPreviewModal [data-dismiss="modal"]');
+        if (!closeButton) return;
+
+        hidePreviewModal();
+        resetAdminDokumenPreview();
+    });
+
+    if (window.jQuery) {
+        window.jQuery(function () {
+            window.jQuery('#adminDokumenPreviewModal').on('hidden.bs.modal', resetAdminDokumenPreview);
+        });
+    }
 })();
 </script>
