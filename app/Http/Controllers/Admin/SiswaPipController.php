@@ -210,11 +210,19 @@ class SiswaPipController extends Controller
     {
         return $dokumen->values()->map(function (DokumenSiswa $item, int $index) {
             $label = $item->original_name ?: $item->nama_file ?: ('Dokumen ' . ($index + 1));
-            $url = route('siswa.dokumen.preview', $item->id);
+            $previewUrl = route('siswa.dokumen.preview', $item->id);
+            $downloadUrl = route('siswa.dokumen.download', $item->id);
+            $extension = $item->getFileExtension();
 
-            return '<a href="' . $url . '" target="_blank" class="btn btn-outline-info btn-xs mr-1" title="' . e($label) . '">
+            return '<button type="button"
+                        class="btn btn-outline-info btn-xs mr-1 js-preview-admin-dokumen"
+                        data-preview-url="' . e($previewUrl) . '"
+                        data-download-url="' . e($downloadUrl) . '"
+                        data-title="' . e($label) . '"
+                        data-extension="' . e($extension) . '"
+                        title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
-                    </a>';
+                    </button>';
         })->implode('');
     }
 

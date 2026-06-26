@@ -158,6 +158,8 @@
     </div>
 </div>
 
+@include('admin.partials.dokumen-preview-modal')
+
 @stop
 
 @section('js')

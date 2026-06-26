@@ -577,9 +577,14 @@
                                         <td>{{ $dokumen->getFileSizeFormatted() }}</td>
                                         <td>{{ $dokumen->created_at?->format('d M Y H:i') ?? '-' }}</td>
                                         <td>
-                                            <a href="{{ route('siswa.dokumen.preview', $dokumen->id) }}" target="_blank" class="btn btn-info btn-xs">
+                                            <button type="button"
+                                                    class="btn btn-info btn-xs js-preview-admin-dokumen"
+                                                    data-preview-url="{{ route('siswa.dokumen.preview', $dokumen->id) }}"
+                                                    data-download-url="{{ route('siswa.dokumen.download', $dokumen->id) }}"
+                                                    data-title="{{ $dokumen->original_name ?? $dokumen->nama_file ?? $dokumen->getJenisDokumenLabel() }}"
+                                                    data-extension="{{ $dokumen->getFileExtension() }}">
                                                 <i class="fas fa-eye"></i> Lihat
-                                            </a>
+                                            </button>
                                             <a href="{{ route('siswa.dokumen.download', $dokumen->id) }}" class="btn btn-secondary btn-xs">
                                                 <i class="fas fa-download"></i>
                                             </a>
@@ -798,6 +803,8 @@
         </div>
     </div>
 </div>
+
+@include('admin.partials.dokumen-preview-modal')
 
 <!-- Action Buttons -->
 <div class="card student-show-card">
