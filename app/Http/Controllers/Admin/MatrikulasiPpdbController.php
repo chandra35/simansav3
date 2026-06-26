@@ -17,7 +17,7 @@ class MatrikulasiPpdbController extends Controller
     public function index(Request $request)
     {
         $tahunPelajaran = TahunPelajaran::orderByDesc('tahun_mulai')->get();
-        $selectedTahunId = $request->get('tahun_pelajaran_id') ?: optional(TahunPelajaran::active()->first())->id;
+        $selectedTahunId = $request->get('tahun_pelajaran_id') ?: optional($tahunPelajaran->first())->id;
         $kelompokMatrikulasi = $this->service->kelompokFor($selectedTahunId);
         $stats = $this->service->stats($selectedTahunId);
 
