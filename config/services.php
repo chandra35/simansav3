@@ -46,4 +46,10 @@ return [
         'bearer_token' => env('EMIS_BEARER_TOKEN'),
     ],
 
+    'ppdb_sync' => [
+        'base_url' => env('PPDB_SYNC_BASE_URL', 'https://ppdb.man1metro.sch.id'),
+        'token' => env('PPDB_SYNC_TOKEN'),
+        'timeout' => env('PPDB_SYNC_TIMEOUT', 30),
+    ],
+
 ];

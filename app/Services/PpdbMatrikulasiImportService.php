@@ -63,33 +63,28 @@ class PpdbMatrikulasiImportService
 
     public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20): Collection
     {
-        return $this->baseCandidateQuery($tahunPelajaranId)
-            ->when($term, function ($query) use ($term) {
-                $like = '%' . str_replace(' ', '%', trim($term)) . '%';
-                $query->where(function ($q) use ($like) {
-                    $q->where('cs.nama_lengkap', 'like', $like)
-                        ->orWhere('cs.nisn', 'like', $like)
-                        ->orWhere('cs.nomor_registrasi', 'like', $like)
-                        ->orWhere('cs.nomor_tes', 'like', $like);
-                });
-            })
-            ->orderBy('cs.nama_lengkap')
-            ->limit($limit)
-            ->get()
-            ->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
+        $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
+        $rows = $this->fetchPpdbCandidates([
+            'q' => $term,
+            'limit' => $limit,
+        ], $tahun, false);
+
+        return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
-    public function preview(array $calonSiswaIds, ?string $tahunPelajaranId = null): Collection
+    public function preview(array $calonSiswaIds, ?string $tahunPelajaranId = null, bool $includeDocuments = false): Collection
     {
         if (empty($calonSiswaIds)) {
             return collect();
         }
 
-        return $this->baseCandidateQuery($tahunPelajaranId)
-            ->whereIn('cs.id', $calonSiswaIds)
-            ->orderBy('cs.nama_lengkap')
-            ->get()
-            ->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
+        $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
+        $rows = $this->fetchPpdbCandidates([
+            'ids' => implode(',', $calonSiswaIds),
+            'limit' => min(max(count($calonSiswaIds), 1), 100),
+        ], $tahun, $includeDocuments);
+
+        return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
     public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId): array
@@ -98,7 +93,7 @@ class PpdbMatrikulasiImportService
         $periode = $this->periodeFor($tahun);
         $kelompok = MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId);
 
-        $candidates = $this->preview($calonSiswaIds, $tahun->id);
+        $candidates = $this->preview($calonSiswaIds, $tahun->id, true);
         $results = [
             'success' => 0,
             'failed' => 0,
@@ -165,42 +160,36 @@ class PpdbMatrikulasiImportService
         ];
     }
 
-    private function baseCandidateQuery(?string $tahunPelajaranId = null)
+    private function fetchPpdbCandidates(array $params, ?TahunPelajaran $tahun, bool $includeDocuments): Collection
     {
-        $ppdbYear = null;
-        if ($tahunPelajaranId) {
-            $targetYear = TahunPelajaran::find($tahunPelajaranId);
-            $ppdbYear = $targetYear ? $this->findPpdbYearFor($targetYear) : null;
+        $baseUrl = rtrim((string) config('services.ppdb_sync.base_url'), '/');
+        $token = (string) config('services.ppdb_sync.token');
+
+        if ($baseUrl === '' || $token === '') {
+            throw new RuntimeException('Konfigurasi API PPDB belum lengkap.');
         }
 
-        return DB::connection('mysql_ppdb')
-            ->table('calon_siswas as cs')
-            ->join('kelulusan as k', 'k.calon_siswa_id', '=', 'cs.id')
-            ->join('registrasis as r', function ($join) {
-                $join->on('r.calon_siswa_id', '=', 'cs.id')
-                    ->whereNull('r.deleted_at');
-            })
-            ->leftJoin('tahun_pelajarans as tp', 'tp.id', '=', 'cs.tahun_pelajaran_id')
-            ->leftJoin('jalur_pendaftaran as jp', 'jp.id', '=', 'cs.jalur_pendaftaran_id')
-            ->leftJoin('gelombang_pendaftaran as gp', 'gp.id', '=', 'cs.gelombang_pendaftaran_id')
-            ->whereNull('cs.deleted_at')
-            ->where('k.status', 'lulus')
-            ->when($ppdbYear, fn ($q) => $q->where('cs.tahun_pelajaran_id', $ppdbYear->id))
-            ->when($tahunPelajaranId && !$ppdbYear, fn ($q) => $q->whereRaw('1 = 0'))
-            ->select([
-                'cs.*',
-                'tp.nama as ppdb_tahun_nama',
-                'tp.tahun_mulai as ppdb_tahun_mulai',
-                'tp.tahun_selesai as ppdb_tahun_selesai',
-                'jp.nama as jalur_nama',
-                'gp.nama as gelombang_nama',
-                'r.jurusan_awal',
-                'r.jurusan_final',
-                'r.pindah_jurusan',
-                'r.tanggal_registrasi as tanggal_registrasi_komite',
-                'k.tanggal_kelulusan',
-            ])
-            ->distinct();
+        if ($tahun) {
+            $params['tahun_nama'] = $tahun->nama;
+            $params['tahun_mulai'] = $tahun->tahun_mulai;
+            $params['tahun_selesai'] = $tahun->tahun_selesai;
+        }
+
+        if ($includeDocuments) {
+            $params['include_documents'] = 1;
+        }
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->timeout((int) config('services.ppdb_sync.timeout', 30))
+            ->get($baseUrl . '/api/internal/simansa/pendaftar', $params);
+
+        if (!$response->successful()) {
+            throw new RuntimeException('API PPDB gagal: ' . ($response->json('message') ?: $response->body()));
+        }
+
+        return collect($response->json('data', []))
+            ->map(fn ($row) => json_decode(json_encode($row), false));
     }
 
     private function decorateCandidate(object $row, ?string $tahunPelajaranId): object
@@ -222,12 +211,8 @@ class PpdbMatrikulasiImportService
             ->when($row->nik, fn ($q) => $q->orWhere('nik', $row->nik))
             ->first();
 
-        $row->documents_count = DB::connection('mysql_ppdb')
-            ->table('calon_dokumen')
-            ->where('calon_siswa_id', $row->id)
-            ->whereNull('deleted_at')
-            ->count();
-
+        $row->documents_count = (int) ($row->documents_count ?? 0);
+        $row->documents = collect($row->documents ?? []);
         $row->import_status = $this->candidateStatus($row);
         $row->label = trim("{$row->nama_lengkap} - {$row->nisn} - {$row->nomor_registrasi}");
 
@@ -275,28 +260,8 @@ class PpdbMatrikulasiImportService
         }
     }
 
-    private function findPpdbYearFor(TahunPelajaran $targetYear): ?object
-    {
-        return DB::connection('mysql_ppdb')
-            ->table('tahun_pelajarans')
-            ->where(function ($q) use ($targetYear) {
-                $q->whereRaw('REPLACE(nama, " ", "") = ?', [str_replace(' ', '', (string) $targetYear->nama)])
-                    ->orWhere(function ($yearQ) use ($targetYear) {
-                        $yearQ->where('tahun_mulai', $targetYear->tahun_mulai)
-                            ->where('tahun_selesai', $targetYear->tahun_selesai);
-                    });
-            })
-            ->first();
-    }
-
     private function upsertPeserta(object $candidate, MatrikulasiPeriode $periode, MatrikulasiKelompok $kelompok): MatrikulasiPeserta
     {
-        $ortu = DB::connection('mysql_ppdb')
-            ->table('calon_ortus')
-            ->where('calon_siswa_id', $candidate->id)
-            ->whereNull('deleted_at')
-            ->first();
-
         $payload = [
             'matrikulasi_kelompok_id' => $kelompok->id,
             'ppdb_tahun_pelajaran_id' => $candidate->tahun_pelajaran_id,
@@ -309,7 +274,7 @@ class PpdbMatrikulasiImportService
             'jurusan_awal' => $candidate->jurusan_awal,
             'jurusan_final' => $candidate->jurusan_final,
             'data_siswa' => $this->objectToArray($candidate),
-            'data_ortu' => $ortu ? $this->objectToArray($ortu) : null,
+            'data_ortu' => isset($candidate->ortu) ? $this->objectToArray($candidate->ortu) : null,
             'data_ppdb' => [
                 'tahun' => $candidate->ppdb_tahun_nama,
                 'jalur' => $candidate->jalur_nama,
@@ -332,15 +297,8 @@ class PpdbMatrikulasiImportService
 
     private function syncDocuments(MatrikulasiPeserta $peserta, object $candidate, TahunPelajaran $targetTahun): int
     {
-        $documents = DB::connection('mysql_ppdb')
-            ->table('calon_dokumen')
-            ->where('calon_siswa_id', $candidate->id)
-            ->whereNull('deleted_at')
-            ->orderBy('jenis_dokumen')
-            ->get();
-
         $count = 0;
-        foreach ($documents as $document) {
+        foreach (collect($candidate->documents ?? []) as $document) {
             if (MatrikulasiDokumen::where('matrikulasi_peserta_id', $peserta->id)->where('ppdb_calon_dokumen_id', $document->id)->exists()) {
                 continue;
             }
@@ -366,7 +324,7 @@ class PpdbMatrikulasiImportService
                 'mime_type' => $document->mime_type ?: 'application/octet-stream',
                 'storage_disk' => $disk,
                 'ppdb_source_disk' => $document->storage_disk,
-                'ppdb_source_url' => $this->sourceUrl($document),
+                'ppdb_source_url' => $document->download_url ?? $document->remote_file_url ?? null,
                 'status_verifikasi' => $document->status_verifikasi ?: 'pending',
                 'imported_at' => now(),
             ]);
@@ -379,40 +337,16 @@ class PpdbMatrikulasiImportService
 
     private function readPpdbDocumentContent(object $document): ?string
     {
-        if (($document->storage_disk ?? 'public') === 'public' && $document->file_path) {
-            $basePath = rtrim((string) env('PPDB_PUBLIC_STORAGE_PATH', ''), DIRECTORY_SEPARATOR);
-            if ($basePath) {
-                $path = $basePath . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($document->file_path, '/\\'));
-                if (is_file($path) && is_readable($path)) {
-                    return file_get_contents($path) ?: null;
-                }
-            }
-        }
-
-        $url = $this->sourceUrl($document);
+        $url = $document->download_url ?? null;
         if (!$url) {
             return null;
         }
 
-        $response = Http::timeout(20)->get($url);
+        $response = Http::withToken((string) config('services.ppdb_sync.token'))
+            ->timeout((int) config('services.ppdb_sync.timeout', 30))
+            ->get($url);
+
         return $response->successful() ? $response->body() : null;
-    }
-
-    private function sourceUrl(object $document): ?string
-    {
-        if (($document->storage_disk ?? null) === 'gdrive' && $document->remote_file_id) {
-            return 'https://drive.google.com/uc?export=download&id=' . $document->remote_file_id;
-        }
-
-        if (!empty($document->remote_file_url)) {
-            return $document->remote_file_url;
-        }
-
-        if (!empty($document->file_path) && env('PPDB_PUBLIC_STORAGE_URL')) {
-            return rtrim((string) env('PPDB_PUBLIC_STORAGE_URL'), '/') . '/' . ltrim($document->file_path, '/');
-        }
-
-        return null;
     }
 
     private function extensionFor(object $document): string
@@ -432,7 +366,7 @@ class PpdbMatrikulasiImportService
         };
     }
 
-    private function objectToArray(object $value): array
+    private function objectToArray(mixed $value): array
     {
         return json_decode(json_encode($value), true) ?: [];
     }
