@@ -25,19 +25,14 @@ class SiswaPipController extends Controller
     }
 
     /**
-     * Query dasar: siswa yang punya dokumen KIP/SKTM
+     * Query dasar: siswa yang punya dokumen KIP/SKTM atau nomor PKH.
      */
     private function baseQuery()
     {
-        $keywords = $this->allKeywords();
+        $query = Siswa::query();
+        $this->applyAssistanceFilter($query);
 
-        return Siswa::whereHas('dokumen', function ($q) use ($keywords) {
-            $q->where(function ($inner) use ($keywords) {
-                foreach ($keywords as $kw) {
-                    $inner->orWhere('jenis_dokumen', 'like', "%{$kw}%");
-                }
-            });
-        });
+        return $query;
     }
 
     /**
@@ -53,6 +48,7 @@ class SiswaPipController extends Controller
             'total'      => (clone $base)->count(),
             'kip'        => (clone $base)->whereHas('dokumen', fn($q) => $this->filterByType($q, 'kip'))->count(),
             'sktm'       => (clone $base)->whereHas('dokumen', fn($q) => $this->filterByType($q, 'sktm'))->count(),
+            'pkh'        => (clone $base)->whereNotNull('nomor_pkh')->where('nomor_pkh', '!=', '')->count(),
             'laki_laki'  => (clone $base)->where('jenis_kelamin', 'L')->count(),
             'perempuan'  => (clone $base)->where('jenis_kelamin', 'P')->count(),
         ];
@@ -81,19 +77,14 @@ class SiswaPipController extends Controller
                 $this->filterByType($q, 'sktm');
             }]);
 
-        // Hanya siswa yang punya dokumen KIP/SKTM
-        $keywords = $this->allKeywords();
-        $query->whereHas('dokumen', function ($q) use ($keywords) {
-            $q->where(function ($inner) use ($keywords) {
-                foreach ($keywords as $kw) {
-                    $inner->orWhere('jenis_dokumen', 'like', "%{$kw}%");
-                }
-            });
-        });
+        // Hanya siswa yang punya dokumen KIP/SKTM atau nomor PKH
+        $this->applyAssistanceFilter($query);
 
-        // Filter jenis dokumen
+        // Filter jenis bantuan
         if ($request->filled('jenis') && in_array($request->jenis, ['kip', 'sktm'], true)) {
             $query->whereHas('dokumen', fn($q) => $this->filterByType($q, $request->jenis));
+        } elseif ($request->jenis === 'pkh') {
+            $query->whereNotNull('nomor_pkh')->where('nomor_pkh', '!=', '');
         }
 
         // Filter tingkat
@@ -112,7 +103,8 @@ class SiswaPipController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('nisn', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%");
+                  ->orWhere('nik', 'like', "%{$search}%")
+                  ->orWhere('nomor_pkh', 'like', "%{$search}%");
             });
         }
 
@@ -143,6 +135,7 @@ class SiswaPipController extends Controller
                 'jenis_kelamin'  => $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
                 'kelas'          => $kelasNama,
                 'dokumen'        => $dokumenHtml ?: '-',
+                'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
                 'total_dokumen'  => $dokumenKip->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
             ];
@@ -150,11 +143,7 @@ class SiswaPipController extends Controller
 
         return response()->json([
             'draw'            => intval($request->draw),
-            'recordsTotal'    => Siswa::whereHas('dokumen', fn($q) => $q->where(function ($inner) {
-                foreach ($this->allKeywords() as $kw) {
-                    $inner->orWhere('jenis_dokumen', 'like', "%{$kw}%");
-                }
-            }))->count(),
+            'recordsTotal'    => $this->baseQuery()->count(),
             'recordsFiltered' => $totalFiltered,
             'data'            => $data,
         ]);
@@ -172,6 +161,23 @@ class SiswaPipController extends Controller
         });
 
         return $query;
+    }
+
+    private function applyAssistanceFilter($query)
+    {
+        $keywords = $this->allKeywords();
+
+        return $query->where(function ($outer) use ($keywords) {
+            $outer->whereHas('dokumen', function ($q) use ($keywords) {
+                $q->where(function ($inner) use ($keywords) {
+                    foreach ($keywords as $kw) {
+                        $inner->orWhere('jenis_dokumen', 'like', "%{$kw}%");
+                    }
+                });
+            })->orWhere(function ($q) {
+                $q->whereNotNull('nomor_pkh')->where('nomor_pkh', '!=', '');
+            });
+        });
     }
 
     private function isDokumenType(string $jenisDokumen, string $type): bool

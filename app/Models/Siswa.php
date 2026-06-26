@@ -35,6 +35,7 @@ class Siswa extends Model
         'hobi',
         'cita_cita',
         'nomor_hp',
+        'nomor_pkh',
         'alamat_sama_ortu',
         'jenis_tempat_tinggal',
         'alamat_siswa',

@@ -14,7 +14,7 @@
             <h5><i class="fas fa-folder-open"></i> Dokumen Siswa</h5>
             <p class="mb-0">
                 Upload dokumen yang diperlukan untuk kelengkapan administrasi. Dokumen <strong>Kartu Keluarga</strong> dan <strong>Ijazah SMP</strong> adalah wajib, 
-                sedangkan <strong>KIP</strong> dan <strong>SKTM</strong> bersifat opsional (jika memiliki). 
+                sedangkan <strong>KIP</strong>, <strong>SKTM</strong>, dan <strong>Nomor PKH</strong> bersifat opsional (jika memiliki).
                 Pastikan dokumen yang diupload <strong>jelas dan dapat dibaca</strong>.
             </p>
         </div>
@@ -79,9 +79,49 @@
                 <li>Ukuran maksimal file: <strong>5 MB</strong> (gambar akan di-compress otomatis)</li>
                 <li>Pastikan dokumen <strong>jelas dan dapat dibaca</strong></li>
                 <li>Upload ulang akan <strong>mengganti dokumen lama</strong></li>
-                <li>Dokumen <strong>KK dan Ijazah SMP</strong> adalah wajib, sedangkan <strong>KIP dan SKTM</strong> opsional</li>
+                <li>Dokumen <strong>KK dan Ijazah SMP</strong> adalah wajib, sedangkan <strong>KIP, SKTM, dan Nomor PKH</strong> opsional</li>
                 <li><span class="badge badge-success"><i class="fas fa-compress"></i> Auto-Compress</span> File gambar besar akan dikompres otomatis tanpa mengurangi kualitas visual</li>
             </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Data PKH -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-hand-holding-heart"></i> Program Keluarga Harapan (PKH)
+                    <span class="badge badge-secondary ml-2">Opsional</span>
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="pkhForm">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group mb-2">
+                        <label for="nomor_pkh">Nomor PKH</label>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   id="nomor_pkh"
+                                   name="nomor_pkh"
+                                   value="{{ old('nomor_pkh', $siswa->nomor_pkh) }}"
+                                   maxlength="50"
+                                   placeholder="Masukkan nomor PKH jika memiliki">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-save"></i> Simpan
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">
+                            Isi nomor PKH tanpa upload dokumen. Kosongkan lalu simpan jika ingin menghapus data PKH.
+                        </small>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -750,6 +790,45 @@ $('#file').on('change', function() {
 $('#file_lainnya').on('change', function() {
     var fileName = $(this).val().split('\\').pop();
     $('#file_lainnya_label').html('<i class="fas fa-check-circle text-success mr-1"></i>' + (fileName || 'File dipilih'));
+});
+
+// Handle nomor PKH submit
+$('#pkhForm').on('submit', function(e) {
+    e.preventDefault();
+
+    var $form = $(this);
+    var $button = $form.find('button[type="submit"]');
+    var originalHtml = $button.html();
+
+    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+    $.ajax({
+        url: '{{ route('siswa.dokumen.pkh.update') }}',
+        type: 'POST',
+        data: $form.serialize(),
+        success: function(response) {
+            if (response.success) {
+                $('#nomor_pkh').val(response.nomor_pkh || '');
+                toastr.success(response.message);
+            } else {
+                toastr.error(response.message || 'Gagal menyimpan nomor PKH');
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                var errorMessage = '';
+                $.each(xhr.responseJSON.errors, function(key, value) {
+                    errorMessage += value[0] + '<br>';
+                });
+                toastr.error(errorMessage || 'Validasi gagal');
+            } else {
+                toastr.error('Terjadi kesalahan saat menyimpan nomor PKH');
+            }
+        },
+        complete: function() {
+            $button.prop('disabled', false).html(originalHtml);
+        }
+    });
 });
 
 // Handle form submit

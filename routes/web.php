@@ -851,6 +851,7 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     
     // Dokumen Management
     Route::get('/dokumen', [App\Http\Controllers\Siswa\DokumenController::class, 'index'])->name('dokumen');
+    Route::put('/dokumen/pkh', [App\Http\Controllers\Siswa\DokumenController::class, 'updatePkh'])->name('dokumen.pkh.update');
     Route::post('/dokumen/upload', [App\Http\Controllers\Siswa\DokumenController::class, 'upload'])->name('dokumen.upload');
     Route::get('/dokumen/{id}/preview', [App\Http\Controllers\Siswa\DokumenController::class, 'preview'])->name('dokumen.preview');
     Route::get('/dokumen/{id}/download', [App\Http\Controllers\Siswa\DokumenController::class, 'download'])->name('dokumen.download');

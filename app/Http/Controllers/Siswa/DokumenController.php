@@ -35,6 +35,48 @@ class DokumenController extends Controller
     }
 
     /**
+     * Update nomor PKH tanpa upload dokumen.
+     */
+    public function updatePkh(Request $request)
+    {
+        $request->validate([
+            'nomor_pkh' => 'nullable|string|max:50',
+        ], [
+            'nomor_pkh.max' => 'Nomor PKH maksimal 50 karakter',
+        ]);
+
+        $user = Auth::user();
+        $siswa = $user->siswa;
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data siswa tidak ditemukan',
+            ], 404);
+        }
+
+        $oldNomorPkh = $siswa->nomor_pkh;
+        $newNomorPkh = trim((string) $request->nomor_pkh);
+        $siswa->nomor_pkh = $newNomorPkh !== '' ? $newNomorPkh : null;
+        $siswa->save();
+
+        ActivityLogService::log([
+            'activity_type' => 'update_nomor_pkh',
+            'model_type' => Siswa::class,
+            'model_id' => $siswa->id,
+            'description' => 'Update nomor PKH siswa',
+            'old_values' => ['nomor_pkh' => $oldNomorPkh],
+            'new_values' => ['nomor_pkh' => $siswa->nomor_pkh],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nomor PKH berhasil disimpan',
+            'nomor_pkh' => $siswa->nomor_pkh,
+        ]);
+    }
+
+    /**
      * Upload dokumen
      */
     public function upload(Request $request)

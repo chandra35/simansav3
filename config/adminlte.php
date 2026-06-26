@@ -347,7 +347,7 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
-                    'text' => 'Data Siswa KIP/SKTM',
+                    'text' => 'Data Siswa KIP/SKTM/PKH',
                     'route' => 'admin.kip-sktm.index',
                     'icon' => 'fas fa-fw fa-hand-holding-heart',
                     'can' => 'view-pip',

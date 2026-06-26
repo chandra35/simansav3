@@ -332,6 +332,10 @@
                         <b><i class="fas fa-phone text-success"></i> No. HP</b>
                         <a class="float-right">{{ $siswa->nomor_hp ?? '-' }}</a>
                     </li>
+                    <li class="list-group-item">
+                        <b><i class="fas fa-hand-holding-heart text-info"></i> No. PKH</b>
+                        <a class="float-right">{{ $siswa->nomor_pkh ?? '-' }}</a>
+                    </li>
                 </ul>
 
                 @can('edit-siswa')
@@ -439,6 +443,10 @@
                             <tr>
                                 <th>Cita-cita</th>
                                 <td>{{ $siswa->cita_cita ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nomor PKH</th>
+                                <td>{{ $siswa->nomor_pkh ?? '-' }}</td>
                             </tr>
                             <tr>
                                 <th>Hobi</th>

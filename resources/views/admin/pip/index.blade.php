@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Data Siswa KIP/SKTM - SIMANSA')
+@section('title', 'Data Siswa KIP/SKTM/PKH - SIMANSA')
 
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
@@ -12,9 +12,9 @@
                 <i class="fas fa-hand-holding-heart"></i>
                 Manajemen Kesiswaan
             </div>
-            <h1 class="simansa-hero__title">Data Siswa KIP/SKTM</h1>
+            <h1 class="simansa-hero__title">Data Siswa KIP/SKTM/PKH</h1>
             <p class="simansa-hero__subtitle">
-                Daftar siswa yang memiliki dokumen Kartu Indonesia Pintar (KIP) atau Surat Keterangan Tidak Mampu (SKTM).
+                Daftar siswa yang memiliki dokumen Kartu Indonesia Pintar (KIP), Surat Keterangan Tidak Mampu (SKTM), atau Nomor PKH.
             </p>
         </div>
         <div class="simansa-hero__side">
@@ -25,6 +25,10 @@
             <div class="simansa-hero-chip">
                 <span class="simansa-hero-chip__label">KIP</span>
                 <span class="simansa-hero-chip__value">{{ number_format($stats['kip']) }}</span>
+            </div>
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">PKH</span>
+                <span class="simansa-hero-chip__value">{{ number_format($stats['pkh']) }}</span>
             </div>
         </div>
     </div>
@@ -40,7 +44,7 @@
             <div class="simansa-stat-card__body">
                 <div class="simansa-stat-card__label">Total Siswa</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['total']) }}</div>
-                <div class="simansa-stat-card__desc">Siswa dengan dokumen KIP atau SKTM.</div>
+                <div class="simansa-stat-card__desc">Siswa dengan KIP, SKTM, atau PKH.</div>
             </div>
         </div>
     </div>
@@ -66,6 +70,16 @@
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="simansa-stat-card simansa-stat-card--cyan">
+            <div class="simansa-stat-card__icon"><i class="fas fa-hand-holding-heart"></i></div>
+            <div class="simansa-stat-card__body">
+                <div class="simansa-stat-card__label">PKH</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['pkh']) }}</div>
+                <div class="simansa-stat-card__desc">Punya Nomor PKH.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="simansa-stat-card simansa-stat-card--cyan">
             <div class="simansa-stat-card__icon"><i class="fas fa-venus-mars"></i></div>
             <div class="simansa-stat-card__body">
                 <div class="simansa-stat-card__label">L / P</div>
@@ -83,7 +97,7 @@
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                     <h3 class="card-title mb-3 mb-lg-0">
                         <i class="fas fa-hand-holding-heart mr-2"></i>
-                        Daftar Siswa KIP/SKTM
+                        Daftar Siswa KIP/SKTM/PKH
                     </h3>
                     <div class="card-tools ml-0">
                         <button type="button" id="btnExportExcel" class="btn btn-success btn-sm">
@@ -98,12 +112,13 @@
                     <div class="row">
                         <div class="col-md-6 col-xl-3 mb-3">
                             <label class="simansa-filter-label">
-                                <i class="fas fa-folder-open mr-1"></i> Jenis Dokumen
+                                <i class="fas fa-folder-open mr-1"></i> Jenis Bantuan
                             </label>
                             <select id="filterJenis" class="form-control form-control-sm">
-                                <option value="">Semua (KIP + SKTM)</option>
+                                <option value="">Semua (KIP + SKTM + PKH)</option>
                                 <option value="kip">KIP saja</option>
                                 <option value="sktm">SKTM saja</option>
+                                <option value="pkh">PKH saja</option>
                             </select>
                         </div>
                         <div class="col-md-6 col-xl-3 mb-3">
@@ -134,7 +149,7 @@
                 </div>
 
                 <p class="text-muted small mb-3">
-                    Menampilkan siswa yang telah mengupload dokumen KIP atau SKTM ke sistem.
+                    Menampilkan siswa yang memiliki dokumen KIP/SKTM atau mengisi Nomor PKH.
                     Gunakan tombol lihat pada kolom dokumen untuk membuka file, atau tombol detail untuk membuka profil siswa lengkap.
                 </p>
 
@@ -148,6 +163,7 @@
                                 <th>Jenis Kelamin</th>
                                 <th>Kelas</th>
                                 <th>Dokumen</th>
+                                <th>Nomor PKH</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -186,12 +202,13 @@ $(function () {
             { data: 'jenis_kelamin' },
             { data: 'kelas' },
             { data: 'dokumen', orderable: false },
+            { data: 'nomor_pkh' },
             { data: 'actions', orderable: false },
         ],
         order: [[2, 'asc']],
         language: {
             processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
-            emptyTable:  'Tidak ada siswa dengan dokumen KIP / SKTM.',
+            emptyTable:  'Tidak ada siswa dengan data KIP / SKTM / PKH.',
             zeroRecords: 'Tidak ada siswa yang cocok dengan filter.',
             lengthMenu:  'Tampilkan _MENU_ data per halaman',
             info:        'Menampilkan _START_–_END_ dari _TOTAL_ siswa',
