@@ -12,7 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('smartq_periodes', function (Blueprint $table) {
-            $table->longText('last_scan_data')->nullable()->after('moodle_quizzes');
+            $afterColumn = Schema::hasColumn('smartq_periodes', 'moodle_quizzes')
+                ? 'moodle_quizzes'
+                : 'moodle_quiz_name';
+
+            $table->longText('last_scan_data')->nullable()->after($afterColumn);
             $table->timestamp('last_scan_at')->nullable()->after('last_scan_data');
         });
     }
@@ -23,7 +27,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('smartq_periodes', function (Blueprint $table) {
-            $table->dropColumn(['last_scan_data', 'last_scan_at']);
+            if (Schema::hasColumn('smartq_periodes', 'last_scan_data')) {
+                $table->dropColumn(['last_scan_data', 'last_scan_at']);
+            }
         });
     }
 };
