@@ -20,6 +20,21 @@
 
 @section('content')
     <div class="mat-shell">
+        <div class="mat-progress-overlay" id="matProgressOverlay" aria-live="polite">
+            <div class="mat-progress-panel">
+                <div class="mat-progress-icon">
+                    <i class="fas fa-cloud-download-alt"></i>
+                </div>
+                <div class="mat-progress-copy">
+                    <strong id="matProgressTitle">Memuat data PPDB</strong>
+                    <span id="matProgressText">Menghubungi API PPDB...</span>
+                </div>
+                <div class="progress mat-progress-track">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="matProgressBar" style="width: 35%"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="mat-stats">
             <div class="mat-stat">
                 <span>Peserta</span>
@@ -115,6 +130,9 @@
                         <div class="form-group">
                             <label for="calon_siswa_ids">Pendaftar PPDB</label>
                             <select id="calon_siswa_ids" class="form-control" multiple></select>
+                            <small class="form-text text-muted">
+                                Pilih beberapa pendaftar untuk preview manual, atau muat semua data PPDB yang sudah lulus dan registrasi komite.
+                            </small>
                         </div>
 
                         <div class="mat-actions">
@@ -127,6 +145,11 @@
                             <button type="button" class="btn btn-primary" id="btnImport" disabled>
                                 <i class="fas fa-sync-alt mr-1"></i>Sync ke Matrikulasi
                             </button>
+                        </div>
+
+                        <div class="mat-preview-summary mt-3" id="previewSummary">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Belum ada data preview.
                         </div>
 
                         <div class="table-responsive mt-3">
@@ -161,6 +184,53 @@
 @section('css')
     <style>
         .mat-shell { padding-bottom: 1rem; }
+        .mat-progress-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2050;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, .42);
+            backdrop-filter: blur(2px);
+        }
+        .mat-progress-panel {
+            width: min(420px, 100%);
+            border: 1px solid #e6e8ef;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .18);
+            padding: 1rem;
+        }
+        .mat-progress-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #0d6efd;
+            margin-bottom: .75rem;
+        }
+        .mat-progress-copy strong,
+        .mat-progress-copy span {
+            display: block;
+        }
+        .mat-progress-copy strong {
+            color: #1f2937;
+            font-size: 1rem;
+        }
+        .mat-progress-copy span {
+            color: #6c757d;
+            margin-top: .15rem;
+        }
+        .mat-progress-track {
+            height: .55rem;
+            margin-top: .85rem;
+            border-radius: 999px;
+        }
         .mat-stats {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -211,6 +281,30 @@
             flex-wrap: wrap;
             gap: .5rem;
         }
+        .mat-actions .btn {
+            min-height: 38px;
+        }
+        .mat-preview-summary {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+            border: 1px solid #e6e8ef;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #495057;
+            padding: .65rem .75rem;
+            font-weight: 600;
+        }
+        .mat-preview-summary.is-ready {
+            border-color: #b7dfc2;
+            background: #edf8f0;
+            color: #1b5e20;
+        }
+        .mat-preview-summary.is-warning {
+            border-color: #ffe08a;
+            background: #fff8df;
+            color: #73510d;
+        }
         .mat-table th {
             white-space: nowrap;
             border-top: 0;
@@ -253,9 +347,39 @@
         };
 
         let previewIds = [];
+        let suppressSelectionReset = false;
 
         function selectedIds() {
             return $('#calon_siswa_ids').val() || [];
+        }
+
+        function setProgressOverlay(show, text = 'Menghubungi API PPDB...', percent = 35) {
+            $('#matProgressText').text(text);
+            $('#matProgressBar').css('width', `${percent}%`);
+            $('#matProgressOverlay').css('display', show ? 'flex' : 'none');
+        }
+
+        function setButtonLoading($button, loading, loadingText, normalHtml) {
+            $button.prop('disabled', loading).html(loading ? `<i class="fas fa-spinner fa-spin mr-1"></i>${loadingText}` : normalHtml);
+        }
+
+        function updatePreviewSummary(rows, mode = 'idle') {
+            const $summary = $('#previewSummary');
+            $summary.removeClass('is-ready is-warning');
+
+            if (!rows.length) {
+                $summary.html('<i class="fas fa-info-circle mr-1"></i>Belum ada data preview.');
+                return;
+            }
+
+            const locked = rows.filter(row => row.import_status === 'sudah_jadi_siswa').length;
+            const documents = rows.reduce((total, row) => total + Number(row.documents_count || 0), 0);
+            const icon = locked ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            const className = locked ? 'is-warning' : 'is-ready';
+            const modeText = mode === 'all' ? 'dimuat dari PPDB' : 'siap dipreview';
+            const lockedText = locked ? `, ${locked} sudah menjadi siswa reguler` : '';
+
+            $summary.addClass(className).html(`<i class="fas ${icon} mr-1"></i>${rows.length} pendaftar ${modeText}, ${documents} dokumen terdeteksi${lockedText}.`);
         }
 
         function statusChip(status) {
@@ -275,6 +399,7 @@
             if (!rows.length) {
                 $tbody.html('<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data preview.</td></tr>');
                 $('#btnImport').prop('disabled', true);
+                updatePreviewSummary([]);
                 return;
             }
 
@@ -292,6 +417,7 @@
 
             $tbody.html(html);
             $('#btnImport').prop('disabled', rows.some(row => row.import_status === 'sudah_jadi_siswa'));
+            updatePreviewSummary(rows);
         }
 
         function showResult(result) {
@@ -353,8 +479,13 @@
             });
 
             $('#calon_siswa_ids').on('change', function () {
+                if (suppressSelectionReset) {
+                    return;
+                }
+
                 previewIds = [];
                 $('#btnImport').prop('disabled', true);
+                updatePreviewSummary([]);
             });
 
             $('#btnCreateKelompok').on('click', function () {
@@ -386,6 +517,10 @@
                     return;
                 }
 
+                const $button = $(this);
+                setButtonLoading($button, true, 'Preview...', '<i class="fas fa-eye mr-1"></i>Preview');
+                $('#btnImport').prop('disabled', true);
+
                 $.post(routes.preview, {
                     calon_siswa_ids: ids,
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
@@ -393,25 +528,35 @@
                     renderPreview(response.data || []);
                 }).fail(xhr => {
                     Swal.fire('Preview gagal', xhr.responseJSON?.message || 'Gagal membuat preview.', 'error');
+                }).always(() => {
+                    setButtonLoading($button, false, 'Preview...', '<i class="fas fa-eye mr-1"></i>Preview');
                 });
             });
 
             $('#btnLoadAll').on('click', function () {
                 const $button = $(this);
-                $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Memuat...');
+                setButtonLoading($button, true, 'Memuat...', '<i class="fas fa-list mr-1"></i>Muat Semua PPDB');
+                $('#btnPreview').prop('disabled', true);
                 $('#btnImport').prop('disabled', true);
+                setProgressOverlay(true, 'Mengambil semua pendaftar eligible dari PPDB...', 35);
 
                 $.post(routes.previewAll, {
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
                 }).done(response => {
                     const rows = response.data || [];
-                    renderPreview(rows);
+                    setProgressOverlay(true, 'Menyiapkan tabel preview...', 85);
+                    suppressSelectionReset = true;
                     $('#calon_siswa_ids').val(null).trigger('change');
+                    suppressSelectionReset = false;
+                    renderPreview(rows);
+                    updatePreviewSummary(rows, 'all');
                     Swal.fire('Data dimuat', `${rows.length} pendaftar PPDB siap dipreview.`, 'success');
                 }).fail(xhr => {
                     Swal.fire('Gagal memuat', xhr.responseJSON?.message || 'Tidak bisa mengambil semua data PPDB.', 'error');
                 }).always(() => {
-                    $button.prop('disabled', false).html('<i class="fas fa-list mr-1"></i>Muat Semua PPDB');
+                    setProgressOverlay(false);
+                    setButtonLoading($button, false, 'Memuat...', '<i class="fas fa-list mr-1"></i>Muat Semua PPDB');
+                    $('#btnPreview').prop('disabled', false);
                 });
             });
 
