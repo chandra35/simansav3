@@ -403,6 +403,15 @@
     });
 
     document.addEventListener('click', function (event) {
+        const downloadButton = event.target.closest('#adminDokumenPreviewDownload');
+        if (!downloadButton) return;
+
+        window.setTimeout(function () {
+            hidePreviewModal();
+        }, 150);
+    });
+
+    document.addEventListener('click', function (event) {
         const closeButton = event.target.closest('#adminDokumenPreviewModal [data-dismiss="modal"]');
         if (!closeButton) return;
 

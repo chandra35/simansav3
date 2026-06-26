@@ -769,6 +769,12 @@ $('#previewModal').on('hidden.bs.modal', function() {
     $('#previewPdf').hide();
 });
 
+$('#btnDownloadDoc').on('click', function() {
+    setTimeout(function() {
+        $('#previewModal').modal('hide');
+    }, 150);
+});
+
 // Show upload modal
 function showUploadModal(jenisDokumen, label) {
     $('#jenis_dokumen').val(jenisDokumen);
