@@ -131,6 +131,41 @@ class MatrikulasiPpdbController extends Controller
         }
     }
 
+    public function previewAll(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+        ]);
+
+        try {
+            $preview = $this->service->previewAll($validated['tahun_pelajaran_id']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $preview->map(fn ($candidate) => [
+                    'id' => $candidate->id,
+                    'nama_lengkap' => $candidate->nama_lengkap,
+                    'nisn' => $candidate->nisn,
+                    'nik' => $candidate->nik,
+                    'nomor_registrasi' => $candidate->nomor_registrasi,
+                    'nomor_tes' => $candidate->nomor_tes,
+                    'tahun_ppdb' => $candidate->ppdb_tahun_nama,
+                    'jalur' => $candidate->jalur_nama,
+                    'gelombang' => $candidate->gelombang_nama,
+                    'jurusan_awal' => $candidate->jurusan_awal,
+                    'jurusan_final' => $candidate->jurusan_final,
+                    'documents_count' => $candidate->documents_count,
+                    'import_status' => $candidate->import_status,
+                ])->values(),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil semua data PPDB: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function import(Request $request)
     {
         $validated = $request->validate([

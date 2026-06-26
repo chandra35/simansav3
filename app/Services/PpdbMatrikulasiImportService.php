@@ -87,6 +87,14 @@ class PpdbMatrikulasiImportService
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
+    public function previewAll(?string $tahunPelajaranId = null): Collection
+    {
+        $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
+        $rows = $this->fetchAllPpdbCandidates($tahun);
+
+        return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
+    }
+
     public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId): array
     {
         $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
@@ -190,6 +198,60 @@ class PpdbMatrikulasiImportService
 
         return collect($response->json('data', []))
             ->map(fn ($row) => json_decode(json_encode($row), false));
+    }
+
+    private function fetchAllPpdbCandidates(?TahunPelajaran $tahun): Collection
+    {
+        $all = collect();
+        $page = 1;
+        $lastPage = 1;
+
+        do {
+            $response = $this->fetchPpdbResponse([
+                'page' => $page,
+                'per_page' => 200,
+            ], $tahun, false);
+
+            $all = $all->merge($response['data']);
+            $lastPage = (int) ($response['meta']['last_page'] ?? $page);
+            $page++;
+        } while ($page <= $lastPage);
+
+        return $all->map(fn ($row) => json_decode(json_encode($row), false));
+    }
+
+    private function fetchPpdbResponse(array $params, ?TahunPelajaran $tahun, bool $includeDocuments): array
+    {
+        $baseUrl = rtrim((string) config('services.ppdb_sync.base_url'), '/');
+        $token = (string) config('services.ppdb_sync.token');
+
+        if ($baseUrl === '' || $token === '') {
+            throw new RuntimeException('Konfigurasi API PPDB belum lengkap.');
+        }
+
+        if ($tahun) {
+            $params['tahun_nama'] = $tahun->nama;
+            $params['tahun_mulai'] = $tahun->tahun_mulai;
+            $params['tahun_selesai'] = $tahun->tahun_selesai;
+        }
+
+        if ($includeDocuments) {
+            $params['include_documents'] = 1;
+        }
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->timeout((int) config('services.ppdb_sync.timeout', 30))
+            ->get($baseUrl . '/api/internal/simansa/pendaftar', $params);
+
+        if (!$response->successful()) {
+            throw new RuntimeException('API PPDB gagal: ' . ($response->json('message') ?: $response->body()));
+        }
+
+        return [
+            'data' => $response->json('data', []),
+            'meta' => $response->json('meta', []),
+        ];
     }
 
     private function decorateCandidate(object $row, ?string $tahunPelajaranId): object

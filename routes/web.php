@@ -271,6 +271,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/kelompok', [MatrikulasiPpdbController::class, 'storeKelompok'])->name('kelompok.store');
         Route::get('/candidates', [MatrikulasiPpdbController::class, 'candidates'])->name('candidates');
         Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');
+        Route::post('/preview-all', [MatrikulasiPpdbController::class, 'previewAll'])->name('preview-all');
         Route::post('/import', [MatrikulasiPpdbController::class, 'import'])->name('import');
     });
 

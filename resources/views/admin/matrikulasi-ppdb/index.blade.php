@@ -118,6 +118,9 @@
                         </div>
 
                         <div class="mat-actions">
+                            <button type="button" class="btn btn-outline-primary" id="btnLoadAll">
+                                <i class="fas fa-list mr-1"></i>Muat Semua PPDB
+                            </button>
                             <button type="button" class="btn btn-secondary" id="btnPreview">
                                 <i class="fas fa-eye mr-1"></i>Preview
                             </button>
@@ -244,9 +247,12 @@
         const routes = {
             candidates: @json(route('admin.matrikulasi-ppdb.candidates')),
             preview: @json(route('admin.matrikulasi-ppdb.preview')),
+            previewAll: @json(route('admin.matrikulasi-ppdb.preview-all')),
             import: @json(route('admin.matrikulasi-ppdb.import')),
             kelompokStore: @json(route('admin.matrikulasi-ppdb.kelompok.store')),
         };
+
+        let previewIds = [];
 
         function selectedIds() {
             return $('#calon_siswa_ids').val() || [];
@@ -264,6 +270,8 @@
 
         function renderPreview(rows) {
             const $tbody = $('#previewTable tbody');
+            previewIds = rows.map(row => row.id);
+
             if (!rows.length) {
                 $tbody.html('<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data preview.</td></tr>');
                 $('#btnImport').prop('disabled', true);
@@ -344,6 +352,11 @@
                 }
             });
 
+            $('#calon_siswa_ids').on('change', function () {
+                previewIds = [];
+                $('#btnImport').prop('disabled', true);
+            });
+
             $('#btnCreateKelompok').on('click', function () {
                 const nama = $('#new_kelompok_nama').val().trim();
                 if (!nama) {
@@ -383,8 +396,27 @@
                 });
             });
 
+            $('#btnLoadAll').on('click', function () {
+                const $button = $(this);
+                $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Memuat...');
+                $('#btnImport').prop('disabled', true);
+
+                $.post(routes.previewAll, {
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                }).done(response => {
+                    const rows = response.data || [];
+                    renderPreview(rows);
+                    $('#calon_siswa_ids').val(null).trigger('change');
+                    Swal.fire('Data dimuat', `${rows.length} pendaftar PPDB siap dipreview.`, 'success');
+                }).fail(xhr => {
+                    Swal.fire('Gagal memuat', xhr.responseJSON?.message || 'Tidak bisa mengambil semua data PPDB.', 'error');
+                }).always(() => {
+                    $button.prop('disabled', false).html('<i class="fas fa-list mr-1"></i>Muat Semua PPDB');
+                });
+            });
+
             $('#btnImport').on('click', function () {
-                const ids = selectedIds();
+                const ids = previewIds.length ? previewIds : selectedIds();
                 const kelompokId = $('#kelompok_id').val();
                 if (!ids.length || !kelompokId) {
                     Swal.fire('Data belum lengkap', 'Pilih pendaftar dan kelompok matrikulasi tujuan.', 'warning');
