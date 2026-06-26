@@ -425,6 +425,13 @@ return [
                     'active' => ['admin/kelas*'],
                 ],
                 [
+                    'text' => 'Matrikulasi PPDB',
+                    'route' => 'admin.matrikulasi-ppdb.index',
+                    'icon' => 'fas fa-fw fa-user-plus',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/matrikulasi-ppdb*'],
+                ],
+                [
                     'text' => 'Nilai Siswa',
                     'route' => 'admin.nilai.index',
                     'icon' => 'fas fa-fw fa-chart-line',

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\RdmMapelMappingController;
 use App\Http\Controllers\Admin\RdmMatchingController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\MutasiSiswaController;
+use App\Http\Controllers\Admin\MatrikulasiPpdbController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 
@@ -263,6 +264,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/kenaikan-kelas/status-kelulusan', [KenaikanKelasController::class, 'statusKelulusan'])->name('kenaikan-kelas.status-kelulusan');
         Route::post('/kenaikan-kelas/proses-kelulusan', [KenaikanKelasController::class, 'prosesKelulusan'])->name('kenaikan-kelas.proses-kelulusan');
         Route::post('/kenaikan-kelas/proses-naik-kelas', [KenaikanKelasController::class, 'prosesNaikKelas'])->name('kenaikan-kelas.proses-naik-kelas');
+    });
+
+    Route::middleware(['permission:manage-settings'])->prefix('matrikulasi-ppdb')->name('matrikulasi-ppdb.')->group(function () {
+        Route::get('/', [MatrikulasiPpdbController::class, 'index'])->name('index');
+        Route::get('/candidates', [MatrikulasiPpdbController::class, 'candidates'])->name('candidates');
+        Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');
+        Route::post('/import', [MatrikulasiPpdbController::class, 'import'])->name('import');
     });
 
     // Mutasi Siswa

@@ -16,6 +16,11 @@ class DokumenSiswa extends Model
 
     protected $fillable = [
         'siswa_id',
+        'ppdb_calon_dokumen_id',
+        'ppdb_jenis_dokumen',
+        'ppdb_source_disk',
+        'ppdb_source_url',
+        'ppdb_imported_at',
         'jenis_dokumen',
         'nama_file',
         'file_path',
@@ -41,6 +46,7 @@ class DokumenSiswa extends Model
 
     protected $casts = [
         'file_size' => 'integer',
+        'ppdb_imported_at' => 'datetime',
         'approved_at' => 'datetime',
         'accessed_at' => 'datetime',
         'access_count' => 'integer',

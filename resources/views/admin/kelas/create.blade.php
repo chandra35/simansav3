@@ -382,6 +382,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="jenis_kelas">Jenis Kelas <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('jenis_kelas') is-invalid @enderror"
+                                        id="jenis_kelas" name="jenis_kelas" required>
+                                        <option value="reguler" {{ old('jenis_kelas', 'reguler') === 'reguler' ? 'selected' : '' }}>Reguler</option>
+                                        <option value="matrikulasi" {{ old('jenis_kelas') === 'matrikulasi' ? 'selected' : '' }}>Matrikulasi PPDB</option>
+                                    </select>
+                                    @error('jenis_kelas')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="nama_kelas">Nama Kelas <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('nama_kelas') is-invalid @enderror" 
                                         id="nama_kelas" name="nama_kelas" value="{{ old('nama_kelas') }}" 
@@ -394,6 +410,7 @@
                                     </small>
                                 </div>
                             </div>
+                            <div class="col-md-6"></div>
                         </div>
 
                         <div class="form-group">
