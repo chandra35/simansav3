@@ -428,7 +428,7 @@ return [
                     'text' => 'Matrikulasi PPDB',
                     'route' => 'admin.matrikulasi-ppdb.index',
                     'icon' => 'fas fa-fw fa-user-plus',
-                    'can' => 'manage-settings',
+                    'can' => 'manage-kelas',
                     'active' => ['admin/matrikulasi-ppdb*'],
                 ],
                 [
