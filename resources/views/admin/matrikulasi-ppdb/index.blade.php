@@ -779,6 +779,109 @@
             background: #fff8df;
             color: #73510d;
         }
+        .mat-result-card {
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 14px 34px rgba(79, 70, 229, .1);
+        }
+        .mat-result-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .85rem .95rem;
+            background:
+                linear-gradient(135deg, rgba(79, 70, 229, .1), rgba(15, 118, 110, .06)),
+                #f8fafc;
+            border-bottom: 1px solid #e0e7ff;
+        }
+        .mat-result-title {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            color: #111827;
+        }
+        .mat-result-title span {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #4f46e5;
+            box-shadow: 0 10px 22px rgba(79, 70, 229, .24);
+            flex: 0 0 auto;
+        }
+        .mat-result-title strong,
+        .mat-result-title small {
+            display: block;
+        }
+        .mat-result-title strong {
+            font-weight: 800;
+        }
+        .mat-result-title small {
+            color: #64748b;
+            margin-top: .08rem;
+        }
+        .mat-result-stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .35rem;
+        }
+        .mat-result-stat {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: .25rem .52rem;
+            font-size: .74rem;
+            font-weight: 800;
+            background: #eef2ff;
+            color: #3730a3;
+            white-space: nowrap;
+        }
+        .mat-result-stat.is-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .mat-result-stat.is-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .mat-result-table {
+            margin-bottom: 0;
+        }
+        .mat-result-table thead th {
+            border-top: 0;
+            border-bottom: 1px solid #dbe4ee;
+            background: #f8fafc;
+            color: #475569;
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .mat-result-table tbody td {
+            border-top: 0;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+        .mat-result-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+        .mat-result-row-success {
+            background: #f0fdf4;
+        }
+        .mat-result-row-danger {
+            background: #fff1f2;
+        }
+        .mat-result-message {
+            color: #334155;
+            font-weight: 600;
+        }
         .mat-table th {
             white-space: nowrap;
             border-top: 0;
@@ -1280,6 +1383,46 @@
         .candidate-pill.is-paid { background: #dcfce7; color: #166534; }
         .candidate-pill.is-unpaid { background: #fee2e2; color: #991b1b; }
         .candidate-pill.is-muted { background: #f1f5f9; color: #475569; }
+        .mat-quick-search-dropdown {
+            border: 1px solid #c7d2fe !important;
+            border-radius: 8px !important;
+            overflow: hidden;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
+        }
+        .mat-quick-search-dropdown .select2-results__option {
+            padding: .75rem .85rem;
+            border-bottom: 1px solid #edf2f7;
+            background: #fff;
+            color: #111827;
+        }
+        .mat-quick-search-dropdown .select2-results__option:last-child {
+            border-bottom: 0;
+        }
+        .mat-quick-search-dropdown .select2-results__option--highlighted[aria-selected] {
+            background: #eef2ff !important;
+            color: #111827 !important;
+        }
+        .mat-quick-search-dropdown .select2-results__option[aria-selected=true] {
+            background: #ecfeff;
+            color: #111827;
+        }
+        .mat-quick-search-dropdown .select2-results__message {
+            color: #64748b;
+            padding: .85rem;
+        }
+        .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected],
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: #eef2ff;
+            color: #111827;
+        }
+        .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] .candidate-option strong,
+        .select2-container--default .select2-results__option--highlighted[aria-selected] .candidate-option strong {
+            color: #111827;
+        }
+        .select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] .candidate-option small,
+        .select2-container--default .select2-results__option--highlighted[aria-selected] .candidate-option small {
+            color: #475569;
+        }
         .payment-chip {
             display: inline-flex;
             align-items: center;
@@ -1720,6 +1863,91 @@
             `);
         }
 
+        function normalizeSearchValue(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function splitSmartSearchTerms(text) {
+            return String(text || '')
+                .split(/\r?\n|;|\t/)
+                .map(term => term.trim())
+                .filter(Boolean)
+                .filter((term, index, terms) => terms.findIndex(item => item.toLowerCase() === term.toLowerCase()) === index)
+                .slice(0, 50);
+        }
+
+        function chooseBestCandidate(term, results) {
+            const normalized = normalizeSearchValue(term);
+            return (results || []).find(item => {
+                return [item.nomor_tes, item.nisn, item.nama_lengkap, item.text]
+                    .some(value => normalizeSearchValue(value) === normalized);
+            }) || (results || [])[0] || null;
+        }
+
+        function addCandidateSelections(candidates) {
+            const $select = $('#calon_siswa_ids');
+            const existing = new Set($select.val() || []);
+
+            candidates.forEach(item => {
+                const id = String(item.id);
+                const text = item.nama_lengkap || item.text || item.nomor_tes || item.nisn || id;
+
+                if (!$select.find(`option[value="${id.replace(/"/g, '\\"')}"]`).length) {
+                    $select.append(new Option(text, id, false, false));
+                }
+
+                existing.add(id);
+            });
+
+            $select.val(Array.from(existing)).trigger('change');
+        }
+
+        async function handleSmartPaste(text) {
+            const terms = splitSmartSearchTerms(text);
+            if (terms.length < 2) {
+                return false;
+            }
+
+            setProgressOverlay(true, `Mencari ${terms.length} pendaftar dari teks yang ditempel...`, 30);
+
+            try {
+                const requests = terms.map(term => $.get(routes.candidates, {
+                    q: term,
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                    include_all: 0
+                }).then(response => ({
+                    term,
+                    match: chooseBestCandidate(term, response.results || [])
+                })).catch(() => ({
+                    term,
+                    match: null
+                })));
+
+                const responses = await Promise.all(requests);
+                const matches = responses.map(item => item.match).filter(Boolean);
+                const uniqueMatches = matches.filter((item, index, rows) => rows.findIndex(row => String(row.id) === String(item.id)) === index);
+                const notFound = responses.filter(item => !item.match).map(item => item.term);
+
+                if (uniqueMatches.length) {
+                    addCandidateSelections(uniqueMatches);
+                }
+
+                const message = notFound.length
+                    ? `${uniqueMatches.length} pendaftar ditemukan. ${notFound.length} baris belum ketemu: ${notFound.slice(0, 5).join(', ')}${notFound.length > 5 ? ', ...' : ''}`
+                    : `${uniqueMatches.length} pendaftar berhasil ditambahkan ke pilihan.`;
+
+                Swal.fire({
+                    title: uniqueMatches.length ? 'Pencarian multi data selesai' : 'Belum ada yang cocok',
+                    text: message,
+                    icon: uniqueMatches.length ? (notFound.length ? 'warning' : 'success') : 'warning'
+                });
+            } finally {
+                setProgressOverlay(false);
+            }
+
+            return true;
+        }
+
         function confirmUnpaid(rows, actionText) {
             const unpaid = rows.filter(row => !row.has_registrasi_komite);
             if (!unpaid.length) {
@@ -1738,23 +1966,36 @@
 
         function showResult(result) {
             const rows = (result.items || []).map(item => `
-                <tr class="${item.status === 'success' ? 'table-success' : 'table-danger'}">
-                    <td>${item.nama}</td>
-                    <td>${item.nisn}</td>
-                    <td>${item.message}</td>
+                <tr class="${item.status === 'success' ? 'mat-result-row-success' : 'mat-result-row-danger'}">
+                    <td><strong>${escapeHtml(item.nama || '-')}</strong></td>
+                    <td>${escapeHtml(item.nisn || '-')}</td>
+                    <td class="mat-result-message">${escapeHtml(item.message || '-')}</td>
                     <td class="text-center">${item.documents_copied || 0}</td>
                 </tr>
             `).join('');
 
             $('#resultBox').show().html(`
-                <div class="alert alert-info mb-2">
-                    <strong>Hasil sync:</strong> ${result.success} berhasil, ${result.failed} gagal, ${result.documents_copied} dokumen disalin.
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered mb-0">
-                        <thead><tr><th>Nama</th><th>NISN</th><th>Pesan</th><th>Dok.</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
+                <div class="mat-result-card">
+                    <div class="mat-result-head">
+                        <div class="mat-result-title">
+                            <span><i class="fas fa-check-double"></i></span>
+                            <div>
+                                <strong>Hasil Sync Matrikulasi</strong>
+                                <small>Ringkasan import data dan dokumen dari PPDB.</small>
+                            </div>
+                        </div>
+                        <div class="mat-result-stats">
+                            <span class="mat-result-stat is-success">${result.success || 0} berhasil</span>
+                            <span class="mat-result-stat is-danger">${result.failed || 0} gagal</span>
+                            <span class="mat-result-stat">${result.documents_copied || 0} dokumen</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mat-result-table">
+                            <thead><tr><th>Nama</th><th>NISN</th><th>Pesan</th><th class="text-center">Dok.</th></tr></thead>
+                            <tbody>${rows || '<tr><td colspan="4" class="text-center text-muted py-3">Tidak ada rincian hasil.</td></tr>'}</tbody>
+                        </table>
+                    </div>
                 </div>
             `);
         }
@@ -1774,6 +2015,7 @@
                 theme: 'bootstrap4',
                 width: '100%',
                 placeholder: 'Cari nama, NISN, nomor registrasi, atau nomor tes',
+                dropdownCssClass: 'mat-quick-search-dropdown',
                 minimumInputLength: 2,
                 ajax: {
                     url: routes.candidates,
@@ -1793,6 +2035,20 @@
                     if (!item.id) return item.text;
                     return candidateOption(item);
                 }
+            });
+
+            $(document).on('paste', '.mat-quick-search .select2-search__field', function (event) {
+                const clipboard = event.originalEvent?.clipboardData || window.clipboardData;
+                const text = clipboard?.getData('text') || '';
+                const terms = splitSmartSearchTerms(text);
+
+                if (terms.length < 2) {
+                    return;
+                }
+
+                event.preventDefault();
+                $('#calon_siswa_ids').select2('close');
+                handleSmartPaste(text);
             });
 
             $('#calon_siswa_ids').on('change', function () {
