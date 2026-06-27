@@ -1383,30 +1383,31 @@
         .candidate-pill.is-paid { background: #dcfce7; color: #166534; }
         .candidate-pill.is-unpaid { background: #fee2e2; color: #991b1b; }
         .candidate-pill.is-muted { background: #f1f5f9; color: #475569; }
-        .mat-quick-search-dropdown {
+        .select2-container--bootstrap4 .select2-dropdown,
+        .select2-container--default .select2-dropdown {
             border: 1px solid #c7d2fe !important;
             border-radius: 8px !important;
             overflow: hidden;
             box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
         }
-        .mat-quick-search-dropdown .select2-results__option {
+        .select2-container--bootstrap4 .select2-results__option,
+        .select2-container--default .select2-results__option {
             padding: .75rem .85rem;
             border-bottom: 1px solid #edf2f7;
             background: #fff;
             color: #111827;
         }
-        .mat-quick-search-dropdown .select2-results__option:last-child {
+        .select2-container--bootstrap4 .select2-results__option:last-child,
+        .select2-container--default .select2-results__option:last-child {
             border-bottom: 0;
         }
-        .mat-quick-search-dropdown .select2-results__option--highlighted[aria-selected] {
-            background: #eef2ff !important;
-            color: #111827 !important;
-        }
-        .mat-quick-search-dropdown .select2-results__option[aria-selected=true] {
+        .select2-container--bootstrap4 .select2-results__option[aria-selected=true],
+        .select2-container--default .select2-results__option[aria-selected=true] {
             background: #ecfeff;
             color: #111827;
         }
-        .mat-quick-search-dropdown .select2-results__message {
+        .select2-container--bootstrap4 .select2-results__message,
+        .select2-container--default .select2-results__message {
             color: #64748b;
             padding: .85rem;
         }
@@ -2015,7 +2016,6 @@
                 theme: 'bootstrap4',
                 width: '100%',
                 placeholder: 'Cari nama, NISN, nomor registrasi, atau nomor tes',
-                dropdownCssClass: 'mat-quick-search-dropdown',
                 minimumInputLength: 2,
                 ajax: {
                     url: routes.candidates,
