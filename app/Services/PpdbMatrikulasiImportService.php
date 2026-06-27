@@ -103,6 +103,24 @@ class PpdbMatrikulasiImportService
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
+    public function browseCandidates(?string $term, ?string $tahunPelajaranId = null, int $page = 1, int $perPage = 25): array
+    {
+        $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
+        $response = $this->fetchPpdbResponse([
+            'q' => $term,
+            'scope' => 'all',
+            'page' => max(1, $page),
+            'per_page' => max(1, min($perPage, 100)),
+        ], $tahun, false);
+
+        return [
+            'data' => collect($response['data'])
+                ->map(fn ($row) => $this->decorateCandidate(json_decode(json_encode($row), false), $tahunPelajaranId))
+                ->values(),
+            'meta' => $response['meta'],
+        ];
+    }
+
     public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId, bool $allowUnpaid = false): array
     {
         $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);

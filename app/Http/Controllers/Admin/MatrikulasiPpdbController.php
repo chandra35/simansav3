@@ -100,6 +100,63 @@ class MatrikulasiPpdbController extends Controller
         }
     }
 
+    public function browserCandidates(Request $request)
+    {
+        $validated = $request->validate([
+            'draw' => 'nullable|integer|min:1',
+            'start' => 'nullable|integer|min:0',
+            'length' => 'nullable|integer|min:1|max:100',
+            'search.value' => 'nullable|string|max:100',
+            'tahun_pelajaran_id' => 'nullable|exists:tahun_pelajaran,id',
+        ]);
+
+        $length = (int) ($validated['length'] ?? 25);
+        $start = (int) ($validated['start'] ?? 0);
+        $page = (int) floor($start / max($length, 1)) + 1;
+        $term = data_get($validated, 'search.value');
+
+        try {
+            $result = $this->service->browseCandidates(
+                $term,
+                $request->get('tahun_pelajaran_id'),
+                $page,
+                $length
+            );
+            $total = (int) ($result['meta']['total'] ?? $result['data']->count());
+
+            return response()->json([
+                'draw' => (int) ($validated['draw'] ?? 1),
+                'recordsTotal' => $total,
+                'recordsFiltered' => $total,
+                'data' => $result['data']->map(fn ($candidate) => [
+                    'id' => $candidate->id,
+                    'nama_lengkap' => $candidate->nama_lengkap,
+                    'nisn' => $candidate->nisn,
+                    'nik' => $candidate->nik,
+                    'nomor_tes' => $candidate->nomor_tes,
+                    'tahun' => $candidate->ppdb_tahun_nama,
+                    'jurusan' => $candidate->jurusan_final ?: $candidate->jurusan_awal ?: $candidate->pilihan_program,
+                    'documents_count' => $candidate->documents_count,
+                    'import_status' => $candidate->import_status,
+                    'is_lulus' => $candidate->is_lulus,
+                    'has_registrasi_komite' => $candidate->has_registrasi_komite,
+                ])->values(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal browse pendaftar PPDB untuk matrikulasi', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'draw' => (int) ($validated['draw'] ?? 1),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Gagal mengambil data PPDB: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function preview(Request $request)
     {
         $validated = $request->validate([
