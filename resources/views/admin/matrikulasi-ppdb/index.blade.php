@@ -6,10 +6,13 @@
 @section('plugins.Sweetalert2', true)
 
 @section('content_header')
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-        <div>
-            <h1 class="mb-1"><i class="fas fa-users-cog mr-2"></i>Matrikulasi PPDB</h1>
-            <div class="text-muted">Staging calon siswa baru sebelum ditetapkan ke kelas reguler.</div>
+    <div class="mat-page-head d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+        <div class="mat-page-title">
+            <span class="mat-title-icon"><i class="fas fa-users-cog"></i></span>
+            <div>
+                <h1 class="mb-1">Matrikulasi PPDB</h1>
+                <div class="text-muted">Staging calon siswa baru sebelum ditetapkan ke kelas reguler.</div>
+            </div>
         </div>
         <ol class="breadcrumb mt-2 mt-md-0">
             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
@@ -57,7 +60,7 @@
         <div class="row">
             <div class="col-xl-4">
                 <div class="card mat-card">
-                    <div class="card-header border-0">
+                    <div class="card-header border-0 mat-card-head">
                         <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Periode & Kelompok</h3>
                     </div>
                     <div class="card-body">
@@ -122,7 +125,7 @@
 
             <div class="col-xl-8">
                 <div class="card mat-card">
-                    <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                    <div class="card-header border-0 d-flex align-items-center justify-content-between mat-card-head">
                         <h3 class="card-title"><i class="fas fa-cloud-download-alt mr-2"></i>Sync Data PPDB</h3>
                         <span class="badge badge-light">Lulus + Registrasi Komite</span>
                     </div>
@@ -138,6 +141,9 @@
                         <div class="mat-actions">
                             <button type="button" class="btn btn-outline-primary" id="btnLoadAll">
                                 <i class="fas fa-list mr-1"></i>Muat Semua PPDB
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="btnOpenAddModal">
+                                <i class="fas fa-user-plus mr-1"></i>Tambah Pendaftar
                             </button>
                             <button type="button" class="btn btn-secondary" id="btnPreview">
                                 <i class="fas fa-eye mr-1"></i>Preview
@@ -158,7 +164,7 @@
                                 <tr>
                                     <th>Nama</th>
                                     <th>NISN</th>
-                                    <th>No. Reg</th>
+                                    <th>No.Tes</th>
                                     <th>Tahun</th>
                                     <th>Jurusan</th>
                                     <th class="text-center">Dok.</th>
@@ -179,10 +185,79 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="addCandidateModal" tabindex="-1" role="dialog" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content mat-modal">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="addCandidateModalLabel">
+                            <i class="fas fa-user-plus mr-2"></i>Tambah Pendaftar PPDB
+                        </h5>
+                        <small class="text-muted">Browse semua pendaftar pada tahun pelajaran terpilih.</small>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mat-browser-bar">
+                        <div>
+                            <strong>Tahun pelajaran</strong>
+                            <span id="modalYearName">{{ optional($tahunPelajaran->firstWhere('id', $selectedTahunId))->nama ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <strong>Mode</strong>
+                            <span>Semua pendaftar</span>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="browse_candidate_ids">Cari dan pilih pendaftar</label>
+                        <select id="browse_candidate_ids" class="form-control" multiple></select>
+                    </div>
+                    <div class="mat-browser-note mt-3">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Pendaftar yang belum registrasi komite akan diberi tanda dan wajib dikonfirmasi sebelum masuk preview/sync.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="btnAddCandidatesPreview">
+                        <i class="fas fa-plus mr-1"></i>Tambahkan ke Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
     <style>
+        .mat-page-head {
+            gap: 1rem;
+        }
+        .mat-page-title {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+        }
+        .mat-page-title h1 {
+            color: #111827;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+        .mat-title-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #0f766e;
+            box-shadow: 0 10px 24px rgba(15, 118, 110, .22);
+        }
         .mat-shell { padding-bottom: 1rem; }
         .mat-progress-overlay {
             position: fixed;
@@ -243,6 +318,7 @@
             border-radius: 8px;
             padding: .9rem 1rem;
             min-height: 78px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .04);
         }
         .mat-stat span {
             display: block;
@@ -261,7 +337,15 @@
         .mat-card {
             border: 1px solid #e6e8ef;
             border-radius: 8px;
-            box-shadow: none;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
+            overflow: hidden;
+        }
+        .mat-card-head {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+        .mat-card-head .card-title {
+            color: #172033;
+            font-weight: 800;
         }
         .mat-inline-create {
             border: 1px solid #e9edf5;
@@ -308,6 +392,105 @@
         .mat-table th {
             white-space: nowrap;
             border-top: 0;
+            color: #475569;
+            font-size: .76rem;
+            text-transform: uppercase;
+        }
+        .mat-table td {
+            vertical-align: middle;
+        }
+        .mat-modal {
+            border: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 22px 64px rgba(15, 23, 42, .22);
+        }
+        .mat-modal .modal-header {
+            background: #f8fafc;
+            border-bottom-color: #e6e8ef;
+        }
+        .mat-browser-bar {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+        .mat-browser-bar > div {
+            border: 1px solid #e6e8ef;
+            border-radius: 8px;
+            background: #fff;
+            padding: .75rem .85rem;
+        }
+        .mat-browser-bar strong,
+        .mat-browser-bar span {
+            display: block;
+        }
+        .mat-browser-bar strong {
+            color: #64748b;
+            font-size: .73rem;
+            text-transform: uppercase;
+        }
+        .mat-browser-bar span {
+            color: #111827;
+            font-weight: 800;
+            margin-top: .12rem;
+        }
+        .mat-browser-note {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            background: #fffbeb;
+            color: #7c4a03;
+            padding: .7rem .8rem;
+        }
+        .candidate-option {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(190px, .75fr);
+            gap: .75rem;
+            align-items: center;
+            padding: .25rem 0;
+        }
+        .candidate-option strong,
+        .candidate-option small {
+            display: block;
+        }
+        .candidate-option small {
+            color: #64748b;
+        }
+        .candidate-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .35rem;
+        }
+        .candidate-pill {
+            border-radius: 6px;
+            padding: .13rem .42rem;
+            font-size: .7rem;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #eef2ff;
+            color: #3730a3;
+        }
+        .candidate-pill.is-paid { background: #dcfce7; color: #166534; }
+        .candidate-pill.is-unpaid { background: #fee2e2; color: #991b1b; }
+        .candidate-pill.is-muted { background: #f1f5f9; color: #475569; }
+        .payment-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: .18rem .5rem;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .payment-chip.is-paid {
+            background: #dcfce7;
+            color: #166534;
         }
         .select2-container--default .select2-selection--multiple {
             min-height: 42px;
@@ -332,6 +515,9 @@
             .mat-stats { grid-template-columns: 1fr; }
             .mat-actions .btn { width: 100%; }
             .mat-stat strong { font-size: 1.1rem; }
+            .candidate-option,
+            .mat-browser-bar { grid-template-columns: 1fr; }
+            .candidate-meta { justify-content: flex-start; }
         }
     </style>
 @stop
@@ -347,6 +533,7 @@
         };
 
         let previewIds = [];
+        let currentPreviewRows = [];
         let suppressSelectionReset = false;
 
         function selectedIds() {
@@ -361,6 +548,12 @@
 
         function setButtonLoading($button, loading, loadingText, normalHtml) {
             $button.prop('disabled', loading).html(loading ? `<i class="fas fa-spinner fa-spin mr-1"></i>${loadingText}` : normalHtml);
+        }
+
+        function paymentChip(row) {
+            return row.has_registrasi_komite
+                ? '<span class="payment-chip is-paid">Sudah bayar</span>'
+                : '<span class="payment-chip">Belum bayar</span>';
         }
 
         function updatePreviewSummary(rows, mode = 'idle') {
@@ -394,6 +587,7 @@
 
         function renderPreview(rows) {
             const $tbody = $('#previewTable tbody');
+            currentPreviewRows = rows;
             previewIds = rows.map(row => row.id);
 
             if (!rows.length) {
@@ -407,9 +601,9 @@
                 <tr>
                     <td><strong>${row.nama_lengkap || '-'}</strong><br><small class="text-muted">${row.nik || '-'}</small></td>
                     <td>${row.nisn || '-'}</td>
-                    <td>${row.nomor_registrasi || row.nomor_tes || '-'}</td>
+                    <td><strong>${row.nomor_tes || '-'}</strong></td>
                     <td>${row.tahun_ppdb || '-'}</td>
-                    <td>${row.jurusan_final || row.jurusan_awal || '-'}</td>
+                    <td>${row.jurusan_final || row.jurusan_awal || '-'}<br>${paymentChip(row)}</td>
                     <td class="text-center">${row.documents_count || 0}</td>
                     <td>${statusChip(row.import_status)}</td>
                 </tr>
@@ -418,6 +612,44 @@
             $tbody.html(html);
             $('#btnImport').prop('disabled', rows.some(row => row.import_status === 'sudah_jadi_siswa'));
             updatePreviewSummary(rows);
+        }
+
+        function candidateOption(item) {
+            if (!item.id) return item.text;
+
+            const paidClass = item.has_registrasi_komite ? 'is-paid' : 'is-unpaid';
+            const paidText = item.has_registrasi_komite ? 'Sudah bayar' : 'Belum bayar';
+            const lulusText = item.is_lulus ? 'Lulus' : 'Belum lulus';
+
+            return $(`
+                <div class="candidate-option">
+                    <div>
+                        <strong>${item.nama_lengkap || item.text}</strong>
+                        <small>${item.nisn || '-'} | No.Tes: ${item.nomor_tes || '-'}</small>
+                    </div>
+                    <div class="candidate-meta">
+                        <span class="candidate-pill ${paidClass}">${paidText}</span>
+                        <span class="candidate-pill">${lulusText}</span>
+                        <span class="candidate-pill is-muted">${item.jurusan || '-'}</span>
+                    </div>
+                </div>
+            `);
+        }
+
+        function confirmUnpaid(rows, actionText) {
+            const unpaid = rows.filter(row => !row.has_registrasi_komite);
+            if (!unpaid.length) {
+                return Promise.resolve(true);
+            }
+
+            return Swal.fire({
+                title: 'Ada pendaftar belum bayar',
+                html: `<div class="text-left">${unpaid.length} pendaftar belum tercatat registrasi komite.<br>Yakin tetap ${actionText}?</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, lanjutkan',
+                cancelButtonText: 'Batal'
+            }).then(result => result.isConfirmed);
         }
 
         function showResult(result) {
@@ -465,7 +697,8 @@
                     delay: 300,
                     data: params => ({
                         q: params.term,
-                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                        include_all: 0
                     }),
                     processResults: data => data,
                     error: xhr => {
@@ -474,8 +707,32 @@
                 },
                 templateResult: function (item) {
                     if (!item.id) return item.text;
-                    return $(`<div><strong>${item.text}</strong><br><small>${item.tahun || '-'} | Dokumen: ${item.documents_count || 0} | ${item.status || '-'}</small></div>`);
+                    return candidateOption(item);
                 }
+            });
+
+            $('#browse_candidate_ids').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $('#addCandidateModal'),
+                placeholder: 'Ketik nama, NISN, atau No.Tes',
+                minimumInputLength: 0,
+                ajax: {
+                    url: routes.candidates,
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term || '',
+                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                        include_all: 1
+                    }),
+                    processResults: data => data,
+                    error: xhr => {
+                        Swal.fire('Koneksi PPDB gagal', xhr.responseJSON?.message || 'Tidak bisa mengambil data semua pendaftar.', 'error');
+                    }
+                },
+                templateResult: candidateOption,
+                templateSelection: item => item.nama_lengkap || item.text
             });
 
             $('#calon_siswa_ids').on('change', function () {
@@ -484,8 +741,14 @@
                 }
 
                 previewIds = [];
+                currentPreviewRows = [];
                 $('#btnImport').prop('disabled', true);
                 updatePreviewSummary([]);
+            });
+
+            $('#btnOpenAddModal').on('click', function () {
+                $('#browse_candidate_ids').val(null).trigger('change');
+                $('#addCandidateModal').modal('show');
             });
 
             $('#btnCreateKelompok').on('click', function () {
@@ -523,7 +786,8 @@
 
                 $.post(routes.preview, {
                     calon_siswa_ids: ids,
-                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                    include_all: 0
                 }).done(response => {
                     renderPreview(response.data || []);
                 }).fail(xhr => {
@@ -560,6 +824,49 @@
                 });
             });
 
+            $('#btnAddCandidatesPreview').on('click', function () {
+                const ids = $('#browse_candidate_ids').val() || [];
+                if (!ids.length) {
+                    Swal.fire('Belum ada pilihan', 'Pilih minimal satu pendaftar dari daftar browse.', 'warning');
+                    return;
+                }
+
+                const $button = $(this);
+                setButtonLoading($button, true, 'Menambahkan...', '<i class="fas fa-plus mr-1"></i>Tambahkan ke Preview');
+                setProgressOverlay(true, 'Mengambil detail pendaftar dari PPDB...', 45);
+
+                $.post(routes.preview, {
+                    calon_siswa_ids: ids,
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                    include_all: 1
+                }).done(async response => {
+                    const rows = response.data || [];
+                    const confirmed = await confirmUnpaid(rows, 'menambahkan ke preview');
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    const merged = [...currentPreviewRows];
+                    rows.forEach(row => {
+                        const index = merged.findIndex(existing => existing.id === row.id);
+                        if (index >= 0) {
+                            merged[index] = row;
+                        } else {
+                            merged.push(row);
+                        }
+                    });
+
+                    renderPreview(merged);
+                    $('#addCandidateModal').modal('hide');
+                    Swal.fire('Ditambahkan', `${rows.length} pendaftar masuk preview.`, 'success');
+                }).fail(xhr => {
+                    Swal.fire('Gagal menambahkan', xhr.responseJSON?.message || 'Tidak bisa membuat preview pendaftar.', 'error');
+                }).always(() => {
+                    setProgressOverlay(false);
+                    setButtonLoading($button, false, 'Menambahkan...', '<i class="fas fa-plus mr-1"></i>Tambahkan ke Preview');
+                });
+            });
+
             $('#btnImport').on('click', function () {
                 const ids = previewIds.length ? previewIds : selectedIds();
                 const kelompokId = $('#kelompok_id').val();
@@ -568,10 +875,15 @@
                     return;
                 }
 
+                const unpaidCount = currentPreviewRows.filter(row => ids.includes(row.id) && !row.has_registrasi_komite).length;
+                const confirmText = unpaidCount
+                    ? `Data akan masuk staging matrikulasi. Ada ${unpaidCount} pendaftar belum registrasi komite.`
+                    : 'Data akan masuk staging matrikulasi, belum menjadi siswa reguler.';
+
                 Swal.fire({
                     title: 'Sync ke matrikulasi?',
-                    text: 'Data akan masuk staging matrikulasi, belum menjadi siswa reguler.',
-                    icon: 'question',
+                    text: confirmText,
+                    icon: unpaidCount ? 'warning' : 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, sync',
                     cancelButtonText: 'Batal'
@@ -583,7 +895,8 @@
                         calon_siswa_ids: ids,
                         tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
                         kelompok_id: kelompokId,
-                        include_documents: $('#include_documents').is(':checked') ? 1 : 0
+                        include_documents: $('#include_documents').is(':checked') ? 1 : 0,
+                        allow_unpaid: unpaidCount ? 1 : 0
                     }).done(response => {
                         showResult(response.data || {});
                         Swal.fire('Selesai', response.message || 'Sync selesai.', 'success');

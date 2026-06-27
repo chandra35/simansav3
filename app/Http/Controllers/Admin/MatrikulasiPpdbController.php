@@ -62,12 +62,15 @@ class MatrikulasiPpdbController extends Controller
         $request->validate([
             'q' => 'nullable|string|max:100',
             'tahun_pelajaran_id' => 'nullable|exists:tahun_pelajaran,id',
+            'include_all' => 'nullable|boolean',
         ]);
 
         try {
             $candidates = $this->service->searchCandidates(
                 $request->get('q'),
-                $request->get('tahun_pelajaran_id')
+                $request->get('tahun_pelajaran_id'),
+                50,
+                $request->boolean('include_all')
             );
 
             return response()->json([
@@ -77,6 +80,12 @@ class MatrikulasiPpdbController extends Controller
                     'status' => $candidate->import_status,
                     'documents_count' => $candidate->documents_count,
                     'tahun' => $candidate->ppdb_tahun_nama,
+                    'nama_lengkap' => $candidate->nama_lengkap,
+                    'nisn' => $candidate->nisn,
+                    'nomor_tes' => $candidate->nomor_tes,
+                    'jurusan' => $candidate->jurusan_final ?: $candidate->jurusan_awal ?: $candidate->pilihan_program,
+                    'is_lulus' => $candidate->is_lulus,
+                    'has_registrasi_komite' => $candidate->has_registrasi_komite,
                 ])->values(),
             ]);
         } catch (\Throwable $e) {
@@ -97,12 +106,15 @@ class MatrikulasiPpdbController extends Controller
             'calon_siswa_ids' => 'required|array|min:1',
             'calon_siswa_ids.*' => 'required|string',
             'tahun_pelajaran_id' => 'nullable|exists:tahun_pelajaran,id',
+            'include_all' => 'nullable|boolean',
         ]);
 
         try {
             $preview = $this->service->preview(
                 $validated['calon_siswa_ids'],
-                $validated['tahun_pelajaran_id'] ?? null
+                $validated['tahun_pelajaran_id'] ?? null,
+                false,
+                $request->boolean('include_all')
             );
 
             return response()->json([
@@ -121,6 +133,8 @@ class MatrikulasiPpdbController extends Controller
                     'jurusan_final' => $candidate->jurusan_final,
                     'documents_count' => $candidate->documents_count,
                     'import_status' => $candidate->import_status,
+                    'is_lulus' => $candidate->is_lulus,
+                    'has_registrasi_komite' => $candidate->has_registrasi_komite,
                 ])->values(),
             ]);
         } catch (\Throwable $e) {
@@ -156,6 +170,8 @@ class MatrikulasiPpdbController extends Controller
                     'jurusan_final' => $candidate->jurusan_final,
                     'documents_count' => $candidate->documents_count,
                     'import_status' => $candidate->import_status,
+                    'is_lulus' => $candidate->is_lulus,
+                    'has_registrasi_komite' => $candidate->has_registrasi_komite,
                 ])->values(),
             ]);
         } catch (\Throwable $e) {
@@ -174,6 +190,7 @@ class MatrikulasiPpdbController extends Controller
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
             'kelompok_id' => 'required|exists:matrikulasi_kelompoks,id',
             'include_documents' => 'nullable|boolean',
+            'allow_unpaid' => 'nullable|boolean',
         ]);
 
         try {
@@ -181,7 +198,8 @@ class MatrikulasiPpdbController extends Controller
                 $validated['calon_siswa_ids'],
                 $validated['kelompok_id'],
                 (bool) ($validated['include_documents'] ?? false),
-                $validated['tahun_pelajaran_id']
+                $validated['tahun_pelajaran_id'],
+                (bool) ($validated['allow_unpaid'] ?? false)
             );
 
             return response()->json([

@@ -61,28 +61,36 @@ class PpdbMatrikulasiImportService
         ]);
     }
 
-    public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20): Collection
+    public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20, bool $includeAll = false): Collection
     {
         $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
         $rows = $this->fetchPpdbCandidates([
             'q' => $term,
             'limit' => $limit,
+            'scope' => $includeAll ? 'all' : 'eligible',
         ], $tahun, false);
 
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
-    public function preview(array $calonSiswaIds, ?string $tahunPelajaranId = null, bool $includeDocuments = false): Collection
+    public function preview(array $calonSiswaIds, ?string $tahunPelajaranId = null, bool $includeDocuments = false, bool $includeAll = false): Collection
     {
         if (empty($calonSiswaIds)) {
             return collect();
         }
 
         $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
-        $rows = $this->fetchPpdbCandidates([
-            'ids' => implode(',', $calonSiswaIds),
-            'limit' => min(max(count($calonSiswaIds), 1), 100),
-        ], $tahun, $includeDocuments);
+        $rows = collect($calonSiswaIds)
+            ->filter()
+            ->unique()
+            ->chunk(100)
+            ->flatMap(function (Collection $ids) use ($tahun, $includeDocuments, $includeAll) {
+                return $this->fetchPpdbCandidates([
+                    'ids' => $ids->implode(','),
+                    'limit' => $ids->count(),
+                    'scope' => $includeAll ? 'all' : 'eligible',
+                ], $tahun, $includeDocuments);
+            });
 
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
@@ -95,13 +103,13 @@ class PpdbMatrikulasiImportService
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));
     }
 
-    public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId): array
+    public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId, bool $allowUnpaid = false): array
     {
         $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
         $periode = $this->periodeFor($tahun);
         $kelompok = MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId);
 
-        $candidates = $this->preview($calonSiswaIds, $tahun->id, true);
+        $candidates = $this->preview($calonSiswaIds, $tahun->id, true, $allowUnpaid);
         $results = [
             'success' => 0,
             'failed' => 0,
@@ -115,6 +123,7 @@ class PpdbMatrikulasiImportService
 
                 $this->assertYearMatches($candidate, $tahun);
                 $this->assertImportable($candidate);
+                $this->assertPaymentAllowed($candidate, $allowUnpaid);
 
                 $peserta = $this->upsertPeserta($candidate, $periode, $kelompok);
                 $copied = $includeDocuments ? $this->syncDocuments($peserta, $candidate, $tahun) : 0;
@@ -275,8 +284,10 @@ class PpdbMatrikulasiImportService
 
         $row->documents_count = (int) ($row->documents_count ?? 0);
         $row->documents = collect($row->documents ?? []);
+        $row->is_lulus = (bool) ($row->is_lulus ?? false);
+        $row->has_registrasi_komite = (bool) ($row->has_registrasi_komite ?? false);
         $row->import_status = $this->candidateStatus($row);
-        $row->label = trim("{$row->nama_lengkap} - {$row->nisn} - {$row->nomor_registrasi}");
+        $row->label = trim("{$row->nama_lengkap} - {$row->nisn} - {$row->nomor_tes}");
 
         return $row;
     }
@@ -302,6 +313,13 @@ class PpdbMatrikulasiImportService
 
         if (empty($candidate->nama_lengkap)) {
             throw new RuntimeException('Nama pendaftar kosong.');
+        }
+    }
+
+    private function assertPaymentAllowed(object $candidate, bool $allowUnpaid): void
+    {
+        if (!$candidate->has_registrasi_komite && !$allowUnpaid) {
+            throw new RuntimeException('Pendaftar belum melakukan registrasi komite. Konfirmasi khusus diperlukan.');
         }
     }
 
