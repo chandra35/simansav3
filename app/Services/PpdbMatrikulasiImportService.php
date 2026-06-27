@@ -43,6 +43,8 @@ class PpdbMatrikulasiImportService
             ->kelompoks()
             ->withCount('pesertas')
             ->where('status', 'aktif')
+            ->orderBy('jenis_kelompok')
+            ->orderBy('tingkat_kelas')
             ->orderBy('nama')
             ->get();
     }
@@ -56,6 +58,8 @@ class PpdbMatrikulasiImportService
             'matrikulasi_periode_id' => $periode->id,
             'nama' => $payload['nama'],
             'kode' => $payload['kode'] ?? null,
+            'tingkat_kelas' => $payload['tingkat_kelas'] ?? null,
+            'jenis_kelompok' => $payload['jenis_kelompok'] ?? 'reguler',
             'kapasitas' => $payload['kapasitas'] ?? null,
             'status' => 'aktif',
         ]);

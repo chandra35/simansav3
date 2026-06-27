@@ -35,6 +35,8 @@ class MatrikulasiPpdbController extends Controller
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
             'nama' => 'required|string|max:120',
             'kode' => 'nullable|string|max:30',
+            'tingkat_kelas' => 'nullable|string|max:30',
+            'jenis_kelompok' => 'nullable|in:reguler,asrama',
             'kapasitas' => 'nullable|integer|min:1|max:500',
         ]);
 
@@ -46,7 +48,7 @@ class MatrikulasiPpdbController extends Controller
                 'message' => 'Kelompok matrikulasi berhasil dibuat.',
                 'data' => [
                     'id' => $kelompok->id,
-                    'text' => $kelompok->nama,
+                    'text' => $kelompok->nama . ' - ' . $kelompok->label_kelas,
                 ],
             ]);
         } catch (\Throwable $e) {

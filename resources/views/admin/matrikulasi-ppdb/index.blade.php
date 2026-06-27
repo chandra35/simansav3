@@ -83,26 +83,47 @@
                                 <option value="">Pilih kelompok</option>
                                 @foreach($kelompokMatrikulasi as $kelompok)
                                     <option value="{{ $kelompok->id }}">
-                                        {{ $kelompok->nama }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
+                                        {{ $kelompok->nama }} - {{ $kelompok->label_kelas }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="mat-inline-create">
+                        <div class="mat-inline-create mat-class-builder">
+                            <div class="mat-class-builder-head">
+                                <div>
+                                    <strong>Buat Kelas Matrikulasi</strong>
+                                    <span>Kelas sementara, tidak masuk kelas reguler SIMANSA.</span>
+                                </div>
+                                <i class="fas fa-layer-group"></i>
+                            </div>
                             <div class="form-row">
-                                <div class="col-12">
-                                    <label for="new_kelompok_nama">Buat Kelompok Baru</label>
+                                <div class="col-12 mb-2">
+                                    <label for="new_kelompok_nama">Nama Kelas</label>
+                                    <input id="new_kelompok_nama" class="form-control" placeholder="Madani, Al-Fath, Ibnu Sina">
                                 </div>
-                                <div class="col-8">
-                                    <input id="new_kelompok_nama" class="form-control" placeholder="Matrikulasi A">
+                                <div class="col-md-6 mb-2">
+                                    <label for="new_kelompok_jenis">Jenis</label>
+                                    <select id="new_kelompok_jenis" class="form-control">
+                                        <option value="reguler">Reguler</option>
+                                        <option value="asrama">Asrama</option>
+                                    </select>
                                 </div>
-                                <div class="col-4">
-                                    <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="Kapasitas">
+                                <div class="col-md-6 mb-2">
+                                    <label for="new_kelompok_tingkat">Tingkat/Kode</label>
+                                    <input id="new_kelompok_tingkat" class="form-control" placeholder="X1, X2, A1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="new_kelompok_kapasitas">Kapasitas</label>
+                                    <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="36">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="new_kelompok_kode">Kode Internal</label>
+                                    <input id="new_kelompok_kode" class="form-control" placeholder="Opsional">
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-block mt-2" id="btnCreateKelompok">
-                                <i class="fas fa-plus mr-1"></i>Buat Kelompok
+                                <i class="fas fa-plus mr-1"></i>Buat Kelas Matrikulasi
                             </button>
                         </div>
 
@@ -513,6 +534,52 @@
             padding: .85rem;
             background: #f8fafc;
         }
+        .mat-class-builder {
+            background:
+                linear-gradient(135deg, rgba(15, 118, 110, .07), rgba(79, 70, 229, .05)),
+                #fff;
+            border-color: #dbe4ee;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .04);
+        }
+        .mat-class-builder-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: .75rem;
+        }
+        .mat-class-builder-head strong,
+        .mat-class-builder-head span {
+            display: block;
+        }
+        .mat-class-builder-head strong {
+            color: #111827;
+            font-weight: 800;
+        }
+        .mat-class-builder-head span {
+            color: #64748b;
+            font-size: .78rem;
+            margin-top: .1rem;
+        }
+        .mat-class-builder-head i {
+            color: #0f766e;
+            margin-top: .1rem;
+        }
+        .mat-class-builder label {
+            color: #475569;
+            font-size: .74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: .25rem;
+        }
+        .mat-class-builder .form-control {
+            border-color: #d8e0ea;
+            border-radius: 8px;
+        }
+        .mat-class-builder .form-control:focus {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 .18rem rgba(15, 118, 110, .12);
+        }
         .mat-note {
             display: flex;
             gap: .75rem;
@@ -809,10 +876,32 @@
         #addCandidateModal .dataTables_length {
             margin-bottom: .75rem;
         }
+        #addCandidateModal .dataTables_filter {
+            float: none;
+            text-align: left;
+        }
+        #addCandidateModal .dataTables_length {
+            float: none;
+        }
         #addCandidateModal .dataTables_filter label,
         #addCandidateModal .dataTables_length label {
             color: #64748b;
             font-weight: 700;
+        }
+        #addCandidateModal .dataTables_filter label {
+            display: block;
+            position: relative;
+            width: min(460px, 100%);
+        }
+        #addCandidateModal .dataTables_filter label::before {
+            content: "\f002";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: .85rem;
+            bottom: .72rem;
+            color: #0f766e;
+            z-index: 1;
         }
         #addCandidateModal .dataTables_filter input,
         #addCandidateModal .dataTables_length select {
@@ -820,18 +909,56 @@
             border-radius: 8px;
             box-shadow: none;
         }
+        #addCandidateModal .dataTables_filter input {
+            width: 100%;
+            height: 44px;
+            margin: .35rem 0 0;
+            padding-left: 2.25rem;
+            background: #fff;
+        }
+        #addCandidateModal .dataTables_length select {
+            height: 38px;
+            margin: 0 .25rem;
+        }
         #addCandidateModal .dataTables_filter input:focus {
             border-color: #0f766e;
             box-shadow: 0 0 0 .18rem rgba(15, 118, 110, .12);
         }
+        #addCandidateModal .dataTables_paginate {
+            padding-top: .85rem;
+        }
+        #addCandidateModal .pagination {
+            gap: .35rem;
+            flex-wrap: wrap;
+        }
         #addCandidateModal .page-link {
-            border-color: #dbe4ee;
+            min-width: 38px;
+            height: 38px;
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #334155;
+            background: #fff;
+            font-weight: 800;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, .05);
+        }
+        #addCandidateModal .page-link:hover {
+            border-color: #99f6e4;
+            background: #ecfeff;
             color: #0f766e;
         }
         #addCandidateModal .page-item.active .page-link {
-            background: #0f766e;
+            background: linear-gradient(135deg, #0f766e, #4f46e5);
             border-color: #0f766e;
             color: #fff;
+            box-shadow: 0 10px 20px rgba(15, 118, 110, .22);
+        }
+        #addCandidateModal .page-item.disabled .page-link {
+            background: #f8fafc;
+            color: #94a3b8;
+            box-shadow: none;
         }
         .mat-browser-note {
             display: flex;
@@ -1363,11 +1490,17 @@
                 $.post(routes.kelompokStore, {
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
                     nama: nama,
+                    kode: $('#new_kelompok_kode').val(),
+                    tingkat_kelas: $('#new_kelompok_tingkat').val(),
+                    jenis_kelompok: $('#new_kelompok_jenis').val(),
                     kapasitas: $('#new_kelompok_kapasitas').val()
                 }).done(response => {
                     const data = response.data || {};
                     $('#kelompok_id').append(new Option(data.text, data.id, true, true)).trigger('change');
                     $('#new_kelompok_nama').val('');
+                    $('#new_kelompok_kode').val('');
+                    $('#new_kelompok_tingkat').val('');
+                    $('#new_kelompok_jenis').val('reguler');
                     $('#new_kelompok_kapasitas').val('');
                     Swal.fire('Berhasil', response.message || 'Kelompok dibuat.', 'success');
                 }).fail(xhr => {

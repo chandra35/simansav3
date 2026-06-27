@@ -16,11 +16,21 @@ class MatrikulasiKelompok extends Model
         'matrikulasi_periode_id',
         'nama',
         'kode',
+        'tingkat_kelas',
+        'jenis_kelompok',
         'kapasitas',
         'pembina_id',
         'status',
         'catatan',
     ];
+
+    public function getLabelKelasAttribute(): string
+    {
+        $jenis = strtoupper((string) ($this->jenis_kelompok ?: 'reguler'));
+        $tingkat = strtoupper((string) ($this->tingkat_kelas ?: $this->kode ?: ''));
+
+        return trim($jenis . ' ' . $tingkat) ?: $this->nama;
+    }
 
     public function periode()
     {
