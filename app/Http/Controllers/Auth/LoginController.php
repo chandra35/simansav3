@@ -21,6 +21,9 @@ class LoginController extends Controller
             if ($user->gtk) {
                 return redirect('admin/gtk/dashboard');
             }
+            if ($user->matrikulasiPeserta || $user->hasRole('Matrikulasi') || $user->role === 'matrikulasi') {
+                return redirect('matrikulasi/dashboard');
+            }
             if ($user->siswa) {
                 return redirect('siswa/dashboard');
             }
@@ -82,6 +85,10 @@ class LoginController extends Controller
             }
             
             // 2. Check if user has Siswa record (Siswa → Siswa Dashboard)
+            if ($user->matrikulasiPeserta || $user->hasRole('Matrikulasi') || $user->role === 'matrikulasi') {
+                return redirect()->intended('matrikulasi/dashboard');
+            }
+
             if ($user->siswa) {
                 return redirect()->intended('siswa/dashboard');
             }

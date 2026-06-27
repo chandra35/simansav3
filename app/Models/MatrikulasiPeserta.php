@@ -16,6 +16,9 @@ class MatrikulasiPeserta extends Model
         'matrikulasi_periode_id',
         'matrikulasi_kelompok_id',
         'siswa_id',
+        'user_id',
+        'akun_created_at',
+        'akun_last_reset_at',
         'ppdb_calon_siswa_id',
         'ppdb_tahun_pelajaran_id',
         'nomor_registrasi',
@@ -41,6 +44,8 @@ class MatrikulasiPeserta extends Model
         'data_ortu' => 'array',
         'data_ppdb' => 'array',
         'imported_at' => 'datetime',
+        'akun_created_at' => 'datetime',
+        'akun_last_reset_at' => 'datetime',
         'promoted_at' => 'datetime',
     ];
 
@@ -57,6 +62,11 @@ class MatrikulasiPeserta extends Model
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function dokumens()

@@ -9,11 +9,14 @@ use App\Models\MatrikulasiPeriode;
 use App\Models\MatrikulasiPeserta;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Spatie\Permission\Models\Role;
 
 class PpdbMatrikulasiImportService
 {
@@ -63,6 +66,105 @@ class PpdbMatrikulasiImportService
             'kapasitas' => $payload['kapasitas'] ?? null,
             'status' => 'aktif',
         ]);
+    }
+
+    public function pesertaFor(?string $tahunPelajaranId = null)
+    {
+        if (!$tahunPelajaranId || !$tahun = TahunPelajaran::find($tahunPelajaranId)) {
+            return MatrikulasiPeserta::query()->whereRaw('1 = 0');
+        }
+
+        $periode = $this->periodeFor($tahun);
+
+        return MatrikulasiPeserta::query()
+            ->with(['kelompok', 'user.latestSession'])
+            ->withCount('dokumens')
+            ->where('matrikulasi_periode_id', $periode->id);
+    }
+
+    public function assignKelompok(array $pesertaIds, string $kelompokId, string $tahunPelajaranId): int
+    {
+        $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
+        $periode = $this->periodeFor($tahun);
+        $kelompok = MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId);
+
+        return MatrikulasiPeserta::where('matrikulasi_periode_id', $periode->id)
+            ->whereIn('id', $pesertaIds)
+            ->update(['matrikulasi_kelompok_id' => $kelompok->id]);
+    }
+
+    public function generateAccounts(array $pesertaIds, string $tahunPelajaranId): array
+    {
+        $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
+        $periode = $this->periodeFor($tahun);
+        Role::firstOrCreate(['name' => 'Matrikulasi', 'guard_name' => 'web']);
+
+        $result = ['created' => 0, 'existing' => 0, 'failed' => 0, 'items' => []];
+        $pesertas = MatrikulasiPeserta::where('matrikulasi_periode_id', $periode->id)
+            ->whereIn('id', $pesertaIds)
+            ->get();
+
+        foreach ($pesertas as $peserta) {
+            try {
+                DB::beginTransaction();
+
+                if ($peserta->user_id && $peserta->user) {
+                    $peserta->user->assignRole('Matrikulasi');
+                    $result['existing']++;
+                    $result['items'][] = [
+                        'status' => 'existing',
+                        'nama' => $peserta->nama_lengkap,
+                        'username' => $peserta->user->username,
+                        'message' => 'Akun sudah ada.',
+                    ];
+                    DB::commit();
+                    continue;
+                }
+
+                $username = $this->uniqueMatrikulasiUsername($peserta);
+                $password = $this->initialMatrikulasiPassword($peserta);
+                $user = User::create([
+                    'name' => $peserta->nama_lengkap,
+                    'username' => $username,
+                    'email' => $username . '@matrikulasi.local',
+                    'password' => Hash::make($password),
+                    'role' => 'matrikulasi',
+                    'is_first_login' => true,
+                    'is_active' => true,
+                    'phone' => $peserta->data_siswa['nomor_hp'] ?? null,
+                ]);
+                $user->readable_password = $password;
+                $user->save();
+                $user->assignRole('Matrikulasi');
+
+                $peserta->update([
+                    'user_id' => $user->id,
+                    'akun_created_at' => now(),
+                    'akun_last_reset_at' => now(),
+                ]);
+
+                DB::commit();
+
+                $result['created']++;
+                $result['items'][] = [
+                    'status' => 'created',
+                    'nama' => $peserta->nama_lengkap,
+                    'username' => $username,
+                    'message' => 'Akun dibuat.',
+                ];
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                $result['failed']++;
+                $result['items'][] = [
+                    'status' => 'failed',
+                    'nama' => $peserta->nama_lengkap,
+                    'username' => '-',
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return $result;
     }
 
     public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20, bool $includeAll = false): Collection
@@ -229,6 +331,40 @@ class PpdbMatrikulasiImportService
 
         return collect($response->json('data', []))
             ->map(fn ($row) => json_decode(json_encode($row), false));
+    }
+
+    private function uniqueMatrikulasiUsername(MatrikulasiPeserta $peserta): string
+    {
+        $base = preg_replace('/[^a-zA-Z0-9]/', '', (string) ($peserta->nisn ?: $peserta->nomor_tes ?: $peserta->nik));
+        $base = $base ?: 'mat' . substr((string) $peserta->id, 0, 8);
+        $candidate = $base;
+
+        if ($this->usernameExists($candidate, $peserta->user_id)) {
+            $candidate = 'mat' . $base;
+        }
+
+        $suffix = 1;
+        $unique = $candidate;
+        while ($this->usernameExists($unique, $peserta->user_id)) {
+            $unique = $candidate . $suffix;
+            $suffix++;
+        }
+
+        return strtolower($unique);
+    }
+
+    private function usernameExists(string $username, ?string $exceptUserId = null): bool
+    {
+        return User::where('username', $username)
+            ->when($exceptUserId, fn ($query) => $query->whereKeyNot($exceptUserId))
+            ->exists();
+    }
+
+    private function initialMatrikulasiPassword(MatrikulasiPeserta $peserta): string
+    {
+        $value = preg_replace('/[^a-zA-Z0-9]/', '', (string) ($peserta->nisn ?: $peserta->nomor_tes ?: $peserta->nik));
+
+        return $value ?: substr((string) $peserta->id, 0, 8);
     }
 
     private function fetchAllPpdbCandidates(?TahunPelajaran $tahun): Collection

@@ -224,6 +224,72 @@
                 </div>
             </div>
         </div>
+
+        <div class="card mat-card mat-participant-card mt-3">
+            <div class="mat-sync-hero">
+                <div class="mat-sync-title">
+                    <span><i class="fas fa-user-check"></i></span>
+                    <div>
+                        <h3>Peserta Matrikulasi</h3>
+                        <p>Assign peserta yang sudah tersinkron ke kelas sementara dan siapkan akun login matrikulasi.</p>
+                    </div>
+                </div>
+                <span class="mat-sync-badge">Staging Matrikulasi</span>
+            </div>
+            <div class="card-body">
+                <div class="mat-participant-tools">
+                    <div>
+                        <label for="participant_kelompok_filter">Filter Kelompok</label>
+                        <select id="participant_kelompok_filter" class="form-control">
+                            <option value="">Semua kelompok</option>
+                            @foreach($kelompokMatrikulasi as $kelompok)
+                                <option value="{{ $kelompok->id }}">{{ $kelompok->nama }} - {{ $kelompok->label_kelas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="assign_kelompok_id">Assign ke Kelompok</label>
+                        <select id="assign_kelompok_id" class="form-control">
+                            <option value="">Pilih kelompok tujuan</option>
+                            @foreach($kelompokMatrikulasi as $kelompok)
+                                <option value="{{ $kelompok->id }}">{{ $kelompok->nama }} - {{ $kelompok->label_kelas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mat-participant-actions">
+                        <button type="button" class="btn btn-outline-primary" id="btnAssignKelompok">
+                            <i class="fas fa-random mr-1"></i>Assign Kelompok
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btnGenerateAccounts">
+                            <i class="fas fa-key mr-1"></i>Buat Akun
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mat-search-foot mb-2">
+                    <span id="participantSelectionInfo"><i class="fas fa-check-square mr-1"></i>Belum ada peserta dipilih</span>
+                    <span><i class="fas fa-info-circle mr-1"></i>Akun matrikulasi tidak masuk tabel siswa reguler.</span>
+                </div>
+
+                <div class="table-responsive mat-browser-table-wrap">
+                    <table class="table table-hover mb-0" id="matrikulasiPesertaTable">
+                        <thead>
+                        <tr>
+                            <th class="text-center" style="width:42px;">
+                                <input type="checkbox" id="checkAllParticipants" aria-label="Pilih semua peserta pada halaman">
+                            </th>
+                            <th>Peserta</th>
+                            <th>No.Tes</th>
+                            <th>Kelompok</th>
+                            <th>Akun</th>
+                            <th>Login</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="addCandidateModal" tabindex="-1" role="dialog" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
@@ -528,6 +594,38 @@
         .mat-preview-head i {
             color: #0f766e;
         }
+        .mat-participant-tools {
+            display: grid;
+            grid-template-columns: minmax(180px, .28fr) minmax(220px, .32fr) minmax(260px, .4fr);
+            gap: .85rem;
+            align-items: end;
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            background: #fff;
+            padding: .9rem;
+            margin-bottom: .85rem;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, .04);
+        }
+        .mat-participant-tools label {
+            color: #475569;
+            font-size: .74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: .25rem;
+        }
+        .mat-participant-tools .form-control {
+            border-color: #d8e0ea;
+            border-radius: 8px;
+        }
+        .mat-participant-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            justify-content: flex-end;
+        }
+        .mat-participant-actions .btn {
+            min-height: 38px;
+        }
         .mat-inline-create {
             border: 1px solid #e9edf5;
             border-radius: 8px;
@@ -771,6 +869,61 @@
             width: 100% !important;
             border-collapse: separate !important;
             border-spacing: 0;
+        }
+        #matrikulasiPesertaTable {
+            width: 100% !important;
+        }
+        #matrikulasiPesertaTable thead th,
+        #matrikulasiPesertaTable tbody td {
+            border-top: 0;
+            vertical-align: middle;
+        }
+        #matrikulasiPesertaTable thead th {
+            border-bottom: 1px solid #dbe4ee;
+            background: #f8fafc;
+            color: #475569;
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding: .72rem .75rem;
+        }
+        #matrikulasiPesertaTable tbody td {
+            border-bottom: 1px solid #edf2f7;
+            padding: .78rem .75rem;
+        }
+        #matrikulasiPesertaTable tbody tr.is-selected {
+            background: #ecfeff;
+        }
+        .account-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: .18rem .46rem;
+            font-size: .7rem;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .account-pill.is-ready {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .login-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: .18rem .46rem;
+            font-size: .7rem;
+            font-weight: 800;
+            white-space: nowrap;
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .login-pill.is-online {
+            background: #dbeafe;
+            color: #1d4ed8;
         }
         #candidateBrowserTable thead th {
             border-top: 0;
@@ -1091,6 +1244,9 @@
             white-space: nowrap;
         }
         .status-baru { background: #e8f5e9; color: #1b5e20; }
+        .status-matrikulasi { background: #e0f2fe; color: #075985; }
+        .status-dipromosikan { background: #dcfce7; color: #166534; }
+        .status-dibatalkan { background: #fee2e2; color: #991b1b; }
         .status-sudah_matrikulasi { background: #e3f2fd; color: #0d47a1; }
         .status-sudah_jadi_siswa { background: #fff3cd; color: #7a4d00; }
         @media (max-width: 991.98px) {
@@ -1102,9 +1258,12 @@
             .mat-stat strong { font-size: 1.1rem; }
             .mat-sync-hero,
             .mat-sync-title,
-            .mat-quick-search { display: block; }
+            .mat-quick-search,
+            .mat-participant-tools { display: block; }
             .mat-sync-title > span { margin-bottom: .65rem; }
             .mat-sync-badge { display: inline-flex; margin-top: .75rem; }
+            .mat-participant-tools > div { margin-bottom: .7rem; }
+            .mat-participant-actions .btn { width: 100%; }
             .mat-modal-hero,
             .mat-modal .modal-body { padding: 1rem; }
             .mat-modal-title { align-items: flex-start; }
@@ -1122,6 +1281,9 @@
         const routes = {
             candidates: @json(route('admin.matrikulasi-ppdb.candidates')),
             browserCandidates: @json(route('admin.matrikulasi-ppdb.browser-candidates')),
+            peserta: @json(route('admin.matrikulasi-ppdb.peserta')),
+            assignKelompok: @json(route('admin.matrikulasi-ppdb.assign-kelompok')),
+            generateAccounts: @json(route('admin.matrikulasi-ppdb.generate-accounts')),
             preview: @json(route('admin.matrikulasi-ppdb.preview')),
             previewAll: @json(route('admin.matrikulasi-ppdb.preview-all')),
             import: @json(route('admin.matrikulasi-ppdb.import')),
@@ -1131,7 +1293,9 @@
         let previewIds = [];
         let currentPreviewRows = [];
         let browserTable = null;
+        let participantTable = null;
         let selectedBrowserRows = new Map();
+        let selectedParticipantRows = new Map();
         let suppressSelectionReset = false;
 
         function selectedIds() {
@@ -1180,6 +1344,9 @@
         function statusChip(status) {
             const label = {
                 baru: 'Baru',
+                matrikulasi: 'Matrikulasi',
+                dipromosikan: 'Dipromosikan',
+                dibatalkan: 'Dibatalkan',
                 sudah_matrikulasi: 'Sudah Matrikulasi',
                 sudah_jadi_siswa: 'Sudah Jadi Siswa',
             }[status] || status;
@@ -1212,12 +1379,42 @@
             $('#checkAllBrowserCandidates').prop('checked', false);
         }
 
+        function updateParticipantSelectionInfo() {
+            const count = selectedParticipantRows.size;
+            $('#participantSelectionInfo').html(`<i class="fas fa-check-square mr-1"></i>${count ? `${count} peserta dipilih` : 'Belum ada peserta dipilih'}`);
+            $('#checkAllParticipants').prop('checked', false);
+        }
+
         function syncBrowserChecks() {
             $('#candidateBrowserTable .browser-check').each(function () {
                 const id = $(this).data('id');
                 const checked = selectedBrowserRows.has(id);
                 $(this).prop('checked', checked).closest('tr').toggleClass('is-selected', checked);
             });
+        }
+
+        function syncParticipantChecks() {
+            $('#matrikulasiPesertaTable .participant-check').each(function () {
+                const id = $(this).data('id');
+                const checked = selectedParticipantRows.has(id);
+                $(this).prop('checked', checked).closest('tr').toggleClass('is-selected', checked);
+            });
+        }
+
+        function accountStatus(row) {
+            if (!row.akun) {
+                return '<span class="account-pill">Belum ada akun</span>';
+            }
+
+            return `<span class="account-pill is-ready">${escapeHtml(row.username || 'Akun aktif')}</span>`;
+        }
+
+        function loginStatus(row) {
+            if (row.is_online) {
+                return '<span class="login-pill is-online">Online</span>';
+            }
+
+            return `<span class="login-pill">${row.last_login_at ? escapeHtml(row.last_login_at) : 'Belum login'}</span>`;
         }
 
         function initBrowserTable() {
@@ -1300,6 +1497,101 @@
                     emptyTable: 'Tidak ada pendaftar pada tahun ini.',
                     zeroRecords: 'Tidak ada pendaftar yang cocok.',
                     info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ pendaftar',
+                    infoEmpty: 'Tidak ada data',
+                    infoFiltered: '(difilter dari _MAX_ total)',
+                    paginate: {
+                        first: 'Awal',
+                        last: 'Akhir',
+                        next: 'Berikutnya',
+                        previous: 'Sebelumnya'
+                    }
+                }
+            });
+        }
+
+        function initParticipantTable() {
+            if (participantTable) {
+                return;
+            }
+
+            participantTable = $('#matrikulasiPesertaTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50], [10, 25, 50]],
+                order: [],
+                ajax: {
+                    url: routes.peserta,
+                    data: function (data) {
+                        data.tahun_pelajaran_id = $('#tahun_pelajaran_id').val();
+                        data.kelompok_id = $('#participant_kelompok_filter').val();
+                    },
+                    error: function (xhr) {
+                        Swal.fire('Gagal memuat peserta', xhr.responseJSON?.message || 'Tidak bisa mengambil data peserta matrikulasi.', 'error');
+                    }
+                },
+                columns: [
+                    {
+                        data: 'id',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function (id) {
+                            return `<input type="checkbox" class="browser-check participant-check" data-id="${escapeHtml(id)}" aria-label="Pilih peserta">`;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (row) {
+                            return `
+                                <div class="browser-person">
+                                    <span class="browser-avatar">${escapeHtml(initials(row.nama_lengkap))}</span>
+                                    <div>
+                                        <strong>${escapeHtml(row.nama_lengkap || '-')}</strong>
+                                        <span>NISN ${escapeHtml(row.nisn || '-')} | ${escapeHtml(row.jenis_kelamin || '-')}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    },
+                    {
+                        data: 'nomor_tes',
+                        orderable: false,
+                        render: data => `<span class="browser-no-tes">${escapeHtml(data || '-')}</span>`
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: row => row.kelompok ? `${escapeHtml(row.kelompok)}<br><small class="text-muted">${escapeHtml(row.label_kelas || '-')}</small>` : '<span class="text-muted">Belum diassign</span>'
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: accountStatus
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: loginStatus
+                    },
+                    {
+                        data: 'status',
+                        orderable: false,
+                        render: data => statusChip(data)
+                    }
+                ],
+                drawCallback: syncParticipantChecks,
+                language: {
+                    search: 'Cari:',
+                    lengthMenu: 'Tampilkan _MENU_',
+                    processing: 'Memuat peserta...',
+                    emptyTable: 'Belum ada peserta matrikulasi.',
+                    zeroRecords: 'Tidak ada peserta yang cocok.',
+                    info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ peserta',
                     infoEmpty: 'Tidak ada data',
                     infoFiltered: '(difilter dari _MAX_ total)',
                     paginate: {
@@ -1480,6 +1772,95 @@
                 });
             });
 
+            initParticipantTable();
+
+            $('#participant_kelompok_filter').on('change', function () {
+                selectedParticipantRows.clear();
+                updateParticipantSelectionInfo();
+                participantTable.ajax.reload(null, true);
+            });
+
+            $('#matrikulasiPesertaTable').on('change', '.participant-check', function () {
+                const id = $(this).data('id');
+                const row = participantTable.row($(this).closest('tr')).data();
+                if (this.checked && row) {
+                    selectedParticipantRows.set(id, row);
+                } else {
+                    selectedParticipantRows.delete(id);
+                }
+
+                $(this).closest('tr').toggleClass('is-selected', this.checked);
+                updateParticipantSelectionInfo();
+            });
+
+            $('#checkAllParticipants').on('change', function () {
+                const checked = this.checked;
+                $('#matrikulasiPesertaTable .participant-check').each(function () {
+                    $(this).prop('checked', checked).trigger('change');
+                });
+            });
+
+            $('#btnAssignKelompok').on('click', function () {
+                const ids = Array.from(selectedParticipantRows.keys());
+                const kelompokId = $('#assign_kelompok_id').val();
+                if (!ids.length || !kelompokId) {
+                    Swal.fire('Data belum lengkap', 'Centang peserta dan pilih kelompok tujuan.', 'warning');
+                    return;
+                }
+
+                const $button = $(this);
+                setButtonLoading($button, true, 'Assign...', '<i class="fas fa-random mr-1"></i>Assign Kelompok');
+                $.post(routes.assignKelompok, {
+                    peserta_ids: ids,
+                    kelompok_id: kelompokId,
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                }).done(response => {
+                    selectedParticipantRows.clear();
+                    updateParticipantSelectionInfo();
+                    participantTable.ajax.reload(null, false);
+                    Swal.fire('Berhasil', response.message || 'Peserta berhasil diassign.', 'success');
+                }).fail(xhr => {
+                    Swal.fire('Gagal assign', xhr.responseJSON?.message || 'Assign kelompok gagal.', 'error');
+                }).always(() => {
+                    setButtonLoading($button, false, 'Assign...', '<i class="fas fa-random mr-1"></i>Assign Kelompok');
+                });
+            });
+
+            $('#btnGenerateAccounts').on('click', function () {
+                const ids = Array.from(selectedParticipantRows.keys());
+                if (!ids.length) {
+                    Swal.fire('Belum ada peserta', 'Centang peserta yang akan dibuatkan akun matrikulasi.', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Buat akun matrikulasi?',
+                    text: 'Akun ini hanya untuk fase matrikulasi dan belum menjadi akun siswa reguler final.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, buat akun',
+                    cancelButtonText: 'Batal'
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    const $button = $('#btnGenerateAccounts');
+                    setButtonLoading($button, true, 'Membuat...', '<i class="fas fa-key mr-1"></i>Buat Akun');
+                    $.post(routes.generateAccounts, {
+                        peserta_ids: ids,
+                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                    }).done(response => {
+                        selectedParticipantRows.clear();
+                        updateParticipantSelectionInfo();
+                        participantTable.ajax.reload(null, false);
+                        Swal.fire('Selesai', response.message || 'Generate akun selesai.', 'success');
+                    }).fail(xhr => {
+                        Swal.fire('Gagal membuat akun', xhr.responseJSON?.message || 'Generate akun gagal.', 'error');
+                    }).always(() => {
+                        setButtonLoading($button, false, 'Membuat...', '<i class="fas fa-key mr-1"></i>Buat Akun');
+                    });
+                });
+            });
+
             $('#btnCreateKelompok').on('click', function () {
                 const nama = $('#new_kelompok_nama').val().trim();
                 if (!nama) {
@@ -1497,6 +1878,8 @@
                 }).done(response => {
                     const data = response.data || {};
                     $('#kelompok_id').append(new Option(data.text, data.id, true, true)).trigger('change');
+                    $('#participant_kelompok_filter').append(new Option(data.text, data.id, false, false));
+                    $('#assign_kelompok_id').append(new Option(data.text, data.id, false, false));
                     $('#new_kelompok_nama').val('');
                     $('#new_kelompok_kode').val('');
                     $('#new_kelompok_tingkat').val('');
@@ -1634,6 +2017,9 @@
                         allow_unpaid: unpaidCount ? 1 : 0
                     }).done(response => {
                         showResult(response.data || {});
+                        if (participantTable) {
+                            participantTable.ajax.reload(null, false);
+                        }
                         Swal.fire('Selesai', response.message || 'Sync selesai.', 'success');
                     }).fail(xhr => {
                         Swal.fire('Sync gagal', xhr.responseJSON?.message || 'Gagal sync.', 'error');

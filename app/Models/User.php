@@ -98,6 +98,11 @@ class User extends Authenticatable
         return $this->hasOne(Siswa::class);
     }
 
+    public function matrikulasiPeserta()
+    {
+        return $this->hasOne(MatrikulasiPeserta::class);
+    }
+
     public function gtk()
     {
         return $this->hasOne(Gtk::class);

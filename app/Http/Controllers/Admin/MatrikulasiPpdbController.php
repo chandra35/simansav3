@@ -241,6 +241,118 @@ class MatrikulasiPpdbController extends Controller
         }
     }
 
+    public function peserta(Request $request)
+    {
+        $validated = $request->validate([
+            'draw' => 'nullable|integer|min:1',
+            'start' => 'nullable|integer|min:0',
+            'length' => 'nullable|integer|min:1|max:100',
+            'search.value' => 'nullable|string|max:100',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'kelompok_id' => 'nullable|exists:matrikulasi_kelompoks,id',
+        ]);
+
+        $query = $this->service->pesertaFor($validated['tahun_pelajaran_id']);
+        if ($request->filled('kelompok_id')) {
+            $query->where('matrikulasi_kelompok_id', $request->get('kelompok_id'));
+        }
+
+        $recordsTotal = (clone $query)->count();
+        $term = trim((string) data_get($validated, 'search.value', ''));
+        if ($term !== '') {
+            $like = '%' . str_replace(' ', '%', $term) . '%';
+            $query->where(function ($q) use ($like) {
+                $q->where('nama_lengkap', 'like', $like)
+                    ->orWhere('nisn', 'like', $like)
+                    ->orWhere('nomor_tes', 'like', $like)
+                    ->orWhere('nik', 'like', $like);
+            });
+        }
+
+        $recordsFiltered = (clone $query)->count();
+        $rows = $query
+            ->orderBy('nama_lengkap')
+            ->skip((int) ($validated['start'] ?? 0))
+            ->take((int) ($validated['length'] ?? 25))
+            ->get();
+
+        return response()->json([
+            'draw' => (int) ($validated['draw'] ?? 1),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $rows->map(fn ($peserta) => [
+                'id' => $peserta->id,
+                'nama_lengkap' => $peserta->nama_lengkap,
+                'nisn' => $peserta->nisn,
+                'nik' => $peserta->nik,
+                'nomor_tes' => $peserta->nomor_tes,
+                'jenis_kelamin' => $peserta->jenis_kelamin,
+                'jurusan' => $peserta->jurusan_final ?: $peserta->jurusan_awal,
+                'kelompok_id' => $peserta->matrikulasi_kelompok_id,
+                'kelompok' => $peserta->kelompok?->nama,
+                'label_kelas' => $peserta->kelompok?->label_kelas,
+                'akun' => (bool) $peserta->user_id,
+                'username' => $peserta->user?->username,
+                'last_login_at' => optional($peserta->user?->latestSession?->last_activity)->toDateTimeString(),
+                'is_online' => (bool) ($peserta->user?->latestSession?->isStillOnline() ?? false),
+                'dokumens_count' => $peserta->dokumens_count,
+                'status' => $peserta->status,
+            ])->values(),
+        ]);
+    }
+
+    public function assignKelompok(Request $request)
+    {
+        $validated = $request->validate([
+            'peserta_ids' => 'required|array|min:1',
+            'peserta_ids.*' => 'required|exists:matrikulasi_pesertas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'kelompok_id' => 'required|exists:matrikulasi_kelompoks,id',
+        ]);
+
+        try {
+            $count = $this->service->assignKelompok(
+                $validated['peserta_ids'],
+                $validated['kelompok_id'],
+                $validated['tahun_pelajaran_id']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} peserta berhasil diassign ke kelompok.",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal assign kelompok: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function generateAccounts(Request $request)
+    {
+        $validated = $request->validate([
+            'peserta_ids' => 'required|array|min:1',
+            'peserta_ids.*' => 'required|exists:matrikulasi_pesertas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+        ]);
+
+        try {
+            $result = $this->service->generateAccounts($validated['peserta_ids'], $validated['tahun_pelajaran_id']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Akun dibuat: {$result['created']}, sudah ada: {$result['existing']}, gagal: {$result['failed']}.",
+                'data' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate akun: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function import(Request $request)
     {
         $validated = $request->validate([

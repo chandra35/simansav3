@@ -26,6 +26,10 @@ Route::get('/', function () {
 
     $user = auth()->user();
 
+    if ($user->matrikulasiPeserta || $user->hasRole('Matrikulasi') || $user->role === 'matrikulasi') {
+        return redirect('/matrikulasi/dashboard');
+    }
+
     if ($user->hasRole('Siswa') || $user->role === 'siswa') {
         return redirect('/siswa/dashboard');
     }
@@ -49,6 +53,10 @@ Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth'])->prefix('matrikulasi')->name('matrikulasi.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Matrikulasi\DashboardController::class, 'index'])->name('dashboard');
+});
 
 // Forgot Password Routes
 Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -271,6 +279,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/kelompok', [MatrikulasiPpdbController::class, 'storeKelompok'])->name('kelompok.store');
         Route::get('/candidates', [MatrikulasiPpdbController::class, 'candidates'])->name('candidates');
         Route::get('/browser-candidates', [MatrikulasiPpdbController::class, 'browserCandidates'])->name('browser-candidates');
+        Route::get('/peserta', [MatrikulasiPpdbController::class, 'peserta'])->name('peserta');
+        Route::post('/assign-kelompok', [MatrikulasiPpdbController::class, 'assignKelompok'])->name('assign-kelompok');
+        Route::post('/generate-accounts', [MatrikulasiPpdbController::class, 'generateAccounts'])->name('generate-accounts');
         Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');
         Route::post('/preview-all', [MatrikulasiPpdbController::class, 'previewAll'])->name('preview-all');
         Route::post('/import', [MatrikulasiPpdbController::class, 'import'])->name('import');
