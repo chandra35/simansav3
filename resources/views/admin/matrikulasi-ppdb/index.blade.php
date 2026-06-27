@@ -1525,6 +1525,42 @@
             return $('<div>').text(value ?? '').html();
         }
 
+        function chunkArray(items, size) {
+            const chunks = [];
+            for (let index = 0; index < items.length; index += size) {
+                chunks.push(items.slice(index, index + size));
+            }
+
+            return chunks;
+        }
+
+        function emptyImportResult() {
+            return {
+                success: 0,
+                failed: 0,
+                documents_copied: 0,
+                items: []
+            };
+        }
+
+        function mergeImportResult(target, source) {
+            target.success += Number(source.success || 0);
+            target.failed += Number(source.failed || 0);
+            target.documents_copied += Number(source.documents_copied || 0);
+            target.items = target.items.concat(source.items || []);
+
+            return target;
+        }
+
+        function postImportChunk(ids, payload) {
+            return new Promise((resolve, reject) => {
+                $.post(routes.import, {
+                    ...payload,
+                    calon_siswa_ids: ids
+                }).done(resolve).fail(reject);
+            });
+        }
+
         function paymentChip(row) {
             return row.has_registrasi_komite
                 ? '<span class="payment-chip is-paid">Sudah bayar</span>'
@@ -2326,27 +2362,58 @@
                     showCancelButton: true,
                     confirmButtonText: 'Ya, sync',
                     cancelButtonText: 'Batal'
-                }).then(result => {
+                }).then(async result => {
                     if (!result.isConfirmed) return;
 
-                    $('#btnImport').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyinkronkan...');
-                    $.post(routes.import, {
-                        calon_siswa_ids: ids,
+                    const $button = $('#btnImport');
+                    const chunks = chunkArray(ids, 5);
+                    const aggregate = emptyImportResult();
+                    const includeDocuments = $('#include_documents').is(':checked');
+                    const payload = {
                         tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
                         kelompok_id: kelompokId,
-                        include_documents: $('#include_documents').is(':checked') ? 1 : 0,
+                        include_documents: includeDocuments ? 1 : 0,
                         allow_unpaid: unpaidCount ? 1 : 0
-                    }).done(response => {
-                        showResult(response.data || {});
+                    };
+
+                    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyinkronkan...');
+                    $('#btnLoadAll, #btnOpenAddModal, #btnPreview').prop('disabled', true);
+                    setProgressOverlay(true, `Menyiapkan ${ids.length} pendaftar untuk sync matrikulasi...`, 8);
+
+                    try {
+                        for (let index = 0; index < chunks.length; index++) {
+                            const chunk = chunks[index];
+                            const startPercent = 10 + Math.round((index / chunks.length) * 80);
+                            setProgressOverlay(
+                                true,
+                                `Batch ${index + 1}/${chunks.length}: menyinkronkan ${chunk.length} pendaftar${includeDocuments ? ' dan dokumen PPDB' : ''}...`,
+                                startPercent
+                            );
+
+                            const response = await postImportChunk(chunk, payload);
+                            mergeImportResult(aggregate, response.data || {});
+
+                            const donePercent = 10 + Math.round(((index + 1) / chunks.length) * 80);
+                            setProgressOverlay(
+                                true,
+                                `Batch ${index + 1}/${chunks.length} selesai. ${aggregate.success} berhasil, ${aggregate.failed} gagal, ${aggregate.documents_copied} dokumen tersalin.`,
+                                donePercent
+                            );
+                        }
+
+                        setProgressOverlay(true, 'Memperbarui tabel peserta matrikulasi...', 95);
+                        showResult(aggregate);
                         if (participantTable) {
                             participantTable.ajax.reload(null, false);
                         }
-                        Swal.fire('Selesai', response.message || 'Sync selesai.', 'success');
-                    }).fail(xhr => {
-                        Swal.fire('Sync gagal', xhr.responseJSON?.message || 'Gagal sync.', 'error');
-                    }).always(() => {
-                        $('#btnImport').prop('disabled', false).html('<i class="fas fa-sync-alt mr-1"></i>Sync ke Matrikulasi');
-                    });
+                        Swal.fire('Selesai', `${aggregate.success} pendaftar berhasil, ${aggregate.failed} gagal, ${aggregate.documents_copied} dokumen tersalin.`, aggregate.failed ? 'warning' : 'success');
+                    } catch (xhr) {
+                        Swal.fire('Sync gagal', xhr.responseJSON?.message || 'Gagal sync. Coba ulangi, data yang sudah berhasil akan dilewati/diperbarui.', 'error');
+                    } finally {
+                        setProgressOverlay(false);
+                        $button.prop('disabled', false).html('<i class="fas fa-sync-alt mr-1"></i>Sync ke Matrikulasi');
+                        $('#btnLoadAll, #btnOpenAddModal, #btnPreview').prop('disabled', false);
+                    }
                 });
             });
         });

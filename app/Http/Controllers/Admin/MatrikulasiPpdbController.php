@@ -365,6 +365,15 @@ class MatrikulasiPpdbController extends Controller
         ]);
 
         try {
+            Log::info('Mulai import matrikulasi PPDB', [
+                'count' => count($validated['calon_siswa_ids']),
+                'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+                'kelompok_id' => $validated['kelompok_id'],
+                'include_documents' => (bool) ($validated['include_documents'] ?? false),
+                'allow_unpaid' => (bool) ($validated['allow_unpaid'] ?? false),
+                'user_id' => optional($request->user())->id,
+            ]);
+
             $result = $this->service->import(
                 $validated['calon_siswa_ids'],
                 $validated['kelompok_id'],
@@ -372,6 +381,16 @@ class MatrikulasiPpdbController extends Controller
                 $validated['tahun_pelajaran_id'],
                 (bool) ($validated['allow_unpaid'] ?? false)
             );
+
+            Log::info('Selesai import matrikulasi PPDB', [
+                'count' => count($validated['calon_siswa_ids']),
+                'success' => $result['success'] ?? 0,
+                'failed' => $result['failed'] ?? 0,
+                'documents_copied' => $result['documents_copied'] ?? 0,
+                'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
+                'kelompok_id' => $validated['kelompok_id'],
+                'user_id' => optional($request->user())->id,
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -381,6 +400,10 @@ class MatrikulasiPpdbController extends Controller
         } catch (\Throwable $e) {
             Log::error('Gagal import matrikulasi PPDB', [
                 'error' => $e->getMessage(),
+                'count' => count($validated['calon_siswa_ids'] ?? []),
+                'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'] ?? null,
+                'kelompok_id' => $validated['kelompok_id'] ?? null,
+                'user_id' => optional($request->user())->id,
                 'trace' => $e->getTraceAsString(),
             ]);
 
