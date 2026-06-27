@@ -189,32 +189,47 @@
     <div class="modal fade" id="addCandidateModal" tabindex="-1" role="dialog" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
             <div class="modal-content mat-modal">
-                <div class="modal-header">
-                    <div>
-                        <h5 class="modal-title" id="addCandidateModalLabel">
-                            <i class="fas fa-user-plus mr-2"></i>Tambah Pendaftar PPDB
-                        </h5>
-                        <small class="text-muted">Browse semua pendaftar pada tahun pelajaran terpilih.</small>
+                <div class="mat-modal-hero">
+                    <div class="mat-modal-title">
+                        <span><i class="fas fa-user-plus"></i></span>
+                        <div>
+                            <h5 class="modal-title" id="addCandidateModalLabel">Tambah Pendaftar PPDB</h5>
+                            <small>Telusuri pendaftar tahun pelajaran terpilih, lalu masukkan ke preview matrikulasi.</small>
+                        </div>
                     </div>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                    <button type="button" class="close mat-modal-close" data-dismiss="modal" aria-label="Tutup">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <div class="mat-browser-bar">
                         <div>
-                            <strong>Tahun pelajaran</strong>
+                            <i class="fas fa-calendar-check"></i>
+                            <strong>Tahun Pelajaran</strong>
                             <span id="modalYearName">{{ optional($tahunPelajaran->firstWhere('id', $selectedTahunId))->nama ?? '-' }}</span>
                         </div>
                         <div>
+                            <i class="fas fa-layer-group"></i>
                             <strong>Mode</strong>
                             <span>Semua pendaftar</span>
                         </div>
                     </div>
-                    <div class="form-group mb-0">
-                        <label for="browse_candidate_ids">Cari dan pilih pendaftar</label>
+
+                    <div class="mat-search-panel">
+                        <div class="mat-search-title">
+                            <div>
+                                <strong>Cari Pendaftar</strong>
+                                <span>Nama, NISN, atau No.Tes</span>
+                            </div>
+                            <i class="fas fa-search"></i>
+                        </div>
                         <select id="browse_candidate_ids" class="form-control" multiple></select>
+                        <div class="mat-search-foot">
+                            <span><i class="fas fa-mouse-pointer mr-1"></i>Pilih satu atau beberapa pendaftar</span>
+                            <span><i class="fas fa-tags mr-1"></i>Status bayar tampil di kanan</span>
+                        </div>
                     </div>
+
                     <div class="mat-browser-note mt-3">
                         <i class="fas fa-shield-alt"></i>
                         <span>Pendaftar yang belum registrasi komite akan diberi tanda dan wajib dikonfirmasi sebelum masuk preview/sync.</span>
@@ -405,9 +420,61 @@
             overflow: hidden;
             box-shadow: 0 22px 64px rgba(15, 23, 42, .22);
         }
-        .mat-modal .modal-header {
+        .mat-modal-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.25rem 1.35rem;
+            border-bottom: 1px solid #dbe4ee;
+            background:
+                linear-gradient(135deg, rgba(15, 118, 110, .1), rgba(37, 99, 235, .06)),
+                #f8fafc;
+        }
+        .mat-modal-title {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+        }
+        .mat-modal-title > span {
+            width: 46px;
+            height: 46px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #0f766e;
+            box-shadow: 0 12px 26px rgba(15, 118, 110, .24);
+            flex: 0 0 auto;
+        }
+        .mat-modal-title h5 {
+            color: #111827;
+            font-weight: 800;
+            margin: 0;
+        }
+        .mat-modal-title small {
+            display: block;
+            color: #64748b;
+            margin-top: .18rem;
+        }
+        .mat-modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .72) !important;
+            border: 1px solid #dbe4ee !important;
+            color: #475569;
+            opacity: 1;
+            text-shadow: none;
+        }
+        .mat-modal .modal-body {
+            padding: 1.1rem 1.35rem;
+            background: #fff;
+        }
+        .mat-modal .modal-footer {
             background: #f8fafc;
-            border-bottom-color: #e6e8ef;
+            border-top-color: #e6e8ef;
         }
         .mat-browser-bar {
             display: grid;
@@ -420,6 +487,15 @@
             border-radius: 8px;
             background: #fff;
             padding: .75rem .85rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .mat-browser-bar > div i {
+            position: absolute;
+            right: .85rem;
+            top: .8rem;
+            color: #0f766e;
+            opacity: .82;
         }
         .mat-browser-bar strong,
         .mat-browser-bar span {
@@ -435,6 +511,44 @@
             font-weight: 800;
             margin-top: .12rem;
         }
+        .mat-search-panel {
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: .9rem;
+        }
+        .mat-search-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .7rem;
+        }
+        .mat-search-title strong,
+        .mat-search-title span {
+            display: block;
+        }
+        .mat-search-title strong {
+            color: #111827;
+            font-weight: 800;
+        }
+        .mat-search-title span {
+            color: #64748b;
+            font-size: .82rem;
+            margin-top: .05rem;
+        }
+        .mat-search-title > i {
+            color: #0f766e;
+        }
+        .mat-search-foot {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: .5rem;
+            color: #64748b;
+            font-size: .78rem;
+            margin-top: .65rem;
+        }
         .mat-browser-note {
             display: flex;
             align-items: center;
@@ -445,19 +559,79 @@
             color: #7c4a03;
             padding: .7rem .8rem;
         }
+        #addCandidateModal .select2-container {
+            width: 100% !important;
+        }
+        #addCandidateModal .select2-container--bootstrap4 .select2-selection--multiple,
+        #addCandidateModal .select2-container--default .select2-selection--multiple {
+            min-height: 50px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #fff;
+            padding: .28rem .45rem;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .04);
+        }
+        #addCandidateModal .select2-container--bootstrap4.select2-container--focus .select2-selection,
+        #addCandidateModal .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 .18rem rgba(15, 118, 110, .12);
+        }
+        #addCandidateModal .select2-search--inline {
+            width: 100%;
+        }
+        #addCandidateModal .select2-search__field {
+            width: 100% !important;
+            min-width: 260px;
+            height: 34px;
+            margin-top: .15rem;
+            font-size: .92rem;
+        }
+        #addCandidateModal .select2-selection__choice {
+            border: 0;
+            border-radius: 6px;
+            background: #e0f2fe;
+            color: #075985;
+            font-weight: 700;
+            padding: .22rem .5rem;
+        }
+        #addCandidateModal .select2-dropdown {
+            border-color: #dbe4ee;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, .16);
+        }
+        #addCandidateModal .select2-results__options {
+            max-height: 390px;
+        }
+        #addCandidateModal .select2-results__option {
+            padding: .72rem .85rem;
+            border-bottom: 1px solid #edf2f7;
+        }
+        #addCandidateModal .select2-results__option:last-child {
+            border-bottom: 0;
+        }
+        #addCandidateModal .select2-results__option--highlighted[aria-selected] {
+            background: #ecfeff;
+            color: #111827;
+        }
         .candidate-option {
             display: grid;
             grid-template-columns: minmax(0, 1.25fr) minmax(190px, .75fr);
             gap: .75rem;
             align-items: center;
-            padding: .25rem 0;
+            padding: .05rem 0;
         }
         .candidate-option strong,
         .candidate-option small {
             display: block;
         }
+        .candidate-option strong {
+            color: #1f2937;
+            font-size: .91rem;
+        }
         .candidate-option small {
             color: #64748b;
+            margin-top: .16rem;
         }
         .candidate-meta {
             display: flex;
@@ -515,9 +689,14 @@
             .mat-stats { grid-template-columns: 1fr; }
             .mat-actions .btn { width: 100%; }
             .mat-stat strong { font-size: 1.1rem; }
+            .mat-modal-hero,
+            .mat-modal .modal-body { padding: 1rem; }
+            .mat-modal-title { align-items: flex-start; }
             .candidate-option,
             .mat-browser-bar { grid-template-columns: 1fr; }
             .candidate-meta { justify-content: flex-start; }
+            .mat-search-foot { display: block; }
+            .mat-search-foot span { display: block; margin-top: .25rem; }
         }
     </style>
 @stop
@@ -749,6 +928,10 @@
             $('#btnOpenAddModal').on('click', function () {
                 $('#browse_candidate_ids').val(null).trigger('change');
                 $('#addCandidateModal').modal('show');
+            });
+
+            $('#addCandidateModal').on('shown.bs.modal', function () {
+                $('#browse_candidate_ids').select2('open');
             });
 
             $('#btnCreateKelompok').on('click', function () {
