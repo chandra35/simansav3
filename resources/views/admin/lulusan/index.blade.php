@@ -39,6 +39,7 @@
                     <div class="form-group">
                         <label>Mode Checker</label>
                         <select id="filterTrackerType" class="form-control">
+                            <option value="ALL">Semua Jalur</option>
                             <option value="SNBP">SNBP</option>
                             <option value="SPAN-PTKIN">SPAN-PTKIN</option>
                         </select>
@@ -411,20 +412,21 @@
         let lulusanTable;
         const jalurMasukOptions = @json($jalurMasukOptions);
         const defaultTrackerMeta = {
-            summary_total_label: 'Eligible SNBP',
-            summary_number_label: 'Sudah Isi Nomor SNBP',
-            summary_passed_label: 'Lulus SNBP',
-            summary_failed_label: 'Tidak Lulus SNBP',
-            summary_error_label: 'Gagal Cek SNBP',
-            summary_pending_label: 'Belum Dicek SNBP',
-            checker_title: 'Status Checker SNBP',
-            top_university_title: 'Top PTN Diterima SNBP',
-            top_program_title: 'Top Prodi Diterima SNBP',
-            checker_column_label: 'Checker SNBP',
-            result_column_label: 'Hasil SNBP',
-            matrix_tracker_label: 'Lulus SNBP',
-            empty_university_text: 'Belum ada siswa diterima via SNBP.',
-            empty_program_text: 'Belum ada prodi SNBP.'
+            summary_total_label: 'Peserta Checker',
+            summary_number_label: 'Sudah Ada Nomor',
+            summary_passed_label: 'Lulus Checker',
+            summary_failed_label: 'Tidak Lulus Checker',
+            summary_error_label: 'Gagal Cek',
+            summary_pending_label: 'Belum Dicek',
+            checker_title: 'Status Checker Semua Jalur',
+            top_university_title: 'Top Kampus Diterima Checker',
+            top_program_title: 'Top Prodi Diterima Checker',
+            checker_column_label: 'Checker',
+            result_column_label: 'Hasil Checker',
+            matrix_tracker_label: 'Lulus Checker',
+            empty_university_text: 'Belum ada siswa diterima via checker.',
+            empty_program_text: 'Belum ada prodi dari checker.',
+            type: 'Semua Jalur'
         };
 
         function getFilters() {
@@ -448,7 +450,7 @@
             const summary = [
                 `Tahun: ${$('#filterTahunPelajaran option:selected').text() || '-'}`,
                 `Status: ${$('#filterStatusPengisian option:selected').text() || 'Semua Status'}`,
-                `Checker: ${$('#filterTrackerType option:selected').text() || 'SNBP'}`,
+                `Checker: ${$('#filterTrackerType option:selected').text() || 'Semua Jalur'}`,
                 `Jalur: ${$('#filterJalurMasuk option:selected').text() || 'Semua Jalur'}`,
                 `Pencarian: ${filters.q || '-'}`
             ];
@@ -659,7 +661,7 @@
 
             $('#btnResetFilter').on('click', function () {
                 $('#filterStatusPengisian').val('');
-                $('#filterTrackerType').val('SNBP');
+                $('#filterTrackerType').val('ALL');
                 $('#filterJalurMasuk').val('');
                 $('#filterPencarian').val('');
                 lulusanTable.search('').ajax.reload();

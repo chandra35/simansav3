@@ -307,12 +307,7 @@ class LulusanController extends Controller
         );
 
         $trackerType = $this->resolveTrackerType($request);
-        $trackerRows = collect(
-            $this->buildTrackerQuery($request, $selectedTahun->id, $trackerType)
-                ->orderBy('kelas_nama')
-                ->orderBy('nama_lengkap')
-                ->get()
-        );
+        $trackerRows = $this->buildTrackerRows($request, $selectedTahun->id, $trackerType);
 
         $summary = [
             'total' => $rows->count(),
@@ -329,9 +324,7 @@ class LulusanController extends Controller
             'total_ptn_diterima' => $trackerRows->where('check_status', 'lulus')->pluck('nama_universitas')->filter()->unique()->count(),
         ];
 
-        $perJalur = collect(SiswaLulusan::JALUR_MASUK)
-            ->mapWithKeys(fn (string $jalur) => [$jalur => $rows->where('jalur_masuk', $jalur)->count()])
-            ->all();
+        $perJalur = $this->buildPerJalurStats($rows, $trackerRows, $trackerType);
 
         $trackerByClass = $trackerRows->groupBy(fn ($row) => $row->kelas_nama ?: 'Tanpa Kelas');
 
@@ -854,6 +847,72 @@ class LulusanController extends Controller
         return $this->buildEligibleQuery($request, $tahunPelajaranId);
     }
 
+    private function buildTrackerRows(Request $request, string $tahunPelajaranId, ?string $trackerType): Collection
+    {
+        if ($trackerType === 'ALL') {
+            $snbpRows = collect(
+                $this->buildEligibleQuery($request, $tahunPelajaranId)
+                    ->orderBy('kelas_nama')
+                    ->orderBy('nama_lengkap')
+                    ->get()
+            )->map(function ($row) {
+                $row->tracker_type = 'SNBP';
+                return $row;
+            });
+
+            $spanRows = collect(
+                $this->buildSpanPtkinQuery($request, $tahunPelajaranId)
+                    ->orderBy('kelas_nama')
+                    ->orderBy('nama_lengkap')
+                    ->get()
+            )->map(function ($row) {
+                $row->tracker_type = 'SPAN-PTKIN';
+                return $row;
+            });
+
+            return $snbpRows
+                ->concat($spanRows)
+                ->sortBy([
+                    ['kelas_nama', 'asc'],
+                    ['nama_lengkap', 'asc'],
+                    ['tracker_type', 'asc'],
+                ])
+                ->values();
+        }
+
+        return collect(
+            $this->buildTrackerQuery($request, $tahunPelajaranId, $trackerType)
+                ->orderBy('kelas_nama')
+                ->orderBy('nama_lengkap')
+                ->get()
+        )->map(function ($row) use ($trackerType) {
+            $row->tracker_type = $trackerType ?: 'SNBP';
+            return $row;
+        });
+    }
+
+    private function buildPerJalurStats(Collection $rows, Collection $trackerRows, ?string $trackerType): array
+    {
+        $perJalur = collect(SiswaLulusan::JALUR_MASUK)
+            ->mapWithKeys(fn (string $jalur) => [$jalur => $rows->where('jalur_masuk', $jalur)->count()]);
+
+        if ($trackerType === 'ALL' || $trackerType === 'SNBP') {
+            $perJalur['SNBP'] = $trackerRows
+                ->filter(fn ($row) => ($row->tracker_type ?? 'SNBP') === 'SNBP')
+                ->where('check_status', 'lulus')
+                ->count();
+        }
+
+        if ($trackerType === 'ALL' || $trackerType === 'SPAN-PTKIN') {
+            $perJalur['SPAN-PTKIN'] = $trackerRows
+                ->filter(fn ($row) => ($row->tracker_type ?? null) === 'SPAN-PTKIN')
+                ->where('check_status', 'lulus')
+                ->count();
+        }
+
+        return $perJalur->all();
+    }
+
     private function applyCommonFilters($query, Request $request): void
     {
         if ($request->filled('status_pengisian')) {
@@ -922,11 +981,37 @@ class LulusanController extends Controller
 
     private function defaultTrackerMeta(): array
     {
-        return $this->buildTrackerMeta(null);
+        return $this->buildTrackerMeta('ALL');
     }
 
     private function buildTrackerMeta(?string $trackerType): array
     {
+        if ($trackerType === 'ALL') {
+            return [
+                'type' => 'Semua Jalur',
+                'summary_total_label' => 'Peserta Checker',
+                'summary_number_label' => 'Sudah Ada Nomor',
+                'summary_missing_number_label' => 'Belum Ada Nomor',
+                'summary_passed_label' => 'Lulus Checker',
+                'summary_failed_label' => 'Tidak Lulus Checker',
+                'summary_error_label' => 'Gagal Cek',
+                'summary_pending_label' => 'Belum Dicek',
+                'checker_title' => 'Status Checker Semua Jalur',
+                'top_university_title' => 'Top Kampus Diterima Checker',
+                'top_program_title' => 'Top Prodi Diterima Checker',
+                'checker_column_label' => 'Checker',
+                'result_column_label' => 'Hasil Checker',
+                'matrix_tracker_label' => 'Lulus Checker',
+                'empty_university_text' => 'Belum ada siswa diterima via checker.',
+                'empty_program_text' => 'Belum ada prodi dari checker.',
+                'status_passed_label' => 'Lulus Checker',
+                'number_column_label' => 'Nomor Pendaftaran',
+                'accepted_university_short_label' => 'Kampus',
+                'accepted_university_summary_label' => 'Kampus Diterima dari Checker',
+                'monitoring_sheet_title' => 'Monitoring Checker',
+            ];
+        }
+
         if ($trackerType === 'SPAN-PTKIN') {
             return [
                 'type' => 'SPAN-PTKIN',
@@ -980,14 +1065,14 @@ class LulusanController extends Controller
 
     private function resolveTrackerType(Request $request): ?string
     {
-        if (in_array($request->input('tracker_type'), ['SNBP', 'SPAN-PTKIN'], true)) {
+        if (in_array($request->input('tracker_type'), ['ALL', 'SNBP', 'SPAN-PTKIN'], true)) {
             return $request->input('tracker_type');
         }
 
         return match ($request->input('jalur_masuk')) {
             'SPAN-PTKIN' => 'SPAN-PTKIN',
             'SNBP' => 'SNBP',
-            default => null,
+            default => 'ALL',
         };
     }
 
@@ -1077,6 +1162,18 @@ class LulusanController extends Controller
                 'SNBP' => 'SNBP',
                 default => 'SNBP',
             };
+        }
+
+        if ($resolvedTracker === 'ALL') {
+            if (($row->has_snbp_number ?? false) && ($row->snbp_check_status ?? null) === 'lulus') {
+                $resolvedTracker = 'SNBP';
+            } elseif (($row->has_span_ptkin_number ?? false) && ($row->span_ptkin_check_status ?? null) === 'lulus') {
+                $resolvedTracker = 'SPAN-PTKIN';
+            } elseif ($row->jalur_masuk === 'SPAN-PTKIN' || ($row->has_span_ptkin_number ?? false)) {
+                $resolvedTracker = 'SPAN-PTKIN';
+            } else {
+                $resolvedTracker = 'SNBP';
+            }
         }
 
         if ($resolvedTracker === 'SPAN-PTKIN') {
