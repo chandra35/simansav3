@@ -688,6 +688,7 @@ class LulusanController extends Controller
                 'belum_isi' => 'Belum Isi',
                 default => 'Semua Status',
             },
+            'Mode Checker' => $this->buildTrackerMeta($this->resolveTrackerType($request))['type'],
             'Jalur Masuk' => $request->jalur_masuk ?: 'Semua Jalur',
             'Kelas' => $request->kelas_nama ?: 'Semua Kelas',
             'Pencarian' => $request->q ?: '-',
@@ -979,6 +980,10 @@ class LulusanController extends Controller
 
     private function resolveTrackerType(Request $request): ?string
     {
+        if (in_array($request->input('tracker_type'), ['SNBP', 'SPAN-PTKIN'], true)) {
+            return $request->input('tracker_type');
+        }
+
         return match ($request->input('jalur_masuk')) {
             'SPAN-PTKIN' => 'SPAN-PTKIN',
             'SNBP' => 'SNBP',

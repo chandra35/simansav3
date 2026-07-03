@@ -13,7 +13,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label>Tahun Pelajaran</label>
                         <select id="filterTahunPelajaran" class="form-control">
@@ -25,7 +25,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label>Status Pengisian</label>
                         <select id="filterStatusPengisian" class="form-control">
@@ -36,6 +36,15 @@
                     </div>
                 </div>
                 <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Mode Checker</label>
+                        <select id="filterTrackerType" class="form-control">
+                            <option value="SNBP">SNBP</option>
+                            <option value="SPAN-PTKIN">SPAN-PTKIN</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <div class="form-group">
                         <label>Jalur Masuk</label>
                         <select id="filterJalurMasuk" class="form-control">
@@ -422,6 +431,7 @@
             return {
                 tahun_pelajaran_id: $('#filterTahunPelajaran').val(),
                 status_pengisian: $('#filterStatusPengisian').val(),
+                tracker_type: $('#filterTrackerType').val(),
                 jalur_masuk: $('#filterJalurMasuk').val(),
                 q: $('#filterPencarian').val()
             };
@@ -438,6 +448,7 @@
             const summary = [
                 `Tahun: ${$('#filterTahunPelajaran option:selected').text() || '-'}`,
                 `Status: ${$('#filterStatusPengisian option:selected').text() || 'Semua Status'}`,
+                `Checker: ${$('#filterTrackerType option:selected').text() || 'SNBP'}`,
                 `Jalur: ${$('#filterJalurMasuk option:selected').text() || 'Semua Jalur'}`,
                 `Pencarian: ${filters.q || '-'}`
             ];
@@ -648,6 +659,7 @@
 
             $('#btnResetFilter').on('click', function () {
                 $('#filterStatusPengisian').val('');
+                $('#filterTrackerType').val('SNBP');
                 $('#filterJalurMasuk').val('');
                 $('#filterPencarian').val('');
                 lulusanTable.search('').ajax.reload();
@@ -663,7 +675,15 @@
                 }
             });
 
-            $('#filterTahunPelajaran, #filterStatusPengisian, #filterJalurMasuk').on('change', function () {
+            $('#filterJalurMasuk').on('change', function () {
+                const selectedJalur = $(this).val();
+                if (selectedJalur === 'SNBP' || selectedJalur === 'SPAN-PTKIN') {
+                    $('#filterTrackerType').val(selectedJalur);
+                }
+                updateExportLinks();
+            });
+
+            $('#filterTahunPelajaran, #filterStatusPengisian, #filterTrackerType').on('change', function () {
                 updateExportLinks();
             });
 
