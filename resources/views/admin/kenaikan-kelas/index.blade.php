@@ -121,9 +121,8 @@
     </div>
     <div class="card-body">
         <p class="text-muted">
-            Proses ini memindahkan siswa dari kelas lama ke kelas baru di tahun pelajaran berbeda.
-            Record <code>siswa_kelas</code> lama akan ditandai <code>naik_kelas</code> dan record baru dibuat di tahun tujuan.
-            Siswa yang sudah terdaftar aktif di tahun tujuan akan dilewati.
+            Proses ini menandai siswa kelas X dan XI sebagai <code>naik_kelas</code> pada tahun pelajaran asal.
+            Sistem tidak membuat rombel tujuan otomatis; siswa tetap ditempatkan ke rombel baru lewat assignment kelas di tahun pelajaran baru.
         </p>
 
         <div class="row mb-3">
@@ -153,20 +152,22 @@
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label><strong>Tanggal Masuk Kelas Baru</strong></label>
+                    <label><strong>Tanggal Naik Tingkat</strong></label>
                     <input type="date" id="tanggal-masuk" class="form-control" value="{{ now()->format('Y-m-d') }}">
                 </div>
             </div>
         </div>
 
         <button id="btn-load-mapping" class="btn btn-info mb-3" disabled>
-            <i class="fas fa-sync-alt mr-1"></i> Muat Kelas untuk Mapping
+            <i class="fas fa-sync-alt mr-1"></i> Muat Preview Kenaikan
         </button>
 
-        {{-- Tabel Mapping --}}
+        {{-- Preview kenaikan tingkat --}}
         <div id="mapping-container" class="d-none">
-            <h6 class="font-weight-bold mb-2">Mapping Kelas (Asal → Tujuan)</h6>
-            <p class="text-muted small">Pilih kelas tujuan untuk setiap kelas sumber. Baris tanpa kelas tujuan akan dilewati.</p>
+            <h6 class="font-weight-bold mb-2">Preview Kenaikan Tingkat</h6>
+            <p class="text-muted small">
+                Semua siswa aktif pada kelas X dan XI akan ditandai naik tingkat. Rombel tahun baru diisi kemudian melalui assignment kelas.
+            </p>
             <div class="table-responsive">
                 <table class="table table-sm table-bordered">
                     <thead class="thead-light">
@@ -174,7 +175,7 @@
                             <th>Kelas Asal (Tahun Asal)</th>
                             <th>Tingkat</th>
                             <th>Jml Siswa Aktif</th>
-                            <th>→ Kelas Tujuan (Tahun Tujuan)</th>
+                            <th>Status Proses</th>
                         </tr>
                     </thead>
                     <tbody id="mapping-tbody"></tbody>
@@ -736,9 +737,13 @@
     const elTahunAsal   = document.getElementById('tahun-asal');
     const elTahunTujuan = document.getElementById('tahun-tujuan');
     const btnLoadMapping = document.getElementById('btn-load-mapping');
+    let naikKelasPreview = { kelasCount: 0, siswaCount: 0 };
 
     function updateLoadBtn() {
         btnLoadMapping.disabled = !(elTahunAsal.value && elTahunTujuan.value && elTahunAsal.value !== elTahunTujuan.value);
+        naikKelasPreview = { kelasCount: 0, siswaCount: 0 };
+        document.getElementById('mapping-container').classList.add('d-none');
+        document.getElementById('result-naik-kelas').innerHTML = '';
     }
     elTahunAsal.addEventListener('change', updateLoadBtn);
     elTahunTujuan.addEventListener('change', updateLoadBtn);
@@ -765,40 +770,24 @@
         this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...';
 
         try {
-            // Ambil kelas tingkat 10 dan 11 dari tahun asal
             const [kelas10, kelas11] = await Promise.all([
                 fetchKelas(asalId, 10),
                 fetchKelas(asalId, 11),
             ]);
 
-            // Ambil kelas tingkat 11 dan 12 dari tahun tujuan (untuk dropdown)
-            const [kelas11tujuan, kelas12tujuan] = await Promise.all([
-                fetchKelas(tujuanId, 11),
-                fetchKelas(tujuanId, 12),
-            ]);
-
             const kelasAsal = [...kelas10, ...kelas11];
-
-            // Hitung siswa aktif per kelas asal
             const counts = await Promise.all(kelasAsal.map(k => getSiswaCount(k.id, asalId)));
+            const totalSiswa = counts.reduce((sum, count) => sum + count, 0);
+            naikKelasPreview = { kelasCount: kelasAsal.length, siswaCount: totalSiswa };
 
             const tbody = document.getElementById('mapping-tbody');
             tbody.innerHTML = kelasAsal.map((k, i) => {
-                const opsiTujuan = k.tingkat === 10 ? kelas11tujuan : kelas12tujuan;
-                const opts = opsiTujuan.map(t =>
-                    `<option value="${esc(t.id)}">${esc(t.nama_kelas)}</option>`
-                ).join('');
+                const tingkatTujuan = Number(k.tingkat) + 1;
                 return `<tr>
                     <td>${esc(k.nama_kelas)}</td>
                     <td><span class="badge badge-secondary">${k.tingkat}</span></td>
                     <td>${counts[i]}</td>
-                    <td>
-                        <select class="form-control form-control-sm kelas-tujuan-select"
-                                data-asal="${esc(k.id)}" style="min-width:180px;">
-                            <option value="">-- Lewati --</option>
-                            ${opts}
-                        </select>
-                    </td>
+                    <td><span class="badge badge-info">Naik ke tingkat ${tingkatTujuan}</span></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="4" class="text-center text-muted">Tidak ada kelas X/XI di tahun asal.</td></tr>';
 
@@ -806,30 +795,22 @@
         } catch (e) {
             showAppMessage({
                 title: 'Gagal Memuat Kelas',
-                subtitle: 'Mapping kelas belum bisa ditampilkan.',
+                subtitle: 'Preview kenaikan belum bisa ditampilkan.',
                 message: e.message || 'Gagal memuat data kelas. Coba lagi.',
                 type: 'danger',
             });
         } finally {
             this.disabled = false;
-            this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Muat Kelas untuk Mapping';
+            this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Muat Preview Kenaikan';
         }
     });
 
     document.getElementById('btn-proses-naik-kelas').addEventListener('click', async function () {
-        const selects = document.querySelectorAll('.kelas-tujuan-select');
-        const mapping = [];
-        selects.forEach(s => {
-            if (s.value) {
-                mapping.push({ kelas_asal_id: s.dataset.asal, kelas_tujuan_id: s.value });
-            }
-        });
-
-        if (mapping.length === 0) {
+        if (naikKelasPreview.siswaCount === 0) {
             showAppMessage({
-                title: 'Mapping Belum Dipilih',
+                title: 'Tidak Ada Siswa',
                 subtitle: 'Proses naik kelas belum dapat dijalankan.',
-                message: 'Pilih setidaknya satu pasangan kelas asal ke kelas tujuan.',
+                message: 'Tidak ada siswa aktif kelas X/XI pada tahun pelajaran asal.',
                 type: 'warning',
             });
             return;
@@ -837,16 +818,16 @@
 
         const confirmed = await openActionConfirm({
             title: 'Proses Naik Kelas',
-            subtitle: `${mapping.length} pasangan kelas akan diproses.`,
+            subtitle: `${naikKelasPreview.siswaCount} siswa dari ${naikKelasPreview.kelasCount} kelas akan ditandai naik tingkat.`,
             icon: 'fa-arrow-up',
             tone: 'warning',
             confirmText: 'Proses Naik Kelas',
             confirmClass: 'btn-warning',
-            bodyHtml: `<p class="mb-2">Sistem akan membuat record <code>siswa_kelas</code> baru di tahun tujuan dan menandai record lama sebagai <code>naik_kelas</code>.</p>
+            bodyHtml: `<p class="mb-2">Sistem akan menandai record <code>siswa_kelas</code> lama sebagai <code>naik_kelas</code> dan mengosongkan kelas saat ini bagi siswa yang belum ditempatkan di tahun tujuan.</p>
                 <ul class="action-confirm-list">
-                    <li>Siswa yang sudah aktif di tahun tujuan akan dilewati.</li>
-                    <li>Pastikan mapping kelas asal dan kelas tujuan sudah sesuai.</li>
-                    <li>Proses ini tidak dibatalkan otomatis.</li>
+                    <li>Rombel tahun baru tidak dibuat otomatis.</li>
+                    <li>Siswa ditempatkan ke rombel baru melalui assignment kelas.</li>
+                    <li>Proses ini tidak dapat dibatalkan otomatis.</li>
                 </ul>`,
         });
         if (!confirmed) return;
@@ -856,16 +837,16 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...';
         openProcessModal({
             title: 'Proses Naik Kelas',
-            subtitle: `${mapping.length} pasangan kelas akan diproses ke tahun pelajaran tujuan.`,
+            subtitle: `${naikKelasPreview.siswaCount} siswa akan ditandai naik tingkat.`,
             steps: [
-                'Memvalidasi mapping kelas',
-                'Membuat record siswa_kelas tahun tujuan',
+                'Memvalidasi tahun pelajaran',
                 'Menandai record kelas lama',
+                'Mengosongkan kelas saat ini yang menunggu rombel',
                 'Memuat ulang ringkasan',
             ],
         });
-        setProcessStep(0, 'done', `${mapping.length} pasangan kelas siap diproses.`);
-        setProcessStep(1, 'active', 'Membuat data kelas aktif di tahun tujuan.');
+        setProcessStep(0, 'done', `${naikKelasPreview.kelasCount} kelas asal siap diproses.`);
+        setProcessStep(1, 'active', 'Menandai siswa aktif X/XI sebagai naik_kelas.');
         setProcessProgress(30, 'Memproses kenaikan kelas...');
 
         fetch('{{ route('admin.kenaikan-kelas.proses-naik-kelas') }}', {
@@ -874,29 +855,22 @@
             body: JSON.stringify({
                 tahun_asal_id:   elTahunAsal.value,
                 tahun_tujuan_id: elTahunTujuan.value,
-                mapping:         mapping,
                 tanggal_masuk:   document.getElementById('tanggal-masuk').value,
             })
         })
         .then(parseJsonResponse)
         .then(d => {
             let html = `<i class="fas fa-check mr-1"></i> ${esc(d.message)}`;
-            if (d.errors && d.errors.length > 0) {
-                html += '<ul class="mb-0 mt-1">' + d.errors.map(e => `<li>${esc(e)}</li>`).join('') + '</ul>';
-            }
-            const type = d.errors && d.errors.length ? 'warning' : 'success';
-            const ok = d.success && !(d.errors && d.errors.length);
-            setProcessStep(1, ok ? 'done' : 'error', `${d.diproses || 0} siswa dipindahkan, ${d.dilewati || 0} dilewati.`);
-            setProcessStep(2, ok ? 'done' : 'error', ok ? 'Kelas lama ditandai naik_kelas.' : 'Sebagian mapping perlu diperiksa.');
+            const type = d.success ? 'success' : 'danger';
+            const ok = Boolean(d.success);
+            setProcessStep(1, ok ? 'done' : 'error', `${d.diproses || 0} siswa ditandai naik tingkat.`);
+            setProcessStep(2, ok ? 'done' : 'error', `${d.sudah_ditempatkan || 0} siswa sudah punya rombel aktif di tahun tujuan.`);
             setProcessStep(3, 'active', 'Mengambil ulang statistik halaman.');
             setProcessProgress(85, 'Memuat ulang ringkasan...');
             document.getElementById('result-naik-kelas').innerHTML = alertBox(html, type);
             loadStats(elTahunAsal.value);
             setProcessStep(3, 'done', 'Ringkasan halaman sudah diperbarui.');
-            const detail = d.errors && d.errors.length
-                ? '<ul class="mb-0 mt-2">' + d.errors.map(e => `<li>${esc(e)}</li>`).join('') + '</ul>'
-                : '';
-            finishProcess(ok, d.message || 'Proses naik kelas selesai.', detail);
+            finishProcess(ok, d.message || 'Proses naik kelas selesai.');
         })
         .catch(err => {
             setProcessStep(1, 'error', err.message || 'Proses berhenti sebelum selesai.');

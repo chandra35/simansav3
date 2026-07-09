@@ -241,25 +241,21 @@ class KenaikanKelasController extends Controller
 
     /**
      * POST: proses naik kelas batch.
-     * Memindahkan siswa dari kelas lama (tahun lama) ke kelas baru (tahun baru)
-     * berdasarkan mapping yang dikirim.
+     * Menandai siswa kelas X dan XI sebagai naik tingkat.
+     * Penempatan rombel tahun tujuan dilakukan terpisah oleh admin.
      *
      * Payload: {
      *   tahun_asal_id: uuid,
      *   tahun_tujuan_id: uuid,
-     *   mapping: [ { kelas_asal_id: uuid, kelas_tujuan_id: uuid }, ... ],
      *   tanggal_masuk: 'YYYY-MM-DD',
      * }
      */
     public function prosesNaikKelas(Request $request)
     {
         $request->validate([
-            'tahun_asal_id'            => 'required|exists:tahun_pelajaran,id',
-            'tahun_tujuan_id'          => 'required|exists:tahun_pelajaran,id|different:tahun_asal_id',
-            'mapping'                  => 'required|array|min:1',
-            'mapping.*.kelas_asal_id'  => 'required|exists:kelas,id',
-            'mapping.*.kelas_tujuan_id'=> 'required|exists:kelas,id',
-            'tanggal_masuk'            => 'required|date',
+            'tahun_asal_id'   => 'required|exists:tahun_pelajaran,id',
+            'tahun_tujuan_id' => 'required|exists:tahun_pelajaran,id|different:tahun_asal_id',
+            'tanggal_masuk'   => 'required|date',
         ]);
 
         $tahunAsal   = TahunPelajaran::findOrFail($request->tahun_asal_id);
@@ -267,83 +263,73 @@ class KenaikanKelasController extends Controller
         $tanggalMasuk = $request->tanggal_masuk;
 
         $diproses = 0;
-        $dilewati = 0;
-        $errors   = [];
+        $kelasDiproses = 0;
+        $sudahDitempatkan = 0;
 
-        DB::transaction(function () use ($tahunAsal, $tahunTujuan, $request, $tanggalMasuk, &$diproses, &$dilewati, &$errors) {
-            foreach ($request->mapping as $map) {
-                $kelasAsal   = Kelas::findOrFail($map['kelas_asal_id']);
-                $kelasTujuan = Kelas::findOrFail($map['kelas_tujuan_id']);
+        DB::transaction(function () use ($tahunAsal, $tahunTujuan, $tanggalMasuk, &$diproses, &$kelasDiproses, &$sudahDitempatkan) {
+            $kelasAsalIds = Kelas::where('tahun_pelajaran_id', $tahunAsal->id)
+                ->whereIn('tingkat', [10, 11])
+                ->where('is_active', true)
+                ->pluck('id');
 
-                // Validasi: tingkat tujuan harus lebih tinggi
-                if ($kelasTujuan->tingkat <= $kelasAsal->tingkat) {
-                    $errors[] = "Kelas {$kelasTujuan->nama_kelas} (tingkat {$kelasTujuan->tingkat}) harus lebih tinggi dari {$kelasAsal->nama_kelas} (tingkat {$kelasAsal->tingkat}).";
-                    continue;
-                }
+            $kelasDiproses = $kelasAsalIds->count();
 
-                // Ambil semua siswa aktif di kelas asal
-                $siswaKelasRows = SiswaKelas::with('siswa')
-                    ->where('kelas_id', $kelasAsal->id)
-                    ->where('tahun_pelajaran_id', $tahunAsal->id)
-                    ->where('status', 'aktif')
-                    ->get();
-
-                foreach ($siswaKelasRows as $sk) {
-                    // Cek apakah siswa sudah ada di kelas tujuan
-                    $exists = SiswaKelas::where('siswa_id', $sk->siswa_id)
-                        ->where('tahun_pelajaran_id', $tahunTujuan->id)
-                        ->where('status', 'aktif')
-                        ->exists();
-
-                    if ($exists) {
-                        $dilewati++;
-                        continue;
-                    }
-
-                    // Nomor urut absen di kelas tujuan
-                    $nomorBaru = SiswaKelas::where('kelas_id', $kelasTujuan->id)
-                        ->where('tahun_pelajaran_id', $tahunTujuan->id)
-                        ->max('nomor_urut_absen') + 1;
-
-                    // Buat record baru di kelas tujuan
-                    SiswaKelas::create([
-                        'siswa_id'            => $sk->siswa_id,
-                        'kelas_id'            => $kelasTujuan->id,
-                        'tahun_pelajaran_id'  => $tahunTujuan->id,
-                        'tanggal_masuk'       => $tanggalMasuk,
-                        'status'              => 'aktif',
-                        'nomor_urut_absen'    => $nomorBaru,
-                        'catatan_perpindahan' => "Naik kelas dari {$kelasAsal->nama_kelas} ({$tahunAsal->nama})",
-                    ]);
-
-                    // Update record lama → status naik_kelas
-                    $sk->update([
-                        'status'              => 'naik_kelas',
-                        'tanggal_keluar'      => $tanggalMasuk,
-                        'catatan_perpindahan' => "Naik ke {$kelasTujuan->nama_kelas} ({$tahunTujuan->nama})",
-                    ]);
-
-                    // Update kelas_saat_ini_id di siswa
-                    if ($sk->siswa) {
-                        $sk->siswa->update(['kelas_saat_ini_id' => $kelasTujuan->id]);
-                    }
-
-                    $diproses++;
-                }
+            if ($kelasAsalIds->isEmpty()) {
+                return;
             }
-        });
+
+            $rows = SiswaKelas::whereIn('kelas_id', $kelasAsalIds)
+                ->where('tahun_pelajaran_id', $tahunAsal->id)
+                ->where('status', 'aktif')
+                ->get(['id', 'siswa_id']);
+
+            if ($rows->isEmpty()) {
+                return;
+            }
+
+            $rowIds = $rows->pluck('id');
+            $siswaIds = $rows->pluck('siswa_id')->unique()->values();
+            $siswaAktifTahunTujuan = SiswaKelas::whereIn('siswa_id', $siswaIds)
+                ->where('tahun_pelajaran_id', $tahunTujuan->id)
+                ->where('status', 'aktif')
+                ->pluck('siswa_id')
+                ->unique()
+                ->values();
+
+            $sudahDitempatkan = $siswaAktifTahunTujuan->count();
+            $belumDitempatkan = $siswaIds->diff($siswaAktifTahunTujuan)->values();
+
+            foreach ($rowIds->chunk(500) as $chunk) {
+                SiswaKelas::whereIn('id', $chunk)->update([
+                    'status'              => 'naik_kelas',
+                    'tanggal_keluar'      => $tanggalMasuk,
+                    'catatan_perpindahan' => "Naik tingkat dari {$tahunAsal->nama} ke {$tahunTujuan->nama}. Menunggu penempatan rombel baru.",
+                    'updated_at'          => now(),
+                ]);
+            }
+
+            foreach ($belumDitempatkan->chunk(500) as $chunk) {
+                Siswa::whereIn('id', $chunk)->update([
+                    'kelas_saat_ini_id' => null,
+                    'updated_at'        => now(),
+                ]);
+            }
+
+            $diproses = $rows->count();
+
+        }, 3);
 
         return response()->json([
-            'success'  => count($errors) === 0,
-            'diproses' => $diproses,
-            'dilewati' => $dilewati,
-            'errors'   => $errors,
-            'message'  => "Berhasil memindahkan {$diproses} siswa. {$dilewati} siswa dilewati.",
+            'success'           => true,
+            'diproses'          => $diproses,
+            'kelas_diproses'    => $kelasDiproses,
+            'sudah_ditempatkan' => $sudahDitempatkan,
+            'message'           => "Naik kelas selesai: {$diproses} siswa ditandai naik tingkat. {$sudahDitempatkan} siswa sudah punya rombel aktif di tahun tujuan.",
         ]);
     }
 
     /**
-     * AJAX: ambil daftar kelas di tahun pelajaran tertentu (untuk dropdown mapping).
+     * AJAX: ambil daftar kelas di tahun pelajaran tertentu.
      */
     public function getKelasByTahun(Request $request)
     {
