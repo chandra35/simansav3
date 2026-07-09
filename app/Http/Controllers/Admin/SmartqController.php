@@ -1120,6 +1120,7 @@ class SmartqController extends Controller
                         $kelas->siswas()->attach($siswa->id, [
                             'id' => Str::uuid(),
                             'tahun_pelajaran_id' => $tahunAktif->id,
+                            'tingkat' => $kelas->tingkat,
                             'tanggal_masuk' => now()->format('Y-m-d'),
                             'status' => 'aktif',
                             'nomor_urut_absen' => $lastAbsen + 1,

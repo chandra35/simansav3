@@ -122,7 +122,7 @@
     <div class="card-body">
         <p class="text-muted">
             Proses ini menandai siswa kelas X dan XI sebagai <code>naik_kelas</code> pada tahun pelajaran asal.
-            Sistem tidak membuat rombel tujuan otomatis; siswa tetap ditempatkan ke rombel baru lewat assignment kelas di tahun pelajaran baru.
+            Sistem membuat record aktif di tahun tujuan sesuai tingkat baru, tanpa rombel. Rombel baru diisi kemudian lewat assignment kelas.
         </p>
 
         <div class="row mb-3">
@@ -166,7 +166,7 @@
         <div id="mapping-container" class="d-none">
             <h6 class="font-weight-bold mb-2">Preview Kenaikan Tingkat</h6>
             <p class="text-muted small">
-                Semua siswa aktif pada kelas X dan XI akan ditandai naik tingkat. Rombel tahun baru diisi kemudian melalui assignment kelas.
+                Semua siswa aktif pada kelas X dan XI akan dibuat aktif pada tingkat baru tanpa rombel. Rombel tahun baru diisi kemudian melalui assignment kelas.
             </p>
             <div class="table-responsive">
                 <table class="table table-sm table-bordered">
@@ -777,16 +777,34 @@
 
             const kelasAsal = [...kelas10, ...kelas11];
             const counts = await Promise.all(kelasAsal.map(k => getSiswaCount(k.id, asalId)));
-            const totalSiswa = counts.reduce((sum, count) => sum + count, 0);
-            naikKelasPreview = { kelasCount: kelasAsal.length, siswaCount: totalSiswa };
+            const statsResponse = await fetch(`{{ route('admin.kenaikan-kelas.data') }}?tahun_pelajaran_id=${asalId}`);
+            const stats = await statsResponse.json();
+            const siswaKelas10 = kelasAsal.reduce((sum, k, i) => sum + (Number(k.tingkat) === 10 ? counts[i] : 0), 0);
+            const siswaKelas11 = kelasAsal.reduce((sum, k, i) => sum + (Number(k.tingkat) === 11 ? counts[i] : 0), 0);
+            const tanpaRombel10 = Math.max((Number(stats.siswa_10) || 0) - siswaKelas10, 0);
+            const tanpaRombel11 = Math.max((Number(stats.siswa_11) || 0) - siswaKelas11, 0);
+            const totalSiswa = (Number(stats.siswa_10) || 0) + (Number(stats.siswa_11) || 0);
+            const previewRows = kelasAsal.map((k, i) => ({
+                nama: k.nama_kelas,
+                tingkat: Number(k.tingkat),
+                count: counts[i],
+                isRombel: true,
+            }));
+            if (tanpaRombel10 > 0) {
+                previewRows.push({ nama: 'Tanpa Rombel', tingkat: 10, count: tanpaRombel10, isRombel: false });
+            }
+            if (tanpaRombel11 > 0) {
+                previewRows.push({ nama: 'Tanpa Rombel', tingkat: 11, count: tanpaRombel11, isRombel: false });
+            }
+            naikKelasPreview = { kelasCount: previewRows.length, siswaCount: totalSiswa };
 
             const tbody = document.getElementById('mapping-tbody');
-            tbody.innerHTML = kelasAsal.map((k, i) => {
-                const tingkatTujuan = Number(k.tingkat) + 1;
+            tbody.innerHTML = previewRows.map(row => {
+                const tingkatTujuan = row.tingkat + 1;
                 return `<tr>
-                    <td>${esc(k.nama_kelas)}</td>
-                    <td><span class="badge badge-secondary">${k.tingkat}</span></td>
-                    <td>${counts[i]}</td>
+                    <td>${esc(row.nama)}${row.isRombel ? '' : ' <span class="badge badge-light ml-1">aktif</span>'}</td>
+                    <td><span class="badge badge-secondary">${row.tingkat}</span></td>
+                    <td>${row.count}</td>
                     <td><span class="badge badge-info">Naik ke tingkat ${tingkatTujuan}</span></td>
                 </tr>`;
             }).join('') || '<tr><td colspan="4" class="text-center text-muted">Tidak ada kelas X/XI di tahun asal.</td></tr>';
@@ -818,12 +836,12 @@
 
         const confirmed = await openActionConfirm({
             title: 'Proses Naik Kelas',
-            subtitle: `${naikKelasPreview.siswaCount} siswa dari ${naikKelasPreview.kelasCount} kelas akan ditandai naik tingkat.`,
+            subtitle: `${naikKelasPreview.siswaCount} siswa dari ${naikKelasPreview.kelasCount} baris preview akan ditandai naik tingkat.`,
             icon: 'fa-arrow-up',
             tone: 'warning',
             confirmText: 'Proses Naik Kelas',
             confirmClass: 'btn-warning',
-            bodyHtml: `<p class="mb-2">Sistem akan menandai record <code>siswa_kelas</code> lama sebagai <code>naik_kelas</code> dan mengosongkan kelas saat ini bagi siswa yang belum ditempatkan di tahun tujuan.</p>
+            bodyHtml: `<p class="mb-2">Sistem akan menutup record <code>siswa_kelas</code> lama sebagai <code>naik_kelas</code>, lalu membuat record aktif di tahun tujuan sesuai tingkat baru tanpa rombel.</p>
                 <ul class="action-confirm-list">
                     <li>Rombel tahun baru tidak dibuat otomatis.</li>
                     <li>Siswa ditempatkan ke rombel baru melalui assignment kelas.</li>
@@ -841,12 +859,12 @@
             steps: [
                 'Memvalidasi tahun pelajaran',
                 'Menandai record kelas lama',
-                'Mengosongkan kelas saat ini yang menunggu rombel',
+                'Membuat record aktif tanpa rombel',
                 'Memuat ulang ringkasan',
             ],
         });
-        setProcessStep(0, 'done', `${naikKelasPreview.kelasCount} kelas asal siap diproses.`);
-        setProcessStep(1, 'active', 'Menandai siswa aktif X/XI sebagai naik_kelas.');
+        setProcessStep(0, 'done', `${naikKelasPreview.kelasCount} baris preview siap diproses.`);
+        setProcessStep(1, 'active', 'Menutup histori lama siswa aktif X/XI.');
         setProcessProgress(30, 'Memproses kenaikan kelas...');
 
         fetch('{{ route('admin.kenaikan-kelas.proses-naik-kelas') }}', {

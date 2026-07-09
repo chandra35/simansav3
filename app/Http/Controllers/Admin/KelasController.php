@@ -657,10 +657,17 @@ class KelasController extends Controller
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 10); // Support custom per_page
 
-        $query = Siswa::whereDoesntHave('kelas', function ($query) use ($kelas) {
+        $query = Siswa::where(function ($query) use ($kelas) {
+            $query->whereDoesntHave('siswaKelasRecords', function ($query) use ($kelas) {
                 $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                       ->where('siswa_kelas.status', 'aktif');
-            })
+            })->orWhereHas('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif')
+                      ->whereNull('siswa_kelas.kelas_id')
+                      ->where('siswa_kelas.tingkat', $kelas->tingkat);
+            });
+        })
             // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
             // ->where('data_diri_completed', true)
             ->orderBy('nama_lengkap');
@@ -709,10 +716,17 @@ class KelasController extends Controller
     {
         // Get siswa yang belum ada di kelas manapun untuk tahun pelajaran ini
         // atau siswa yang sudah lulus dari tingkat sebelumnya
-        $availableSiswa = Siswa::whereDoesntHave('kelas', function ($query) use ($kelas) {
+        $availableSiswa = Siswa::where(function ($query) use ($kelas) {
+            $query->whereDoesntHave('siswaKelasRecords', function ($query) use ($kelas) {
                 $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                       ->where('siswa_kelas.status', 'aktif');
-            })
+            })->orWhereHas('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif')
+                      ->whereNull('siswa_kelas.kelas_id')
+                      ->where('siswa_kelas.tingkat', $kelas->tingkat);
+            });
+        })
             // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
             // ->where('data_diri_completed', true)
             ->orderBy('nama_lengkap')
@@ -755,14 +769,16 @@ class KelasController extends Controller
         try {
             $successCount = 0;
             foreach ($request->siswa_ids as $siswaId) {
-                // Check if already in kelas
-                $exists = $kelas->siswas()
-                    ->where('siswa.id', $siswaId)
-                    ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                    ->wherePivot('status', 'aktif')
-                    ->exists();
+                $activeRecord = SiswaKelas::where('siswa_id', $siswaId)
+                    ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->first();
 
-                if ($exists) {
+                if ($activeRecord && $activeRecord->kelas_id && $activeRecord->kelas_id !== $kelas->id) {
+                    continue;
+                }
+
+                if ($activeRecord && $activeRecord->kelas_id === $kelas->id) {
                     continue;
                 }
 
@@ -771,13 +787,23 @@ class KelasController extends Controller
                     ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                     ->max('siswa_kelas.nomor_urut_absen') ?? 0;
 
-                $kelas->siswas()->attach($siswaId, [
-                    'id' => \Illuminate\Support\Str::uuid()->toString(),
-                    'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
-                    'tanggal_masuk' => $tanggalMasuk,
-                    'status' => 'aktif',
-                    'nomor_urut_absen' => $lastAbsen + 1,
-                ]);
+                if ($activeRecord) {
+                    $activeRecord->update([
+                        'kelas_id' => $kelas->id,
+                        'tingkat' => $kelas->tingkat,
+                        'nomor_urut_absen' => $lastAbsen + 1,
+                        'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                    ]);
+                } else {
+                    $kelas->siswas()->attach($siswaId, [
+                        'id' => \Illuminate\Support\Str::uuid()->toString(),
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'tingkat' => $kelas->tingkat,
+                        'tanggal_masuk' => $tanggalMasuk,
+                        'status' => 'aktif',
+                        'nomor_urut_absen' => $lastAbsen + 1,
+                    ]);
+                }
 
                 // Update kelas_saat_ini_id pada tabel siswa
                 Siswa::where('id', $siswaId)->update([
@@ -881,16 +907,23 @@ class KelasController extends Controller
                         continue;
                     }
 
-                    // Check if already in any kelas for this tahun pelajaran
-                    $existsInKelas = $siswa->kelas()
-                        ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                        ->wherePivot('status', 'aktif')
-                        ->exists();
+                    $activeRecord = SiswaKelas::where('siswa_id', $siswa->id)
+                        ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                        ->where('status', 'aktif')
+                        ->first();
 
-                    if ($existsInKelas) {
+                    if ($activeRecord && $activeRecord->kelas_id && $activeRecord->kelas_id !== $kelas->id) {
                         $errors[] = [
                             'nisn' => $nisn,
                             'error' => 'Siswa sudah terdaftar di kelas lain'
+                        ];
+                        continue;
+                    }
+
+                    if ($activeRecord && $activeRecord->kelas_id === $kelas->id) {
+                        $errors[] = [
+                            'nisn' => $nisn,
+                            'error' => 'Siswa sudah terdaftar di kelas ini'
                         ];
                         continue;
                     }
@@ -900,14 +933,23 @@ class KelasController extends Controller
                         ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                         ->max('nomor_urut_absen') ?? 0;
 
-                    // Add to kelas
-                    $kelas->siswas()->attach($siswa->id, [
-                        'id' => \Illuminate\Support\Str::uuid()->toString(),
-                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
-                        'tanggal_masuk' => $tanggalMasuk,
-                        'status' => 'aktif',
-                        'nomor_urut_absen' => $lastAbsen + 1,
-                    ]);
+                    if ($activeRecord) {
+                        $activeRecord->update([
+                            'kelas_id' => $kelas->id,
+                            'tingkat' => $kelas->tingkat,
+                            'nomor_urut_absen' => $lastAbsen + 1,
+                            'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                        ]);
+                    } else {
+                        $kelas->siswas()->attach($siswa->id, [
+                            'id' => \Illuminate\Support\Str::uuid()->toString(),
+                            'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                            'tingkat' => $kelas->tingkat,
+                            'tanggal_masuk' => $tanggalMasuk,
+                            'status' => 'aktif',
+                            'nomor_urut_absen' => $lastAbsen + 1,
+                        ]);
+                    }
 
                     // Update kelas_saat_ini_id pada tabel siswa
                     $siswa->update(['kelas_saat_ini_id' => $kelas->id]);

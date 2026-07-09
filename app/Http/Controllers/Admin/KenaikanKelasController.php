@@ -42,18 +42,20 @@ class KenaikanKelasController extends Controller
             ->get()
             ->groupBy('tingkat');
 
-        // Jumlah siswa aktif per tingkat
+        // Jumlah siswa aktif per tingkat, termasuk yang aktif tanpa rombel.
         $siswaPerTingkat = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
             ->where('status', 'aktif')
-            ->whereHas('kelas', fn($q) => $q->where('is_active', true))
             ->with('kelas:id,tingkat,nama_kelas')
             ->get()
-            ->groupBy(fn($sk) => $sk->kelas->tingkat ?? 0);
+            ->groupBy(fn($sk) => $sk->tingkat ?? $sk->kelas->tingkat ?? 0);
 
         // Status kelulusan kelas 12
         $kelas12Ids = ($kelasByTingkat[12] ?? collect())->pluck('id');
         $siswa12Total = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
-            ->whereIn('kelas_id', $kelas12Ids)
+            ->where(function ($query) use ($kelas12Ids) {
+                $query->where('tingkat', 12)
+                    ->orWhereIn('kelas_id', $kelas12Ids);
+            })
             ->where('status', 'aktif')
             ->count();
         $siswa12Lulus = PengumumanKelulusan::where('tahun_pelajaran_id', $tahunId)
@@ -119,7 +121,10 @@ class KenaikanKelasController extends Controller
             ->pluck('id');
 
         $siswaKelasRows = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
-            ->whereIn('kelas_id', $kelas12Ids)
+            ->where(function ($query) use ($kelas12Ids) {
+                $query->where('tingkat', 12)
+                    ->orWhereIn('kelas_id', $kelas12Ids);
+            })
             ->where('status', 'aktif')
             ->pluck('siswa_id');
 
@@ -135,7 +140,10 @@ class KenaikanKelasController extends Controller
 
         // Cek berapa yang siswa_kelas.status sudah di-finalisasi
         $sudah_finalisasi = SiswaKelas::where('tahun_pelajaran_id', $tahunId)
-            ->whereIn('kelas_id', $kelas12Ids)
+            ->where(function ($query) use ($kelas12Ids) {
+                $query->where('tingkat', 12)
+                    ->orWhereIn('kelas_id', $kelas12Ids);
+            })
             ->whereIn('status', ['lulus', 'tinggal_kelas'])
             ->count();
 
@@ -177,7 +185,10 @@ class KenaikanKelasController extends Controller
         // Ambil semua siswa aktif kelas XII + PengumumanKelulusan mereka
         $siswaKelasRows = SiswaKelas::with('siswa')
             ->where('tahun_pelajaran_id', $tahun->id)
-            ->whereIn('kelas_id', $kelas12Ids)
+            ->where(function ($query) use ($kelas12Ids) {
+                $query->where('tingkat', 12)
+                    ->orWhereIn('kelas_id', $kelas12Ids);
+            })
             ->where('status', 'aktif')
             ->get();
 
@@ -274,14 +285,14 @@ class KenaikanKelasController extends Controller
 
             $kelasDiproses = $kelasAsalIds->count();
 
-            if ($kelasAsalIds->isEmpty()) {
-                return;
-            }
-
-            $rows = SiswaKelas::whereIn('kelas_id', $kelasAsalIds)
+            $rows = SiswaKelas::with('kelas:id,tingkat,nama_kelas')
                 ->where('tahun_pelajaran_id', $tahunAsal->id)
                 ->where('status', 'aktif')
-                ->get(['id', 'siswa_id']);
+                ->where(function ($query) use ($kelasAsalIds) {
+                    $query->whereIn('tingkat', [10, 11])
+                        ->orWhereIn('kelas_id', $kelasAsalIds);
+                })
+                ->get(['id', 'siswa_id', 'kelas_id', 'tingkat']);
 
             if ($rows->isEmpty()) {
                 return;
@@ -297,18 +308,38 @@ class KenaikanKelasController extends Controller
                 ->values();
 
             $sudahDitempatkan = $siswaAktifTahunTujuan->count();
-            $belumDitempatkan = $siswaIds->diff($siswaAktifTahunTujuan)->values();
+            $belumDitempatkanRows = $rows
+                ->whereNotIn('siswa_id', $siswaAktifTahunTujuan)
+                ->values();
 
             foreach ($rowIds->chunk(500) as $chunk) {
                 SiswaKelas::whereIn('id', $chunk)->update([
                     'status'              => 'naik_kelas',
                     'tanggal_keluar'      => $tanggalMasuk,
-                    'catatan_perpindahan' => "Naik tingkat dari {$tahunAsal->nama} ke {$tahunTujuan->nama}. Menunggu penempatan rombel baru.",
+                    'catatan_perpindahan' => "Naik tingkat dari {$tahunAsal->nama} ke {$tahunTujuan->nama}. Histori kelas lama ditutup.",
                     'updated_at'          => now(),
                 ]);
             }
 
-            foreach ($belumDitempatkan->chunk(500) as $chunk) {
+            foreach ($belumDitempatkanRows as $row) {
+                $tingkatAsal = $row->tingkat ?? $row->kelas?->tingkat;
+                if (!in_array((int) $tingkatAsal, [10, 11], true)) {
+                    continue;
+                }
+
+                SiswaKelas::create([
+                    'siswa_id'            => $row->siswa_id,
+                    'kelas_id'            => null,
+                    'tahun_pelajaran_id'  => $tahunTujuan->id,
+                    'tingkat'             => (int) $tingkatAsal + 1,
+                    'tanggal_masuk'       => $tanggalMasuk,
+                    'status'              => 'aktif',
+                    'nomor_urut_absen'    => null,
+                    'catatan_perpindahan' => "Naik tingkat dari {$tahunAsal->nama}. Menunggu penempatan rombel baru.",
+                ]);
+            }
+
+            foreach ($belumDitempatkanRows->pluck('siswa_id')->chunk(500) as $chunk) {
                 Siswa::whereIn('id', $chunk)->update([
                     'kelas_saat_ini_id' => null,
                     'updated_at'        => now(),
@@ -324,7 +355,7 @@ class KenaikanKelasController extends Controller
             'diproses'          => $diproses,
             'kelas_diproses'    => $kelasDiproses,
             'sudah_ditempatkan' => $sudahDitempatkan,
-            'message'           => "Naik kelas selesai: {$diproses} siswa ditandai naik tingkat. {$sudahDitempatkan} siswa sudah punya rombel aktif di tahun tujuan.",
+            'message'           => "Naik kelas selesai: {$diproses} histori lama ditutup. {$sudahDitempatkan} siswa sudah punya rombel aktif di tahun tujuan, sisanya aktif tanpa rombel.",
         ]);
     }
 

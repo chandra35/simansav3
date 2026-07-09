@@ -17,6 +17,7 @@ class SiswaKelas extends Model
         'siswa_id',
         'kelas_id',
         'tahun_pelajaran_id',
+        'tingkat',
         'tanggal_masuk',
         'tanggal_keluar',
         'status',
@@ -27,6 +28,7 @@ class SiswaKelas extends Model
     protected $casts = [
         'tanggal_masuk' => 'date',
         'tanggal_keluar' => 'date',
+        'tingkat' => 'integer',
     ];
 
     /**

@@ -279,7 +279,13 @@ class SiswaController extends Controller
         $data = $siswa->get()->map(function($item) {
             // Get kelas aktif
             $kelasAktif = $item->kelasAktif()->first();
-            $kelasNama = $kelasAktif ? $kelasAktif->nama_kelas : '<span class="text-muted small">Tanpa Rombel</span>';
+            $aktifRecord = $kelasAktif ? null : $item->siswaKelasRecords()
+                ->where('status', 'aktif')
+                ->latest('created_at')
+                ->first();
+            $kelasNama = $kelasAktif
+                ? $kelasAktif->nama_kelas
+                : '<span class="text-muted small">' . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '') . 'Tanpa Rombel</span>';
 
             $jk = $item->jenis_kelamin;
             $jkBadge = $jk === 'L'
