@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Helpers\StorageHelper;
+use App\Models\DokumenSiswa;
 use App\Models\MatrikulasiDokumen;
 use App\Models\MatrikulasiKelompok;
 use App\Models\MatrikulasiPeriode;
 use App\Models\MatrikulasiPeserta;
+use App\Models\Ortu;
 use App\Models\Siswa;
+use App\Models\SiswaKelas;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -227,11 +230,13 @@ class PpdbMatrikulasiImportService
         ];
     }
 
-    public function import(array $calonSiswaIds, string $kelompokId, bool $includeDocuments, string $tahunPelajaranId, bool $allowUnpaid = false): array
+    public function import(array $calonSiswaIds, ?string $kelompokId, bool $includeDocuments, string $tahunPelajaranId, bool $allowUnpaid = false): array
     {
         $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
         $periode = $this->periodeFor($tahun);
-        $kelompok = MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId);
+        $kelompok = $kelompokId
+            ? MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId)
+            : null;
 
         $candidates = $this->preview($calonSiswaIds, $tahun->id, true, $allowUnpaid);
         $results = [
@@ -498,10 +503,92 @@ class PpdbMatrikulasiImportService
         }
     }
 
-    private function upsertPeserta(object $candidate, MatrikulasiPeriode $periode, MatrikulasiKelompok $kelompok): MatrikulasiPeserta
+    public function promoteToSiswa(array $pesertaIds, string $tahunPelajaranId): array
+    {
+        $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
+        $periode = $this->periodeFor($tahun);
+        Role::firstOrCreate(['name' => 'Siswa', 'guard_name' => 'web']);
+
+        $result = ['success' => 0, 'existing' => 0, 'failed' => 0, 'items' => []];
+        $pesertas = MatrikulasiPeserta::with(['user', 'dokumens'])
+            ->where('matrikulasi_periode_id', $periode->id)
+            ->whereIn('id', $pesertaIds)
+            ->get();
+
+        foreach ($pesertas as $peserta) {
+            try {
+                DB::beginTransaction();
+
+                if ($peserta->siswa_id || $peserta->status === 'dipromosikan') {
+                    $result['existing']++;
+                    $result['items'][] = [
+                        'status' => 'existing',
+                        'nama' => $peserta->nama_lengkap,
+                        'nisn' => $peserta->nisn,
+                        'message' => 'Peserta sudah menjadi siswa.',
+                    ];
+                    DB::commit();
+                    continue;
+                }
+
+                if ($peserta->nisn && Siswa::where('nisn', $peserta->nisn)->exists()) {
+                    throw new RuntimeException('NISN sudah ada di data siswa reguler.');
+                }
+
+                $user = $this->userForPromotedSiswa($peserta);
+                $siswa = Siswa::create($this->siswaPayload($peserta, $tahun, $user));
+
+                $this->syncOrtuToSiswa($peserta, $siswa);
+                $this->syncMatrikulasiDocumentsToSiswa($peserta, $siswa, $tahun);
+
+                SiswaKelas::create([
+                    'siswa_id' => $siswa->id,
+                    'kelas_id' => null,
+                    'tahun_pelajaran_id' => $tahun->id,
+                    'tingkat' => 10,
+                    'tanggal_masuk' => now()->toDateString(),
+                    'status' => 'aktif',
+                    'nomor_urut_absen' => null,
+                    'catatan_perpindahan' => 'Ditetapkan dari staging matrikulasi PPDB. Menunggu penempatan rombel kelas 10.',
+                ]);
+
+                $peserta->update([
+                    'siswa_id' => $siswa->id,
+                    'user_id' => null,
+                    'status' => 'dipromosikan',
+                    'promoted_at' => now(),
+                    'promoted_by' => auth()->id(),
+                ]);
+
+                DB::commit();
+
+                $result['success']++;
+                $result['items'][] = [
+                    'status' => 'success',
+                    'nama' => $peserta->nama_lengkap,
+                    'nisn' => $peserta->nisn,
+                    'message' => 'Berhasil menjadi siswa aktif tingkat 10 tanpa rombel.',
+                ];
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                $result['failed']++;
+                $result['items'][] = [
+                    'status' => 'failed',
+                    'nama' => $peserta->nama_lengkap,
+                    'nisn' => $peserta->nisn,
+                    'message' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    private function upsertPeserta(object $candidate, MatrikulasiPeriode $periode, ?MatrikulasiKelompok $kelompok): MatrikulasiPeserta
     {
         $payload = [
-            'matrikulasi_kelompok_id' => $kelompok->id,
+            'matrikulasi_kelompok_id' => $kelompok?->id,
             'ppdb_tahun_pelajaran_id' => $candidate->tahun_pelajaran_id,
             'nomor_registrasi' => $candidate->nomor_registrasi,
             'nomor_tes' => $candidate->nomor_tes,
@@ -531,6 +618,133 @@ class PpdbMatrikulasiImportService
             ],
             $payload
         );
+    }
+
+    private function userForPromotedSiswa(MatrikulasiPeserta $peserta): User
+    {
+        $username = preg_replace('/[^a-zA-Z0-9]/', '', (string) ($peserta->nisn ?: $peserta->nomor_tes ?: $peserta->nik));
+        $username = strtolower($username ?: 'siswa' . substr((string) $peserta->id, 0, 8));
+        $password = $this->initialMatrikulasiPassword($peserta);
+
+        $user = $peserta->user ?: User::where('username', $username)->first();
+        if ($user?->siswa) {
+            throw new RuntimeException('Username sudah terhubung ke siswa reguler lain.');
+        }
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $peserta->nama_lengkap,
+                'username' => $username,
+                'email' => $username . '@student.man1metro.sch.id',
+                'password' => Hash::make($password),
+                'role' => 'siswa',
+                'is_first_login' => true,
+                'is_active' => true,
+                'phone' => $peserta->data_siswa['nomor_hp'] ?? null,
+            ]);
+            $user->readable_password = $password;
+            $user->save();
+        } else {
+            $user->update([
+                'name' => $peserta->nama_lengkap,
+                'role' => 'siswa',
+                'is_active' => true,
+            ]);
+        }
+
+        $user->syncRoles(['Siswa']);
+
+        return $user;
+    }
+
+    private function siswaPayload(MatrikulasiPeserta $peserta, TahunPelajaran $tahun, User $user): array
+    {
+        $data = $peserta->data_siswa ?: [];
+
+        return [
+            'user_id' => $user->id,
+            'nisn' => $peserta->nisn,
+            'nama_lengkap' => $peserta->nama_lengkap,
+            'jenis_kelamin' => $this->pick($data, ['jenis_kelamin', 'jk']),
+            'nik' => $peserta->nik,
+            'tempat_lahir' => $this->pick($data, ['tempat_lahir']),
+            'tanggal_lahir' => $this->pick($data, ['tanggal_lahir']),
+            'agama' => $this->pick($data, ['agama']),
+            'nomor_hp' => $this->pick($data, ['nomor_hp', 'hp', 'no_hp']),
+            'alamat_siswa' => $this->pick($data, ['alamat_siswa', 'alamat']),
+            'rt_siswa' => $this->pick($data, ['rt_siswa', 'rt']),
+            'rw_siswa' => $this->pick($data, ['rw_siswa', 'rw']),
+            'kodepos_siswa' => $this->pick($data, ['kodepos_siswa', 'kode_pos', 'kodepos']),
+            'tahun_masuk' => $tahun->tahun_mulai,
+            'asal_siswa' => 'ppdb',
+            'status_siswa' => 'aktif',
+            'kelas_saat_ini_id' => null,
+            'ppdb_id' => is_numeric($peserta->ppdb_calon_siswa_id) ? $peserta->ppdb_calon_siswa_id : null,
+            'ppdb_imported_at' => now(),
+        ];
+    }
+
+    private function syncOrtuToSiswa(MatrikulasiPeserta $peserta, Siswa $siswa): void
+    {
+        $ortu = $peserta->data_ortu ?: [];
+
+        Ortu::create([
+            'siswa_id' => $siswa->id,
+            'no_kk' => $this->pick($ortu, ['no_kk', 'nomor_kk']),
+            'nik_ayah' => $this->pick($ortu, ['nik_ayah']),
+            'nama_ayah' => $this->pick($ortu, ['nama_ayah']),
+            'pekerjaan_ayah' => $this->pick($ortu, ['pekerjaan_ayah']),
+            'penghasilan_ayah' => $this->pick($ortu, ['penghasilan_ayah']),
+            'hp_ayah' => $this->pick($ortu, ['hp_ayah', 'no_hp_ayah']),
+            'nik_ibu' => $this->pick($ortu, ['nik_ibu']),
+            'nama_ibu' => $this->pick($ortu, ['nama_ibu']),
+            'pekerjaan_ibu' => $this->pick($ortu, ['pekerjaan_ibu']),
+            'penghasilan_ibu' => $this->pick($ortu, ['penghasilan_ibu']),
+            'hp_ibu' => $this->pick($ortu, ['hp_ibu', 'no_hp_ibu']),
+            'alamat_ortu' => $this->pick($ortu, ['alamat_ortu', 'alamat']),
+            'rt_ortu' => $this->pick($ortu, ['rt_ortu', 'rt']),
+            'rw_ortu' => $this->pick($ortu, ['rw_ortu', 'rw']),
+            'kodepos' => $this->pick($ortu, ['kodepos', 'kode_pos']),
+        ]);
+    }
+
+    private function syncMatrikulasiDocumentsToSiswa(MatrikulasiPeserta $peserta, Siswa $siswa, TahunPelajaran $tahun): void
+    {
+        foreach ($peserta->dokumens as $dokumen) {
+            DokumenSiswa::updateOrCreate(
+                [
+                    'siswa_id' => $siswa->id,
+                    'ppdb_calon_dokumen_id' => $dokumen->ppdb_calon_dokumen_id,
+                ],
+                [
+                    'jenis_dokumen' => $dokumen->jenis_dokumen ?: $dokumen->nama_dokumen,
+                    'ppdb_jenis_dokumen' => $dokumen->jenis_dokumen,
+                    'ppdb_source_disk' => $dokumen->ppdb_source_disk,
+                    'ppdb_source_url' => $dokumen->ppdb_source_url,
+                    'ppdb_imported_at' => $dokumen->imported_at ?: now(),
+                    'nama_file' => $dokumen->nama_file,
+                    'original_name' => $dokumen->nama_file,
+                    'file_path' => $dokumen->file_path,
+                    'file_size' => $dokumen->file_size,
+                    'mime_type' => $dokumen->mime_type,
+                    'storage_disk' => $dokumen->storage_disk,
+                    'tahun_pelajaran' => $tahun->nama,
+                    'uploaded_by_role' => 'system',
+                    'status' => $dokumen->status_verifikasi === 'valid' ? 'approved' : 'pending',
+                ]
+            );
+        }
+    }
+
+    private function pick(array $data, array $keys): mixed
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $data) && $data[$key] !== '') {
+                return $data[$key];
+            }
+        }
+
+        return null;
     }
 
     private function syncDocuments(MatrikulasiPeserta $peserta, object $candidate, TahunPelajaran $targetTahun): int

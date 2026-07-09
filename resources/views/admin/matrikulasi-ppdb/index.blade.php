@@ -46,7 +46,7 @@
                 <strong>{{ number_format($stats['total'] ?? 0) }}</strong>
             </div>
             <div class="mat-stat">
-                <span>Kelompok</span>
+                <span>Kelompok Opsional</span>
                 <strong>{{ number_format($stats['kelompok'] ?? 0) }}</strong>
             </div>
             <div class="mat-stat">
@@ -63,7 +63,7 @@
             <div class="col-xl-4">
                 <div class="card mat-card">
                     <div class="card-header border-0 mat-card-head">
-                        <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Periode & Kelompok</h3>
+                        <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Periode Matrikulasi</h3>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -77,59 +77,74 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="kelompok_id">Kelompok Matrikulasi</label>
-                            <select id="kelompok_id" class="form-control">
-                                <option value="">Pilih kelompok</option>
-                                @foreach($kelompokMatrikulasi as $kelompok)
-                                    <option value="{{ $kelompok->id }}">
-                                        {{ $kelompok->nama }} - {{ $kelompok->label_kelas }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mat-inline-create mat-class-builder">
-                            <div class="mat-class-builder-head">
-                                <div>
-                                    <strong>Buat Kelas Matrikulasi</strong>
-                                    <span>Kelas sementara, tidak masuk kelas reguler SIMANSA.</span>
-                                </div>
-                                <i class="fas fa-layer-group"></i>
-                            </div>
-                            <div class="form-row">
-                                <div class="col-12 mb-2">
-                                    <label for="new_kelompok_nama">Nama Kelas</label>
-                                    <input id="new_kelompok_nama" class="form-control" placeholder="Madani, Al-Fath, Ibnu Sina">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label for="new_kelompok_jenis">Jenis</label>
-                                    <select id="new_kelompok_jenis" class="form-control">
-                                        <option value="reguler">Reguler</option>
-                                        <option value="asrama">Asrama</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label for="new_kelompok_tingkat">Tingkat/Kode</label>
-                                    <input id="new_kelompok_tingkat" class="form-control" placeholder="X1, X2, A1">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="new_kelompok_kapasitas">Kapasitas</label>
-                                    <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="36">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="new_kelompok_kode">Kode Internal</label>
-                                    <input id="new_kelompok_kode" class="form-control" placeholder="Opsional">
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-outline-primary btn-block mt-2" id="btnCreateKelompok">
-                                <i class="fas fa-plus mr-1"></i>Buat Kelas Matrikulasi
-                            </button>
-                        </div>
-
                         <div class="custom-control custom-switch mt-3">
                             <input type="checkbox" class="custom-control-input" id="include_documents" checked>
                             <label class="custom-control-label" for="include_documents">Salin dokumen PPDB ke staging SIMANSA</label>
+                        </div>
+
+                        <div class="mat-note mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                Sync matrikulasi tidak perlu kelompok. Setelah data masuk staging, pilih peserta lalu tetapkan menjadi siswa aktif tingkat 10 tanpa rombel.
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-secondary btn-block mt-3" data-toggle="collapse" data-target="#optionalKelompokPanel">
+                            <i class="fas fa-layer-group mr-1"></i>Kelompok Matrikulasi Opsional
+                        </button>
+
+                            <div id="optionalKelompokPanel" class="collapse mt-3">
+                                <div class="form-group">
+                                    <label for="kelompok_id">Kelompok saat Sync</label>
+                                    <select id="kelompok_id" class="form-control">
+                                        <option value="">Tanpa kelompok</option>
+                                        @foreach($kelompokMatrikulasi as $kelompok)
+                                            <option value="{{ $kelompok->id }}">
+                                                {{ $kelompok->nama }} - {{ $kelompok->label_kelas }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Gunakan hanya jika suatu saat matrikulasi dibagi kelompok/kelas sementara.</small>
+                                </div>
+
+                                <div class="mat-inline-create mat-class-builder">
+                                    <div class="mat-class-builder-head">
+                                        <div>
+                                            <strong>Buat Kelas Matrikulasi</strong>
+                                            <span>Kelas sementara, tidak masuk kelas reguler SIMANSA.</span>
+                                        </div>
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="col-12 mb-2">
+                                            <label for="new_kelompok_nama">Nama Kelas</label>
+                                            <input id="new_kelompok_nama" class="form-control" placeholder="Madani, Al-Fath, Ibnu Sina">
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label for="new_kelompok_jenis">Jenis</label>
+                                            <select id="new_kelompok_jenis" class="form-control">
+                                                <option value="reguler">Reguler</option>
+                                                <option value="asrama">Asrama</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label for="new_kelompok_tingkat">Tingkat/Kode</label>
+                                            <input id="new_kelompok_tingkat" class="form-control" placeholder="X1, X2, A1">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="new_kelompok_kapasitas">Kapasitas</label>
+                                            <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="36">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="new_kelompok_kode">Kode Internal</label>
+                                            <input id="new_kelompok_kode" class="form-control" placeholder="Opsional">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-block mt-2" id="btnCreateKelompok">
+                                        <i class="fas fa-plus mr-1"></i>Buat Kelas Matrikulasi
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,7 +154,7 @@
                         <div class="mat-note">
                             <i class="fas fa-info-circle"></i>
                             <div>
-                                Peserta matrikulasi tidak masuk menu Data Siswa reguler. Data akan menjadi siswa aktif hanya setelah proses penetapan kelas X final.
+                                Peserta matrikulasi belum masuk Data Siswa reguler. Gunakan tombol <strong>Tetapkan Jadi Siswa Kelas 10</strong> setelah data staging siap.
                             </div>
                         </div>
                     </div>
@@ -231,37 +246,19 @@
                     <span><i class="fas fa-user-check"></i></span>
                     <div>
                         <h3>Peserta Matrikulasi</h3>
-                        <p>Assign peserta yang sudah tersinkron ke kelas sementara dan siapkan akun login matrikulasi.</p>
+                        <p>Data staging PPDB. Pilih peserta lalu tetapkan menjadi siswa aktif tingkat 10 tanpa rombel.</p>
                     </div>
                 </div>
                 <span class="mat-sync-badge">Staging Matrikulasi</span>
             </div>
             <div class="card-body">
                 <div class="mat-participant-tools">
-                    <div>
-                        <label for="participant_kelompok_filter">Filter Kelompok</label>
-                        <select id="participant_kelompok_filter" class="form-control">
-                            <option value="">Semua kelompok</option>
-                            @foreach($kelompokMatrikulasi as $kelompok)
-                                <option value="{{ $kelompok->id }}">{{ $kelompok->nama }} - {{ $kelompok->label_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="assign_kelompok_id">Assign ke Kelompok</label>
-                        <select id="assign_kelompok_id" class="form-control">
-                            <option value="">Pilih kelompok tujuan</option>
-                            @foreach($kelompokMatrikulasi as $kelompok)
-                                <option value="{{ $kelompok->id }}">{{ $kelompok->nama }} - {{ $kelompok->label_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <div class="mat-participant-actions">
-                        <button type="button" class="btn btn-outline-primary" id="btnAssignKelompok">
-                            <i class="fas fa-random mr-1"></i>Assign Kelompok
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnGenerateAccounts">
+                        <button type="button" class="btn btn-outline-secondary" id="btnGenerateAccounts">
                             <i class="fas fa-key mr-1"></i>Buat Akun
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnPromoteToSiswa">
+                            <i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10
                         </button>
                     </div>
                 </div>
@@ -280,7 +277,6 @@
                             </th>
                             <th>Peserta</th>
                             <th>No.Tes</th>
-                            <th>Kelompok</th>
                             <th>Akun</th>
                             <th>Login</th>
                             <th>Status</th>
@@ -1493,6 +1489,7 @@
             peserta: @json(route('admin.matrikulasi-ppdb.peserta')),
             assignKelompok: @json(route('admin.matrikulasi-ppdb.assign-kelompok')),
             generateAccounts: @json(route('admin.matrikulasi-ppdb.generate-accounts')),
+            promoteToSiswa: @json(route('admin.matrikulasi-ppdb.promote-to-siswa')),
             preview: @json(route('admin.matrikulasi-ppdb.preview')),
             previewAll: @json(route('admin.matrikulasi-ppdb.preview-all')),
             import: @json(route('admin.matrikulasi-ppdb.import')),
@@ -1770,7 +1767,6 @@
                     url: routes.peserta,
                     data: function (data) {
                         data.tahun_pelajaran_id = $('#tahun_pelajaran_id').val();
-                        data.kelompok_id = $('#participant_kelompok_filter').val();
                     },
                     error: function (xhr) {
                         Swal.fire('Gagal memuat peserta', xhr.responseJSON?.message || 'Tidak bisa mengambil data peserta matrikulasi.', 'error');
@@ -1805,11 +1801,6 @@
                         data: 'nomor_tes',
                         orderable: false,
                         render: data => `<span class="browser-no-tes">${escapeHtml(data || '-')}</span>`
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        render: row => row.kelompok ? `${escapeHtml(row.kelompok)}<br><small class="text-muted">${escapeHtml(row.label_kelas || '-')}</small>` : '<span class="text-muted">Belum diassign</span>'
                     },
                     {
                         data: null,
@@ -2131,12 +2122,6 @@
 
             initParticipantTable();
 
-            $('#participant_kelompok_filter').on('change', function () {
-                selectedParticipantRows.clear();
-                updateParticipantSelectionInfo();
-                participantTable.ajax.reload(null, true);
-            });
-
             $('#matrikulasiPesertaTable').on('change', '.participant-check', function () {
                 const id = $(this).data('id');
                 const row = participantTable.row($(this).closest('tr')).data();
@@ -2154,32 +2139,6 @@
                 const checked = this.checked;
                 $('#matrikulasiPesertaTable .participant-check').each(function () {
                     $(this).prop('checked', checked).trigger('change');
-                });
-            });
-
-            $('#btnAssignKelompok').on('click', function () {
-                const ids = Array.from(selectedParticipantRows.keys());
-                const kelompokId = $('#assign_kelompok_id').val();
-                if (!ids.length || !kelompokId) {
-                    Swal.fire('Data belum lengkap', 'Centang peserta dan pilih kelompok tujuan.', 'warning');
-                    return;
-                }
-
-                const $button = $(this);
-                setButtonLoading($button, true, 'Assign...', '<i class="fas fa-random mr-1"></i>Assign Kelompok');
-                $.post(routes.assignKelompok, {
-                    peserta_ids: ids,
-                    kelompok_id: kelompokId,
-                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
-                }).done(response => {
-                    selectedParticipantRows.clear();
-                    updateParticipantSelectionInfo();
-                    participantTable.ajax.reload(null, false);
-                    Swal.fire('Berhasil', response.message || 'Peserta berhasil diassign.', 'success');
-                }).fail(xhr => {
-                    Swal.fire('Gagal assign', xhr.responseJSON?.message || 'Assign kelompok gagal.', 'error');
-                }).always(() => {
-                    setButtonLoading($button, false, 'Assign...', '<i class="fas fa-random mr-1"></i>Assign Kelompok');
                 });
             });
 
@@ -2218,6 +2177,41 @@
                 });
             });
 
+            $('#btnPromoteToSiswa').on('click', function () {
+                const ids = Array.from(selectedParticipantRows.keys());
+                if (!ids.length) {
+                    Swal.fire('Belum ada peserta', 'Centang peserta matrikulasi yang akan ditetapkan menjadi siswa kelas 10.', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Tetapkan menjadi siswa kelas 10?',
+                    text: 'Peserta akan masuk Data Siswa sebagai siswa aktif tingkat 10 tanpa rombel. Rombel dapat diassign kemudian di Manajemen Kelas.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, tetapkan',
+                    cancelButtonText: 'Batal'
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    const $button = $('#btnPromoteToSiswa');
+                    setButtonLoading($button, true, 'Memproses...', '<i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10');
+                    $.post(routes.promoteToSiswa, {
+                        peserta_ids: ids,
+                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                    }).done(response => {
+                        selectedParticipantRows.clear();
+                        updateParticipantSelectionInfo();
+                        participantTable.ajax.reload(null, false);
+                        Swal.fire('Selesai', response.message || 'Peserta berhasil ditetapkan menjadi siswa.', 'success');
+                    }).fail(xhr => {
+                        Swal.fire('Gagal menetapkan siswa', xhr.responseJSON?.message || 'Proses penetapan siswa gagal.', 'error');
+                    }).always(() => {
+                        setButtonLoading($button, false, 'Memproses...', '<i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10');
+                    });
+                });
+            });
+
             $('#btnCreateKelompok').on('click', function () {
                 const nama = $('#new_kelompok_nama').val().trim();
                 if (!nama) {
@@ -2235,8 +2229,6 @@
                 }).done(response => {
                     const data = response.data || {};
                     $('#kelompok_id').append(new Option(data.text, data.id, true, true)).trigger('change');
-                    $('#participant_kelompok_filter').append(new Option(data.text, data.id, false, false));
-                    $('#assign_kelompok_id').append(new Option(data.text, data.id, false, false));
                     $('#new_kelompok_nama').val('');
                     $('#new_kelompok_kode').val('');
                     $('#new_kelompok_tingkat').val('');
@@ -2345,8 +2337,8 @@
             $('#btnImport').on('click', function () {
                 const ids = previewIds.length ? previewIds : selectedIds();
                 const kelompokId = $('#kelompok_id').val();
-                if (!ids.length || !kelompokId) {
-                    Swal.fire('Data belum lengkap', 'Pilih pendaftar dan kelompok matrikulasi tujuan.', 'warning');
+                if (!ids.length) {
+                    Swal.fire('Data belum lengkap', 'Pilih pendaftar PPDB yang akan disinkronkan.', 'warning');
                     return;
                 }
 
@@ -2371,7 +2363,7 @@
                     const includeDocuments = $('#include_documents').is(':checked');
                     const payload = {
                         tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
-                        kelompok_id: kelompokId,
+                        kelompok_id: kelompokId || '',
                         include_documents: includeDocuments ? 1 : 0,
                         allow_unpaid: unpaidCount ? 1 : 0
                     };

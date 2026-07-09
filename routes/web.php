@@ -282,6 +282,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/peserta', [MatrikulasiPpdbController::class, 'peserta'])->name('peserta');
         Route::post('/assign-kelompok', [MatrikulasiPpdbController::class, 'assignKelompok'])->name('assign-kelompok');
         Route::post('/generate-accounts', [MatrikulasiPpdbController::class, 'generateAccounts'])->name('generate-accounts');
+        Route::post('/promote-to-siswa', [MatrikulasiPpdbController::class, 'promoteToSiswa'])->name('promote-to-siswa');
         Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');
         Route::post('/preview-all', [MatrikulasiPpdbController::class, 'previewAll'])->name('preview-all');
         Route::post('/import', [MatrikulasiPpdbController::class, 'import'])->name('import');

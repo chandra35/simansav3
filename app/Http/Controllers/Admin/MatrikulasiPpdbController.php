@@ -353,13 +353,37 @@ class MatrikulasiPpdbController extends Controller
         }
     }
 
+    public function promoteToSiswa(Request $request)
+    {
+        $validated = $request->validate([
+            'peserta_ids' => 'required|array|min:1',
+            'peserta_ids.*' => 'required|exists:matrikulasi_pesertas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+        ]);
+
+        try {
+            $result = $this->service->promoteToSiswa($validated['peserta_ids'], $validated['tahun_pelajaran_id']);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Penetapan selesai: {$result['success']} berhasil, {$result['existing']} sudah siswa, {$result['failed']} gagal.",
+                'data' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menetapkan siswa: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function import(Request $request)
     {
         $validated = $request->validate([
             'calon_siswa_ids' => 'required|array|min:1',
             'calon_siswa_ids.*' => 'required|string',
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'kelompok_id' => 'required|exists:matrikulasi_kelompoks,id',
+            'kelompok_id' => 'nullable|exists:matrikulasi_kelompoks,id',
             'include_documents' => 'nullable|boolean',
             'allow_unpaid' => 'nullable|boolean',
         ]);
@@ -368,7 +392,7 @@ class MatrikulasiPpdbController extends Controller
             Log::info('Mulai import matrikulasi PPDB', [
                 'count' => count($validated['calon_siswa_ids']),
                 'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
-                'kelompok_id' => $validated['kelompok_id'],
+                'kelompok_id' => $validated['kelompok_id'] ?? null,
                 'include_documents' => (bool) ($validated['include_documents'] ?? false),
                 'allow_unpaid' => (bool) ($validated['allow_unpaid'] ?? false),
                 'user_id' => optional($request->user())->id,
@@ -376,7 +400,7 @@ class MatrikulasiPpdbController extends Controller
 
             $result = $this->service->import(
                 $validated['calon_siswa_ids'],
-                $validated['kelompok_id'],
+                $validated['kelompok_id'] ?? null,
                 (bool) ($validated['include_documents'] ?? false),
                 $validated['tahun_pelajaran_id'],
                 (bool) ($validated['allow_unpaid'] ?? false)
@@ -388,7 +412,7 @@ class MatrikulasiPpdbController extends Controller
                 'failed' => $result['failed'] ?? 0,
                 'documents_copied' => $result['documents_copied'] ?? 0,
                 'tahun_pelajaran_id' => $validated['tahun_pelajaran_id'],
-                'kelompok_id' => $validated['kelompok_id'],
+                'kelompok_id' => $validated['kelompok_id'] ?? null,
                 'user_id' => optional($request->user())->id,
             ]);
 
