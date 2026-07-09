@@ -228,6 +228,46 @@
         </ol>
     </div>
 </div>
+
+{{-- MODAL PROGRESS PROSES --}}
+<div class="modal fade" id="processProgressModal" tabindex="-1" role="dialog" aria-labelledby="processProgressTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content process-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title mb-1" id="processProgressTitle">Memproses</h5>
+                    <div class="text-muted small" id="processProgressSubtitle">Mohon tunggu sampai proses selesai.</div>
+                </div>
+                <span class="badge badge-info align-self-start" id="processProgressBadge">Berjalan</span>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="process-icon mr-3" id="processProgressIcon">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="flex-fill">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong id="processProgressLabel">Menyiapkan proses...</strong>
+                            <span class="text-muted small" id="processProgressPercent">0%</span>
+                        </div>
+                        <div class="progress process-progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="processProgressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-steps" id="processProgressSteps"></div>
+
+                <div class="alert mt-3 mb-0 d-none" id="processProgressResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary d-none" id="processProgressClose" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('css')
@@ -250,6 +290,84 @@
 .kelas-checkbox-label:has(input:checked) {
     background: #fff3cd;
     border-color: #ffc107;
+}
+.process-modal {
+    border: 0;
+    border-radius: .5rem;
+    overflow: hidden;
+}
+.process-modal .modal-header {
+    background: #f8fafc;
+    border-bottom-color: #e5e7eb;
+}
+.process-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: .5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #fff;
+    background: #17a2b8;
+    flex: 0 0 52px;
+}
+.process-icon.is-success { background: #28a745; }
+.process-icon.is-danger { background: #dc3545; }
+.process-progress {
+    height: .75rem;
+    border-radius: 999px;
+}
+.process-steps {
+    border: 1px solid #e5e7eb;
+    border-radius: .4rem;
+    overflow: hidden;
+}
+.process-step {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem .9rem;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+}
+.process-step:last-child { border-bottom: 0; }
+.process-step-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    background: #eef2f7;
+    flex: 0 0 30px;
+}
+.process-step.is-active {
+    background: #f8fbff;
+}
+.process-step.is-active .process-step-icon {
+    color: #fff;
+    background: #17a2b8;
+}
+.process-step.is-done .process-step-icon {
+    color: #fff;
+    background: #28a745;
+}
+.process-step.is-error .process-step-icon {
+    color: #fff;
+    background: #dc3545;
+}
+.process-step-text {
+    min-width: 0;
+}
+.process-step-title {
+    font-weight: 600;
+    line-height: 1.2;
+}
+.process-step-note {
+    font-size: .82rem;
+    color: #6c757d;
 }
 </style>
 @endsection
@@ -282,6 +400,77 @@
             throw new Error(payload?.message || payload?.error || `HTTP ${response.status}`);
         }
         return payload || {};
+    }
+
+    let processSteps = [];
+
+    function renderProcessSteps() {
+        const wrap = document.getElementById('processProgressSteps');
+        wrap.innerHTML = processSteps.map((step, i) => {
+            const state = step.state || 'pending';
+            const icon = state === 'done'
+                ? 'fa-check'
+                : (state === 'error' ? 'fa-times' : (state === 'active' ? 'fa-spinner fa-spin' : 'fa-circle'));
+            return `<div class="process-step is-${state}" data-step="${i}">
+                <span class="process-step-icon"><i class="fas ${icon}"></i></span>
+                <div class="process-step-text">
+                    <div class="process-step-title">${esc(step.title)}</div>
+                    ${step.note ? `<div class="process-step-note">${esc(step.note)}</div>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function openProcessModal({ title, subtitle, steps }) {
+        processSteps = steps.map(title => ({ title, state: 'pending', note: '' }));
+        document.getElementById('processProgressTitle').textContent = title;
+        document.getElementById('processProgressSubtitle').textContent = subtitle;
+        document.getElementById('processProgressBadge').className = 'badge badge-info align-self-start';
+        document.getElementById('processProgressBadge').textContent = 'Berjalan';
+        document.getElementById('processProgressIcon').className = 'process-icon mr-3';
+        document.getElementById('processProgressIcon').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.getElementById('processProgressBar').className = 'progress-bar progress-bar-striped progress-bar-animated';
+        document.getElementById('processProgressResult').className = 'alert mt-3 mb-0 d-none';
+        document.getElementById('processProgressResult').innerHTML = '';
+        document.getElementById('processProgressClose').classList.add('d-none');
+        setProcessProgress(5, 'Menyiapkan proses...');
+        renderProcessSteps();
+        $('#processProgressModal').modal({ backdrop: 'static', keyboard: false, show: true });
+    }
+
+    function setProcessStep(index, state, note = '') {
+        if (!processSteps[index]) return;
+        processSteps[index].state = state;
+        processSteps[index].note = note;
+        renderProcessSteps();
+    }
+
+    function setProcessProgress(percent, label) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        const bar = document.getElementById('processProgressBar');
+        bar.style.width = safePercent + '%';
+        bar.setAttribute('aria-valuenow', safePercent);
+        document.getElementById('processProgressPercent').textContent = safePercent + '%';
+        document.getElementById('processProgressLabel').textContent = label;
+    }
+
+    function finishProcess(success, message, detailHtml = '') {
+        setProcessProgress(100, success ? 'Proses selesai' : 'Proses gagal');
+        const badge = document.getElementById('processProgressBadge');
+        const icon = document.getElementById('processProgressIcon');
+        const bar = document.getElementById('processProgressBar');
+        const result = document.getElementById('processProgressResult');
+
+        badge.className = `badge badge-${success ? 'success' : 'danger'} align-self-start`;
+        badge.textContent = success ? 'Selesai' : 'Gagal';
+        icon.className = `process-icon mr-3 ${success ? 'is-success' : 'is-danger'}`;
+        icon.innerHTML = `<i class="fas ${success ? 'fa-check' : 'fa-times'}"></i>`;
+        bar.classList.remove('progress-bar-animated');
+        bar.classList.toggle('bg-success', success);
+        bar.classList.toggle('bg-danger', !success);
+        result.className = `alert alert-${success ? 'success' : 'danger'} mt-3 mb-0`;
+        result.innerHTML = `<strong>${success ? 'Berhasil.' : 'Gagal.'}</strong> ${esc(message)}${detailHtml}`;
+        document.getElementById('processProgressClose').classList.remove('d-none');
     }
 
     // --- STATS ---
@@ -337,6 +526,19 @@
         const btn = this;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...';
+        openProcessModal({
+            title: 'Finalisasi Kelulusan Kelas XII',
+            subtitle: 'Sistem sedang mengunci status kelulusan dari data Pengumuman Kelulusan.',
+            steps: [
+                'Memvalidasi data pengumuman',
+                'Mengubah status siswa_kelas',
+                'Memperbarui status siswa',
+                'Memuat ulang ringkasan',
+            ],
+        });
+        setProcessStep(0, 'done', 'Data pengumuman siap diproses.');
+        setProcessStep(1, 'active', 'Mengunci status lulus dan tinggal kelas.');
+        setProcessProgress(35, 'Memproses finalisasi kelulusan...');
 
         fetch('{{ route('admin.kenaikan-kelas.proses-kelulusan') }}', {
             method: 'POST',
@@ -349,13 +551,21 @@
         .then(parseJsonResponse)
         .then(d => {
             const type = d.success ? 'success' : 'warning';
+            setProcessStep(1, 'done', `${d.diproses_lulus || 0} lulus, ${d.diproses_tinggal || 0} tinggal kelas.`);
+            setProcessStep(2, 'done', document.getElementById('tandai-siswa-lulus').checked ? 'Status siswa ikut diperbarui.' : 'Update status siswa dilewati sesuai pilihan.');
+            setProcessStep(3, 'active', 'Mengambil ulang statistik halaman.');
+            setProcessProgress(85, 'Memuat ulang ringkasan...');
             document.getElementById('result-kelulusan').innerHTML = alertBox(
                 `<i class="fas fa-check-circle mr-1"></i> ${esc(d.message)}`, type
             );
             loadStats(tahunAktifId);
             loadStatusKelulusan(tahunAktifId);
+            setProcessStep(3, 'done', 'Ringkasan halaman sudah diperbarui.');
+            finishProcess(true, d.message || 'Finalisasi kelulusan selesai.');
         })
         .catch(err => {
+            setProcessStep(1, 'error', err.message || 'Proses berhenti sebelum selesai.');
+            finishProcess(false, err.message || 'Terjadi kesalahan. Coba lagi.');
             document.getElementById('result-kelulusan').innerHTML = alertBox(esc(err.message || 'Terjadi kesalahan. Coba lagi.'), 'danger');
         })
         .finally(() => {
@@ -462,6 +672,19 @@
         const btn = this;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...';
+        openProcessModal({
+            title: 'Proses Naik Kelas',
+            subtitle: `${mapping.length} pasangan kelas akan diproses ke tahun pelajaran tujuan.`,
+            steps: [
+                'Memvalidasi mapping kelas',
+                'Membuat record siswa_kelas tahun tujuan',
+                'Menandai record kelas lama',
+                'Memuat ulang ringkasan',
+            ],
+        });
+        setProcessStep(0, 'done', `${mapping.length} pasangan kelas siap diproses.`);
+        setProcessStep(1, 'active', 'Membuat data kelas aktif di tahun tujuan.');
+        setProcessProgress(30, 'Memproses kenaikan kelas...');
 
         fetch('{{ route('admin.kenaikan-kelas.proses-naik-kelas') }}', {
             method: 'POST',
@@ -480,10 +703,22 @@
                 html += '<ul class="mb-0 mt-1">' + d.errors.map(e => `<li>${esc(e)}</li>`).join('') + '</ul>';
             }
             const type = d.errors && d.errors.length ? 'warning' : 'success';
+            const ok = d.success && !(d.errors && d.errors.length);
+            setProcessStep(1, ok ? 'done' : 'error', `${d.diproses || 0} siswa dipindahkan, ${d.dilewati || 0} dilewati.`);
+            setProcessStep(2, ok ? 'done' : 'error', ok ? 'Kelas lama ditandai naik_kelas.' : 'Sebagian mapping perlu diperiksa.');
+            setProcessStep(3, 'active', 'Mengambil ulang statistik halaman.');
+            setProcessProgress(85, 'Memuat ulang ringkasan...');
             document.getElementById('result-naik-kelas').innerHTML = alertBox(html, type);
             loadStats(elTahunAsal.value);
+            setProcessStep(3, 'done', 'Ringkasan halaman sudah diperbarui.');
+            const detail = d.errors && d.errors.length
+                ? '<ul class="mb-0 mt-2">' + d.errors.map(e => `<li>${esc(e)}</li>`).join('') + '</ul>'
+                : '';
+            finishProcess(ok, d.message || 'Proses naik kelas selesai.', detail);
         })
         .catch(err => {
+            setProcessStep(1, 'error', err.message || 'Proses berhenti sebelum selesai.');
+            finishProcess(false, err.message || 'Terjadi kesalahan. Coba lagi.');
             document.getElementById('result-naik-kelas').innerHTML = alertBox(esc(err.message || 'Terjadi kesalahan. Coba lagi.'), 'danger');
         })
         .finally(() => {
