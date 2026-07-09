@@ -66,6 +66,30 @@
                         <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Periode Matrikulasi</h3>
                     </div>
                     <div class="card-body">
+                        <div class="mat-flow">
+                            <div class="mat-flow-step is-active">
+                                <span>1</span>
+                                <div>
+                                    <strong>Sync PPDB</strong>
+                                    <small>Staging matrikulasi</small>
+                                </div>
+                            </div>
+                            <div class="mat-flow-step">
+                                <span>2</span>
+                                <div>
+                                    <strong>Tetapkan Siswa</strong>
+                                    <small>Tingkat 10 tanpa rombel</small>
+                                </div>
+                            </div>
+                            <div class="mat-flow-step">
+                                <span>3</span>
+                                <div>
+                                    <strong>Assign Rombel</strong>
+                                    <small>Manajemen Kelas</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="tahun_pelajaran_id">Tahun Pelajaran</label>
                             <select id="tahun_pelajaran_id" class="form-control">
@@ -82,68 +106,69 @@
                             <label class="custom-control-label" for="include_documents">Salin dokumen PPDB ke staging SIMANSA</label>
                         </div>
 
-                        <div class="mat-note mt-3">
-                            <i class="fas fa-info-circle"></i>
+                        <div class="mat-policy-card mt-3">
+                            <i class="fas fa-shield-alt"></i>
                             <div>
-                                Sync matrikulasi tidak perlu kelompok. Setelah data masuk staging, pilih peserta lalu tetapkan menjadi siswa aktif tingkat 10 tanpa rombel.
+                                <strong>Default sync: lulus dan sudah registrasi komite</strong>
+                                <span>Pendaftar belum bayar tetap bisa diproses setelah konfirmasi khusus.</span>
                             </div>
                         </div>
 
-                        <button type="button" class="btn btn-outline-secondary btn-block mt-3" data-toggle="collapse" data-target="#optionalKelompokPanel">
-                            <i class="fas fa-layer-group mr-1"></i>Kelompok Matrikulasi Opsional
+                        <button type="button" class="btn btn-outline-secondary btn-block mt-3 mat-collapse-btn" data-toggle="collapse" data-target="#optionalKelompokPanel">
+                            <span><i class="fas fa-layer-group mr-1"></i>Kelompok Matrikulasi Opsional</span>
+                            <i class="fas fa-chevron-down"></i>
                         </button>
 
-                            <div id="optionalKelompokPanel" class="collapse mt-3">
-                                <div class="form-group">
-                                    <label for="kelompok_id">Kelompok saat Sync</label>
-                                    <select id="kelompok_id" class="form-control">
-                                        <option value="">Tanpa kelompok</option>
-                                        @foreach($kelompokMatrikulasi as $kelompok)
-                                            <option value="{{ $kelompok->id }}">
-                                                {{ $kelompok->nama }} - {{ $kelompok->label_kelas }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <small class="text-muted">Gunakan hanya jika suatu saat matrikulasi dibagi kelompok/kelas sementara.</small>
-                                </div>
+                        <div id="optionalKelompokPanel" class="collapse mt-3">
+                            <div class="form-group">
+                                <label for="kelompok_id">Kelompok saat Sync</label>
+                                <select id="kelompok_id" class="form-control">
+                                    <option value="">Tanpa kelompok</option>
+                                    @foreach($kelompokMatrikulasi as $kelompok)
+                                        <option value="{{ $kelompok->id }}">
+                                            {{ $kelompok->nama }} - {{ $kelompok->label_kelas }}{{ $kelompok->kapasitas ? ' - '.$kelompok->pesertas_count.'/'.$kelompok->kapasitas : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Opsional untuk kelas sementara matrikulasi.</small>
+                            </div>
 
-                                <div class="mat-inline-create mat-class-builder">
-                                    <div class="mat-class-builder-head">
-                                        <div>
-                                            <strong>Buat Kelas Matrikulasi</strong>
-                                            <span>Kelas sementara, tidak masuk kelas reguler SIMANSA.</span>
-                                        </div>
-                                        <i class="fas fa-layer-group"></i>
+                            <div class="mat-inline-create mat-class-builder">
+                                <div class="mat-class-builder-head">
+                                    <div>
+                                        <strong>Buat Kelas Matrikulasi</strong>
+                                        <span>Kelas sementara, tidak masuk kelas reguler SIMANSA.</span>
                                     </div>
-                                    <div class="form-row">
-                                        <div class="col-12 mb-2">
-                                            <label for="new_kelompok_nama">Nama Kelas</label>
-                                            <input id="new_kelompok_nama" class="form-control" placeholder="Madani, Al-Fath, Ibnu Sina">
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="new_kelompok_jenis">Jenis</label>
-                                            <select id="new_kelompok_jenis" class="form-control">
-                                                <option value="reguler">Reguler</option>
-                                                <option value="asrama">Asrama</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="new_kelompok_tingkat">Tingkat/Kode</label>
-                                            <input id="new_kelompok_tingkat" class="form-control" placeholder="X1, X2, A1">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="new_kelompok_kapasitas">Kapasitas</label>
-                                            <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="36">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="new_kelompok_kode">Kode Internal</label>
-                                            <input id="new_kelompok_kode" class="form-control" placeholder="Opsional">
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn btn-outline-primary btn-block mt-2" id="btnCreateKelompok">
-                                        <i class="fas fa-plus mr-1"></i>Buat Kelas Matrikulasi
-                                    </button>
+                                    <i class="fas fa-layer-group"></i>
                                 </div>
+                                <div class="form-row">
+                                    <div class="col-12 mb-2">
+                                        <label for="new_kelompok_nama">Nama Kelas</label>
+                                        <input id="new_kelompok_nama" class="form-control" placeholder="Madani, Al-Fath, Ibnu Sina">
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label for="new_kelompok_jenis">Jenis</label>
+                                        <select id="new_kelompok_jenis" class="form-control">
+                                            <option value="reguler">Reguler</option>
+                                            <option value="asrama">Asrama</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label for="new_kelompok_tingkat">Tingkat/Kode</label>
+                                        <input id="new_kelompok_tingkat" class="form-control" placeholder="X1, X2, A1">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="new_kelompok_kapasitas">Kapasitas</label>
+                                        <input id="new_kelompok_kapasitas" type="number" min="1" class="form-control" placeholder="36">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="new_kelompok_kode">Kode Internal</label>
+                                        <input id="new_kelompok_kode" class="form-control" placeholder="Opsional">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-block mt-2" id="btnCreateKelompok">
+                                    <i class="fas fa-plus mr-1"></i>Buat Kelas Matrikulasi
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -171,14 +196,29 @@
                                 <p>Tarik data pendaftar ke staging matrikulasi sebelum ditetapkan sebagai siswa reguler.</p>
                             </div>
                         </div>
-                        <span class="mat-sync-badge">Lulus + Registrasi Komite</span>
+                        <span class="mat-sync-badge">Default: Sudah Bayar</span>
                     </div>
                     <div class="card-body">
                         <div class="mat-sync-workbench">
+                            <div class="mat-policy-strip">
+                                <div class="mat-policy-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Lulus PPDB</span>
+                                </div>
+                                <div class="mat-policy-item">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>Registrasi komite</span>
+                                </div>
+                                <div class="mat-policy-item is-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Belum bayar: perlu konfirmasi</span>
+                                </div>
+                            </div>
+
                             <div class="mat-quick-search">
                                 <div>
-                                    <label for="calon_siswa_ids">Quick Search Pendaftar</label>
-                                    <small>Pilih manual beberapa pendaftar eligible, atau gunakan tabel browse untuk semua pendaftar.</small>
+                                    <label for="calon_siswa_ids">Cari Pendaftar PPDB</label>
+                                    <small>Pilih pendaftar, lalu preview sebelum sync.</small>
                                 </div>
                                 <select id="calon_siswa_ids" class="form-control" multiple></select>
                             </div>
@@ -190,7 +230,7 @@
                                 <button type="button" class="btn btn-outline-secondary" id="btnOpenAddModal">
                                     <i class="fas fa-table mr-1"></i>Browse Pendaftar
                                 </button>
-                                <button type="button" class="btn btn-secondary" id="btnPreview">
+                                <button type="button" class="btn btn-outline-dark" id="btnPreview">
                                     <i class="fas fa-eye mr-1"></i>Preview
                                 </button>
                                 <button type="button" class="btn btn-primary" id="btnImport" disabled>
@@ -479,6 +519,89 @@
             color: #172033;
             font-weight: 800;
         }
+        .mat-flow {
+            display: grid;
+            gap: .55rem;
+            margin-bottom: 1rem;
+        }
+        .mat-flow-step {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #fff;
+            padding: .7rem .8rem;
+        }
+        .mat-flow-step > span {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 800;
+            flex: 0 0 auto;
+        }
+        .mat-flow-step strong,
+        .mat-flow-step small {
+            display: block;
+        }
+        .mat-flow-step strong {
+            color: #111827;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .mat-flow-step small {
+            color: #64748b;
+            margin-top: .1rem;
+        }
+        .mat-flow-step.is-active {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+        }
+        .mat-flow-step.is-active > span {
+            background: #2563eb;
+            color: #fff;
+        }
+        .mat-policy-card {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            background: #f0f9ff;
+            color: #075985;
+            padding: .8rem .9rem;
+        }
+        .mat-policy-card > i {
+            margin-top: .18rem;
+            color: #0284c7;
+        }
+        .mat-policy-card strong,
+        .mat-policy-card span {
+            display: block;
+        }
+        .mat-policy-card strong {
+            color: #0f172a;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .mat-policy-card span {
+            color: #475569;
+            margin-top: .15rem;
+            line-height: 1.35;
+        }
+        .mat-collapse-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            text-align: left;
+            font-weight: 700;
+        }
         .mat-sync-card .card-body {
             background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
         }
@@ -537,6 +660,36 @@
             background: #fff;
             padding: .9rem;
             box-shadow: 0 8px 22px rgba(15, 23, 42, .04);
+        }
+        .mat-policy-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .55rem;
+            margin-bottom: .85rem;
+        }
+        .mat-policy-item {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            min-height: 38px;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            background: #f0fdf4;
+            color: #166534;
+            padding: .45rem .65rem;
+            font-size: .82rem;
+            font-weight: 800;
+        }
+        .mat-policy-item i {
+            flex: 0 0 auto;
+        }
+        .mat-policy-item span {
+            min-width: 0;
+        }
+        .mat-policy-item.is-warning {
+            border-color: #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
         }
         .mat-quick-search {
             display: grid;
@@ -656,10 +809,8 @@
             color: #0f766e;
         }
         .mat-participant-tools {
-            display: grid;
-            grid-template-columns: minmax(180px, .28fr) minmax(220px, .32fr) minmax(260px, .4fr);
-            gap: .85rem;
-            align-items: end;
+            display: flex;
+            justify-content: flex-end;
             border: 1px solid #dbe4ee;
             border-radius: 8px;
             background: #fff;
@@ -750,6 +901,8 @@
             display: flex;
             flex-wrap: wrap;
             gap: .5rem;
+            justify-content: flex-end;
+            padding-top: .15rem;
         }
         .mat-actions .btn {
             min-height: 38px;
@@ -1463,8 +1616,10 @@
             .mat-stat strong { font-size: 1.1rem; }
             .mat-sync-hero,
             .mat-sync-title,
+            .mat-policy-strip,
             .mat-quick-search,
             .mat-participant-tools { display: block; }
+            .mat-policy-item { margin-bottom: .5rem; }
             .mat-sync-title > span { margin-bottom: .65rem; }
             .mat-sync-badge { display: inline-flex; margin-top: .75rem; }
             .mat-participant-tools > div { margin-bottom: .7rem; }
