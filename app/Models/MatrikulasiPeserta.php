@@ -33,6 +33,12 @@ class MatrikulasiPeserta extends Model
         'data_ortu',
         'data_ppdb',
         'status',
+        'status_pembayaran',
+        'status_matrikulasi',
+        'tanggal_hadir_matrikulasi',
+        'verified_at',
+        'verified_by',
+        'catatan_validasi',
         'imported_at',
         'promoted_at',
         'promoted_by',
@@ -46,6 +52,8 @@ class MatrikulasiPeserta extends Model
         'imported_at' => 'datetime',
         'akun_created_at' => 'datetime',
         'akun_last_reset_at' => 'datetime',
+        'tanggal_hadir_matrikulasi' => 'date',
+        'verified_at' => 'datetime',
         'promoted_at' => 'datetime',
     ];
 

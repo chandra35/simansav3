@@ -109,8 +109,8 @@
                         <div class="mat-policy-card mt-3">
                             <i class="fas fa-shield-alt"></i>
                             <div>
-                                <strong>Default sync: lulus dan sudah registrasi komite</strong>
-                                <span>Pendaftar belum bayar tetap bisa diproses setelah konfirmasi khusus.</span>
+                                <strong>Sync mengambil semua pendaftar lulus/eligible</strong>
+                                <span>Pembayaran, nomor, kehadiran, dan keputusan akhir divalidasi di SIMANSA.</span>
                             </div>
                         </div>
 
@@ -196,7 +196,7 @@
                                 <p>Tarik data pendaftar ke staging matrikulasi sebelum ditetapkan sebagai siswa reguler.</p>
                             </div>
                         </div>
-                        <span class="mat-sync-badge">Default: Sudah Bayar</span>
+                        <span class="mat-sync-badge">Staging Semua Eligible</span>
                     </div>
                     <div class="card-body">
                         <div class="mat-sync-workbench">
@@ -207,11 +207,11 @@
                                 </div>
                                 <div class="mat-policy-item">
                                     <i class="fas fa-receipt"></i>
-                                    <span>Registrasi komite</span>
+                                    <span>Pembayaran diverifikasi</span>
                                 </div>
                                 <div class="mat-policy-item is-warning">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Belum bayar: perlu konfirmasi</span>
+                                    <span>Belum bayar: masuk staging</span>
                                 </div>
                             </div>
 
@@ -294,6 +294,18 @@
             <div class="card-body">
                 <div class="mat-participant-tools">
                     <div class="mat-participant-actions">
+                        <button type="button" class="btn btn-outline-primary btnValidationAction" data-payment="susulan_bayar">
+                            <i class="fas fa-receipt mr-1"></i>Bayar Susulan
+                        </button>
+                        <button type="button" class="btn btn-outline-success btnValidationAction" data-matrikulasi="hadir">
+                            <i class="fas fa-user-check mr-1"></i>Hadir
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btnValidationAction" data-matrikulasi="mengundurkan_diri">
+                            <i class="fas fa-user-times mr-1"></i>Mundur
+                        </button>
+                        <button type="button" class="btn btn-primary btnValidationAction" data-matrikulasi="siap_ditetapkan">
+                            <i class="fas fa-clipboard-check mr-1"></i>Siap Ditetapkan
+                        </button>
                         <button type="button" class="btn btn-outline-secondary" id="btnGenerateAccounts">
                             <i class="fas fa-key mr-1"></i>Buat Akun
                         </button>
@@ -317,9 +329,11 @@
                             </th>
                             <th>Peserta</th>
                             <th>No.Tes</th>
+                            <th>Pembayaran</th>
+                            <th>Matrikulasi</th>
                             <th>Akun</th>
                             <th>Login</th>
-                            <th>Status</th>
+                            <th>Staging</th>
                         </tr>
                         </thead>
                     </table>
@@ -389,7 +403,7 @@
 
                     <div class="mat-browser-note mt-3">
                         <i class="fas fa-shield-alt"></i>
-                        <span>Pendaftar yang belum registrasi komite akan diberi tanda dan wajib dikonfirmasi sebelum masuk preview/sync.</span>
+                        <span>Pendaftar belum bayar atau belum lengkap nomor tetap bisa masuk staging untuk divalidasi saat matrikulasi.</span>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1607,6 +1621,15 @@
         .status-dibatalkan { background: #fee2e2; color: #991b1b; }
         .status-sudah_matrikulasi { background: #e3f2fd; color: #0d47a1; }
         .status-sudah_jadi_siswa { background: #fff3cd; color: #7a4d00; }
+        .status-sudah_bayar_ppdb { background: #dcfce7; color: #166534; }
+        .status-susulan_bayar { background: #e0f2fe; color: #075985; }
+        .status-belum_bayar { background: #fee2e2; color: #991b1b; }
+        .status-dibebaskan { background: #f1f5f9; color: #475569; }
+        .status-terdaftar { background: #eef2ff; color: #3730a3; }
+        .status-hadir { background: #dcfce7; color: #166534; }
+        .status-tidak_hadir { background: #fff7ed; color: #9a3412; }
+        .status-mengundurkan_diri { background: #fee2e2; color: #991b1b; }
+        .status-siap_ditetapkan { background: #ccfbf1; color: #0f766e; }
         @media (max-width: 991.98px) {
             .mat-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -1643,6 +1666,7 @@
             browserCandidates: @json(route('admin.matrikulasi-ppdb.browser-candidates')),
             peserta: @json(route('admin.matrikulasi-ppdb.peserta')),
             assignKelompok: @json(route('admin.matrikulasi-ppdb.assign-kelompok')),
+            updateValidation: @json(route('admin.matrikulasi-ppdb.update-validation')),
             generateAccounts: @json(route('admin.matrikulasi-ppdb.generate-accounts')),
             promoteToSiswa: @json(route('admin.matrikulasi-ppdb.promote-to-siswa')),
             preview: @json(route('admin.matrikulasi-ppdb.preview')),
@@ -1746,9 +1770,33 @@
                 dibatalkan: 'Dibatalkan',
                 sudah_matrikulasi: 'Sudah Matrikulasi',
                 sudah_jadi_siswa: 'Sudah Jadi Siswa',
+                sudah_bayar_ppdb: 'Sudah Bayar PPDB',
+                susulan_bayar: 'Bayar Susulan',
+                belum_bayar: 'Belum Bayar',
+                dibebaskan: 'Dibebaskan',
+                terdaftar: 'Terdaftar',
+                hadir: 'Hadir',
+                tidak_hadir: 'Tidak Hadir',
+                mengundurkan_diri: 'Mengundurkan Diri',
+                siap_ditetapkan: 'Siap Ditetapkan',
             }[status] || status;
 
             return `<span class="status-chip status-${status}">${label}</span>`;
+        }
+
+        function validationActionLabel(payment, matriculation) {
+            if (payment === 'susulan_bayar') return 'Bayar Susulan';
+            if (matriculation === 'hadir') return 'Hadir Matrikulasi';
+            if (matriculation === 'mengundurkan_diri') return 'Mengundurkan Diri';
+            if (matriculation === 'siap_ditetapkan') return 'Siap Ditetapkan';
+            return 'Update Validasi';
+        }
+
+        function reloadParticipantsAfterValidation(message) {
+            selectedParticipantRows.clear();
+            updateParticipantSelectionInfo();
+            participantTable.ajax.reload(null, false);
+            Swal.fire('Berhasil', message || 'Status peserta diperbarui.', 'success');
         }
 
         function initials(name) {
@@ -1958,6 +2006,20 @@
                         render: data => `<span class="browser-no-tes">${escapeHtml(data || '-')}</span>`
                     },
                     {
+                        data: 'status_pembayaran',
+                        orderable: false,
+                        render: data => statusChip(data || 'belum_bayar')
+                    },
+                    {
+                        data: 'status_matrikulasi',
+                        orderable: false,
+                        render: function (data, type, row) {
+                            const chip = statusChip(data || 'terdaftar');
+                            const date = row.tanggal_hadir_matrikulasi ? `<br><small class="text-muted">${escapeHtml(row.tanggal_hadir_matrikulasi)}</small>` : '';
+                            return chip + date;
+                        }
+                    },
+                    {
                         data: null,
                         orderable: false,
                         searchable: false,
@@ -2129,22 +2191,6 @@
             }
 
             return true;
-        }
-
-        function confirmUnpaid(rows, actionText) {
-            const unpaid = rows.filter(row => !row.has_registrasi_komite);
-            if (!unpaid.length) {
-                return Promise.resolve(true);
-            }
-
-            return Swal.fire({
-                title: 'Ada pendaftar belum bayar',
-                html: `<div class="text-left">${unpaid.length} pendaftar belum tercatat registrasi komite.<br>Yakin tetap ${actionText}?</div>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, lanjutkan',
-                cancelButtonText: 'Batal'
-            }).then(result => result.isConfirmed);
         }
 
         function showResult(result) {
@@ -2332,6 +2378,47 @@
                 });
             });
 
+            $('.btnValidationAction').on('click', function () {
+                const ids = Array.from(selectedParticipantRows.keys());
+                if (!ids.length) {
+                    Swal.fire('Belum ada peserta', 'Centang peserta matrikulasi yang akan diperbarui statusnya.', 'warning');
+                    return;
+                }
+
+                const payment = $(this).data('payment') || null;
+                const matriculation = $(this).data('matrikulasi') || null;
+                const actionLabel = validationActionLabel(payment, matriculation);
+                const payload = {
+                    peserta_ids: ids,
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
+                };
+
+                if (payment) payload.status_pembayaran = payment;
+                if (matriculation) payload.status_matrikulasi = matriculation;
+
+                Swal.fire({
+                    title: `${actionLabel}?`,
+                    input: 'textarea',
+                    inputLabel: 'Catatan validasi',
+                    inputPlaceholder: 'Opsional, misalnya bukti bayar susulan atau alasan mundur',
+                    inputAttributes: { maxlength: 1000 },
+                    icon: matriculation === 'mengundurkan_diri' ? 'warning' : 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Simpan',
+                    cancelButtonText: 'Batal',
+                    preConfirm: note => note
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    payload.catatan_validasi = result.value || '';
+                    $.post(routes.updateValidation, payload)
+                        .done(response => reloadParticipantsAfterValidation(response.message))
+                        .fail(xhr => {
+                            Swal.fire('Gagal memperbarui', xhr.responseJSON?.message || 'Status peserta tidak bisa diperbarui.', 'error');
+                        });
+                });
+            });
+
             $('#btnPromoteToSiswa').on('click', function () {
                 const ids = Array.from(selectedParticipantRows.keys());
                 if (!ids.length) {
@@ -2341,7 +2428,7 @@
 
                 Swal.fire({
                     title: 'Tetapkan menjadi siswa kelas 10?',
-                    text: 'Peserta akan masuk Data Siswa sebagai siswa aktif tingkat 10 tanpa rombel. Rombel dapat diassign kemudian di Manajemen Kelas.',
+                    text: 'Hanya peserta berstatus Siap Ditetapkan dan pembayaran/administrasinya valid yang akan menjadi siswa aktif tingkat 10 tanpa rombel.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, tetapkan',
@@ -2461,13 +2548,8 @@
                     calon_siswa_ids: ids,
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
                     include_all: 1
-                }).done(async response => {
+                }).done(response => {
                     const rows = response.data || [];
-                    const confirmed = await confirmUnpaid(rows, 'menambahkan ke preview');
-                    if (!confirmed) {
-                        return;
-                    }
-
                     const merged = [...currentPreviewRows];
                     rows.forEach(row => {
                         const index = merged.findIndex(existing => existing.id === row.id);
@@ -2499,13 +2581,13 @@
 
                 const unpaidCount = currentPreviewRows.filter(row => ids.includes(row.id) && !row.has_registrasi_komite).length;
                 const confirmText = unpaidCount
-                    ? `Data akan masuk staging matrikulasi. Ada ${unpaidCount} pendaftar belum registrasi komite.`
+                    ? `Data akan masuk staging matrikulasi. ${unpaidCount} pendaftar belum registrasi komite akan ditandai Belum Bayar.`
                     : 'Data akan masuk staging matrikulasi, belum menjadi siswa reguler.';
 
                 Swal.fire({
                     title: 'Sync ke matrikulasi?',
                     text: confirmText,
-                    icon: unpaidCount ? 'warning' : 'question',
+                    icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, sync',
                     cancelButtonText: 'Batal'
@@ -2520,7 +2602,7 @@
                         tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
                         kelompok_id: kelompokId || '',
                         include_documents: includeDocuments ? 1 : 0,
-                        allow_unpaid: unpaidCount ? 1 : 0
+                        allow_unpaid: 1
                     };
 
                     $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyinkronkan...');

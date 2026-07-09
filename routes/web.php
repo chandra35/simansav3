@@ -281,6 +281,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/browser-candidates', [MatrikulasiPpdbController::class, 'browserCandidates'])->name('browser-candidates');
         Route::get('/peserta', [MatrikulasiPpdbController::class, 'peserta'])->name('peserta');
         Route::post('/assign-kelompok', [MatrikulasiPpdbController::class, 'assignKelompok'])->name('assign-kelompok');
+        Route::post('/update-validation', [MatrikulasiPpdbController::class, 'updateValidation'])->name('update-validation');
         Route::post('/generate-accounts', [MatrikulasiPpdbController::class, 'generateAccounts'])->name('generate-accounts');
         Route::post('/promote-to-siswa', [MatrikulasiPpdbController::class, 'promoteToSiswa'])->name('promote-to-siswa');
         Route::post('/preview', [MatrikulasiPpdbController::class, 'preview'])->name('preview');

@@ -297,8 +297,50 @@ class MatrikulasiPpdbController extends Controller
                 'is_online' => (bool) ($peserta->user?->latestSession?->isStillOnline() ?? false),
                 'dokumens_count' => $peserta->dokumens_count,
                 'status' => $peserta->status,
+                'status_pembayaran' => $peserta->status_pembayaran,
+                'status_matrikulasi' => $peserta->status_matrikulasi,
+                'tanggal_hadir_matrikulasi' => optional($peserta->tanggal_hadir_matrikulasi)->format('d/m/Y'),
+                'catatan_validasi' => $peserta->catatan_validasi,
             ])->values(),
         ]);
+    }
+
+    public function updateValidation(Request $request)
+    {
+        $validated = $request->validate([
+            'peserta_ids' => 'required|array|min:1',
+            'peserta_ids.*' => 'required|exists:matrikulasi_pesertas,id',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'status_pembayaran' => 'nullable|in:sudah_bayar_ppdb,susulan_bayar,belum_bayar,dibebaskan',
+            'status_matrikulasi' => 'nullable|in:terdaftar,hadir,tidak_hadir,mengundurkan_diri,siap_ditetapkan',
+            'tanggal_hadir_matrikulasi' => 'nullable|date',
+            'catatan_validasi' => 'nullable|string|max:1000',
+        ]);
+
+        if (!array_key_exists('status_pembayaran', $validated) && !array_key_exists('status_matrikulasi', $validated)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pilih minimal satu status yang akan diperbarui.',
+            ], 422);
+        }
+
+        try {
+            $count = $this->service->updateLocalValidation(
+                $validated['peserta_ids'],
+                $validated['tahun_pelajaran_id'],
+                $validated
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} peserta berhasil diperbarui.",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui validasi: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function assignKelompok(Request $request)

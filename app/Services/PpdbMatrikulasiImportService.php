@@ -238,7 +238,7 @@ class PpdbMatrikulasiImportService
             ? MatrikulasiKelompok::where('matrikulasi_periode_id', $periode->id)->findOrFail($kelompokId)
             : null;
 
-        $candidates = $this->preview($calonSiswaIds, $tahun->id, true, $allowUnpaid);
+        $candidates = $this->preview($calonSiswaIds, $tahun->id, true, true);
         $results = [
             'success' => 0,
             'failed' => 0,
@@ -252,7 +252,6 @@ class PpdbMatrikulasiImportService
 
                 $this->assertYearMatches($candidate, $tahun);
                 $this->assertImportable($candidate);
-                $this->assertPaymentAllowed($candidate, $allowUnpaid);
 
                 $peserta = $this->upsertPeserta($candidate, $periode, $kelompok);
                 $copied = $includeDocuments ? $this->syncDocuments($peserta, $candidate, $tahun) : 0;
@@ -265,7 +264,9 @@ class PpdbMatrikulasiImportService
                     'status' => 'success',
                     'nisn' => $candidate->nisn,
                     'nama' => $candidate->nama_lengkap,
-                    'message' => 'Berhasil masuk staging matrikulasi.',
+                    'message' => $candidate->has_registrasi_komite
+                        ? 'Berhasil masuk staging matrikulasi.'
+                        : 'Berhasil masuk staging. Perlu verifikasi pembayaran/administrasi.',
                     'documents_copied' => $copied,
                 ];
             } catch (\Throwable $e) {
@@ -382,6 +383,7 @@ class PpdbMatrikulasiImportService
             $response = $this->fetchPpdbResponse([
                 'page' => $page,
                 'per_page' => 200,
+                'scope' => 'eligible',
             ], $tahun, false);
 
             $all = $all->merge($response['data']);
@@ -439,11 +441,24 @@ class PpdbMatrikulasiImportService
                 ->first()
             : null;
 
-        $row->existing_siswa = Siswa::query()
-            ->where('ppdb_id', $row->id)
-            ->orWhere('nisn', $row->nisn)
-            ->when($row->nik, fn ($q) => $q->orWhere('nik', $row->nik))
-            ->first();
+        $hasSiswaIdentifier = is_numeric($row->id) || !empty($row->nisn) || !empty($row->nik);
+        $row->existing_siswa = $hasSiswaIdentifier
+            ? Siswa::query()
+                ->where(function ($query) use ($row) {
+                    if (is_numeric($row->id)) {
+                        $query->where('ppdb_id', $row->id);
+                    }
+
+                    if (!empty($row->nisn)) {
+                        $query->orWhere('nisn', $row->nisn);
+                    }
+
+                    if (!empty($row->nik)) {
+                        $query->orWhere('nik', $row->nik);
+                    }
+                })
+                ->first()
+            : null;
 
         $row->documents_count = (int) ($row->documents_count ?? 0);
         $row->documents = collect($row->documents ?? []);
@@ -477,12 +492,9 @@ class PpdbMatrikulasiImportService
         if (empty($candidate->nama_lengkap)) {
             throw new RuntimeException('Nama pendaftar kosong.');
         }
-    }
 
-    private function assertPaymentAllowed(object $candidate, bool $allowUnpaid): void
-    {
-        if (!$candidate->has_registrasi_komite && !$allowUnpaid) {
-            throw new RuntimeException('Pendaftar belum melakukan registrasi komite. Konfirmasi khusus diperlukan.');
+        if (!$candidate->is_lulus) {
+            throw new RuntimeException('Pendaftar belum berstatus lulus/eligible di PPDB.');
         }
     }
 
@@ -535,6 +547,14 @@ class PpdbMatrikulasiImportService
                     throw new RuntimeException('NISN sudah ada di data siswa reguler.');
                 }
 
+                if ($peserta->status_matrikulasi !== 'siap_ditetapkan') {
+                    throw new RuntimeException('Peserta belum berstatus siap ditetapkan. Validasi hadir dan administrasi matrikulasi terlebih dahulu.');
+                }
+
+                if (!in_array($peserta->status_pembayaran, ['sudah_bayar_ppdb', 'susulan_bayar', 'dibebaskan'], true)) {
+                    throw new RuntimeException('Pembayaran/administrasi peserta belum valid.');
+                }
+
                 $user = $this->userForPromotedSiswa($peserta);
                 $siswa = Siswa::create($this->siswaPayload($peserta, $tahun, $user));
 
@@ -556,6 +576,7 @@ class PpdbMatrikulasiImportService
                     'siswa_id' => $siswa->id,
                     'user_id' => null,
                     'status' => 'dipromosikan',
+                    'status_matrikulasi' => 'dipromosikan',
                     'promoted_at' => now(),
                     'promoted_by' => auth()->id(),
                 ]);
@@ -587,8 +608,12 @@ class PpdbMatrikulasiImportService
 
     private function upsertPeserta(object $candidate, MatrikulasiPeriode $periode, ?MatrikulasiKelompok $kelompok): MatrikulasiPeserta
     {
+        $existing = MatrikulasiPeserta::where('matrikulasi_periode_id', $periode->id)
+            ->where('ppdb_calon_siswa_id', $candidate->id)
+            ->first();
+
         $payload = [
-            'matrikulasi_kelompok_id' => $kelompok?->id,
+            'matrikulasi_kelompok_id' => $kelompok?->id ?: $existing?->matrikulasi_kelompok_id,
             'ppdb_tahun_pelajaran_id' => $candidate->tahun_pelajaran_id,
             'nomor_registrasi' => $candidate->nomor_registrasi,
             'nomor_tes' => $candidate->nomor_tes,
@@ -607,9 +632,14 @@ class PpdbMatrikulasiImportService
                 'tanggal_kelulusan' => $candidate->tanggal_kelulusan,
                 'tanggal_registrasi_komite' => $candidate->tanggal_registrasi_komite,
             ],
-            'status' => 'matrikulasi',
+            'status_pembayaran' => $this->paymentStatusForCandidate($candidate, $existing),
+            'status_matrikulasi' => $existing?->status_matrikulasi ?: 'terdaftar',
             'imported_at' => now(),
         ];
+
+        if (!$existing || !in_array($existing->status, ['dipromosikan', 'dibatalkan'], true)) {
+            $payload['status'] = 'matrikulasi';
+        }
 
         return MatrikulasiPeserta::updateOrCreate(
             [
@@ -618,6 +648,56 @@ class PpdbMatrikulasiImportService
             ],
             $payload
         );
+    }
+
+    public function updateLocalValidation(array $pesertaIds, string $tahunPelajaranId, array $payload): int
+    {
+        $tahun = TahunPelajaran::findOrFail($tahunPelajaranId);
+        $periode = $this->periodeFor($tahun);
+
+        $update = [
+            'verified_at' => now(),
+            'verified_by' => auth()->id(),
+        ];
+
+        if (array_key_exists('status_pembayaran', $payload)) {
+            $update['status_pembayaran'] = $payload['status_pembayaran'];
+        }
+
+        if (array_key_exists('status_matrikulasi', $payload)) {
+            $update['status_matrikulasi'] = $payload['status_matrikulasi'];
+            if ($payload['status_matrikulasi'] === 'hadir' || $payload['status_matrikulasi'] === 'siap_ditetapkan') {
+                $update['tanggal_hadir_matrikulasi'] = $payload['tanggal_hadir_matrikulasi'] ?? now()->toDateString();
+            }
+
+            if ($payload['status_matrikulasi'] === 'mengundurkan_diri') {
+                $update['status'] = 'dibatalkan';
+            } elseif ($payload['status_matrikulasi'] !== 'dipromosikan') {
+                $update['status'] = 'matrikulasi';
+            }
+        }
+
+        if (array_key_exists('catatan_validasi', $payload)) {
+            $update['catatan_validasi'] = $payload['catatan_validasi'];
+        }
+
+        return MatrikulasiPeserta::where('matrikulasi_periode_id', $periode->id)
+            ->whereIn('id', $pesertaIds)
+            ->where('status_matrikulasi', '!=', 'dipromosikan')
+            ->update($update);
+    }
+
+    private function paymentStatusForCandidate(object $candidate, ?MatrikulasiPeserta $existing): string
+    {
+        if ($candidate->has_registrasi_komite) {
+            return 'sudah_bayar_ppdb';
+        }
+
+        if ($existing && in_array($existing->status_pembayaran, ['susulan_bayar', 'dibebaskan'], true)) {
+            return $existing->status_pembayaran;
+        }
+
+        return 'belum_bayar';
     }
 
     private function userForPromotedSiswa(MatrikulasiPeserta $peserta): User
