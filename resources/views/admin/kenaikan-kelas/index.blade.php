@@ -229,6 +229,61 @@
     </div>
 </div>
 
+{{-- MODAL KONFIRMASI --}}
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" role="dialog" aria-labelledby="actionConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content action-confirm-modal">
+            <div class="modal-header">
+                <div class="d-flex align-items-center">
+                    <span class="action-confirm-icon mr-3" id="actionConfirmIcon">
+                        <i class="fas fa-question"></i>
+                    </span>
+                    <div>
+                        <h5 class="modal-title mb-1" id="actionConfirmTitle">Konfirmasi</h5>
+                        <div class="text-muted small" id="actionConfirmSubtitle">Periksa kembali sebelum melanjutkan.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="actionConfirmBody"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="actionConfirmCancel" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="actionConfirmOk">
+                    <i class="fas fa-check mr-1"></i> Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL PESAN --}}
+<div class="modal fade" id="appMessageModal" tabindex="-1" role="dialog" aria-labelledby="appMessageTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content action-confirm-modal">
+            <div class="modal-header">
+                <div class="d-flex align-items-center">
+                    <span class="action-confirm-icon mr-3" id="appMessageIcon">
+                        <i class="fas fa-info"></i>
+                    </span>
+                    <div>
+                        <h5 class="modal-title mb-1" id="appMessageTitle">Informasi</h5>
+                        <div class="text-muted small" id="appMessageSubtitle">SIMANSA</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body" id="appMessageBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">
+                    <i class="fas fa-check mr-1"></i> Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL PROGRESS PROSES --}}
 <div class="modal fade" id="processProgressModal" tabindex="-1" role="dialog" aria-labelledby="processProgressTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -290,6 +345,37 @@
 .kelas-checkbox-label:has(input:checked) {
     background: #fff3cd;
     border-color: #ffc107;
+}
+.action-confirm-modal {
+    border: 0;
+    border-radius: .5rem;
+    overflow: hidden;
+}
+.action-confirm-modal .modal-header {
+    background: #f8fafc;
+    border-bottom-color: #e5e7eb;
+}
+.action-confirm-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: .5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #17a2b8;
+    flex: 0 0 46px;
+}
+.action-confirm-icon.is-warning { background: #ffc107; color: #1f2937; }
+.action-confirm-icon.is-danger { background: #dc3545; }
+.action-confirm-icon.is-info { background: #17a2b8; }
+.action-confirm-icon.is-success { background: #28a745; }
+.action-confirm-list {
+    margin: .75rem 0 0;
+    padding-left: 1.2rem;
+}
+.action-confirm-list li + li {
+    margin-top: .35rem;
 }
 .process-modal {
     border: 0;
@@ -400,6 +486,64 @@
             throw new Error(payload?.message || payload?.error || `HTTP ${response.status}`);
         }
         return payload || {};
+    }
+
+    function openActionConfirm({ title, subtitle, bodyHtml, confirmText = 'Lanjutkan', confirmClass = 'btn-primary', icon = 'fa-question', tone = 'info' }) {
+        return new Promise(resolve => {
+            const modal = $('#actionConfirmModal');
+            const okBtn = document.getElementById('actionConfirmOk');
+            const cancelBtn = document.getElementById('actionConfirmCancel');
+            const iconEl = document.getElementById('actionConfirmIcon');
+
+            document.getElementById('actionConfirmTitle').textContent = title;
+            document.getElementById('actionConfirmSubtitle').textContent = subtitle;
+            document.getElementById('actionConfirmBody').innerHTML = bodyHtml;
+            iconEl.className = `action-confirm-icon mr-3 is-${tone}`;
+            iconEl.innerHTML = `<i class="fas ${icon}"></i>`;
+            okBtn.className = `btn ${confirmClass}`;
+            okBtn.innerHTML = `<i class="fas fa-check mr-1"></i> ${esc(confirmText)}`;
+
+            const cleanup = () => {
+                okBtn.removeEventListener('click', onOk);
+                cancelBtn.removeEventListener('click', onCancel);
+                modal.off('hidden.bs.modal', onHidden);
+            };
+            const close = result => {
+                cleanup();
+                modal.data('confirmed', result);
+                modal.modal('hide');
+                resolve(result);
+            };
+            const onOk = () => close(true);
+            const onCancel = () => close(false);
+            const onHidden = () => {
+                const confirmed = modal.data('confirmed') === true;
+                cleanup();
+                modal.removeData('confirmed');
+                resolve(confirmed);
+            };
+
+            modal.removeData('confirmed');
+            okBtn.addEventListener('click', onOk);
+            cancelBtn.addEventListener('click', onCancel);
+            modal.on('hidden.bs.modal', onHidden);
+            modal.modal({ backdrop: 'static', keyboard: false, show: true });
+        });
+    }
+
+    function showAppMessage({ title = 'Informasi', subtitle = 'SIMANSA', message, type = 'info' }) {
+        const iconMap = {
+            info: 'fa-info',
+            warning: 'fa-exclamation-triangle',
+            danger: 'fa-times',
+            success: 'fa-check',
+        };
+        document.getElementById('appMessageTitle').textContent = title;
+        document.getElementById('appMessageSubtitle').textContent = subtitle;
+        document.getElementById('appMessageBody').innerHTML = `<p class="mb-0">${esc(message)}</p>`;
+        document.getElementById('appMessageIcon').className = `action-confirm-icon mr-3 is-${type}`;
+        document.getElementById('appMessageIcon').innerHTML = `<i class="fas ${iconMap[type] || iconMap.info}"></i>`;
+        $('#appMessageModal').modal('show');
     }
 
     let processSteps = [];
@@ -520,8 +664,22 @@
     if (tahunAktifId) { loadStats(tahunAktifId); loadStatusKelulusan(tahunAktifId); }
 
     // --- STEP 1: FINALISASI KELULUSAN ---
-    document.getElementById('btn-proses-kelulusan').addEventListener('click', function () {
-        if (!confirm('Finalisasi kelulusan kelas XII?\nSiswa dengan status Lulus/Lulus Bersyarat akan ditandai lulus, Tidak Lulus akan ditandai tinggal kelas.\nTindakan ini tidak dapat dibatalkan secara otomatis.')) return;
+    document.getElementById('btn-proses-kelulusan').addEventListener('click', async function () {
+        const confirmed = await openActionConfirm({
+            title: 'Finalisasi Kelulusan Kelas XII',
+            subtitle: 'Pastikan data Pengumuman Kelulusan sudah benar.',
+            icon: 'fa-graduation-cap',
+            tone: 'danger',
+            confirmText: 'Finalisasi Sekarang',
+            confirmClass: 'btn-danger',
+            bodyHtml: `<p class="mb-2">Sistem akan mengunci status kelas XII berdasarkan data Pengumuman Kelulusan.</p>
+                <ul class="action-confirm-list">
+                    <li><strong>Lulus / Lulus Bersyarat</strong> akan ditandai <code>siswa_kelas.status = lulus</code>.</li>
+                    <li><strong>Tidak Lulus</strong> akan ditandai <code>siswa_kelas.status = tinggal_kelas</code>.</li>
+                    <li>Proses ini tidak dibatalkan otomatis, jadi sebaiknya dilakukan setelah data final.</li>
+                </ul>`,
+        });
+        if (!confirmed) return;
 
         const btn = this;
         btn.disabled = true;
@@ -646,14 +804,19 @@
 
             document.getElementById('mapping-container').classList.remove('d-none');
         } catch (e) {
-            alert('Gagal memuat data kelas. Coba lagi.');
+            showAppMessage({
+                title: 'Gagal Memuat Kelas',
+                subtitle: 'Mapping kelas belum bisa ditampilkan.',
+                message: e.message || 'Gagal memuat data kelas. Coba lagi.',
+                type: 'danger',
+            });
         } finally {
             this.disabled = false;
             this.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Muat Kelas untuk Mapping';
         }
     });
 
-    document.getElementById('btn-proses-naik-kelas').addEventListener('click', function () {
+    document.getElementById('btn-proses-naik-kelas').addEventListener('click', async function () {
         const selects = document.querySelectorAll('.kelas-tujuan-select');
         const mapping = [];
         selects.forEach(s => {
@@ -663,11 +826,30 @@
         });
 
         if (mapping.length === 0) {
-            alert('Pilih setidaknya satu pasangan kelas asal → kelas tujuan.');
+            showAppMessage({
+                title: 'Mapping Belum Dipilih',
+                subtitle: 'Proses naik kelas belum dapat dijalankan.',
+                message: 'Pilih setidaknya satu pasangan kelas asal ke kelas tujuan.',
+                type: 'warning',
+            });
             return;
         }
 
-        if (!confirm(`Proses naik kelas untuk ${mapping.length} pasangan kelas?\nTindakan ini tidak dapat dibatalkan secara otomatis.`)) return;
+        const confirmed = await openActionConfirm({
+            title: 'Proses Naik Kelas',
+            subtitle: `${mapping.length} pasangan kelas akan diproses.`,
+            icon: 'fa-arrow-up',
+            tone: 'warning',
+            confirmText: 'Proses Naik Kelas',
+            confirmClass: 'btn-warning',
+            bodyHtml: `<p class="mb-2">Sistem akan membuat record <code>siswa_kelas</code> baru di tahun tujuan dan menandai record lama sebagai <code>naik_kelas</code>.</p>
+                <ul class="action-confirm-list">
+                    <li>Siswa yang sudah aktif di tahun tujuan akan dilewati.</li>
+                    <li>Pastikan mapping kelas asal dan kelas tujuan sudah sesuai.</li>
+                    <li>Proses ini tidak dibatalkan otomatis.</li>
+                </ul>`,
+        });
+        if (!confirmed) return;
 
         const btn = this;
         btn.disabled = true;
