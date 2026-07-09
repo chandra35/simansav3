@@ -275,6 +275,15 @@
         return d.innerHTML;
     }
 
+    async function parseJsonResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json') ? await response.json() : null;
+        if (!response.ok) {
+            throw new Error(payload?.message || payload?.error || `HTTP ${response.status}`);
+        }
+        return payload || {};
+    }
+
     // --- STATS ---
     function loadStats(tahunId) {
         if (!tahunId) return;
@@ -337,7 +346,7 @@
                 tandai_siswa_lulus: document.getElementById('tandai-siswa-lulus').checked,
             })
         })
-        .then(r => r.json())
+        .then(parseJsonResponse)
         .then(d => {
             const type = d.success ? 'success' : 'warning';
             document.getElementById('result-kelulusan').innerHTML = alertBox(
@@ -346,8 +355,8 @@
             loadStats(tahunAktifId);
             loadStatusKelulusan(tahunAktifId);
         })
-        .catch(() => {
-            document.getElementById('result-kelulusan').innerHTML = alertBox('Terjadi kesalahan. Coba lagi.', 'danger');
+        .catch(err => {
+            document.getElementById('result-kelulusan').innerHTML = alertBox(esc(err.message || 'Terjadi kesalahan. Coba lagi.'), 'danger');
         })
         .finally(() => {
             btn.disabled = false;
@@ -464,7 +473,7 @@
                 tanggal_masuk:   document.getElementById('tanggal-masuk').value,
             })
         })
-        .then(r => r.json())
+        .then(parseJsonResponse)
         .then(d => {
             let html = `<i class="fas fa-check mr-1"></i> ${esc(d.message)}`;
             if (d.errors && d.errors.length > 0) {
@@ -474,8 +483,8 @@
             document.getElementById('result-naik-kelas').innerHTML = alertBox(html, type);
             loadStats(elTahunAsal.value);
         })
-        .catch(() => {
-            document.getElementById('result-naik-kelas').innerHTML = alertBox('Terjadi kesalahan. Coba lagi.', 'danger');
+        .catch(err => {
+            document.getElementById('result-naik-kelas').innerHTML = alertBox(esc(err.message || 'Terjadi kesalahan. Coba lagi.'), 'danger');
         })
         .finally(() => {
             btn.disabled = false;

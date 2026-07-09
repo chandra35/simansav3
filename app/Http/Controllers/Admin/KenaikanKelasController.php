@@ -185,40 +185,45 @@ class KenaikanKelasController extends Controller
             ->whereIn('siswa_id', $siswaKelasRows->pluck('siswa_id'))
             ->pluck('status', 'siswa_id');
 
-        $diproses_lulus   = 0;
-        $diproses_tinggal = 0;
-        $belum_diproses   = 0;
-
-        DB::transaction(function () use ($tahun, $siswaKelasRows, $pengumumanMap, $tandaiLulus, &$diproses_lulus, &$diproses_tinggal, &$belum_diproses) {
-            foreach ($siswaKelasRows as $sk) {
-                $statusPengumuman = $pengumumanMap->get($sk->siswa_id);
-
-                if (!$statusPengumuman) {
-                    $belum_diproses++;
-                    continue;
-                }
-
-                if (in_array($statusPengumuman, ['lulus', 'lulus_bersyarat'])) {
-                    $sk->update([
-                        'status'              => 'lulus',
-                        'tanggal_keluar'      => now()->toDateString(),
-                        'catatan_perpindahan' => 'Finalisasi kelulusan tahun ' . $tahun->nama,
-                    ]);
-                    if ($tandaiLulus && $sk->siswa) {
-                        $sk->siswa->update(['status_siswa' => 'lulus']);
-                    }
-                    $diproses_lulus++;
-                } elseif ($statusPengumuman === 'tidak_lulus') {
-                    $sk->update([
-                        'status'              => 'tinggal_kelas',
-                        'catatan_perpindahan' => 'Tidak lulus, tinggal kelas — tahun ' . $tahun->nama,
-                    ]);
-                    $diproses_tinggal++;
-                }
-            }
+        $lulusRows = $siswaKelasRows->filter(function ($sk) use ($pengumumanMap) {
+            return in_array($pengumumanMap->get($sk->siswa_id), ['lulus', 'lulus_bersyarat'], true);
+        });
+        $tinggalRows = $siswaKelasRows->filter(function ($sk) use ($pengumumanMap) {
+            return $pengumumanMap->get($sk->siswa_id) === 'tidak_lulus';
         });
 
-        $total = $diproses_lulus + $diproses_tinggal + $belum_diproses;
+        $diproses_lulus   = $lulusRows->count();
+        $diproses_tinggal = $tinggalRows->count();
+        $belum_diproses   = $siswaKelasRows->count() - $pengumumanMap->count();
+        $tanggalKeluar    = now()->toDateString();
+
+        // Batch update menjaga transaksi singkat dan menghindari lock wait timeout saat data kelas XII banyak.
+        DB::transaction(function () use ($tahun, $lulusRows, $tinggalRows, $tandaiLulus, $tanggalKeluar) {
+            if ($lulusRows->isNotEmpty()) {
+                SiswaKelas::whereIn('id', $lulusRows->pluck('id'))->update([
+                    'status'              => 'lulus',
+                    'tanggal_keluar'      => $tanggalKeluar,
+                    'catatan_perpindahan' => 'Finalisasi kelulusan tahun ' . $tahun->nama,
+                    'updated_at'          => now(),
+                ]);
+
+                if ($tandaiLulus) {
+                    Siswa::whereIn('id', $lulusRows->pluck('siswa_id'))->update([
+                        'status_siswa' => 'lulus',
+                        'updated_at'   => now(),
+                    ]);
+                }
+            }
+
+            if ($tinggalRows->isNotEmpty()) {
+                SiswaKelas::whereIn('id', $tinggalRows->pluck('id'))->update([
+                    'status'              => 'tinggal_kelas',
+                    'catatan_perpindahan' => 'Tidak lulus, tinggal kelas - tahun ' . $tahun->nama,
+                    'updated_at'          => now(),
+                ]);
+            }
+        }, 3);
+
         $parts = [];
         if ($diproses_lulus > 0)   $parts[] = "{$diproses_lulus} siswa lulus";
         if ($diproses_tinggal > 0) $parts[] = "{$diproses_tinggal} siswa tinggal kelas";
@@ -231,6 +236,7 @@ class KenaikanKelasController extends Controller
             'belum_diproses'   => $belum_diproses,
             'message'          => 'Finalisasi selesai: ' . implode(', ', $parts) . '.',
         ]);
+
     }
 
     /**
