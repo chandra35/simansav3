@@ -2214,13 +2214,16 @@
             return matched === tokens.length ? 70 + matched : matched ? 30 + matched : 0;
         }
 
+        const maxSmartSearchTerms = 700;
+        const smartSearchBatchSize = 20;
+
         function splitSmartSearchTerms(text) {
             return String(text || '')
                 .split(/\r?\n|;|\t/)
                 .map(term => term.trim())
                 .filter(Boolean)
                 .filter((term, index, terms) => terms.findIndex(item => item.toLowerCase() === term.toLowerCase()) === index)
-                .slice(0, 50);
+                .slice(0, maxSmartSearchTerms);
         }
 
         function chooseBestCandidate(term, results) {
@@ -2254,23 +2257,33 @@
                 return false;
             }
 
-            setProgressOverlay(true, `Mencari ${terms.length} pendaftar dari teks yang ditempel...`, 30);
+            setProgressOverlay(true, `Mencari ${terms.length} pendaftar dari teks yang ditempel...`, 12);
 
             try {
-                const requests = terms.map(term => $.get(routes.candidates, {
-                    q: term,
-                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
-                    include_all: 1,
-                    smart: 1
-                }).then(response => ({
-                    term,
-                    match: chooseBestCandidate(term, response.results || [])
-                })).catch(() => ({
-                    term,
-                    match: null
-                })));
+                const responses = [];
+                const batches = chunkArray(terms, smartSearchBatchSize);
 
-                const responses = await Promise.all(requests);
+                for (let index = 0; index < batches.length; index++) {
+                    const batch = batches[index];
+                    const progress = 12 + Math.round((index / Math.max(batches.length, 1)) * 78);
+                    setProgressOverlay(true, `Batch ${index + 1}/${batches.length}: mencari ${batch.length} nama...`, progress);
+
+                    const batchResponses = await Promise.all(batch.map(term => $.get(routes.candidates, {
+                        q: term,
+                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                        include_all: 1,
+                        smart: 1
+                    }).then(response => ({
+                        term,
+                        match: chooseBestCandidate(term, response.results || [])
+                    })).catch(() => ({
+                        term,
+                        match: null
+                    }))));
+
+                    responses.push(...batchResponses);
+                }
+
                 const matches = responses.map(item => item.match).filter(Boolean);
                 const uniqueMatches = matches.filter((item, index, rows) => rows.findIndex(row => String(row.id) === String(item.id)) === index);
                 const notFound = responses.filter(item => !item.match).map(item => item.term);
@@ -2280,7 +2293,7 @@
                 }
 
                 const message = notFound.length
-                    ? `${uniqueMatches.length} pendaftar ditemukan. ${notFound.length} baris belum ketemu: ${notFound.slice(0, 5).join(', ')}${notFound.length > 5 ? ', ...' : ''}`
+                    ? `${uniqueMatches.length} pendaftar ditemukan dari ${terms.length} baris. ${notFound.length} baris belum ketemu: ${notFound.slice(0, 5).join(', ')}${notFound.length > 5 ? ', ...' : ''}`
                     : `${uniqueMatches.length} pendaftar berhasil ditambahkan ke pilihan.`;
 
                 Swal.fire({
