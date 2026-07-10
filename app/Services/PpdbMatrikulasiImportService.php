@@ -555,11 +555,7 @@ class PpdbMatrikulasiImportService
                 }
 
                 if ($peserta->status_matrikulasi !== 'siap_ditetapkan') {
-                    throw new RuntimeException('Peserta belum berstatus siap ditetapkan. Validasi hadir dan administrasi matrikulasi terlebih dahulu.');
-                }
-
-                if (!in_array($peserta->status_pembayaran, ['sudah_bayar_ppdb', 'susulan_bayar', 'dibebaskan'], true)) {
-                    throw new RuntimeException('Pembayaran/administrasi peserta belum valid.');
+                    throw new RuntimeException('Peserta belum berstatus siap ditetapkan. Validasi kehadiran dan keputusan matrikulasi terlebih dahulu.');
                 }
 
                 $user = $this->userForPromotedSiswa($peserta);

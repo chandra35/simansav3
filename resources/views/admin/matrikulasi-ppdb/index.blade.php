@@ -2716,7 +2716,7 @@
 
                 Swal.fire({
                     title: 'Tetapkan menjadi siswa kelas 10?',
-                    text: 'Hanya peserta berstatus Siap Ditetapkan dan pembayaran/administrasinya valid yang akan menjadi siswa aktif tingkat 10 tanpa rombel.',
+                    text: 'Peserta berstatus Siap Ditetapkan akan menjadi siswa aktif tingkat 10 tanpa rombel. Status pembayaran tetap dibawa sebagai histori administrasi.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, tetapkan',
