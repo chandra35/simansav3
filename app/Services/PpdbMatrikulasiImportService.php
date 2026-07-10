@@ -265,9 +265,7 @@ class PpdbMatrikulasiImportService
                     'status' => 'success',
                     'nisn' => $candidate->nisn,
                     'nama' => $candidate->nama_lengkap,
-                    'message' => $candidate->has_registrasi_komite
-                        ? 'Berhasil masuk staging matrikulasi.'
-                        : 'Berhasil masuk staging. Perlu verifikasi pembayaran/administrasi.',
+                    'message' => $this->importSuccessMessage($candidate),
                     'documents_copied' => $copied,
                 ];
             } catch (\Throwable $e) {
@@ -494,9 +492,22 @@ class PpdbMatrikulasiImportService
             throw new RuntimeException('Nama pendaftar kosong.');
         }
 
-        if (!$candidate->is_lulus) {
-            throw new RuntimeException('Pendaftar belum berstatus lulus/eligible di PPDB.');
+        if (!$candidate->is_lulus && empty($candidate->nomor_tes)) {
+            throw new RuntimeException('Pendaftar belum lulus dan belum memiliki nomor tes PPDB.');
         }
+    }
+
+    private function importSuccessMessage(object $candidate): string
+    {
+        if (!$candidate->is_lulus) {
+            return 'Berhasil masuk staging. Status kelulusan PPDB belum eligible, perlu validasi matrikulasi.';
+        }
+
+        if (!$candidate->has_registrasi_komite) {
+            return 'Berhasil masuk staging. Perlu verifikasi pembayaran/administrasi.';
+        }
+
+        return 'Berhasil masuk staging matrikulasi.';
     }
 
     private function assertYearMatches(object $candidate, TahunPelajaran $targetTahun): void
@@ -630,6 +641,8 @@ class PpdbMatrikulasiImportService
                 'tahun' => $candidate->ppdb_tahun_nama,
                 'jalur' => $candidate->jalur_nama,
                 'gelombang' => $candidate->gelombang_nama,
+                'status_kelulusan' => $candidate->status_kelulusan,
+                'is_lulus' => $candidate->is_lulus,
                 'tanggal_kelulusan' => $candidate->tanggal_kelulusan,
                 'tanggal_registrasi_komite' => $candidate->tanggal_registrasi_komite,
             ],
@@ -640,6 +653,10 @@ class PpdbMatrikulasiImportService
 
         if (!$existing || !in_array($existing->status, ['dipromosikan', 'dibatalkan'], true)) {
             $payload['status'] = 'matrikulasi';
+        }
+
+        if (!$candidate->is_lulus && empty($payload['catatan_validasi']) && empty($existing?->catatan_validasi)) {
+            $payload['catatan_validasi'] = 'Masuk staging manual: status kelulusan PPDB belum lulus/eligible saat import.';
         }
 
         return MatrikulasiPeserta::updateOrCreate(
