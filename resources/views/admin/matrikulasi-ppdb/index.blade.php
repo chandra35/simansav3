@@ -1794,6 +1794,33 @@
             });
         }
 
+        function emptyAccountResult() {
+            return {
+                created: 0,
+                existing: 0,
+                failed: 0,
+                items: []
+            };
+        }
+
+        function mergeAccountResult(target, source) {
+            target.created += Number(source.created || 0);
+            target.existing += Number(source.existing || 0);
+            target.failed += Number(source.failed || 0);
+            target.items = target.items.concat(source.items || []);
+
+            return target;
+        }
+
+        function postGenerateAccountsChunk(ids, tahunPelajaranId) {
+            return new Promise((resolve, reject) => {
+                $.post(routes.generateAccounts, {
+                    peserta_ids: ids,
+                    tahun_pelajaran_id: tahunPelajaranId
+                }).done(resolve).fail(reject);
+            });
+        }
+
         function paymentChip(row) {
             return row.has_registrasi_komite
                 ? '<span class="payment-chip is-paid">Sudah bayar</span>'
@@ -2569,24 +2596,46 @@
                     showCancelButton: true,
                     confirmButtonText: 'Ya, buat akun',
                     cancelButtonText: 'Batal'
-                }).then(result => {
+                }).then(async result => {
                     if (!result.isConfirmed) return;
 
                     const $button = $('#btnGenerateAccounts');
+                    const chunks = chunkArray(ids, 20);
+                    const aggregate = emptyAccountResult();
+
                     setButtonLoading($button, true, 'Membuat...', '<i class="fas fa-key mr-1"></i>Buat Akun');
-                    $.post(routes.generateAccounts, {
-                        peserta_ids: ids,
-                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
-                    }).done(response => {
+                    $('#btnSelectAllParticipants, #btnClearParticipantSelection, .btnValidationAction, #btnPromoteToSiswa').prop('disabled', true);
+                    setProgressOverlay(true, `Menyiapkan pembuatan akun untuk ${ids.length} peserta...`, 8);
+
+                    try {
+                        for (let index = 0; index < chunks.length; index++) {
+                            const chunk = chunks[index];
+                            const startPercent = 10 + Math.round((index / chunks.length) * 80);
+                            setProgressOverlay(true, `Batch ${index + 1}/${chunks.length}: membuat akun ${chunk.length} peserta...`, startPercent);
+
+                            const response = await postGenerateAccountsChunk(chunk, $('#tahun_pelajaran_id').val());
+                            mergeAccountResult(aggregate, response.data || {});
+
+                            const donePercent = 10 + Math.round(((index + 1) / chunks.length) * 80);
+                            setProgressOverlay(true, `Batch ${index + 1}/${chunks.length} selesai. ${aggregate.created} dibuat, ${aggregate.existing} sudah ada, ${aggregate.failed} gagal.`, donePercent);
+                        }
+
+                        setProgressOverlay(true, 'Memperbarui tabel akun matrikulasi...', 95);
                         selectedParticipantRows.clear();
                         updateParticipantSelectionInfo();
                         participantTable.ajax.reload(null, false);
-                        Swal.fire('Selesai', response.message || 'Generate akun selesai.', 'success');
-                    }).fail(xhr => {
-                        Swal.fire('Gagal membuat akun', xhr.responseJSON?.message || 'Generate akun gagal.', 'error');
-                    }).always(() => {
+                        Swal.fire(
+                            'Selesai',
+                            `Akun dibuat: ${aggregate.created}, sudah ada: ${aggregate.existing}, gagal: ${aggregate.failed}.`,
+                            aggregate.failed ? 'warning' : 'success'
+                        );
+                    } catch (xhr) {
+                        Swal.fire('Gagal membuat akun', xhr.responseJSON?.message || 'Generate akun gagal. Data yang sudah berhasil tidak akan dibuat dobel.', 'error');
+                    } finally {
+                        setProgressOverlay(false);
                         setButtonLoading($button, false, 'Membuat...', '<i class="fas fa-key mr-1"></i>Buat Akun');
-                    });
+                        $('#btnSelectAllParticipants, #btnClearParticipantSelection, .btnValidationAction, #btnPromoteToSiswa').prop('disabled', false);
+                    }
                 });
             });
 
