@@ -254,23 +254,10 @@ class MatrikulasiPpdbController extends Controller
             'kelompok_id' => 'nullable|exists:matrikulasi_kelompoks,id',
         ]);
 
-        $query = $this->service->pesertaFor($validated['tahun_pelajaran_id']);
-        if ($request->filled('kelompok_id')) {
-            $query->where('matrikulasi_kelompok_id', $request->get('kelompok_id'));
-        }
+        $baseQuery = $this->filteredPesertaQuery($request, $validated, false);
+        $query = $this->filteredPesertaQuery($request, $validated);
 
-        $recordsTotal = (clone $query)->count();
-        $term = trim((string) data_get($validated, 'search.value', ''));
-        if ($term !== '') {
-            $like = '%' . str_replace(' ', '%', $term) . '%';
-            $query->where(function ($q) use ($like) {
-                $q->where('nama_lengkap', 'like', $like)
-                    ->orWhere('nisn', 'like', $like)
-                    ->orWhere('nomor_tes', 'like', $like)
-                    ->orWhere('nik', 'like', $like);
-            });
-        }
-
+        $recordsTotal = (clone $baseQuery)->count();
         $recordsFiltered = (clone $query)->count();
         $rows = $query
             ->orderBy('nama_lengkap')
@@ -305,6 +292,53 @@ class MatrikulasiPpdbController extends Controller
                 'catatan_validasi' => $peserta->catatan_validasi,
             ])->values(),
         ]);
+    }
+
+    public function pesertaIds(Request $request)
+    {
+        $validated = $request->validate([
+            'search.value' => 'nullable|string|max:100',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'kelompok_id' => 'nullable|exists:matrikulasi_kelompoks,id',
+        ]);
+
+        $query = $this->filteredPesertaQuery($request, $validated);
+        $ids = $query
+            ->orderBy('nama_lengkap')
+            ->limit(1000)
+            ->pluck('id')
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'ids' => $ids,
+            'count' => $ids->count(),
+        ]);
+    }
+
+    private function filteredPesertaQuery(Request $request, array $validated, bool $applySearch = true)
+    {
+        $query = $this->service->pesertaFor($validated['tahun_pelajaran_id']);
+        if ($request->filled('kelompok_id')) {
+            $query->where('matrikulasi_kelompok_id', $request->get('kelompok_id'));
+        }
+
+        if (!$applySearch) {
+            return $query;
+        }
+
+        $term = trim((string) data_get($validated, 'search.value', ''));
+        if ($term !== '') {
+            $like = '%' . str_replace(' ', '%', $term) . '%';
+            $query->where(function ($q) use ($like) {
+                $q->where('nama_lengkap', 'like', $like)
+                    ->orWhere('nisn', 'like', $like)
+                    ->orWhere('nomor_tes', 'like', $like)
+                    ->orWhere('nik', 'like', $like);
+            });
+        }
+
+        return $query;
     }
 
     public function updateValidation(Request $request)

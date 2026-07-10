@@ -342,16 +342,11 @@ class PpdbMatrikulasiImportService
     {
         $base = preg_replace('/[^a-zA-Z0-9]/', '', (string) ($peserta->nisn ?: $peserta->nomor_tes ?: $peserta->nik));
         $base = $base ?: 'mat' . substr((string) $peserta->id, 0, 8);
-        $candidate = $base;
-
-        if ($this->usernameExists($candidate, $peserta->user_id)) {
-            $candidate = 'mat' . $base;
-        }
 
         $suffix = 1;
-        $unique = $candidate;
+        $unique = $base;
         while ($this->usernameExists($unique, $peserta->user_id)) {
-            $unique = $candidate . $suffix;
+            $unique = $base . $suffix;
             $suffix++;
         }
 

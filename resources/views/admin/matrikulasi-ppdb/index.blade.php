@@ -322,6 +322,12 @@
                         <button type="button" class="btn btn-outline-secondary" id="btnGenerateAccounts">
                             <i class="fas fa-key mr-1"></i>Buat Akun
                         </button>
+                        <button type="button" class="btn btn-outline-dark" id="btnSelectAllParticipants">
+                            <i class="fas fa-check-double mr-1"></i>Pilih Semua
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnClearParticipantSelection">
+                            <i class="fas fa-times mr-1"></i>Bersihkan
+                        </button>
                         <button type="button" class="btn btn-success" id="btnPromoteToSiswa">
                             <i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10
                         </button>
@@ -1715,6 +1721,7 @@
             candidates: @json(route('admin.matrikulasi-ppdb.candidates')),
             browserCandidates: @json(route('admin.matrikulasi-ppdb.browser-candidates')),
             peserta: @json(route('admin.matrikulasi-ppdb.peserta')),
+            pesertaIds: @json(route('admin.matrikulasi-ppdb.peserta-ids')),
             assignKelompok: @json(route('admin.matrikulasi-ppdb.assign-kelompok')),
             updateValidation: @json(route('admin.matrikulasi-ppdb.update-validation')),
             generateAccounts: @json(route('admin.matrikulasi-ppdb.generate-accounts')),
@@ -2521,6 +2528,33 @@
                 });
             });
 
+            $('#btnSelectAllParticipants').on('click', function () {
+                const $button = $(this);
+                setButtonLoading($button, true, 'Memilih...', '<i class="fas fa-check-double mr-1"></i>Pilih Semua');
+
+                $.get(routes.pesertaIds, {
+                    tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
+                    'search[value]': participantTable ? participantTable.search() : '',
+                    kelompok_id: $('#kelompok_id').val() || ''
+                }).done(response => {
+                    selectedParticipantRows.clear();
+                    (response.ids || []).forEach(id => selectedParticipantRows.set(String(id), { id: String(id) }));
+                    syncParticipantChecks();
+                    updateParticipantSelectionInfo();
+                    Swal.fire('Peserta dipilih', `${response.count || 0} peserta hasil filter sudah dipilih.`, 'success');
+                }).fail(xhr => {
+                    Swal.fire('Gagal memilih peserta', xhr.responseJSON?.message || 'Tidak bisa mengambil daftar peserta.', 'error');
+                }).always(() => {
+                    setButtonLoading($button, false, 'Memilih...', '<i class="fas fa-check-double mr-1"></i>Pilih Semua');
+                });
+            });
+
+            $('#btnClearParticipantSelection').on('click', function () {
+                selectedParticipantRows.clear();
+                syncParticipantChecks();
+                updateParticipantSelectionInfo();
+            });
+
             $('#btnGenerateAccounts').on('click', function () {
                 const ids = Array.from(selectedParticipantRows.keys());
                 if (!ids.length) {
@@ -2530,7 +2564,7 @@
 
                 Swal.fire({
                     title: 'Buat akun matrikulasi?',
-                    text: 'Akun ini hanya untuk fase matrikulasi dan belum menjadi akun siswa reguler final.',
+                    text: 'Default username dan password adalah NISN peserta. Jika username sudah dipakai, sistem menambahkan pembeda agar tetap unik.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, buat akun',
