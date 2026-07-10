@@ -2173,6 +2173,10 @@
             return normalizeSearchValue(value).replace(/\s+/g, '');
         }
 
+        function collapseRepeatedLetters(value) {
+            return normalizeSearchValue(value).replace(/([a-z0-9])\1+/g, '$1');
+        }
+
         function initialsOf(value) {
             return normalizeSearchValue(value)
                 .split(' ')
@@ -2181,11 +2185,51 @@
                 .join('');
         }
 
+        function editDistanceLimited(a, b, limit = 1) {
+            if (Math.abs(a.length - b.length) > limit) return limit + 1;
+
+            let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+            for (let i = 1; i <= a.length; i++) {
+                const current = [i];
+                let rowMin = current[0];
+
+                for (let j = 1; j <= b.length; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    current[j] = Math.min(
+                        previous[j] + 1,
+                        current[j - 1] + 1,
+                        previous[j - 1] + cost
+                    );
+                    rowMin = Math.min(rowMin, current[j]);
+                }
+
+                if (rowMin > limit) return limit + 1;
+                previous = current;
+            }
+
+            return previous[b.length];
+        }
+
+        function tokenMatchesName(token, words) {
+            const collapsedToken = collapseRepeatedLetters(token);
+
+            return words.some(word => {
+                const collapsedWord = collapseRepeatedLetters(word);
+                if (token.length === 1) return word.startsWith(token);
+                if (word.startsWith(token) || word.includes(token)) return true;
+                if (collapsedWord.startsWith(collapsedToken) || collapsedWord.includes(collapsedToken)) return true;
+
+                return token.length >= 4 && word.length >= 4 && editDistanceLimited(collapsedToken, collapsedWord, 1) <= 1;
+            });
+        }
+
         function candidateScore(term, item) {
             const needle = normalizeSearchValue(term);
             const needleCompact = compactSearchValue(term);
+            const needleCollapsed = collapseRepeatedLetters(term).replace(/\s+/g, '');
             const name = normalizeSearchValue(item.nama_lengkap || item.text || '');
             const nameCompact = compactSearchValue(item.nama_lengkap || item.text || '');
+            const nameCollapsed = collapseRepeatedLetters(item.nama_lengkap || item.text || '').replace(/\s+/g, '');
             const nameInitials = initialsOf(item.nama_lengkap || item.text || '');
             const identifiers = [item.nomor_tes, item.nisn, item.nomor_registrasi]
                 .map(value => normalizeSearchValue(value))
@@ -2198,18 +2242,15 @@
             if (name.startsWith(needle)) return 95;
             if (name.includes(needle)) return 85;
             if (needleCompact && nameCompact.includes(needleCompact)) return 80;
+            if (needleCollapsed && nameCollapsed === needleCollapsed) return 78;
+            if (needleCollapsed && nameCollapsed.includes(needleCollapsed)) return 76;
             if (needleCompact.length > 1 && nameInitials.startsWith(needleCompact)) return 74;
 
             const tokens = needle.split(' ').filter(Boolean);
             if (!tokens.length) return 0;
+            const words = name.split(' ').filter(Boolean);
 
-            const matched = tokens.filter(token => {
-                if (token.length === 1) {
-                    return name.split(' ').some(word => word.startsWith(token));
-                }
-
-                return name.split(' ').some(word => word.startsWith(token) || word.includes(token));
-            }).length;
+            const matched = tokens.filter(token => tokenMatchesName(token, words)).length;
 
             return matched === tokens.length ? 70 + matched : matched ? 30 + matched : 0;
         }
