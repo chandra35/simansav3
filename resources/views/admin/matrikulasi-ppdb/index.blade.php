@@ -218,9 +218,22 @@
                             <div class="mat-quick-search">
                                 <div>
                                     <label for="calon_siswa_ids">Cari Pendaftar PPDB</label>
-                                    <small>Pilih pendaftar, lalu preview sebelum sync.</small>
+                                    <small>Pencarian manual membaca seluruh data PPDB tahun ini, termasuk yang belum eligible.</small>
                                 </div>
                                 <select id="calon_siswa_ids" class="form-control" multiple></select>
+                            </div>
+
+                            <div class="mat-bulk-name-search">
+                                <div class="mat-bulk-name-head">
+                                    <div>
+                                        <strong>Cari Banyak Nama</strong>
+                                        <span>Satu nama per baris. Bisa memakai nama lengkap, sebagian nama, NISN, nomor registrasi, atau nomor tes.</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnSmartNameSearch">
+                                        <i class="fas fa-search-plus mr-1"></i>Cari & Tambahkan
+                                    </button>
+                                </div>
+                                <textarea id="smart_name_terms" class="form-control" rows="3" placeholder="Contoh:&#10;AMIRA NURIN NAJWA&#10;MUZZAKKY ALVANEZTERN&#10;ABEL AULIA"></textarea>
                             </div>
 
                             <div class="mat-actions">
@@ -789,6 +802,43 @@
         .mat-quick-search .select2-container--default .select2-selection__choice__remove {
             color: #4338ca;
             margin-right: .35rem;
+        }
+        .mat-bulk-name-search {
+            border: 1px solid #dbe4ee;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: .85rem;
+            margin-bottom: .85rem;
+        }
+        .mat-bulk-name-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: .65rem;
+        }
+        .mat-bulk-name-head strong,
+        .mat-bulk-name-head span {
+            display: block;
+        }
+        .mat-bulk-name-head strong {
+            color: #111827;
+            font-weight: 800;
+        }
+        .mat-bulk-name-head span {
+            color: #64748b;
+            font-size: .84rem;
+            line-height: 1.35;
+        }
+        .mat-bulk-name-search textarea {
+            border-color: #cbd5e1;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 86px;
+        }
+        .mat-bulk-name-search textarea:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 .2rem rgba(79, 70, 229, .13);
         }
         .mat-preview-frame {
             border: 1px solid #dbe4ee;
@@ -2109,7 +2159,59 @@
         }
 
         function normalizeSearchValue(value) {
-            return String(value || '').trim().toLowerCase();
+            return String(value || '')
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function compactSearchValue(value) {
+            return normalizeSearchValue(value).replace(/\s+/g, '');
+        }
+
+        function initialsOf(value) {
+            return normalizeSearchValue(value)
+                .split(' ')
+                .filter(Boolean)
+                .map(word => word.charAt(0))
+                .join('');
+        }
+
+        function candidateScore(term, item) {
+            const needle = normalizeSearchValue(term);
+            const needleCompact = compactSearchValue(term);
+            const name = normalizeSearchValue(item.nama_lengkap || item.text || '');
+            const nameCompact = compactSearchValue(item.nama_lengkap || item.text || '');
+            const nameInitials = initialsOf(item.nama_lengkap || item.text || '');
+            const identifiers = [item.nomor_tes, item.nisn, item.nomor_registrasi]
+                .map(value => normalizeSearchValue(value))
+                .filter(Boolean);
+
+            if (!needle) return 0;
+            if (identifiers.includes(needle)) return 120;
+            if (name === needle) return 110;
+            if (nameCompact === needleCompact) return 105;
+            if (name.startsWith(needle)) return 95;
+            if (name.includes(needle)) return 85;
+            if (needleCompact && nameCompact.includes(needleCompact)) return 80;
+            if (needleCompact.length > 1 && nameInitials.startsWith(needleCompact)) return 74;
+
+            const tokens = needle.split(' ').filter(Boolean);
+            if (!tokens.length) return 0;
+
+            const matched = tokens.filter(token => {
+                if (token.length === 1) {
+                    return name.split(' ').some(word => word.startsWith(token));
+                }
+
+                return name.split(' ').some(word => word.startsWith(token) || word.includes(token));
+            }).length;
+
+            return matched === tokens.length ? 70 + matched : matched ? 30 + matched : 0;
         }
 
         function splitSmartSearchTerms(text) {
@@ -2122,11 +2224,10 @@
         }
 
         function chooseBestCandidate(term, results) {
-            const normalized = normalizeSearchValue(term);
-            return (results || []).find(item => {
-                return [item.nomor_tes, item.nisn, item.nama_lengkap, item.text]
-                    .some(value => normalizeSearchValue(value) === normalized);
-            }) || (results || [])[0] || null;
+            return (results || [])
+                .map(item => ({ item, score: candidateScore(term, item) }))
+                .filter(row => row.score > 0)
+                .sort((a, b) => b.score - a.score)[0]?.item || (results || [])[0] || null;
         }
 
         function addCandidateSelections(candidates) {
@@ -2159,7 +2260,8 @@
                 const requests = terms.map(term => $.get(routes.candidates, {
                     q: term,
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
-                    include_all: 0
+                    include_all: 1,
+                    smart: 1
                 }).then(response => ({
                     term,
                     match: chooseBestCandidate(term, response.results || [])
@@ -2191,6 +2293,25 @@
             }
 
             return true;
+        }
+
+        async function runSmartNameSearch() {
+            const text = $('#smart_name_terms').val();
+            const terms = splitSmartSearchTerms(text);
+
+            if (!terms.length) {
+                Swal.fire('Nama belum diisi', 'Isi minimal satu nama, NISN, nomor registrasi, atau nomor tes.', 'warning');
+                return;
+            }
+
+            const $button = $('#btnSmartNameSearch');
+            setButtonLoading($button, true, 'Mencari...', '<i class="fas fa-search-plus mr-1"></i>Cari & Tambahkan');
+
+            try {
+                await handleSmartPaste(text);
+            } finally {
+                setButtonLoading($button, false, 'Mencari...', '<i class="fas fa-search-plus mr-1"></i>Cari & Tambahkan');
+            }
         }
 
         function showResult(result) {
@@ -2252,7 +2373,8 @@
                     data: params => ({
                         q: params.term,
                         tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
-                        include_all: 0
+                        include_all: 1,
+                        smart: 1
                     }),
                     processResults: data => data,
                     error: xhr => {
@@ -2264,6 +2386,8 @@
                     return candidateOption(item);
                 }
             });
+
+            $('#btnSmartNameSearch').on('click', runSmartNameSearch);
 
             $(document).on('paste', '.mat-quick-search .select2-search__field', function (event) {
                 const clipboard = event.originalEvent?.clipboardData || window.clipboardData;
@@ -2496,7 +2620,7 @@
                 $.post(routes.preview, {
                     calon_siswa_ids: ids,
                     tahun_pelajaran_id: $('#tahun_pelajaran_id').val(),
-                    include_all: 0
+                    include_all: 1
                 }).done(response => {
                     renderPreview(response.data || []);
                 }).fail(xhr => {

@@ -170,13 +170,14 @@ class PpdbMatrikulasiImportService
         return $result;
     }
 
-    public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20, bool $includeAll = false): Collection
+    public function searchCandidates(?string $term, ?string $tahunPelajaranId = null, int $limit = 20, bool $includeAll = false, bool $smart = false): Collection
     {
         $tahun = $tahunPelajaranId ? TahunPelajaran::find($tahunPelajaranId) : null;
         $rows = $this->fetchPpdbCandidates([
             'q' => $term,
             'limit' => $limit,
             'scope' => $includeAll ? 'all' : 'eligible',
+            'smart' => $smart ? 1 : 0,
         ], $tahun, false);
 
         return $rows->map(fn ($row) => $this->decorateCandidate($row, $tahunPelajaranId));

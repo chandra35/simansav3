@@ -65,6 +65,7 @@ class MatrikulasiPpdbController extends Controller
             'q' => 'nullable|string|max:100',
             'tahun_pelajaran_id' => 'nullable|exists:tahun_pelajaran,id',
             'include_all' => 'nullable|boolean',
+            'smart' => 'nullable|boolean',
         ]);
 
         try {
@@ -72,7 +73,8 @@ class MatrikulasiPpdbController extends Controller
                 $request->get('q'),
                 $request->get('tahun_pelajaran_id'),
                 50,
-                $request->boolean('include_all')
+                $request->boolean('include_all'),
+                $request->boolean('smart')
             );
 
             return response()->json([
