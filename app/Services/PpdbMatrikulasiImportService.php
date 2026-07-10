@@ -810,7 +810,7 @@ class PpdbMatrikulasiImportService
                     'ppdb_calon_dokumen_id' => $dokumen->ppdb_calon_dokumen_id,
                 ],
                 [
-                    'jenis_dokumen' => $dokumen->jenis_dokumen ?: $dokumen->nama_dokumen,
+                    'jenis_dokumen' => $this->siswaDocumentType($dokumen->jenis_dokumen, $dokumen->nama_dokumen ?: $dokumen->nama_file),
                     'ppdb_jenis_dokumen' => $dokumen->jenis_dokumen,
                     'ppdb_source_disk' => $dokumen->ppdb_source_disk,
                     'ppdb_source_url' => $dokumen->ppdb_source_url,
@@ -827,6 +827,24 @@ class PpdbMatrikulasiImportService
                 ]
             );
         }
+    }
+
+    private function siswaDocumentType(?string $jenisDokumen, ?string $namaDokumen = null): string
+    {
+        $value = strtolower(trim((string) ($jenisDokumen ?: $namaDokumen)));
+        $value = str_replace(['-', '_'], ' ', $value);
+
+        if ($value === '') {
+            return 'lainnya';
+        }
+
+        return match (true) {
+            str_contains($value, 'kartu keluarga') || preg_match('/\bkk\b/', $value) === 1 => 'kk',
+            str_contains($value, 'ijazah') || preg_match('/\bskl\b/', $value) === 1 => 'ijazah_smp',
+            preg_match('/\b(kip|pip|kks|pkh)\b/', $value) === 1 => 'kip',
+            str_contains($value, 'sktm') || str_contains($value, 'tidak mampu') => 'sktm',
+            default => 'lainnya',
+        };
     }
 
     private function pick(array $data, array $keys): mixed
