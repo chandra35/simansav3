@@ -1821,6 +1821,33 @@
             });
         }
 
+        function emptyPromotionResult() {
+            return {
+                success: 0,
+                existing: 0,
+                failed: 0,
+                items: []
+            };
+        }
+
+        function mergePromotionResult(target, source) {
+            target.success += Number(source.success || 0);
+            target.existing += Number(source.existing || 0);
+            target.failed += Number(source.failed || 0);
+            target.items = target.items.concat(source.items || []);
+
+            return target;
+        }
+
+        function postPromoteChunk(ids, tahunPelajaranId) {
+            return new Promise((resolve, reject) => {
+                $.post(routes.promoteToSiswa, {
+                    peserta_ids: ids,
+                    tahun_pelajaran_id: tahunPelajaranId
+                }).done(resolve).fail(reject);
+            });
+        }
+
         function paymentChip(row) {
             return row.has_registrasi_komite
                 ? '<span class="payment-chip is-paid">Sudah bayar</span>'
@@ -2694,24 +2721,46 @@
                     showCancelButton: true,
                     confirmButtonText: 'Ya, tetapkan',
                     cancelButtonText: 'Batal'
-                }).then(result => {
+                }).then(async result => {
                     if (!result.isConfirmed) return;
 
                     const $button = $('#btnPromoteToSiswa');
+                    const chunks = chunkArray(ids, 20);
+                    const aggregate = emptyPromotionResult();
+
                     setButtonLoading($button, true, 'Memproses...', '<i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10');
-                    $.post(routes.promoteToSiswa, {
-                        peserta_ids: ids,
-                        tahun_pelajaran_id: $('#tahun_pelajaran_id').val()
-                    }).done(response => {
+                    $('#btnSelectAllParticipants, #btnClearParticipantSelection, .btnValidationAction, #btnGenerateAccounts').prop('disabled', true);
+                    setProgressOverlay(true, `Menyiapkan penetapan ${ids.length} peserta menjadi siswa kelas 10...`, 8);
+
+                    try {
+                        for (let index = 0; index < chunks.length; index++) {
+                            const chunk = chunks[index];
+                            const startPercent = 10 + Math.round((index / chunks.length) * 80);
+                            setProgressOverlay(true, `Batch ${index + 1}/${chunks.length}: menetapkan ${chunk.length} peserta...`, startPercent);
+
+                            const response = await postPromoteChunk(chunk, $('#tahun_pelajaran_id').val());
+                            mergePromotionResult(aggregate, response.data || {});
+
+                            const donePercent = 10 + Math.round(((index + 1) / chunks.length) * 80);
+                            setProgressOverlay(true, `Batch ${index + 1}/${chunks.length} selesai. ${aggregate.success} berhasil, ${aggregate.existing} sudah siswa, ${aggregate.failed} gagal.`, donePercent);
+                        }
+
+                        setProgressOverlay(true, 'Memperbarui tabel peserta matrikulasi...', 95);
                         selectedParticipantRows.clear();
                         updateParticipantSelectionInfo();
                         participantTable.ajax.reload(null, false);
-                        Swal.fire('Selesai', response.message || 'Peserta berhasil ditetapkan menjadi siswa.', 'success');
-                    }).fail(xhr => {
-                        Swal.fire('Gagal menetapkan siswa', xhr.responseJSON?.message || 'Proses penetapan siswa gagal.', 'error');
-                    }).always(() => {
+                        Swal.fire(
+                            aggregate.failed ? 'Penetapan selesai sebagian' : 'Selesai',
+                            `Penetapan selesai: ${aggregate.success} berhasil, ${aggregate.existing} sudah siswa, ${aggregate.failed} gagal.`,
+                            aggregate.failed ? 'warning' : 'success'
+                        );
+                    } catch (xhr) {
+                        Swal.fire('Gagal menetapkan siswa', xhr.responseJSON?.message || 'Proses penetapan siswa gagal. Data yang sudah berhasil tidak akan dibuat dobel.', 'error');
+                    } finally {
+                        setProgressOverlay(false);
                         setButtonLoading($button, false, 'Memproses...', '<i class="fas fa-user-graduate mr-1"></i>Tetapkan Jadi Siswa Kelas 10');
-                    });
+                        $('#btnSelectAllParticipants, #btnClearParticipantSelection, .btnValidationAction, #btnGenerateAccounts').prop('disabled', false);
+                    }
                 });
             });
 
