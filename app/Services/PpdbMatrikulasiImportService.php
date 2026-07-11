@@ -609,6 +609,19 @@ class PpdbMatrikulasiImportService
         return $result;
     }
 
+    public function refreshPromotedSiswaData(MatrikulasiPeserta $peserta, TahunPelajaran $tahun): bool
+    {
+        $siswa = $peserta->siswa;
+        if (!$siswa) {
+            return false;
+        }
+
+        $siswa->update($this->siswaPayload($peserta, $tahun, $siswa->user));
+        $this->syncOrtuToSiswa($peserta, $siswa);
+
+        return true;
+    }
+
     private function upsertPeserta(object $candidate, MatrikulasiPeriode $periode, ?MatrikulasiKelompok $kelompok): MatrikulasiPeserta
     {
         $existing = MatrikulasiPeserta::where('matrikulasi_periode_id', $periode->id)
@@ -759,11 +772,24 @@ class PpdbMatrikulasiImportService
             'tempat_lahir' => $this->pick($data, ['tempat_lahir']),
             'tanggal_lahir' => $this->pick($data, ['tanggal_lahir']),
             'agama' => $this->pick($data, ['agama']),
+            'jumlah_saudara' => $this->pick($data, ['jumlah_saudara']),
+            'anak_ke' => $this->pick($data, ['anak_ke']),
+            'hobi' => $this->pick($data, ['hobi']),
+            'cita_cita' => $this->pick($data, ['cita_cita']),
             'nomor_hp' => $this->pick($data, ['nomor_hp', 'hp', 'no_hp']),
+            'alamat_sama_ortu' => (bool) ($this->pick($data, ['alamat_sama_ortu']) ?? false),
+            'jenis_tempat_tinggal' => $this->pick($data, ['jenis_tempat_tinggal']),
             'alamat_siswa' => $this->pick($data, ['alamat_siswa', 'alamat']),
             'rt_siswa' => $this->pick($data, ['rt_siswa', 'rt']),
             'rw_siswa' => $this->pick($data, ['rw_siswa', 'rw']),
+            'provinsi_id_siswa' => $this->pick($data, ['provinsi_id_siswa', 'provinsi_id']),
+            'kabupaten_id_siswa' => $this->pick($data, ['kabupaten_id_siswa', 'kabupaten_id']),
+            'kecamatan_id_siswa' => $this->pick($data, ['kecamatan_id_siswa', 'kecamatan_id']),
+            'kelurahan_id_siswa' => $this->pick($data, ['kelurahan_id_siswa', 'kelurahan_id']),
             'kodepos_siswa' => $this->pick($data, ['kodepos_siswa', 'kode_pos', 'kodepos']),
+            'npsn_asal_sekolah' => $this->pick($data, ['npsn_asal_sekolah', 'npsn']),
+            'data_diri_completed' => (bool) ($this->pick($data, ['data_diri_completed']) ?? $this->hasRequiredStudentData($data)),
+            'data_ortu_completed' => !empty($peserta->data_ortu),
             'tahun_masuk' => $tahun->tahun_mulai,
             'asal_siswa' => 'ppdb',
             'status_siswa' => 'aktif',
@@ -777,14 +803,17 @@ class PpdbMatrikulasiImportService
     {
         $ortu = $peserta->data_ortu ?: [];
 
-        Ortu::create([
+        Ortu::updateOrCreate([
             'siswa_id' => $siswa->id,
+        ], [
             'no_kk' => $this->pick($ortu, ['no_kk', 'nomor_kk']),
+            'status_ayah' => $this->pick($ortu, ['status_ayah']),
             'nik_ayah' => $this->pick($ortu, ['nik_ayah']),
             'nama_ayah' => $this->pick($ortu, ['nama_ayah']),
             'pekerjaan_ayah' => $this->pick($ortu, ['pekerjaan_ayah']),
             'penghasilan_ayah' => $this->pick($ortu, ['penghasilan_ayah']),
             'hp_ayah' => $this->pick($ortu, ['hp_ayah', 'no_hp_ayah']),
+            'status_ibu' => $this->pick($ortu, ['status_ibu']),
             'nik_ibu' => $this->pick($ortu, ['nik_ibu']),
             'nama_ibu' => $this->pick($ortu, ['nama_ibu']),
             'pekerjaan_ibu' => $this->pick($ortu, ['pekerjaan_ibu']),
@@ -793,8 +822,23 @@ class PpdbMatrikulasiImportService
             'alamat_ortu' => $this->pick($ortu, ['alamat_ortu', 'alamat']),
             'rt_ortu' => $this->pick($ortu, ['rt_ortu', 'rt']),
             'rw_ortu' => $this->pick($ortu, ['rw_ortu', 'rw']),
+            'provinsi_id' => $this->pick($ortu, ['provinsi_id']),
+            'kabupaten_id' => $this->pick($ortu, ['kabupaten_id']),
+            'kecamatan_id' => $this->pick($ortu, ['kecamatan_id']),
+            'kelurahan_id' => $this->pick($ortu, ['kelurahan_id']),
             'kodepos' => $this->pick($ortu, ['kodepos', 'kode_pos']),
         ]);
+    }
+
+    private function hasRequiredStudentData(array $data): bool
+    {
+        foreach (['nama_lengkap', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'agama'] as $key) {
+            if (empty($data[$key])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function syncMatrikulasiDocumentsToSiswa(MatrikulasiPeserta $peserta, Siswa $siswa, TahunPelajaran $tahun): void
