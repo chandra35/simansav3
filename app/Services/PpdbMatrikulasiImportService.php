@@ -9,6 +9,7 @@ use App\Models\MatrikulasiKelompok;
 use App\Models\MatrikulasiPeriode;
 use App\Models\MatrikulasiPeserta;
 use App\Models\Ortu;
+use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\SiswaKelas;
 use App\Models\TahunPelajaran;
@@ -787,7 +788,7 @@ class PpdbMatrikulasiImportService
             'kecamatan_id_siswa' => $this->pick($data, ['kecamatan_id_siswa', 'kecamatan_id']),
             'kelurahan_id_siswa' => $this->pick($data, ['kelurahan_id_siswa', 'kelurahan_id']),
             'kodepos_siswa' => $this->pick($data, ['kodepos_siswa', 'kode_pos', 'kodepos']),
-            'npsn_asal_sekolah' => $this->pick($data, ['npsn_asal_sekolah', 'npsn']),
+            'npsn_asal_sekolah' => $this->ensureSekolahAsal($data),
             'data_diri_completed' => (bool) ($this->pick($data, ['data_diri_completed']) ?? $this->hasRequiredStudentData($data)),
             'data_ortu_completed' => !empty($peserta->data_ortu),
             'tahun_masuk' => $tahun->tahun_mulai,
@@ -839,6 +840,32 @@ class PpdbMatrikulasiImportService
         }
 
         return true;
+    }
+
+    private function ensureSekolahAsal(array $data): ?string
+    {
+        $npsn = $this->pick($data, ['npsn_asal_sekolah', 'npsn']);
+        $npsn = preg_replace('/\D+/', '', (string) $npsn);
+
+        if (strlen($npsn) !== 8) {
+            return null;
+        }
+
+        Sekolah::firstOrCreate(
+            ['npsn' => $npsn],
+            [
+                'nama' => $this->pick($data, ['nama_sekolah_asal']) ?: 'Sekolah asal PPDB ' . $npsn,
+                'status' => $this->pick($data, ['status_sekolah_asal']),
+                'bentuk_pendidikan' => $this->pick($data, ['bentuk_sekolah_asal']),
+                'alamat_jalan' => $this->pick($data, ['alamat_sekolah_asal']),
+                'kecamatan' => $this->pick($data, ['kecamatan_sekolah_asal']),
+                'kabupaten_kota' => $this->pick($data, ['kabupaten_sekolah_asal']),
+                'provinsi' => $this->pick($data, ['provinsi_sekolah_asal']),
+                'last_fetched_at' => now(),
+            ]
+        );
+
+        return $npsn;
     }
 
     private function syncMatrikulasiDocumentsToSiswa(MatrikulasiPeserta $peserta, Siswa $siswa, TahunPelajaran $tahun): void
