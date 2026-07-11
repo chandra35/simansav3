@@ -83,13 +83,13 @@ class DokumenSiswa extends Model
 
     public function getFileUrl()
     {
-        // For new secure files, use authenticated route
-        if ($this->file_uuid) {
+        // Always stream through the authenticated preview route so private
+        // dokumen disks, imported PPDB files, and legacy rows resolve safely.
+        if ($this->file_path) {
             return route('siswa.dokumen.preview', $this->id);
         }
-        
-        // Legacy files (backward compatible)
-        return Storage::url($this->file_path);
+
+        return null;
     }
 
     public function getSecureFilePath()

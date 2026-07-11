@@ -617,7 +617,7 @@ class PpdbMatrikulasiImportService
             return false;
         }
 
-        $siswa->update($this->siswaPayload($peserta, $tahun, $siswa->user));
+        $siswa->update($this->siswaPayload($peserta, $tahun, $siswa->user, $siswa));
         $this->syncOrtuToSiswa($peserta, $siswa);
 
         return true;
@@ -760,14 +760,16 @@ class PpdbMatrikulasiImportService
         return $user;
     }
 
-    private function siswaPayload(MatrikulasiPeserta $peserta, TahunPelajaran $tahun, User $user): array
+    private function siswaPayload(MatrikulasiPeserta $peserta, TahunPelajaran $tahun, User $user, ?Siswa $existingSiswa = null): array
     {
         $data = $peserta->data_siswa ?: [];
+        $fotoProfile = $this->copyMatrikulasiPhotoToPublic($peserta, $existingSiswa);
 
         return [
             'user_id' => $user->id,
             'nisn' => $peserta->nisn,
             'nama_lengkap' => $peserta->nama_lengkap,
+            'foto_profile' => $fotoProfile,
             'jenis_kelamin' => $this->pick($data, ['jenis_kelamin', 'jk']),
             'nik' => $peserta->nik,
             'tempat_lahir' => $this->pick($data, ['tempat_lahir']),
@@ -894,6 +896,73 @@ class PpdbMatrikulasiImportService
                 ]
             );
         }
+    }
+
+    private function copyMatrikulasiPhotoToPublic(MatrikulasiPeserta $peserta, ?Siswa $existingSiswa = null): ?string
+    {
+        if ($existingSiswa?->foto_profile && StorageHelper::publicFileExists($existingSiswa->foto_profile)) {
+            return $existingSiswa->foto_profile;
+        }
+
+        $foto = $peserta->relationLoaded('dokumens')
+            ? $peserta->dokumens->first(fn ($dokumen) => $this->isPhotoDocument($dokumen))
+            : $peserta->dokumens()->get()->first(fn ($dokumen) => $this->isPhotoDocument($dokumen));
+
+        if (!$foto || empty($foto->file_path)) {
+            return $existingSiswa?->foto_profile;
+        }
+
+        $disk = $foto->storage_disk ?: StorageHelper::getDiskFromPath($foto->file_path);
+        if (!Storage::disk($disk)->exists($foto->file_path)) {
+            return $existingSiswa?->foto_profile;
+        }
+
+        $content = Storage::disk($disk)->get($foto->file_path);
+        if (!$this->looksLikeImage($content, $foto->mime_type)) {
+            return $existingSiswa?->foto_profile;
+        }
+
+        $extension = $this->imageExtensionFor($foto->mime_type, $foto->nama_file ?: $foto->file_path);
+        $path = 'foto_profile/siswa/ppdb-' . $peserta->id . '.' . $extension;
+        Storage::disk('public')->put($path, $content);
+
+        return $path;
+    }
+
+    private function isPhotoDocument(MatrikulasiDokumen $dokumen): bool
+    {
+        $jenis = strtolower(trim((string) $dokumen->jenis_dokumen));
+        $nama = strtolower(trim((string) ($dokumen->nama_dokumen ?: $dokumen->nama_file)));
+
+        return $jenis === 'foto'
+            || str_contains($jenis, 'pas foto')
+            || str_contains($nama, 'pas foto')
+            || preg_match('/\bfoto\b/', $nama) === 1;
+    }
+
+    private function looksLikeImage(string $content, ?string $mimeType): bool
+    {
+        if ($mimeType && str_starts_with(strtolower($mimeType), 'image/')) {
+            return true;
+        }
+
+        return str_starts_with($content, "\xFF\xD8\xFF")
+            || str_starts_with($content, "\x89PNG")
+            || str_starts_with($content, 'RIFF');
+    }
+
+    private function imageExtensionFor(?string $mimeType, ?string $name): string
+    {
+        $ext = strtolower(pathinfo((string) $name, PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return $ext === 'jpeg' ? 'jpg' : $ext;
+        }
+
+        return match (strtolower((string) $mimeType)) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
     }
 
     private function siswaDocumentType(?string $jenisDokumen, ?string $namaDokumen = null): string
