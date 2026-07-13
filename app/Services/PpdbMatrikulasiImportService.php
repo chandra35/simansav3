@@ -850,9 +850,9 @@ class PpdbMatrikulasiImportService
     private function ensureSekolahAsal(array $data): ?string
     {
         $npsn = $this->pick($data, ['npsn_asal_sekolah', 'npsn']);
-        $npsn = preg_replace('/\D+/', '', (string) $npsn);
+        $npsn = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $npsn));
 
-        if (strlen($npsn) !== 8) {
+        if (!preg_match('/^[A-Z0-9]{8}$/', $npsn)) {
             return null;
         }
 

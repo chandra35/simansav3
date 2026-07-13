@@ -350,9 +350,9 @@ class SiswaStatisticsController extends Controller
 
     private function normalizeNpsn($value): ?string
     {
-        $npsn = preg_replace('/\D+/', '', (string) $value);
+        $npsn = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $value));
 
-        return strlen($npsn) === 8 ? $npsn : null;
+        return preg_match('/^[A-Z0-9]{8}$/', $npsn) ? $npsn : null;
     }
 
     private function pick(array $data, array $keys): mixed
