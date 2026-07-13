@@ -81,6 +81,79 @@
             </div>
         </a>
     </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong']) }}" class="simansa-kpi-link">
+            <div class="simansa-kpi simansa-kpi--slate">
+                <div class="simansa-kpi__icon"><i class="fas fa-school"></i></div>
+                <div class="simansa-kpi__body">
+                    <div class="simansa-kpi__label">NPSN Kosong</div>
+                    <div class="simansa-kpi__value">{{ number_format($kpi['npsn_kosong']) }}</div>
+                    <div class="simansa-kpi__desc">{{ number_format($kpi['npsn_kosong_kelas_10']) }} siswa kelas 10 perlu dicek dari data PPDB.</div>
+                    <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <section class="simansa-analytics-section">
+            <div class="simansa-section-head">
+                <div>
+                    <h3>NPSN Kosong Kelas 10</h3>
+                    <p>Gunakan checker untuk mengisi NPSN asal sekolah dari staging matrikulasi atau API PPDB berdasarkan NISN.</p>
+                </div>
+                <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong', 'tingkat' => 10]) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-list mr-1"></i>Lihat Semua
+                </a>
+            </div>
+            <div class="table-responsive simansa-table-shell">
+                <table class="table table-hover simansa-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nama</th>
+                            <th>NISN</th>
+                            <th>No. Tes</th>
+                            <th>Kelas/Tingkat</th>
+                            <th>Status</th>
+                            <th class="text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($missingNpsnKelas10 as $index => $student)
+                            <tr id="missing-npsn-row-{{ $student['id'] }}">
+                                <td>{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="simansa-table-title">{{ $student['nama_lengkap'] }}</div>
+                                </td>
+                                <td>{{ $student['nisn'] ?: '-' }}</td>
+                                <td>{{ $student['nomor_tes'] ?: '-' }}</td>
+                                <td>{{ $student['kelas'] }}</td>
+                                <td>
+                                    <span class="badge badge-warning simansa-npsn-status" id="missing-npsn-status-{{ $student['id'] }}">Belum dicek</span>
+                                </td>
+                                <td class="text-right">
+                                    <button
+                                        type="button"
+                                        class="btn btn-xs btn-primary btn-check-npsn"
+                                        data-url="{{ route('admin.siswa.statistics.check-npsn-ppdb', $student['id']) }}"
+                                        data-id="{{ $student['id'] }}">
+                                        <i class="fas fa-search mr-1"></i>Cek PPDB
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Tidak ada siswa kelas 10 dengan NPSN asal sekolah kosong.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
 
 <div class="row">
@@ -429,6 +502,7 @@
         .simansa-kpi--green .simansa-kpi__icon { background: #dcfce7; color: #15803d; }
         .simansa-kpi--amber .simansa-kpi__icon { background: #fef3c7; color: #b45309; }
         .simansa-kpi--rose .simansa-kpi__icon { background: #ffe4e6; color: #be123c; }
+        .simansa-kpi--slate .simansa-kpi__icon { background: #e0f2fe; color: #0369a1; }
 
         a.simansa-kpi-link {
             display: block;
@@ -459,6 +533,12 @@
         .simansa-kpi--green .simansa-kpi__view-link { color: #15803d; }
         .simansa-kpi--amber .simansa-kpi__view-link { color: #b45309; }
         .simansa-kpi--rose  .simansa-kpi__view-link { color: #be123c; }
+        .simansa-kpi--slate .simansa-kpi__view-link { color: #0369a1; }
+
+        .simansa-npsn-status {
+            min-width: 92px;
+            padding: 0.42rem 0.55rem;
+        }
 
         .simansa-analytics-section {
             padding: 1.1rem;
@@ -750,6 +830,7 @@
 
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const completionData = @json([
@@ -767,6 +848,7 @@
         const mapAddressPoints = @json($mapAddressPoints);
         const mapSchoolPoints = @json($mapSchoolPoints);
         const siswaIndexBaseUrl = @json(route('admin.siswa.index'));
+        const csrfToken = @json(csrf_token());
 
         function formatNumber(value) {
             return new Intl.NumberFormat('id-ID').format(value || 0);
@@ -781,6 +863,45 @@
             });
             window.location.href = url.toString();
         }
+
+        $('.btn-check-npsn').on('click', function () {
+            const button = $(this);
+            const url = button.data('url');
+            const studentId = button.data('id');
+            const statusBadge = $('#missing-npsn-status-' + studentId);
+
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Mengecek');
+            statusBadge.removeClass('badge-warning badge-success badge-danger').addClass('badge-info').text('Mengecek...');
+
+            $.ajax({
+                url,
+                method: 'POST',
+                data: {_token: csrfToken},
+                success(response) {
+                    statusBadge.removeClass('badge-info badge-warning badge-danger').addClass('badge-success').text(response.npsn);
+                    button.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check mr-1"></i>Terisi');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'NPSN terisi',
+                        text: `${response.school_name} (${response.npsn}) dari ${response.source}.`,
+                        confirmButtonText: 'OK'
+                    });
+                },
+                error(xhr) {
+                    const message = xhr.responseJSON?.message || 'Gagal mengecek data PPDB.';
+                    statusBadge.removeClass('badge-info badge-warning badge-success').addClass('badge-danger').text('Gagal');
+                    button.prop('disabled', false).removeClass('btn-success').addClass('btn-primary').html('<i class="fas fa-search mr-1"></i>Cek PPDB');
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Belum ketemu',
+                        text: message,
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
 
         function buildBarChart(canvasId, labels, values, color, horizontal = false) {
             const ctx = document.getElementById(canvasId);

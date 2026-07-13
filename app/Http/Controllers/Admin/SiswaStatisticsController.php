@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MatrikulasiPeserta;
+use App\Models\Sekolah;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SiswaStatisticsController extends Controller
 {
@@ -25,6 +29,11 @@ class SiswaStatisticsController extends Controller
         $sudahLogin = $this->countStudentsWhoHaveLoggedIn(clone $baseQuery);
         $belumPernahLogin = max($totalSiswa - $sudahLogin, 0);
         $belumLengkap = max($totalSiswa - $dataLengkap, 0);
+        $npsnKosong = $this->applyMissingNpsnScope(clone $baseQuery)->count();
+        $npsnKosongKelas10 = $this->applyKelasTingkatScope(
+            $this->applyMissingNpsnScope(clone $baseQuery),
+            10
+        )->count();
 
         $kpi = [
             'total_siswa' => $totalSiswa,
@@ -32,9 +41,12 @@ class SiswaStatisticsController extends Controller
             'belum_lengkap' => $belumLengkap,
             'sudah_login' => $sudahLogin,
             'belum_pernah_login' => $belumPernahLogin,
+            'npsn_kosong' => $npsnKosong,
+            'npsn_kosong_kelas_10' => $npsnKosongKelas10,
         ];
 
         $topSchools = $this->topOriginSchools();
+        $missingNpsnKelas10 = $this->missingNpsnStudentsByTingkat(10);
         $educationSpread = $this->educationSpread();
         $addressProvinceSpread = $this->addressSpreadByLevel('province');
         $addressCitySpread = $this->addressSpreadByLevel('city');
@@ -75,6 +87,7 @@ class SiswaStatisticsController extends Controller
         return view('admin.siswa.statistics', [
             'kpi' => $kpi,
             'topSchools' => $topSchools,
+            'missingNpsnKelas10' => $missingNpsnKelas10,
             'educationSpread' => $educationSpread,
             'addressProvinceSpread' => $addressProvinceSpread,
             'addressCitySpread' => $addressCitySpread,
@@ -85,9 +98,105 @@ class SiswaStatisticsController extends Controller
         ]);
     }
 
+    public function checkNpsnFromPpdb(Request $request, Siswa $siswa)
+    {
+        $this->authorize('edit-siswa');
+
+        $nisn = preg_replace('/\D+/', '', (string) $siswa->nisn);
+        if ($nisn === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa belum memiliki NISN, sehingga data asal sekolah tidak bisa dicek otomatis.',
+            ], 422);
+        }
+
+        $candidate = $this->findPpdbCandidateForSiswa($siswa);
+        if (!$candidate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data PPDB dengan NISN tersebut belum ditemukan.',
+            ], 404);
+        }
+
+        $npsn = $this->normalizeNpsn($this->pick($candidate, ['npsn_asal_sekolah', 'npsn']));
+        if (!$npsn) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data PPDB ditemukan, tetapi NPSN asal sekolah masih kosong atau tidak valid.',
+            ], 422);
+        }
+
+        Sekolah::updateOrCreate(
+            ['npsn' => $npsn],
+            [
+                'nama' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
+                'status' => $this->pick($candidate, ['status_sekolah_asal']),
+                'bentuk_pendidikan' => $this->pick($candidate, ['bentuk_sekolah_asal']) ?: 'SMP/MTs',
+                'alamat_jalan' => $this->pick($candidate, ['alamat_sekolah_asal']),
+                'kecamatan' => $this->pick($candidate, ['kecamatan_sekolah_asal']),
+                'kabupaten_kota' => $this->pick($candidate, ['kabupaten_sekolah_asal']),
+                'provinsi' => $this->pick($candidate, ['provinsi_sekolah_asal']),
+                'last_fetched_at' => now(),
+            ]
+        );
+
+        $siswa->forceFill(['npsn_asal_sekolah' => $npsn])->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'NPSN asal sekolah berhasil diisi dari data PPDB.',
+            'npsn' => $npsn,
+            'school_name' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
+            'source' => $candidate['_source'] ?? 'PPDB',
+        ]);
+    }
+
     private function baseSiswaQuery()
     {
         return $this->applyRoleScope(Siswa::query()->from('siswa'));
+    }
+
+    private function applyMissingNpsnScope($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('siswa.npsn_asal_sekolah')
+                ->orWhereRaw("TRIM(COALESCE(siswa.npsn_asal_sekolah, '')) = ''");
+        });
+    }
+
+    private function applyKelasTingkatScope($query, int $tingkat)
+    {
+        return $query->whereExists(function ($subQuery) use ($tingkat) {
+            $subQuery->select(DB::raw(1))
+                ->from('siswa_kelas')
+                ->whereColumn('siswa_kelas.siswa_id', 'siswa.id')
+                ->whereNull('siswa_kelas.deleted_at')
+                ->where('siswa_kelas.status', 'aktif')
+                ->where('siswa_kelas.tingkat', $tingkat);
+        });
+    }
+
+    private function missingNpsnStudentsByTingkat(int $tingkat)
+    {
+        return $this->applyKelasTingkatScope(
+                $this->applyMissingNpsnScope($this->baseSiswaQuery()),
+                $tingkat
+            )
+            ->with(['kelasAktif'])
+            ->orderBy('siswa.nama_lengkap')
+            ->limit(50)
+            ->get(['siswa.id', 'siswa.nisn', 'siswa.nama_lengkap', 'siswa.nomor_tes'])
+            ->map(function (Siswa $siswa) use ($tingkat) {
+                $kelas = $siswa->kelasAktif->first();
+
+                return [
+                    'id' => $siswa->id,
+                    'nama_lengkap' => $siswa->nama_lengkap,
+                    'nisn' => $siswa->nisn,
+                    'nomor_tes' => $siswa->nomor_tes,
+                    'kelas' => $kelas?->nama_kelas ?: 'Tingkat ' . $tingkat . ' - tanpa rombel',
+                ];
+            });
     }
 
     private function applyRoleScope($query)
@@ -119,6 +228,103 @@ class SiswaStatisticsController extends Controller
                     ->where('activity_logs.activity_type', 'login');
             })
             ->count();
+    }
+
+    private function findPpdbCandidateForSiswa(Siswa $siswa): ?array
+    {
+        $fromMatrikulasi = MatrikulasiPeserta::query()
+            ->where(function ($query) use ($siswa) {
+                $query->where('siswa_id', $siswa->id);
+
+                if ($siswa->nisn) {
+                    $query->orWhere('nisn', $siswa->nisn);
+                }
+
+                if ($siswa->ppdb_id) {
+                    $query->orWhere('ppdb_calon_siswa_id', $siswa->ppdb_id);
+                }
+            })
+            ->latest('updated_at')
+            ->first();
+
+        if ($fromMatrikulasi) {
+            $data = (array) ($fromMatrikulasi->data_ppdb ?: $fromMatrikulasi->data_siswa ?: []);
+            $data['npsn_asal_sekolah'] = $this->pick($data, ['npsn_asal_sekolah', 'npsn'])
+                ?: $this->pick((array) $fromMatrikulasi->data_siswa, ['npsn_asal_sekolah', 'npsn']);
+            $data['nama_sekolah_asal'] = $this->pick($data, ['nama_sekolah_asal', 'asal_sekolah'])
+                ?: $this->pick((array) $fromMatrikulasi->data_siswa, ['nama_sekolah_asal', 'asal_sekolah']);
+            $data['_source'] = 'staging matrikulasi';
+
+            if ($this->normalizeNpsn($this->pick($data, ['npsn_asal_sekolah', 'npsn']))) {
+                return $data;
+            }
+        }
+
+        return $this->fetchPpdbCandidateFromApi($siswa);
+    }
+
+    private function fetchPpdbCandidateFromApi(Siswa $siswa): ?array
+    {
+        $baseUrl = rtrim((string) config('services.ppdb_sync.base_url'), '/');
+        $token = (string) config('services.ppdb_sync.token');
+
+        if ($baseUrl === '' || $token === '') {
+            return null;
+        }
+
+        try {
+            $response = Http::withToken($token)
+                ->acceptJson()
+                ->timeout((int) config('services.ppdb_sync.timeout', 30))
+                ->get($baseUrl . '/api/internal/simansa/pendaftar', [
+                    'q' => $siswa->nisn,
+                    'scope' => 'all',
+                    'smart' => 0,
+                    'limit' => 5,
+                    'per_page' => 5,
+                ]);
+
+            if (!$response->successful()) {
+                return null;
+            }
+
+            $nisn = preg_replace('/\D+/', '', (string) $siswa->nisn);
+            $candidate = collect($response->json('data', []))
+                ->map(fn ($row) => (array) $row)
+                ->first(fn ($row) => preg_replace('/\D+/', '', (string) ($row['nisn'] ?? '')) === $nisn);
+
+            if ($candidate) {
+                $candidate['_source'] = 'API PPDB';
+            }
+
+            return $candidate;
+        } catch (\Throwable $exception) {
+            Log::warning('Gagal mengecek NPSN asal sekolah dari API PPDB', [
+                'siswa_id' => $siswa->id,
+                'nisn' => $siswa->nisn,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    private function normalizeNpsn($value): ?string
+    {
+        $npsn = preg_replace('/\D+/', '', (string) $value);
+
+        return strlen($npsn) === 8 ? $npsn : null;
+    }
+
+    private function pick(array $data, array $keys): mixed
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $data) && filled($data[$key])) {
+                return $data[$key];
+            }
+        }
+
+        return null;
     }
 
     private function topOriginSchools()

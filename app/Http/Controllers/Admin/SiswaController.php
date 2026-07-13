@@ -60,6 +60,9 @@ class SiswaController extends Controller
             'province_name',
             'status',
             'login_status',
+            'npsn_status',
+            'tingkat',
+            'kelas_id',
         ]))->filter(fn ($value) => filled($value))->all();
 
         return view('admin.siswa.index', compact('stats', 'tingkatOptions', 'contextScope', 'contextQuery'));
@@ -1106,6 +1109,13 @@ class SiswaController extends Controller
 
     private function applyStatisticsDrilldownFilters($query, Request $request)
     {
+        if ($request->input('npsn_status') === 'kosong') {
+            $query->where(function ($npsnQuery) {
+                $npsnQuery->whereNull('siswa.npsn_asal_sekolah')
+                    ->orWhereRaw("TRIM(COALESCE(siswa.npsn_asal_sekolah, '')) = ''");
+            });
+        }
+
         if ($request->filled('school_npsn') || $request->filled('school_name') || $request->filled('school_city_name') || $request->filled('school_province_name') || $request->filled('education_form')) {
             $query->leftJoin('sekolah as sekolah_asal_filter', 'sekolah_asal_filter.npsn', '=', 'siswa.npsn_asal_sekolah');
 
@@ -1181,6 +1191,13 @@ class SiswaController extends Controller
 
     private function buildStatisticsContext(Request $request): ?array
     {
+        if ($request->input('npsn_status') === 'kosong') {
+            return [
+                'title' => 'Filter Statistik: NPSN Asal Sekolah',
+                'description' => 'Siswa yang NPSN asal sekolahnya masih kosong',
+            ];
+        }
+
         if ($request->filled('login_status')) {
             $label = $request->login_status === 'sudah' ? 'Sudah Pernah Login' : 'Belum Pernah Login';
             return [
