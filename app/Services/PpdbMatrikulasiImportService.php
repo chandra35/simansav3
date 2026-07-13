@@ -564,6 +564,7 @@ class PpdbMatrikulasiImportService
 
                 $this->syncOrtuToSiswa($peserta, $siswa);
                 $this->syncMatrikulasiDocumentsToSiswa($peserta, $siswa, $tahun);
+                $this->ensurePromotedSiswaPhoto($peserta, $siswa);
 
                 SiswaKelas::create([
                     'siswa_id' => $siswa->id,
@@ -619,6 +620,7 @@ class PpdbMatrikulasiImportService
 
         $siswa->update($this->siswaPayload($peserta, $tahun, $siswa->user, $siswa));
         $this->syncOrtuToSiswa($peserta, $siswa);
+        $this->ensurePromotedSiswaPhoto($peserta, $siswa);
 
         return true;
     }
@@ -925,9 +927,22 @@ class PpdbMatrikulasiImportService
 
         $extension = $this->imageExtensionFor($foto->mime_type, $foto->nama_file ?: $foto->file_path);
         $path = 'foto_profile/siswa/ppdb-' . $peserta->id . '.' . $extension;
+        Storage::disk('public')->makeDirectory('foto_profile/siswa');
         Storage::disk('public')->put($path, $content);
 
-        return $path;
+        return StorageHelper::publicFileExists($path) ? $path : $existingSiswa?->foto_profile;
+    }
+
+    private function ensurePromotedSiswaPhoto(MatrikulasiPeserta $peserta, Siswa $siswa): void
+    {
+        if ($siswa->foto_profile && StorageHelper::publicFileExists($siswa->foto_profile)) {
+            return;
+        }
+
+        $path = $this->copyMatrikulasiPhotoToPublic($peserta, null);
+        if ($path && StorageHelper::publicFileExists($path)) {
+            $siswa->forceFill(['foto_profile' => $path])->save();
+        }
     }
 
     private function isPhotoDocument(MatrikulasiDokumen $dokumen): bool
