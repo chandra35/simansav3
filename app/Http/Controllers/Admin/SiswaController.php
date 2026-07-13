@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Siswa;
 use App\Models\Ortu;
 use App\Models\DokumenSiswa;
+use App\Models\Sekolah;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
