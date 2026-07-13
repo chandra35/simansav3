@@ -5,8 +5,8 @@
     <title>ID Card Siswa - {{ $setting->nama_sekolah ?? 'SIMANSA' }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 4.5mm 5mm;
+            size: A4 portrait;
+            margin: 5mm;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -22,7 +22,7 @@
         /* === GRID: front+back side by side === */
         .card-grid {
             border-collapse: separate;
-            border-spacing: 1.35mm;
+            border-spacing: 2mm 4mm;
             margin: 0 auto;
         }
         .card-grid td {
@@ -30,7 +30,7 @@
             padding: 0;
         }
         .pair-gap {
-            width: 8mm;
+            width: 12mm;
         }
 
         /* === CARD SHELL: standard vertical ID card 54mm x 86mm === */
@@ -292,18 +292,14 @@
         }
     }
     // 2 pairs per row × 2 rows = 4 persons per A4 landscape page
-    $chunks = $allSiswa->chunk(4);
+    $chunks = $allSiswa->chunk(3); // 3 students per A4 portrait page.
 @endphp
 
 @foreach($chunks as $chunkIndex => $chunk)
 <div class="{{ !$loop->last ? 'page-break' : '' }}">
     <table class="card-grid">
-    @foreach($chunk->chunk(2) as $row)
+    @foreach($chunk as $siswa)
         <tr>
-        @foreach($row as $rowIdx => $siswa)
-            @if($rowIdx > 0)
-            <td class="pair-gap"></td>
-            @endif
             {{-- FRONT (ASN-style: white + gradient bottom) --}}
             <td>
                 <div class="id-card" style="background-image: url('{{ $bgFrontBase64 }}');">
@@ -362,6 +358,7 @@
                     </div>
                 </div>
             </td>
+            <td class="pair-gap"></td>
             {{-- BACK (full gradient) --}}
             <td>
                 <div class="id-card" style="background-image: url('{{ $bgBackBase64 }}');">
@@ -425,13 +422,6 @@
                     </div>
                 </div>
             </td>
-        @endforeach
-        {{-- Fill empty cells if odd number --}}
-        @if($row->count() < 2)
-            <td class="pair-gap"></td>
-            <td></td>
-            <td></td>
-        @endif
         </tr>
     @endforeach
     </table>
