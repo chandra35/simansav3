@@ -2174,15 +2174,15 @@ a {
 }
 
 /* ===============================================
-   SIMANSA UI POLISH — operational dashboard
+   SIMANSA UI POLISH - siswa operational dashboard
    =============================================== */
-.simansa-hero {
+.simansa-siswa-management .simansa-hero {
     grid-template-columns: minmax(0, 1.35fr) minmax(280px, .75fr);
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
-.simansa-hero__main {
+.simansa-siswa-management .simansa-hero__main {
     background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
     border: 1px solid rgba(219, 234, 254, .22);
     border-radius: 16px;
@@ -2190,7 +2190,7 @@ a {
     box-shadow: 0 16px 34px rgba(15, 23, 42, .12);
 }
 
-.simansa-hero__eyebrow {
+.simansa-siswa-management .simansa-hero__eyebrow {
     margin-bottom: .45rem;
     font-size: .72rem;
     font-weight: 800;
@@ -2198,7 +2198,8 @@ a {
     color: rgba(240, 253, 250, .94) !important;
 }
 
-.simansa-hero__title {
+.content-header .simansa-siswa-management .simansa-hero h1.simansa-hero__title,
+.simansa-siswa-management .simansa-hero__title {
     font-size: clamp(1.45rem, 1.9vw, 1.95rem) !important;
     font-weight: 800 !important;
     line-height: 1.12;
@@ -2207,18 +2208,18 @@ a {
     color: #ffffff !important;
 }
 
-.simansa-hero__subtitle {
+.simansa-siswa-management .simansa-hero__subtitle {
     max-width: 760px;
     font-size: .9rem;
     line-height: 1.55;
     color: rgba(255, 255, 255, .9) !important;
 }
 
-.simansa-hero__side {
+.simansa-siswa-management .simansa-hero__side {
     gap: .75rem;
 }
 
-.simansa-hero-chip {
+.simansa-siswa-management .simansa-hero-chip {
     position: relative;
     overflow: hidden;
     border-radius: 14px;
@@ -2228,7 +2229,7 @@ a {
     box-shadow: 0 14px 30px rgba(15, 23, 42, .09);
 }
 
-.simansa-hero-chip::before {
+.simansa-siswa-management .simansa-hero-chip::before {
     content: "";
     position: absolute;
     left: 0;
@@ -2238,7 +2239,7 @@ a {
     background: linear-gradient(180deg, #2563eb, #0f766e);
 }
 
-.simansa-hero-chip::after {
+.simansa-siswa-management .simansa-hero-chip::after {
     content: "";
     position: absolute;
     right: -22px;
@@ -2249,7 +2250,7 @@ a {
     background: rgba(37, 99, 235, .08);
 }
 
-.simansa-hero-chip__label {
+.simansa-siswa-management .simansa-hero-chip__label {
     position: relative;
     z-index: 1;
     margin-bottom: .25rem;
@@ -2259,7 +2260,7 @@ a {
     color: #475569;
 }
 
-.simansa-hero-chip__value {
+.simansa-siswa-management .simansa-hero-chip__value {
     position: relative;
     z-index: 1;
     font-size: 1.48rem;
@@ -2268,14 +2269,14 @@ a {
     color: #0f172a;
 }
 
-.simansa-stat-card {
+.simansa-siswa-management .simansa-stat-card {
     min-height: 124px;
     border-radius: 14px !important;
     padding: 1rem;
     box-shadow: 0 12px 26px rgba(15, 23, 42, .1);
 }
 
-.simansa-stat-card__icon {
+.simansa-siswa-management .simansa-stat-card__icon {
     width: 40px;
     height: 40px;
     flex-basis: 40px;
@@ -2283,55 +2284,55 @@ a {
     background: rgba(255, 255, 255, .18);
 }
 
-.simansa-stat-card__label {
+.simansa-siswa-management .simansa-stat-card__label {
     font-size: .68rem;
     letter-spacing: .075em;
     opacity: .94;
 }
 
-.simansa-stat-card__value {
+.simansa-siswa-management .simansa-stat-card__value {
     font-size: 1.62rem;
     font-weight: 800;
     margin-bottom: .32rem;
 }
 
-.simansa-stat-card__desc {
+.simansa-siswa-management .simansa-stat-card__desc {
     font-size: .76rem;
     line-height: 1.35;
     opacity: .9;
 }
 
-.simansa-management-card {
+.simansa-siswa-management .simansa-management-card {
     border: 1px solid rgba(203, 213, 225, .75) !important;
     border-radius: 16px !important;
     box-shadow: 0 16px 36px rgba(15, 23, 42, .08) !important;
 }
 
-.simansa-management-card > .card-header {
+.simansa-siswa-management .simansa-management-card > .card-header {
     background: #ffffff !important;
     border-bottom: 1px solid rgba(203, 213, 225, .85) !important;
     padding: 1rem 1.1rem !important;
 }
 
-.simansa-management-card > .card-header .card-title,
-.simansa-management-card > .card-header .card-title i {
+.simansa-siswa-management .simansa-management-card > .card-header .card-title,
+.simansa-siswa-management .simansa-management-card > .card-header .card-title i {
     color: #0f172a !important;
 }
 
-.simansa-management-card > .card-header .card-title {
+.simansa-siswa-management .simansa-management-card > .card-header .card-title {
     font-size: 1.02rem;
     font-weight: 800;
     letter-spacing: 0;
 }
 
-.simansa-management-card .card-tools .btn {
+.simansa-siswa-management .simansa-management-card .card-tools .btn {
     border-radius: 8px;
     font-weight: 700;
     letter-spacing: 0;
     box-shadow: none !important;
 }
 
-.simansa-filter-panel {
+.simansa-siswa-management .simansa-filter-panel {
     border: 1px solid rgba(203, 213, 225, .9);
     border-radius: 14px;
     background: #f8fafc;
@@ -2339,26 +2340,26 @@ a {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
 }
 
-.simansa-filter-label {
+.simansa-siswa-management .simansa-filter-label {
     font-size: .76rem;
     font-weight: 800;
     letter-spacing: .025em;
     color: #334155;
 }
 
-.simansa-filter-panel .form-control,
-.simansa-filter-panel .select2-selection {
+.simansa-siswa-management .simansa-filter-panel .form-control,
+.simansa-siswa-management .simansa-filter-panel .select2-selection {
     border-color: #cbd5e1 !important;
     color: #0f172a;
     font-weight: 600;
 }
 
-.simansa-filter-panel .form-control:focus {
+.simansa-siswa-management .simansa-filter-panel .form-control:focus {
     border-color: #2563eb;
     box-shadow: 0 0 0 .16rem rgba(37, 99, 235, .14);
 }
 
-.simansa-btn-strong {
+.simansa-siswa-management .simansa-btn-strong {
     background: linear-gradient(135deg, #2563eb, #0f766e) !important;
     border: 0 !important;
     color: #ffffff !important;
@@ -2366,7 +2367,7 @@ a {
     border-radius: 8px !important;
 }
 
-.simansa-btn-contrast {
+.simansa-siswa-management .simansa-btn-contrast {
     background: #0f172a !important;
     border-color: #0f172a !important;
     color: #ffffff !important;

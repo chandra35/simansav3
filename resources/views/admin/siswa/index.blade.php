@@ -5,25 +5,27 @@
 
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow">
-                <i class="fas fa-user-graduate"></i>
-                Manajemen Peserta Didik
+    <div class="simansa-siswa-management">
+        <div class="simansa-hero">
+            <div class="simansa-hero__main">
+                <div class="simansa-hero__eyebrow">
+                    <i class="fas fa-user-graduate"></i>
+                    Manajemen Peserta Didik
+                </div>
+                <h1 class="simansa-hero__title">Data Siswa</h1>
+                <p class="simansa-hero__subtitle">
+                    Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional yang lebih rapi.
+                </p>
             </div>
-            <h1 class="simansa-hero__title">Data Siswa</h1>
-            <p class="simansa-hero__subtitle">
-                Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional yang lebih rapi.
-            </p>
-        </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label"><i class="fas fa-users mr-1"></i> Total Siswa</span>
-                <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label"><i class="fas fa-check-circle mr-1"></i> Data Lengkap</span>
-                <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
+            <div class="simansa-hero__side">
+                <div class="simansa-hero-chip">
+                    <span class="simansa-hero-chip__label"><i class="fas fa-users mr-1"></i> Total Siswa</span>
+                    <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
+                </div>
+                <div class="simansa-hero-chip">
+                    <span class="simansa-hero-chip__label"><i class="fas fa-check-circle mr-1"></i> Data Lengkap</span>
+                    <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -31,6 +33,7 @@
 
 @section('content')
 
+<div class="simansa-siswa-management">
 <div class="row mb-4">
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="simansa-stat-card simansa-stat-card--blue">
@@ -440,6 +443,8 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>
 @stop
 
