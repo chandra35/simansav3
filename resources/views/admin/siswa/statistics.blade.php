@@ -104,9 +104,14 @@
                     <h3>NPSN Kosong Kelas 10</h3>
                     <p>Gunakan checker NISN SIMANSA untuk mengisi NPSN asal sekolah. Jika belum ditemukan, sistem mencoba data matrikulasi/PPDB.</p>
                 </div>
-                <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong', 'tingkat' => 10]) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-list mr-1"></i>Lihat Semua
-                </a>
+                <div class="simansa-section-actions">
+                    <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNpsn" @if($missingNpsnKelas10->isEmpty()) disabled @endif>
+                        <i class="fas fa-tasks mr-1"></i>Bulk Check
+                    </button>
+                    <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong', 'tingkat' => 10]) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list mr-1"></i>Lihat Semua
+                    </a>
+                </div>
             </div>
             <div class="table-responsive simansa-table-shell">
                 <table class="table table-hover simansa-table">
@@ -139,7 +144,9 @@
                                         type="button"
                                         class="btn btn-xs btn-primary btn-check-npsn"
                                         data-url="{{ route('admin.siswa.statistics.check-npsn-ppdb', $student['id']) }}"
-                                        data-id="{{ $student['id'] }}">
+                                        data-id="{{ $student['id'] }}"
+                                        data-name="{{ $student['nama_lengkap'] }}"
+                                        data-nisn="{{ $student['nisn'] ?: '-' }}">
                                         <i class="fas fa-search mr-1"></i>Cek NISN
                                     </button>
                                 </td>
@@ -153,6 +160,31 @@
                 </table>
             </div>
         </section>
+    </div>
+</div>
+
+<div id="bulkNpsnOverlay" class="simansa-progress-overlay" aria-hidden="true">
+    <div class="simansa-progress-modal">
+        <div class="simansa-progress-modal__head">
+            <div>
+                <div class="simansa-progress-eyebrow"><i class="fas fa-id-card mr-1"></i>Bulk Check NPSN</div>
+                <h3>Mengecek NPSN Asal Sekolah</h3>
+                <p>Proses berjalan satu per satu agar layanan checker tetap stabil.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-light" id="btnCloseBulkOverlay" disabled>
+                <i class="fas fa-times mr-1"></i>Tutup
+            </button>
+        </div>
+        <div class="simansa-progress-summary">
+            <div>
+                <span id="bulkNpsnProgressText">Menyiapkan proses...</span>
+                <strong id="bulkNpsnCounter">0/0</strong>
+            </div>
+            <div class="progress simansa-progress-bar">
+                <div id="bulkNpsnProgressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="simansa-progress-log" id="bulkNpsnLog"></div>
     </div>
 </div>
 
@@ -540,6 +572,122 @@
             padding: 0.42rem 0.55rem;
         }
 
+        .simansa-section-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .simansa-progress-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1080;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            background: rgba(15, 23, 42, 0.58);
+            backdrop-filter: blur(4px);
+        }
+
+        .simansa-progress-overlay.is-active {
+            display: flex;
+        }
+
+        .simansa-progress-modal {
+            width: min(760px, 100%);
+            max-height: min(720px, 92vh);
+            display: flex;
+            flex-direction: column;
+            border-radius: 18px;
+            background: #fff;
+            border: 1px solid #d9e3f0;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.28);
+            overflow: hidden;
+        }
+
+        .simansa-progress-modal__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.1rem 1.2rem;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+        }
+
+        .simansa-progress-modal__head h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0.2rem 0 0.25rem;
+        }
+
+        .simansa-progress-modal__head p {
+            color: rgba(255, 255, 255, 0.84);
+            margin: 0;
+        }
+
+        .simansa-progress-eyebrow {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            opacity: 0.9;
+        }
+
+        .simansa-progress-summary {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid #e5edf7;
+            background: #f8fafc;
+        }
+
+        .simansa-progress-summary > div:first-child {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            color: #334155;
+        }
+
+        .simansa-progress-bar {
+            height: 0.72rem;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+        .simansa-progress-log {
+            padding: 0.25rem 1.2rem 1rem;
+            overflow: auto;
+            min-height: 220px;
+            max-height: 380px;
+            background: #fff;
+        }
+
+        .simansa-progress-log-row {
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr);
+            gap: 0.75rem;
+            padding: 0.82rem 0;
+            border-bottom: 1px solid #edf2f7;
+            color: #334155;
+        }
+
+        .simansa-progress-log-row:last-child {
+            border-bottom: 0;
+        }
+
+        .simansa-progress-log-row strong {
+            color: #0f172a;
+        }
+
+        .simansa-progress-log-meta {
+            color: #64748b;
+            font-size: 0.86rem;
+            margin-top: 0.15rem;
+        }
+
         .simansa-analytics-section {
             padding: 1.1rem;
             border-radius: 22px;
@@ -864,16 +1012,50 @@
             window.location.href = url.toString();
         }
 
-        $('.btn-check-npsn').on('click', function () {
-            const button = $(this);
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function (char) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[char];
+            });
+        }
+
+        function appendBulkLog(statusClass, title, message) {
+            const badgeClass = statusClass === 'success' ? 'badge-success' : (statusClass === 'danger' ? 'badge-danger' : 'badge-info');
+            const label = statusClass === 'success' ? 'Berhasil' : (statusClass === 'danger' ? 'Gagal' : 'Proses');
+            $('#bulkNpsnLog').prepend(`
+                <div class="simansa-progress-log-row">
+                    <div><span class="badge ${badgeClass}">${label}</span></div>
+                    <div>
+                        <strong>${escapeHtml(title)}</strong>
+                        <div class="simansa-progress-log-meta">${escapeHtml(message)}</div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function setBulkProgress(done, total, text) {
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            $('#bulkNpsnCounter').text(`${done}/${total}`);
+            $('#bulkNpsnProgressText').text(text);
+            $('#bulkNpsnProgressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+        }
+
+        function runNpsnCheck(button, options = {}) {
             const url = button.data('url');
             const studentId = button.data('id');
+            const studentName = button.data('name') || 'Siswa';
+            const nisn = button.data('nisn') || '-';
             const statusBadge = $('#missing-npsn-status-' + studentId);
 
             button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Mengecek');
             statusBadge.removeClass('badge-warning badge-success badge-danger').addClass('badge-info').text('Mengecek...');
 
-            $.ajax({
+            return $.ajax({
                 url,
                 method: 'POST',
                 data: {_token: csrfToken},
@@ -881,26 +1063,94 @@
                     statusBadge.removeClass('badge-info badge-warning badge-danger').addClass('badge-success').text(response.npsn);
                     button.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check mr-1"></i>Terisi');
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'NPSN terisi',
-                        text: `${response.school_name} (${response.npsn}) dari ${response.source}.`,
-                        confirmButtonText: 'OK'
-                    });
+                    if (options.log) {
+                        appendBulkLog('success', `${studentName} (${nisn})`, `${response.school_name} (${response.npsn}) dari ${response.source}.`);
+                    }
+
+                    if (!options.silent) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'NPSN terisi',
+                            text: `${response.school_name} (${response.npsn}) dari ${response.source}.`,
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 },
                 error(xhr) {
                     const message = xhr.responseJSON?.message || 'Gagal mengecek data PPDB.';
                     statusBadge.removeClass('badge-info badge-warning badge-success').addClass('badge-danger').text('Gagal');
                     button.prop('disabled', false).removeClass('btn-success').addClass('btn-primary').html('<i class="fas fa-search mr-1"></i>Cek NISN');
 
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Belum ketemu',
-                        text: message,
-                        confirmButtonText: 'OK'
-                    });
+                    if (options.log) {
+                        appendBulkLog('danger', `${studentName} (${nisn})`, message);
+                    }
+
+                    if (!options.silent) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Belum ketemu',
+                            text: message,
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 }
             });
+        }
+
+        $('.btn-check-npsn').on('click', function () {
+            runNpsnCheck($(this));
+        });
+
+        $('#btnCloseBulkOverlay').on('click', function () {
+            $('#bulkNpsnOverlay').removeClass('is-active').attr('aria-hidden', 'true');
+        });
+
+        $('#btnBulkCheckNpsn').on('click', async function () {
+            const buttons = $('.btn-check-npsn').filter(function () {
+                return !$(this).hasClass('btn-success');
+            }).toArray().map((el) => $(el));
+            const total = buttons.length;
+
+            if (total === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Tidak ada data',
+                    text: 'Semua siswa pada daftar ini sudah terisi atau tidak ada yang perlu dicek.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            $('#bulkNpsnLog').empty();
+            $('#bulkNpsnOverlay').addClass('is-active').attr('aria-hidden', 'false');
+            $('#btnCloseBulkOverlay').prop('disabled', true);
+            $('#btnBulkCheckNpsn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Bulk Check');
+            setBulkProgress(0, total, 'Menyiapkan pengecekan...');
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (let index = 0; index < total; index++) {
+                const button = buttons[index];
+                const name = button.data('name') || 'Siswa';
+                const nisn = button.data('nisn') || '-';
+
+                setBulkProgress(index, total, `Mengecek ${name} (${nisn})...`);
+                appendBulkLog('info', `${name} (${nisn})`, 'Sedang mengecek NISN dan asal sekolah...');
+
+                try {
+                    await runNpsnCheck(button, {silent: true, log: true});
+                    successCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+
+                setBulkProgress(index + 1, total, `${index + 1} dari ${total} siswa selesai dicek.`);
+            }
+
+            $('#btnCloseBulkOverlay').prop('disabled', false);
+            $('#btnBulkCheckNpsn').prop('disabled', false).html('<i class="fas fa-tasks mr-1"></i>Bulk Check');
+            setBulkProgress(total, total, `Selesai: ${successCount} berhasil, ${failedCount} gagal.`);
         });
 
         function buildBarChart(canvasId, labels, values, color, horizontal = false) {
