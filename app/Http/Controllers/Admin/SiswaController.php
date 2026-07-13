@@ -1215,11 +1215,20 @@ class SiswaController extends Controller
         }
 
         if ($request->filled('school_npsn') || $request->filled('school_name')) {
+            $sekolah = $request->filled('school_npsn')
+                ? Sekolah::find($request->school_npsn)
+                : null;
+            $schoolName = $sekolah?->nama ?: $request->school_name;
+
             return [
                 'title' => 'Filter Statistik: Sekolah Asal',
-                'description' => trim(collect([
-                    $request->school_name,
-                    $request->education_form,
+                'description' => $schoolName,
+                'meta' => [
+                    'npsn' => $sekolah?->npsn ?: $request->school_npsn,
+                    'nsm' => $sekolah?->nsm,
+                ],
+                'detail' => trim(collect([
+                    $sekolah?->bentuk_pendidikan ?: $request->education_form,
                     $request->school_city_name,
                     $request->school_province_name,
                 ])->filter()->implode(' | ')),

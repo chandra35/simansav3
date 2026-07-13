@@ -190,7 +190,17 @@
                     <div class="alert alert-info simansa-stat-context d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3">
                         <div class="mb-2 mb-lg-0">
                             <strong>{{ $contextScope['title'] }}</strong><br>
-                            <span>{{ $contextScope['description'] ?: 'Daftar siswa sedang difilter dari halaman statistik.' }}</span>
+                            <span class="simansa-context-main">{{ $contextScope['description'] ?: 'Daftar siswa sedang difilter dari halaman statistik.' }}</span>
+                            @if(!empty($contextScope['meta']))
+                                <div class="simansa-context-meta">
+                                    NPSN: {{ $contextScope['meta']['npsn'] ?: '-' }}
+                                    <span class="mx-1">|</span>
+                                    NSM: {{ $contextScope['meta']['nsm'] ?: '-' }}
+                                </div>
+                            @endif
+                            @if(!empty($contextScope['detail']))
+                                <div class="simansa-context-detail">{{ $contextScope['detail'] }}</div>
+                            @endif
                         </div>
                         <a href="{{ route('admin.siswa.index') }}" class="btn btn-sm simansa-btn-contrast">
                             <i class="fas fa-times-circle"></i> Hapus Filter Statistik
@@ -609,6 +619,24 @@
 
         .simansa-stat-context strong {
             color: #1d4ed8;
+        }
+
+        .simansa-context-main {
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        .simansa-context-meta {
+            color: #334155;
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin-top: 0.18rem;
+        }
+
+        .simansa-context-detail {
+            color: #64748b;
+            font-size: 0.86rem;
+            margin-top: 0.12rem;
         }
 
         #siswaModal .modal-footer {
