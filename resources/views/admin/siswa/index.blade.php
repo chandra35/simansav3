@@ -5,28 +5,15 @@
 
 
 @section('content_header')
-    <div class="simansa-siswa-management">
-        <div class="simansa-hero">
-            <div class="simansa-hero__main">
-                <div class="simansa-hero__eyebrow">
-                    <i class="fas fa-user-graduate"></i>
-                    Manajemen Peserta Didik
-                </div>
-                <h1 class="simansa-hero__title">Data Siswa</h1>
-                <p class="simansa-hero__subtitle">
-                    Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional yang lebih rapi.
-                </p>
-            </div>
-            <div class="simansa-hero__side">
-                <div class="simansa-hero-chip">
-                    <span class="simansa-hero-chip__label"><i class="fas fa-users mr-1"></i> Total Siswa</span>
-                    <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
-                </div>
-                <div class="simansa-hero-chip">
-                    <span class="simansa-hero-chip__label"><i class="fas fa-check-circle mr-1"></i> Data Lengkap</span>
-                    <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
-                </div>
-            </div>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-graduate text-primary"></i> Data Siswa</h1>
+        </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Data Siswa</li>
+            </ol>
         </div>
     </div>
 @stop
@@ -34,44 +21,66 @@
 @section('content')
 
 <div class="simansa-siswa-management">
+<div class="card bg-gradient-primary text-white mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-1"><i class="fas fa-database"></i> Manajemen Peserta Didik</h3>
+                <p class="mb-2 text-white-50">
+                    Pantau data siswa aktif, kelengkapan biodata, rombel, dan akses akun dari satu halaman operasional.
+                </p>
+                <p class="mb-0">Gunakan filter dan aksi cepat untuk mengelola data siswa secara rapi, ringkas, dan konsisten.</p>
+            </div>
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="text-white-50 small text-uppercase font-weight-bold">Total Siswa</div>
+                        <h3 class="mb-0 text-white" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-white-50 small text-uppercase font-weight-bold">Data Lengkap</div>
+                        <h3 class="mb-0 text-white" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-stat-card simansa-stat-card--blue">
-            <div class="simansa-stat-card__icon"><i class="fas fa-users"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Total Siswa</div>
-                <div class="simansa-stat-card__value" id="stat-total">{{ number_format($stats['total_siswa']) }}</div>
-                <div class="simansa-stat-card__desc">Semua siswa yang saat ini tercatat di SIMANSA.</div>
+        <div class="card card-outline card-primary h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Total Siswa</div>
+                <h3 class="text-primary mb-1" id="stat-total">{{ number_format($stats['total_siswa']) }}</h3>
+                <div class="text-muted">Semua siswa yang saat ini tercatat di SIMANSA.</div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-stat-card simansa-stat-card--cyan">
-            <div class="simansa-stat-card__icon"><i class="fas fa-male"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Laki-Laki</div>
-                <div class="simansa-stat-card__value" id="stat-laki">{{ number_format($stats['laki_laki']) }}</div>
-                <div class="simansa-stat-card__desc">Jumlah siswa laki-laki sesuai filter yang sedang aktif.</div>
+        <div class="card card-outline card-info h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Laki-Laki</div>
+                <h3 class="text-info mb-1" id="stat-laki">{{ number_format($stats['laki_laki']) }}</h3>
+                <div class="text-muted">Jumlah siswa laki-laki sesuai filter yang sedang aktif.</div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-stat-card simansa-stat-card--rose">
-            <div class="simansa-stat-card__icon"><i class="fas fa-female"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Perempuan</div>
-                <div class="simansa-stat-card__value" id="stat-perempuan">{{ number_format($stats['perempuan']) }}</div>
-                <div class="simansa-stat-card__desc">Jumlah siswa perempuan sesuai filter yang sedang aktif.</div>
+        <div class="card card-outline card-danger h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Perempuan</div>
+                <h3 class="text-danger mb-1" id="stat-perempuan">{{ number_format($stats['perempuan']) }}</h3>
+                <div class="text-muted">Jumlah siswa perempuan sesuai filter yang sedang aktif.</div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3 mb-4">
-        <div class="simansa-stat-card simansa-stat-card--green">
-            <div class="simansa-stat-card__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Data Lengkap</div>
-                <div class="simansa-stat-card__value" id="stat-lengkap">{{ number_format($stats['data_lengkap']) }}</div>
-                <div class="simansa-stat-card__desc">Siswa dengan data diri dan orang tua yang sudah lengkap.</div>
+        <div class="card card-outline card-success h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Data Lengkap</div>
+                <h3 class="text-success mb-1" id="stat-lengkap">{{ number_format($stats['data_lengkap']) }}</h3>
+                <div class="text-muted">Siswa dengan data diri dan orang tua yang sudah lengkap.</div>
             </div>
         </div>
     </div>
@@ -79,7 +88,7 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card simansa-management-card simansa-siswa-management">
+        <div class="card card-outline card-primary">
             <div class="card-header">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                     <h3 class="card-title mb-3 mb-lg-0">
