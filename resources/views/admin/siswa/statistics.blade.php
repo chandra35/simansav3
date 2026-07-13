@@ -102,7 +102,7 @@
             <div class="simansa-section-head">
                 <div>
                     <h3>NPSN Kosong Kelas 10</h3>
-                    <p>Gunakan checker untuk mengisi NPSN asal sekolah dari staging matrikulasi atau API PPDB berdasarkan NISN.</p>
+                    <p>Gunakan checker NISN SIMANSA untuk mengisi NPSN asal sekolah. Jika belum ditemukan, sistem mencoba data matrikulasi/PPDB.</p>
                 </div>
                 <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong', 'tingkat' => 10]) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-list mr-1"></i>Lihat Semua
@@ -140,7 +140,7 @@
                                         class="btn btn-xs btn-primary btn-check-npsn"
                                         data-url="{{ route('admin.siswa.statistics.check-npsn-ppdb', $student['id']) }}"
                                         data-id="{{ $student['id'] }}">
-                                        <i class="fas fa-search mr-1"></i>Cek PPDB
+                                        <i class="fas fa-search mr-1"></i>Cek NISN
                                     </button>
                                 </td>
                             </tr>
@@ -891,7 +891,7 @@
                 error(xhr) {
                     const message = xhr.responseJSON?.message || 'Gagal mengecek data PPDB.';
                     statusBadge.removeClass('badge-info badge-warning badge-success').addClass('badge-danger').text('Gagal');
-                    button.prop('disabled', false).removeClass('btn-success').addClass('btn-primary').html('<i class="fas fa-search mr-1"></i>Cek PPDB');
+                    button.prop('disabled', false).removeClass('btn-success').addClass('btn-primary').html('<i class="fas fa-search mr-1"></i>Cek NISN');
 
                     Swal.fire({
                         icon: 'warning',

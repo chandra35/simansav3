@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\EmisNisnService;
 
 class SiswaStatisticsController extends Controller
 {
@@ -110,11 +111,11 @@ class SiswaStatisticsController extends Controller
             ], 422);
         }
 
-        $candidate = $this->findPpdbCandidateForSiswa($siswa);
+        $candidate = $this->findNisnCheckerCandidate($nisn) ?: $this->findPpdbCandidateForSiswa($siswa);
         if (!$candidate) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data PPDB dengan NISN tersebut belum ditemukan.',
+                'message' => 'NPSN belum ditemukan dari checker NISN SIMANSA maupun data PPDB.',
             ], 404);
         }
 
@@ -122,7 +123,7 @@ class SiswaStatisticsController extends Controller
         if (!$npsn) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data PPDB ditemukan, tetapi NPSN asal sekolah masih kosong atau tidak valid.',
+                'message' => 'Data ditemukan, tetapi NPSN asal sekolah masih kosong atau tidak valid.',
             ], 422);
         }
 
@@ -144,7 +145,7 @@ class SiswaStatisticsController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'NPSN asal sekolah berhasil diisi dari data PPDB.',
+            'message' => 'NPSN asal sekolah berhasil diisi.',
             'npsn' => $npsn,
             'school_name' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
             'source' => $candidate['_source'] ?? 'PPDB',
@@ -228,6 +229,44 @@ class SiswaStatisticsController extends Controller
                     ->where('activity_logs.activity_type', 'login');
             })
             ->count();
+    }
+
+    private function findNisnCheckerCandidate(string $nisn): ?array
+    {
+        try {
+            $result = app(EmisNisnService::class)->cekNisn($nisn);
+        } catch (\Throwable $exception) {
+            Log::warning('Gagal mengecek NPSN asal sekolah dari checker NISN SIMANSA', [
+                'nisn' => $nisn,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        if (!($result['success'] ?? false) || empty($result['data'])) {
+            return null;
+        }
+
+        $kemdikbud = (array) ($result['data']['kemdikbud'] ?? []);
+        $kemenag = (array) ($result['data']['kemenag'] ?? []);
+        $npsn = $this->normalizeNpsn($kemdikbud['npsn'] ?? ($kemenag['npsn'] ?? null));
+
+        if (!$npsn) {
+            return null;
+        }
+
+        return [
+            'npsn_asal_sekolah' => $npsn,
+            'nama_sekolah_asal' => $kemdikbud['sekolah'] ?? ($kemenag['institution_name'] ?? null),
+            'status_sekolah_asal' => null,
+            'bentuk_sekolah_asal' => null,
+            'alamat_sekolah_asal' => null,
+            'kecamatan_sekolah_asal' => null,
+            'kabupaten_sekolah_asal' => null,
+            'provinsi_sekolah_asal' => null,
+            '_source' => 'checker NISN SIMANSA',
+        ];
     }
 
     private function findPpdbCandidateForSiswa(Siswa $siswa): ?array

@@ -59,6 +59,7 @@ class EmisNisnService
             // Initialize data variables
             $kemdikbudData = null;
             $kemenagData = null;
+            $unauthorized = false;
 
             // 1. Fetch Kemdikbud data (Pusdatin endpoint)
             try {
@@ -69,7 +70,9 @@ class EmisNisnService
                     'body' => $response1->body()
                 ]);
 
-                if ($response1->successful()) {
+                if ($response1->status() === 401) {
+                    $unauthorized = true;
+                } elseif ($response1->successful()) {
                     $data = $response1->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results'])) {
                         // Check if data is "data tidak ditemukan"
@@ -95,7 +98,9 @@ class EmisNisnService
                     'body' => $response2->body()
                 ]);
 
-                if ($response2->successful()) {
+                if ($response2->status() === 401) {
+                    $unauthorized = true;
+                } elseif ($response2->successful()) {
                     $data = $response2->json();
                     if (isset($data['success']) && $data['success'] === true && isset($data['results']) && !empty($data['results'])) {
                         $kemenagData = $data['results'][0]; // Get first result from array
@@ -139,47 +144,20 @@ class EmisNisnService
                 ];
             }
 
+            if ($unauthorized) {
+                Log::error('EmisNisnService: Unauthorized - Token mungkin expired atau invalid');
+
+                return [
+                    'success' => false,
+                    'message' => 'Token API EMIS expired atau invalid. Silakan perbarui token EMIS terlebih dahulu.',
+                    'data' => null
+                ];
+            }
+
             // No data found from both sources
             return [
                 'success' => false,
                 'message' => 'NISN tidak ditemukan dalam database EMIS (Kemdikbud & Kemenag)',
-                'data' => null
-            ];
-
-            // Handle HTTP errors
-            if ($response->status() === 404) {
-                return [
-                    'success' => false,
-                    'message' => 'NISN tidak ditemukan dalam database EMIS',
-                    'data' => null
-                ];
-            }
-
-            if ($response->status() === 401) {
-                Log::error('EmisNisnService: Unauthorized - Token mungkin expired atau invalid');
-                return [
-                    'success' => false,
-                    'message' => 'Token API expired atau invalid. Silakan hubungi administrator untuk memperbarui token EMIS.',
-                    'data' => null
-                ];
-            }
-
-            if ($response->status() >= 500) {
-                Log::error('EmisNisnService: Server error', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return [
-                    'success' => false,
-                    'message' => 'Server API EMIS sedang bermasalah. Silakan coba lagi nanti.',
-                    'data' => null
-                ];
-            }
-
-            // Other errors
-            return [
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengecek NISN. Status: ' . $response->status(),
                 'data' => null
             ];
 
