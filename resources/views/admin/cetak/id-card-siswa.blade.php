@@ -124,7 +124,7 @@
 
         /* Bottom section on gradient */
         .f-bottom {
-            padding: 3mm 3.6mm 0 3.6mm;
+            padding: 2.6mm 3.6mm 0 3.6mm;
         }
         .f-bottom-tbl {
             width: 100%;
@@ -134,27 +134,39 @@
             vertical-align: middle;
             padding: 0;
         }
-        .f-info {
-            text-align: left;
-        }
         .f-name {
-            font-size: 7.2pt;
+            font-size: 7pt;
             font-weight: bold;
             color: #ffffff;
             letter-spacing: 0;
-            padding: 1.3mm 1.5mm;
+            text-align: center;
+            padding: 1.2mm 1.8mm;
             line-height: 1.14;
-            min-height: 7.4mm;
+            min-height: 7mm;
             background: rgba(16, 43, 65, 0.88);
             border-radius: 1.6mm;
-            margin-bottom: 1.1mm;
+            margin-bottom: 1.4mm;
         }
-        .f-id-number {
-            font-size: 5.1pt;
-            color: #29465d;
-            letter-spacing: 0;
-            line-height: 1.35;
+        .f-meta-cell {
+            text-align: left;
+        }
+        .f-meta-line {
+            margin-bottom: 0.55mm;
+        }
+        .f-meta-label {
+            display: inline-block;
+            width: 8mm;
+            font-size: 3.9pt;
+            color: #6d7f8d;
             font-weight: bold;
+            text-transform: uppercase;
+        }
+        .f-meta-value {
+            font-size: 4.9pt;
+            color: #1f3548;
+            letter-spacing: 0;
+            font-weight: bold;
+            line-height: 1.25;
         }
         .f-qr-cell {
             width: 14.5mm;
@@ -344,12 +356,18 @@
 
                     {{-- Bottom: Name + NISN + QR --}}
                     <div class="f-bottom">
+                        <div class="f-name">{{ strtoupper($siswa->nama_lengkap) }}</div>
                         <table class="f-bottom-tbl">
                             <tr>
-                                <td class="f-info">
-                                    <div class="f-name">{{ strtoupper($siswa->nama_lengkap) }}</div>
-                                    <div class="f-id-number">NISN {{ $siswa->nisn ?? '-' }}</div>
-                                    <div class="f-id-number">KELAS {{ $siswa->kelas_nama ?? '-' }}</div>
+                                <td class="f-meta-cell">
+                                    <div class="f-meta-line">
+                                        <span class="f-meta-label">NISN</span>
+                                        <span class="f-meta-value">{{ $siswa->nisn ?? '-' }}</span>
+                                    </div>
+                                    <div class="f-meta-line">
+                                        <span class="f-meta-label">Kelas</span>
+                                        <span class="f-meta-value">{{ $siswa->kelas_nama ?? '-' }}</span>
+                                    </div>
                                 </td>
                                 @if($siswa->qr_base64)
                                 <td class="f-qr-cell">
