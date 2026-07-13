@@ -83,6 +83,9 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     box-shadow: var(--shadow-sm) !important;
     transition: var(--transition) !important;
     overflow: hidden;
+}
+
+.card:not([class*="bg-"]) {
     background: var(--bg-card) !important;
 }
 
@@ -93,8 +96,11 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
 /* Card Headers - Elegant border-bottom accent */
 .card-header {
     padding: 0.75rem 1rem !important;
-    background: transparent !important;
     border-bottom: 1px solid var(--border-color) !important;
+}
+
+.card-header:not([class*="bg-"]) {
+    background: transparent !important;
 }
 
 .card-title {
@@ -108,6 +114,11 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     font-size: 0.875rem !important;
     color: var(--primary) !important;
     margin-right: 0.35rem;
+}
+
+.card-header[class*="bg-"] .card-title,
+.card-header[class*="bg-"] .card-title i {
+    color: #ffffff !important;
 }
 
 /* Card Body */
@@ -513,7 +524,7 @@ body:not(.layout-top-nav) .content-wrapper,
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06) !important;
 }
 
-.card-header {
+.card-header:not([class*="bg-"]) {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95)) !important;
 }
 
