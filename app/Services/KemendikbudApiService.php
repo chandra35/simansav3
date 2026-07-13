@@ -274,6 +274,37 @@ class KemendikbudApiService
 
     protected function extractLabelValuePairs(string $html): array
     {
+        $pairs = [];
+
+        preg_match_all('/<tr\b[^>]*>(.*?)<\/tr>/is', $html, $rows);
+        foreach ($rows[1] as $row) {
+            preg_match_all('/<td\b[^>]*>(.*?)<\/td>/is', $row, $cells);
+
+            $values = collect($cells[1] ?? [])
+                ->map(function ($cell) {
+                    $cell = preg_replace('/<(br|\/div|\/p)\b[^>]*>/i', ' ', $cell);
+                    $cell = html_entity_decode(strip_tags($cell), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cell = str_replace("\xc2\xa0", ' ', $cell);
+                    return trim(preg_replace('/\s+/u', ' ', $cell));
+                })
+                ->filter(fn ($cell) => $cell !== '')
+                ->values();
+
+            $separatorIndex = $values->search(':');
+            if ($separatorIndex !== false && $separatorIndex > 0 && $values->has($separatorIndex + 1)) {
+                $label = $values->get($separatorIndex - 1);
+                $value = $values->get($separatorIndex + 1);
+
+                if ($label !== '' && $value !== '') {
+                    $pairs[$label] = $value;
+                }
+            }
+        }
+
+        if (!empty($pairs)) {
+            return $pairs;
+        }
+
         $html = preg_replace('/<(script|style).*?<\/\1>/is', '', $html);
         $html = preg_replace('/<(br|\/div|\/p|\/tr|\/li|\/h[1-6])\b[^>]*>/i', "\n", $html);
         $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -282,7 +313,6 @@ class KemendikbudApiService
             ->map(fn ($line) => trim(preg_replace('/\s+/u', ' ', $line)))
             ->filter(fn ($line) => $line !== '' && str_contains($line, ':'));
 
-        $pairs = [];
         foreach ($lines as $line) {
             [$label, $value] = array_pad(explode(':', $line, 2), 2, null);
             $label = trim((string) $label);
