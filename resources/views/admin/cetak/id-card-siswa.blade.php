@@ -151,31 +151,24 @@
             text-align: left;
             padding-right: 1.2mm !important;
         }
-        .f-meta-card {
-            background: #ffffff;
-            border-left: 0.75mm solid #2f5970;
-            border-radius: 1.5mm;
-            padding: 1mm 1.2mm;
-            min-height: 10.5mm;
-        }
         .f-meta-line {
-            margin-bottom: 0.65mm;
+            margin-bottom: 0.75mm;
             white-space: nowrap;
         }
         .f-meta-label {
             display: inline-block;
             width: 7.5mm;
-            font-size: 4.2pt;
-            color: #526677;
+            font-size: 4.3pt;
+            color: rgba(255,255,255,0.72);
             font-weight: bold;
             text-transform: uppercase;
         }
         .f-meta-value {
-            font-size: 5.2pt;
-            color: #102b41;
+            font-size: 5.6pt;
+            color: #ffffff;
             letter-spacing: 0;
             font-weight: bold;
-            line-height: 1.25;
+            line-height: 1.3;
         }
         .f-qr-cell {
             width: 14.5mm;
@@ -369,15 +362,13 @@
                         <table class="f-bottom-tbl">
                             <tr>
                                 <td class="f-meta-cell">
-                                    <div class="f-meta-card">
-                                        <div class="f-meta-line">
-                                            <span class="f-meta-label">NISN</span>
-                                            <span class="f-meta-value">{{ $siswa->nisn ?? '-' }}</span>
-                                        </div>
-                                        <div class="f-meta-line">
-                                            <span class="f-meta-label">Kelas</span>
-                                            <span class="f-meta-value">{{ $siswa->kelas_nama ?? '-' }}</span>
-                                        </div>
+                                    <div class="f-meta-line">
+                                        <span class="f-meta-label">NISN</span>
+                                        <span class="f-meta-value">{{ $siswa->nisn ?? '-' }}</span>
+                                    </div>
+                                    <div class="f-meta-line">
+                                        <span class="f-meta-label">Kelas</span>
+                                        <span class="f-meta-value">{{ $siswa->kelas_nama ?? '-' }}</span>
                                     </div>
                                 </td>
                                 @if($siswa->qr_base64)
