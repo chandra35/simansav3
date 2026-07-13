@@ -30,15 +30,15 @@
             padding: 0;
         }
         .pair-gap {
-            width: 10mm;
+            width: 8mm;
         }
 
-        /* === CARD SHELL (62mm × 98mm) === */
+        /* === CARD SHELL: standard vertical ID card 54mm x 86mm === */
         .id-card {
-            width: 62mm;
-            height: 98mm;
+            width: 54mm;
+            height: 86mm;
             overflow: hidden;
-            background-size: 62mm 98mm;
+            background-size: 54mm 86mm;
             background-repeat: no-repeat;
             background-position: center;
             border-radius: 3mm;
@@ -47,7 +47,7 @@
         /* ====== FRONT (ASN-style: white top, gradient bottom) ====== */
         .f-header {
             text-align: center;
-            padding: 3mm 3.5mm 1.2mm 3.5mm;
+            padding: 2.3mm 3mm 1mm 3mm;
         }
         .f-header-tbl {
             width: 100%;
@@ -58,11 +58,11 @@
             padding: 0;
         }
         .f-logo {
-            width: 11mm;
+            width: 9mm;
             text-align: center;
         }
         .f-logo img {
-            height: 9.5mm;
+            height: 8mm;
             width: auto;
         }
         .f-htext {
@@ -70,13 +70,13 @@
             padding: 0 1mm;
         }
         .f-ministry {
-            font-size: 6.2pt;
+            font-size: 5.3pt;
             color: #6f7a86;
             letter-spacing: 0;
             text-transform: uppercase;
         }
         .f-school {
-            font-size: 8.2pt;
+            font-size: 7.4pt;
             font-weight: bold;
             color: #143545;
             text-transform: uppercase;
@@ -84,7 +84,7 @@
             line-height: 1.15;
         }
         .f-addr {
-            font-size: 5pt;
+            font-size: 4.4pt;
             color: #8a97a4;
             line-height: 1.15;
         }
@@ -97,11 +97,11 @@
         /* Large photo area — borderless, fills white zone */
         .f-foto-area {
             text-align: center;
-            padding: 2.6mm 0 0 0;
+            padding: 2.2mm 0 0 0;
         }
         .f-foto-frame {
-            width: 40mm;
-            height: 40mm;
+            width: 34mm;
+            height: 34mm;
             overflow: hidden;
             text-align: center;
             margin: 0 auto;
@@ -111,19 +111,19 @@
             border-radius: 2mm;
         }
         .f-foto-frame img {
-            width: 40mm;
-            height: 40mm;
+            width: 34mm;
+            height: 34mm;
         }
         .f-foto-placeholder {
-            padding-top: 17mm;
-            font-size: 6pt;
+            padding-top: 14.5mm;
+            font-size: 5.5pt;
             color: #8a97a4;
-            height: 40mm;
+            height: 34mm;
         }
 
         /* Bottom section on gradient */
         .f-bottom {
-            padding: 5mm 4.5mm 0 4.5mm;
+            padding: 4.2mm 3.8mm 0 3.8mm;
         }
         .f-bottom-tbl {
             width: 100%;
@@ -137,70 +137,70 @@
             text-align: left;
         }
         .f-name {
-            font-size: 8.4pt;
+            font-size: 7.5pt;
             font-weight: bold;
             color: #ffffff;
             letter-spacing: 0;
             padding-bottom: 0.9mm;
             line-height: 1.18;
-            min-height: 9.5mm;
+            min-height: 8.4mm;
         }
         .f-id-number {
-            font-size: 5.8pt;
+            font-size: 5.1pt;
             color: rgba(255,255,255,0.86);
             letter-spacing: 0;
             line-height: 1.35;
         }
         .f-qr-cell {
-            width: 17mm;
+            width: 14.5mm;
             text-align: right;
         }
         .f-qr-box {
-            width: 14.5mm;
-            height: 14.5mm;
-            padding: 0.7mm;
+            width: 13mm;
+            height: 13mm;
+            padding: 0.6mm;
             background: #ffffff;
             border-radius: 1.5mm;
         }
         .f-qr-box img {
-            width: 13.1mm;
-            height: 13.1mm;
+            width: 11.8mm;
+            height: 11.8mm;
         }
 
         /* ====== BACK ====== */
         .b-header {
             text-align: center;
-            padding: 3.5mm 3.5mm 2mm 3.5mm;
+            padding: 3mm 3mm 1.4mm 3mm;
         }
         .b-header-title {
-            font-size: 6pt;
+            font-size: 5.3pt;
             font-weight: bold;
             color: #ffffff;
-            letter-spacing: 0.5px;
+            letter-spacing: 0;
             text-transform: uppercase;
         }
         .b-header-sub {
-            font-size: 4pt;
+            font-size: 3.6pt;
             color: rgba(255,255,255,0.7);
             padding-top: 0.3mm;
         }
         .b-id-number {
             text-align: right;
-            padding: 0 3.5mm;
-            font-size: 5pt;
+            padding: 0 3mm;
+            font-size: 4.3pt;
             font-weight: bold;
             color: rgba(255,255,255,0.8);
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
         }
         .b-body {
-            padding: 1.5mm 3.5mm 1mm 3.5mm;
+            padding: 1.1mm 3mm 0.8mm 3mm;
         }
         .b-section-title {
-            font-size: 5.5pt;
+            font-size: 4.8pt;
             font-weight: bold;
             color: rgba(255,255,255,0.9);
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
             border-bottom: 0.4px solid rgba(255,255,255,0.3);
             padding-bottom: 0.3mm;
             margin-bottom: 0.5mm;
@@ -208,16 +208,16 @@
         .b-detail-tbl {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 1.5mm;
+            margin-bottom: 1mm;
         }
         .b-detail-tbl td {
-            font-size: 5.5pt;
-            padding: 0.4mm 0;
+            font-size: 4.7pt;
+            padding: 0.25mm 0;
             vertical-align: top;
             color: rgba(255,255,255,0.9);
         }
         .b-detail-tbl .lbl {
-            width: 14mm;
+            width: 12mm;
             color: rgba(255,255,255,0.6);
         }
         .b-detail-tbl .sep {
@@ -226,58 +226,58 @@
             color: rgba(255,255,255,0.4);
         }
         .b-rules-title {
-            font-size: 5.5pt;
+            font-size: 4.8pt;
             font-weight: bold;
             color: rgba(255,255,255,0.9);
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
             border-bottom: 0.4px solid rgba(255,255,255,0.3);
             padding-bottom: 0.3mm;
             margin-bottom: 0.5mm;
-            margin-top: 1mm;
+            margin-top: 0.7mm;
         }
         .b-rules ol {
             margin: 0;
-            padding-left: 3.5mm;
-            font-size: 5pt;
+            padding-left: 3.2mm;
+            font-size: 4.4pt;
             color: rgba(255,255,255,0.8);
-            line-height: 1.5;
+            line-height: 1.35;
         }
         .b-sig-tbl {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 2mm;
+            margin-top: 1.4mm;
         }
         .b-sig-tbl td {
             text-align: center;
             vertical-align: bottom;
-            font-size: 5pt;
+            font-size: 4.4pt;
             width: 50%;
             color: rgba(255,255,255,0.8);
-            padding: 0 2mm;
+            padding: 0 1.4mm;
         }
         .b-sig-line {
             border-bottom: 0.4px solid rgba(255,255,255,0.5);
-            margin-top: 6mm;
+            margin-top: 4.3mm;
             margin-bottom: 0.3mm;
         }
         .b-sig-name {
             font-weight: bold;
-            font-size: 5pt;
+            font-size: 4.4pt;
             color: #ffffff;
         }
         .b-footer {
             text-align: center;
-            padding: 1.5mm 2mm 1mm 2mm;
+            padding: 1mm 2mm 0.8mm 2mm;
         }
         .b-footer-text {
-            font-size: 5pt;
+            font-size: 4.4pt;
             font-weight: bold;
             color: rgba(255,255,255,0.9);
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
         }
         .b-footer-sub {
-            font-size: 3pt;
+            font-size: 2.8pt;
             color: rgba(255,255,255,0.5);
         }
     </style>
