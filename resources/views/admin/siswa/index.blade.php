@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', 'Data Siswa - SIMANSA')
 
@@ -76,27 +76,27 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card simansa-management-card">
+        <div class="card simansa-management-card simansa-siswa-management">
             <div class="card-header">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                     <h3 class="card-title mb-3 mb-lg-0">
                         <i class="fas fa-user-graduate mr-2"></i>
                         Manajemen Data Siswa
                     </h3>
-                    <div class="card-tools ml-0">
+                    <div class="card-tools ml-0 simansa-action-bar">
                         @can('view-siswa')
-                            <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-secondary btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chart-pie"></i> Statistik Siswa
                             </a>
                         @endcan
                         @can('create-siswa')
-                            <a href="{{ route('admin.siswa.import') }}" class="btn btn-secondary btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.import') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-file-excel"></i> Import Data Siswa
                             </a>
-                            <a href="{{ route('admin.emis-import.form') }}" class="btn btn-secondary btn-sm mr-2">
+                            <a href="{{ route('admin.emis-import.form') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-cloud-download-alt"></i> Import EMIS
                             </a>
-                            <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-secondary btn-sm mr-2">
+                            <a href="{{ route('admin.siswa.import-npsn') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-school"></i> Import NPSN
                             </a>
                             <button type="button" class="btn simansa-btn-strong btn-sm" onclick="addSiswa()">
@@ -152,7 +152,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end" style="gap:.5rem;">
+                    <div class="simansa-filter-actions">
                         <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-redo"></i> Reset Filter
                         </button>
@@ -176,8 +176,8 @@
                     </div>
                 @endif
 
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 gap-2">
-                    <p class="text-muted mb-0">
+                <div class="simansa-table-note">
+                    <p class="mb-0">
                         Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, dan rombel. Klik foto untuk preview dan unduh cepat.
                     </p>
                 </div>
@@ -375,8 +375,8 @@
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom & Rotasi"><i class="fas fa-compress"></i></button>
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90°"><i class="fas fa-undo"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90°"><i class="fas fa-redo"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90�"><i class="fas fa-undo"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90�"><i class="fas fa-redo"></i></button>
                     <button class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
                     <button class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="OCR seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
                     <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download original"><i class="fas fa-download"></i></a>
@@ -454,22 +454,54 @@
             font-size: 0.8em;
         }
 
-        /* Compact professional table */
-        .simansa-siswa-table thead th {
-            background: #f8fafc;
-            color: #374151;
+        .simansa-action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+            justify-content: flex-end;
+        }
+        .simansa-action-bar .btn {
+            margin: 0 !important;
+            border-radius: .5rem;
             font-size: .78rem;
             font-weight: 700;
-            letter-spacing: .04em;
+            padding: .38rem .62rem;
+        }
+        .simansa-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+        .simansa-table-note {
+            margin-bottom: .85rem;
+            padding: .72rem .85rem;
+            border: 1px solid #dbeafe;
+            border-radius: .75rem;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: .86rem;
+            font-weight: 600;
+            line-height: 1.45;
+        }
+
+        /* Compact professional table */
+        .simansa-siswa-table thead th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .045em;
             text-transform: uppercase;
-            border-bottom: 2px solid #e5e7eb;
-            padding: .55rem .6rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding: .64rem .65rem;
             white-space: nowrap;
         }
         .simansa-siswa-table tbody td {
-            font-size: .85rem;
+            font-size: .84rem;
+            color: #0f172a;
             vertical-align: middle;
-            padding: .45rem .6rem;
+            padding: .55rem .65rem;
             border-bottom: 1px solid #f1f5f9;
             border-top: none;
         }
@@ -483,8 +515,10 @@
         }
         .simansa-siswa-table .badge {
             font-size: .76rem;
+            font-weight: 700;
+            border-radius: .45rem;
         }
-        /* Table scroll wrapper — fills card, scrolls horizontally when needed */
+        /* Table scroll wrapper � fills card, scrolls horizontally when needed */
         .simansa-table-scroll {
             width: 100%;
             overflow-x: auto;
@@ -495,11 +529,11 @@
         }
 
         .simansa-btn-strong {
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-            border-color: #1e3a8a;
-            color: #fff;
-            font-weight: 600;
-            box-shadow: 0 10px 22px rgba(30, 64, 175, 0.22);
+            background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%) !important;
+            border: 0 !important;
+            color: #fff !important;
+            font-weight: 800;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
         }
 
         .simansa-btn-strong:hover,
@@ -514,11 +548,11 @@
         }
 
         .simansa-btn-contrast {
-            background: #ffffff !important;
-            border: 1px solid #2563eb !important;
-            color: #1d4ed8 !important;
-            font-weight: 600;
-            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+            background: #0f172a !important;
+            border: 1px solid #0f172a !important;
+            color: #ffffff !important;
+            font-weight: 800;
+            box-shadow: none;
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
@@ -528,8 +562,8 @@
 
         .simansa-btn-contrast:hover,
         .simansa-btn-contrast:focus {
-            background: #1d4ed8 !important;
-            border-color: #1d4ed8 !important;
+            background: #1e293b !important;
+            border-color: #1e293b !important;
             color: #ffffff !important;
         }
 
@@ -794,7 +828,7 @@ async function startOcr() {
     await runOcrOnCanvas(fullCanvas, 'seluruh gambar');
 }
 
-// Core OCR runner — menerima canvas element
+// Core OCR runner � menerima canvas element
 async function runOcrOnCanvas(canvas, label) {
     $('#ocrPanel').show();
     $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat mesin OCR...');
@@ -823,7 +857,7 @@ async function runOcrOnCanvas(canvas, label) {
         ocrText = result.data.text.trim();
         if (ocrText) {
             const lines = ocrText.split('\n').filter(l => l.trim()).length;
-            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks — <small class="text-muted">teks bisa di-select/copy</small>');
+            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks � <small class="text-muted">teks bisa di-select/copy</small>');
             renderOcrText(ocrText, $('#ocrSearchInput').val());
         } else {
             $('#ocrStatus').html('<i class="fas fa-info-circle text-warning mr-1"></i> Tidak ada teks yang terdeteksi');
@@ -1463,7 +1497,7 @@ function deleteSiswa(id) {
     const safePassword = $('<div>').text(password).html();
 
     return `
-      <code class="text-danger js-password-text" data-password="${safePassword}">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</code>
+      <code class="text-danger js-password-text" data-password="${safePassword}">••••••••</code>
       <button type="button" class="btn btn-xs btn-outline-secondary ml-2 js-toggle-password" aria-label="Tampilkan password">
         <i class="fas fa-eye"></i>
       </button>
@@ -1481,8 +1515,8 @@ function deleteSiswa(id) {
       return;
     }
 
-    const isHidden = passwordElement.text() === 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
-    passwordElement.text(isHidden ? passwordElement.data('password') : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢');
+    const isHidden = passwordElement.text() === '••••••••';
+    passwordElement.text(isHidden ? passwordElement.data('password') : '••••••••');
     button.html('<i class="fas ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '"></i>');
   });
 
