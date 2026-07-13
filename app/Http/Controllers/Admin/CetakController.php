@@ -281,7 +281,7 @@ class CetakController extends Controller
         // Process foto siswa to base64 for PDF
         foreach ($kelasList as $kelas) {
             foreach ($kelas->siswas as $siswa) {
-                $siswa->foto_base64 = $this->processFotoProfile($siswa->foto_profile);
+                $siswa->foto_base64 = $this->processFotoProfile($siswa->foto_profile, 'square');
                 $siswa->qr_base64 = $this->generateQrCode($siswa->id, 'siswa');
             }
         }
@@ -301,7 +301,7 @@ class CetakController extends Controller
         ];
 
         $pdf = \PDF::loadView('admin.cetak.id-card-siswa', $data);
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper('A4', 'landscape');
 
         return $pdf->stream('ID_Card_Siswa.pdf');
     }
@@ -679,7 +679,7 @@ class CetakController extends Controller
     /**
      * Process foto profile to base64 for PDF embedding
      */
-    private function processFotoProfile($fotoPath)
+    private function processFotoProfile($fotoPath, $shape = 'portrait')
     {
         if (!$fotoPath) {
             return null;
@@ -698,14 +698,27 @@ class CetakController extends Controller
 
         $width = imagesx($image);
         $height = imagesy($image);
-        // Resize to max 400px height for sharp ID card rendering
-        $newHeight = 400;
-        $newWidth = (int)(($width / $height) * $newHeight);
+        if ($shape === 'square') {
+            $side = min($width, $height);
+            $srcX = (int)(($width - $side) / 2);
+            $srcY = (int)(($height - $side) / 2);
+            $newWidth = 500;
+            $newHeight = 500;
 
-        $resized = imagecreatetruecolor($newWidth, $newHeight);
-        imagealphablending($resized, false);
-        imagesavealpha($resized, true);
-        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            imagecopyresampled($resized, $image, 0, 0, $srcX, $srcY, $newWidth, $newHeight, $side, $side);
+        } else {
+            // Resize to max 400px height for sharp ID card rendering
+            $newHeight = 400;
+            $newWidth = (int)(($width / $height) * $newHeight);
+
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        }
 
         ob_start();
         imagejpeg($resized, null, 95);

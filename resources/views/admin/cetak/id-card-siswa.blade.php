@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4 landscape;
-            margin: 5mm 6mm;
+            margin: 4.5mm 5mm;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,6 +14,7 @@
             font-size: 7pt;
             line-height: 1.3;
             color: #333333;
+            background: #ffffff;
         }
         .page-break { page-break-after: always; }
         .page-break:last-child { page-break-after: avoid; }
@@ -21,7 +22,7 @@
         /* === GRID: front+back side by side === */
         .card-grid {
             border-collapse: separate;
-            border-spacing: 1.5mm;
+            border-spacing: 1.35mm;
             margin: 0 auto;
         }
         .card-grid td {
@@ -40,12 +41,13 @@
             background-size: 62mm 98mm;
             background-repeat: no-repeat;
             background-position: center;
+            border-radius: 3mm;
         }
 
         /* ====== FRONT (ASN-style: white top, gradient bottom) ====== */
         .f-header {
             text-align: center;
-            padding: 3mm 3mm 1.5mm 3mm;
+            padding: 3mm 3.5mm 1.2mm 3.5mm;
         }
         .f-header-tbl {
             width: 100%;
@@ -60,7 +62,7 @@
             text-align: center;
         }
         .f-logo img {
-            height: 10mm;
+            height: 9.5mm;
             width: auto;
         }
         .f-htext {
@@ -68,21 +70,23 @@
             padding: 0 1mm;
         }
         .f-ministry {
-            font-size: 6.5pt;
-            color: #888888;
-            letter-spacing: 0.3px;
+            font-size: 6.2pt;
+            color: #6f7a86;
+            letter-spacing: 0;
             text-transform: uppercase;
         }
         .f-school {
-            font-size: 8.5pt;
+            font-size: 8.2pt;
             font-weight: bold;
-            color: #1a3a4a;
+            color: #143545;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0;
+            line-height: 1.15;
         }
         .f-addr {
             font-size: 5pt;
-            color: #aaaaaa;
+            color: #8a97a4;
+            line-height: 1.15;
         }
         .f-separator {
             border: none;
@@ -93,30 +97,33 @@
         /* Large photo area — borderless, fills white zone */
         .f-foto-area {
             text-align: center;
-            padding: 0.5mm 0 0 0;
+            padding: 2.6mm 0 0 0;
         }
         .f-foto-frame {
-            width: 44mm;
-            height: 50mm;
+            width: 40mm;
+            height: 40mm;
             overflow: hidden;
             text-align: center;
             margin: 0 auto;
-            background: transparent;
+            background: #f4f8fb;
+            border: 0.55mm solid #ffffff;
+            outline: 0.25mm solid #d8e7ee;
+            border-radius: 2mm;
         }
         .f-foto-frame img {
-            width: 44mm;
-            height: 50mm;
+            width: 40mm;
+            height: 40mm;
         }
         .f-foto-placeholder {
-            padding-top: 21mm;
+            padding-top: 17mm;
             font-size: 6pt;
-            color: #cccccc;
-            height: 50mm;
+            color: #8a97a4;
+            height: 40mm;
         }
 
         /* Bottom section on gradient */
         .f-bottom {
-            padding: 3mm 4.5mm 0 4.5mm;
+            padding: 5mm 4.5mm 0 4.5mm;
         }
         .f-bottom-tbl {
             width: 100%;
@@ -130,29 +137,34 @@
             text-align: left;
         }
         .f-name {
-            font-size: 9pt;
+            font-size: 8.4pt;
             font-weight: bold;
             color: #ffffff;
-            letter-spacing: 0.4px;
-            padding-bottom: 1mm;
-            line-height: 1.3;
+            letter-spacing: 0;
+            padding-bottom: 0.9mm;
+            line-height: 1.18;
+            min-height: 9.5mm;
         }
         .f-id-number {
-            font-size: 6pt;
-            color: rgba(255,255,255,0.7);
-            letter-spacing: 0.8px;
+            font-size: 5.8pt;
+            color: rgba(255,255,255,0.86);
+            letter-spacing: 0;
+            line-height: 1.35;
         }
         .f-qr-cell {
             width: 17mm;
             text-align: right;
         }
         .f-qr-box {
-            width: 15mm;
-            height: 15mm;
+            width: 14.5mm;
+            height: 14.5mm;
+            padding: 0.7mm;
+            background: #ffffff;
+            border-radius: 1.5mm;
         }
         .f-qr-box img {
-            width: 15mm;
-            height: 15mm;
+            width: 13.1mm;
+            height: 13.1mm;
         }
 
         /* ====== BACK ====== */
@@ -335,7 +347,8 @@
                             <tr>
                                 <td class="f-info">
                                     <div class="f-name">{{ strtoupper($siswa->nama_lengkap) }}</div>
-                                    <div class="f-id-number">{{ $siswa->nisn ?? '-' }}</div>
+                                    <div class="f-id-number">NISN {{ $siswa->nisn ?? '-' }}</div>
+                                    <div class="f-id-number">KELAS {{ $siswa->kelas_nama ?? '-' }}</div>
                                 </td>
                                 @if($siswa->qr_base64)
                                 <td class="f-qr-cell">

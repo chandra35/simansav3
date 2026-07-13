@@ -35,7 +35,7 @@
                         <div class="simansa-section-note mb-4">
                             <i class="fas fa-info-circle"></i>
                             <strong>Cetak Kartu Pelajar</strong><br>
-                            {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih kelas untuk mencetak ID Card siswa. Kartu akan dicetak dalam format standar (85.6mm x 54mm) dengan bagian depan dan belakang.' }}
+                            {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih kelas untuk mencetak ID Card siswa. Kartu dicetak dalam layout vertikal depan-belakang yang sudah disusun untuk kertas A4 landscape.' }}
                         </div>
 
                         @unless($isRestrictedWaliKelas)
