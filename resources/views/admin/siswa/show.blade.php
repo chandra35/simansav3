@@ -513,8 +513,8 @@
                     <div class="col-md-6">
                         <table class="table table-sm table-borderless student-data-table">
                             <tr>
-                                <th width="40%">NPSN</th>
-                                <td>{{ $siswa->npsn_asal_sekolah ?? '-' }}</td>
+                                <th width="40%">NPSN | NSM</th>
+                                <td>{{ $siswa->npsn_asal_sekolah ?? '-' }} | {{ $siswa->sekolahAsal->nsm ?? '-' }}</td>
                             </tr>
                             <tr>
                                 <th>Nama Sekolah</th>

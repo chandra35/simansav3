@@ -26,6 +26,10 @@
                             <td>{{ $sekolah->npsn }}</td>
                         </tr>
                         <tr>
+                            <th>NSM</th>
+                            <td>{{ $sekolah->nsm ?? '-' }}</td>
+                        </tr>
+                        <tr>
                             <th>Nama Sekolah</th>
                             <td><strong>{{ $sekolah->nama }}</strong></td>
                         </tr>

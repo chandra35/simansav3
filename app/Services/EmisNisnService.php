@@ -195,6 +195,106 @@ class EmisNisnService
         }
     }
 
+    public function lookupInstitutionByNpsn(string $npsn): array
+    {
+        $npsn = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $npsn));
+
+        if (!preg_match('/^[A-Z0-9]{8}$/', $npsn)) {
+            return [
+                'success' => false,
+                'message' => 'Format NPSN tidak valid.',
+                'data' => null,
+            ];
+        }
+
+        if (empty($this->bearerToken)) {
+            return [
+                'success' => false,
+                'message' => 'Token EMIS belum dikonfigurasi.',
+                'data' => null,
+            ];
+        }
+
+        try {
+            $http = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->bearerToken,
+                ]);
+
+            if (config('app.env') !== 'production') {
+                $http = $http->withOptions(['verify' => false]);
+            }
+
+            $response = $http->get($this->apiUrl . '/institutions/list', [
+                'page' => 1,
+                'q' => $npsn,
+            ]);
+
+            Log::info('EmisNisnService: Institution lookup response', [
+                'npsn' => $npsn,
+                'status' => $response->status(),
+                'body_preview' => substr($response->body(), 0, 500),
+            ]);
+
+            if ($response->status() === 401) {
+                return [
+                    'success' => false,
+                    'message' => 'Token API EMIS expired atau invalid. Silakan perbarui token EMIS terlebih dahulu.',
+                    'data' => null,
+                ];
+            }
+
+            if (!$response->successful()) {
+                return [
+                    'success' => false,
+                    'message' => 'Gagal menghubungi API institusi EMIS. Status: ' . $response->status(),
+                    'data' => null,
+                ];
+            }
+
+            $rows = collect($response->json('results', []));
+            $institution = $rows->first(function ($row) use ($npsn) {
+                return strtoupper((string) ($row['npsn'] ?? '')) === $npsn;
+            }) ?: $rows->first();
+
+            if (!$institution) {
+                return [
+                    'success' => false,
+                    'message' => 'Data institusi Kemenag tidak ditemukan. Kemungkinan sekolah ini bukan madrasah.',
+                    'data' => null,
+                ];
+            }
+
+            $nsm = $institution['nsm'] ?? ($institution['statistic_num'] ?? null);
+            if (blank($nsm)) {
+                return [
+                    'success' => false,
+                    'message' => 'Institusi ditemukan, tetapi NSM masih kosong di EMIS.',
+                    'data' => $institution,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Data institusi Kemenag ditemukan.',
+                'data' => $institution,
+            ];
+        } catch (\Throwable $exception) {
+            Log::error('EmisNisnService: Institution lookup failed', [
+                'npsn' => $npsn,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengecek NSM: ' . $exception->getMessage(),
+                'data' => null,
+            ];
+        }
+    }
+
     /**
      * Validate NISN format
      *

@@ -1351,7 +1351,7 @@ function loadSekolahAsalTab(siswa) {
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-school"></i> Informasi Sekolah</h6>
                 <table class="table table-detail table-sm table-bordered">
-                    <tr><td width="40%" class="bg-light"><strong>NPSN</strong></td><td><span class="badge badge-primary">${sekolah.npsn || '-'}</span></td></tr>
+                    <tr><td width="40%" class="bg-light"><strong>NPSN | NSM</strong></td><td><span class="badge badge-primary">${sekolah.npsn || '-'}</span> <span class="text-muted">|</span> <span class="badge badge-info">${sekolah.nsm || '-'}</span></td></tr>
                     <tr><td class="bg-light"><strong>Nama Sekolah</strong></td><td><strong>${sekolah.nama || '-'}</strong></td></tr>
                     <tr><td class="bg-light"><strong>Bentuk Pendidikan</strong></td><td>${sekolah.bentuk_pendidikan || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Status</strong></td><td>

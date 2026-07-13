@@ -20,6 +20,7 @@
                         <tr>
                             <th width="50" class="text-center">No</th>
                             <th width="90">NPSN</th>
+                            <th width="120">NSM</th>
                             <th>Nama Sekolah</th>
                             <th width="90" class="text-center">Status</th>
                             <th width="130">Bentuk Pendidikan</th>
@@ -71,6 +72,7 @@ $(document).ready(function() {
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'npsn', name: 'npsn' },
+            { data: 'nsm', name: 'nsm', defaultContent: '-' },
             { data: 'nama', name: 'nama' },
             { data: 'status_badge', name: 'status', orderable: false },
             { data: 'bentuk_pendidikan', name: 'bentuk_pendidikan', defaultContent: '-' },
@@ -78,7 +80,7 @@ $(document).ready(function() {
             { data: 'siswa_count_badge', name: 'siswa_count', searchable: false },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[6, 'desc']], // Sort by jumlah siswa descending
+        order: [[7, 'desc']], // Sort by jumlah siswa descending
         language: {
             processing: "Sedang memproses...",
             lengthMenu: "Tampilkan _MENU_ data",

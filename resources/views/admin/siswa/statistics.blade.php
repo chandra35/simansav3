@@ -167,9 +167,9 @@
     <div class="simansa-progress-modal">
         <div class="simansa-progress-modal__head">
             <div>
-                <div class="simansa-progress-eyebrow"><i class="fas fa-id-card mr-1"></i>Bulk Check NPSN</div>
-                <h3>Mengecek NPSN Asal Sekolah</h3>
-                <p>Proses berjalan satu per satu agar layanan checker tetap stabil.</p>
+                <div class="simansa-progress-eyebrow" id="bulkProgressEyebrow"><i class="fas fa-id-card mr-1"></i>Bulk Check NPSN</div>
+                <h3 id="bulkProgressTitle">Mengecek NPSN Asal Sekolah</h3>
+                <p id="bulkProgressDescription">Proses berjalan satu per satu agar layanan checker tetap stabil.</p>
             </div>
             <button type="button" class="btn btn-sm btn-light" id="btnCloseBulkOverlay" disabled>
                 <i class="fas fa-times mr-1"></i>Tutup
@@ -323,12 +323,23 @@
 
 <div class="row">
     <div class="col-12 col-xl-7 mb-4">
+        @php
+            $nsmCheckCandidates = $topSchools->filter(function ($school) {
+                $text = strtolower(trim(($school['school_name'] ?? '') . ' ' . ($school['education_form'] ?? '')));
+                return filled($school['npsn'] ?? null)
+                    && blank($school['nsm'] ?? null)
+                    && (str_contains($text, 'mts') || str_contains($text, 'madrasah'));
+            });
+        @endphp
         <section class="simansa-analytics-section">
             <div class="simansa-section-head">
                 <div>
                     <h3>Sekolah Terbanyak</h3>
                     <p>Daftar sekolah asal dengan jumlah siswa tertinggi.</p>
                 </div>
+                <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNsm" @if($nsmCheckCandidates->isEmpty()) disabled @endif>
+                    <i class="fas fa-university mr-1"></i>Bulk Check NSM
+                </button>
             </div>
             <div class="table-responsive simansa-table-shell">
                 <table class="table table-hover simansa-table">
@@ -344,16 +355,34 @@
                     </thead>
                     <tbody>
                         @forelse($topSchools as $index => $school)
+                            @php
+                                $schoolText = strtolower(trim(($school['school_name'] ?? '') . ' ' . ($school['education_form'] ?? '')));
+                                $canCheckNsm = filled($school['npsn'] ?? null)
+                                    && blank($school['nsm'] ?? null)
+                                    && (str_contains($schoolText, 'mts') || str_contains($schoolText, 'madrasah'));
+                            @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>
                                     <div class="simansa-table-title">{{ $school['school_name'] }}</div>
-                                    <div class="simansa-table-subtitle">NPSN: {{ $school['npsn'] ?: '-' }}</div>
+                                    <div class="simansa-table-subtitle" id="school-nsm-status-{{ $school['npsn'] }}">
+                                        NPSN: {{ $school['npsn'] ?: '-' }} | NSM: {{ $school['nsm'] ?: '-' }}
+                                    </div>
                                 </td>
                                 <td>{{ $school['education_form'] }}</td>
                                 <td>{{ collect([$school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
                                 <td class="text-right font-weight-bold">{{ number_format($school['count']) }}</td>
                                 <td class="text-right">
+                                    @if($canCheckNsm)
+                                        <button
+                                            type="button"
+                                            class="btn btn-xs btn-primary btn-check-school-nsm mb-1"
+                                            data-url="{{ route('admin.siswa.statistics.check-school-nsm', $school['npsn']) }}"
+                                            data-npsn="{{ $school['npsn'] }}"
+                                            data-school="{{ $school['school_name'] }}">
+                                            <i class="fas fa-search mr-1"></i>Cek NSM
+                                        </button>
+                                    @endif
                                     <a href="{{ route('admin.siswa.index', ['school_npsn' => $school['npsn'], 'school_name' => $school['school_name'], 'education_form' => $school['education_form'], 'school_city_name' => $school['city_name'], 'school_province_name' => $school['province_name']]) }}" class="btn btn-xs btn-outline-primary">
                                         Lihat Siswa
                                     </a>
@@ -1045,6 +1074,18 @@
             $('#bulkNpsnProgressBar').css('width', `${percent}%`).attr('aria-valuenow', percent);
         }
 
+        function configureBulkOverlay(mode) {
+            if (mode === 'nsm') {
+                $('#bulkProgressEyebrow').html('<i class="fas fa-university mr-1"></i>Bulk Check NSM');
+                $('#bulkProgressTitle').text('Mengecek NSM Madrasah');
+                $('#bulkProgressDescription').text('Data NSM diambil dari EMIS Institutions berdasarkan NPSN madrasah.');
+            } else {
+                $('#bulkProgressEyebrow').html('<i class="fas fa-id-card mr-1"></i>Bulk Check NPSN');
+                $('#bulkProgressTitle').text('Mengecek NPSN Asal Sekolah');
+                $('#bulkProgressDescription').text('Proses berjalan satu per satu agar layanan checker tetap stabil.');
+            }
+        }
+
         function runNpsnCheck(button, options = {}) {
             const url = button.data('url');
             const studentId = button.data('id');
@@ -1101,11 +1142,67 @@
             runNpsnCheck($(this));
         });
 
+        function runSchoolNsmCheck(button, options = {}) {
+            const url = button.data('url');
+            const npsn = button.data('npsn') || '-';
+            const schoolName = button.data('school') || 'Sekolah';
+            const statusText = $('#school-nsm-status-' + npsn);
+
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Mengecek');
+            statusText.text(`NPSN: ${npsn} | NSM: mengecek...`);
+
+            return $.ajax({
+                url,
+                method: 'POST',
+                data: {_token: csrfToken},
+                success(response) {
+                    statusText.text(`NPSN: ${response.npsn || npsn} | NSM: ${response.nsm || '-'}`);
+                    button.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check mr-1"></i>Terisi');
+
+                    if (options.log) {
+                        appendBulkLog('success', `${schoolName} (${npsn})`, `NSM ${response.nsm} berhasil diambil dari EMIS.`);
+                    }
+
+                    if (!options.silent) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'NSM terisi',
+                            text: `${schoolName}: ${response.nsm}`,
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error(xhr) {
+                    const message = xhr.responseJSON?.message || 'NSM belum ditemukan di EMIS.';
+                    statusText.text(`NPSN: ${npsn} | NSM: -`);
+                    button.prop('disabled', false).removeClass('btn-success').addClass('btn-primary').html('<i class="fas fa-search mr-1"></i>Cek NSM');
+
+                    if (options.log) {
+                        appendBulkLog('danger', `${schoolName} (${npsn})`, message);
+                    }
+
+                    if (!options.silent) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'NSM belum ketemu',
+                            text: message,
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            });
+        }
+
+        $('.btn-check-school-nsm').on('click', function () {
+            runSchoolNsmCheck($(this));
+        });
+
         $('#btnCloseBulkOverlay').on('click', function () {
             $('#bulkNpsnOverlay').removeClass('is-active').attr('aria-hidden', 'true');
         });
 
         $('#btnBulkCheckNpsn').on('click', async function () {
+            configureBulkOverlay('npsn');
             const buttons = $('.btn-check-npsn').filter(function () {
                 return !$(this).hasClass('btn-success');
             }).toArray().map((el) => $(el));
@@ -1150,6 +1247,55 @@
 
             $('#btnCloseBulkOverlay').prop('disabled', false);
             $('#btnBulkCheckNpsn').prop('disabled', false).html('<i class="fas fa-tasks mr-1"></i>Bulk Check');
+            setBulkProgress(total, total, `Selesai: ${successCount} berhasil, ${failedCount} gagal.`);
+        });
+
+        $('#btnBulkCheckNsm').on('click', async function () {
+            configureBulkOverlay('nsm');
+            const buttons = $('.btn-check-school-nsm').filter(function () {
+                return !$(this).hasClass('btn-success');
+            }).toArray().map((el) => $(el));
+            const total = buttons.length;
+
+            if (total === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Tidak ada madrasah',
+                    text: 'Tidak ada sekolah madrasah pada daftar ini yang perlu dicek NSM.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            $('#bulkNpsnLog').empty();
+            $('#bulkNpsnOverlay').addClass('is-active').attr('aria-hidden', 'false');
+            $('#btnCloseBulkOverlay').prop('disabled', true);
+            $('#btnBulkCheckNsm').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Bulk Check NSM');
+            setBulkProgress(0, total, 'Menyiapkan pengecekan NSM...');
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (let index = 0; index < total; index++) {
+                const button = buttons[index];
+                const schoolName = button.data('school') || 'Sekolah';
+                const npsn = button.data('npsn') || '-';
+
+                setBulkProgress(index, total, `Mengecek ${schoolName} (${npsn})...`);
+                appendBulkLog('info', `${schoolName} (${npsn})`, 'Sedang mengambil NSM dari EMIS Institutions...');
+
+                try {
+                    await runSchoolNsmCheck(button, {silent: true, log: true});
+                    successCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+
+                setBulkProgress(index + 1, total, `${index + 1} dari ${total} sekolah selesai dicek.`);
+            }
+
+            $('#btnCloseBulkOverlay').prop('disabled', false);
+            $('#btnBulkCheckNsm').prop('disabled', false).html('<i class="fas fa-university mr-1"></i>Bulk Check NSM');
             setBulkProgress(total, total, `Selesai: ${successCount} berhasil, ${failedCount} gagal.`);
         });
 

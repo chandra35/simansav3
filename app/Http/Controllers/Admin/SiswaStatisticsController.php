@@ -127,19 +127,22 @@ class SiswaStatisticsController extends Controller
             ], 422);
         }
 
-        Sekolah::updateOrCreate(
-            ['npsn' => $npsn],
-            [
-                'nama' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
-                'status' => $this->pick($candidate, ['status_sekolah_asal']),
-                'bentuk_pendidikan' => $this->pick($candidate, ['bentuk_sekolah_asal']) ?: 'SMP/MTs',
-                'alamat_jalan' => $this->pick($candidate, ['alamat_sekolah_asal']),
-                'kecamatan' => $this->pick($candidate, ['kecamatan_sekolah_asal']),
-                'kabupaten_kota' => $this->pick($candidate, ['kabupaten_sekolah_asal']),
-                'provinsi' => $this->pick($candidate, ['provinsi_sekolah_asal']),
-                'last_fetched_at' => now(),
-            ]
-        );
+        $schoolPayload = [
+            'nama' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
+            'status' => $this->pick($candidate, ['status_sekolah_asal']),
+            'bentuk_pendidikan' => $this->pick($candidate, ['bentuk_sekolah_asal']) ?: 'SMP/MTs',
+            'alamat_jalan' => $this->pick($candidate, ['alamat_sekolah_asal']),
+            'kecamatan' => $this->pick($candidate, ['kecamatan_sekolah_asal']),
+            'kabupaten_kota' => $this->pick($candidate, ['kabupaten_sekolah_asal']),
+            'provinsi' => $this->pick($candidate, ['provinsi_sekolah_asal']),
+            'last_fetched_at' => now(),
+        ];
+
+        if ($nsm = $this->pick($candidate, ['nsm_asal_sekolah', 'nsm', 'institution_nsm'])) {
+            $schoolPayload['nsm'] = $nsm;
+        }
+
+        Sekolah::updateOrCreate(['npsn' => $npsn], $schoolPayload);
 
         $siswa->forceFill(['npsn_asal_sekolah' => $npsn])->save();
 
@@ -149,6 +152,52 @@ class SiswaStatisticsController extends Controller
             'npsn' => $npsn,
             'school_name' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
             'source' => $candidate['_source'] ?? 'PPDB',
+        ]);
+    }
+
+    public function checkSchoolNsm(Request $request, Sekolah $sekolah)
+    {
+        $this->authorize('edit-siswa');
+
+        $result = app(EmisNisnService::class)->lookupInstitutionByNpsn($sekolah->npsn);
+
+        if (!($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'NSM belum ditemukan.',
+            ], 422);
+        }
+
+        $data = (array) ($result['data'] ?? []);
+        $nsm = trim((string) ($data['nsm'] ?? ($data['statistic_num'] ?? '')));
+
+        if ($nsm === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'NSM tidak tersedia pada data institusi EMIS.',
+            ], 422);
+        }
+
+        $location = (array) ($data['location'] ?? []);
+        $type = (array) ($data['type'] ?? []);
+
+        $sekolah->fill([
+            'nsm' => $nsm,
+            'nama' => $data['name'] ?? $sekolah->nama,
+            'bentuk_pendidikan' => $type['name'] ?? ($type['full_name'] ?? $sekolah->bentuk_pendidikan),
+            'alamat_jalan' => $location['address'] ?? $sekolah->alamat_jalan,
+            'kecamatan' => data_get($location, 'district.district') ?? $sekolah->kecamatan,
+            'kabupaten_kota' => data_get($location, 'city.city') ?? $sekolah->kabupaten_kota,
+            'provinsi' => data_get($location, 'province.province') ?? $sekolah->provinsi,
+            'last_fetched_at' => now(),
+        ])->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'NSM berhasil diperbarui.',
+            'npsn' => $sekolah->npsn,
+            'nsm' => $nsm,
+            'school_name' => $sekolah->nama,
         ]);
     }
 
@@ -258,6 +307,7 @@ class SiswaStatisticsController extends Controller
 
         return [
             'npsn_asal_sekolah' => $npsn,
+            'nsm_asal_sekolah' => $kemenag['institution_nsm'] ?? null,
             'nama_sekolah_asal' => $kemdikbud['sekolah'] ?? ($kemenag['institution_name'] ?? null),
             'status_sekolah_asal' => null,
             'bentuk_sekolah_asal' => null,
@@ -373,6 +423,7 @@ class SiswaStatisticsController extends Controller
             ->whereNotNull('siswa.npsn_asal_sekolah')
             ->groupBy(
                 'siswa.npsn_asal_sekolah',
+                'sekolah_asal.nsm',
                 'sekolah_asal.nama',
                 'sekolah_asal.bentuk_pendidikan',
                 'sekolah_asal.kabupaten_kota',
@@ -382,6 +433,7 @@ class SiswaStatisticsController extends Controller
             ->limit(15)
             ->get([
                 'siswa.npsn_asal_sekolah as npsn',
+                'sekolah_asal.nsm as nsm',
                 DB::raw('COALESCE(sekolah_asal.nama, "Sekolah Tidak Dikenal") as school_name'),
                 DB::raw('COALESCE(sekolah_asal.bentuk_pendidikan, "Tidak diketahui") as education_form'),
                 DB::raw('COALESCE(sekolah_asal.kabupaten_kota, "") as city_name'),
@@ -391,6 +443,7 @@ class SiswaStatisticsController extends Controller
             ->map(function ($item) {
                 return [
                     'npsn' => $item->npsn,
+                    'nsm' => $item->nsm,
                     'school_name' => $item->school_name,
                     'education_form' => $item->education_form,
                     'city_name' => $item->city_name,

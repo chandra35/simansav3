@@ -856,19 +856,22 @@ class PpdbMatrikulasiImportService
             return null;
         }
 
-        Sekolah::firstOrCreate(
-            ['npsn' => $npsn],
-            [
-                'nama' => $this->pick($data, ['nama_sekolah_asal']) ?: 'Sekolah asal PPDB ' . $npsn,
-                'status' => $this->pick($data, ['status_sekolah_asal']),
-                'bentuk_pendidikan' => $this->pick($data, ['bentuk_sekolah_asal']),
-                'alamat_jalan' => $this->pick($data, ['alamat_sekolah_asal']),
-                'kecamatan' => $this->pick($data, ['kecamatan_sekolah_asal']),
-                'kabupaten_kota' => $this->pick($data, ['kabupaten_sekolah_asal']),
-                'provinsi' => $this->pick($data, ['provinsi_sekolah_asal']),
-                'last_fetched_at' => now(),
-            ]
-        );
+        $payload = [
+            'nama' => $this->pick($data, ['nama_sekolah_asal']) ?: 'Sekolah asal PPDB ' . $npsn,
+            'status' => $this->pick($data, ['status_sekolah_asal']),
+            'bentuk_pendidikan' => $this->pick($data, ['bentuk_sekolah_asal']),
+            'alamat_jalan' => $this->pick($data, ['alamat_sekolah_asal']),
+            'kecamatan' => $this->pick($data, ['kecamatan_sekolah_asal']),
+            'kabupaten_kota' => $this->pick($data, ['kabupaten_sekolah_asal']),
+            'provinsi' => $this->pick($data, ['provinsi_sekolah_asal']),
+            'last_fetched_at' => now(),
+        ];
+
+        if ($nsm = $this->pick($data, ['nsm_asal_sekolah', 'nsm', 'institution_nsm'])) {
+            $payload['nsm'] = $nsm;
+        }
+
+        Sekolah::updateOrCreate(['npsn' => $npsn], $payload);
 
         return $npsn;
     }
