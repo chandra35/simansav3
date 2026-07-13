@@ -40,6 +40,7 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'No',
             'Nama Lengkap',
             'NISN',
+            'Nomor Tes PPDB',
             'Username',
             'Password (Default = NISN)',
             'NIK',
@@ -81,6 +82,7 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $this->counter,
             $siswa->nama_lengkap,
             $siswa->nisn,
+            $siswa->nomor_tes ?? '',
             $user?->username ?? '',
             $siswa->nisn, // default password = NISN
             $siswa->nik ?? '',
@@ -128,33 +130,34 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'A' => 5,   // No
             'B' => 30,  // Nama
             'C' => 16,  // NISN
-            'D' => 18,  // Username
-            'E' => 26,  // Password
-            'F' => 20,  // NIK
-            'G' => 14,  // JK
-            'H' => 18,  // Tempat Lahir
-            'I' => 14,  // Tgl Lahir
-            'J' => 12,  // Agama
-            'K' => 16,  // HP
-            'L' => 12,  // Kelas
-            'M' => 12,  // Tahun Masuk
-            'N' => 16,  // NPSN
-            'O' => 28,  // Email
-            'P' => 26,  // Nama Ayah
-            'Q' => 20,  // NIK Ayah
-            'R' => 22,  // Pekerjaan Ayah
-            'S' => 20,  // Penghasilan Ayah
-            'T' => 16,  // HP Ayah
-            'U' => 26,  // Nama Ibu
-            'V' => 20,  // NIK Ibu
-            'W' => 22,  // Pekerjaan Ibu
-            'X' => 20,  // Penghasilan Ibu
-            'Y' => 16,  // HP Ibu
-            'Z' => 20,  // No KK
-            'AA' => 16, // Status Diri
-            'AB' => 16, // Status Ortu
-            'AC' => 14, // Verval
-            'AD' => 14, // Tgl Daftar
+            'D' => 18,  // Nomor Tes
+            'E' => 18,  // Username
+            'F' => 26,  // Password
+            'G' => 20,  // NIK
+            'H' => 14,  // JK
+            'I' => 18,  // Tempat Lahir
+            'J' => 14,  // Tgl Lahir
+            'K' => 12,  // Agama
+            'L' => 16,  // HP
+            'M' => 12,  // Kelas
+            'N' => 12,  // Tahun Masuk
+            'O' => 16,  // NPSN
+            'P' => 28,  // Email
+            'Q' => 26,  // Nama Ayah
+            'R' => 20,  // NIK Ayah
+            'S' => 22,  // Pekerjaan Ayah
+            'T' => 20,  // Penghasilan Ayah
+            'U' => 16,  // HP Ayah
+            'V' => 26,  // Nama Ibu
+            'W' => 20,  // NIK Ibu
+            'X' => 22,  // Pekerjaan Ibu
+            'Y' => 20,  // Penghasilan Ibu
+            'Z' => 16,  // HP Ibu
+            'AA' => 20, // No KK
+            'AB' => 16, // Status Diri
+            'AC' => 16, // Status Ortu
+            'AD' => 14, // Verval
+            'AE' => 14, // Tgl Daftar
         ];
     }
 }

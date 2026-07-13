@@ -1080,6 +1080,7 @@ function loadSiswaDataTab(siswa) {
                 <h6 class="text-primary"><i class="fas fa-user"></i> Informasi Akun</h6>
                 <table class="table table-detail table-sm table-bordered">
                     <tr><td width="40%" class="bg-light"><strong>NISN</strong></td><td>${siswa.nisn || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Nomor Tes PPDB</strong></td><td>${siswa.nomor_tes || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Nama Lengkap</strong></td><td>${siswa.nama_lengkap || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Jenis Kelamin</strong></td><td>${siswa.jenis_kelamin == 'L' ? '<span class="badge badge-primary">Laki-laki</span>' : '<span class="badge badge-danger">Perempuan</span>'}</td></tr>
                     <tr><td class="bg-light"><strong>Username</strong></td><td>${siswa.user.username || '-'}</td></tr>

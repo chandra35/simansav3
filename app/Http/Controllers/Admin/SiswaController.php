@@ -157,7 +157,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
         
         $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
-            ->select(['id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'created_at']);
+            ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'created_at']);
 
         $this->applyRoleScope($siswa);
         $this->applyStatisticsDrilldownFilters($siswa, $request);
@@ -224,6 +224,7 @@ class SiswaController extends Controller
             $search = $request->search['value'];
             $siswa->where(function($q) use ($search) {
                 $q->where('nisn', 'like', "%{$search}%")
+                  ->orWhere('nomor_tes', 'like', "%{$search}%")
                   ->orWhere('nama_lengkap', 'like', "%{$search}%");
             });
         }
@@ -294,7 +295,8 @@ class SiswaController extends Controller
 
             $namaNisn = '<div class="font-weight-600 text-dark" style="font-size:.88rem;line-height:1.3;">'
                 . e($item->nama_lengkap)
-                . '</div><small class="text-muted" style="font-size:.78rem;">' . e($item->nisn) . '</small>';
+                . '</div><small class="text-muted" style="font-size:.78rem;">NISN ' . e($item->nisn) . '</small>'
+                . ($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes ' . e($item->nomor_tes) . '</small>' : '');
 
             return [
                 'id' => $item->id,
@@ -633,6 +635,7 @@ class SiswaController extends Controller
                 'id' => $siswa->id,
                 'nama_lengkap' => $siswa->nama_lengkap,
                 'nisn' => $siswa->nisn,
+                'nomor_tes' => $siswa->nomor_tes,
                 'nis' => $siswa->nis,
                 'jenis_kelamin' => $siswa->jenis_kelamin,
                 'tempat_lahir' => $siswa->tempat_lahir,

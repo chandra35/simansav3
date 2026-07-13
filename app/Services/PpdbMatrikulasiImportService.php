@@ -768,6 +768,7 @@ class PpdbMatrikulasiImportService
         return [
             'user_id' => $user->id,
             'nisn' => $peserta->nisn,
+            'nomor_tes' => $peserta->nomor_tes ?: $this->pick($data, ['nomor_tes']),
             'nama_lengkap' => $peserta->nama_lengkap,
             'foto_profile' => $fotoProfile,
             'jenis_kelamin' => $this->pick($data, ['jenis_kelamin', 'jk']),
