@@ -877,91 +877,122 @@ class KelasController extends Controller
             ], 422);
         }
 
-        // Check capacity
-        $currentCount = $kelas->siswaAktif()->count();
-        if (($currentCount + $nisnArray->count()) > $kelas->kapasitas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kapasitas kelas tidak mencukupi. Sisa tempat: ' . $kelas->sisa_tempat . ', NISN yang diinput: ' . $nisnArray->count()
-            ], 422);
-        }
-
         DB::beginTransaction();
         try {
             $successCount = 0;
             $errors = [];
 
+            $siswaByNisn = Siswa::query()
+                ->whereIn('nisn', $nisnArray)
+                ->get()
+                ->keyBy('nisn');
+
+            $siswaIds = $siswaByNisn->pluck('id');
+            $activeRecords = SiswaKelas::query()
+                ->whereIn('siswa_id', $siswaIds)
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('status', 'aktif')
+                ->get()
+                ->keyBy('siswa_id');
+
+            $assignable = collect();
             foreach ($nisnArray as $nisn) {
-                try {
-                    // Find siswa by NISN
-                    $siswa = Siswa::where('nisn', $nisn)
-                        // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
-                        // ->where('data_diri_completed', true)
-                        ->first();
+                $siswa = $siswaByNisn->get($nisn);
 
-                    if (!$siswa) {
-                        $errors[] = [
-                            'nisn' => $nisn,
-                            'error' => 'NISN tidak ditemukan'
-                        ];
-                        continue;
-                    }
-
-                    $activeRecord = SiswaKelas::where('siswa_id', $siswa->id)
-                        ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                        ->where('status', 'aktif')
-                        ->first();
-
-                    if ($activeRecord && $activeRecord->kelas_id && $activeRecord->kelas_id !== $kelas->id) {
-                        $errors[] = [
-                            'nisn' => $nisn,
-                            'error' => 'Siswa sudah terdaftar di kelas lain'
-                        ];
-                        continue;
-                    }
-
-                    if ($activeRecord && $activeRecord->kelas_id === $kelas->id) {
-                        $errors[] = [
-                            'nisn' => $nisn,
-                            'error' => 'Siswa sudah terdaftar di kelas ini'
-                        ];
-                        continue;
-                    }
-
-                    // Get next nomor absen
-                    $lastAbsen = $kelas->siswas()
-                        ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                        ->max('nomor_urut_absen') ?? 0;
-
-                    if ($activeRecord) {
-                        $activeRecord->update([
-                            'kelas_id' => $kelas->id,
-                            'tingkat' => $kelas->tingkat,
-                            'nomor_urut_absen' => $lastAbsen + 1,
-                            'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
-                        ]);
-                    } else {
-                        $kelas->siswas()->attach($siswa->id, [
-                            'id' => \Illuminate\Support\Str::uuid()->toString(),
-                            'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
-                            'tingkat' => $kelas->tingkat,
-                            'tanggal_masuk' => $tanggalMasuk,
-                            'status' => 'aktif',
-                            'nomor_urut_absen' => $lastAbsen + 1,
-                        ]);
-                    }
-
-                    // Update kelas_saat_ini_id pada tabel siswa
-                    $siswa->update(['kelas_saat_ini_id' => $kelas->id]);
-
-                    $successCount++;
-
-                } catch (\Exception $e) {
+                if (!$siswa) {
                     $errors[] = [
                         'nisn' => $nisn,
-                        'error' => $e->getMessage()
+                        'error' => 'NISN tidak ditemukan'
+                    ];
+                    continue;
+                }
+
+                $activeRecord = $activeRecords->get($siswa->id);
+                if ($activeRecord && $activeRecord->kelas_id && $activeRecord->kelas_id !== $kelas->id) {
+                    $errors[] = [
+                        'nisn' => $nisn,
+                        'error' => 'Siswa sudah terdaftar di kelas lain'
+                    ];
+                    continue;
+                }
+
+                if ($activeRecord && $activeRecord->kelas_id === $kelas->id) {
+                    $errors[] = [
+                        'nisn' => $nisn,
+                        'error' => 'Siswa sudah terdaftar di kelas ini'
+                    ];
+                    continue;
+                }
+
+                $assignable->push([
+                    'nisn' => $nisn,
+                    'siswa' => $siswa,
+                    'active_record' => $activeRecord,
+                ]);
+            }
+
+            $currentCount = SiswaKelas::query()
+                ->where('kelas_id', $kelas->id)
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('status', 'aktif')
+                ->count();
+            if (($currentCount + $assignable->count()) > $kelas->kapasitas) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kapasitas kelas tidak mencukupi. Sisa tempat: ' . max(0, $kelas->kapasitas - $currentCount) . ', siswa yang bisa ditambahkan: ' . $assignable->count()
+                ], 422);
+            }
+
+            $lastAbsen = SiswaKelas::query()
+                ->where('kelas_id', $kelas->id)
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->max('nomor_urut_absen') ?? 0;
+
+            $now = now();
+            $insertRows = [];
+            $successSiswaIds = [];
+
+            foreach ($assignable as $row) {
+                $siswa = $row['siswa'];
+                $activeRecord = $row['active_record'];
+                $nextAbsen = ++$lastAbsen;
+
+                if ($activeRecord) {
+                    $activeRecord->update([
+                        'kelas_id' => $kelas->id,
+                        'tingkat' => $kelas->tingkat,
+                        'nomor_urut_absen' => $nextAbsen,
+                        'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                    ]);
+                } else {
+                    $insertRows[] = [
+                        'id' => \Illuminate\Support\Str::uuid()->toString(),
+                        'siswa_id' => $siswa->id,
+                        'kelas_id' => $kelas->id,
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'tingkat' => $kelas->tingkat,
+                        'tanggal_masuk' => $tanggalMasuk,
+                        'status' => 'aktif',
+                        'nomor_urut_absen' => $nextAbsen,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
                 }
+
+                $successSiswaIds[] = $siswa->id;
+                $successCount++;
+            }
+
+            if (!empty($insertRows)) {
+                DB::table('siswa_kelas')->insert($insertRows);
+            }
+
+            if (!empty($successSiswaIds)) {
+                Siswa::whereIn('id', $successSiswaIds)->update([
+                    'kelas_saat_ini_id' => $kelas->id,
+                    'updated_at' => $now,
+                ]);
             }
 
             DB::commit();

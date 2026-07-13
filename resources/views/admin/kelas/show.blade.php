@@ -1012,8 +1012,13 @@
                     data: formData,
                     beforeSend: function() {
                         Swal.fire({
-                            title: 'Memproses...',
-                            html: `Memproses ${count} NISN...<br><small>Mohon tunggu</small>`,
+                            title: 'Memproses Bulk NISN',
+                            html: `
+                                <div class="text-left">
+                                    <p class="mb-2">Memvalidasi <strong>${count} NISN</strong> dan menempatkan siswa ke rombel.</p>
+                                    <small class="text-muted d-block">Sistem mencocokkan data siswa, mengecek histori kelas aktif, menghitung nomor absen, lalu menyimpan hasilnya.</small>
+                                </div>
+                            `,
                             allowOutsideClick: false,
                             didOpen: () => {
                                 Swal.showLoading();
