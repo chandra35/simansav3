@@ -18,15 +18,17 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 {
     protected Collection $rows;
     protected int $counter = 0;
+    protected string $sheetTitle;
 
-    public function __construct(Collection $rows)
+    public function __construct(Collection $rows, string $sheetTitle = 'Data Siswa')
     {
         $this->rows = $rows;
+        $this->sheetTitle = $sheetTitle;
     }
 
     public function title(): string
     {
-        return 'Data Siswa';
+        return $this->sheetTitle;
     }
 
     public function collection(): Collection

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\SiswaExport;
+use App\Exports\SiswaPerRombelExport;
 use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
@@ -144,6 +145,13 @@ class SiswaController extends Controller
         }
 
         $rows = $query->with(['user', 'ortu', 'kelasAktif'])->get();
+
+        if ($request->filled('tingkat') && $request->tingkat !== 'tanpa_rombel' && !$request->filled('kelas_id')) {
+            $filename = 'data-siswa-tingkat-' . $request->tingkat . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
+
+            return Excel::download(new SiswaPerRombelExport($rows, 'Tingkat ' . $request->tingkat), $filename);
+        }
+
         $filename = 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
 
         return Excel::download(new SiswaExport($rows), $filename);
