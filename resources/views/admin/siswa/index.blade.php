@@ -1687,13 +1687,20 @@ $(document).ready(function() {
     // Sembunyikan overlay via focus event atau timeout fallback
     $('#btnExportSiswa').on('click', function () {
         var hideOverlay = function () {
-            if (typeof appHideGlobalOverlay === 'function') {
+            if (typeof hideAppGlobalOverlay === 'function') {
+                hideAppGlobalOverlay();
+            } else if (typeof appHideGlobalOverlay === 'function') {
                 appHideGlobalOverlay();
             }
+            $('#appGlobalOverlay').removeClass('active').attr('aria-hidden', 'true');
         };
-        var t = setTimeout(hideOverlay, 2000);
+        var timers = [
+            setTimeout(hideOverlay, 800),
+            setTimeout(hideOverlay, 2000),
+            setTimeout(hideOverlay, 5000)
+        ];
         $(window).one('focus.exportHide', function () {
-            clearTimeout(t);
+            timers.forEach(clearTimeout);
             setTimeout(hideOverlay, 200);
         });
     });

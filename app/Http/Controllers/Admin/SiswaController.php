@@ -146,10 +146,12 @@ class SiswaController extends Controller
 
         $rows = $query->with(['user', 'ortu', 'kelasAktif'])->get();
 
-        if ($request->filled('tingkat') && $request->tingkat !== 'tanpa_rombel' && !$request->filled('kelas_id')) {
-            $filename = 'data-siswa-tingkat-' . $request->tingkat . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
+        if (!$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel') {
+            $tingkatLabel = $request->filled('tingkat') ? 'tingkat-' . $request->tingkat : 'semua-tingkat';
+            $filename = 'data-siswa-' . $tingkatLabel . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
+            $tingkat = $request->filled('tingkat') ? (int) $request->tingkat : null;
 
-            return Excel::download(new SiswaPerRombelExport($rows, 'Tingkat ' . $request->tingkat), $filename);
+            return Excel::download(new SiswaPerRombelExport($rows, 'Data Siswa', $tingkat), $filename);
         }
 
         $filename = 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
