@@ -18,11 +18,11 @@
         </div>
         <div class="simansa-hero__side">
             <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total Siswa</span>
+                <span class="simansa-hero-chip__label"><i class="fas fa-users mr-1"></i> Total Siswa</span>
                 <span class="simansa-hero-chip__value" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</span>
             </div>
             <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Data Lengkap</span>
+                <span class="simansa-hero-chip__label"><i class="fas fa-check-circle mr-1"></i> Data Lengkap</span>
                 <span class="simansa-hero-chip__value" id="hero-stat-lengkap">{{ number_format($stats['data_lengkap']) }}</span>
             </div>
         </div>
@@ -375,8 +375,8 @@
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom & Rotasi"><i class="fas fa-compress"></i></button>
                     <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90°"><i class="fas fa-undo"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90°"><i class="fas fa-redo"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90Â°"><i class="fas fa-undo"></i></button>
+                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90Â°"><i class="fas fa-redo"></i></button>
                     <button class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
                     <button class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="OCR seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
                     <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download original"><i class="fas fa-download"></i></a>
@@ -518,7 +518,7 @@
             font-weight: 700;
             border-radius: .45rem;
         }
-        /* Table scroll wrapper — fills card, scrolls horizontally when needed */
+        /* Table scroll wrapper â€” fills card, scrolls horizontally when needed */
         .simansa-table-scroll {
             width: 100%;
             overflow-x: auto;
@@ -828,7 +828,7 @@ async function startOcr() {
     await runOcrOnCanvas(fullCanvas, 'seluruh gambar');
 }
 
-// Core OCR runner — menerima canvas element
+// Core OCR runner â€” menerima canvas element
 async function runOcrOnCanvas(canvas, label) {
     $('#ocrPanel').show();
     $('#ocrStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat mesin OCR...');
@@ -857,7 +857,7 @@ async function runOcrOnCanvas(canvas, label) {
         ocrText = result.data.text.trim();
         if (ocrText) {
             const lines = ocrText.split('\n').filter(l => l.trim()).length;
-            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks — <small class="text-muted">teks bisa di-select/copy</small>');
+            $('#ocrStatus').html('<i class="fas fa-check-circle text-success mr-1"></i> ' + lines + ' baris teks â€” <small class="text-muted">teks bisa di-select/copy</small>');
             renderOcrText(ocrText, $('#ocrSearchInput').val());
         } else {
             $('#ocrStatus').html('<i class="fas fa-info-circle text-warning mr-1"></i> Tidak ada teks yang terdeteksi');
