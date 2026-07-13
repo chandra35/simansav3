@@ -281,7 +281,7 @@ class CetakController extends Controller
         // Process foto siswa to base64 for PDF
         foreach ($kelasList as $kelas) {
             foreach ($kelas->siswas as $siswa) {
-                $siswa->foto_base64 = $this->processFotoProfile($siswa->foto_profile, 'square');
+                $siswa->foto_base64 = $this->processFotoProfile($siswa->foto_profile, 'circle');
                 $siswa->qr_base64 = $this->generateQrCode($siswa->id, 'siswa');
             }
         }
@@ -603,8 +603,8 @@ class CetakController extends Controller
         $navyBar = imagecolorallocate($img, 25, 40, 65);
         imagefilledrectangle($img, 0, 0, 8, $height, $navyBar);
 
-        // Bottom gradient section starts at ~65% from top
-        $gradStart = (int)($height * 0.65);
+        // Keep the colored bottom band compact so the card feels closer to a standard ID layout.
+        $gradStart = (int)($height * 0.72);
 
         // Smooth fade zone: white → gradient (feather ~30px)
         $fadeZone = 40;
@@ -698,7 +698,7 @@ class CetakController extends Controller
 
         $width = imagesx($image);
         $height = imagesy($image);
-        if ($shape === 'square') {
+        if (in_array($shape, ['square', 'circle'], true)) {
             $side = min($width, $height);
             $srcX = (int)(($width - $side) / 2);
             $srcY = (int)(($height - $side) / 2);
@@ -709,6 +709,29 @@ class CetakController extends Controller
             imagealphablending($resized, false);
             imagesavealpha($resized, true);
             imagecopyresampled($resized, $image, 0, 0, $srcX, $srcY, $newWidth, $newHeight, $side, $side);
+
+            if ($shape === 'circle') {
+                $circle = imagecreatetruecolor($newWidth, $newHeight);
+                imagealphablending($circle, false);
+                imagesavealpha($circle, true);
+                $transparent = imagecolorallocatealpha($circle, 0, 0, 0, 127);
+                imagefill($circle, 0, 0, $transparent);
+
+                $radius = $newWidth / 2;
+                $center = $radius - 0.5;
+                for ($x = 0; $x < $newWidth; $x++) {
+                    for ($y = 0; $y < $newHeight; $y++) {
+                        $dx = $x - $center;
+                        $dy = $y - $center;
+                        if (($dx * $dx + $dy * $dy) <= ($radius * $radius)) {
+                            imagesetpixel($circle, $x, $y, imagecolorat($resized, $x, $y));
+                        }
+                    }
+                }
+
+                imagedestroy($resized);
+                $resized = $circle;
+            }
         } else {
             // Resize to max 400px height for sharp ID card rendering
             $newHeight = 400;
@@ -721,9 +744,14 @@ class CetakController extends Controller
         }
 
         ob_start();
-        imagejpeg($resized, null, 95);
+        if ($shape === 'circle') {
+            imagepng($resized, null, 6);
+        } else {
+            imagejpeg($resized, null, 95);
+        }
         $imageData = ob_get_clean();
-        $base64 = 'data:image/jpeg;base64,' . base64_encode($imageData);
+        $mime = $shape === 'circle' ? 'image/png' : 'image/jpeg';
+        $base64 = 'data:' . $mime . ';base64,' . base64_encode($imageData);
 
         imagedestroy($image);
         imagedestroy($resized);

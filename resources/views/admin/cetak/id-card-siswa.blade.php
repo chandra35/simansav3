@@ -97,33 +97,34 @@
         /* Large photo area — borderless, fills white zone */
         .f-foto-area {
             text-align: center;
-            padding: 2.2mm 0 0 0;
+            padding: 2mm 0 0 0;
         }
         .f-foto-frame {
-            width: 34mm;
-            height: 34mm;
+            width: 31mm;
+            height: 31mm;
             overflow: hidden;
             text-align: center;
             margin: 0 auto;
             background: #f4f8fb;
-            border: 0.55mm solid #ffffff;
-            outline: 0.25mm solid #d8e7ee;
-            border-radius: 2mm;
+            border: 0.8mm solid #ffffff;
+            outline: 0.35mm solid #d8e7ee;
+            border-radius: 50%;
         }
         .f-foto-frame img {
-            width: 34mm;
-            height: 34mm;
+            width: 31mm;
+            height: 31mm;
+            border-radius: 50%;
         }
         .f-foto-placeholder {
-            padding-top: 14.5mm;
+            padding-top: 13mm;
             font-size: 5.5pt;
             color: #8a97a4;
-            height: 34mm;
+            height: 31mm;
         }
 
         /* Bottom section on gradient */
         .f-bottom {
-            padding: 4.2mm 3.8mm 0 3.8mm;
+            padding: 3mm 3.6mm 0 3.6mm;
         }
         .f-bottom-tbl {
             width: 100%;
@@ -137,19 +138,23 @@
             text-align: left;
         }
         .f-name {
-            font-size: 7.5pt;
+            font-size: 7.2pt;
             font-weight: bold;
             color: #ffffff;
             letter-spacing: 0;
-            padding-bottom: 0.9mm;
-            line-height: 1.18;
-            min-height: 8.4mm;
+            padding: 1.3mm 1.5mm;
+            line-height: 1.14;
+            min-height: 7.4mm;
+            background: rgba(16, 43, 65, 0.88);
+            border-radius: 1.6mm;
+            margin-bottom: 1.1mm;
         }
         .f-id-number {
             font-size: 5.1pt;
-            color: rgba(255,255,255,0.86);
+            color: #29465d;
             letter-spacing: 0;
             line-height: 1.35;
+            font-weight: bold;
         }
         .f-qr-cell {
             width: 14.5mm;
