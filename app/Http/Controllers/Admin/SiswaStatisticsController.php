@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\EmisNisnService;
+use App\Services\SekolahDataEnrichmentService;
 
 class SiswaStatisticsController extends Controller
 {
@@ -159,45 +160,28 @@ class SiswaStatisticsController extends Controller
     {
         $this->authorize('edit-siswa');
 
-        $result = app(EmisNisnService::class)->lookupInstitutionByNpsn($sekolah->npsn);
+        $result = app(SekolahDataEnrichmentService::class)->enrich($sekolah);
 
         if (!($result['success'] ?? false)) {
             return response()->json([
                 'success' => false,
-                'message' => $result['message'] ?? 'NSM belum ditemukan.',
+                'message' => $result['message'] ?? 'Data sekolah belum berhasil dilengkapi.',
             ], 422);
         }
 
-        $data = (array) ($result['data'] ?? []);
-        $nsm = trim((string) ($data['nsm'] ?? ($data['statistic_num'] ?? '')));
-
-        if ($nsm === '') {
-            return response()->json([
-                'success' => false,
-                'message' => 'NSM tidak tersedia pada data institusi EMIS.',
-            ], 422);
-        }
-
-        $location = (array) ($data['location'] ?? []);
-        $type = (array) ($data['type'] ?? []);
-
-        $sekolah->fill([
-            'nsm' => $nsm,
-            'nama' => $data['name'] ?? $sekolah->nama,
-            'bentuk_pendidikan' => $type['name'] ?? ($type['full_name'] ?? $sekolah->bentuk_pendidikan),
-            'alamat_jalan' => $location['address'] ?? $sekolah->alamat_jalan,
-            'kecamatan' => data_get($location, 'district.district') ?? $sekolah->kecamatan,
-            'kabupaten_kota' => data_get($location, 'city.city') ?? $sekolah->kabupaten_kota,
-            'provinsi' => data_get($location, 'province.province') ?? $sekolah->provinsi,
-            'last_fetched_at' => now(),
-        ])->save();
+        $sekolah = $result['data'];
 
         return response()->json([
             'success' => true,
-            'message' => 'NSM berhasil diperbarui.',
+            'message' => $result['message'],
             'npsn' => $sekolah->npsn,
-            'nsm' => $nsm,
+            'nsm' => $sekolah->nsm,
             'school_name' => $sekolah->nama,
+            'education_form' => $sekolah->bentuk_pendidikan,
+            'city_name' => $sekolah->kabupaten_kota,
+            'province_name' => $sekolah->provinsi,
+            'sources' => $result['sources'] ?? [],
+            'warnings' => $result['warnings'] ?? [],
         ]);
     }
 

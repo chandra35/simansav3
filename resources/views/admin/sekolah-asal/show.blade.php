@@ -3,19 +3,33 @@
 @section('title', 'Detail Sekolah - ' . $sekolah->nama)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0"><i class="fas fa-school"></i> Detail Sekolah Asal</h1>
-        <a href="{{ route('admin.sekolah-asal.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
+    <div class="simansa-page-hero">
+        <div>
+            <div class="simansa-page-hero__eyebrow">
+                <i class="fas fa-school mr-1"></i> Detail Sekolah Asal
+            </div>
+            <h1>{{ $sekolah->nama }}</h1>
+            <p>{{ $sekolah->npsn }} | NSM: {{ $sekolah->nsm ?: '-' }} | {{ $sekolah->alamat_lengkap ?: 'Wilayah belum lengkap' }}</p>
+        </div>
+        <div class="simansa-page-hero__actions">
+            <button type="button"
+                class="btn btn-light"
+                id="btnEnrichSchool"
+                data-url="{{ route('admin.sekolah-asal.enrich', $sekolah->npsn) }}">
+                <i class="fas fa-sync-alt mr-1"></i>Lengkapi Data
+            </button>
+            <a href="{{ route('admin.sekolah-asal.index') }}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left mr-1"></i>Kembali
+            </a>
+        </div>
     </div>
 @stop
 
 @section('content')
     {{-- Informasi Sekolah --}}
-    <div class="card card-primary">
+    <div class="card simansa-card">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Sekolah</h3>
+            <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i>Informasi Sekolah</h3>
         </div>
         <div class="card-body">
             <div class="row">
@@ -49,6 +63,22 @@
                             <th>Bentuk Pendidikan</th>
                             <td>{{ $sekolah->bentuk_pendidikan ?? '-' }}</td>
                         </tr>
+                        <tr>
+                            <th>Jenjang</th>
+                            <td>{{ $sekolah->jenjang_pendidikan ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Kementerian Pembina</th>
+                            <td>{{ $sekolah->kementerian_pembina ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sumber Data</th>
+                            <td>{{ $sekolah->sumber_data_sekolah ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Terakhir Update</th>
+                            <td>{{ $sekolah->last_fetched_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                        </tr>
                     </table>
                 </div>
                 <div class="col-md-6">
@@ -69,6 +99,48 @@
                             <th>Provinsi</th>
                             <td>{{ $sekolah->provinsi ?? '-' }}</td>
                         </tr>
+                        <tr>
+                            <th>Kode Pos</th>
+                            <td>{{ $sekolah->kode_pos ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>RT/RW</th>
+                            <td>{{ $sekolah->rt ?? '-' }} / {{ $sekolah->rw ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Koordinat</th>
+                            <td>{{ $sekolah->lintang ?? '-' }}, {{ $sekolah->bujur ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card simansa-card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-file-signature mr-1"></i>Dokumen, Perizinan, dan Kontak</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr><th width="40%">NPYP</th><td>{{ $sekolah->npyp ?? '-' }}</td></tr>
+                        <tr><th>No. SK Pendirian</th><td>{{ $sekolah->no_sk_pendirian ?? '-' }}</td></tr>
+                        <tr><th>Tgl. SK Pendirian</th><td>{{ $sekolah->tanggal_sk_pendirian ?? '-' }}</td></tr>
+                        <tr><th>No. SK Operasional</th><td>{{ $sekolah->no_sk_operasional ?? '-' }}</td></tr>
+                        <tr><th>Tgl. SK Operasional</th><td>{{ $sekolah->tanggal_sk_operasional ?? '-' }}</td></tr>
+                        <tr><th>Akreditasi</th><td>{{ $sekolah->akreditasi ?? '-' }}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr><th width="40%">Luas Tanah</th><td>{{ $sekolah->luas_tanah ?? '-' }}</td></tr>
+                        <tr><th>Akses Internet</th><td>{{ $sekolah->akses_internet ?? '-' }}</td></tr>
+                        <tr><th>Sumber Listrik</th><td>{{ $sekolah->sumber_listrik ?? '-' }}</td></tr>
+                        <tr><th>Telepon</th><td>{{ $sekolah->telepon ?? '-' }}</td></tr>
+                        <tr><th>Email</th><td>{{ $sekolah->email ?? '-' }}</td></tr>
+                        <tr><th>Website</th><td>{{ $sekolah->website ?? '-' }}</td></tr>
                     </table>
                 </div>
             </div>
@@ -236,6 +308,58 @@
 
 @section('css')
     <style>
+        .content-wrapper {
+            background: #f3f7fc;
+        }
+        .simansa-page-hero {
+            align-items: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 56%, #168891 100%);
+            border-radius: 16px;
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            min-height: 118px;
+            padding: 22px 24px;
+        }
+        .simansa-page-hero__eyebrow {
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .simansa-page-hero h1 {
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 850;
+            margin: 10px 0 6px;
+        }
+        .simansa-page-hero p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+        .simansa-page-hero__actions {
+            display: flex;
+            flex: 0 0 auto;
+            gap: 10px;
+        }
+        .simansa-card {
+            border: 1px solid #dbe7f5;
+            border-radius: 16px;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+        .simansa-card .card-header {
+            background: #fff;
+            border-bottom: 1px solid #e5edf7;
+            color: #0f172a;
+            font-weight: 800;
+        }
+        .simansa-card th {
+            color: #64748b;
+            font-size: 0.86rem;
+            font-weight: 800;
+        }
         .small-box .inner h3 {
             font-size: 2.5rem;
         }
@@ -245,12 +369,47 @@
         .table-detail td {
             padding: 0.4rem;
         }
+        @media (max-width: 768px) {
+            .simansa-page-hero {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 14px;
+            }
+        }
     </style>
 @stop
 
 @section('js')
 <script>
 $(document).ready(function() {
+    $('#btnEnrichSchool').on('click', function() {
+        const button = $(this);
+        const original = button.html();
+
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Mengambil data...');
+
+        $.ajax({
+            url: button.data('url'),
+            method: 'POST',
+            data: {_token: '{{ csrf_token() }}'}
+        }).done(function(response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Data sekolah diperbarui',
+                text: response.message || 'Data sekolah berhasil dilengkapi.',
+                confirmButtonText: 'Muat Ulang'
+            }).then(() => window.location.reload());
+        }).fail(function(xhr) {
+            button.prop('disabled', false).html(original);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Belum berhasil',
+                text: xhr.responseJSON?.message || 'Data sekolah belum berhasil dilengkapi.',
+                confirmButtonText: 'OK'
+            });
+        });
+    });
+
     $('#tableSiswa').DataTable({
         processing: true,
         serverSide: true,

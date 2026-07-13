@@ -72,7 +72,7 @@ class KemendikbudApiService
             }
             
             // Save to database (updateOrCreate agar tidak error duplicate key saat refresh data stale)
-            $sekolah = Sekolah::updateOrCreate(['npsn' => $npsn], $data);
+            $sekolah = $this->saveSchoolPayload($npsn, $data);
             
             Log::info("Sekolah NPSN {$npsn} successfully saved/updated to database from API");
             
@@ -99,6 +99,11 @@ class KemendikbudApiService
      * @param string $npsn
      * @return array|null
      */
+    public function fetchAndSaveFromReferensi(string $npsn): array
+    {
+        return $this->fetchAndSaveFromApi($npsn);
+    }
+
     protected function parseHtmlResponse($html, $npsn)
     {
         try {
@@ -107,65 +112,140 @@ class KemendikbudApiService
                 'nama' => null,
                 'status' => null,
                 'bentuk_pendidikan' => null,
+                'jenjang_pendidikan' => null,
+                'kementerian_pembina' => null,
+                'npyp' => null,
+                'no_sk_pendirian' => null,
+                'tanggal_sk_pendirian' => null,
+                'no_sk_operasional' => null,
+                'tanggal_sk_operasional' => null,
+                'akreditasi' => null,
+                'luas_tanah' => null,
+                'akses_internet' => null,
+                'sumber_listrik' => null,
                 'alamat_jalan' => null,
                 'desa_kelurahan' => null,
                 'kecamatan' => null,
                 'kabupaten_kota' => null,
                 'provinsi' => null,
+                'telepon' => null,
+                'email' => null,
+                'website' => null,
+                'operator' => null,
+                'lintang' => null,
+                'bujur' => null,
+                'sumber_data_sekolah' => 'referensi-kemendikdasmen',
                 'last_fetched_at' => now(),
             ];
-            
-            // Parse table rows
-            preg_match_all('/<tr>(.*?)<\/tr>/is', $html, $rows);
-            
-            foreach ($rows[1] as $row) {
-                // Clean HTML
-                $cleanRow = strip_tags($row);
-                $cleanRow = html_entity_decode($cleanRow);
-                $cleanRow = preg_replace('/&nbsp;/', '', $cleanRow);
-                $cleanRow = preg_replace('/\s+/', ' ', $cleanRow);
-                $cleanRow = trim($cleanRow);
-                
-                // Split by colon
-                if (strpos($cleanRow, ':') !== false) {
-                    $parts = explode(':', $cleanRow, 2);
-                    $label = trim($parts[0]);
-                    $value = trim($parts[1]);
-                    
-                    // Map labels to data fields
-                    switch (true) {
-                        case stripos($label, 'Nama') !== false && !stripos($label, 'Desa'):
-                            $data['nama'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Status Sekolah') !== false:
-                            $data['status'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Bentuk Pendidikan') !== false:
-                            $data['bentuk_pendidikan'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Alamat') !== false && !stripos($label, 'Desa'):
-                            $data['alamat_jalan'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Desa') !== false || stripos($label, 'Kelurahan') !== false:
-                            $data['desa_kelurahan'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Kecamatan') !== false:
-                            $data['kecamatan'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Kab') !== false:
-                            $data['kabupaten_kota'] = $value;
-                            break;
-                            
-                        case stripos($label, 'Propinsi') !== false || stripos($label, 'Provinsi') !== false:
-                            $data['provinsi'] = $value;
-                            break;
-                    }
+
+            foreach ($this->extractLabelValuePairs($html) as $label => $value) {
+                $labelKey = $this->normalizeLabel($label);
+                $value = $this->cleanValue($value);
+
+                if ($value === null) {
+                    continue;
+                }
+
+                switch (true) {
+                    case str_contains($labelKey, 'nama') && !str_contains($labelKey, 'desa'):
+                        $data['nama'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'status sekolah'):
+                        $data['status'] = strtoupper($value);
+                        break;
+
+                    case str_contains($labelKey, 'bentuk pendidikan'):
+                        $data['bentuk_pendidikan'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'jenjang pendidikan'):
+                        $data['jenjang_pendidikan'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'kementerian pembina'):
+                        $data['kementerian_pembina'] = $value;
+                        break;
+
+                    case $labelKey === 'npyp':
+                        $data['npyp'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'no sk pendirian'):
+                        $data['no_sk_pendirian'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'tanggal sk pendirian'):
+                        $data['tanggal_sk_pendirian'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'nomor sk operasional'):
+                        $data['no_sk_operasional'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'tanggal sk operasional'):
+                        $data['tanggal_sk_operasional'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'akreditasi'):
+                        $data['akreditasi'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'luas tanah'):
+                        $data['luas_tanah'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'akses internet'):
+                        $data['akses_internet'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'sumber listrik'):
+                        $data['sumber_listrik'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'alamat') && !str_contains($labelKey, 'desa'):
+                        $data['alamat_jalan'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'desa') || str_contains($labelKey, 'kelurahan'):
+                        $data['desa_kelurahan'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'kecamatan'):
+                        $data['kecamatan'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'kab') || str_contains($labelKey, 'kota negara'):
+                        $data['kabupaten_kota'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'propinsi') || str_contains($labelKey, 'provinsi'):
+                        $data['provinsi'] = $value;
+                        break;
+
+                    case $labelKey === 'telepon':
+                        $data['telepon'] = $value;
+                        break;
+
+                    case $labelKey === 'email':
+                        $data['email'] = $value;
+                        break;
+
+                    case $labelKey === 'website':
+                        $data['website'] = $value;
+                        break;
+
+                    case $labelKey === 'operator':
+                        $data['operator'] = $value;
+                        break;
+
+                    case str_contains($labelKey, 'lintang'):
+                        $data['lintang'] = $this->normalizeCoordinate($value);
+                        break;
+
+                    case str_contains($labelKey, 'bujur'):
+                        $data['bujur'] = $this->normalizeCoordinate($value);
+                        break;
                 }
             }
             
@@ -181,6 +261,71 @@ class KemendikbudApiService
             Log::error("HTML parsing error for NPSN {$npsn}: " . $e->getMessage());
             return null;
         }
+    }
+
+    protected function saveSchoolPayload(string $npsn, array $data): Sekolah
+    {
+        $payload = collect($data)
+            ->reject(fn ($value, $key) => $key === 'npsn' || blank($value))
+            ->all();
+
+        return Sekolah::updateOrCreate(['npsn' => $npsn], $payload);
+    }
+
+    protected function extractLabelValuePairs(string $html): array
+    {
+        $html = preg_replace('/<(script|style).*?<\/\1>/is', '', $html);
+        $html = preg_replace('/<(br|\/div|\/p|\/tr|\/li|\/h[1-6])\b[^>]*>/i', "\n", $html);
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/\r\n|\r/", "\n", $text);
+        $lines = collect(explode("\n", $text))
+            ->map(fn ($line) => trim(preg_replace('/\s+/u', ' ', $line)))
+            ->filter(fn ($line) => $line !== '' && str_contains($line, ':'));
+
+        $pairs = [];
+        foreach ($lines as $line) {
+            [$label, $value] = array_pad(explode(':', $line, 2), 2, null);
+            $label = trim((string) $label);
+
+            if ($label !== '') {
+                $pairs[$label] = trim((string) $value);
+            }
+        }
+
+        return $pairs;
+    }
+
+    protected function normalizeLabel(string $label): string
+    {
+        $label = html_entity_decode($label, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $label = preg_replace('/\s+/u', ' ', $label);
+
+        return strtolower(trim($label));
+    }
+
+    protected function cleanValue(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        $value = preg_replace('/\s+/u', ' ', $value);
+
+        if ($value === '' || $value === '-' || $value === '.000000000000') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function normalizeCoordinate(?string $value): ?float
+    {
+        $value = $this->cleanValue($value);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $value = str_replace(',', '.', $value);
+
+        return is_numeric($value) ? (float) $value : null;
     }
     
     /**

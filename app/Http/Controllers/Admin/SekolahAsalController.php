@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Sekolah;
 use App\Models\Siswa;
+use App\Services\SekolahDataEnrichmentService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -37,25 +38,42 @@ class SekolahAsalController extends Controller
                         // Count only students in their class
                         $query->whereIn('id', $siswaKelasIds);
                     }])
-                    ->orderBy('siswa_count', 'desc')
-                    ->get();
+                    ->orderBy('siswa_count', 'desc');
             } else {
                 // Admin/Super Admin: show all sekolah
                 $sekolah = Sekolah::query()
                     ->withCount('siswa')
-                    ->orderBy('siswa_count', 'desc')
-                    ->get();
+                    ->orderBy('siswa_count', 'desc');
             }
 
             return DataTables::of($sekolah)
                 ->addIndexColumn()
+                ->addColumn('identity', function ($row) {
+                    return '
+                        <div class="school-name">' . e($row->nama) . '</div>
+                        <div class="school-meta">
+                            NPSN: ' . e($row->npsn) . ' <span>|</span> NSM: ' . e($row->nsm ?: '-') . '
+                        </div>
+                    ';
+                })
                 ->addColumn('action', function ($row) {
                     $url = route('admin.sekolah-asal.show', $row->npsn);
+                    $syncUrl = route('admin.sekolah-asal.enrich', $row->npsn);
+
                     return '
-                        <a href="' . $url . '" 
-                           class="btn btn-sm btn-info" title="Lihat Detail">
-                            <i class="fas fa-eye"></i> Detail
-                        </a>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button"
+                                class="btn btn-primary btn-enrich-school"
+                                data-url="' . e($syncUrl) . '"
+                                data-npsn="' . e($row->npsn) . '"
+                                data-school="' . e($row->nama) . '"
+                                title="Lengkapi data sekolah">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <a href="' . e($url) . '" class="btn btn-outline-primary" title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
                     ';
                 })
                 ->addColumn('status_badge', function ($row) {
@@ -79,11 +97,87 @@ class SekolahAsalController extends Controller
                              ' badge-pill">' . $count . ' siswa</span>';
                     return $badge;
                 })
-                ->rawColumns(['action', 'status_badge', 'siswa_count_badge'])
+                ->addColumn('wilayah', function ($row) {
+                    return collect([$row->kabupaten_kota, $row->provinsi])->filter()->implode(', ')
+                        ?: '<span class="text-muted">-</span>';
+                })
+                ->addColumn('kelengkapan_badge', function ($row) {
+                    $fields = [
+                        'nama',
+                        'status',
+                        'bentuk_pendidikan',
+                        'alamat_jalan',
+                        'desa_kelurahan',
+                        'kecamatan',
+                        'kabupaten_kota',
+                        'provinsi',
+                    ];
+                    $filled = collect($fields)->filter(fn ($field) => filled($row->{$field}))->count();
+                    $percent = (int) round(($filled / count($fields)) * 100);
+                    $color = $percent >= 90 ? 'success' : ($percent >= 60 ? 'info' : 'warning');
+
+                    return '
+                        <span class="badge badge-' . $color . ' badge-pill">' . $percent . '%</span>
+                        <div class="school-meta mt-1">' . ($row->last_fetched_at ? 'Update ' . $row->last_fetched_at->format('d/m/Y') : 'Belum dicek') . '</div>
+                    ';
+                })
+                ->editColumn('bentuk_pendidikan', fn ($row) => $row->bentuk_pendidikan ?: '-')
+                ->editColumn('nsm', fn ($row) => $row->nsm ?: '-')
+                ->filterColumn('identity', function ($query, $keyword) {
+                    $query->where(function ($schoolQuery) use ($keyword) {
+                        $schoolQuery->where('nama', 'like', "%{$keyword}%")
+                            ->orWhere('npsn', 'like', "%{$keyword}%")
+                            ->orWhere('nsm', 'like', "%{$keyword}%");
+                    });
+                })
+                ->rawColumns(['identity', 'action', 'status_badge', 'siswa_count_badge', 'wilayah', 'kelengkapan_badge'])
                 ->make(true);
         }
 
-        return view('admin.sekolah-asal.index');
+        $stats = [
+            'total' => Sekolah::count(),
+            'lengkap' => Sekolah::whereNotNull('alamat_jalan')
+                ->whereNotNull('kecamatan')
+                ->whereNotNull('kabupaten_kota')
+                ->whereNotNull('provinsi')
+                ->count(),
+            'nsm' => Sekolah::whereNotNull('nsm')->count(),
+            'perlu_update' => Sekolah::whereNull('last_fetched_at')->count(),
+        ];
+
+        return view('admin.sekolah-asal.index', compact('stats'));
+    }
+
+    public function enrich(Request $request, Sekolah $sekolah, SekolahDataEnrichmentService $service)
+    {
+        $this->authorize('edit-siswa');
+
+        $result = $service->enrich($sekolah);
+
+        if (!($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Data sekolah belum berhasil dilengkapi.',
+                'warnings' => $result['warnings'] ?? [],
+            ], 422);
+        }
+
+        $sekolah = $result['data'];
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['message'],
+            'sources' => $result['sources'] ?? [],
+            'warnings' => $result['warnings'] ?? [],
+            'data' => [
+                'npsn' => $sekolah->npsn,
+                'nsm' => $sekolah->nsm,
+                'nama' => $sekolah->nama,
+                'bentuk_pendidikan' => $sekolah->bentuk_pendidikan,
+                'wilayah' => collect([$sekolah->kabupaten_kota, $sekolah->provinsi])->filter()->implode(', '),
+                'last_fetched_at' => optional($sekolah->last_fetched_at)->format('d/m/Y H:i'),
+            ],
+        ]);
     }
 
     /**
