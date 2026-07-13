@@ -163,6 +163,16 @@
                                 <option value="belum">Belum Lengkap</option>
                             </select>
                         </div>
+                        <div class="col-md-6 col-xl-3 mb-3">
+                            <label for="filterEmisStatus" class="simansa-filter-label">
+                                <i class="fas fa-cloud-upload-alt mr-1"></i> Status EMIS
+                            </label>
+                            <select id="filterEmisStatus" class="form-control form-control-sm">
+                                <option value="">Semua</option>
+                                <option value="sudah">Sudah Masuk EMIS</option>
+                                <option value="belum">Belum Masuk EMIS</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="simansa-filter-actions">
                         <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
@@ -190,7 +200,7 @@
 
                 <div class="simansa-table-note">
                     <p class="mb-0">
-                        Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, dan rombel. Klik foto untuk preview dan unduh cepat.
+                        Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, rombel, dan status input EMIS. Klik tombol EMIS setelah siswa berhasil dimasukkan ke EMIS.
                     </p>
                 </div>
 
@@ -205,6 +215,7 @@
                                 <th class="text-center">Ortu</th>
                                 <th class="text-center">Diri</th>
                                 <th class="text-center">Verval</th>
+                                <th class="text-center">EMIS</th>
                                 <th class="text-center">Tgl Masuk</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -965,8 +976,9 @@ $(document).ready(function() {
             { targets: 4, width: '76px'  },   // status ortu
             { targets: 5, width: '68px'  },   // status diri
             { targets: 6, width: '82px'  },   // verval
-            { targets: 7, width: '82px'  },   // tgl masuk
-            { targets: 8, width: '110px' },   // aksi
+            { targets: 7, width: '82px'  },   // emis
+            { targets: 8, width: '82px'  },   // tgl masuk
+            { targets: 9, width: '110px' },   // aksi
         ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle' },
@@ -976,12 +988,13 @@ $(document).ready(function() {
             { data: 'status_ortu',   name: 'status_ortu',   orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle' },
             { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle' }
         ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
-        order: [[7, 'desc']],
+        order: [[8, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",
@@ -1067,6 +1080,24 @@ $(document).ready(function() {
             })
             .fail(function() {
                 toastr.error('Gagal mengubah status verval ijazah');
+                btn.prop('disabled', false);
+            });
+    });
+
+    // Toggle status siswa sudah masuk EMIS
+    $(document).on('click', '.btn-toggle-emis', function() {
+        const btn = $(this);
+        const url = btn.data('url');
+        btn.prop('disabled', true);
+        $.post(url, { _token: '{{ csrf_token() }}' })
+            .done(function(res) {
+                if (res.success) {
+                    btn.closest('td').html(res.badge);
+                    toastr.success(res.emis_registered ? 'Ditandai sudah masuk EMIS' : 'Tanda masuk EMIS dibatalkan');
+                }
+            })
+            .fail(function() {
+                toastr.error('Gagal mengubah status EMIS');
                 btn.prop('disabled', false);
             });
     });
@@ -1682,7 +1713,7 @@ $(document).ready(function() {
     });
     
     // Apply filter on change
-    $('#filterJenisKelamin, #filterKelas, #filterStatus').on('change', function() {
+    $('#filterJenisKelamin, #filterKelas, #filterStatus, #filterEmisStatus').on('change', function() {
         applyFilters();
     });
     
@@ -1692,6 +1723,7 @@ $(document).ready(function() {
         $('#filterTingkat').val('');
         $('#filterKelas').val('').prop('disabled', true).html('<option value="">Pilih Tingkat Dulu</option>');
         $('#filterStatus').val('');
+        $('#filterEmisStatus').val('');
         applyFilters();
     });
     
@@ -1700,6 +1732,7 @@ $(document).ready(function() {
         let tingkat = $('#filterTingkat').val();
         let kelas = $('#filterKelas').val();
         let status = $('#filterStatus').val();
+        let emisStatus = $('#filterEmisStatus').val();
         
         // Build filter parameters
         let filterParams = Object.assign({}, statsContextFilters);
@@ -1707,6 +1740,7 @@ $(document).ready(function() {
         if (tingkat) filterParams.tingkat = tingkat;
         if (kelas) filterParams.kelas_id = kelas;
         if (status) filterParams.status = status;
+        if (emisStatus) filterParams.emis_status = emisStatus;
         
         // Reload DataTable with filters
         siswaTable.settings()[0].ajax.data = function(d) {

@@ -113,6 +113,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen');
     Route::get('/siswa/{siswaId}/dokumen/{dokumenId}/download-jpg', [AdminSiswaController::class, 'downloadDokumenAsJpg'])->name('siswa.dokumen.download-jpg');
     Route::post('/siswa/{siswa}/toggle-verval-ijazah', [AdminSiswaController::class, 'toggleVervalIjazah'])->name('siswa.toggle-verval-ijazah');
+    Route::post('/siswa/{siswa}/toggle-emis-registered', [AdminSiswaController::class, 'toggleEmisRegistered'])->name('siswa.toggle-emis-registered');
     Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');
     Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
     Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');

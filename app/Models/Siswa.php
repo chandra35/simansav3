@@ -52,6 +52,9 @@ class Siswa extends Model
         'verval_ijazah',
         'verval_ijazah_at',
         'verval_ijazah_by',
+        'emis_registered',
+        'emis_registered_at',
+        'emis_registered_by',
         'created_by',
         'updated_by',
         // Kolom akademik baru
@@ -71,6 +74,8 @@ class Siswa extends Model
         'data_diri_completed' => 'boolean',
         'verval_ijazah' => 'boolean',
         'verval_ijazah_at' => 'datetime',
+        'emis_registered' => 'boolean',
+        'emis_registered_at' => 'datetime',
         'tahun_masuk' => 'integer',
         'ppdb_imported_at' => 'datetime',
     ];

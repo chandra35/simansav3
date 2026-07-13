@@ -69,6 +69,8 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'Status Data Diri',
             'Status Data Ortu',
             'Verval Ijazah',
+            'Status EMIS',
+            'Tanggal Masuk EMIS',
             'Tanggal Daftar',
         ];
     }
@@ -111,6 +113,8 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $siswa->data_diri_completed ? 'Lengkap' : 'Belum',
             $siswa->data_ortu_completed ? 'Lengkap' : 'Belum',
             $siswa->verval_ijazah ? 'Sudah' : 'Belum',
+            $siswa->emis_registered ? 'Sudah Masuk EMIS' : 'Belum Masuk EMIS',
+            $siswa->emis_registered_at ? $siswa->emis_registered_at->format('d/m/Y H:i') : '',
             $siswa->created_at ? $siswa->created_at->format('d/m/Y') : '',
         ];
     }
@@ -159,7 +163,9 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'AB' => 16, // Status Diri
             'AC' => 16, // Status Ortu
             'AD' => 14, // Verval
-            'AE' => 14, // Tgl Daftar
+            'AE' => 18, // Status EMIS
+            'AF' => 18, // Tgl EMIS
+            'AG' => 14, // Tgl Daftar
         ];
     }
 }

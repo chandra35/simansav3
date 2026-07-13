@@ -96,6 +96,9 @@ class SiswaController extends Controller
                 $query->where(fn($q) => $q->where('data_diri_completed', false)->orWhere('data_ortu_completed', false));
             }
         }
+        if ($request->filled('emis_status')) {
+            $query->where('emis_registered', $request->emis_status === 'sudah');
+        }
 
         return response()->json([
             'total_siswa' => (clone $query)->count(),
@@ -143,6 +146,9 @@ class SiswaController extends Controller
                 });
             }
         }
+        if ($request->filled('emis_status')) {
+            $query->where('siswa.emis_registered', $request->emis_status === 'sudah');
+        }
 
         $rows = $query->with(['user', 'ortu', 'kelasAktif'])->get();
 
@@ -167,7 +173,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
         
         $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
-            ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'created_at']);
+            ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
 
         $this->applyRoleScope($siswa);
         $this->applyStatisticsDrilldownFilters($siswa, $request);
@@ -208,6 +214,11 @@ class SiswaController extends Controller
                       ->orWhere('data_ortu_completed', false);
                 });
             }
+        }
+
+        // Filter by EMIS registration flag
+        if ($request->filled('emis_status')) {
+            $siswa->where('emis_registered', $request->emis_status === 'sudah');
         }
 
         // Filter by Login Status
@@ -258,11 +269,11 @@ class SiswaController extends Controller
             $orderDirection = $request->order[0]['dir'];
             
             // Map column index to actual column names
-            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=created_at, 8=actions
+            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=emis, 8=created_at, 9=actions
             $columns = [
                 1 => 'nama_lengkap',
                 2 => 'jenis_kelamin',
-                7 => 'siswa.created_at',
+                8 => 'siswa.created_at',
             ];
 
             // Handle Kelas ordering (index 3, needs join)
@@ -319,6 +330,7 @@ class SiswaController extends Controller
                     ? '<span class="badge badge-success">Lengkap</span>'
                     : '<span class="badge badge-danger">Belum</span>',
                 'verval_ijazah' => $this->getVervalIjazahBadge($item),
+                'emis_registered' => $this->getEmisRegisteredBadge($item),
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item)
             ];
@@ -335,7 +347,6 @@ class SiswaController extends Controller
     private function getVervalIjazahBadge(Siswa $siswa): string
     {
         $toggleUrl = route('admin.siswa.toggle-verval-ijazah', $siswa);
-        $csrf = csrf_field();
 
         if ($siswa->verval_ijazah) {
             $tgl = $siswa->verval_ijazah_at ? $siswa->verval_ijazah_at->format('d/m/Y') : '';
@@ -368,6 +379,42 @@ class SiswaController extends Controller
             'success' => true,
             'verval_ijazah' => $siswa->verval_ijazah,
             'badge' => $this->getVervalIjazahBadge($siswa),
+        ]);
+    }
+
+    private function getEmisRegisteredBadge(Siswa $siswa): string
+    {
+        $toggleUrl = route('admin.siswa.toggle-emis-registered', $siswa);
+
+        if ($siswa->emis_registered) {
+            $tgl = $siswa->emis_registered_at ? $siswa->emis_registered_at->format('d/m/Y H:i') : '';
+            $title = "Sudah masuk EMIS" . ($tgl ? " ({$tgl})" : "") . " - Klik untuk batalkan";
+
+            return '<button class="btn btn-success btn-xs btn-toggle-emis"
+                data-url="' . e($toggleUrl) . '"
+                title="' . e($title) . '">'
+                . '<i class="fas fa-check-circle"></i> Sudah</button>';
+        }
+
+        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-emis"
+            data-url="' . e($toggleUrl) . '"
+            title="Klik jika siswa sudah diinput/masuk ke EMIS">'
+            . '<i class="far fa-circle"></i> Belum</button>';
+    }
+
+    public function toggleEmisRegistered(Siswa $siswa)
+    {
+        $this->authorize('edit-siswa');
+
+        $siswa->emis_registered = !$siswa->emis_registered;
+        $siswa->emis_registered_at = $siswa->emis_registered ? now() : null;
+        $siswa->emis_registered_by = $siswa->emis_registered ? Auth::id() : null;
+        $siswa->save();
+
+        return response()->json([
+            'success' => true,
+            'emis_registered' => $siswa->emis_registered,
+            'badge' => $this->getEmisRegisteredBadge($siswa),
         ]);
     }
 
