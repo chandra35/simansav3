@@ -168,6 +168,17 @@ class HotspotController extends Controller
 
     public function syncSingle(Request $request, HotspotUser $hotspot)
     {
+        $hotspot->loadMissing('user.siswa');
+
+        if (!$hotspot->isEligibleForRadius()) {
+            $hotspot->rejectFromRadius('Akun tidak disync karena siswa/user tidak aktif.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun tidak eligible untuk RADIUS. Khusus siswa hanya status aktif yang boleh disync.',
+            ], 422);
+        }
+
         $user = $hotspot->user;
         if (!$user || empty($user->encrypted_password)) {
             return response()->json(['success' => false, 'message' => 'Password tidak ditemukan di Simansa.'], 422);
@@ -189,7 +200,19 @@ class HotspotController extends Controller
 
     public function toggleActive(Request $request, HotspotUser $hotspot)
     {
-        $hotspot->update(['is_active' => !$hotspot->is_active]);
+        $hotspot->loadMissing('user.siswa');
+        $willActivate = !$hotspot->is_active;
+
+        if ($willActivate && !$hotspot->isEligibleForRadius()) {
+            $hotspot->rejectFromRadius('Aktivasi ditolak karena siswa/user tidak aktif.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak bisa mengaktifkan akun ini. Untuk siswa, hanya status aktif yang boleh masuk RADIUS.',
+            ], 422);
+        }
+
+        $hotspot->update(['is_active' => $willActivate]);
 
         // Sync status ke RADIUS
         if (!$hotspot->is_active) {
@@ -590,8 +613,17 @@ class HotspotController extends Controller
         $users    = HotspotUser::whereIn('id', $request->ids)->get();
         $radius   = DB::connection('mysql_radius');
         $count    = 0;
+        $skipped  = 0;
 
         foreach ($users as $hotspot) {
+            $hotspot->loadMissing('user.siswa');
+
+            if ($isActive && !$hotspot->isEligibleForRadius()) {
+                $hotspot->rejectFromRadius('Bulk aktivasi ditolak karena siswa/user tidak aktif.');
+                $skipped++;
+                continue;
+            }
+
             $hotspot->update(['is_active' => $isActive]);
 
             // Sync status ke RADIUS
@@ -612,11 +644,13 @@ class HotspotController extends Controller
         }
 
         $label = $isActive ? 'diaktifkan' : 'dinonaktifkan';
+        $extra = $skipped > 0 ? " {$skipped} akun dilewati karena tidak eligible." : '';
 
         return response()->json([
             'success' => true,
             'count'   => $count,
-            'message' => "{$count} akun berhasil {$label}.",
+            'skipped' => $skipped,
+            'message' => "{$count} akun berhasil {$label}.{$extra}",
             'stats'   => $this->getStats(false),
         ]);
     }

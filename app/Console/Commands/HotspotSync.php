@@ -202,19 +202,31 @@ class HotspotSync extends Command
 
     private function deactivateInactive(bool $dryRun): void
     {
-        // Nonaktifkan siswa yang statusnya bukan aktif lagi
-        $inactiveSiswa = HotspotUser::where('role', 'siswa')
+        // Nonaktifkan siswa yang tidak lagi memenuhi syarat akses hotspot.
+        // Syarat siswa: user aktif, data siswa ada, status_siswa = aktif, dan NISN terisi.
+        $inactiveSiswa = HotspotUser::with('user.siswa')
+            ->where('role', 'siswa')
             ->where('is_active', true)
-            ->whereHas('user', fn($q) => $q->where('is_active', false))
+            ->where(function ($q) {
+                $q->whereDoesntHave('user', function ($user) {
+                    $user->where('is_active', true)
+                        ->whereHas('siswa', function ($siswa) {
+                            $siswa->where('status_siswa', 'aktif')
+                                ->whereNotNull('nisn')
+                                ->where('nisn', '!=', '');
+                        });
+                });
+            })
             ->get();
 
         foreach ($inactiveSiswa as $hotspot) {
             if ($dryRun) {
-                $this->line("  [DEACTIVATE] {$hotspot->username}");
+                $status = $hotspot->user?->siswa?->status_siswa ?: 'tanpa data siswa/user';
+                $this->line("  [DEACTIVATE] {$hotspot->username} ({$status})");
                 continue;
             }
-            $hotspot->update(['is_active' => false]);
-            $hotspot->syncToRadius('__DISABLED__'); // trigger reject di radius
+            $status = $hotspot->user?->siswa?->status_siswa ?: 'tanpa data siswa/user';
+            $hotspot->rejectFromRadius("Siswa tidak aktif untuk hotspot: {$status}");
             $this->deactivated++;
         }
     }

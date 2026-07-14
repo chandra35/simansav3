@@ -153,4 +153,32 @@ class HotspotUser extends Model
     {
         return $query->where('role', 'tamu');
     }
+
+    public function isEligibleForRadius(): bool
+    {
+        if (!$this->user || !$this->user->is_active) {
+            return $this->role === 'tamu';
+        }
+
+        if ($this->role === 'siswa') {
+            $siswa = $this->user->siswa;
+
+            return $siswa
+                && $siswa->status_siswa === 'aktif'
+                && !empty($siswa->nisn);
+        }
+
+        return in_array($this->role, ['guru', 'tamu'], true);
+    }
+
+    public function rejectFromRadius(string $reason = 'Tidak eligible untuk akses hotspot.'): void
+    {
+        $this->update([
+            'is_active' => false,
+            'sync_status' => 'pending',
+            'sync_error' => $reason,
+        ]);
+
+        $this->syncToRadius('__DISABLED__');
+    }
 }
