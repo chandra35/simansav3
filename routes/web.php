@@ -791,50 +791,50 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // ==================== SMART-Q KELAS UNGGULAN ====================
-    Route::prefix('smartq')->name('smartq.')->group(function () {
+    Route::prefix('smartq')->name('smartq.')->middleware(['permission:view-smartq'])->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SmartqController::class, 'index'])->name('index');
-        Route::get('/create', [App\Http\Controllers\Admin\SmartqController::class, 'create'])->name('create');
-        Route::post('/', [App\Http\Controllers\Admin\SmartqController::class, 'store'])->name('store');
+        Route::get('/create', [App\Http\Controllers\Admin\SmartqController::class, 'create'])->middleware('permission:create-smartq')->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\SmartqController::class, 'store'])->middleware('permission:create-smartq')->name('store');
         Route::get('/{smartq}', [App\Http\Controllers\Admin\SmartqController::class, 'show'])->name('show');
-        Route::get('/{smartq}/edit', [App\Http\Controllers\Admin\SmartqController::class, 'edit'])->name('edit');
-        Route::put('/{smartq}', [App\Http\Controllers\Admin\SmartqController::class, 'update'])->name('update');
-        Route::put('/{smartq}/komponen', [App\Http\Controllers\Admin\SmartqController::class, 'updateKomponen'])->name('komponen.update');
+        Route::get('/{smartq}/edit', [App\Http\Controllers\Admin\SmartqController::class, 'edit'])->middleware('permission:edit-smartq')->name('edit');
+        Route::put('/{smartq}', [App\Http\Controllers\Admin\SmartqController::class, 'update'])->middleware('permission:edit-smartq')->name('update');
+        Route::put('/{smartq}/komponen', [App\Http\Controllers\Admin\SmartqController::class, 'updateKomponen'])->middleware('permission:edit-smartq')->name('komponen.update');
 
         // Peserta
         Route::get('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'peserta'])->name('peserta');
-        Route::post('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'tambahPeserta'])->name('peserta.tambah');
-        Route::delete('/{smartq}/peserta/{peserta}', [App\Http\Controllers\Admin\SmartqController::class, 'hapusPeserta'])->name('peserta.hapus');
+        Route::post('/{smartq}/peserta', [App\Http\Controllers\Admin\SmartqController::class, 'tambahPeserta'])->middleware('permission:manage-peserta-smartq')->name('peserta.tambah');
+        Route::delete('/{smartq}/peserta/{peserta}', [App\Http\Controllers\Admin\SmartqController::class, 'hapusPeserta'])->middleware('permission:manage-peserta-smartq')->name('peserta.hapus');
 
         // Kelulusan reset
-        Route::delete('/{smartq}/kelulusan/{peserta}/reset', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanPeserta'])->name('kelulusan.reset.peserta');
-        Route::delete('/{smartq}/kelulusan/reset-all', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanBulk'])->name('kelulusan.reset.bulk');
-        Route::put('/{smartq}/kelulusan/{peserta}/status', [App\Http\Controllers\Admin\SmartqController::class, 'updateKelulusanPesertaStatus'])->name('kelulusan.status.update');
+        Route::delete('/{smartq}/kelulusan/{peserta}/reset', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanPeserta'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.reset.peserta');
+        Route::delete('/{smartq}/kelulusan/reset-all', [App\Http\Controllers\Admin\SmartqController::class, 'resetKelulusanBulk'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.reset.bulk');
+        Route::put('/{smartq}/kelulusan/{peserta}/status', [App\Http\Controllers\Admin\SmartqController::class, 'updateKelulusanPesertaStatus'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.status.update');
 
         // Nilai
-        Route::get('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'inputNilai'])->name('nilai');
-        Route::post('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'simpanNilai'])->name('nilai.simpan');
+        Route::get('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'inputNilai'])->middleware('permission:input-nilai-smartq')->name('nilai');
+        Route::post('/{smartq}/nilai', [App\Http\Controllers\Admin\SmartqController::class, 'simpanNilai'])->middleware('permission:input-nilai-smartq')->name('nilai.simpan');
 
         // Moodle Integration
-        Route::get('/{smartq}/moodle', [App\Http\Controllers\Admin\SmartqController::class, 'moodleConfig'])->name('moodle.config');
-        Route::get('/{smartq}/moodle/categories', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCategories'])->name('moodle.categories');
-        Route::get('/{smartq}/moodle/courses', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCourses'])->name('moodle.courses');
-        Route::get('/{smartq}/moodle/quizzes', [App\Http\Controllers\Admin\SmartqController::class, 'moodleQuizzes'])->name('moodle.quizzes');
-        Route::post('/{smartq}/moodle/save', [App\Http\Controllers\Admin\SmartqController::class, 'moodleSaveCourseQuiz'])->name('moodle.save');
-        Route::post('/{smartq}/moodle/sync', [App\Http\Controllers\Admin\SmartqController::class, 'syncMoodle'])->name('moodle.sync');
-        Route::get('/{smartq}/moodle/scan', [App\Http\Controllers\Admin\SmartqController::class, 'moodleScan'])->name('moodle.scan');
-        Route::post('/{smartq}/moodle/scan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'confirmMoodleScan'])->name('moodle.scan.confirm');
-        Route::post('/{smartq}/moodle/scan/add-to-simansa', [App\Http\Controllers\Admin\SmartqController::class, 'addUnmatchedToSimansa'])->name('moodle.scan.addToSimansa');
-        Route::get('/{smartq}/moodle/scan/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportScanReport'])->name('moodle.scan.export');
-        Route::get('/{smartq}/moodle/scan/view', [App\Http\Controllers\Admin\SmartqController::class, 'viewScanCache'])->name('moodle.scan.view');
-        Route::get('/{smartq}/nilai-cbt', [App\Http\Controllers\Admin\SmartqController::class, 'nilaiCbt'])->name('nilai-cbt');
+        Route::get('/{smartq}/moodle', [App\Http\Controllers\Admin\SmartqController::class, 'moodleConfig'])->middleware('permission:manage-moodle-smartq')->name('moodle.config');
+        Route::get('/{smartq}/moodle/categories', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCategories'])->middleware('permission:manage-moodle-smartq')->name('moodle.categories');
+        Route::get('/{smartq}/moodle/courses', [App\Http\Controllers\Admin\SmartqController::class, 'moodleCourses'])->middleware('permission:manage-moodle-smartq')->name('moodle.courses');
+        Route::get('/{smartq}/moodle/quizzes', [App\Http\Controllers\Admin\SmartqController::class, 'moodleQuizzes'])->middleware('permission:manage-moodle-smartq')->name('moodle.quizzes');
+        Route::post('/{smartq}/moodle/save', [App\Http\Controllers\Admin\SmartqController::class, 'moodleSaveCourseQuiz'])->middleware('permission:manage-moodle-smartq')->name('moodle.save');
+        Route::post('/{smartq}/moodle/sync', [App\Http\Controllers\Admin\SmartqController::class, 'syncMoodle'])->middleware('permission:manage-moodle-smartq')->name('moodle.sync');
+        Route::get('/{smartq}/moodle/scan', [App\Http\Controllers\Admin\SmartqController::class, 'moodleScan'])->middleware('permission:manage-moodle-smartq')->name('moodle.scan');
+        Route::post('/{smartq}/moodle/scan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'confirmMoodleScan'])->middleware('permission:manage-moodle-smartq')->name('moodle.scan.confirm');
+        Route::post('/{smartq}/moodle/scan/add-to-simansa', [App\Http\Controllers\Admin\SmartqController::class, 'addUnmatchedToSimansa'])->middleware('permission:manage-moodle-smartq')->name('moodle.scan.addToSimansa');
+        Route::get('/{smartq}/moodle/scan/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportScanReport'])->middleware('permission:export-smartq')->name('moodle.scan.export');
+        Route::get('/{smartq}/moodle/scan/view', [App\Http\Controllers\Admin\SmartqController::class, 'viewScanCache'])->middleware('permission:manage-moodle-smartq')->name('moodle.scan.view');
+        Route::get('/{smartq}/nilai-cbt', [App\Http\Controllers\Admin\SmartqController::class, 'nilaiCbt'])->middleware('permission:manage-moodle-smartq')->name('nilai-cbt');
 
         // Kelulusan Import & Export
         Route::get('/{smartq}/ranking-data', [App\Http\Controllers\Admin\SmartqController::class, 'rankingData'])->name('ranking.data');
-        Route::get('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanForm'])->name('kelulusan.import');
-        Route::get('/{smartq}/kelulusan/template', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanTemplate'])->name('kelulusan.template');
-        Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanPreview'])->name('kelulusan.import.process');
-        Route::post('/{smartq}/kelulusan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanConfirm'])->name('kelulusan.import.confirm');
-        Route::get('/{smartq}/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportExcel'])->name('export');
+        Route::get('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanForm'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.import');
+        Route::get('/{smartq}/kelulusan/template', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanTemplate'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.template');
+        Route::post('/{smartq}/kelulusan/import', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanPreview'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.import.process');
+        Route::post('/{smartq}/kelulusan/confirm', [App\Http\Controllers\Admin\SmartqController::class, 'importKelulusanConfirm'])->middleware('permission:manage-kelulusan-smartq')->name('kelulusan.import.confirm');
+        Route::get('/{smartq}/export', [App\Http\Controllers\Admin\SmartqController::class, 'exportExcel'])->middleware('permission:export-smartq')->name('export');
     });
 
     // ==================== DOWNLOAD CENTER ====================

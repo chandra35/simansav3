@@ -429,8 +429,14 @@ class PermissionSyncService
                 'color' => 'warning',
                 'description' => 'Akses SMART-Q kelas unggulan',
                 'permissions' => [
-                    'admin-menu-only',
-                    'siswa-smartq-access',
+                    'view-smartq',
+                    'create-smartq',
+                    'edit-smartq',
+                    'manage-peserta-smartq',
+                    'input-nilai-smartq',
+                    'manage-moodle-smartq',
+                    'manage-kelulusan-smartq',
+                    'export-smartq',
                 ],
             ],
             'siswa-access' => [
@@ -441,6 +447,7 @@ class PermissionSyncService
                 'permissions' => [
                     'siswa-access',
                     'siswa-menu-only',
+                    'siswa-smartq-access',
                     'siswa-graduation-announcement-access',
                 ],
             ],
