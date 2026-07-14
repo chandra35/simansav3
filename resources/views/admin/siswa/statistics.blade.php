@@ -29,7 +29,7 @@
 
 @section('content')
 <div class="row">
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-md-6 col-xl mb-4">
         <a href="{{ route('admin.siswa.index') }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--blue">
                 <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
@@ -42,7 +42,7 @@
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-md-6 col-xl mb-4">
         <a href="{{ route('admin.siswa.index', ['status' => 'lengkap']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--green">
                 <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
@@ -55,7 +55,7 @@
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-md-6 col-xl mb-4">
         <a href="{{ route('admin.siswa.index', ['login_status' => 'sudah']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--amber">
                 <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
@@ -68,7 +68,7 @@
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-md-6 col-xl mb-4">
         <a href="{{ route('admin.siswa.index', ['login_status' => 'belum']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--rose">
                 <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
@@ -81,7 +81,7 @@
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-md-6 col-xl mb-4">
         <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--slate">
                 <div class="simansa-kpi__icon"><i class="fas fa-school"></i></div>
@@ -443,11 +443,11 @@
             justify-content: space-between;
             align-items: stretch;
             gap: 1rem;
-            padding: 1.25rem;
-            border-radius: 22px;
-            background: linear-gradient(135deg, #0f4c81 0%, #2563eb 55%, #60a5fa 100%);
+            padding: 1.35rem 1.45rem;
+            border-radius: 16px;
+            background: #3b82f6;
             color: #fff;
-            box-shadow: 0 22px 48px rgba(37, 99, 235, 0.24);
+            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22);
         }
 
         .simansa-stat-hero__main {
@@ -458,27 +458,26 @@
             display: inline-flex;
             align-items: center;
             gap: 0.45rem;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            padding: 0.45rem 0.75rem;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.16);
-            margin-bottom: 0.85rem;
+            margin-bottom: 0.65rem;
+            color: rgba(255, 255, 255, 0.92);
         }
 
         .simansa-stat-hero__title {
-            font-size: 2rem;
+            font-size: 1.45rem;
             font-weight: 700;
-            margin-bottom: 0.45rem;
+            color: #fff;
+            margin-bottom: 0.35rem;
         }
 
         .simansa-stat-hero__subtitle {
             margin-bottom: 0;
-            color: rgba(255, 255, 255, 0.88);
-            line-height: 1.65;
-            max-width: 650px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.55;
+            max-width: 760px;
         }
 
         .simansa-stat-hero__meta {
@@ -492,70 +491,79 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 1rem;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(8px);
+            padding: 0.95rem 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         .simansa-stat-hero-chip__label {
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.74);
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.78);
             margin-bottom: 0.35rem;
         }
 
         .simansa-stat-hero-chip__value {
-            font-size: 1.55rem;
+            font-size: 1.45rem;
             font-weight: 700;
         }
 
         .simansa-kpi {
             display: flex;
-            gap: 0.95rem;
-            min-height: 168px;
-            padding: 1rem;
-            border-radius: 20px;
+            gap: 0.85rem;
+            min-height: 156px;
+            padding: 1rem 1.05rem;
+            border-radius: 14px;
             background: #fff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+            border: 1px solid #dbe4f0;
+            border-top: 4px solid #3b82f6;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
         }
 
         .simansa-kpi__icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.05rem;
             flex-shrink: 0;
         }
 
         .simansa-kpi__label {
-            font-size: 0.88rem;
+            font-size: 0.78rem;
             color: #64748b;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
         }
 
         .simansa-kpi__value {
-            font-size: 1.8rem;
+            font-size: 1.55rem;
             line-height: 1.1;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.35rem;
         }
 
         .simansa-kpi__desc {
             color: #64748b;
-            line-height: 1.55;
-            font-size: 0.9rem;
+            line-height: 1.45;
+            font-size: 0.84rem;
         }
 
-        .simansa-kpi--blue .simansa-kpi__icon { background: #dbeafe; color: #1d4ed8; }
-        .simansa-kpi--green .simansa-kpi__icon { background: #dcfce7; color: #15803d; }
-        .simansa-kpi--amber .simansa-kpi__icon { background: #fef3c7; color: #b45309; }
-        .simansa-kpi--rose .simansa-kpi__icon { background: #ffe4e6; color: #be123c; }
-        .simansa-kpi--slate .simansa-kpi__icon { background: #e0f2fe; color: #0369a1; }
+        .simansa-kpi--blue { border-top-color: #3b82f6; }
+        .simansa-kpi--green { border-top-color: #16a34a; }
+        .simansa-kpi--amber { border-top-color: #f59e0b; }
+        .simansa-kpi--rose { border-top-color: #e11d48; }
+        .simansa-kpi--slate { border-top-color: #0f766e; }
+        .simansa-kpi--blue .simansa-kpi__icon,
+        .simansa-kpi--green .simansa-kpi__icon,
+        .simansa-kpi--amber .simansa-kpi__icon,
+        .simansa-kpi--rose .simansa-kpi__icon,
+        .simansa-kpi--slate .simansa-kpi__icon { background: #eef4ff; color: #2563eb; }
 
         a.simansa-kpi-link {
             display: block;
@@ -567,9 +575,9 @@
         }
         a.simansa-kpi-link:hover .simansa-kpi,
         a.simansa-kpi-link:focus .simansa-kpi {
-            box-shadow: 0 20px 44px rgba(15, 23, 42, 0.13);
-            transform: translateY(-3px);
-            border-color: #c7d8f5;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
+            transform: translateY(-2px);
+            border-color: #bfdbfe;
         }
         a.simansa-kpi-link .simansa-kpi__view-link {
             display: inline-block;
@@ -710,11 +718,11 @@
         }
 
         .simansa-analytics-section {
-            padding: 1.1rem;
-            border-radius: 22px;
+            padding: 1.1rem 1.25rem;
+            border-radius: 14px;
             background: #fff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+            border: 1px solid #dbe4f0;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
             height: 100%;
         }
 
@@ -727,7 +735,7 @@
         }
 
         .simansa-section-head h3 {
-            font-size: 1.08rem;
+            font-size: 1.02rem;
             font-weight: 700;
             color: #0f172a;
             margin-bottom: 0.3rem;
@@ -753,7 +761,7 @@
         .simansa-chart-panel,
         .simansa-list-panel {
             padding: 1rem;
-            border-radius: 18px;
+            border-radius: 12px;
             background: #f8fafc;
             border: 1px solid #e5edf7;
             height: 100%;
@@ -809,11 +817,11 @@
         }
 
         .simansa-list-rank {
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
-            background: #dbeafe;
-            color: #1d4ed8;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #2563eb;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
@@ -835,7 +843,7 @@
         .simansa-map {
             width: 100%;
             height: 460px;
-            border-radius: 18px;
+            border-radius: 12px;
             overflow: hidden;
             border: 1px solid #d9e3f0;
         }
@@ -854,7 +862,7 @@
         }
 
         .simansa-table thead th {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             color: #64748b;
@@ -889,7 +897,7 @@
 
         .simansa-table-shell {
             border: 1px solid #e5edf7;
-            border-radius: 18px;
+            border-radius: 12px;
             background: #f8fafc;
             padding: 0;
         }
