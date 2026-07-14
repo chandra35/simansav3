@@ -157,54 +157,48 @@
             </div>
 
             {{-- Card: Fitur Cetak Lainnya (Placeholder) --}}
-            <div class="card card-secondary">
+            <div class="card simansa-management-card simansa-coming-card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-file-alt"></i> Fitur Cetak Lainnya</h3>
+                    <h3 class="card-title mb-0"><i class="fas fa-file-alt mr-2"></i> Fitur Cetak Lainnya</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h4>Daftar Nilai</h4>
-                                    <p>Coming Soon</p>
-                                </div>
-                                <div class="icon">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="simansa-print-feature">
+                                <div class="simansa-print-feature__icon">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
-                                <a href="#" class="small-box-footer disabled">
-                                    Coming Soon <i class="fas fa-arrow-circle-right"></i>
-                                </a>
+                                <div>
+                                    <h4>Daftar Nilai</h4>
+                                    <p>Format cetak nilai per kelas sedang disiapkan.</p>
+                                </div>
+                                <span class="simansa-print-feature__badge">Coming Soon</span>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h4>Rapor</h4>
-                                    <p>Coming Soon</p>
-                                </div>
-                                <div class="icon">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="simansa-print-feature">
+                                <div class="simansa-print-feature__icon">
                                     <i class="fas fa-book"></i>
                                 </div>
-                                <a href="#" class="small-box-footer disabled">
-                                    Coming Soon <i class="fas fa-arrow-circle-right"></i>
-                                </a>
+                                <div>
+                                    <h4>Rapor</h4>
+                                    <p>Template rapor akan mengikuti data akademik aktif.</p>
+                                </div>
+                                <span class="simansa-print-feature__badge">Coming Soon</span>
                             </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h4>Surat Keterangan</h4>
-                                    <p>Coming Soon</p>
-                                </div>
-                                <div class="icon">
+                            <div class="simansa-print-feature">
+                                <div class="simansa-print-feature__icon">
                                     <i class="fas fa-file-signature"></i>
                                 </div>
-                                <a href="#" class="small-box-footer disabled">
-                                    Coming Soon <i class="fas fa-arrow-circle-right"></i>
-                                </a>
+                                <div>
+                                    <h4>Surat Keterangan</h4>
+                                    <p>Cetak surat akademik dari data siswa terpilih.</p>
+                                </div>
+                                <span class="simansa-print-feature__badge">Coming Soon</span>
                             </div>
                         </div>
                     </div>
@@ -530,10 +524,193 @@
 
 @section('css')
     <style>
+        .simansa-hero {
+            border-radius: 16px;
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22);
+        }
+        .simansa-hero__eyebrow {
+            color: rgba(255, 255, 255, 0.92);
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+        .simansa-hero__title {
+            color: #fff;
+            font-size: 1.45rem;
+        }
+        .simansa-hero__subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 760px;
+        }
+        .simansa-hero-chip {
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+        .simansa-hero-chip__label {
+            color: rgba(255, 255, 255, 0.78);
+        }
+        .simansa-hero-chip__value {
+            color: #fff;
+        }
+        .simansa-management-card {
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+            overflow: hidden;
+        }
+        .simansa-management-card > .card-header {
+            background: #fff;
+            border-bottom: 1px solid #e5edf7;
+            color: #0f172a;
+            padding: 0.95rem 1.25rem;
+        }
+        .simansa-management-card > .card-header .card-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .simansa-management-card .card-body {
+            padding: 1.25rem;
+        }
+        .simansa-section-note {
+            border: 1px solid #dbeafe;
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            background: #eff6ff;
+            color: #1e3a8a;
+            padding: 0.95rem 1rem;
+        }
+        .simansa-filter-panel {
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            background: #f8fafc;
+            padding: 1rem;
+        }
+        .simansa-filter-panel--accent {
+            background: #f8fafc;
+            border-color: #dbe4f0;
+        }
+        .simansa-form-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .simansa-form-section__title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+        .simansa-form-section__desc,
+        .simansa-filter-hint {
+            color: #64748b;
+            font-size: 0.86rem;
+        }
+        .simansa-filter-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.38rem;
+        }
+        .simansa-btn-contrast,
+        .simansa-btn-strong {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 700;
+        }
+        .simansa-btn-contrast:hover,
+        .simansa-btn-strong:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #fff;
+        }
+        .simansa-btn-muted {
+            border-color: #cbd5e1;
+            background: #fff;
+            color: #334155;
+            font-weight: 700;
+        }
+        .simansa-results-panel {
+            border: 1px solid #dbe4f0;
+            border-radius: 12px;
+            background: #fff;
+            padding: 1rem;
+        }
+        .simansa-results-panel__title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.85rem;
+        }
+        .simansa-results-panel__title h5 {
+            margin: 0;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .simansa-coming-card {
+            margin-top: 1rem;
+        }
+        .simansa-print-feature {
+            position: relative;
+            min-height: 136px;
+            padding: 1rem;
+            border: 1px solid #dbe4f0;
+            border-top: 4px solid #3b82f6;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+        }
+        .simansa-print-feature__icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4ff;
+            color: #2563eb;
+            margin-bottom: 0.8rem;
+        }
+        .simansa-print-feature h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.35rem;
+        }
+        .simansa-print-feature p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.86rem;
+            line-height: 1.45;
+            max-width: 80%;
+        }
+        .simansa-print-feature__badge {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+            padding: 0.28rem 0.55rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
         .select2-container--default .select2-selection--single {
             height: calc(2.25rem + 2px);
-            border: 1px solid #ced4da;
-            border-radius: .25rem;
+            border: 1px solid #cbd5e1;
+            border-radius: .5rem;
             padding: .375rem .75rem;
         }
         .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -573,6 +750,18 @@
         }
         .custom-control-label {
             cursor: pointer;
+        }
+        @media (max-width: 767.98px) {
+            .simansa-form-section,
+            .simansa-results-panel__title {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .simansa-toolbar__group {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
         }
     </style>
 @stop
