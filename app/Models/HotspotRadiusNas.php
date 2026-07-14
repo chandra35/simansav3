@@ -34,19 +34,37 @@ class HotspotRadiusNas extends Model
 
     public function syncToRadius(): bool
     {
-        try {
-            $db = DB::connection('mysql_radius');
+        $result = $this->syncToRadiusWithLog();
 
+        return $result['success'];
+    }
+
+    public function syncToRadiusWithLog(): array
+    {
+        $steps = [];
+
+        try {
+            $steps[] = ['status' => 'running', 'message' => 'Membuka koneksi database FreeRADIUS.'];
+            $db = DB::connection('mysql_radius');
+            $db->getPdo();
+            $steps[] = ['status' => 'success', 'message' => 'Koneksi database FreeRADIUS berhasil.'];
+
+            $steps[] = ['status' => 'running', 'message' => 'Memeriksa tabel nas pada database FreeRADIUS.'];
             if (!$this->radiusTableExists($db, 'nas')) {
                 throw new \RuntimeException('Tabel nas tidak ditemukan di database FreeRADIUS.');
             }
+            $steps[] = ['status' => 'success', 'message' => 'Tabel nas tersedia.'];
 
             if (!$this->is_active) {
+                $steps[] = ['status' => 'running', 'message' => "Menghapus NAS {$this->nasname} dari FreeRADIUS karena status nonaktif."];
                 $db->table('nas')->where('nasname', $this->nasname)->delete();
                 $this->markSynced();
-                return true;
+                $steps[] = ['status' => 'success', 'message' => 'NAS nonaktif berhasil dihapus dari FreeRADIUS.'];
+
+                return ['success' => true, 'steps' => $steps];
             }
 
+            $steps[] = ['status' => 'running', 'message' => "Menulis/update NAS {$this->nasname} ke tabel nas."];
             $db->table('nas')->updateOrInsert(
                 ['nasname' => $this->nasname],
                 [
@@ -61,8 +79,12 @@ class HotspotRadiusNas extends Model
             );
 
             $this->markSynced();
-            return true;
+            $steps[] = ['status' => 'success', 'message' => 'NAS berhasil ditulis ke FreeRADIUS.'];
+            $steps[] = ['status' => 'success', 'message' => 'Status sinkronisasi lokal diperbarui.'];
+
+            return ['success' => true, 'steps' => $steps];
         } catch (\Throwable $e) {
+            $steps[] = ['status' => 'error', 'message' => $e->getMessage()];
             Log::error('[HotspotRadiusNas] Sync failed', [
                 'nasname' => $this->nasname,
                 'error' => $e->getMessage(),
@@ -73,7 +95,7 @@ class HotspotRadiusNas extends Model
                 'sync_error' => $e->getMessage(),
             ]);
 
-            return false;
+            return ['success' => false, 'steps' => $steps, 'error' => $e->getMessage()];
         }
     }
 

@@ -295,6 +295,30 @@
 .net-chip.green { background: #dcfce7; color: #166534; }
 .net-chip.warn { background: #fef3c7; color: #92400e; }
 .net-action-row { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .55rem; }
+.nas-sync-log {
+    text-align: left;
+    background: #07111f;
+    color: #b7c9dd;
+    border-radius: 12px;
+    padding: .85rem 1rem;
+    font-family: Consolas, Monaco, monospace;
+    font-size: .78rem;
+    line-height: 1.55;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #1e3a5f;
+}
+.nas-sync-log__row {
+    display: flex;
+    gap: .55rem;
+    padding: .2rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, .12);
+}
+.nas-sync-log__row:last-child { border-bottom: none; }
+.nas-sync-log__icon { width: 18px; flex: 0 0 18px; }
+.nas-sync-log__row.running .nas-sync-log__icon { color: #38bdf8; }
+.nas-sync-log__row.success .nas-sync-log__icon { color: #4ade80; }
+.nas-sync-log__row.error .nas-sync-log__icon { color: #f87171; }
 @media (max-width: 991.98px) {
     .net-grid { grid-template-columns: 1fr; }
     .net-kv { grid-template-columns: 1fr 1fr; }
@@ -704,6 +728,38 @@
             </button>
         </div>
 
+    </div>
+</div>
+
+{{-- NAS Sync Progress ---------------------------------------------------- --}}
+<div class="modal fade" id="modalNasSync" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:18px;overflow:hidden">
+            <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#0f766e);color:#fff;border-bottom:none">
+                <h5 class="modal-title"><i class="fas fa-network-wired mr-2"></i>Sync NAS ke FreeRADIUS</h5>
+                <button type="button" class="close text-white nas-sync-close" data-dismiss="modal" style="display:none">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="sync-spinner-wrap mr-3 mb-0" id="nasSyncSpinner" style="width:48px;height:48px">
+                        <i class="fas fa-sync fa-spin" style="font-size:1.2rem"></i>
+                    </div>
+                    <div>
+                        <h6 class="font-weight-bold mb-1" id="nasSyncTitle">Menyiapkan sinkronisasi...</h6>
+                        <div class="small text-muted" id="nasSyncSub">Log proses akan tampil di bawah.</div>
+                    </div>
+                </div>
+                <div class="nas-sync-log" id="nasSyncLog"></div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary nas-sync-close" data-dismiss="modal" style="display:none">
+                    Tutup
+                </button>
+                <button type="button" class="btn btn-primary nas-sync-refresh" style="display:none">
+                    <i class="fas fa-redo mr-1"></i>Refresh Halaman
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1565,21 +1621,84 @@ $('#btnSaveNas').on('click', () => {
 $(document).on('click', '.btn-sync-nas', function () {
     const btn = $(this);
     const original = btn.html();
+    const card = btn.closest('.net-mini-card');
+    const nasName = card.data('nasname') || 'NAS';
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sync');
+
+    resetNasSyncModal();
+    $('#nasSyncTitle').text('Sync ' + nasName);
+    $('#modalNasSync').modal('show');
+    appendNasSyncLog('running', 'Menyiapkan request sinkronisasi.');
+    setTimeout(() => appendNasSyncLog('running', 'Mengirim request ke server SIMANSA.'), 250);
+
     $.ajax({
         url: ROUTES.nasSync(btn.data('id')),
         method: 'POST',
-        timeout: 15000,
+        timeout: 30000,
         data: { _token: '{{ csrf_token() }}' }
     }).done(r => {
+        appendNasSyncLog('success', 'Response server diterima.');
+        renderNasSyncSteps(r.steps || []);
+        finishNasSync(true, r.message || 'NAS berhasil disinkronkan.');
         toastr.success(r.message);
-        setTimeout(() => location.reload(), 500);
     }).fail(xhr => {
-        toastr.error(xhr.responseJSON?.message || 'Sync NAS gagal.');
+        const message = xhr.responseJSON?.message || 'Sync NAS gagal.';
+        appendNasSyncLog('error', 'Response server gagal atau timeout.');
+        renderNasSyncSteps(xhr.responseJSON?.steps || []);
+        finishNasSync(false, message);
+        toastr.error(message);
     }).always(() => {
         btn.prop('disabled', false).html(original);
     });
 });
+
+function resetNasSyncModal() {
+    $('#nasSyncLog').html('');
+    $('#nasSyncSpinner').show();
+    $('#nasSyncTitle').text('Sync NAS ke FreeRADIUS');
+    $('#nasSyncSub').text('Log proses akan tampil di bawah.');
+    $('.nas-sync-close, .nas-sync-refresh').hide();
+}
+
+function appendNasSyncLog(status, message) {
+    const icon = status === 'success'
+        ? '<i class="fas fa-check"></i>'
+        : status === 'error'
+            ? '<i class="fas fa-times"></i>'
+            : '<i class="fas fa-circle-notch fa-spin"></i>';
+    const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+    $('#nasSyncLog').append(`
+        <div class="nas-sync-log__row ${status}">
+            <span class="nas-sync-log__icon">${icon}</span>
+            <span>[${time}] ${escapeHtml(message)}</span>
+        </div>
+    `);
+    const log = document.getElementById('nasSyncLog');
+    log.scrollTop = log.scrollHeight;
+}
+
+function renderNasSyncSteps(steps) {
+    steps.forEach(step => appendNasSyncLog(step.status || 'running', step.message || '-'));
+}
+
+function finishNasSync(success, message) {
+    $('#nasSyncSpinner').hide();
+    $('#nasSyncTitle').text(success ? 'Sync NAS selesai' : 'Sync NAS gagal');
+    $('#nasSyncSub').text(message);
+    appendNasSyncLog(success ? 'success' : 'error', message);
+    $('.nas-sync-close, .nas-sync-refresh').show();
+}
+
+$('.nas-sync-refresh').on('click', () => location.reload());
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 $(document).on('click', '.btn-delete-nas', function () {
     if (!confirm('Hapus NAS ini dari SIMANSA dan database RADIUS?')) return;

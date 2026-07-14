@@ -482,11 +482,13 @@ class HotspotController extends Controller
 
     public function syncNas(HotspotRadiusNas $nas)
     {
-        $ok = $nas->syncToRadius();
+        $result = $nas->syncToRadiusWithLog();
+        $ok = $result['success'];
 
         return response()->json([
             'success' => $ok,
             'message' => $ok ? 'NAS berhasil disinkronkan ke FreeRADIUS.' : 'Sync NAS gagal: '.$nas->sync_error,
+            'steps' => $result['steps'] ?? [],
         ], $ok ? 200 : 422);
     }
 
