@@ -1,38 +1,53 @@
 @extends('adminlte::page')
 
 @section('title', 'Cetak Dokumen')
-@section('plugins.Select2', true)
 
 @section('content_header')
-    <div class="simansa-print-hero">
-        <div class="simansa-print-hero__main">
-            <div class="simansa-print-hero__eyebrow">
-                <i class="fas fa-print"></i>
-                Akademik
-            </div>
-            <h1 class="simansa-print-hero__title">Cetak Dokumen</h1>
-            <p class="simansa-print-hero__subtitle">
-                Cetak absensi dan dokumen akademik lain dari satu alur yang lebih cepat. Filter dirapikan agar admin bisa memilih kelas massal tanpa bolak-balik.
-            </p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-print text-primary"></i> Cetak Dokumen</h1>
         </div>
-        <div class="simansa-print-hero__meta">
-            <div class="simansa-print-chip">
-                <span class="simansa-print-chip__label">Mode</span>
-                <span class="simansa-print-chip__value">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</span>
-            </div>
-            <div class="simansa-print-chip">
-                <span class="simansa-print-chip__label">Tahun Aktif</span>
-                <span class="simansa-print-chip__value">{{ $tahunPelajarans->firstWhere('is_active', true)?->nama ?? '-' }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Cetak Dokumen</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="simansa-siswa-management simansa-print-page">
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-print"></i> Layanan Cetak Akademik</h3>
+                    <p class="mb-2 text-white-50">
+                        Cetak absensi dan dokumen akademik lain dari satu alur yang lebih cepat.
+                    </p>
+                    <p class="mb-0">Gunakan filter kelas untuk menyiapkan preview PDF massal secara rapi dan konsisten.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-white-50 small text-uppercase font-weight-bold">Mode</div>
+                            <h3 class="mb-0 text-white">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</h3>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-white-50 small text-uppercase font-weight-bold">Tahun Aktif</div>
+                            <h3 class="mb-0 text-white">{{ $tahunPelajarans->firstWhere('is_active', true)?->nama ?? '-' }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             {{-- Card: Cetak Absensi Kelas --}}
-            <div class="card simansa-management-card simansa-print-card">
+            <div class="card card-outline card-primary simansa-management-card simansa-print-card">
                 <div class="card-header">
                     <div class="simansa-toolbar">
                         <h3 class="card-title mb-0"><i class="fas fa-clipboard-check mr-2"></i> Cetak Absensi Kelas</h3>
@@ -54,7 +69,7 @@
                         </div>
 
                         @unless($isRestrictedWaliKelas)
-                            <div class="simansa-filter-panel simansa-filter-panel--accent simansa-print-filter mb-4">
+                            <div class="simansa-filter-panel simansa-print-filter mb-4">
                                 <div class="simansa-form-section">
                                     <div>
                                         <h4 class="simansa-form-section__title">Filter Kelas</h4>
@@ -73,8 +88,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_tahun_pelajaran" class="simansa-filter-label"><i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span></label>
-                                        <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control print-filter-select" required>
-                                            <option value="">-- Pilih Tahun Pelajaran --</option>
+                                        <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control form-control-sm print-filter-select" required>
+                                            <option value="">Pilih Tahun Pelajaran</option>
                                             @foreach($tahunPelajarans as $tp)
                                                 <option value="{{ $tp->id }}" {{ $tp->is_active ? 'selected' : '' }}>
                                                     {{ $tp->nama }} {{ $tp->is_active ? '(Aktif)' : '' }}
@@ -87,8 +102,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_tingkat" class="simansa-filter-label"><i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span></label>
-                                        <select name="tingkat" id="filter_tingkat" class="form-control print-filter-select" required>
-                                            <option value="">-- Pilih Tingkat --</option>
+                                        <select name="tingkat" id="filter_tingkat" class="form-control form-control-sm print-filter-select" required>
+                                            <option value="">Pilih Tingkat</option>
                                             @foreach($tingkatOptions as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
                                             @endforeach
@@ -99,8 +114,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_rombel" class="simansa-filter-label"><i class="fas fa-users"></i> Rombel</label>
-                                        <select name="rombel" id="filter_rombel" class="form-control print-filter-select">
-                                            <option value="">-- Semua Rombel --</option>
+                                        <select name="rombel" id="filter_rombel" class="form-control form-control-sm print-filter-select">
+                                            <option value="">Semua Rombel</option>
                                         </select>
                                         <div class="simansa-filter-hint">Rombel mengikuti tingkat yang dipilih.</div>
                                     </div>
@@ -109,8 +124,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="filter_kurikulum" class="simansa-filter-label"><i class="fas fa-book"></i> Kurikulum</label>
-                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control print-filter-select">
-                                            <option value="">-- Semua Kurikulum --</option>
+                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control form-control-sm print-filter-select">
+                                            <option value="">Semua Kurikulum</option>
                                             @foreach($kurikulums as $kurikulum)
                                                 <option value="{{ $kurikulum->id }}">{{ $kurikulum->nama }}</option>
                                             @endforeach
@@ -157,7 +172,7 @@
             </div>
 
             {{-- Card: Fitur Cetak Lainnya (Placeholder) --}}
-            <div class="card simansa-management-card simansa-print-card simansa-coming-card">
+            <div class="card card-outline card-primary simansa-management-card simansa-print-card simansa-coming-card">
                 <div class="card-header">
                     <h3 class="card-title mb-0"><i class="fas fa-file-alt mr-2"></i> Fitur Cetak Lainnya</h3>
                 </div>
@@ -206,6 +221,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <div class="modal fade" id="printPreviewModal" tabindex="-1" role="dialog" aria-labelledby="printPreviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -239,14 +255,6 @@
             const $printPreviewModal = $('#printPreviewModal');
             const $printPreviewLoading = $('#printPreviewLoading');
             const $printPreviewFrame = $('#printPreviewFrame');
-
-            if ($.fn.select2) {
-                $('.print-filter-select').select2({
-                    width: '100%',
-                    allowClear: false,
-                    minimumResultsForSearch: 8,
-                });
-            }
 
             let autoLoadTimer = null;
 
@@ -333,8 +341,7 @@
 
             function resetRombelOptions() {
                 const $rombel = $('#filter_rombel');
-                $rombel.html('<option value="">-- Semua Rombel --</option>').val('');
-                $rombel.trigger('change.select2');
+                $rombel.html('<option value="">Semua Rombel</option>').val('');
             }
 
             function populateRombelOptions(kelasList) {
@@ -346,11 +353,10 @@
                     return a.localeCompare(b, 'id');
                 });
 
-                $rombel.html('<option value="">-- Semua Rombel --</option>');
+                $rombel.html('<option value="">Semua Rombel</option>');
                 rombels.forEach(function(rombel) {
                     $rombel.append(new Option(rombel, rombel, false, rombel === currentValue));
                 });
-                $rombel.trigger('change.select2');
             }
 
             function refreshRombelOptions() {
@@ -457,9 +463,7 @@
             // Reset Button
             $('#btnReset').on('click', function() {
                 $('#formCetakAbsensi')[0].reset();
-                if ($.fn.select2) {
-                    $('.print-filter-select').val('').trigger('change');
-                }
+                $('.print-filter-select').val('');
                 $('#kelasList').slideUp();
                 $('#selectAll').prop('checked', false);
                 $('#kelasCheckboxes').empty();
@@ -524,170 +528,15 @@
 
 @section('css')
     <style>
-        .simansa-print-hero {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.2rem;
-            padding: 1.35rem 1.45rem;
-            border-radius: 16px;
-            background: #3b82f6;
-            color: #fff;
-            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22);
-        }
-        .simansa-print-hero__main {
-            min-width: 0;
-            max-width: 820px;
-        }
-        .simansa-print-hero__eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            margin-bottom: 0.65rem;
-            color: rgba(255, 255, 255, 0.92);
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-        .simansa-print-hero__title {
-            margin: 0 0 0.35rem;
-            color: #fff;
-            font-size: 1.45rem;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-        .simansa-print-hero__subtitle {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.55;
-            font-size: 0.96rem;
-        }
-        .simansa-print-hero__meta {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(150px, 1fr));
-            gap: 0.85rem;
-            flex: 0 0 auto;
-        }
-        .simansa-print-chip {
-            min-height: 76px;
-            padding: 0.9rem 1rem;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        .simansa-print-chip__label {
-            display: block;
-            margin-bottom: 0.35rem;
-            color: rgba(255, 255, 255, 0.78);
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-        .simansa-print-chip__value {
-            display: block;
-            color: #fff;
-            font-size: 1.25rem;
-            font-weight: 700;
-            line-height: 1.18;
-        }
-        .simansa-print-card {
-            border: 1px solid #dbe4f0 !important;
-            border-radius: 14px !important;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05) !important;
-            overflow: hidden !important;
-        }
-        .simansa-print-card > .card-header {
-            background: #fff !important;
-            border-bottom: 1px solid #e5edf7 !important;
-            color: #0f172a !important;
-            padding: 0.95rem 1.25rem !important;
-        }
-        .simansa-print-card > .card-header .card-title,
-        .simansa-print-card > .card-header .card-title i {
-            font-size: 1.02rem !important;
-            font-weight: 700 !important;
-            color: #0f172a !important;
-        }
-        .simansa-print-card .card-body {
-            padding: 1.25rem !important;
-        }
         .simansa-print-note {
-            border: 1px solid #dbeafe !important;
-            border-left: 4px solid #3b82f6 !important;
-            border-radius: 12px !important;
-            background: #f8fbff !important;
-            color: #1e3a8a !important;
-            padding: 0.85rem 1rem !important;
-        }
-        .simansa-print-filter {
-            border: 1px solid #dbe4f0 !important;
-            border-radius: 14px !important;
-            background: #fff !important;
-            padding: 1rem !important;
-        }
-        .simansa-print-filter.simansa-filter-panel--accent {
-            background: #fff !important;
-            border-color: #dbe4f0 !important;
+            margin-bottom: 1rem !important;
         }
         .simansa-form-section {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .simansa-form-section__title {
-            font-size: 1.02rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-        .simansa-form-section__desc,
-        .simansa-filter-hint {
-            color: #64748b;
-            font-size: 0.86rem;
-        }
-        .simansa-filter-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.38rem;
-        }
-        .simansa-btn-contrast,
-        .simansa-btn-strong {
-            border-color: #2563eb;
-            background: #2563eb;
-            color: #fff;
-            font-weight: 700;
-        }
-        .simansa-btn-contrast:hover,
-        .simansa-btn-strong:hover {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
-            color: #fff;
-        }
-        .simansa-btn-muted {
-            border-color: #cbd5e1;
-            background: #fff;
-            color: #334155;
-            font-weight: 700;
-        }
-        .simansa-print-card .card-footer {
-            background: #f8fafc !important;
-            border-top: 1px solid #e5edf7 !important;
-            padding: 0.85rem 1rem !important;
-        }
-        .simansa-print-results {
-            border: 1px solid #dbe4f0 !important;
-            border-radius: 12px !important;
-            background: #fff !important;
-            padding: 1rem !important;
+            margin-bottom: 1.1rem;
         }
         .simansa-results-panel__title {
             display: flex;
@@ -698,12 +547,8 @@
         }
         .simansa-results-panel__title h5 {
             margin: 0;
-            font-size: 0.98rem;
             font-weight: 700;
             color: #0f172a;
-        }
-        .simansa-coming-card {
-            margin-top: 1rem;
         }
         .simansa-print-feature {
             position: relative;
@@ -750,25 +595,6 @@
             font-size: 0.74rem;
             font-weight: 700;
         }
-        .select2-container--default .select2-selection--single {
-            height: calc(2.25rem + 2px);
-            border: 1px solid #cbd5e1;
-            border-radius: .5rem;
-            padding: .375rem .75rem;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #495057;
-            line-height: 1.5rem;
-            padding-left: 0;
-            padding-right: 1.5rem;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: calc(2.25rem + 2px);
-            right: .35rem;
-        }
-        .select2-container {
-            display: block;
-        }
         .print-preview-frame {
             width: 100%;
             height: 78vh;
@@ -795,14 +621,6 @@
             cursor: pointer;
         }
         @media (max-width: 767.98px) {
-            .simansa-print-hero {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 1rem;
-            }
-            .simansa-print-hero__meta {
-                grid-template-columns: 1fr;
-            }
             .simansa-form-section,
             .simansa-results-panel__title {
                 flex-direction: column;
