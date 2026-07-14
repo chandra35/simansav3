@@ -613,15 +613,14 @@
             </div>
             <div class="hs-panel__body nas-list">
                 @forelse($nasList as $nas)
-                    <div class="net-mini-card" data-nas='@json([
-                        "id" => $nas->id,
-                        "name" => $nas->name,
-                        "nasname" => $nas->nasname,
-                        "shortname" => $nas->shortname,
-                        "type" => $nas->type,
-                        "description" => $nas->description,
-                        "is_active" => $nas->is_active,
-                    ])'>
+                    <div class="net-mini-card"
+                         data-id="{{ $nas->id }}"
+                         data-name="{{ e($nas->name) }}"
+                         data-nasname="{{ e($nas->nasname) }}"
+                         data-shortname="{{ e($nas->shortname) }}"
+                         data-type="{{ e($nas->type) }}"
+                         data-description="{{ e($nas->description) }}"
+                         data-active="{{ $nas->is_active ? 1 : 0 }}">
                         <div class="net-mini-card__top">
                             <div>
                                 <strong>{{ $nas->name }}</strong>
@@ -1518,16 +1517,16 @@ $('#btnAddNas').on('click', () => {
 });
 
 $(document).on('click', '.btn-edit-nas', function () {
-    const n = $(this).closest('[data-nas]').data('nas');
+    const card = $(this).closest('.net-mini-card');
     resetNasForm();
-    $('#nasId').val(n.id);
-    $('#nasName').val(n.name);
-    $('#nasNameIp').val(n.nasname);
-    $('#nasShortname').val(n.shortname || '');
-    $('#nasType').val(n.type || 'mikrotik');
-    $('#nasDescription').val(n.description || '');
+    $('#nasId').val(card.data('id'));
+    $('#nasName').val(card.data('name'));
+    $('#nasNameIp').val(card.data('nasname'));
+    $('#nasShortname').val(card.data('shortname') || '');
+    $('#nasType').val(card.data('type') || 'mikrotik');
+    $('#nasDescription').val(card.data('description') || '');
     $('#nasSecret').val('');
-    $('#nasActive').prop('checked', !!n.is_active);
+    $('#nasActive').prop('checked', String(card.data('active')) === '1');
     $('#modalNas .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit MikroTik / NAS');
     $('#modalNas').modal('show');
 });
