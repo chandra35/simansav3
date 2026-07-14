@@ -877,7 +877,7 @@
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-primary font-weight-bold" id="btnSaveNas">
-                    <i class="fas fa-save mr-1"></i>Simpan & Sync
+                    <i class="fas fa-save mr-1"></i>Simpan
                 </button>
             </div>
         </div>
@@ -1533,9 +1533,12 @@ $(document).on('click', '.btn-edit-nas', function () {
 
 $('#btnSaveNas').on('click', () => {
     const id = $('#nasId').val();
+    const btn = $('#btnSaveNas');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...');
     $.ajax({
         url: id ? ROUTES.nasUpdate(id) : ROUTES.nasStore,
         method: id ? 'PUT' : 'POST',
+        timeout: 15000,
         data: {
             name: $('#nasName').val(),
             nasname: $('#nasNameIp').val(),
@@ -1548,14 +1551,34 @@ $('#btnSaveNas').on('click', () => {
         }
     }).done(r => {
         toastr.success(r.message);
+        $('#modalNas').modal('hide');
         location.reload();
-    }).fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal menyimpan NAS.'));
+    }).fail(xhr => {
+        const errors = xhr.responseJSON?.errors;
+        const firstError = errors ? Object.values(errors).flat()[0] : null;
+        toastr.error(firstError || xhr.responseJSON?.message || 'Gagal menyimpan NAS.');
+    }).always(() => {
+        btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>Simpan');
+    });
 });
 
 $(document).on('click', '.btn-sync-nas', function () {
-    $.post(ROUTES.nasSync($(this).data('id')), { _token: '{{ csrf_token() }}' })
-        .done(r => toastr.success(r.message))
-        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Sync NAS gagal.'));
+    const btn = $(this);
+    const original = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sync');
+    $.ajax({
+        url: ROUTES.nasSync(btn.data('id')),
+        method: 'POST',
+        timeout: 15000,
+        data: { _token: '{{ csrf_token() }}' }
+    }).done(r => {
+        toastr.success(r.message);
+        setTimeout(() => location.reload(), 500);
+    }).fail(xhr => {
+        toastr.error(xhr.responseJSON?.message || 'Sync NAS gagal.');
+    }).always(() => {
+        btn.prop('disabled', false).html(original);
+    });
 });
 
 $(document).on('click', '.btn-delete-nas', function () {

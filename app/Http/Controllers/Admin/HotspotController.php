@@ -456,9 +456,12 @@ class HotspotController extends Controller
     public function storeNas(Request $request)
     {
         $nas = HotspotRadiusNas::create($this->validateNas($request) + ['sync_status' => 'pending']);
-        $synced = $nas->syncToRadius();
 
-        return response()->json(['success' => true, 'message' => $synced ? 'NAS/MikroTik berhasil ditambahkan dan disinkronkan.' : 'NAS tersimpan, tetapi sync ke FreeRADIUS gagal: '.$nas->sync_error, 'nas' => $nas]);
+        return response()->json([
+            'success' => true,
+            'message' => 'NAS/MikroTik berhasil disimpan. Gunakan tombol Sync untuk menulis ke FreeRADIUS.',
+            'nas' => $nas,
+        ]);
     }
 
     public function updateNas(Request $request, HotspotRadiusNas $nas)
@@ -469,9 +472,12 @@ class HotspotController extends Controller
         }
 
         $nas->update($data + ['sync_status' => 'pending']);
-        $synced = $nas->syncToRadius();
 
-        return response()->json(['success' => true, 'message' => $synced ? 'NAS/MikroTik berhasil diperbarui dan disinkronkan.' : 'NAS diperbarui, tetapi sync ke FreeRADIUS gagal: '.$nas->sync_error, 'nas' => $nas->fresh()]);
+        return response()->json([
+            'success' => true,
+            'message' => 'NAS/MikroTik berhasil diperbarui. Gunakan tombol Sync untuk menulis ke FreeRADIUS.',
+            'nas' => $nas->fresh(),
+        ]);
     }
 
     public function syncNas(HotspotRadiusNas $nas)
