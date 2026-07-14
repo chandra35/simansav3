@@ -1628,8 +1628,8 @@ $(document).on('click', '.btn-sync-nas', function () {
     resetNasSyncModal();
     $('#nasSyncTitle').text('Sync ' + nasName);
     $('#modalNasSync').modal('show');
-    appendNasSyncLog('running', 'Menyiapkan request sinkronisasi.');
-    setTimeout(() => appendNasSyncLog('running', 'Mengirim request ke server SIMANSA.'), 250);
+    appendNasSyncLog('success', 'Request sinkronisasi disiapkan.');
+    appendNasSyncLog('running', 'Mengirim request ke server SIMANSA.');
 
     $.ajax({
         url: ROUTES.nasSync(btn.data('id')),
@@ -1637,12 +1637,14 @@ $(document).on('click', '.btn-sync-nas', function () {
         timeout: 30000,
         data: { _token: '{{ csrf_token() }}' }
     }).done(r => {
+        markLastNasSyncRunningDone();
         appendNasSyncLog('success', 'Response server diterima.');
         renderNasSyncSteps(r.steps || []);
         finishNasSync(true, r.message || 'NAS berhasil disinkronkan.');
         toastr.success(r.message);
     }).fail(xhr => {
         const message = xhr.responseJSON?.message || 'Sync NAS gagal.';
+        markLastNasSyncRunningDone();
         appendNasSyncLog('error', 'Response server gagal atau timeout.');
         renderNasSyncSteps(xhr.responseJSON?.steps || []);
         finishNasSync(false, message);
@@ -1678,7 +1680,10 @@ function appendNasSyncLog(status, message) {
 }
 
 function renderNasSyncSteps(steps) {
-    steps.forEach(step => appendNasSyncLog(step.status || 'running', step.message || '-'));
+    steps.forEach(step => {
+        const status = step.status === 'running' ? 'success' : (step.status || 'success');
+        appendNasSyncLog(status, step.message || '-');
+    });
 }
 
 function finishNasSync(success, message) {
@@ -1687,6 +1692,17 @@ function finishNasSync(success, message) {
     $('#nasSyncSub').text(message);
     appendNasSyncLog(success ? 'success' : 'error', message);
     $('.nas-sync-close, .nas-sync-refresh').show();
+}
+
+function markLastNasSyncRunningDone() {
+    const lastRunning = $('#nasSyncLog .nas-sync-log__row.running').last();
+    if (!lastRunning.length) return;
+
+    lastRunning
+        .removeClass('running')
+        .addClass('success')
+        .find('.nas-sync-log__icon')
+        .html('<i class="fas fa-check"></i>');
 }
 
 $('.nas-sync-refresh').on('click', () => location.reload());

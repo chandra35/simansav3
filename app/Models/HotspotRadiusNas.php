@@ -44,19 +44,19 @@ class HotspotRadiusNas extends Model
         $steps = [];
 
         try {
-            $steps[] = ['status' => 'running', 'message' => 'Membuka koneksi database FreeRADIUS.'];
+            $steps[] = ['status' => 'success', 'message' => 'Membuka koneksi database FreeRADIUS.'];
             $db = DB::connection('mysql_radius');
             $db->getPdo();
             $steps[] = ['status' => 'success', 'message' => 'Koneksi database FreeRADIUS berhasil.'];
 
-            $steps[] = ['status' => 'running', 'message' => 'Memeriksa tabel nas pada database FreeRADIUS.'];
+            $steps[] = ['status' => 'success', 'message' => 'Memeriksa tabel nas pada database FreeRADIUS.'];
             if (!$this->radiusTableExists($db, 'nas')) {
                 throw new \RuntimeException('Tabel nas tidak ditemukan di database FreeRADIUS.');
             }
             $steps[] = ['status' => 'success', 'message' => 'Tabel nas tersedia.'];
 
             if (!$this->is_active) {
-                $steps[] = ['status' => 'running', 'message' => "Menghapus NAS {$this->nasname} dari FreeRADIUS karena status nonaktif."];
+                $steps[] = ['status' => 'success', 'message' => "Menghapus NAS {$this->nasname} dari FreeRADIUS karena status nonaktif."];
                 $db->table('nas')->where('nasname', $this->nasname)->delete();
                 $this->markSynced();
                 $steps[] = ['status' => 'success', 'message' => 'NAS nonaktif berhasil dihapus dari FreeRADIUS.'];
@@ -64,7 +64,7 @@ class HotspotRadiusNas extends Model
                 return ['success' => true, 'steps' => $steps];
             }
 
-            $steps[] = ['status' => 'running', 'message' => "Menulis/update NAS {$this->nasname} ke tabel nas."];
+            $steps[] = ['status' => 'success', 'message' => "Menulis/update NAS {$this->nasname} ke tabel nas."];
             $db->table('nas')->updateOrInsert(
                 ['nasname' => $this->nasname],
                 [
