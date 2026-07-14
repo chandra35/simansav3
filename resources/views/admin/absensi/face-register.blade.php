@@ -295,6 +295,24 @@
                         </div>
                     </div>
                 </div>
+                <div class="face-register-result-overlay d-none" id="registrationResultModal" role="alertdialog" aria-live="assertive">
+                    <div class="face-register-result-card">
+                        <div class="face-register-result-icon" id="registrationResultIcon">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                        <h4 class="mb-2" id="registrationResultTitle">Menyimpan registrasi wajah</h4>
+                        <p class="text-muted mb-0" id="registrationResultMessage">Mohon tunggu, data wajah sedang dikirim ke server.</p>
+                        <div class="face-register-result-meta mt-3" id="registrationResultMeta"></div>
+                        <div class="mt-4 d-flex flex-column flex-sm-row justify-content-center">
+                            <button type="button" class="btn btn-secondary mr-sm-2 mb-2 mb-sm-0 d-none" id="registrationResultRetry" onclick="retryRegistrationAfterFailure()">
+                                <i class="fas fa-redo mr-1"></i> Ulangi Registrasi
+                            </button>
+                            <button type="button" class="btn btn-primary d-none" id="registrationResultClose" onclick="finishRegistrationResult()">
+                                <i class="fas fa-sync-alt mr-1"></i> Refresh Halaman
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="face-register-modal__info px-3 py-2 border-bottom">
                     <div class="small text-muted d-flex flex-wrap align-items-center">
                         <span class="mr-3 mb-1"><i class="fas fa-mobile-alt mr-1"></i> Tampilan menyesuaikan perangkat</span>
@@ -426,6 +444,59 @@
         color: #6c757d;
         opacity: 1;
     }
+    .face-register-result-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(4px);
+    }
+    .face-register-result-card {
+        width: min(100%, 31rem);
+        background: #fff;
+        border-radius: 1.1rem;
+        box-shadow: 0 1.4rem 4rem rgba(15, 23, 42, 0.26);
+        padding: 1.6rem;
+        text-align: center;
+    }
+    .face-register-result-icon {
+        width: 5.4rem;
+        height: 5.4rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 2.1rem;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 0.35rem solid #dbeafe;
+    }
+    .face-register-result-icon.is-success {
+        color: #16a34a;
+        background: #f0fdf4;
+        border-color: #dcfce7;
+    }
+    .face-register-result-icon.is-error {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: #fee2e2;
+    }
+    .face-register-result-meta {
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.45rem;
+    }
+    .face-register-result-meta .badge {
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+    }
     .face-register-camera-panel {
         background: #000;
         min-height: 400px;
@@ -553,6 +624,7 @@ let stepStartedAt = null;
 let registrationStartedAt = null;
 let baselineMetrics = null;
 let blinkCloseFrames = 0;
+let registrationFinished = false;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
     frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil.' },
@@ -624,7 +696,13 @@ function openRegister(userId, userName, userType) {
     $('#modalRegister').modal('show');
     if (!modelsLoaded) loadModels(); else startCameraAndRegister();
 }
-function closeRegister() { isDetecting = false; stopCamera(); resetUI(); $('#modalRegister').modal('hide'); }
+function closeRegister() {
+    if (registrationFinished) {
+        window.location.reload();
+        return;
+    }
+    isDetecting = false; stopCamera(); resetUI(); $('#modalRegister').modal('hide');
+}
 function stopCamera() { if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; } const video = document.getElementById('videoElement'); if (video) video.srcObject = null; }
 async function loadModels() {
     const MODEL_URL = '{{ asset("vendor/face-api/models") }}';
@@ -683,6 +761,7 @@ function beginAutoRegistration() {
     passiveSamples = [];
     gestureSamples = [];
     registrationStartedAt = Date.now();
+    registrationFinished = false;
     stepStartedAt = Date.now();
     livenessSummary = {
         challenge_order: STEPS.map(step => step.angle),
@@ -709,6 +788,7 @@ function resetUI() {
     document.getElementById('duplicateFaceAlert').classList.add('d-none');
     document.getElementById('duplicateFaceAlertText').textContent = '';
     hideDuplicateFaceModal();
+    hideRegistrationResult();
     const canvas = document.getElementById('overlayCanvas'); if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 function updateStepUI() {
@@ -933,17 +1013,108 @@ function hideDuplicateFaceModal() {
 async function saveRegistration() {
     const video = document.getElementById('videoElement'), c = document.createElement('canvas'); c.width = 320; c.height = 240; c.getContext('2d').drawImage(video, 0, 0, 320, 240);
     const livenessPayload = buildLivenessPayload();
+    isDetecting = false;
+    hideCountdownRing();
+    showRegistrationResult('saving', 'Menyimpan registrasi wajah', 'Mohon tunggu, data wajah sedang dikirim ke server.', {
+        captures: capturedDescriptors.length,
+        score: computeQualityScore(livenessPayload),
+    });
     try {
         const res = await fetch(storeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ user_id: selectedUserId, user_type: selectedUserType, descriptors: capturedDescriptors, angles: capturedAngles, quality_score: computeQualityScore(livenessPayload), liveness_score: livenessPayload.liveness_score, liveness_summary: livenessPayload, photo: c.toDataURL('image/jpeg', 0.8) }) });
         const result = await res.json().catch(() => ({}));
         if (!res.ok) {
             const validationErrors = result.errors ? Object.values(result.errors).flat().join(', ') : '';
-            setFaceStatus(result.message || validationErrors || 'Registrasi gagal diproses.', false);
+            const message = result.message || validationErrors || 'Registrasi gagal diproses.';
+            setFaceStatus(message, false);
+            showRegistrationResult('error', 'Registrasi wajah gagal', message, {
+                captures: capturedDescriptors.length,
+                score: computeQualityScore(livenessPayload),
+            });
             return;
         }
-        if (result.success) { document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Registrasi berhasil!'; document.getElementById('stepInstruction').style.display = 'block'; document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.9)'; document.getElementById('stepInstruction').style.color = '#fff'; setFaceStatus('Tersimpan. Menunggu verifikasi admin.', true); setTimeout(() => { closeRegister(); window.location.reload(); }, 1500); }
-        else setFaceStatus('Gagal: ' + (result.message || 'Error'), false);
-    } catch (err) { setFaceStatus('Error: ' + err.message, false); }
+        if (result.success) {
+            registrationFinished = true;
+            document.getElementById('stepInstruction').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Registrasi berhasil!';
+            document.getElementById('stepInstruction').style.display = 'block';
+            document.getElementById('stepInstruction').style.background = 'rgba(40,167,69,0.9)';
+            document.getElementById('stepInstruction').style.color = '#fff';
+            setFaceStatus('Tersimpan. Menunggu verifikasi admin.', true);
+            showRegistrationResult('success', 'Registrasi wajah berhasil', result.message || 'Data wajah berhasil disimpan dan menunggu verifikasi admin.', {
+                captures: result.data?.total_captures || capturedDescriptors.length,
+                score: computeQualityScore(livenessPayload),
+            });
+        } else {
+            const message = result.message || 'Server tidak mengembalikan status sukses.';
+            setFaceStatus('Gagal: ' + message, false);
+            showRegistrationResult('error', 'Registrasi wajah gagal', message, {
+                captures: capturedDescriptors.length,
+                score: computeQualityScore(livenessPayload),
+            });
+        }
+    } catch (err) {
+        setFaceStatus('Error: ' + err.message, false);
+        showRegistrationResult('error', 'Koneksi ke server gagal', err.message || 'Periksa koneksi lalu ulangi registrasi.', {
+            captures: capturedDescriptors.length,
+            score: computeQualityScore(livenessPayload),
+        });
+    }
+}
+function showRegistrationResult(type, title, message, meta = {}) {
+    const overlay = document.getElementById('registrationResultModal');
+    const icon = document.getElementById('registrationResultIcon');
+    const retry = document.getElementById('registrationResultRetry');
+    const close = document.getElementById('registrationResultClose');
+    const metaEl = document.getElementById('registrationResultMeta');
+
+    icon.className = 'face-register-result-icon';
+    retry.classList.add('d-none');
+    close.classList.add('d-none');
+
+    if (type === 'success') {
+        icon.classList.add('is-success');
+        icon.innerHTML = '<i class="fas fa-check"></i>';
+        close.classList.remove('d-none');
+        close.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh Halaman';
+        close.className = 'btn btn-success';
+    } else if (type === 'error') {
+        icon.classList.add('is-error');
+        icon.innerHTML = '<i class="fas fa-times"></i>';
+        retry.classList.remove('d-none');
+        close.classList.remove('d-none');
+        close.innerHTML = '<i class="fas fa-times mr-1"></i> Tutup';
+        close.className = 'btn btn-outline-secondary';
+    } else {
+        icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    document.getElementById('registrationResultTitle').textContent = title;
+    document.getElementById('registrationResultMessage').textContent = message;
+    metaEl.innerHTML = [
+        meta.captures ? `<span class="badge badge-light"><i class="fas fa-camera mr-1"></i>${meta.captures} capture</span>` : '',
+        meta.score ? `<span class="badge badge-light"><i class="fas fa-shield-alt mr-1"></i>Quality ${meta.score}%</span>` : '',
+        selectedUserName ? `<span class="badge badge-light"><i class="fas fa-user mr-1"></i>${escapeHtml(selectedUserName)}</span>` : '',
+    ].join('');
+    overlay.classList.remove('d-none');
+}
+function hideRegistrationResult() {
+    const overlay = document.getElementById('registrationResultModal');
+    if (overlay) overlay.classList.add('d-none');
+}
+function retryRegistrationAfterFailure() {
+    hideRegistrationResult();
+    resetRegistration();
+}
+function finishRegistrationResult() {
+    if (registrationFinished) {
+        window.location.reload();
+        return;
+    }
+    hideRegistrationResult();
+}
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    }[char]));
 }
 function buildLivenessPayload() {
     livenessSummary.total_duration_ms = Date.now() - (registrationStartedAt || Date.now());
@@ -975,6 +1146,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
 </script>
 @stop
