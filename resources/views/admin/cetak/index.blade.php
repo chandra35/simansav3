@@ -4,25 +4,25 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <div class="simansa-hero simansa-print-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow">
+    <div class="simansa-print-hero">
+        <div class="simansa-print-hero__main">
+            <div class="simansa-print-hero__eyebrow">
                 <i class="fas fa-print"></i>
                 Akademik
             </div>
-            <h1 class="simansa-hero__title">Cetak Dokumen</h1>
-            <p class="simansa-hero__subtitle">
+            <h1 class="simansa-print-hero__title">Cetak Dokumen</h1>
+            <p class="simansa-print-hero__subtitle">
                 Cetak absensi dan dokumen akademik lain dari satu alur yang lebih cepat. Filter dirapikan agar admin bisa memilih kelas massal tanpa bolak-balik.
             </p>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Mode</span>
-                <span class="simansa-hero-chip__value">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</span>
+        <div class="simansa-print-hero__meta">
+            <div class="simansa-print-chip">
+                <span class="simansa-print-chip__label">Mode</span>
+                <span class="simansa-print-chip__value">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</span>
             </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Tahun Aktif</span>
-                <span class="simansa-hero-chip__value">{{ $tahunPelajarans->firstWhere('is_active', true)?->nama ?? '-' }}</span>
+            <div class="simansa-print-chip">
+                <span class="simansa-print-chip__label">Tahun Aktif</span>
+                <span class="simansa-print-chip__value">{{ $tahunPelajarans->firstWhere('is_active', true)?->nama ?? '-' }}</span>
             </div>
         </div>
     </div>
@@ -525,39 +525,73 @@
 @section('css')
     <style>
         .simansa-print-hero {
-            border-radius: 16px !important;
-            background: #3b82f6 !important;
-            color: #fff !important;
-            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22) !important;
-            border: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.2rem;
+            padding: 1.35rem 1.45rem;
+            border-radius: 16px;
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22);
         }
-        .simansa-print-hero .simansa-hero__eyebrow {
-            color: rgba(255, 255, 255, 0.92) !important;
-            background: transparent !important;
-            padding: 0 !important;
-            border-radius: 0 !important;
+        .simansa-print-hero__main {
+            min-width: 0;
+            max-width: 820px;
         }
-        .simansa-print-hero .simansa-hero__title {
-            color: #fff !important;
-            font-size: 1.45rem !important;
-            text-shadow: none !important;
+        .simansa-print-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
-        .simansa-print-hero .simansa-hero__subtitle {
-            color: rgba(255, 255, 255, 0.9) !important;
-            max-width: 760px !important;
+        .simansa-print-hero__title {
+            margin: 0 0 0.35rem;
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 700;
+            line-height: 1.2;
         }
-        .simansa-print-hero .simansa-hero-chip {
-            border-radius: 12px !important;
-            background: rgba(255, 255, 255, 0.14) !important;
-            border: 1px solid rgba(255, 255, 255, 0.18) !important;
-            color: #fff !important;
-            box-shadow: none !important;
+        .simansa-print-hero__subtitle {
+            margin: 0;
+            max-width: 760px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.55;
+            font-size: 0.96rem;
         }
-        .simansa-print-hero .simansa-hero-chip__label {
-            color: rgba(255, 255, 255, 0.78) !important;
+        .simansa-print-hero__meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 0.85rem;
+            flex: 0 0 auto;
         }
-        .simansa-print-hero .simansa-hero-chip__value {
-            color: #fff !important;
+        .simansa-print-chip {
+            min-height: 76px;
+            padding: 0.9rem 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .simansa-print-chip__label {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .simansa-print-chip__value {
+            display: block;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.18;
         }
         .simansa-print-card {
             border: 1px solid #dbe4f0 !important;
@@ -584,18 +618,18 @@
             border: 1px solid #dbeafe !important;
             border-left: 4px solid #3b82f6 !important;
             border-radius: 12px !important;
-            background: #eff6ff !important;
+            background: #f8fbff !important;
             color: #1e3a8a !important;
-            padding: 0.95rem 1rem !important;
+            padding: 0.85rem 1rem !important;
         }
         .simansa-print-filter {
             border: 1px solid #dbe4f0 !important;
             border-radius: 14px !important;
-            background: #f8fafc !important;
+            background: #fff !important;
             padding: 1rem !important;
         }
         .simansa-print-filter.simansa-filter-panel--accent {
-            background: #f8fafc !important;
+            background: #fff !important;
             border-color: #dbe4f0 !important;
         }
         .simansa-form-section {
@@ -606,7 +640,7 @@
             margin-bottom: 1rem;
         }
         .simansa-form-section__title {
-            font-size: 1rem;
+            font-size: 1.02rem;
             font-weight: 700;
             color: #0f172a;
             margin-bottom: 0.25rem;
@@ -643,6 +677,11 @@
             background: #fff;
             color: #334155;
             font-weight: 700;
+        }
+        .simansa-print-card .card-footer {
+            background: #f8fafc !important;
+            border-top: 1px solid #e5edf7 !important;
+            padding: 0.85rem 1rem !important;
         }
         .simansa-print-results {
             border: 1px solid #dbe4f0 !important;
@@ -756,6 +795,14 @@
             cursor: pointer;
         }
         @media (max-width: 767.98px) {
+            .simansa-print-hero {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+            }
+            .simansa-print-hero__meta {
+                grid-template-columns: 1fr;
+            }
             .simansa-form-section,
             .simansa-results-panel__title {
                 flex-direction: column;
