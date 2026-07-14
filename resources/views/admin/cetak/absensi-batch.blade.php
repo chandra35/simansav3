@@ -40,17 +40,17 @@
         }
         
         .kop-logo {
-            width: {{ $setting->logo_column_width ?? 12 }}%;
+            width: {{ max((int) ($setting->logo_column_width ?? 14), 14) }}%;
             text-align: center;
         }
         
         .kop-logo img {
-            height: {{ $setting->logo_display_height ?? 50 }}px;
+            height: {{ max((int) ($setting->logo_display_height ?? 66), 62) }}px;
             width: auto;
         }
         
         .kop-content {
-            width: {{ 100 - (($setting->logo_column_width ?? 12) * 2) }}%;
+            width: {{ 100 - (max((int) ($setting->logo_column_width ?? 14), 14) * 2) }}%;
             text-align: center;
         }
         
@@ -381,7 +381,7 @@
             <div class="footer-right">
                 <div class="ttd-section">
                     <div class="ttd-text">
-                        {{ $setting->kota_nama ?? 'Kota' }}, {{ date('d F Y') }}<br>
+                        {{ $schoolCityName ?? 'Kota Metro' }}, {{ date('d F Y') }}<br>
                         Wali Kelas
                     </div>
                     <div class="ttd-nama">{{ $kelas->waliKelas->name ?? '___________________' }}</div>

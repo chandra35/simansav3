@@ -7,11 +7,11 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Gtk;
 use App\Models\TahunPelajaran;
-use App\Models\Kurikulum;
 use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CetakController extends Controller
@@ -24,7 +24,6 @@ class CetakController extends Controller
         $this->authorize('view-kelas');
         
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
-        $kurikulums = Kurikulum::where('is_active', true)->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
         $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
@@ -32,7 +31,6 @@ class CetakController extends Controller
         
         return view('admin.cetak.index', compact(
             'tahunPelajarans',
-            'kurikulums',
             'tingkatOptions',
             'isRestrictedWaliKelas',
             'defaultTahunPelajaranId'
@@ -85,13 +83,11 @@ class CetakController extends Controller
         $tahunPelajaranId = $request->input('tahun_pelajaran_id');
         $tingkat = $request->input('tingkat');
         $rombel = $request->input('rombel');
-        $kurikulumId = $request->input('kurikulum_id');
         $kelasIds = $request->input('kelas_ids', []);
         
         // Build query
         $query = Kelas::with([
             'tahunPelajaran',
-            'kurikulum',
             'jurusan',
             'waliKelas',
             'siswas' => function($q) use ($tahunPelajaranId) {
@@ -115,10 +111,6 @@ class CetakController extends Controller
             $query->where('nama_kelas', $rombel);
         }
         
-        if ($kurikulumId) {
-            $query->where('kurikulum_id', $kurikulumId);
-        }
-        
         if (!empty($kelasIds)) {
             $query->whereIn('id', $kelasIds);
         }
@@ -130,7 +122,10 @@ class CetakController extends Controller
         }
         
         // Load app settings
-        $setting = AppSetting::first();
+        $setting = AppSetting::with('kota')->first();
+        if (!$setting) {
+            $setting = AppSetting::getInstance()->load('kota');
+        }
         
         // Process logos once
         $logoKemenagBase64 = $this->processLogo($setting, 'logo_kemenag_path', 'logo_kemenag_height');
@@ -141,6 +136,7 @@ class CetakController extends Controller
             'setting' => $setting,
             'logoKemenagBase64' => $logoKemenagBase64,
             'logoSekolahBase64' => $logoSekolahBase64,
+            'schoolCityName' => $this->resolveSchoolCityName($setting),
         ];
         
         // Generate PDF
@@ -216,10 +212,6 @@ class CetakController extends Controller
             $query->where('nama_kelas', $request->rombel);
         }
         
-        if ($request->filled('kurikulum_id')) {
-            $query->where('kurikulum_id', $request->kurikulum_id);
-        }
-        
         $kelasList = $query->orderBy('tingkat')->orderBy('nama_kelas')->get();
         
         return response()->json([
@@ -236,6 +228,17 @@ class CetakController extends Controller
                 ];
             })
         ]);
+    }
+
+    private function resolveSchoolCityName(?AppSetting $setting): string
+    {
+        $cityName = $setting?->kota?->name;
+
+        if (!$cityName) {
+            return 'Kota Metro';
+        }
+
+        return Str::title(Str::lower($cityName));
     }
 
     /**

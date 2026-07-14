@@ -85,7 +85,7 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="filter_tahun_pelajaran" class="simansa-filter-label"><i class="fas fa-calendar-alt"></i> Tahun Pelajaran <span class="text-danger">*</span></label>
                                         <select name="tahun_pelajaran_id" id="filter_tahun_pelajaran" class="form-control form-control-sm print-filter-select" required>
@@ -99,7 +99,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="filter_tingkat" class="simansa-filter-label"><i class="fas fa-layer-group"></i> Tingkat <span class="text-danger">*</span></label>
                                         <select name="tingkat" id="filter_tingkat" class="form-control form-control-sm print-filter-select" required>
@@ -111,7 +111,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="filter_rombel" class="simansa-filter-label"><i class="fas fa-users"></i> Rombel</label>
                                         <select name="rombel" id="filter_rombel" class="form-control form-control-sm print-filter-select">
@@ -121,18 +121,6 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="filter_kurikulum" class="simansa-filter-label"><i class="fas fa-book"></i> Kurikulum</label>
-                                        <select name="kurikulum_id" id="filter_kurikulum" class="form-control form-control-sm print-filter-select">
-                                            <option value="">Semua Kurikulum</option>
-                                            @foreach($kurikulums as $kurikulum)
-                                                <option value="{{ $kurikulum->id }}">{{ $kurikulum->nama }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="simansa-filter-hint">Opsional untuk mempersempit hasil.</div>
-                                    </div>
-                                </div>
                             </div>
                             </div>
                         @endunless
@@ -278,7 +266,6 @@
                 const tahunPelajaran = $('#filter_tahun_pelajaran').val();
                 const tingkat = $('#filter_tingkat').val();
                 const rombel = $('#filter_rombel').val();
-                const kurikulum = $('#filter_kurikulum').val();
 
                 if (!tahunPelajaran) {
                     Swal.fire({
@@ -304,8 +291,7 @@
                     data: {
                         tahun_pelajaran_id: tahunPelajaran,
                         tingkat: tingkat,
-                        rombel: rombel,
-                        kurikulum_id: kurikulum
+                        rombel: rombel
                     },
                     beforeSend: function() {
                         $('#btnLoadKelas').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memuat...');
@@ -362,7 +348,6 @@
             function refreshRombelOptions() {
                 const tahunPelajaran = $('#filter_tahun_pelajaran').val();
                 const tingkat = $('#filter_tingkat').val();
-                const kurikulum = $('#filter_kurikulum').val();
 
                 if (!tahunPelajaran || !tingkat) {
                     resetRombelOptions();
@@ -374,8 +359,7 @@
                     method: 'GET',
                     data: {
                         tahun_pelajaran_id: tahunPelajaran,
-                        tingkat: tingkat,
-                        kurikulum_id: kurikulum
+                        tingkat: tingkat
                     },
                     success: function(response) {
                         populateRombelOptions(response.data || []);
@@ -391,7 +375,7 @@
                 loadKelasByCurrentContext();
             });
 
-            $('#filter_tahun_pelajaran, #filter_tingkat, #filter_kurikulum').on('change', function() {
+            $('#filter_tahun_pelajaran, #filter_tingkat').on('change', function() {
                 $('#kelasCheckboxes').empty();
                 $('#kelasList').slideUp();
                 $('#selectAll').prop('checked', false);
@@ -420,7 +404,6 @@
                                 <label class="custom-control-label" for="kelas_${kelas.id}">
                                     <strong>${kelas.nama_lengkap}</strong><br>
                                     <small class="text-muted d-block mt-1"><i class="fas fa-users mr-1"></i>${kelas.siswa_count} siswa</small>
-                                    <small class="text-muted d-block">${kelas.kurikulum || 'Kurikulum belum diatur'}</small>
                                 </label>
                             </div>
                         </div>
