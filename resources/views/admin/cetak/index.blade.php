@@ -4,7 +4,7 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <div class="simansa-hero">
+    <div class="simansa-hero simansa-print-hero">
         <div class="simansa-hero__main">
             <div class="simansa-hero__eyebrow">
                 <i class="fas fa-print"></i>
@@ -32,7 +32,7 @@
     <div class="row">
         <div class="col-md-12">
             {{-- Card: Cetak Absensi Kelas --}}
-            <div class="card simansa-management-card">
+            <div class="card simansa-management-card simansa-print-card">
                 <div class="card-header">
                     <div class="simansa-toolbar">
                         <h3 class="card-title mb-0"><i class="fas fa-clipboard-check mr-2"></i> Cetak Absensi Kelas</h3>
@@ -47,14 +47,14 @@
                         <input type="hidden" name="tahun_pelajaran_id" id="filter_tahun_pelajaran" value="{{ $defaultTahunPelajaranId }}">
                     @endif
                     <div class="card-body">
-                        <div class="simansa-section-note mb-4">
+                        <div class="simansa-section-note simansa-print-note mb-4">
                             <i class="fas fa-info-circle"></i> 
                             <strong>{{ $isRestrictedWaliKelas ? 'Cetak Absensi Kelas Anda' : 'Cetak Absensi Sekaligus' }}</strong><br>
                             {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih filter untuk mencetak absensi beberapa kelas sekaligus. Setiap kelas akan dicetak dalam halaman terpisah dalam satu file PDF.' }}
                         </div>
 
                         @unless($isRestrictedWaliKelas)
-                            <div class="simansa-filter-panel simansa-filter-panel--accent mb-4">
+                            <div class="simansa-filter-panel simansa-filter-panel--accent simansa-print-filter mb-4">
                                 <div class="simansa-form-section">
                                     <div>
                                         <h4 class="simansa-form-section__title">Filter Kelas</h4>
@@ -126,7 +126,7 @@
 
                         {{-- Kelas List Section --}}
                         <div id="kelasList" style="{{ $isRestrictedWaliKelas ? '' : 'display: none;' }}">
-                            <div class="simansa-results-panel">
+                            <div class="simansa-results-panel simansa-print-results">
                             <div class="simansa-results-panel__title">
                                 <h5><i class="fas fa-list mr-1"></i> Pilih Kelas yang Akan Dicetak</h5>
                                 <div id="selectedCount" class="badge badge-success px-3 py-2" style="display: none;">
@@ -157,7 +157,7 @@
             </div>
 
             {{-- Card: Fitur Cetak Lainnya (Placeholder) --}}
-            <div class="card simansa-management-card simansa-coming-card">
+            <div class="card simansa-management-card simansa-print-card simansa-coming-card">
                 <div class="card-header">
                     <h3 class="card-title mb-0"><i class="fas fa-file-alt mr-2"></i> Fitur Cetak Lainnya</h3>
                 </div>
@@ -524,75 +524,79 @@
 
 @section('css')
     <style>
-        .simansa-hero {
-            border-radius: 16px;
-            background: #3b82f6;
-            color: #fff;
-            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22);
+        .simansa-print-hero {
+            border-radius: 16px !important;
+            background: #3b82f6 !important;
+            color: #fff !important;
+            box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22) !important;
+            border: 0 !important;
         }
-        .simansa-hero__eyebrow {
-            color: rgba(255, 255, 255, 0.92);
-            background: transparent;
-            padding: 0;
-            border-radius: 0;
+        .simansa-print-hero .simansa-hero__eyebrow {
+            color: rgba(255, 255, 255, 0.92) !important;
+            background: transparent !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
         }
-        .simansa-hero__title {
-            color: #fff;
-            font-size: 1.45rem;
+        .simansa-print-hero .simansa-hero__title {
+            color: #fff !important;
+            font-size: 1.45rem !important;
+            text-shadow: none !important;
         }
-        .simansa-hero__subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            max-width: 760px;
+        .simansa-print-hero .simansa-hero__subtitle {
+            color: rgba(255, 255, 255, 0.9) !important;
+            max-width: 760px !important;
         }
-        .simansa-hero-chip {
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            color: #fff;
+        .simansa-print-hero .simansa-hero-chip {
+            border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.14) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            color: #fff !important;
+            box-shadow: none !important;
         }
-        .simansa-hero-chip__label {
-            color: rgba(255, 255, 255, 0.78);
+        .simansa-print-hero .simansa-hero-chip__label {
+            color: rgba(255, 255, 255, 0.78) !important;
         }
-        .simansa-hero-chip__value {
-            color: #fff;
+        .simansa-print-hero .simansa-hero-chip__value {
+            color: #fff !important;
         }
-        .simansa-management-card {
-            border: 1px solid #dbe4f0;
-            border-radius: 14px;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
-            overflow: hidden;
+        .simansa-print-card {
+            border: 1px solid #dbe4f0 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05) !important;
+            overflow: hidden !important;
         }
-        .simansa-management-card > .card-header {
-            background: #fff;
-            border-bottom: 1px solid #e5edf7;
-            color: #0f172a;
-            padding: 0.95rem 1.25rem;
+        .simansa-print-card > .card-header {
+            background: #fff !important;
+            border-bottom: 1px solid #e5edf7 !important;
+            color: #0f172a !important;
+            padding: 0.95rem 1.25rem !important;
         }
-        .simansa-management-card > .card-header .card-title {
-            font-size: 1.02rem;
-            font-weight: 700;
-            color: #0f172a;
+        .simansa-print-card > .card-header .card-title,
+        .simansa-print-card > .card-header .card-title i {
+            font-size: 1.02rem !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
         }
-        .simansa-management-card .card-body {
-            padding: 1.25rem;
+        .simansa-print-card .card-body {
+            padding: 1.25rem !important;
         }
-        .simansa-section-note {
-            border: 1px solid #dbeafe;
-            border-left: 4px solid #3b82f6;
-            border-radius: 12px;
-            background: #eff6ff;
-            color: #1e3a8a;
-            padding: 0.95rem 1rem;
+        .simansa-print-note {
+            border: 1px solid #dbeafe !important;
+            border-left: 4px solid #3b82f6 !important;
+            border-radius: 12px !important;
+            background: #eff6ff !important;
+            color: #1e3a8a !important;
+            padding: 0.95rem 1rem !important;
         }
-        .simansa-filter-panel {
-            border: 1px solid #dbe4f0;
-            border-radius: 14px;
-            background: #f8fafc;
-            padding: 1rem;
+        .simansa-print-filter {
+            border: 1px solid #dbe4f0 !important;
+            border-radius: 14px !important;
+            background: #f8fafc !important;
+            padding: 1rem !important;
         }
-        .simansa-filter-panel--accent {
-            background: #f8fafc;
-            border-color: #dbe4f0;
+        .simansa-print-filter.simansa-filter-panel--accent {
+            background: #f8fafc !important;
+            border-color: #dbe4f0 !important;
         }
         .simansa-form-section {
             display: flex;
@@ -640,11 +644,11 @@
             color: #334155;
             font-weight: 700;
         }
-        .simansa-results-panel {
-            border: 1px solid #dbe4f0;
-            border-radius: 12px;
-            background: #fff;
-            padding: 1rem;
+        .simansa-print-results {
+            border: 1px solid #dbe4f0 !important;
+            border-radius: 12px !important;
+            background: #fff !important;
+            padding: 1rem !important;
         }
         .simansa-results-panel__title {
             display: flex;
