@@ -366,6 +366,16 @@
                             <td>{{ $kelas->siswas->count() }} Siswa</td>
                         </tr>
                         <tr>
+                            <td class="label">Laki-laki</td>
+                            <td>:</td>
+                            <td>{{ $kelas->siswas->where('jenis_kelamin', 'L')->count() }} Siswa</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Perempuan</td>
+                            <td>:</td>
+                            <td>{{ $kelas->siswas->where('jenis_kelamin', 'P')->count() }} Siswa</td>
+                        </tr>
+                        <tr>
                             <td class="label">Jumlah Hadir</td>
                             <td>:</td>
                             <td>_______ Siswa</td>

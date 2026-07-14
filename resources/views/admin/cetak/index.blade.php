@@ -155,6 +155,16 @@
                         <button type="submit" class="btn simansa-btn-strong btn-lg" id="btnCetak" disabled>
                             <i class="fas fa-print"></i> Cetak Absensi
                         </button>
+                        <button
+                            type="submit"
+                            class="btn btn-success btn-lg ml-2"
+                            id="btnExportAbsensi"
+                            formaction="{{ route('admin.cetak.absensi-batch.export') }}"
+                            formtarget="_blank"
+                            data-export="1"
+                            disabled>
+                            <i class="fas fa-file-excel"></i> Export XLS
+                        </button>
                     </div>
                 </form>
             </div>
@@ -437,9 +447,11 @@
                 if (count > 0) {
                     $('#selectedCount').slideDown();
                     $('#btnCetak').prop('disabled', false);
+                    $('#btnExportAbsensi').prop('disabled', false);
                 } else {
                     $('#selectedCount').slideUp();
                     $('#btnCetak').prop('disabled', true);
+                    $('#btnExportAbsensi').prop('disabled', true);
                 }
             }
 
@@ -456,6 +468,8 @@
 
             // Form Submit
             $('#formCetakAbsensi').on('submit', function(e) {
+                const submitter = e.originalEvent && e.originalEvent.submitter;
+                const isExport = submitter && $(submitter).data('export');
                 const count = $('.kelas-checkbox:checked').length;
                 if (count === 0) {
                     e.preventDefault();
@@ -465,6 +479,10 @@
                         text: 'Pilih minimal 1 kelas untuk dicetak!'
                     });
                     return false;
+                }
+
+                if (isExport) {
+                    return true;
                 }
 
                 $('#btnCetak')

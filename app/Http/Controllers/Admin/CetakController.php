@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AbsensiKelasExport;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CetakController extends Controller
@@ -146,6 +148,53 @@ class CetakController extends Controller
         $filename = 'Absensi_Batch_Tingkat_' . ($tingkat ?? 'All') . '.pdf';
         
         return $pdf->stream($filename);
+    }
+
+    public function exportAbsensiBatch(Request $request)
+    {
+        $this->authorize('view-kelas');
+
+        $tahunPelajaranId = $request->input('tahun_pelajaran_id');
+        $tingkat = $request->input('tingkat');
+        $rombel = $request->input('rombel');
+        $kelasIds = $request->input('kelas_ids', []);
+
+        $query = Kelas::with([
+            'tahunPelajaran',
+            'waliKelas',
+            'siswas' => function($q) use ($tahunPelajaranId) {
+                $q->wherePivot('status', 'aktif')
+                  ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                  ->orderBy('nama_lengkap');
+            }
+        ]);
+        $this->applyWaliKelasScope($query, $request->user());
+
+        if ($tahunPelajaranId) {
+            $query->where('tahun_pelajaran_id', $tahunPelajaranId);
+        }
+
+        if ($tingkat) {
+            $query->where('tingkat', $tingkat);
+        }
+
+        if ($rombel) {
+            $query->where('nama_kelas', $rombel);
+        }
+
+        if (!empty($kelasIds)) {
+            $query->whereIn('id', $kelasIds);
+        }
+
+        $kelasList = $query->orderBy('tingkat')->orderBy('nama_kelas')->get();
+
+        if ($kelasList->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada kelas yang ditemukan dengan filter tersebut.');
+        }
+
+        $filename = 'Absensi_Kelas_' . ($tingkat ? 'Tingkat_' . $tingkat : 'Semua') . '_' . date('Ymd_His') . '.xlsx';
+
+        return Excel::download(new AbsensiKelasExport($kelasList), $filename);
     }
     
     /**

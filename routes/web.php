@@ -487,6 +487,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:view-kelas'])->group(function () {
         Route::get('/cetak', [App\Http\Controllers\Admin\CetakController::class, 'index'])->name('cetak.index');
         Route::post('/cetak/absensi-batch', [App\Http\Controllers\Admin\CetakController::class, 'cetakAbsensiBatch'])->name('cetak.absensi-batch');
+        Route::post('/cetak/absensi-batch/export', [App\Http\Controllers\Admin\CetakController::class, 'exportAbsensiBatch'])->name('cetak.absensi-batch.export');
         Route::get('/cetak/kelas-by-filter', [App\Http\Controllers\Admin\CetakController::class, 'getKelasByFilter'])->name('cetak.kelas-by-filter');
     });
 
