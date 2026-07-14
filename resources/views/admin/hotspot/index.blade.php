@@ -196,6 +196,112 @@
 
 /* ── Tamu form ─────────────────────────────────── */
 .tamu-password-toggle { cursor: pointer; }
+
+.net-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.net-card {
+    background: #fff;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
+    overflow: hidden;
+}
+.net-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    padding: .95rem 1.1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #f8fbff, #eef6ff);
+}
+.net-card__title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 800;
+}
+.net-card__sub {
+    margin: .15rem 0 0;
+    color: #64748b;
+    font-size: .78rem;
+}
+.net-card__body { padding: 1rem 1.1rem; }
+.net-kv {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .65rem;
+}
+.net-kv__item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: .7rem .8rem;
+    background: #f8fafc;
+}
+.net-kv__label {
+    color: #64748b;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.net-kv__value {
+    color: #0f172a;
+    font-size: .95rem;
+    font-weight: 800;
+    word-break: break-word;
+    margin-top: .2rem;
+}
+.net-terminal {
+    background: #07111f;
+    color: #b7c9dd;
+    border-radius: 14px;
+    padding: .85rem 1rem;
+    font-family: Consolas, Monaco, monospace;
+    font-size: .74rem;
+    line-height: 1.55;
+    overflow-x: auto;
+    border: 1px solid #1e3a5f;
+}
+.net-terminal .comment { color: #5eead4; }
+.profile-list, .nas-list { display: grid; gap: .6rem; }
+.net-mini-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: .75rem;
+    background: #fff;
+}
+.net-mini-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem;
+}
+.net-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 999px;
+    padding: .18rem .5rem;
+    font-size: .68rem;
+    font-weight: 800;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+.net-chip.green { background: #dcfce7; color: #166534; }
+.net-chip.warn { background: #fef3c7; color: #92400e; }
+.net-action-row { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .55rem; }
+@media (max-width: 991.98px) {
+    .net-grid { grid-template-columns: 1fr; }
+    .net-kv { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 575.98px) {
+    .net-kv { grid-template-columns: 1fr; }
+}
 </style>
 @endsection
 
@@ -278,6 +384,88 @@
     </a>
 </div>
 
+{{-- Network Operations --------------------------------------------------- --}}
+<div class="net-grid">
+    <div class="net-card">
+        <div class="net-card__head">
+            <div>
+                <h2 class="net-card__title"><i class="fas fa-network-wired text-primary mr-1"></i>Detail Server FreeRADIUS</h2>
+                <p class="net-card__sub">Informasi inti untuk menghubungkan MikroTik Hotspot ke RADIUS SIMANSA.</p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" id="btnCopyMikrotik">
+                <i class="fas fa-copy mr-1"></i>Copy Script
+            </button>
+        </div>
+        <div class="net-card__body">
+            <div class="net-kv mb-3">
+                <div class="net-kv__item">
+                    <div class="net-kv__label">RADIUS Host</div>
+                    <div class="net-kv__value">{{ $serverInfo['host'] }}</div>
+                </div>
+                <div class="net-kv__item">
+                    <div class="net-kv__label">Auth / Accounting</div>
+                    <div class="net-kv__value">{{ $serverInfo['auth_port'] }} / {{ $serverInfo['acct_port'] }}</div>
+                </div>
+                <div class="net-kv__item">
+                    <div class="net-kv__label">CoA</div>
+                    <div class="net-kv__value">{{ $serverInfo['coa_port'] }}</div>
+                </div>
+                <div class="net-kv__item">
+                    <div class="net-kv__label">DB Radius</div>
+                    <div class="net-kv__value">{{ $serverInfo['database'] }}:{{ $serverInfo['database_port'] }}</div>
+                </div>
+                <div class="net-kv__item">
+                    <div class="net-kv__label">Shared Secret</div>
+                    <div class="net-kv__value">{{ $serverInfo['shared_secret_hint'] }}</div>
+                </div>
+                <div class="net-kv__item">
+                    <div class="net-kv__label">Firewall</div>
+                    <div class="net-kv__value">UDP 1812/1813</div>
+                </div>
+            </div>
+            <div class="net-terminal" id="mikrotikScript">/radius add service=hotspot address={{ $serverInfo['host'] }} secret=&lt;SECRET&gt; authentication-port={{ $serverInfo['auth_port'] }} accounting-port={{ $serverInfo['acct_port'] }} timeout=1000ms
+/ip hotspot profile set [find name=&lt;HOTSPOT_PROFILE&gt;] use-radius=yes accounting=yes
+/radius incoming set accept=yes port={{ $serverInfo['coa_port'] }}
+<span class="comment"># Pastikan MikroTik/NAS sudah didaftarkan di FreeRADIUS dan firewall mengizinkan UDP 1812/1813.</span></div>
+        </div>
+    </div>
+
+    <div class="net-card">
+        <div class="net-card__head">
+            <div>
+                <h2 class="net-card__title"><i class="fas fa-sliders-h text-info mr-1"></i>Profile RADIUS</h2>
+                <p class="net-card__sub">Bandwidth, timeout, pool, dan batas login dikirim sebagai group FreeRADIUS.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnAddProfile">
+                <i class="fas fa-plus mr-1"></i>Profile
+            </button>
+        </div>
+        <div class="net-card__body profile-list" id="profileList">
+            @forelse($profiles as $profile)
+                <div class="net-mini-card" data-profile='@json($profile)'>
+                    <div class="net-mini-card__top">
+                        <div>
+                            <strong>{{ $profile->name }}</strong>
+                            <div class="small text-muted">{{ $profile->code }}{{ $profile->rate_limit ? ' | '.$profile->rate_limit : '' }}</div>
+                        </div>
+                        <span class="net-chip {{ $profile->sync_status === 'synced' ? 'green' : 'warn' }}">
+                            {{ $profile->is_default ? 'Default ' : '' }}{{ strtoupper($profile->role ?? 'CUSTOM') }}
+                        </span>
+                    </div>
+                    <div class="small text-muted mt-2">{{ $profile->description ?: 'Belum ada catatan profile.' }}</div>
+                    <div class="net-action-row">
+                        <button class="btn btn-xs btn-outline-primary btn-edit-profile"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-xs btn-outline-info btn-sync-profile" data-id="{{ $profile->id }}"><i class="fas fa-sync"></i> Sync</button>
+                        <button class="btn btn-xs btn-outline-danger btn-delete-profile" data-id="{{ $profile->id }}"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            @empty
+                <div class="text-muted small">Belum ada profile RADIUS.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
 {{-- Main Panel ----------------------------------------------------------- --}}
 <div class="row">
     <div class="col-lg-8">
@@ -326,6 +514,15 @@
                         <button class="btn btn-danger btn-sm px-3" id="btnBulkNonaktif">
                             <i class="fas fa-ban mr-1"></i>Nonaktifkan
                         </button>
+                        <select id="bulkProfileId" class="form-control form-control-sm" style="width:190px">
+                            <option value="">Profile default role</option>
+                            @foreach($profiles as $profile)
+                                <option value="{{ $profile->id }}">{{ $profile->name }}</option>
+                            @endforeach
+                        </select>
+                        <button class="btn btn-info btn-sm px-3" id="btnBulkProfile">
+                            <i class="fas fa-layer-group mr-1"></i>Set Profile
+                        </button>
                     </div>
                     <button class="btn btn-outline-secondary btn-sm ml-auto" id="btnBulkClear" title="Batal pilih semua">
                         <i class="fas fa-times mr-1"></i>Batal Pilih
@@ -352,6 +549,7 @@
                             <th>Nama</th>
                             <th>Kelas</th>
                             <th>Role</th>
+                            <th>Profile</th>
                             <th>Status</th>
                             <th>Sync</th>
                             <th>Aksi</th>
@@ -405,6 +603,42 @@
                         <div class="small mt-2 text-muted">Data hotspot lokal tetap bisa dipakai walau layanan eksternal lambat atau offline.</div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="hs-panel mt-3">
+            <div class="hs-panel__header">
+                <span class="hs-panel__title"><i class="fas fa-router mr-1 text-primary"></i>MikroTik / NAS</span>
+                <button class="btn btn-xs btn-primary" id="btnAddNas"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="hs-panel__body nas-list">
+                @forelse($nasList as $nas)
+                    <div class="net-mini-card" data-nas='@json([
+                        "id" => $nas->id,
+                        "name" => $nas->name,
+                        "nasname" => $nas->nasname,
+                        "shortname" => $nas->shortname,
+                        "type" => $nas->type,
+                        "description" => $nas->description,
+                        "is_active" => $nas->is_active,
+                    ])'>
+                        <div class="net-mini-card__top">
+                            <div>
+                                <strong>{{ $nas->name }}</strong>
+                                <div class="small text-muted">{{ $nas->nasname }} | {{ $nas->shortname ?: '-' }}</div>
+                            </div>
+                            <span class="net-chip {{ $nas->sync_status === 'synced' ? 'green' : 'warn' }}">{{ strtoupper($nas->type) }}</span>
+                        </div>
+                        <div class="small text-muted mt-2">Secret: {{ $nas->maskedSecret() }}{{ $nas->description ? ' | '.$nas->description : '' }}</div>
+                        <div class="net-action-row">
+                            <button class="btn btn-xs btn-outline-primary btn-edit-nas"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-xs btn-outline-info btn-sync-nas" data-id="{{ $nas->id }}"><i class="fas fa-sync"></i> Sync</button>
+                            <button class="btn btn-xs btn-outline-danger btn-delete-nas" data-id="{{ $nas->id }}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-muted small">Belum ada MikroTik/NAS yang didaftarkan.</div>
+                @endforelse
             </div>
         </div>
     </div>
@@ -471,6 +705,183 @@
             </button>
         </div>
 
+    </div>
+</div>
+
+{{-- Modal Profile RADIUS ------------------------------------------------- --}}
+<div class="modal fade" id="modalProfile" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:18px;overflow:hidden">
+            <div class="modal-header" style="background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;border-bottom:none">
+                <h5 class="modal-title"><i class="fas fa-sliders-h mr-2"></i>Profile RADIUS</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formProfile">
+                    <input type="hidden" id="profileId">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Nama Profile</label>
+                                <input type="text" id="profileName" class="form-control" placeholder="Siswa 5M, Guru, Tamu">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Kode Group</label>
+                                <input type="text" id="profileCode" class="form-control" placeholder="siswa-5m">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Role</label>
+                                <select id="profileRole" class="form-control">
+                                    <option value="">Custom</option>
+                                    <option value="siswa">Siswa</option>
+                                    <option value="guru">Guru</option>
+                                    <option value="tamu">Tamu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Prioritas</label>
+                                <input type="number" id="profilePriority" class="form-control" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Mikrotik-Rate-Limit</label>
+                                <input type="text" id="profileRateLimit" class="form-control" placeholder="5M/5M atau 2M/2M 5M/5M...">
+                                <small class="text-muted">Format mengikuti atribut MikroTik.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Session</label>
+                                <input type="number" id="profileSession" class="form-control" placeholder="detik">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Idle</label>
+                                <input type="number" id="profileIdle" class="form-control" placeholder="detik">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Login</label>
+                                <input type="number" id="profileSimUse" class="form-control" placeholder="1">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Aktif</label>
+                                <select id="profileActive" class="form-control">
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Framed-Pool</label>
+                                <input type="text" id="profilePool" class="form-control" placeholder="pool-siswa">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Address List</label>
+                                <input type="text" id="profileAddressList" class="form-control" placeholder="siswa-hotspot">
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input" id="profileDefault">
+                                <label class="form-check-label font-weight-bold small" for="profileDefault">Jadikan default untuk role</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold small">Catatan</label>
+                        <textarea id="profileDescription" class="form-control" rows="2" placeholder="Keterangan penggunaan profile"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary font-weight-bold" id="btnSaveProfile">
+                    <i class="fas fa-save mr-1"></i>Simpan & Sync
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal NAS ------------------------------------------------------------ --}}
+<div class="modal fade" id="modalNas" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:18px;overflow:hidden">
+            <div class="modal-header" style="background:linear-gradient(135deg,#0f766e,#0f172a);color:#fff;border-bottom:none">
+                <h5 class="modal-title"><i class="fas fa-router mr-2"></i>MikroTik / NAS</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formNas">
+                    <input type="hidden" id="nasId">
+                    <div class="form-group">
+                        <label class="font-weight-bold small">Nama Router</label>
+                        <input type="text" id="nasName" class="form-control" placeholder="MikroTik Lab / Gateway Utama">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">IP / NAS Name</label>
+                                <input type="text" id="nasNameIp" class="form-control" placeholder="172.16.250.1">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Shortname</label>
+                                <input type="text" id="nasShortname" class="form-control" placeholder="gw-hotspot">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Type</label>
+                                <input type="text" id="nasType" class="form-control" value="mikrotik">
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label class="font-weight-bold small">Shared Secret</label>
+                                <input type="password" id="nasSecret" class="form-control" placeholder="Isi ulang jika ingin mengganti">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold small">Catatan</label>
+                        <textarea id="nasDescription" class="form-control" rows="2" placeholder="Lokasi router, interface, atau catatan firewall"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="nasActive" checked>
+                        <label class="form-check-label font-weight-bold small" for="nasActive">Aktif di RADIUS</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary font-weight-bold" id="btnSaveNas">
+                    <i class="fas fa-save mr-1"></i>Simpan & Sync
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -558,6 +969,15 @@ const ROUTES = {
     radiusStatus: '{{ route("admin.hotspot.radius-status") }}',
     filterOptions:'{{ route("admin.hotspot.filter-options") }}',
     bulkToggle:   '{{ route("admin.hotspot.bulk-toggle") }}',
+    assignProfile:'{{ route("admin.hotspot.assign-profile") }}',
+    profileStore: '{{ route("admin.hotspot.profiles.store") }}',
+    profileUpdate:(id) => `{{ url("admin/hotspot/profiles") }}/${id}`,
+    profileSync:  (id) => `{{ url("admin/hotspot/profiles") }}/${id}/sync`,
+    profileDestroy:(id) => `{{ url("admin/hotspot/profiles") }}/${id}`,
+    nasStore:     '{{ route("admin.hotspot.nas.store") }}',
+    nasUpdate:    (id) => `{{ url("admin/hotspot/nas") }}/${id}`,
+    nasSync:      (id) => `{{ url("admin/hotspot/nas") }}/${id}/sync`,
+    nasDestroy:   (id) => `{{ url("admin/hotspot/nas") }}/${id}`,
     tamuStore:    '{{ route("admin.hotspot.tamu.store") }}',
     tamuUpdate:   (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
     tamuDestroy:  (id) => `{{ url("admin/hotspot/tamu") }}/${id}`,
@@ -593,6 +1013,7 @@ $(function () {
             { data: 'display_name', name: 'display_name' },
             { data: 'kelas_info',   name: 'kelas_info', orderable: false, searchable: false },
             { data: 'role_badge',   name: 'role', orderable: false },
+            { data: 'profile_badge', name: 'profile_badge', orderable: false, searchable: false },
             { data: 'status_badge', name: 'is_active', orderable: false },
             { data: 'sync_badge',   name: 'sync_status', orderable: false },
             { data: 'actions',      name: 'actions', orderable: false, searchable: false },
@@ -746,6 +1167,38 @@ function doBulkToggle(action) {
 
 $('#btnBulkAktif').on('click', () => doBulkToggle('aktif'));
 $('#btnBulkNonaktif').on('click', () => doBulkToggle('nonaktif'));
+
+$('#btnBulkProfile').on('click', () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) {
+        toastr.warning('Pilih akun terlebih dahulu.');
+        return;
+    }
+
+    const profileId = $('#bulkProfileId').val();
+    if (!confirm(`${ids.length} akun akan dipindahkan ke profile yang dipilih. Lanjutkan?`)) return;
+
+    $.post(ROUTES.assignProfile, {
+        ids,
+        profile_id: profileId,
+        _token: '{{ csrf_token() }}'
+    }).done(r => {
+        toastr[r.success ? 'success' : 'error'](r.message);
+        if (r.success) {
+            selectedIds.clear();
+            $('#checkAll').prop('checked', false).prop('indeterminate', false);
+            updateBulkBar();
+            table.ajax.reload();
+            loadRadiusStatus();
+        }
+    }).fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal mengubah profile.'));
+});
+
+$('#btnCopyMikrotik').on('click', () => {
+    const text = $('#mikrotikScript').text().trim();
+    navigator.clipboard?.writeText(text);
+    toastr.success('Script MikroTik disalin.');
+});
 
 // ── Sync overlay ──────────────────────────────────────────────────────────
 let lastSyncRole = '', lastSyncForce = false;
@@ -976,6 +1429,143 @@ $(document).on('click', '.btn-delete', function () {
 });
 
 // ── RADIUS Live Status ────────────────────────────────────────────────────
+function resetProfileForm() {
+    $('#formProfile')[0].reset();
+    $('#profileId').val('');
+    $('#profilePriority').val(1);
+    $('#profileActive').val('1');
+    $('#profileDefault').prop('checked', false);
+}
+
+$('#btnAddProfile').on('click', () => {
+    resetProfileForm();
+    $('#modalProfile .modal-title').html('<i class="fas fa-sliders-h mr-2"></i>Profile RADIUS Baru');
+    $('#modalProfile').modal('show');
+});
+
+$(document).on('click', '.btn-edit-profile', function () {
+    const p = $(this).closest('[data-profile]').data('profile');
+    resetProfileForm();
+    $('#profileId').val(p.id);
+    $('#profileName').val(p.name);
+    $('#profileCode').val(p.code);
+    $('#profileRole').val(p.role || '');
+    $('#profilePriority').val(p.priority || 1);
+    $('#profileRateLimit').val(p.rate_limit || '');
+    $('#profileSession').val(p.session_timeout || '');
+    $('#profileIdle').val(p.idle_timeout || '');
+    $('#profileSimUse').val(p.simultaneous_use || '');
+    $('#profilePool').val(p.framed_pool || '');
+    $('#profileAddressList').val(p.address_list || '');
+    $('#profileDescription').val(p.description || '');
+    $('#profileDefault').prop('checked', !!p.is_default);
+    $('#profileActive').val(p.is_active ? '1' : '0');
+    $('#modalProfile .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit Profile RADIUS');
+    $('#modalProfile').modal('show');
+});
+
+$('#btnSaveProfile').on('click', () => {
+    const id = $('#profileId').val();
+    $.ajax({
+        url: id ? ROUTES.profileUpdate(id) : ROUTES.profileStore,
+        method: id ? 'PUT' : 'POST',
+        data: {
+            name: $('#profileName').val(),
+            code: $('#profileCode').val(),
+            role: $('#profileRole').val(),
+            priority: $('#profilePriority').val(),
+            rate_limit: $('#profileRateLimit').val(),
+            session_timeout: $('#profileSession').val(),
+            idle_timeout: $('#profileIdle').val(),
+            simultaneous_use: $('#profileSimUse').val(),
+            framed_pool: $('#profilePool').val(),
+            address_list: $('#profileAddressList').val(),
+            description: $('#profileDescription').val(),
+            is_default: $('#profileDefault').is(':checked') ? 1 : 0,
+            is_active: $('#profileActive').val(),
+            _token: '{{ csrf_token() }}',
+        }
+    }).done(r => {
+        toastr.success(r.message);
+        location.reload();
+    }).fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal menyimpan profile.'));
+});
+
+$(document).on('click', '.btn-sync-profile', function () {
+    $.post(ROUTES.profileSync($(this).data('id')), { _token: '{{ csrf_token() }}' })
+        .done(r => toastr.success(r.message))
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Sync profile gagal.'));
+});
+
+$(document).on('click', '.btn-delete-profile', function () {
+    if (!confirm('Hapus profile ini dari SIMANSA dan group RADIUS?')) return;
+    $.ajax({ url: ROUTES.profileDestroy($(this).data('id')), method: 'DELETE', data: { _token: '{{ csrf_token() }}' } })
+        .done(r => { toastr.success(r.message); location.reload(); })
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Profile tidak bisa dihapus.'));
+});
+
+function resetNasForm() {
+    $('#formNas')[0].reset();
+    $('#nasId').val('');
+    $('#nasType').val('mikrotik');
+    $('#nasActive').prop('checked', true);
+}
+
+$('#btnAddNas').on('click', () => {
+    resetNasForm();
+    $('#modalNas .modal-title').html('<i class="fas fa-router mr-2"></i>Tambah MikroTik / NAS');
+    $('#modalNas').modal('show');
+});
+
+$(document).on('click', '.btn-edit-nas', function () {
+    const n = $(this).closest('[data-nas]').data('nas');
+    resetNasForm();
+    $('#nasId').val(n.id);
+    $('#nasName').val(n.name);
+    $('#nasNameIp').val(n.nasname);
+    $('#nasShortname').val(n.shortname || '');
+    $('#nasType').val(n.type || 'mikrotik');
+    $('#nasDescription').val(n.description || '');
+    $('#nasSecret').val('');
+    $('#nasActive').prop('checked', !!n.is_active);
+    $('#modalNas .modal-title').html('<i class="fas fa-edit mr-2"></i>Edit MikroTik / NAS');
+    $('#modalNas').modal('show');
+});
+
+$('#btnSaveNas').on('click', () => {
+    const id = $('#nasId').val();
+    $.ajax({
+        url: id ? ROUTES.nasUpdate(id) : ROUTES.nasStore,
+        method: id ? 'PUT' : 'POST',
+        data: {
+            name: $('#nasName').val(),
+            nasname: $('#nasNameIp').val(),
+            shortname: $('#nasShortname').val(),
+            type: $('#nasType').val(),
+            secret: $('#nasSecret').val(),
+            description: $('#nasDescription').val(),
+            is_active: $('#nasActive').is(':checked') ? 1 : 0,
+            _token: '{{ csrf_token() }}',
+        }
+    }).done(r => {
+        toastr.success(r.message);
+        location.reload();
+    }).fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal menyimpan NAS.'));
+});
+
+$(document).on('click', '.btn-sync-nas', function () {
+    $.post(ROUTES.nasSync($(this).data('id')), { _token: '{{ csrf_token() }}' })
+        .done(r => toastr.success(r.message))
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Sync NAS gagal.'));
+});
+
+$(document).on('click', '.btn-delete-nas', function () {
+    if (!confirm('Hapus NAS ini dari SIMANSA dan database RADIUS?')) return;
+    $.ajax({ url: ROUTES.nasDestroy($(this).data('id')), method: 'DELETE', data: { _token: '{{ csrf_token() }}' } })
+        .done(r => { toastr.success(r.message); location.reload(); })
+        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'NAS tidak bisa dihapus.'));
+});
+
 function loadRadiusStatus() {
     const $panel = $('#radiusStatusPanel');
     const $btn = $('#btnRefreshRadius');
@@ -1019,6 +1609,8 @@ function loadRadiusStatus() {
             <div class="radius-live mb-2">
                 <div class="radius-live__row"><span>Akun di RADIUS</span><span class="radius-live__val">${c.radcheck}</span></div>
                 <div class="radius-live__row"><span>User groups</span><span class="radius-live__val">${c.radusergroup}</span></div>
+                <div class="radius-live__row"><span>Group reply</span><span class="radius-live__val">${c.radgroupreply ?? '-'}</span></div>
+                <div class="radius-live__row"><span>NAS/MikroTik</span><span class="radius-live__val">${c.nas ?? '-'}</span></div>
                 <div class="radius-live__row"><span>Online saat ini</span><span class="radius-live__val" style="color:#4ade80">${c.radacct_active}</span></div>
                 <div class="radius-live__row"><span>Auth hari ini</span><span class="radius-live__val">${c.radpostauth_today}</span></div>
             </div>

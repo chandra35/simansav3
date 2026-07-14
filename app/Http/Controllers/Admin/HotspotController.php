@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\HotspotRadiusNas;
+use App\Models\HotspotRadiusProfile;
 use App\Models\HotspotUser;
 use App\Models\Siswa;
 use App\Models\Gtk;
@@ -20,13 +22,16 @@ class HotspotController extends Controller
     {
         $stats = $this->getStats(false);
         $radiusConnected = null;
+        $profiles = HotspotRadiusProfile::query()->orderBy('role')->orderBy('priority')->orderBy('name')->get();
+        $nasList = HotspotRadiusNas::query()->orderBy('name')->get();
+        $serverInfo = $this->getRadiusServerInfo();
 
-        return view('admin.hotspot.index', compact('stats', 'radiusConnected'));
+        return view('admin.hotspot.index', compact('stats', 'radiusConnected', 'profiles', 'nasList', 'serverInfo'));
     }
 
     public function data(Request $request)
     {
-        $query = HotspotUser::with(['user', 'user.siswa.kelasAktif'])
+        $query = HotspotUser::with(['user', 'user.siswa.kelasAktif', 'radiusProfile'])
             ->withTrashed($request->boolean('show_deleted'));
 
         if ($request->filled('role')) {
@@ -98,6 +103,15 @@ class HotspotController extends Controller
                     default => '<span class="badge badge-secondary">'.$h->role.'</span>',
                 };
             })
+            ->addColumn('profile_badge', function (HotspotUser $h) {
+                $profile = $h->radiusProfile ?: HotspotRadiusProfile::defaultForRole($h->role);
+                if (!$profile) {
+                    return '<span class="badge badge-light border text-muted">Default role</span>';
+                }
+
+                $rate = $profile->rate_limit ? '<small class="d-block text-muted">'.e($profile->rate_limit).'</small>' : '';
+                return '<span class="badge badge-primary">'.e($profile->name).'</span>'.$rate;
+            })
             ->addColumn('actions', function (HotspotUser $h) {
                 $btn = '';
                 if (!$h->deleted_at) {
@@ -114,7 +128,7 @@ class HotspotController extends Controller
                 }
                 return $btn;
             })
-            ->rawColumns(['kelas_info', 'status_badge', 'sync_badge', 'role_badge', 'actions'])
+            ->rawColumns(['kelas_info', 'status_badge', 'sync_badge', 'role_badge', 'profile_badge', 'actions'])
             ->make(true);
     }
 
@@ -288,6 +302,8 @@ class HotspotController extends Controller
             $counts = [
                 'radcheck' => $db->table('radcheck')->count(),
                 'radusergroup' => $db->table('radusergroup')->count(),
+                'radgroupreply' => $this->radiusTableExists($db, 'radgroupreply') ? $db->table('radgroupreply')->count() : null,
+                'nas' => $this->radiusTableExists($db, 'nas') ? $db->table('nas')->count() : null,
                 'radacct_active' => $db->table('radacct')->whereNull('acctstoptime')->count(),
                 'radpostauth_today' => $db->table('radpostauth')
                     ->whereDate('authdate', today())
@@ -303,10 +319,178 @@ class HotspotController extends Controller
                 'connected' => true,
                 'counts' => $counts,
                 'recent_auth' => $recentAuth,
+                'server' => $this->getRadiusServerInfo(),
             ]);
         } catch (\Exception $e) {
             return response()->json(['connected' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    public function profiles()
+    {
+        $profiles = HotspotRadiusProfile::query()
+            ->withCount('users')
+            ->orderBy('role')
+            ->orderBy('priority')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (HotspotRadiusProfile $profile) => [
+                'id' => $profile->id,
+                'code' => $profile->code,
+                'name' => $profile->name,
+                'role' => $profile->role,
+                'rate_limit' => $profile->rate_limit,
+                'session_timeout' => $profile->session_timeout,
+                'idle_timeout' => $profile->idle_timeout,
+                'simultaneous_use' => $profile->simultaneous_use,
+                'framed_pool' => $profile->framed_pool,
+                'address_list' => $profile->address_list,
+                'priority' => $profile->priority,
+                'description' => $profile->description,
+                'is_default' => $profile->is_default,
+                'is_active' => $profile->is_active,
+                'sync_status' => $profile->sync_status,
+                'sync_error' => $profile->sync_error,
+                'users_count' => $profile->users_count,
+            ]);
+
+        return response()->json(['success' => true, 'profiles' => $profiles]);
+    }
+
+    public function storeProfile(Request $request)
+    {
+        $data = $this->validateProfile($request);
+
+        if ($request->boolean('is_default') && !empty($data['role'])) {
+            HotspotRadiusProfile::where('role', $data['role'])->update(['is_default' => false]);
+        }
+
+        $profile = HotspotRadiusProfile::create($data + ['sync_status' => 'pending']);
+        $synced = $profile->syncToRadius();
+
+        return response()->json([
+            'success' => true,
+            'message' => $synced ? 'Profile RADIUS berhasil dibuat dan disinkronkan.' : 'Profile dibuat, tetapi sync ke FreeRADIUS gagal: '.$profile->sync_error,
+            'profile' => $profile,
+        ]);
+    }
+
+    public function updateProfile(Request $request, HotspotRadiusProfile $profile)
+    {
+        $data = $this->validateProfile($request, $profile->id);
+
+        if ($request->boolean('is_default') && !empty($data['role'])) {
+            HotspotRadiusProfile::where('role', $data['role'])
+                ->whereKeyNot($profile->id)
+                ->update(['is_default' => false]);
+        }
+
+        $profile->update($data + ['sync_status' => 'pending']);
+        $synced = $profile->syncToRadius();
+
+        return response()->json([
+            'success' => true,
+            'message' => $synced ? 'Profile RADIUS berhasil diperbarui dan disinkronkan.' : 'Profile diperbarui, tetapi sync ke FreeRADIUS gagal: '.$profile->sync_error,
+            'profile' => $profile->fresh(),
+        ]);
+    }
+
+    public function syncProfile(HotspotRadiusProfile $profile)
+    {
+        $ok = $profile->syncToRadius();
+
+        return response()->json([
+            'success' => $ok,
+            'message' => $ok ? 'Profile berhasil disinkronkan ke FreeRADIUS.' : 'Sync profile gagal: '.$profile->sync_error,
+        ], $ok ? 200 : 422);
+    }
+
+    public function destroyProfile(HotspotRadiusProfile $profile)
+    {
+        if ($profile->users()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profile masih dipakai akun hotspot. Pindahkan akun terlebih dahulu.',
+            ], 422);
+        }
+
+        $profile->removeFromRadius();
+        $profile->delete();
+
+        return response()->json(['success' => true, 'message' => 'Profile berhasil dihapus.']);
+    }
+
+    public function assignProfile(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1|max:1000',
+            'ids.*' => 'integer|exists:hotspot_users,id',
+            'profile_id' => 'nullable|exists:hotspot_radius_profiles,id',
+        ]);
+
+        $profile = $request->profile_id ? HotspotRadiusProfile::find($request->profile_id) : null;
+        $users = HotspotUser::whereIn('id', $request->ids)->get();
+        $count = 0;
+
+        foreach ($users as $hotspot) {
+            $hotspot->update([
+                'hotspot_radius_profile_id' => $profile?->id,
+                'sync_status' => 'pending',
+            ]);
+
+            $plain = $this->resolveHotspotPassword($hotspot);
+            if ($plain !== null) {
+                $hotspot->syncToRadius($plain);
+            }
+
+            $count++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'count' => $count,
+            'message' => "{$count} akun diperbarui ke profile ".($profile?->name ?? 'default role').'.',
+        ]);
+    }
+
+    public function storeNas(Request $request)
+    {
+        $nas = HotspotRadiusNas::create($this->validateNas($request) + ['sync_status' => 'pending']);
+        $synced = $nas->syncToRadius();
+
+        return response()->json(['success' => true, 'message' => $synced ? 'NAS/MikroTik berhasil ditambahkan dan disinkronkan.' : 'NAS tersimpan, tetapi sync ke FreeRADIUS gagal: '.$nas->sync_error, 'nas' => $nas]);
+    }
+
+    public function updateNas(Request $request, HotspotRadiusNas $nas)
+    {
+        $data = $this->validateNas($request, $nas->id);
+        if (!$request->filled('secret')) {
+            unset($data['secret']);
+        }
+
+        $nas->update($data + ['sync_status' => 'pending']);
+        $synced = $nas->syncToRadius();
+
+        return response()->json(['success' => true, 'message' => $synced ? 'NAS/MikroTik berhasil diperbarui dan disinkronkan.' : 'NAS diperbarui, tetapi sync ke FreeRADIUS gagal: '.$nas->sync_error, 'nas' => $nas->fresh()]);
+    }
+
+    public function syncNas(HotspotRadiusNas $nas)
+    {
+        $ok = $nas->syncToRadius();
+
+        return response()->json([
+            'success' => $ok,
+            'message' => $ok ? 'NAS berhasil disinkronkan ke FreeRADIUS.' : 'Sync NAS gagal: '.$nas->sync_error,
+        ], $ok ? 200 : 422);
+    }
+
+    public function destroyNas(HotspotRadiusNas $nas)
+    {
+        $nas->update(['is_active' => false]);
+        $nas->syncToRadius();
+        $nas->delete();
+
+        return response()->json(['success' => true, 'message' => 'NAS/MikroTik berhasil dihapus.']);
     }
 
     public function onlinePage()
@@ -462,6 +646,98 @@ class HotspotController extends Controller
             DB::connection('mysql_radius')->getPdo();
             return true;
         } catch (\Exception) {
+            return false;
+        }
+    }
+
+    private function validateProfile(Request $request, ?int $ignoreId = null): array
+    {
+        $unique = 'unique:hotspot_radius_profiles,code';
+        if ($ignoreId) {
+            $unique .= ','.$ignoreId;
+        }
+
+        return $request->validate([
+            'code' => ['required', 'string', 'max:64', 'regex:/^[a-zA-Z0-9_.-]+$/', $unique],
+            'name' => 'required|string|max:120',
+            'role' => 'nullable|in:guru,siswa,tamu',
+            'rate_limit' => 'nullable|string|max:80',
+            'session_timeout' => 'nullable|integer|min:60|max:31536000',
+            'idle_timeout' => 'nullable|integer|min:60|max:86400',
+            'simultaneous_use' => 'nullable|integer|min:1|max:50',
+            'framed_pool' => 'nullable|string|max:80',
+            'address_list' => 'nullable|string|max:80',
+            'priority' => 'nullable|integer|min:1|max:999',
+            'description' => 'nullable|string|max:1000',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+    }
+
+    private function validateNas(Request $request, ?int $ignoreId = null): array
+    {
+        $unique = 'unique:hotspot_radius_nas,nasname';
+        if ($ignoreId) {
+            $unique .= ','.$ignoreId;
+        }
+
+        return $request->validate([
+            'name' => 'required|string|max:120',
+            'nasname' => ['required', 'string', 'max:120', $unique],
+            'shortname' => 'nullable|string|max:60',
+            'type' => 'required|string|max:40',
+            'ports' => 'nullable|integer|min:0|max:65535',
+            'secret' => $ignoreId ? 'nullable|string|max:255' : 'required|string|max:255',
+            'server' => 'nullable|string|max:80',
+            'community' => 'nullable|string|max:80',
+            'description' => 'nullable|string|max:1000',
+            'is_active' => 'boolean',
+        ]);
+    }
+
+    private function resolveHotspotPassword(HotspotUser $hotspot): ?string
+    {
+        if ($hotspot->role === 'tamu') {
+            return null;
+        }
+
+        $user = $hotspot->user;
+        if (!$user) {
+            return null;
+        }
+
+        if (!empty($user->encrypted_password)) {
+            try {
+                return Crypt::decryptString($user->encrypted_password);
+            } catch (\Throwable) {
+            }
+        }
+
+        return $hotspot->username;
+    }
+
+    private function getRadiusServerInfo(): array
+    {
+        $host = config('database.connections.mysql_radius.host');
+        $dbPort = config('database.connections.mysql_radius.port');
+        $database = config('database.connections.mysql_radius.database');
+
+        return [
+            'host' => $host,
+            'database_port' => $dbPort,
+            'database' => $database,
+            'auth_port' => env('RADIUS_AUTH_PORT', 1812),
+            'acct_port' => env('RADIUS_ACCT_PORT', 1813),
+            'coa_port' => env('RADIUS_COA_PORT', 3799),
+            'shared_secret_hint' => env('RADIUS_SHARED_SECRET') ? str_repeat('*', 12) : 'Set di MikroTik dan FreeRADIUS clients/nas',
+        ];
+    }
+
+    private function radiusTableExists($db, string $table): bool
+    {
+        try {
+            return $db->getSchemaBuilder()->hasTable($table);
+        } catch (\Throwable) {
             return false;
         }
     }

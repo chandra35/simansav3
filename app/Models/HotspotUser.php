@@ -15,6 +15,7 @@ class HotspotUser extends Model
         'user_id',
         'username',
         'role',
+        'hotspot_radius_profile_id',
         'display_name',
         'is_active',
         'expired_at',
@@ -33,6 +34,11 @@ class HotspotUser extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function radiusProfile()
+    {
+        return $this->belongsTo(HotspotRadiusProfile::class, 'hotspot_radius_profile_id');
     }
 
     /**
@@ -63,10 +69,14 @@ class HotspotUser extends Model
                     ->delete();
             }
 
-            // 3. Pastikan user masuk group yang tepat
+            // 3. Pastikan user masuk group/profile yang tepat
+            $profile = $this->radiusProfile ?: HotspotRadiusProfile::defaultForRole($this->role);
+            $groupName = $profile?->code ?: $this->role;
+            $priority = $profile?->priority ?: 1;
+
             $db->table('radusergroup')->updateOrInsert(
                 ['username' => $this->username],
-                ['groupname' => $this->role, 'priority' => 1]
+                ['groupname' => $groupName, 'priority' => $priority]
             );
 
             // 4. Pastikan userinfo ada (dibutuhkan daloRADIUS untuk menampilkan user)

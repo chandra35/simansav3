@@ -95,8 +95,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/sync/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'syncSingle'])->name('sync-single');
         Route::post('/{hotspot}/toggle-active', [\App\Http\Controllers\Admin\HotspotController::class, 'toggleActive'])->name('toggle-active');
         Route::post('/bulk-toggle', [\App\Http\Controllers\Admin\HotspotController::class, 'bulkToggle'])->name('bulk-toggle');
+        Route::post('/assign-profile', [\App\Http\Controllers\Admin\HotspotController::class, 'assignProfile'])->name('assign-profile');
         Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');
         Route::get('/stats', [\App\Http\Controllers\Admin\HotspotController::class, 'stats'])->name('stats');
+        Route::get('/profiles', [\App\Http\Controllers\Admin\HotspotController::class, 'profiles'])->name('profiles');
+        Route::post('/profiles', [\App\Http\Controllers\Admin\HotspotController::class, 'storeProfile'])->name('profiles.store');
+        Route::put('/profiles/{profile}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateProfile'])->name('profiles.update');
+        Route::post('/profiles/{profile}/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'syncProfile'])->name('profiles.sync');
+        Route::delete('/profiles/{profile}', [\App\Http\Controllers\Admin\HotspotController::class, 'destroyProfile'])->name('profiles.destroy');
+        Route::post('/nas', [\App\Http\Controllers\Admin\HotspotController::class, 'storeNas'])->name('nas.store');
+        Route::put('/nas/{nas}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateNas'])->name('nas.update');
+        Route::post('/nas/{nas}/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'syncNas'])->name('nas.sync');
+        Route::delete('/nas/{nas}', [\App\Http\Controllers\Admin\HotspotController::class, 'destroyNas'])->name('nas.destroy');
         // Tamu CRUD
         Route::post('/tamu', [\App\Http\Controllers\Admin\HotspotController::class, 'storeTamu'])->name('tamu.store');
         Route::put('/tamu/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateTamu'])->name('tamu.update');
