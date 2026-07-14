@@ -419,6 +419,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // User Management
     Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
+    Route::put('/users/{user}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
     Route::get('/users/{user}/assign-role-form', [App\Http\Controllers\Admin\UserController::class, 'assignRoleForm'])->name('users.assign-role-form');
     Route::post('/users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');

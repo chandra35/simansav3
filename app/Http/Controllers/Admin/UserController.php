@@ -120,6 +120,12 @@ class UserController extends Controller
             $actions .= "<button class='btn btn-sm btn-warning btn-assign-role' data-id='{$user->id}' data-name='{$user->name}' title='Assign Role'>
                             <i class='fas fa-user-tag'></i>
                         </button>";
+            if (!$user->isSiswa() && $user->id !== auth()->id()) {
+                $resetUrl = route('admin.users.reset-password', $user->id);
+                $actions .= "<button class='btn btn-sm btn-secondary btn-reset-password' data-url='{$resetUrl}' data-name='{$user->name}' data-username='{$user->username}' title='Reset Password'>
+                                <i class='fas fa-key'></i>
+                            </button>";
+            }
             $actions .= "<a href='" . route('admin.users.edit', $user->id) . "' class='btn btn-sm btn-primary' title='Edit'>
                             <i class='fas fa-edit'></i>
                         </a>";
@@ -198,10 +204,13 @@ class UserController extends Controller
                 'role' => 'operator', // default role column (legacy)
                 'is_first_login' => true,
             ]);
+            $user->readable_password = $validated['password'];
+            $user->save();
 
             // Assign roles jika ada
             if (!empty($validated['roles'])) {
-                $user->syncRoles($validated['roles']);
+                $roles = Role::whereIn('id', $validated['roles'])->get();
+                $user->syncRoles($roles);
             }
 
             DB::commit();
@@ -282,13 +291,22 @@ class UserController extends Controller
             // Update password jika diisi
             if (!empty($validated['password'])) {
                 $updateData['password'] = Hash::make($validated['password']);
+                $updateData['is_first_login'] = true;
+                $updateData['password_reset_at'] = now();
+                $updateData['password_reset_by'] = auth()->user()?->name;
             }
 
             $user->update($updateData);
 
+            if (!empty($validated['password'])) {
+                $user->readable_password = $validated['password'];
+                $user->save();
+            }
+
             // Sync roles
             if (isset($validated['roles'])) {
-                $user->syncRoles($validated['roles']);
+                $roles = Role::whereIn('id', $validated['roles'])->get();
+                $user->syncRoles($roles);
             } else {
                 $user->syncRoles([]);
             }
@@ -306,6 +324,47 @@ class UserController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', 'Gagal memperbarui user: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reset password user umum/GTK ke username.
+     */
+    public function resetPassword(User $user)
+    {
+        $this->authorize('edit-user');
+
+        if ($user->isSiswa()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset password siswa dilakukan dari menu Data Siswa agar mengikuti NISN.',
+            ], 422);
+        }
+
+        try {
+            $defaultPassword = $user->username;
+
+            $user->password = Hash::make($defaultPassword);
+            $user->is_first_login = true;
+            $user->password_reset_at = now();
+            $user->password_reset_by = auth()->user()?->name;
+            $user->readable_password = $defaultPassword;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password user berhasil direset ke username.',
+                'default_password' => $defaultPassword,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error resetting user password: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal reset password: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

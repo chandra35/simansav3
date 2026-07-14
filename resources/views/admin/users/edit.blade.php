@@ -75,6 +75,23 @@
                     <div class="simansa-section-note mb-3">
                         <i class="fas fa-info-circle mr-1"></i> Kosongkan password bila Anda tidak ingin mengubah password user ini.
                     </div>
+                    @unless($user->isSiswa())
+                        <div class="simansa-section-note mb-3 border-left border-warning">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                                <div class="mb-2 mb-md-0">
+                                    <strong>Reset cepat password</strong><br>
+                                    <span>Password akan direset menjadi username: <code>{{ $user->username }}</code></span>
+                                </div>
+                                @if($user->id !== auth()->id())
+                                    <button type="button" class="btn btn-warning btn-sm" id="btnResetUserPassword">
+                                        <i class="fas fa-key mr-1"></i> Reset Password
+                                    </button>
+                                @else
+                                    <span class="badge badge-secondary px-3 py-2">Akun sedang dipakai</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endunless
                     <div class="form-group">
                         <label for="password" class="simansa-filter-label"><i class="fas fa-key"></i> Password Baru</label>
                         <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password">
@@ -132,4 +149,62 @@
         </div>
     </div>
 </form>
+
+@unless($user->isSiswa())
+    <form id="resetUserPasswordForm" action="{{ route('admin.users.reset-password', $user->id) }}" method="POST" class="d-none">
+        @csrf
+        @method('PUT')
+    </form>
+@endunless
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(function () {
+    $('#btnResetUserPassword').on('click', function () {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Reset password user?',
+            html: 'Password <strong>{{ e($user->name) }}</strong> akan direset menjadi username:<br><code>{{ e($user->username) }}</code>',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Reset',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#f59e0b'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Mereset password...',
+                    text: 'Mohon tunggu',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: function () {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: $('#resetUserPasswordForm').attr('action'),
+                    type: 'POST',
+                    data: $('#resetUserPasswordForm').serialize(),
+                    success: function (response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Password direset',
+                            html: response.message + '<br>Password default: <code>' + response.default_password + '</code>'
+                        });
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal reset password',
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat reset password'
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
 @stop

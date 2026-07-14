@@ -849,6 +849,65 @@ $(document).ready(function() {
         });
     });
 
+    // Reset Password Button
+    $('#usersTable').on('click', '.btn-reset-password', function() {
+        const url = $(this).data('url');
+        const userName = $(this).data('name');
+        const username = $(this).data('username');
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Reset password user?',
+            html: `Password <strong>${userName}</strong> akan direset menjadi username:<br><code>${username}</code>`,
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Reset',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            Swal.fire({
+                title: 'Mereset password...',
+                text: 'Mohon tunggu',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.ajax({
+                url: url,
+                type: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Password direset',
+                            html: `${response.message}<br>Password default: <code>${response.default_password}</code>`
+                        });
+                        table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat reset password'
+                    });
+                }
+            });
+        });
+    });
+
     // Delete Button
     $('#usersTable').on('click', '.btn-delete', function() {
         const userId = $(this).data('id');
