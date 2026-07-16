@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>Data Lulusan</h1>
+            <h1><i class="fas fa-user-graduate text-primary"></i> Data Lulusan</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -19,9 +19,35 @@
 
 @section('content')
 <div class="simansa-lulusan-page">
+    <div class="card bg-gradient-primary text-white simansa-lulusan-hero mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-graduation-cap mr-1"></i> Rekap Kelulusan Kelas 12</h3>
+                    <p class="mb-2 text-white-50">
+                        Pantau pengisian data lulusan, hasil checker jalur PTN, serta kampus tujuan dalam satu laporan.
+                    </p>
+                    <p class="mb-0">Seluruh ringkasan, tabel, matriks, dan file export mengikuti tahun pelajaran yang dipilih.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-white-50 small text-uppercase font-weight-bold">Siswa Kelas 12</div>
+                            <h3 class="mb-0 text-white" id="heroSummaryTotal">0</h3>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-white-50 small text-uppercase font-weight-bold">Sudah Mengisi</div>
+                            <h3 class="mb-0 text-white" id="heroSummarySudahIsi">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card card-outline card-primary">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filter Rekap Lulusan</h3>
+            <h3 class="card-title"><i class="fas fa-filter mr-2"></i> Filter dan Aksi Laporan</h3>
             <div class="card-tools">
                 <span class="badge badge-primary p-2" id="selectedYearContext">
                     Tahun {{ optional($selectedTahun)->nama ?? '-' }}
@@ -29,11 +55,12 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="simansa-filter-panel mb-0">
             <div class="row">
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Tahun Pelajaran</label>
-                        <select id="filterTahunPelajaran" class="form-control">
+                        <label class="simansa-filter-label"><i class="fas fa-calendar-alt mr-1"></i> Tahun Pelajaran</label>
+                        <select id="filterTahunPelajaran" class="form-control form-control-sm">
                             @foreach($tahunPelajaranList as $tahun)
                                 <option value="{{ $tahun->id }}" {{ optional($selectedTahun)->id === $tahun->id ? 'selected' : '' }}>
                                     {{ $tahun->nama }}
@@ -44,8 +71,8 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Status Pengisian</label>
-                        <select id="filterStatusPengisian" class="form-control">
+                        <label class="simansa-filter-label"><i class="fas fa-clipboard-check mr-1"></i> Status Pengisian</label>
+                        <select id="filterStatusPengisian" class="form-control form-control-sm">
                             <option value="">Semua Status</option>
                             <option value="sudah_isi">Sudah Isi</option>
                             <option value="belum_isi">Belum Isi</option>
@@ -54,8 +81,8 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Mode Checker</label>
-                        <select id="filterTrackerType" class="form-control">
+                        <label class="simansa-filter-label"><i class="fas fa-tasks mr-1"></i> Mode Checker</label>
+                        <select id="filterTrackerType" class="form-control form-control-sm">
                             <option value="ALL">Semua Jalur</option>
                             <option value="SNBP">SNBP</option>
                             <option value="SPAN-PTKIN">SPAN-PTKIN</option>
@@ -64,8 +91,8 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Jalur Masuk</label>
-                        <select id="filterJalurMasuk" class="form-control">
+                        <label class="simansa-filter-label"><i class="fas fa-route mr-1"></i> Jalur Masuk</label>
+                        <select id="filterJalurMasuk" class="form-control form-control-sm">
                             <option value="">Semua Jalur</option>
                             @foreach($jalurMasukOptions as $jalur)
                                 <option value="{{ $jalur }}">{{ $jalur }}</option>
@@ -75,31 +102,34 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Pencarian</label>
-                        <input type="text" id="filterPencarian" class="form-control" placeholder="Nama, NISN, kampus, prodi">
+                        <label class="simansa-filter-label"><i class="fas fa-search mr-1"></i> Pencarian</label>
+                        <input type="text" id="filterPencarian" class="form-control form-control-sm" placeholder="Nama, NISN, kampus, prodi">
                     </div>
                 </div>
             </div>
+            </div>
         </div>
-        <div class="card-footer">
-            <button type="button" id="btnApplyFilter" class="btn btn-primary">
-                <i class="fas fa-filter mr-1"></i> Terapkan Filter
-            </button>
-            <button type="button" id="btnResetFilter" class="btn btn-default">
-                Reset
-            </button>
-            <button type="button" id="btnSendGraduationEmail" class="btn btn-info">
-                <i class="fas fa-envelope mr-1"></i> Kirim Email Pengumuman
-            </button>
-            @can('kesiswaan-lulusan-access')
-                <a href="{{ route('admin.snbp-menu.index') }}" id="btnCheckerSnbp" class="btn btn-primary">
-                    <i class="fas fa-graduation-cap mr-1"></i> Checker SNBP
-                </a>
-                <a href="{{ route('admin.span-ptkin-menu.index') }}" id="btnCheckerSpanPtkin" class="btn btn-success">
-                    <i class="fas fa-mosque mr-1"></i> Checker SPAN-PTKIN
-                </a>
-            @endcan
-            <div class="float-md-right mt-2 mt-md-0">
+        <div class="card-footer simansa-lulusan-toolbar">
+            <div class="simansa-lulusan-toolbar__group">
+                <button type="button" id="btnApplyFilter" class="btn simansa-btn-strong">
+                    <i class="fas fa-filter mr-1"></i> Terapkan Filter
+                </button>
+                <button type="button" id="btnResetFilter" class="btn btn-secondary">
+                    <i class="fas fa-redo mr-1"></i> Reset
+                </button>
+                <button type="button" id="btnSendGraduationEmail" class="btn btn-info">
+                    <i class="fas fa-envelope mr-1"></i> Kirim Pengumuman
+                </button>
+                @can('kesiswaan-lulusan-access')
+                    <a href="{{ route('admin.snbp-menu.index') }}" id="btnCheckerSnbp" class="btn btn-primary">
+                        <i class="fas fa-graduation-cap mr-1"></i> Checker SNBP
+                    </a>
+                    <a href="{{ route('admin.span-ptkin-menu.index') }}" id="btnCheckerSpanPtkin" class="btn btn-success">
+                        <i class="fas fa-mosque mr-1"></i> Checker SPAN-PTKIN
+                    </a>
+                @endcan
+            </div>
+            <div class="simansa-lulusan-toolbar__group">
                 <a href="#" id="btnExportExcel" class="btn btn-success" data-no-overlay>
                     <i class="fas fa-file-excel mr-1"></i> Export XLS
                 </a>
@@ -111,97 +141,91 @@
     </div>
 
     @if($selectedTahun)
-        <div class="row">
-            <div class="col-md-3 col-sm-6">
-                <div class="info-box bg-info">
-                    <span class="info-box-icon"><i class="fas fa-users"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total Kelas 12</span>
-                        <span class="info-box-number" id="summaryTotal">0</span>
+        <div class="row simansa-summary-grid">
+            <div class="col-md-6 col-xl-3 mb-4">
+                <div class="card card-outline card-primary h-100 simansa-summary-card">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase font-weight-bold">Total Kelas 12</div>
+                        <h3 class="text-primary mb-1" id="summaryTotal">0</h3>
+                        <div class="text-muted">Siswa kelas 12 pada tahun pelajaran terpilih.</div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="info-box bg-success">
-                    <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sudah Mengisi</span>
-                        <span class="info-box-number" id="summarySudahIsi">0</span>
+            <div class="col-md-6 col-xl-3 mb-4">
+                <div class="card card-outline card-success h-100 simansa-summary-card">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase font-weight-bold">Sudah Mengisi</div>
+                        <h3 class="text-success mb-1" id="summarySudahIsi">0</h3>
+                        <div class="text-muted">Data rencana studi lanjut yang sudah dilengkapi.</div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="info-box bg-warning">
-                    <span class="info-box-icon"><i class="fas fa-edit"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Belum Mengisi</span>
-                        <span class="info-box-number" id="summaryBelumIsi">0</span>
+            <div class="col-md-6 col-xl-3 mb-4">
+                <div class="card card-outline card-warning h-100 simansa-summary-card">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase font-weight-bold">Belum Mengisi</div>
+                        <h3 class="text-warning mb-1" id="summaryBelumIsi">0</h3>
+                        <div class="text-muted">Siswa yang masih perlu melengkapi data lulusan.</div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="info-box bg-primary">
-                    <span class="info-box-icon"><i class="fas fa-university"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Universitas Tujuan</span>
-                        <span class="info-box-number" id="summaryUniversitas">0</span>
+            <div class="col-md-6 col-xl-3 mb-4">
+                <div class="card card-outline card-info h-100 simansa-summary-card">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase font-weight-bold">Universitas Tujuan</div>
+                        <h3 class="text-info mb-1" id="summaryUniversitas">0</h3>
+                        <div class="text-muted">Kampus unik yang dipilih oleh siswa.</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-teal">
-                        <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleLabel">Eligible SNBP</span>
-                        <span class="info-box-number" id="summaryEligible">0</span>
+        <div class="row simansa-checker-grid mb-4">
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-info h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-user-check text-info"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleLabel">Peserta Checker</span><strong id="summaryEligible">0</strong></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-secondary">
-                        <span class="info-box-icon"><i class="fas fa-id-card"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleIsiLabel">Sudah Isi Nomor SNBP</span>
-                        <span class="info-box-number" id="summaryEligibleIsi">0</span>
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-secondary h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-id-card text-secondary"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleIsiLabel">Sudah Ada Nomor</span><strong id="summaryEligibleIsi">0</strong></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-success">
-                        <span class="info-box-icon"><i class="fas fa-award"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleLulusLabel">Lulus SNBP</span>
-                        <span class="info-box-number" id="summaryEligibleLulus">0</span>
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-success h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-award text-success"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleLulusLabel">Lulus Checker</span><strong id="summaryEligibleLulus">0</strong></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-danger">
-                        <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleTidakLulusLabel">Tidak Lulus SNBP</span>
-                        <span class="info-box-number" id="summaryEligibleTidakLulus">0</span>
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-danger h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-times-circle text-danger"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleTidakLulusLabel">Tidak Lulus Checker</span><strong id="summaryEligibleTidakLulus">0</strong></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-warning">
-                        <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleGagalLabel">Gagal Cek SNBP</span>
-                        <span class="info-box-number" id="summaryEligibleGagal">0</span>
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-warning h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleGagalLabel">Gagal Cek</span><strong id="summaryEligibleGagal">0</strong></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="info-box bg-dark">
-                        <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text" id="summaryEligibleBelumDicekLabel">Belum Dicek SNBP</span>
-                        <span class="info-box-number" id="summaryEligibleBelumDicek">0</span>
+            <div class="col-sm-6 col-md-4 col-xl-2 mb-3">
+                <div class="card card-outline card-secondary h-100 simansa-mini-stat">
+                    <div class="card-body">
+                        <i class="fas fa-hourglass-half text-dark"></i>
+                        <div><span class="simansa-mini-stat__label" id="summaryEligibleBelumDicekLabel">Belum Dicek</span><strong id="summaryEligibleBelumDicek">0</strong></div>
                     </div>
                 </div>
             </div>
@@ -325,11 +349,14 @@
 
         <div class="card card-outline card-primary">
             <div class="card-header">
-                <h3 class="card-title">Daftar Lulusan Kelas 12</h3>
+                <h3 class="card-title"><i class="fas fa-user-graduate mr-2"></i> Daftar Lulusan Kelas 12</h3>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table id="lulusanTable" class="table table-bordered table-striped table-hover">
+                <div class="simansa-table-note">
+                    Daftar siswa, status pengisian, dan hasil checker di bawah ini mengikuti seluruh filter laporan yang sedang aktif.
+                </div>
+                <div class="simansa-table-scroll">
+                    <table id="lulusanTable" class="table table-hover table-sm simansa-lulusan-table">
                         <thead>
                             <tr>
                                 <th>NISN</th>
@@ -351,10 +378,10 @@
 
         <div class="card card-outline card-warning">
             <div class="card-header">
-                <h3 class="card-title">Matriks Laporan per Kelas dan Jalur</h3>
+                <h3 class="card-title"><i class="fas fa-table mr-2"></i> Matriks Laporan per Kelas dan Jalur</h3>
             </div>
             <div class="card-body table-responsive p-0">
-                <table class="table table-bordered table-sm mb-0" id="matrixTable">
+                <table class="table table-hover table-sm mb-0 simansa-lulusan-table" id="matrixTable">
                     <thead>
                         <tr>
                             <th>Kelas</th>
@@ -423,19 +450,151 @@
 @section('css')
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
     <style>
+        .simansa-lulusan-page .simansa-lulusan-hero {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, .16);
+            overflow: hidden;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-hero .card-body {
+            padding: 1.35rem 1.5rem;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-toolbar,
+        .simansa-lulusan-page .simansa-lulusan-toolbar__group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-toolbar {
+            justify-content: space-between;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-toolbar .btn {
+            margin: 0 !important;
+            border-radius: .5rem;
+            font-size: .78rem;
+            font-weight: 700;
+            padding: .38rem .62rem;
+        }
+
+        .simansa-lulusan-page .simansa-summary-card {
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .05);
+        }
+
+        .simansa-lulusan-page .simansa-summary-card .text-muted:last-child {
+            font-size: .82rem;
+            line-height: 1.4;
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat {
+            margin-bottom: 0;
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .05);
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat .card-body {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            min-height: 76px;
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat i {
+            width: 1.6rem;
+            flex: 0 0 1.6rem;
+            font-size: 1.35rem;
+            text-align: center;
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat__label,
+        .simansa-lulusan-page .simansa-mini-stat strong {
+            display: block;
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat__label {
+            min-height: 2.15em;
+            color: #64748b;
+            font-size: .7rem;
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: .035em;
+            text-transform: uppercase;
+        }
+
+        .simansa-lulusan-page .simansa-mini-stat strong {
+            margin-top: .25rem;
+            color: #0f172a;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .simansa-lulusan-page .simansa-table-note {
+            margin-bottom: .85rem;
+            padding: .72rem .85rem;
+            border: 1px solid #dbeafe;
+            border-radius: .75rem;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: .86rem;
+            font-weight: 600;
+            line-height: 1.45;
+        }
+
+        .simansa-lulusan-page .simansa-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-table thead th,
+        .simansa-lulusan-page .card-body.p-0 .table thead th {
+            padding: .62rem .65rem;
+            border-top: 0;
+            border-bottom: 1px solid #cbd5e1;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .035em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-table tbody td {
+            padding: .52rem .65rem;
+            border-top: 0;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            font-size: .82rem;
+            vertical-align: middle;
+        }
+
+        .simansa-lulusan-page .simansa-lulusan-table tbody tr:hover td {
+            background: #f0f7ff;
+        }
+
         .simansa-lulusan-page #matrixTable th,
         .simansa-lulusan-page #matrixTable td {
             white-space: nowrap;
             vertical-align: middle;
         }
 
-        .simansa-lulusan-page .info-box-text {
-            line-height: 1.2;
-            white-space: normal;
-        }
+        @media (max-width: 767.98px) {
+            .simansa-lulusan-page .simansa-lulusan-hero .card-body {
+                padding: 1rem;
+            }
 
-        .simansa-lulusan-page .card-footer .btn {
-            margin-bottom: .25rem;
+            .simansa-lulusan-page .simansa-lulusan-toolbar,
+            .simansa-lulusan-page .simansa-lulusan-toolbar__group {
+                width: 100%;
+            }
+
+            .simansa-lulusan-page .simansa-lulusan-toolbar .btn {
+                flex: 1 1 auto;
+            }
         }
     </style>
 @stop
@@ -733,6 +892,8 @@
                     applyTrackerMeta(trackerMeta);
                     $('#summaryTotal').text(response.summary.total ?? 0);
                     $('#summarySudahIsi').text(response.summary.sudah_isi ?? 0);
+                    $('#heroSummaryTotal').text(response.summary.total ?? 0);
+                    $('#heroSummarySudahIsi').text(response.summary.sudah_isi ?? 0);
                     $('#summaryBelumIsi').text(response.summary.belum_isi ?? 0);
                     $('#summaryUniversitas').text(response.summary.total_universitas ?? 0);
                     $('#summaryEligible').text(response.summary.eligible_total ?? 0);
@@ -751,7 +912,7 @@
                 },
                 error: function() {
                     applyTrackerMeta(defaultTrackerMeta);
-                    $('#summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleTidakLulus, #summaryEligibleGagal, #summaryEligibleBelumDicek').text('0');
+                    $('#heroSummaryTotal, #heroSummarySudahIsi, #summaryTotal, #summarySudahIsi, #summaryBelumIsi, #summaryUniversitas, #summaryEligible, #summaryEligibleIsi, #summaryEligibleLulus, #summaryEligibleTidakLulus, #summaryEligibleGagal, #summaryEligibleBelumDicek').text('0');
                     renderPerJalur({});
                     renderTopUniversitas([]);
                     renderCheckerStatus({});
