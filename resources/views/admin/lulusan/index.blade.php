@@ -712,6 +712,13 @@
             });
         }
 
+        function reloadLulusanData() {
+            const search = $('#filterPencarian').val();
+            lulusanTable.search(search).draw();
+            updateExportLinks();
+            loadStats();
+        }
+
         $(function () {
             lulusanTable = $('#lulusanTable').DataTable({
                 processing: true,
@@ -742,9 +749,7 @@
             });
 
             $('#btnApplyFilter').on('click', function () {
-                lulusanTable.search($('#filterPencarian').val()).draw();
-                updateExportLinks();
-                loadStats();
+                reloadLulusanData();
             });
 
             $('#btnResetFilter').on('click', function () {
@@ -759,9 +764,7 @@
 
             $('#filterPencarian').on('keyup', function (e) {
                 if (e.key === 'Enter') {
-                    lulusanTable.search(this.value).draw();
-                    updateExportLinks();
-                    loadStats();
+                    reloadLulusanData();
                 }
             });
 
@@ -770,11 +773,11 @@
                 if (selectedJalur === 'SNBP' || selectedJalur === 'SPAN-PTKIN') {
                     $('#filterTrackerType').val(selectedJalur);
                 }
-                updateExportLinks();
+                reloadLulusanData();
             });
 
             $('#filterTahunPelajaran, #filterStatusPengisian, #filterTrackerType').on('change', function () {
-                updateExportLinks();
+                reloadLulusanData();
             });
 
             $('#btnExportExcel').on('click', function (e) {

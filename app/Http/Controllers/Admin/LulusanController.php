@@ -24,6 +24,13 @@ use Yajra\DataTables\Facades\DataTables;
 
 class LulusanController extends Controller
 {
+    /**
+     * Cohort kelas XII tetap menjadi bagian laporan setelah finalisasi akhir tahun.
+     * Status "lulus" adalah histori final dari status "aktif", bukan data yang
+     * harus dikeluarkan dari laporan lulusan.
+     */
+    private const LULUSAN_CLASS_STATUSES = ['aktif', 'lulus'];
+
     public function index(Request $request)
     {
         $tahunPelajaranList = TahunPelajaran::orderByDesc('tahun_mulai')->get();
@@ -310,6 +317,7 @@ class LulusanController extends Controller
                 'top_tracker_universitas' => [],
                 'top_tracker_prodi' => [],
                 'tracker_meta' => $this->defaultTrackerMeta(),
+                'tracker_type' => 'ALL',
                 'accepted_students' => [],
                 'rows' => collect(),
                 'eligible_rows' => collect(),
@@ -407,6 +415,7 @@ class LulusanController extends Controller
             'top_tracker_universitas' => $this->buildTopList($trackerRows->where('check_status', 'lulus'), 'nama_universitas', 10),
             'top_tracker_prodi' => $this->buildTopList($trackerRows->where('check_status', 'lulus'), 'program_studi', 10),
             'tracker_meta' => $this->buildTrackerMeta($trackerType),
+            'tracker_type' => $trackerType,
             'accepted_students' => $acceptedStudents,
             'rows' => $rows,
             'eligible_rows' => $trackerRows,
@@ -519,7 +528,9 @@ class LulusanController extends Controller
     {
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('Daftar Lulusan');
-        $trackerType = $report['tracker_meta']['type'] ?? null;
+        // Gunakan nilai mesin (ALL/SNBP/SPAN-PTKIN), bukan label tampilan
+        // seperti "Semua Jalur", agar kolom checker mengambil sumber yang benar.
+        $trackerType = $report['tracker_type'] ?? 'ALL';
         $trackerMeta = $report['tracker_meta'];
 
         $headers = ['NISN', 'Nama Siswa', 'Kelas', 'Tanggal Lahir', 'Status Pengisian', 'Jalur Masuk', 'Universitas', 'Jurusan/Fakultas', 'Program Studi', $trackerMeta['number_column_label'], $trackerMeta['checker_title'], 'Hasil Checker', 'Terakhir Dicek'];
@@ -581,12 +592,13 @@ class LulusanController extends Controller
 
         $rowNumber = 2;
         foreach ($report['eligible_rows'] as $row) {
+            $rowTrackerType = $row->tracker_type ?? ($report['tracker_type'] ?? 'SNBP');
             $this->setTextCell($sheet, "A{$rowNumber}", $row->nisn);
             $sheet->setCellValue("B{$rowNumber}", $row->nama_lengkap);
             $sheet->setCellValue("C{$rowNumber}", $row->kelas_nama ?: '-');
             $sheet->setCellValue("D{$rowNumber}", $this->formatDateValue($row->tanggal_lahir));
             $this->setTextCell($sheet, "E{$rowNumber}", $row->nomor_pendaftaran ?: '-');
-            $sheet->setCellValue("F{$rowNumber}", $this->formatCheckStatusLabel($row->check_status, true, $trackerMeta['type']));
+            $sheet->setCellValue("F{$rowNumber}", $this->formatCheckStatusLabel($row->check_status, true, $rowTrackerType));
             $sheet->setCellValue("G{$rowNumber}", $this->formatTrackerResultLabel($row->check_status, true));
             $sheet->setCellValue("H{$rowNumber}", $this->formatDateTimeValue($row->last_checked_at));
             $sheet->setCellValue("I{$rowNumber}", $row->is_filled ? 'Sudah Isi' : 'Belum Isi');
@@ -763,7 +775,7 @@ class LulusanController extends Controller
             })
             ->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId)
             ->whereNull('siswa_kelas.deleted_at')
-            ->where('siswa_kelas.status', 'aktif')
+            ->whereIn('siswa_kelas.status', self::LULUSAN_CLASS_STATUSES)
             ->where('kelas.tingkat', 12)
             ->select([
                 'siswa.id as siswa_id',
