@@ -142,9 +142,7 @@ class LulusanController extends Controller
         $spreadsheet->setActiveSheetIndex(0);
 
         $filename = 'laporan_lulusan_' . $this->sanitizeFilenameSegment($report['selectedTahun']->nama) . '_' . now()->format('Ymd_His') . '.xlsx';
-        $tempDir = storage_path('app/temp');
-        File::ensureDirectoryExists($tempDir);
-        $tempFile = tempnam($tempDir, 'lulusan_export_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'simansa_lulusan_export_');
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($tempFile);

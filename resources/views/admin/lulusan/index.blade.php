@@ -75,7 +75,7 @@
                 <i class="fas fa-envelope mr-1"></i> Kirim Email Pengumuman
             </button>
             <div class="float-md-right mt-2 mt-md-0">
-                <a href="#" id="btnExportExcel" class="btn btn-success" data-no-overlay download>
+                <a href="#" id="btnExportExcel" class="btn btn-success" data-no-overlay>
                     <i class="fas fa-file-excel mr-1"></i> Export XLS
                 </a>
                 <a href="#" id="btnExportPdf" class="btn btn-danger" data-no-overlay target="_blank" rel="noopener">
