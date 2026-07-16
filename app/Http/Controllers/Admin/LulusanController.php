@@ -148,11 +148,23 @@ class LulusanController extends Controller
         $writer->save($tempFile);
         $spreadsheet->disconnectWorksheets();
 
-        return response()->download($tempFile, $filename, [
+        return response()->streamDownload(function () use ($tempFile) {
+            while (ob_get_level() > 0) {
+                @ob_end_clean();
+            }
+
+            $stream = fopen($tempFile, 'rb');
+            if ($stream !== false) {
+                fpassthru($stream);
+                fclose($stream);
+            }
+
+            @unlink($tempFile);
+        }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
             'Pragma' => 'public',
-        ])->deleteFileAfterSend(true);
+        ]);
     }
 
     public function exportPdf(Request $request)

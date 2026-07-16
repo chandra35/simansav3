@@ -445,6 +445,94 @@
             $('#btnExportPdf').attr('href', `{{ route('admin.lulusan.export-pdf') }}?${params}`);
         }
 
+        function parseDownloadFilename(disposition, fallback) {
+            if (!disposition) return fallback;
+
+            const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+            if (utfMatch && utfMatch[1]) {
+                try {
+                    return decodeURIComponent(utfMatch[1].replace(/"/g, ''));
+                } catch (e) {
+                    return utfMatch[1].replace(/"/g, '');
+                }
+            }
+
+            const regularMatch = disposition.match(/filename="?([^";]+)"?/i);
+            return regularMatch && regularMatch[1] ? regularMatch[1] : fallback;
+        }
+
+        async function downloadLulusanExcel(url) {
+            const $btn = $('#btnExportExcel');
+            const originalHtml = $btn.html();
+
+            if (window.showAppGlobalOverlay) {
+                window.showAppGlobalOverlay('Menyiapkan export XLS...', 'File sedang dibuat, mohon tunggu');
+            }
+
+            $btn.addClass('disabled').attr('aria-disabled', 'true')
+                .html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyiapkan...');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const blob = await response.blob();
+                const firstBytes = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+                const isXlsx = firstBytes[0] === 0x50 && firstBytes[1] === 0x4B && firstBytes[2] === 0x03 && firstBytes[3] === 0x04;
+
+                if (!response.ok || !isXlsx) {
+                    let detail = `HTTP ${response.status}`;
+                    try {
+                        const text = await blob.text();
+                        const cleaned = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                        if (cleaned) {
+                            detail = cleaned.substring(0, 300);
+                        }
+                    } catch (e) {
+                        // Keep default detail.
+                    }
+
+                    throw new Error(detail || 'Server tidak mengirim file XLSX yang valid.');
+                }
+
+                const filename = parseDownloadFilename(
+                    response.headers.get('Content-Disposition'),
+                    `laporan_lulusan_${new Date().toISOString().slice(0, 10)}.xlsx`
+                );
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+            } catch (error) {
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Export XLS gagal',
+                        text: error.message || 'File export tidak valid.'
+                    });
+                } else {
+                    alert(error.message || 'Export XLS gagal.');
+                }
+            } finally {
+                if (window.hideAppGlobalOverlay) {
+                    window.hideAppGlobalOverlay();
+                }
+
+                $btn.removeClass('disabled').removeAttr('aria-disabled').html(originalHtml);
+            }
+        }
+
         function updateGraduationEmailSummary() {
             const filters = getFilters();
             const summary = [
@@ -687,6 +775,15 @@
 
             $('#filterTahunPelajaran, #filterStatusPengisian, #filterTrackerType').on('change', function () {
                 updateExportLinks();
+            });
+
+            $('#btnExportExcel').on('click', function (e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                if (!url || url === '#') {
+                    updateExportLinks();
+                }
+                downloadLulusanExcel($(this).attr('href'));
             });
 
             $('#btnSendGraduationEmail').on('click', function () {
