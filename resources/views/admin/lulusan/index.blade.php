@@ -3,13 +3,30 @@
 @section('title', 'Data Lulusan')
 
 @section('content_header')
-    <h1>Data Lulusan</h1>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1>Data Lulusan</h1>
+        </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item">Kesiswaan</li>
+                <li class="breadcrumb-item active">Lulusan</li>
+            </ol>
+        </div>
+    </div>
 @stop
 
 @section('content')
+<div class="simansa-lulusan-page">
     <div class="card card-outline card-primary">
         <div class="card-header">
-            <h3 class="card-title">Filter Rekap Lulusan</h3>
+            <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filter Rekap Lulusan</h3>
+            <div class="card-tools">
+                <span class="badge badge-primary p-2" id="selectedYearContext">
+                    Tahun {{ optional($selectedTahun)->nama ?? '-' }}
+                </span>
+            </div>
         </div>
         <div class="card-body">
             <div class="row">
@@ -74,6 +91,14 @@
             <button type="button" id="btnSendGraduationEmail" class="btn btn-info">
                 <i class="fas fa-envelope mr-1"></i> Kirim Email Pengumuman
             </button>
+            @can('kesiswaan-lulusan-access')
+                <a href="{{ route('admin.snbp-menu.index') }}" id="btnCheckerSnbp" class="btn btn-primary">
+                    <i class="fas fa-graduation-cap mr-1"></i> Checker SNBP
+                </a>
+                <a href="{{ route('admin.span-ptkin-menu.index') }}" id="btnCheckerSpanPtkin" class="btn btn-success">
+                    <i class="fas fa-mosque mr-1"></i> Checker SPAN-PTKIN
+                </a>
+            @endcan
             <div class="float-md-right mt-2 mt-md-0">
                 <a href="#" id="btnExportExcel" class="btn btn-success" data-no-overlay>
                     <i class="fas fa-file-excel mr-1"></i> Export XLS
@@ -392,15 +417,25 @@
             </div>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
     <style>
-        #matrixTable th,
-        #matrixTable td {
+        .simansa-lulusan-page #matrixTable th,
+        .simansa-lulusan-page #matrixTable td {
             white-space: nowrap;
             vertical-align: middle;
+        }
+
+        .simansa-lulusan-page .info-box-text {
+            line-height: 1.2;
+            white-space: normal;
+        }
+
+        .simansa-lulusan-page .card-footer .btn {
+            margin-bottom: .25rem;
         }
     </style>
 @stop
@@ -411,6 +446,7 @@
     <script>
         let lulusanTable;
         const jalurMasukOptions = @json($jalurMasukOptions);
+        const checkerLinksByTahun = @json($checkerLinksByTahun);
         const defaultTrackerMeta = {
             summary_total_label: 'Peserta Checker',
             summary_number_label: 'Sudah Ada Nomor',
@@ -443,6 +479,20 @@
             const params = new URLSearchParams(getFilters()).toString();
             $('#btnExportExcel').attr('href', `{{ route('admin.lulusan.export-excel') }}?${params}`);
             $('#btnExportPdf').attr('href', `{{ route('admin.lulusan.export-pdf') }}?${params}`);
+        }
+
+        function updateSelectedYearContext() {
+            const tahunId = $('#filterTahunPelajaran').val();
+            const tahunLabel = $('#filterTahunPelajaran option:selected').text().trim() || '-';
+            const checkerLinks = checkerLinksByTahun[tahunId] || {};
+
+            $('#selectedYearContext').text(`Tahun ${tahunLabel}`);
+            $('#btnCheckerSnbp')
+                .attr('href', checkerLinks.snbp || `{{ route('admin.snbp-menu.index') }}`)
+                .attr('title', checkerLinks.has_snbp ? `Buka checker SNBP ${tahunLabel}` : `Menu SNBP ${tahunLabel} belum tersedia`);
+            $('#btnCheckerSpanPtkin')
+                .attr('href', checkerLinks.span_ptkin || `{{ route('admin.span-ptkin-menu.index') }}`)
+                .attr('title', checkerLinks.has_span_ptkin ? `Buka checker SPAN-PTKIN ${tahunLabel}` : `Menu SPAN-PTKIN ${tahunLabel} belum tersedia`);
         }
 
         function parseDownloadFilename(disposition, fallback) {
@@ -714,6 +764,7 @@
 
         function reloadLulusanData() {
             const search = $('#filterPencarian').val();
+            updateSelectedYearContext();
             lulusanTable.search(search).draw();
             updateExportLinks();
             loadStats();
@@ -854,6 +905,7 @@
             });
 
             updateExportLinks();
+            updateSelectedYearContext();
             loadStats();
         });
     </script>

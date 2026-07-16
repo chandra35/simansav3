@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
+use App\Models\SnbpMenu;
 use App\Models\SiswaLulusan;
+use App\Models\SpanPtkinMenu;
 use App\Models\TahunPelajaran;
 use App\Services\EmailService;
 use Carbon\Carbon;
@@ -40,6 +42,7 @@ class LulusanController extends Controller
             'tahunPelajaranList' => $tahunPelajaranList,
             'selectedTahun' => $selectedTahun,
             'jalurMasukOptions' => SiswaLulusan::JALUR_MASUK,
+            'checkerLinksByTahun' => $this->buildCheckerLinksByTahun($tahunPelajaranList),
         ]);
     }
 
@@ -350,7 +353,7 @@ class LulusanController extends Controller
             'total_ptn_diterima' => $trackerRows->where('check_status', 'lulus')->pluck('nama_universitas')->filter()->unique()->count(),
         ];
 
-        $perJalur = $this->buildPerJalurStats($rows, $trackerRows, $trackerType);
+        $perJalur = $this->buildPerJalurStats($rows);
 
         $trackerByClass = $trackerRows->groupBy(fn ($row) => $row->kelas_nama ?: 'Tanpa Kelas');
 
@@ -813,7 +816,7 @@ class LulusanController extends Controller
             ->leftJoin('siswa_kelas', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
                     ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunPelajaranId)
-                    ->where('siswa_kelas.status', '=', 'aktif')
+                    ->whereIn('siswa_kelas.status', self::LULUSAN_CLASS_STATUSES)
                     ->whereNull('siswa_kelas.deleted_at');
             })
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
@@ -832,6 +835,7 @@ class LulusanController extends Controller
             })
             ->where('snbp_menus.tahun_pelajaran_id', $tahunPelajaranId)
             ->where('snbp_siswa.is_eligible', true)
+            ->where('kelas.tingkat', 12)
             ->select([
                 'siswa.id as siswa_id',
                 'siswa.nisn',
@@ -861,16 +865,21 @@ class LulusanController extends Controller
             ->leftJoin('siswa_kelas', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_kelas.siswa_id', '=', 'siswa.id')
                     ->where('siswa_kelas.tahun_pelajaran_id', '=', $tahunPelajaranId)
-                    ->where('siswa_kelas.status', '=', 'aktif')
+                    ->whereIn('siswa_kelas.status', self::LULUSAN_CLASS_STATUSES)
                     ->whereNull('siswa_kelas.deleted_at');
             })
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa_kelas.kelas_id')
+            ->leftJoin('snbp_registrations', function ($join) use ($tahunPelajaranId) {
+                $join->on('snbp_registrations.siswa_id', '=', 'siswa.id')
+                    ->where('snbp_registrations.tahun_pelajaran_id', '=', $tahunPelajaranId);
+            })
             ->leftJoin('siswa_lulusan', function ($join) use ($tahunPelajaranId) {
                 $join->on('siswa_lulusan.siswa_id', '=', 'siswa.id')
                     ->where('siswa_lulusan.tahun_pelajaran_id', '=', $tahunPelajaranId)
                     ->whereNull('siswa_lulusan.deleted_at');
             })
             ->where('span_ptkin_registrations.tahun_pelajaran_id', $tahunPelajaranId)
+            ->where('kelas.tingkat', 12)
             ->select([
                 'siswa.id as siswa_id',
                 'siswa.nisn',
@@ -946,26 +955,34 @@ class LulusanController extends Controller
         });
     }
 
-    private function buildPerJalurStats(Collection $rows, Collection $trackerRows, ?string $trackerType): array
+    private function buildPerJalurStats(Collection $rows): array
     {
-        $perJalur = collect(SiswaLulusan::JALUR_MASUK)
-            ->mapWithKeys(fn (string $jalur) => [$jalur => $rows->where('jalur_masuk', $jalur)->count()]);
+        return collect(SiswaLulusan::JALUR_MASUK)
+            ->mapWithKeys(fn (string $jalur) => [$jalur => $rows->where('jalur_masuk', $jalur)->count()])
+            ->all();
+    }
 
-        if ($trackerType === 'ALL' || $trackerType === 'SNBP') {
-            $perJalur['SNBP'] = $trackerRows
-                ->filter(fn ($row) => ($row->tracker_type ?? 'SNBP') === 'SNBP')
-                ->where('check_status', 'lulus')
-                ->count();
-        }
+    private function buildCheckerLinksByTahun(Collection $tahunPelajaranList): array
+    {
+        $tahunIds = $tahunPelajaranList->pluck('id');
+        $snbpMenus = SnbpMenu::whereIn('tahun_pelajaran_id', $tahunIds)
+            ->get(['id', 'tahun_pelajaran_id'])
+            ->keyBy('tahun_pelajaran_id');
+        $spanMenus = SpanPtkinMenu::whereIn('tahun_pelajaran_id', $tahunIds)
+            ->get(['id', 'tahun_pelajaran_id'])
+            ->keyBy('tahun_pelajaran_id');
 
-        if ($trackerType === 'ALL' || $trackerType === 'SPAN-PTKIN') {
-            $perJalur['SPAN-PTKIN'] = $trackerRows
-                ->filter(fn ($row) => ($row->tracker_type ?? null) === 'SPAN-PTKIN')
-                ->where('check_status', 'lulus')
-                ->count();
-        }
+        return $tahunPelajaranList->mapWithKeys(function (TahunPelajaran $tahun) use ($snbpMenus, $spanMenus) {
+            $snbpMenu = $snbpMenus->get($tahun->id);
+            $spanMenu = $spanMenus->get($tahun->id);
 
-        return $perJalur->all();
+            return [$tahun->id => [
+                'snbp' => $snbpMenu ? route('admin.snbp-menu.show', $snbpMenu) : route('admin.snbp-menu.index'),
+                'span_ptkin' => $spanMenu ? route('admin.span-ptkin-menu.show', $spanMenu) : route('admin.span-ptkin-menu.index'),
+                'has_snbp' => (bool) $snbpMenu,
+                'has_span_ptkin' => (bool) $spanMenu,
+            ]];
+        })->all();
     }
 
     private function applyCommonFilters($query, Request $request): void

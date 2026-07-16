@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kelas;
-use App\Models\Siswa;
+use App\Models\SiswaKelas;
 use App\Models\SpanPtkinMenu;
 use App\Models\SpanPtkinRegistration;
 use App\Models\TahunPelajaran;
@@ -307,18 +306,23 @@ class SpanPtkinMenuController extends Controller
 
     private function kelas12Students(SpanPtkinMenu $menu)
     {
-        $kelas12Ids = Kelas::query()
+        return SiswaKelas::query()
+            ->with(['siswa', 'kelas'])
             ->where('tahun_pelajaran_id', $menu->tahun_pelajaran_id)
             ->where('tingkat', 12)
-            ->pluck('id');
+            ->whereIn('status', ['aktif', 'lulus'])
+            ->whereNull('deleted_at')
+            ->get()
+            ->filter(fn (SiswaKelas $siswaKelas) => $siswaKelas->siswa !== null)
+            ->unique('siswa_id')
+            ->map(function (SiswaKelas $siswaKelas) {
+                $siswa = $siswaKelas->siswa;
+                $siswa->setRelation('kelasTahunMenu', $siswaKelas->kelas);
 
-        return Siswa::query()
-            ->with('kelasSaatIni')
-            ->whereHas('kelasAktif', function ($query) use ($kelas12Ids) {
-                $query->whereIn('kelas.id', $kelas12Ids);
+                return $siswa;
             })
-            ->orderBy('nama_lengkap')
-            ->get();
+            ->sortBy('nama_lengkap')
+            ->values();
     }
 
     private function previewSessionKey(SpanPtkinMenu $menu): string

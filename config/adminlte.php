@@ -590,6 +590,28 @@ return [
                     'can' => 'kesiswaan-lulusan-access',
                     'active' => ['admin/kelulusan-pengumuman*'],
                 ],
+                [
+                    'text' => 'Checker Jalur PTN',
+                    'icon' => 'fas fa-fw fa-search-location',
+                    'can' => 'kesiswaan-lulusan-access',
+                    'active' => ['admin/snbp-menu*', 'admin/span-ptkin-menu*'],
+                    'submenu' => [
+                        [
+                            'text' => 'Checker SNBP',
+                            'route' => 'admin.snbp-menu.index',
+                            'icon' => 'fas fa-fw fa-graduation-cap',
+                            'can' => 'kesiswaan-lulusan-access',
+                            'active' => ['admin/snbp-menu*'],
+                        ],
+                        [
+                            'text' => 'Checker SPAN-PTKIN',
+                            'route' => 'admin.span-ptkin-menu.index',
+                            'icon' => 'fas fa-fw fa-mosque',
+                            'can' => 'kesiswaan-lulusan-access',
+                            'active' => ['admin/span-ptkin-menu*'],
+                        ],
+                    ],
+                ],
             ],
         ],
         
@@ -816,28 +838,6 @@ return [
                     'icon' => 'fas fa-fw fa-th-list',
                     'can' => 'manage-settings',
                     'active' => ['admin/custom-menu*'],
-                ],
-                [
-                    'text' => 'Jalur PTN',
-                    'icon' => 'fas fa-fw fa-university',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/snbp-menu*', 'admin/span-ptkin-menu*'],
-                    'submenu' => [
-                        [
-                            'text' => 'SNBP',
-                            'route' => 'admin.snbp-menu.index',
-                            'icon' => 'fas fa-fw fa-graduation-cap',
-                            'can' => 'manage-settings',
-                            'active' => ['admin/snbp-menu*'],
-                        ],
-                        [
-                            'text' => 'SPAN-PTKIN',
-                            'route' => 'admin.span-ptkin-menu.index',
-                            'icon' => 'fas fa-fw fa-mosque',
-                            'can' => 'manage-settings',
-                            'active' => ['admin/span-ptkin-menu*'],
-                        ],
-                    ],
                 ],
                 [
                     'text' => 'Referensi Kampus',
