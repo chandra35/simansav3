@@ -142,13 +142,19 @@ class LulusanController extends Controller
         $spreadsheet->setActiveSheetIndex(0);
 
         $filename = 'laporan_lulusan_' . $this->sanitizeFilenameSegment($report['selectedTahun']->nama) . '_' . now()->format('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
+        $tempDir = storage_path('app/temp');
+        File::ensureDirectoryExists($tempDir);
+        $tempFile = tempnam($tempDir, 'lulusan_export_');
 
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $filename, [
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempFile);
+        $spreadsheet->disconnectWorksheets();
+
+        return response()->download($tempFile, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
+            'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
+            'Pragma' => 'public',
+        ])->deleteFileAfterSend(true);
     }
 
     public function exportPdf(Request $request)
