@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -493,6 +495,8 @@ class LulusanController extends Controller
         foreach (range(1, 12) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
         }
+
+        $sheet->freezePane('A4');
     }
 
     private function buildDetailSheet(Spreadsheet $spreadsheet, array $report): void
@@ -510,11 +514,14 @@ class LulusanController extends Controller
 
         $sheet->getStyle('A1:M1')->getFont()->setBold(true);
         $sheet->getStyle('A1:M1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9EAD3');
+        $sheet->getStyle('A1:M1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:M1');
 
         $rowNumber = 2;
         foreach ($report['rows'] as $row) {
             $trackerData = $this->extractRowTrackerData($row, $trackerType);
-            $sheet->setCellValue("A{$rowNumber}", $row->nisn);
+            $this->setTextCell($sheet, "A{$rowNumber}", $row->nisn);
             $sheet->setCellValue("B{$rowNumber}", $row->nama_lengkap);
             $sheet->setCellValue("C{$rowNumber}", $row->kelas_nama);
             $sheet->setCellValue("D{$rowNumber}", $this->formatDateValue($row->tanggal_lahir));
@@ -523,7 +530,7 @@ class LulusanController extends Controller
             $sheet->setCellValue("G{$rowNumber}", $row->nama_universitas ?: '-');
             $sheet->setCellValue("H{$rowNumber}", $row->jurusan_fakultas ?: '-');
             $sheet->setCellValue("I{$rowNumber}", $row->program_studi ?: '-');
-            $sheet->setCellValue("J{$rowNumber}", $trackerData['number'] ?: '-');
+            $this->setTextCell($sheet, "J{$rowNumber}", $trackerData['number'] ?: '-');
             $sheet->setCellValue("K{$rowNumber}", $this->formatCheckStatusLabel($trackerData['status'], $trackerData['has_number'], $trackerData['type']));
             $sheet->setCellValue("L{$rowNumber}", $this->formatTrackerResultLabel($trackerData['status'], $trackerData['has_number']));
             $sheet->setCellValue("M{$rowNumber}", $this->formatDateTimeValue($trackerData['last_checked_at']));
@@ -531,6 +538,7 @@ class LulusanController extends Controller
         }
 
         $sheet->getStyle('A1:M' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:M' . max(1, $rowNumber - 1))->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
 
         foreach (range(1, 13) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
@@ -551,14 +559,17 @@ class LulusanController extends Controller
 
         $sheet->getStyle('A1:L1')->getFont()->setBold(true);
         $sheet->getStyle('A1:L1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('CFE2F3');
+        $sheet->getStyle('A1:L1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:L1');
 
         $rowNumber = 2;
         foreach ($report['eligible_rows'] as $row) {
-            $sheet->setCellValue("A{$rowNumber}", $row->nisn);
+            $this->setTextCell($sheet, "A{$rowNumber}", $row->nisn);
             $sheet->setCellValue("B{$rowNumber}", $row->nama_lengkap);
             $sheet->setCellValue("C{$rowNumber}", $row->kelas_nama ?: '-');
             $sheet->setCellValue("D{$rowNumber}", $this->formatDateValue($row->tanggal_lahir));
-            $sheet->setCellValue("E{$rowNumber}", $row->nomor_pendaftaran ?: '-');
+            $this->setTextCell($sheet, "E{$rowNumber}", $row->nomor_pendaftaran ?: '-');
             $sheet->setCellValue("F{$rowNumber}", $this->formatCheckStatusLabel($row->check_status, true, $trackerMeta['type']));
             $sheet->setCellValue("G{$rowNumber}", $this->formatTrackerResultLabel($row->check_status, true));
             $sheet->setCellValue("H{$rowNumber}", $this->formatDateTimeValue($row->last_checked_at));
@@ -570,6 +581,7 @@ class LulusanController extends Controller
         }
 
         $sheet->getStyle('A1:L' . max(1, $rowNumber - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:L' . max(1, $rowNumber - 1))->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
 
         foreach (range(1, 12) as $index) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($index))->setAutoSize(true);
@@ -608,31 +620,46 @@ class LulusanController extends Controller
         [$column, $row] = Coordinate::coordinateFromString($startCell);
         $startIndex = Coordinate::columnIndexFromString($column);
 
-        $sheet->setCellValueByColumnAndRow($startIndex, $row, 'Matriks Per Kelas');
-        $sheet->getStyleByColumnAndRow($startIndex, $row)->getFont()->setBold(true);
+        $sheet->setCellValue($this->cellAddress($startIndex, $row), 'Matriks Per Kelas');
+        $sheet->getStyle($this->cellAddress($startIndex, $row))->getFont()->setBold(true);
         $row++;
 
         foreach (['Kelas', 'Eligible', $trackerLabel, 'Tidak Lulus', 'Sudah Isi', 'Belum Isi', 'Total'] as $offset => $header) {
-            $sheet->setCellValueByColumnAndRow($startIndex + $offset, $row, $header);
+            $sheet->setCellValue($this->cellAddress($startIndex + $offset, $row), $header);
         }
-        $sheet->getStyleByColumnAndRow($startIndex, $row, $startIndex + 6, $row)->getFont()->setBold(true);
+        $sheet->getStyle($this->cellRange($startIndex, $row, $startIndex + 6, $row))->getFont()->setBold(true);
         $row++;
 
         if (empty($perKelas)) {
-            $sheet->setCellValueByColumnAndRow($startIndex, $row, 'Belum ada data');
+            $sheet->setCellValue($this->cellAddress($startIndex, $row), 'Belum ada data');
             return;
         }
 
         foreach ($perKelas as $item) {
-            $sheet->setCellValueByColumnAndRow($startIndex, $row, $item['kelas_nama']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 1, $row, $item['eligible']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 2, $row, $item['eligible_lulus']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 3, $row, $item['eligible_tidak_lulus'] ?? 0);
-            $sheet->setCellValueByColumnAndRow($startIndex + 4, $row, $item['sudah_isi']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 5, $row, $item['belum_isi']);
-            $sheet->setCellValueByColumnAndRow($startIndex + 6, $row, $item['total']);
+            $sheet->setCellValue($this->cellAddress($startIndex, $row), $item['kelas_nama']);
+            $sheet->setCellValue($this->cellAddress($startIndex + 1, $row), $item['eligible']);
+            $sheet->setCellValue($this->cellAddress($startIndex + 2, $row), $item['eligible_lulus']);
+            $sheet->setCellValue($this->cellAddress($startIndex + 3, $row), $item['eligible_tidak_lulus'] ?? 0);
+            $sheet->setCellValue($this->cellAddress($startIndex + 4, $row), $item['sudah_isi']);
+            $sheet->setCellValue($this->cellAddress($startIndex + 5, $row), $item['belum_isi']);
+            $sheet->setCellValue($this->cellAddress($startIndex + 6, $row), $item['total']);
             $row++;
         }
+    }
+
+    private function cellAddress(int $columnIndex, int $row): string
+    {
+        return Coordinate::stringFromColumnIndex($columnIndex) . $row;
+    }
+
+    private function cellRange(int $startColumnIndex, int $startRow, int $endColumnIndex, int $endRow): string
+    {
+        return $this->cellAddress($startColumnIndex, $startRow) . ':' . $this->cellAddress($endColumnIndex, $endRow);
+    }
+
+    private function setTextCell($sheet, string $cell, mixed $value): void
+    {
+        $sheet->setCellValueExplicit($cell, (string) ($value ?? ''), DataType::TYPE_STRING);
     }
 
     private function buildTopList(Collection $rows, string $field, int $limit = 10): array
