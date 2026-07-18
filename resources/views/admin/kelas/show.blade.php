@@ -198,6 +198,12 @@
                                         ? \Carbon\Carbon::parse($siswa->pivot->tanggal_masuk)
                                         : null;
                                     $asalSekolah = $siswa->sekolahAsal;
+                                    $schoolIdentity = \Illuminate\Support\Str::lower(collect([
+                                        $asalSekolah?->nama,
+                                        $asalSekolah?->bentuk_pendidikan,
+                                    ])->filter()->implode(' '));
+                                    $isMts = \Illuminate\Support\Str::contains($schoolIdentity, ['mts', 'madrasah tsanawiyah']);
+                                    $needsNsm = $asalSekolah && $isMts && blank($asalSekolah->nsm);
                                 @endphp
                                 <tr>
                                     <td class="text-center row-number">{{ $index + 1 }}</td>
@@ -219,13 +225,43 @@
                                         </a>
                                     </td>
                                     <td data-order="{{ $asalSekolah?->nama ?: 'ZZZZ' }}">
-                                        <div class="origin-school">
-                                            <strong>{{ $asalSekolah?->nama ?: 'Sekolah belum terdata' }}</strong>
+                                        <div class="origin-school" data-npsn="{{ $siswa->npsn_asal_sekolah }}">
+                                            @if($asalSekolah)
+                                                @can('view-siswa')
+                                                    <a href="{{ route('admin.sekolah-asal.show', $asalSekolah->npsn) }}"
+                                                       class="origin-school__name"
+                                                       title="Buka detail sekolah">
+                                                        <strong>{{ $asalSekolah->nama }}</strong>
+                                                    </a>
+                                                @else
+                                                    <strong>{{ $asalSekolah->nama }}</strong>
+                                                @endcan
+                                            @else
+                                                <strong>Sekolah belum terdata</strong>
+                                            @endif
                                             <small>
                                                 NPSN: {{ $siswa->npsn_asal_sekolah ?: '-' }}
                                                 <span>|</span>
-                                                NSM: {{ $asalSekolah?->nsm ?: '-' }}
+                                                NSM:
+                                                <b class="origin-school-nsm {{ $needsNsm ? 'is-missing' : '' }}">
+                                                    {{ $asalSekolah?->nsm ?: ($needsNsm ? 'Belum terisi' : '-') }}
+                                                </b>
                                             </small>
+                                            @can('edit-siswa')
+                                                @if($needsNsm)
+                                                    <div class="school-nsm-action">
+                                                        <button type="button"
+                                                                class="btn btn-xs btn-outline-warning btn-complete-school-nsm"
+                                                                data-url="{{ route('admin.sekolah-asal.enrich', $asalSekolah->npsn) }}"
+                                                                data-npsn="{{ $asalSekolah->npsn }}"
+                                                                data-school="{{ $asalSekolah->nama }}"
+                                                                data-toggle="tooltip"
+                                                                title="Ambil dan simpan NSM dari referensi institusi EMIS Kemenag">
+                                                            <i class="fas fa-magic mr-1"></i>Lengkapi NSM
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endcan
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -643,6 +679,10 @@
             color: #172554;
             font-size: .82rem;
         }
+        .class-students-table .origin-school__name:hover strong {
+            color: #2563eb;
+            text-decoration: underline;
+        }
         .class-students-table .origin-school small {
             display: block;
             margin-top: .3rem;
@@ -653,6 +693,21 @@
         .class-students-table .origin-school small span {
             margin: 0 .25rem;
             color: #cbd5e1;
+        }
+        .class-students-table .origin-school-nsm {
+            font-weight: 700;
+            color: #475569;
+        }
+        .class-students-table .origin-school-nsm.is-missing {
+            color: #b45309;
+        }
+        .class-students-table .school-nsm-action {
+            margin-top: .45rem;
+        }
+        .class-students-table .btn-complete-school-nsm {
+            border-radius: 7px;
+            font-size: .7rem;
+            font-weight: 700;
         }
 
         /* Dual Listbox Styling */
@@ -810,6 +865,72 @@
                 classStudentsTable.on('order.dt draw.dt', refreshRowNumbers);
                 refreshRowNumbers();
             }
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $(document).on('click', '.btn-complete-school-nsm', function() {
+                const button = $(this);
+                const url = button.data('url');
+                const npsn = String(button.data('npsn') || '');
+                const schoolName = button.data('school') || 'Madrasah';
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Lengkapi NSM madrasah?',
+                    text: `${schoolName} (${npsn}) akan dicek ke referensi institusi EMIS Kemenag.`,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-sync-alt mr-1"></i> Cek & Simpan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#f59e0b',
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: function() {
+                        return $.ajax({
+                            url: url,
+                            method: 'POST',
+                            data: {_token: '{{ csrf_token() }}'}
+                        }).then(function(response) {
+                            return response;
+                        }, function(xhr) {
+                            Swal.showValidationMessage(xhr.responseJSON?.message || 'Data sekolah belum berhasil dilengkapi.');
+                        });
+                    }
+                }).then(function(result) {
+                    if (!result.isConfirmed || !result.value) return;
+
+                    const response = result.value;
+                    const savedNsm = response.data?.nsm;
+                    const warningText = (response.warnings || []).filter(Boolean).join(' ');
+
+                    if (!response.complete || !savedNsm) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'NSM belum terisi',
+                            text: `${response.message || 'Data baru terisi sebagian.'}${warningText ? ` ${warningText}` : ''}`,
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    const matchingSchools = $('.origin-school').filter(function() {
+                        return String($(this).data('npsn') || '') === npsn;
+                    });
+                    matchingSchools.find('.origin-school-nsm')
+                        .text(savedNsm)
+                        .removeClass('is-missing');
+                    matchingSchools.find('.school-nsm-action').fadeOut(180, function() {
+                        $(this).remove();
+                    });
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'NSM berhasil disimpan',
+                        text: `${schoolName}: ${savedNsm}`,
+                        timer: 2200,
+                        showConfirmButton: false
+                    });
+                });
+            });
 
             let availableSiswa = [];
             let selectedSiswa = [];
