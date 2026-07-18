@@ -129,7 +129,7 @@
 
         <div class="table-responsive simansa-table-shell">
             <table class="table table-hover simansa-table mb-0">
-                <thead><tr><th>No</th><th>Siswa</th><th>Kelas SIMANSA</th><th>Rombel EMIS</th><th>Status</th><th>Field Perlu Dicek</th><th class="text-right">Aksi</th></tr></thead>
+                <thead><tr><th>No</th><th>Siswa SIMANSA</th><th class="simansa-emis-column-head">Nama EMIS</th><th>Kelas SIMANSA</th><th>Rombel EMIS</th><th>Status</th><th>Field Perlu Dicek</th><th class="text-right">Aksi</th></tr></thead>
                 <tbody>
                 @forelse($items as $index => $item)
                     @php
@@ -139,10 +139,28 @@
                         [$statusText, $statusColor] = $statusLabels[$rowStatus] ?? [ucfirst($rowStatus), 'secondary'];
                         $details = $snapshot?->comparison_details ?? [];
                         $differentFields = collect($details)->filter(fn($detail) => in_array($detail['status'] ?? '', ['different', 'similar', 'simansa_empty'], true))->keys();
+                        $emisBirthDate = $snapshot?->birth_date?->format('d/m/Y');
+                        $emisBirth = collect([$snapshot?->birth_place, $emisBirthDate])->filter()->implode(', ');
                     @endphp
                     <tr>
                         <td>{{ $items->firstItem() + $index }}</td>
-                        <td><div class="simansa-table-title">{{ $siswa?->nama_lengkap ?? $snapshot?->full_name ?? '-' }}</div><div class="simansa-table-subtitle">NISN: {{ $siswa?->nisn ?? $snapshot?->nisn ?? '-' }}</div></td>
+                        <td>
+                            @if($siswa)
+                                <div class="simansa-table-title">{{ $siswa->nama_lengkap }}</div>
+                                <div class="simansa-table-subtitle"><i class="fas fa-id-card mr-1"></i>NISN: {{ $siswa->nisn ?: '-' }}</div>
+                            @else
+                                <div class="simansa-empty-identity"><i class="fas fa-unlink mr-1"></i>Belum memiliki pasangan</div>
+                            @endif
+                        </td>
+                        <td class="simansa-emis-identity">
+                            @if($snapshot)
+                                <div class="simansa-table-title simansa-table-title--emis">{{ $snapshot->full_name ?: '-' }}</div>
+                                <div class="simansa-table-subtitle"><i class="fas fa-id-card mr-1"></i>NISN: {{ $snapshot->nisn ?: '-' }}</div>
+                                <div class="simansa-table-subtitle"><i class="fas fa-map-marker-alt mr-1"></i>{{ $emisBirth ?: 'Tempat/tanggal lahir belum tersedia' }}</div>
+                            @else
+                                <div class="simansa-empty-identity simansa-empty-identity--emis"><i class="fas fa-cloud-slash mr-1"></i>Belum ditemukan di EMIS</div>
+                            @endif
+                        </td>
                         <td>{{ $siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
                         <td>{{ $snapshot?->study_group_name ?? '-' }}@if($snapshot?->level_name)<div class="simansa-table-subtitle">{{ $snapshot->level_name }}</div>@endif</td>
                         <td><span class="badge badge-{{ $statusColor }} simansa-status-badge">{{ $statusText }}</span>@if($rowStatus === 'similar' && $snapshot?->name_similarity)<div class="simansa-table-subtitle mt-1">{{ number_format($snapshot->name_similarity, 1) }}% mirip</div>@endif</td>
@@ -165,7 +183,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-search d-block mb-2 fa-2x text-light"></i>Tidak ada data untuk filter ini.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-5"><i class="fas fa-search d-block mb-2 fa-2x text-light"></i>Tidak ada data untuk filter ini.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -203,7 +221,7 @@
     .simansa-emis-kpi--purple{border-top-color:#8b5cf6}.simansa-emis-kpi--purple .simansa-emis-kpi__value,.simansa-emis-kpi--purple .simansa-emis-kpi__action{color:#7c3aed}.simansa-emis-kpi--green{border-top-color:#22c55e}.simansa-emis-kpi--green .simansa-emis-kpi__value,.simansa-emis-kpi--green .simansa-emis-kpi__action{color:#15803d}.simansa-emis-kpi--amber{border-top-color:#f59e0b}.simansa-emis-kpi--amber .simansa-emis-kpi__value,.simansa-emis-kpi--amber .simansa-emis-kpi__action{color:#b45309}.simansa-emis-kpi--slate{border-top-color:#0f766e}.simansa-emis-kpi--slate .simansa-emis-kpi__value,.simansa-emis-kpi--slate .simansa-emis-kpi__action{color:#0f766e}
     .simansa-analytics-section{padding:1.1rem 1.25rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;box-shadow:0 10px 28px rgba(15,23,42,.05)}.simansa-section-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}.simansa-section-head h3{font-size:1.05rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}.simansa-section-head p{color:#64748b;line-height:1.55;margin:0;max-width:800px}.simansa-result-count{white-space:nowrap;background:#eef4ff;color:#2563eb;border-radius:999px;padding:.4rem .75rem;font-size:.8rem;font-weight:700}
     .simansa-filter-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:.8rem;align-items:end;padding:1rem;margin-bottom:1rem;border:1px solid #e5edf7;border-radius:12px;background:#f8fafc}.simansa-filter-panel label{font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}.simansa-filter-panel .form-control{border-color:#dbe4f0;border-radius:8px}.simansa-filter-panel .btn{height:38px;border-radius:8px}
-    .simansa-table-shell{border:1px solid #e5edf7;border-radius:12px;overflow:hidden}.simansa-table thead th{border:0;background:#f8fafc;color:#64748b;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:.8rem}.simansa-table td{vertical-align:middle;border-color:#edf2f7;padding:.8rem}.simansa-table-title{font-weight:700;color:#1e293b}.simansa-table-subtitle{font-size:.78rem;color:#94a3b8}.simansa-status-badge{padding:.42rem .58rem;min-width:74px}.simansa-field-chip{display:inline-flex;padding:.25rem .5rem;margin:0 .2rem .2rem 0;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.72rem;font-weight:600}.simansa-row-actions{display:flex;justify-content:flex-end;gap:.45rem;white-space:nowrap}.simansa-pagination{padding-top:1rem}.simansa-pagination nav,.simansa-pagination>div{width:100%}.simansa-pagination .pagination{margin-bottom:0}.simansa-pagination .page-link{min-width:36px;text-align:center;border-color:#dbe4f0;color:#2563eb}.simansa-pagination .page-item.active .page-link{background:#2563eb;border-color:#2563eb;color:#fff}
+    .simansa-table-shell{border:1px solid #e5edf7;border-radius:12px;overflow:hidden}.simansa-table{min-width:1320px}.simansa-table thead th{border:0;background:#f8fafc;color:#64748b;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:.8rem}.simansa-table td{vertical-align:middle;border-color:#edf2f7;padding:.8rem}.simansa-table-title{font-weight:700;color:#1e293b}.simansa-table-title--emis{color:#166534}.simansa-table-subtitle{font-size:.78rem;color:#94a3b8;line-height:1.55}.simansa-table-subtitle i{width:13px;text-align:center;color:#94a3b8}.simansa-emis-column-head{background:#f0fdf4!important;color:#15803d!important}.simansa-emis-identity{background:rgba(240,253,244,.38);border-left:2px solid #dcfce7}.simansa-empty-identity{font-size:.78rem;color:#94a3b8;font-style:italic}.simansa-empty-identity--emis{color:#b45309}.simansa-status-badge{padding:.42rem .58rem;min-width:74px}.simansa-field-chip{display:inline-flex;padding:.25rem .5rem;margin:0 .2rem .2rem 0;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.72rem;font-weight:600}.simansa-row-actions{display:flex;justify-content:flex-end;gap:.45rem;white-space:nowrap}.simansa-pagination{padding-top:1rem}.simansa-pagination nav,.simansa-pagination>div{width:100%}.simansa-pagination .pagination{margin-bottom:0}.simansa-pagination .page-link{min-width:36px;text-align:center;border-color:#dbe4f0;color:#2563eb}.simansa-pagination .page-item.active .page-link{background:#2563eb;border-color:#2563eb;color:#fff}
     .simansa-progress-overlay{position:fixed;inset:0;z-index:1080;display:none;align-items:center;justify-content:center;padding:1.25rem;background:rgba(15,23,42,.58);backdrop-filter:blur(4px)}.simansa-progress-overlay.is-active{display:flex}.simansa-progress-modal{width:min(760px,100%);max-height:min(720px,92vh);display:flex;flex-direction:column;border-radius:18px;background:#fff;border:1px solid #d9e3f0;box-shadow:0 26px 70px rgba(15,23,42,.28);overflow:hidden}.simansa-progress-modal__head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.2rem;color:#fff;background:linear-gradient(135deg,#2563eb 0%,#0f766e 100%)}.simansa-progress-modal__head h3{font-size:1.25rem;font-weight:700;margin:.2rem 0 .25rem}.simansa-progress-modal__head p{color:rgba(255,255,255,.84);margin:0}.simansa-progress-eyebrow{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.simansa-progress-summary{padding:1rem 1.2rem;border-bottom:1px solid #e5edf7;background:#f8fafc}.simansa-progress-summary>div:first-child{display:flex;justify-content:space-between;gap:1rem;margin-bottom:.75rem;color:#334155}.simansa-progress-bar{height:.72rem;border-radius:999px;background:#e2e8f0}.simansa-progress-log{padding:.25rem 1.2rem 1rem;overflow:auto;min-height:220px;max-height:380px}.simansa-progress-log-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:.75rem;padding:.82rem 0;border-bottom:1px solid #edf2f7;color:#334155}.simansa-progress-log-row strong{color:#0f172a}.simansa-progress-log-meta{color:#64748b;font-size:.82rem;margin-top:.15rem}
     @media(max-width:991.98px){.simansa-emis-hero{flex-direction:column}.simansa-emis-hero__meta{min-width:0}.simansa-token-panel{align-items:flex-start;flex-wrap:wrap}.simansa-token-meta{border-left:0;padding-left:0;min-width:0;width:100%}.simansa-filter-panel{grid-template-columns:1fr 1fr}.simansa-filter-panel .btn{grid-column:1/-1}}
     @media(max-width:575.98px){.simansa-emis-hero__meta,.simansa-filter-panel{grid-template-columns:1fr}.simansa-emis-sync-btn,.simansa-filter-panel .btn{grid-column:auto}.simansa-section-head{flex-direction:column}.simansa-progress-log-row{grid-template-columns:1fr}}
