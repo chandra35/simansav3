@@ -11,7 +11,6 @@ class SmartStudentComparator
         'nisn' => 'NISN',
         'tempat_lahir' => 'Tempat Lahir',
         'tanggal_lahir' => 'Tanggal Lahir',
-        'jenis_kelamin' => 'Jenis Kelamin',
         'kelas' => 'Kelas / Rombel',
     ];
 
@@ -22,7 +21,6 @@ class SmartStudentComparator
             'nisn' => $this->compareText($simansa['nisn'] ?? null, $emis['nisn'] ?? null),
             'tempat_lahir' => $this->compareText($simansa['tempat_lahir'] ?? null, $emis['tempat_lahir'] ?? null),
             'tanggal_lahir' => $this->compareDate($simansa['tanggal_lahir'] ?? null, $emis['tanggal_lahir'] ?? null),
-            'jenis_kelamin' => $this->compareGender($simansa['jenis_kelamin'] ?? null, $emis['jenis_kelamin'] ?? null),
             'kelas' => $this->compareClass($simansa['kelas'] ?? null, $emis['kelas'] ?? null),
         ];
 
@@ -119,26 +117,6 @@ class SmartStudentComparator
         }
 
         return $this->result($left, $right, $leftDate === $rightDate ? 'equivalent' : 'different');
-    }
-
-    private function compareGender(mixed $left, mixed $right): array
-    {
-        $base = $this->baseResult($left, $right);
-        if ($base) {
-            return $base;
-        }
-
-        $normalize = function ($value): string {
-            $value = $this->normalizeText($value);
-
-            return match ($value) {
-                'l', 'laki laki', 'male', 'pria' => 'L',
-                'p', 'perempuan', 'female', 'wanita' => 'P',
-                default => strtoupper($value),
-            };
-        };
-
-        return $this->result($left, $right, $normalize($left) === $normalize($right) ? 'equivalent' : 'different');
     }
 
     private function compareClass(mixed $left, mixed $right): array

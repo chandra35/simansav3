@@ -275,7 +275,6 @@ class EmisStudentComparisonController extends Controller
             'nisn' => $siswa->nisn,
             'tempat_lahir' => $siswa->tempat_lahir,
             'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
-            'jenis_kelamin' => $siswa->jenis_kelamin,
             'kelas' => $siswa->kelasSaatIni?->nama_kelas,
         ];
     }
@@ -287,7 +286,6 @@ class EmisStudentComparisonController extends Controller
             'nisn' => $snapshot->nisn,
             'tempat_lahir' => $snapshot->birth_place,
             'tanggal_lahir' => $snapshot->birth_date?->format('Y-m-d'),
-            'jenis_kelamin' => $snapshot->gender,
             'kelas' => $snapshot->study_group_name,
         ];
     }

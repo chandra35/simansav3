@@ -56,14 +56,26 @@ class SmartStudentComparatorTest extends TestCase
             $this->student(['tempat_lahir' => 'Metro']),
         );
         $missingEmis = $this->comparator->compare(
-            $this->student(['jenis_kelamin' => 'L']),
-            $this->student(['jenis_kelamin' => null]),
+            $this->student(['kelas' => 'XII IPA 1']),
+            $this->student(['kelas' => null]),
         );
 
         $this->assertSame('different', $missingSimansa['status']);
         $this->assertSame('simansa_empty', $missingSimansa['details']['tempat_lahir']['status']);
         $this->assertNotSame('different', $missingEmis['status']);
-        $this->assertSame('emis_empty', $missingEmis['details']['jenis_kelamin']['status']);
+        $this->assertSame('emis_empty', $missingEmis['details']['kelas']['status']);
+    }
+
+    public function test_gender_is_not_part_of_comparison(): void
+    {
+        $baseline = $this->comparator->compare($this->student(), $this->student());
+        $result = $this->comparator->compare(
+            $this->student(['jenis_kelamin' => 'L']),
+            $this->student(['jenis_kelamin' => 'P']),
+        );
+
+        $this->assertArrayNotHasKey('jenis_kelamin', $result['details']);
+        $this->assertSame($baseline['status'], $result['status']);
     }
 
     #[DataProvider('equivalentFieldProvider')]
@@ -82,7 +94,6 @@ class SmartStudentComparatorTest extends TestCase
         return [
             'birth place case' => ['tempat_lahir', 'Metro', 'METRO'],
             'birth date format' => ['tanggal_lahir', '2009-01-15', '15 January 2009'],
-            'gender label' => ['jenis_kelamin', 'L', 'Laki-laki'],
             'class punctuation' => ['kelas', 'XII IPA 1', '12-IPA-1'],
         ];
     }

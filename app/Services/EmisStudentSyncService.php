@@ -376,7 +376,6 @@ class EmisStudentSyncService
                 'nisn' => $siswa->nisn,
                 'tempat_lahir' => $siswa->tempat_lahir,
                 'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
-                'jenis_kelamin' => $siswa->jenis_kelamin,
                 'kelas' => $siswa->kelasSaatIni?->nama_kelas,
             ], $emisData)
             : ['status' => 'only_emis', 'name_similarity' => null, 'details' => [], 'different_fields' => []];
