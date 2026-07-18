@@ -185,6 +185,9 @@
                                 <th>Nama Lengkap</th>
                                 <th>Asal Sekolah</th>
                                 <th>JK</th>
+                                @if(auth()->user()->hasRole('Super Admin'))
+                                <th class="text-center">EMIS</th>
+                                @endif
                                 <th>Tanggal Masuk</th>
                                 @can('remove-siswa-kelas')
                                 <th>Aksi</th>
@@ -271,6 +274,20 @@
                                             <span class="badge badge-danger"><i class="fas fa-female"></i> P</span>
                                         @endif
                                     </td>
+                                    @if(auth()->user()->hasRole('Super Admin'))
+                                    <td class="text-center class-emis-cell">
+                                        <button type="button"
+                                                class="btn btn-xs class-emis-toggle {{ $siswa->emis_registered ? 'is-registered' : 'is-pending' }}"
+                                                data-url="{{ route('admin.siswa.toggle-emis-registered', $siswa) }}"
+                                                data-student="{{ $siswa->nama_lengkap }}"
+                                                data-registered="{{ $siswa->emis_registered ? 1 : 0 }}"
+                                                data-toggle="tooltip"
+                                                title="{{ $siswa->emis_registered ? 'Tandai belum masuk EMIS' : 'Tandai sudah masuk EMIS' }}">
+                                            <i class="fas {{ $siswa->emis_registered ? 'fa-check-circle' : 'fa-circle' }} mr-1"></i>
+                                            <span>{{ $siswa->emis_registered ? 'Sudah' : 'Belum' }}</span>
+                                        </button>
+                                    </td>
+                                    @endif
                                     <td data-order="{{ $tanggalMasuk?->format('Y-m-d') }}">
                                         {{ $tanggalMasuk?->format('d/m/Y') ?: '-' }}
                                     </td>
@@ -661,7 +678,7 @@
             font-weight: 600;
         }
         .class-students-table {
-            min-width: 1120px;
+            min-width: 1180px;
         }
         .class-students-table thead th {
             vertical-align: middle;
@@ -708,6 +725,35 @@
             border-radius: 7px;
             font-size: .7rem;
             font-weight: 700;
+        }
+        .class-students-table .class-emis-cell {
+            width: 76px;
+        }
+        .class-students-table .class-emis-toggle {
+            min-width: 62px;
+            padding: .2rem .42rem;
+            border: 1px solid;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1.25;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+        .class-students-table .class-emis-toggle.is-registered {
+            color: #15803d;
+            border-color: #86efac;
+            background: #dcfce7;
+        }
+        .class-students-table .class-emis-toggle.is-pending {
+            color: #64748b;
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .class-students-table .class-emis-toggle:hover,
+        .class-students-table .class-emis-toggle:focus {
+            filter: brightness(.97);
+            transform: translateY(-1px);
         }
 
         /* Dual Listbox Styling */
@@ -832,7 +878,14 @@
 
 @section('js')
     @php
-        $nonSortableStudentColumns = auth()->user()->can('remove-siswa-kelas') ? [0, 1, 8] : [0, 1];
+        $hasClassEmisColumn = auth()->user()->hasRole('Super Admin');
+        $nonSortableStudentColumns = [0, 1];
+        if ($hasClassEmisColumn) {
+            $nonSortableStudentColumns[] = 7;
+        }
+        if (auth()->user()->can('remove-siswa-kelas')) {
+            $nonSortableStudentColumns[] = $hasClassEmisColumn ? 9 : 8;
+        }
     @endphp
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -867,6 +920,59 @@
             }
 
             $('[data-toggle="tooltip"]').tooltip();
+
+            @if(auth()->user()->hasRole('Super Admin'))
+            $(document).on('click', '.class-emis-toggle', function() {
+                const button = $(this);
+                const currentlyRegistered = Number(button.data('registered')) === 1;
+                const targetRegistered = !currentlyRegistered;
+                const studentName = button.data('student') || 'Siswa';
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Ubah status EMIS?',
+                    text: `${studentName} akan ditandai ${targetRegistered ? 'sudah' : 'belum'} masuk EMIS.`,
+                    showCancelButton: true,
+                    confirmButtonText: targetRegistered ? 'Ya, sudah masuk' : 'Ya, tandai belum',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: targetRegistered ? '#16a34a' : '#64748b',
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: function() {
+                        return $.ajax({
+                            url: button.data('url'),
+                            method: 'POST',
+                            data: {_token: '{{ csrf_token() }}'}
+                        }).then(function(response) {
+                            return response;
+                        }, function(xhr) {
+                            Swal.showValidationMessage(xhr.responseJSON?.message || 'Status EMIS belum berhasil diperbarui.');
+                        });
+                    }
+                }).then(function(result) {
+                    if (!result.isConfirmed || !result.value) return;
+
+                    const registered = Boolean(result.value.emis_registered);
+                    const tooltipText = registered ? 'Tandai belum masuk EMIS' : 'Tandai sudah masuk EMIS';
+                    button
+                        .data('registered', registered ? 1 : 0)
+                        .toggleClass('is-registered', registered)
+                        .toggleClass('is-pending', !registered)
+                        .html(registered
+                            ? '<i class="fas fa-check-circle mr-1"></i><span>Sudah</span>'
+                            : '<i class="fas fa-circle mr-1"></i><span>Belum</span>');
+                    button.tooltip('dispose').attr('title', tooltipText).tooltip();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Status EMIS diperbarui',
+                        text: `${studentName} ditandai ${registered ? 'sudah' : 'belum'} masuk EMIS.`,
+                        timer: 1700,
+                        showConfirmButton: false
+                    });
+                });
+            });
+            @endif
 
             $(document).on('click', '.btn-complete-school-nsm', function() {
                 const button = $(this);
