@@ -166,37 +166,70 @@ body.login-page {
     position: relative;
     display: inline-flex;
     align-items: center;
-    padding-right: 46px;
+    padding-right: 40px;
     isolation: isolate;
 }
 .login-guide-hand {
     position: absolute;
     z-index: 2;
     top: 50%;
-    right: 1px;
-    width: 42px;
-    height: 46px;
+    right: -3px;
+    width: 76px;
+    height: 58px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #1a73e8;
-    font-size: 2rem;
-    line-height: 1;
     opacity: .78;
     pointer-events: none;
-    transform-origin: 34% 18%;
-    transform: translate(7px, 6px) rotate(-48deg);
-    filter: drop-shadow(0 5px 7px rgba(13, 71, 161, .28));
-    -webkit-text-stroke: 1.5px #fff;
+    transform-origin: 78% 66%;
+    transform: translate(4px, 3px) rotate(-5deg);
+    filter: drop-shadow(0 6px 8px rgba(13, 71, 161, .25));
     animation: loginHandIdle 2.4s ease-in-out infinite;
+}
+.login-guide-hand svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.login-hand-glove {
+    fill: #fff;
+    stroke: #1a73e8;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.login-hand-detail {
+    fill: none;
+    stroke: #90caf9;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+.login-hand-cuff {
+    fill: url(#loginHandCuffGradient);
+    stroke: #0d47a1;
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+}
+.login-hand-spark {
+    fill: none;
+    stroke: #29b6f6;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    opacity: 0;
+    transform-origin: 12px 25px;
+}
+.login-button-stage.is-guiding .login-hand-spark,
+.login-button-stage.is-pressing .login-hand-spark {
+    animation: loginHandSpark .5s ease-out both;
 }
 .login-guide-hand::after {
     content: '';
     position: absolute;
-    top: 3px;
-    left: 8px;
-    width: 12px;
-    height: 12px;
+    top: 18px;
+    left: 1px;
+    width: 14px;
+    height: 14px;
     border: 2px solid rgba(26, 115, 232, .55);
     border-radius: 50%;
     opacity: 0;
@@ -337,29 +370,34 @@ body.login-page {
     to { transform: rotate(360deg); }
 }
 @keyframes loginHandGuide {
-    0%, 8% { opacity: .2; transform: translate(26px, 18px) rotate(-42deg) scale(.92); }
-    24% { opacity: 1; transform: translate(12px, 10px) rotate(-47deg) scale(1); }
-    43% { opacity: 1; transform: translate(1px, 1px) rotate(-51deg) scale(1); }
-    52% { opacity: 1; transform: translate(-2px, -2px) rotate(-51deg) scale(.88); }
-    62% { opacity: 1; transform: translate(2px, 2px) rotate(-49deg) scale(1); }
-    78% { opacity: 1; transform: translate(9px, 8px) rotate(-46deg) scale(.98); }
-    100% { opacity: .78; transform: translate(7px, 6px) rotate(-48deg) scale(1); }
+    0%, 8% { opacity: .15; transform: translate(30px, 13px) rotate(8deg) scale(.92); }
+    24% { opacity: 1; transform: translate(15px, 7px) rotate(1deg) scale(1); }
+    43% { opacity: 1; transform: translate(1px, 1px) rotate(-5deg) scale(1); }
+    52% { opacity: 1; transform: translate(-5px, 0) rotate(-7deg) scale(.91); }
+    62% { opacity: 1; transform: translate(0, 2px) rotate(-4deg) scale(1); }
+    78% { opacity: 1; transform: translate(7px, 4px) rotate(-2deg) scale(.98); }
+    100% { opacity: .82; transform: translate(4px, 3px) rotate(-5deg) scale(1); }
 }
 @keyframes loginHandIdle {
-    0%, 100% { opacity: .72; transform: translate(8px, 7px) rotate(-47deg) scale(.98); }
-    50% { opacity: .9; transform: translate(5px, 4px) rotate(-50deg) scale(1.02); }
+    0%, 100% { opacity: .76; transform: translate(5px, 4px) rotate(-4deg) scale(.98); }
+    50% { opacity: .95; transform: translate(2px, 1px) rotate(-7deg) scale(1.02); }
 }
 @keyframes loginHandHover {
-    from { opacity: 0; transform: translate(18px, 13px) rotate(-43deg) scale(.94); }
-    to { opacity: 1; transform: translate(2px, 2px) rotate(-50deg) scale(1); }
+    from { opacity: .35; transform: translate(20px, 9px) rotate(5deg) scale(.94); }
+    to { opacity: 1; transform: translate(0, 0) rotate(-6deg) scale(1); }
 }
 @keyframes loginHandPress {
-    from { opacity: 1; transform: translate(2px, 2px) rotate(-50deg) scale(1); }
-    to { opacity: 1; transform: translate(-2px, -2px) rotate(-50deg) scale(.86); }
+    from { opacity: 1; transform: translate(0, 0) rotate(-6deg) scale(1); }
+    to { opacity: 1; transform: translate(-6px, 0) rotate(-8deg) scale(.9); }
 }
 @keyframes loginHandTapRing {
     0% { opacity: .9; transform: scale(.35); }
     100% { opacity: 0; transform: scale(1.7); }
+}
+@keyframes loginHandSpark {
+    0% { opacity: 0; transform: scale(.55); }
+    35% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.25); }
 }
 
 /* ── Responsive ── */
@@ -434,7 +472,25 @@ body.login-page {
                 <i class="fas fa-sign-in-alt mr-1"></i> Masuk
             </button>
             <span class="login-guide-hand" aria-hidden="true">
-                <i class="fas fa-hand-pointer"></i>
+                <svg viewBox="0 0 104 68" role="presentation" focusable="false">
+                    <defs>
+                        <linearGradient id="loginHandCuffGradient" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#29b6f6"/>
+                            <stop offset="1" stop-color="#0d47a1"/>
+                        </linearGradient>
+                    </defs>
+                    <g class="login-hand-spark">
+                        <path d="M12 8v7"/>
+                        <path d="M2 15l6 4"/>
+                        <path d="M1 29l7-1"/>
+                    </g>
+                    <path class="login-hand-glove" d="M17 20.5h41.5l-5.7-7.2c-2.1-2.7-1.5-6.4 1.2-8.1 2.5-1.6 5.8-.8 7.7 1.5l13.6 16.8 8.7 7.4 8.2 3.7-9.8 24.7-13.1-5.1c-4.7-1.8-9.9-2.2-14.9-1.1l-8.6 1.9c-4.3.9-8.6-1.5-9.8-5.5-.6-2.2-.1-4.4 1.2-6.1-4.1.3-7.5-2.5-7.7-6.2-.1-2.1.9-4 2.6-5.2H17c-5.8 0-10.4-2.8-10.4-6.3s4.6-6.2 10.4-6.2Z"/>
+                    <path class="login-hand-detail" d="M38.2 43.4h16.2"/>
+                    <path class="login-hand-detail" d="M32.6 32.5h24.8"/>
+                    <path class="login-hand-detail" d="M58.5 20.5l7.7 9.5"/>
+                    <path class="login-hand-cuff" d="M84 30.9 103 38.4 92.2 66 73.4 58.6Z"/>
+                    <path d="M88.5 54.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="#fff" opacity=".9"/>
+                </svg>
             </span>
         </span>
     </div>
