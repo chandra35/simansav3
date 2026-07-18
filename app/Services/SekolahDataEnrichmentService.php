@@ -17,6 +17,7 @@ class SekolahDataEnrichmentService
     {
         $sources = [];
         $warnings = [];
+        $emisRequired = false;
 
         $referensi = $this->kemendikbud->fetchAndSaveFromReferensi($sekolah->npsn);
         if ($referensi['success'] ?? false) {
@@ -26,7 +27,8 @@ class SekolahDataEnrichmentService
             $warnings[] = $referensi['message'] ?? 'Data Referensi Kemendikdasmen belum berhasil diambil.';
         }
 
-        if ($this->shouldCheckEmis($sekolah)) {
+        $emisRequired = $this->shouldCheckEmis($sekolah);
+        if ($emisRequired) {
             $emis = $this->emis->lookupInstitutionByNpsn($sekolah->npsn);
 
             if ($emis['success'] ?? false) {
@@ -43,14 +45,23 @@ class SekolahDataEnrichmentService
             'last_fetched_at' => now(),
         ])->save();
 
+        $sekolah = $sekolah->fresh();
+        $complete = !$emisRequired || filled($sekolah->nsm);
+        $partial = !empty($sources) && !$complete;
+
         return [
             'success' => !empty($sources),
-            'message' => !empty($sources)
-                ? 'Data sekolah berhasil dilengkapi dari ' . implode(' dan ', array_unique($sources)) . '.'
-                : 'Data sekolah belum berhasil dilengkapi.',
+            'complete' => $complete,
+            'partial' => $partial,
+            'emis_required' => $emisRequired,
+            'message' => $partial
+                ? 'Data referensi sekolah diperbarui, tetapi NSM belum berhasil dilengkapi.'
+                : (!empty($sources)
+                    ? 'Data sekolah berhasil dilengkapi dari ' . implode(' dan ', array_unique($sources)) . '.'
+                    : 'Data sekolah belum berhasil dilengkapi.'),
             'sources' => array_values(array_unique($sources)),
             'warnings' => $warnings,
-            'data' => $sekolah->fresh(),
+            'data' => $sekolah,
         ];
     }
 

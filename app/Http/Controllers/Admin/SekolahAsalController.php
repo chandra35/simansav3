@@ -166,6 +166,8 @@ class SekolahAsalController extends Controller
 
         return response()->json([
             'success' => true,
+            'complete' => $result['complete'] ?? true,
+            'partial' => $result['partial'] ?? false,
             'message' => $result['message'],
             'sources' => $result['sources'] ?? [],
             'warnings' => $result['warnings'] ?? [],

@@ -11,6 +11,7 @@ class EmisNisnService
 {
     protected $apiUrl;
     protected $bearerToken;
+    protected $institutionLookupToken;
     protected $timeout;
 
     public function __construct()
@@ -18,11 +19,16 @@ class EmisNisnService
         $this->apiUrl = config('services.emis.api_url', 'https://api-emis.kemenag.go.id/v1');
         
         // Prefer emis_institusi_token (operator lembaga), fallback ke emis_api_token, lalu config
-        $tokenData = DB::table('api_tokens')->where('name', 'emis_institusi_token')->whereNotNull('token')->first();
-        if (!$tokenData) {
-            $tokenData = DB::table('api_tokens')->where('name', 'emis_api_token')->whereNotNull('token')->first();
-        }
-        $this->bearerToken = $tokenData ? $tokenData->token : config('services.emis.bearer_token');
+        $institutionToken = DB::table('api_tokens')->where('name', 'emis_institusi_token')->whereNotNull('token')->first();
+        $centralToken = DB::table('api_tokens')->where('name', 'emis_api_token')->whereNotNull('token')->first();
+
+        $this->bearerToken = $institutionToken?->token
+            ?: $centralToken?->token
+            ?: config('services.emis.bearer_token');
+
+        // Endpoint referensi institusi membutuhkan cakupan token Admin Pusat.
+        // Token Lembaga tetap menjadi token utama untuk data siswa lembaga.
+        $this->institutionLookupToken = $centralToken?->token ?: $this->bearerToken;
         
         $this->timeout = 15; // 15 seconds timeout (reduce spinner wait time)
     }
@@ -207,10 +213,10 @@ class EmisNisnService
             ];
         }
 
-        if (empty($this->bearerToken)) {
+        if (empty($this->institutionLookupToken)) {
             return [
                 'success' => false,
-                'message' => 'Token EMIS belum dikonfigurasi.',
+                'message' => 'Token referensi EMIS Admin Pusat belum dikonfigurasi.',
                 'data' => null,
             ];
         }
@@ -220,7 +226,7 @@ class EmisNisnService
                 ->withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->bearerToken,
+                    'Authorization' => 'Bearer ' . $this->institutionLookupToken,
                 ]);
 
             if (config('app.env') !== 'production') {
@@ -241,7 +247,7 @@ class EmisNisnService
             if ($response->status() === 401) {
                 return [
                     'success' => false,
-                    'message' => 'Token API EMIS expired atau invalid. Silakan perbarui token EMIS terlebih dahulu.',
+                    'message' => 'Token referensi EMIS Admin Pusat expired, invalid, atau tidak memiliki akses institusi.',
                     'data' => null,
                 ];
             }

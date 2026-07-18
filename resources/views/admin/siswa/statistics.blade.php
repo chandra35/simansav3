@@ -1082,8 +1082,12 @@
         }
 
         function appendBulkLog(statusClass, title, message) {
-            const badgeClass = statusClass === 'success' ? 'badge-success' : (statusClass === 'danger' ? 'badge-danger' : 'badge-info');
-            const label = statusClass === 'success' ? 'Berhasil' : (statusClass === 'danger' ? 'Gagal' : 'Proses');
+            const badgeClass = statusClass === 'success'
+                ? 'badge-success'
+                : (statusClass === 'danger' ? 'badge-danger' : (statusClass === 'warning' ? 'badge-warning' : 'badge-info'));
+            const label = statusClass === 'success'
+                ? 'Berhasil'
+                : (statusClass === 'danger' ? 'Gagal' : (statusClass === 'warning' ? 'Sebagian' : 'Proses'));
             $('#bulkNpsnLog').prepend(`
                 <div class="simansa-progress-log-row">
                     <div><span class="badge ${badgeClass}">${label}</span></div>
@@ -1184,19 +1188,30 @@
                 method: 'POST',
                 data: {_token: csrfToken},
                 success(response) {
+                    const complete = Boolean(response.complete && response.nsm);
+                    const warningText = (response.warnings || []).filter(Boolean).join(' ');
                     statusText.text(`NPSN: ${response.npsn || npsn} | NSM: ${response.nsm || '-'}`);
-                    button.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check mr-1"></i>Terisi');
+                    button.removeClass('btn-primary btn-success btn-warning');
+
+                    if (complete) {
+                        button.addClass('btn-success').html('<i class="fas fa-check mr-1"></i>Terisi');
+                    } else {
+                        button.prop('disabled', false).addClass('btn-warning').html('<i class="fas fa-exclamation-triangle mr-1"></i>Sebagian');
+                    }
 
                     if (options.log) {
                         const sources = (response.sources || []).join(' + ') || 'sumber resmi';
-                        appendBulkLog('success', `${schoolName} (${npsn})`, `Data sekolah berhasil dilengkapi dari ${sources}.`);
+                        const logMessage = complete
+                            ? `Data sekolah berhasil dilengkapi dari ${sources}.`
+                            : `${response.message || 'NSM belum terisi.'}${warningText ? ` ${warningText}` : ''}`;
+                        appendBulkLog(complete ? 'success' : 'warning', `${schoolName} (${npsn})`, logMessage);
                     }
 
                     if (!options.silent) {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Data sekolah diperbarui',
-                            text: response.message || `${schoolName} berhasil dilengkapi.`,
+                            icon: complete ? 'success' : 'warning',
+                            title: complete ? 'NSM berhasil dilengkapi' : 'Data baru terisi sebagian',
+                            text: `${response.message || `${schoolName} berhasil dilengkapi.`}${warningText ? ` ${warningText}` : ''}`,
                             confirmButtonText: 'OK'
                         });
                     }

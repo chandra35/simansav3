@@ -381,6 +381,7 @@
 
         .simansa-progress-log__row.is-success { border-color: #bbf7d0; background: #f0fdf4; }
         .simansa-progress-log__row.is-danger { border-color: #fecaca; background: #fef2f2; }
+        .simansa-progress-log__row.is-warning { border-color: #fde68a; background: #fffbeb; }
         .simansa-progress-log__row.is-info { border-color: #bfdbfe; background: #eff6ff; }
 
         @media (max-width: 768px) {
@@ -469,18 +470,29 @@ $(document).ready(function() {
             method: 'POST',
             data: {_token: csrf}
         }).done(function(response) {
-            button.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>');
+            const complete = Boolean(response.complete);
+            const warningText = (response.warnings || []).filter(Boolean).join(' ');
+            button.removeClass('btn-primary btn-success btn-warning');
+
+            if (complete) {
+                button.addClass('btn-success').html('<i class="fas fa-check"></i>');
+            } else {
+                button.prop('disabled', false).addClass('btn-warning').html('<i class="fas fa-exclamation-triangle"></i>');
+            }
 
             if (options.log) {
                 const sources = (response.sources || []).join(' + ') || 'sumber resmi';
-                appendLog('success', `${school} (${npsn})`, `Berhasil dilengkapi dari ${sources}.`);
+                const logMessage = complete
+                    ? `Berhasil dilengkapi dari ${sources}.`
+                    : `${response.message || 'Data baru terisi sebagian.'}${warningText ? ` ${warningText}` : ''}`;
+                appendLog(complete ? 'success' : 'warning', `${school} (${npsn})`, logMessage);
             }
 
             if (!options.silent) {
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Data sekolah diperbarui',
-                    text: response.message || `${school} berhasil dilengkapi.`,
+                    icon: complete ? 'success' : 'warning',
+                    title: complete ? 'Data sekolah diperbarui' : 'Data baru terisi sebagian',
+                    text: `${response.message || `${school} berhasil dilengkapi.`}${warningText ? ` ${warningText}` : ''}`,
                     confirmButtonText: 'OK'
                 }).then(() => table.ajax.reload(null, false));
             }
