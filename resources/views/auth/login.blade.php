@@ -182,12 +182,13 @@ body.login-page {
     color: #1a73e8;
     font-size: 2rem;
     line-height: 1;
-    opacity: 0;
+    opacity: .78;
     pointer-events: none;
     transform-origin: 34% 18%;
-    transform: translate(24px, 17px) rotate(-48deg);
+    transform: translate(7px, 6px) rotate(-48deg);
     filter: drop-shadow(0 5px 7px rgba(13, 71, 161, .28));
     -webkit-text-stroke: 1.5px #fff;
+    animation: loginHandIdle 2.4s ease-in-out infinite;
 }
 .login-guide-hand::after {
     content: '';
@@ -336,13 +337,17 @@ body.login-page {
     to { transform: rotate(360deg); }
 }
 @keyframes loginHandGuide {
-    0%, 8% { opacity: 0; transform: translate(26px, 18px) rotate(-42deg) scale(.92); }
+    0%, 8% { opacity: .2; transform: translate(26px, 18px) rotate(-42deg) scale(.92); }
     24% { opacity: 1; transform: translate(12px, 10px) rotate(-47deg) scale(1); }
     43% { opacity: 1; transform: translate(1px, 1px) rotate(-51deg) scale(1); }
     52% { opacity: 1; transform: translate(-2px, -2px) rotate(-51deg) scale(.88); }
     62% { opacity: 1; transform: translate(2px, 2px) rotate(-49deg) scale(1); }
     78% { opacity: 1; transform: translate(9px, 8px) rotate(-46deg) scale(.98); }
-    100% { opacity: 0; transform: translate(25px, 17px) rotate(-42deg) scale(.92); }
+    100% { opacity: .78; transform: translate(7px, 6px) rotate(-48deg) scale(1); }
+}
+@keyframes loginHandIdle {
+    0%, 100% { opacity: .72; transform: translate(8px, 7px) rotate(-47deg) scale(.98); }
+    50% { opacity: .9; transform: translate(5px, 4px) rotate(-50deg) scale(1.02); }
 }
 @keyframes loginHandHover {
     from { opacity: 0; transform: translate(18px, 13px) rotate(-43deg) scale(.94); }
