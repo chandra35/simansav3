@@ -1020,8 +1020,9 @@ $(document).ready(function() {
             { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle' },
             { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle' }
         ],
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
+        pagingType: 'simple_numbers',
         order: [[8, 'desc']],
         language: {
             processing: "Memproses...",

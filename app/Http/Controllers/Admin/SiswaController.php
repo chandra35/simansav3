@@ -259,12 +259,8 @@ class SiswaController extends Controller
         
         // Pagination
         if ($request->has('start') && $request->has('length')) {
-            $length = $request->length;
-            // Handle "All" option (-1)
-            if ($length != -1) {
-                $siswa->skip($request->start)->take($length);
-            }
-            // If length is -1, don't apply skip/take (load all data)
+            $length = max(10, min((int) $request->length, 100));
+            $siswa->skip(max(0, (int) $request->start))->take($length);
         }
 
         // Ordering

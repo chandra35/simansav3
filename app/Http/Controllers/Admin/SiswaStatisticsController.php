@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MatrikulasiPeserta;
+use App\Models\Kelas;
 use App\Models\Sekolah;
 use App\Models\Siswa;
+use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +22,21 @@ class SiswaStatisticsController extends Controller
     {
         $this->authorize('view-siswa');
 
-        $baseQuery = $this->baseSiswaQuery();
+        $activeYear = TahunPelajaran::query()->active()->first();
+        $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true)
+            ? (int) $request->get('tingkat') : null;
+        $classes = Kelas::query()
+            ->where('is_active', true)
+            ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
+            ->when(! $activeYear, fn ($query) => $query->whereRaw('1 = 0'))
+            ->orderBy('tingkat')->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'tingkat', 'tahun_pelajaran_id']);
+        $kelasId = (string) $request->get('kelas_id', '');
+        if ($kelasId !== '' && ! $classes->contains(fn (Kelas $class) => $class->id === $kelasId && (! $tingkat || (int) $class->tingkat === $tingkat))) {
+            $kelasId = '';
+        }
+
+        $baseQuery = $this->applyDashboardFilters($this->baseSiswaQuery(), $activeYear, $tingkat, $kelasId);
 
         $totalSiswa = (clone $baseQuery)->count();
         $dataLengkap = (clone $baseQuery)
@@ -32,10 +48,9 @@ class SiswaStatisticsController extends Controller
         $belumPernahLogin = max($totalSiswa - $sudahLogin, 0);
         $belumLengkap = max($totalSiswa - $dataLengkap, 0);
         $npsnKosong = $this->applyMissingNpsnScope(clone $baseQuery)->count();
-        $npsnKosongKelas10 = $this->applyKelasTingkatScope(
-            $this->applyMissingNpsnScope(clone $baseQuery),
-            10
-        )->count();
+        $npsnTerisi = max($totalSiswa - $npsnKosong, 0);
+        $lakiLaki = (clone $baseQuery)->where('siswa.jenis_kelamin', 'L')->count();
+        $perempuan = (clone $baseQuery)->where('siswa.jenis_kelamin', 'P')->count();
 
         $kpi = [
             'total_siswa' => $totalSiswa,
@@ -44,16 +59,21 @@ class SiswaStatisticsController extends Controller
             'sudah_login' => $sudahLogin,
             'belum_pernah_login' => $belumPernahLogin,
             'npsn_kosong' => $npsnKosong,
-            'npsn_kosong_kelas_10' => $npsnKosongKelas10,
+            'npsn_terisi' => $npsnTerisi,
+            'laki_laki' => $lakiLaki,
+            'perempuan' => $perempuan,
+            'persen_lengkap' => $totalSiswa ? round(($dataLengkap / $totalSiswa) * 100, 1) : 0,
+            'persen_login' => $totalSiswa ? round(($sudahLogin / $totalSiswa) * 100, 1) : 0,
+            'persen_npsn_kosong' => $totalSiswa ? round(($npsnKosong / $totalSiswa) * 100, 1) : 0,
         ];
 
-        $topSchools = $this->topOriginSchools();
-        $missingNpsnKelas10 = $this->missingNpsnStudentsByTingkat(10);
-        $educationSpread = $this->educationSpread();
-        $addressProvinceSpread = $this->addressSpreadByLevel('province');
-        $addressCitySpread = $this->addressSpreadByLevel('city');
-        $addressDistrictSpread = $this->addressSpreadByLevel('district');
-        $schoolCitySpread = $this->schoolSpreadByCity();
+        $originSchools = $this->originSchools(clone $baseQuery);
+        $missingNpsnStudents = $this->missingNpsnStudents(clone $baseQuery, $activeYear, $tingkat);
+        $educationSpread = $this->educationSpread(clone $baseQuery);
+        $addressProvinceSpread = $this->addressSpreadByLevel(clone $baseQuery, 'province');
+        $addressCitySpread = $this->addressSpreadByLevel(clone $baseQuery, 'city');
+        $addressDistrictSpread = $this->addressSpreadByLevel(clone $baseQuery, 'district');
+        $schoolCitySpread = $this->schoolSpreadByCity(clone $baseQuery);
 
         $mapAddressPoints = $addressCitySpread
             ->take(20)
@@ -67,7 +87,7 @@ class SiswaStatisticsController extends Controller
                 ];
             });
 
-        $mapSchoolPoints = $topSchools
+        $mapSchoolPoints = $originSchools
             ->take(15)
             ->values()
             ->map(function ($item) {
@@ -88,8 +108,8 @@ class SiswaStatisticsController extends Controller
 
         return view('admin.siswa.statistics', [
             'kpi' => $kpi,
-            'topSchools' => $topSchools,
-            'missingNpsnKelas10' => $missingNpsnKelas10,
+            'originSchools' => $originSchools,
+            'missingNpsnStudents' => $missingNpsnStudents,
             'educationSpread' => $educationSpread,
             'addressProvinceSpread' => $addressProvinceSpread,
             'addressCitySpread' => $addressCitySpread,
@@ -97,6 +117,11 @@ class SiswaStatisticsController extends Controller
             'schoolCitySpread' => $schoolCitySpread,
             'mapAddressPoints' => $mapAddressPoints,
             'mapSchoolPoints' => $mapSchoolPoints,
+            'activeYear' => $activeYear,
+            'classes' => $classes,
+            'tingkat' => $tingkat,
+            'kelasId' => $kelasId,
+            'filterQuery' => array_filter(['tingkat' => $tingkat, 'kelas_id' => $kelasId]),
         ]);
     }
 
@@ -190,6 +215,21 @@ class SiswaStatisticsController extends Controller
         return $this->applyRoleScope(Siswa::query()->from('siswa'));
     }
 
+    private function applyDashboardFilters($query, ?TahunPelajaran $activeYear, ?int $tingkat, string $kelasId)
+    {
+        if ($kelasId !== '') {
+            return $query->where('siswa.kelas_saat_ini_id', $kelasId);
+        }
+        if ($tingkat) {
+            $query->whereHas('kelasSaatIni', fn ($class) => $class
+                ->where('tingkat', $tingkat)
+                ->when($activeYear, fn ($activeClass) => $activeClass->where('tahun_pelajaran_id', $activeYear->id))
+                ->when(! $activeYear, fn ($activeClass) => $activeClass->whereRaw('1 = 0')));
+        }
+
+        return $query;
+    }
+
     private function applyMissingNpsnScope($query)
     {
         return $query->where(function ($q) {
@@ -198,37 +238,37 @@ class SiswaStatisticsController extends Controller
         });
     }
 
-    private function applyKelasTingkatScope($query, int $tingkat)
+    private function applyKelasTingkatScope($query, int $tingkat, ?string $tahunPelajaranId = null)
     {
-        return $query->whereExists(function ($subQuery) use ($tingkat) {
+        return $query->whereExists(function ($subQuery) use ($tingkat, $tahunPelajaranId) {
             $subQuery->select(DB::raw(1))
                 ->from('siswa_kelas')
                 ->whereColumn('siswa_kelas.siswa_id', 'siswa.id')
                 ->whereNull('siswa_kelas.deleted_at')
                 ->where('siswa_kelas.status', 'aktif')
-                ->where('siswa_kelas.tingkat', $tingkat);
+                ->where('siswa_kelas.tingkat', $tingkat)
+                ->when($tahunPelajaranId, fn ($activeClass) => $activeClass->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId));
         });
     }
 
-    private function missingNpsnStudentsByTingkat(int $tingkat)
+    private function missingNpsnStudents($baseQuery, ?TahunPelajaran $activeYear, ?int $selectedTingkat)
     {
-        return $this->applyKelasTingkatScope(
-                $this->applyMissingNpsnScope($this->baseSiswaQuery()),
-                $tingkat
-            )
-            ->with(['kelasAktif'])
+        $query = $this->applyMissingNpsnScope($baseQuery);
+        if (! $selectedTingkat) {
+            $query = $this->applyKelasTingkatScope($query, 10, $activeYear?->id);
+        }
+
+        return $query->with(['kelasSaatIni'])
             ->orderBy('siswa.nama_lengkap')
             ->limit(50)
             ->get(['siswa.id', 'siswa.nisn', 'siswa.nama_lengkap', 'siswa.nomor_tes'])
-            ->map(function (Siswa $siswa) use ($tingkat) {
-                $kelas = $siswa->kelasAktif->first();
-
+            ->map(function (Siswa $siswa) use ($selectedTingkat) {
                 return [
                     'id' => $siswa->id,
                     'nama_lengkap' => $siswa->nama_lengkap,
                     'nisn' => $siswa->nisn,
                     'nomor_tes' => $siswa->nomor_tes,
-                    'kelas' => $kelas?->nama_kelas ?: 'Tingkat ' . $tingkat . ' - tanpa rombel',
+                    'kelas' => $siswa->kelasSaatIni?->nama_kelas ?: ($selectedTingkat ? 'Tingkat '.$selectedTingkat : 'Tanpa rombel'),
                 ];
             });
     }
@@ -400,28 +440,37 @@ class SiswaStatisticsController extends Controller
         return null;
     }
 
-    private function topOriginSchools()
+    private function originSchools($baseQuery)
     {
-        return $this->applyRoleScope(Siswa::query()->from('siswa'))
+        return $baseQuery
             ->leftJoin('sekolah as sekolah_asal', 'sekolah_asal.npsn', '=', 'siswa.npsn_asal_sekolah')
             ->whereNotNull('siswa.npsn_asal_sekolah')
             ->groupBy(
                 'siswa.npsn_asal_sekolah',
                 'sekolah_asal.nsm',
                 'sekolah_asal.nama',
+                'sekolah_asal.status',
                 'sekolah_asal.bentuk_pendidikan',
+                'sekolah_asal.akreditasi',
+                'sekolah_asal.kementerian_pembina',
+                'sekolah_asal.kecamatan',
                 'sekolah_asal.kabupaten_kota',
-                'sekolah_asal.provinsi'
+                'sekolah_asal.provinsi',
+                'sekolah_asal.last_fetched_at'
             )
             ->orderByDesc(DB::raw('COUNT(*)'))
-            ->limit(15)
             ->get([
                 'siswa.npsn_asal_sekolah as npsn',
                 'sekolah_asal.nsm as nsm',
                 DB::raw('COALESCE(sekolah_asal.nama, "Sekolah Tidak Dikenal") as school_name'),
+                DB::raw('COALESCE(sekolah_asal.status, "Tidak diketahui") as school_status'),
                 DB::raw('COALESCE(sekolah_asal.bentuk_pendidikan, "Tidak diketahui") as education_form'),
+                DB::raw('COALESCE(sekolah_asal.akreditasi, "-") as accreditation'),
+                DB::raw('COALESCE(sekolah_asal.kementerian_pembina, "-") as ministry'),
+                DB::raw('COALESCE(sekolah_asal.kecamatan, "") as district_name'),
                 DB::raw('COALESCE(sekolah_asal.kabupaten_kota, "") as city_name'),
                 DB::raw('COALESCE(sekolah_asal.provinsi, "") as province_name'),
+                'sekolah_asal.last_fetched_at as last_fetched_at',
                 DB::raw('COUNT(*) as count'),
             ])
             ->map(function ($item) {
@@ -429,17 +478,22 @@ class SiswaStatisticsController extends Controller
                     'npsn' => $item->npsn,
                     'nsm' => $item->nsm,
                     'school_name' => $item->school_name,
+                    'school_status' => $item->school_status,
                     'education_form' => $item->education_form,
+                    'accreditation' => $item->accreditation,
+                    'ministry' => $item->ministry,
+                    'district_name' => $item->district_name,
                     'city_name' => $item->city_name,
                     'province_name' => $item->province_name,
+                    'last_fetched_at' => $item->last_fetched_at,
                     'count' => (int) $item->count,
                 ];
             });
     }
 
-    private function educationSpread()
+    private function educationSpread($baseQuery)
     {
-        return $this->applyRoleScope(Siswa::query()->from('siswa'))
+        return $baseQuery
             ->leftJoin('sekolah as sekolah_asal', 'sekolah_asal.npsn', '=', 'siswa.npsn_asal_sekolah')
             ->whereNotNull('siswa.npsn_asal_sekolah')
             ->groupBy('sekolah_asal.bentuk_pendidikan')
@@ -456,9 +510,9 @@ class SiswaStatisticsController extends Controller
             });
     }
 
-    private function schoolSpreadByCity()
+    private function schoolSpreadByCity($baseQuery)
     {
-        return $this->applyRoleScope(Siswa::query()->from('siswa'))
+        return $baseQuery
             ->leftJoin('sekolah as sekolah_asal', 'sekolah_asal.npsn', '=', 'siswa.npsn_asal_sekolah')
             ->whereNotNull('siswa.npsn_asal_sekolah')
             ->groupBy('sekolah_asal.kabupaten_kota', 'sekolah_asal.provinsi')
@@ -483,9 +537,9 @@ class SiswaStatisticsController extends Controller
             });
     }
 
-    private function addressSpreadByLevel(string $level)
+    private function addressSpreadByLevel($baseQuery, string $level)
     {
-        $base = $this->applyRoleScope(Siswa::query()->from('siswa'))
+        $base = $baseQuery
             ->leftJoin('ortu as ortu_siswa', 'ortu_siswa.siswa_id', '=', 'siswa.id');
 
         if ($level === 'province') {

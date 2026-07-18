@@ -2,6 +2,12 @@
 
 @section('title', 'Statistik Siswa - SIMANSA')
 
+@php
+    $selectedClass = $kelasId ? $classes->firstWhere('id', $kelasId) : null;
+    $scopeLabel = $selectedClass?->nama_kelas ?: ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : 'Semua siswa');
+    $listUrl = fn (array $extra = []) => route('admin.siswa.index', array_merge($filterQuery, $extra));
+@endphp
+
 @section('content_header')
     <div class="simansa-stat-hero">
         <div class="simansa-stat-hero__main">
@@ -28,67 +34,75 @@
 @stop
 
 @section('content')
+<section class="simansa-stat-filter mb-4">
+    <div class="simansa-stat-filter__intro"><i class="fas fa-filter"></i><div><h2>Filter Statistik</h2><p>Semua kartu, grafik, peta, domisili, dan sekolah asal mengikuti pilihan ini · {{ $activeYear?->nama ?? 'Tahun aktif belum tersedia' }}</p></div></div>
+    <form method="GET" action="{{ route('admin.siswa.statistics') }}">
+        <div class="form-group mb-0"><label for="statTingkat">Tingkat</label><select id="statTingkat" name="tingkat" class="form-control"><option value="">Semua tingkat</option><option value="10" @selected($tingkat===10)>Kelas X</option><option value="11" @selected($tingkat===11)>Kelas XI</option><option value="12" @selected($tingkat===12)>Kelas XII</option></select></div>
+        <div class="form-group mb-0"><label for="statKelas">Kelas Tahun Aktif</label><select id="statKelas" name="kelas_id" class="form-control" @disabled(!$tingkat)><option value="">{{ $tingkat ? 'Semua kelas tingkat ini' : 'Pilih tingkat dahulu' }}</option>@foreach($classes as $class)<option value="{{ $class->id }}" data-level="{{ $class->tingkat }}" @selected($kelasId===$class->id)>{{ $class->nama_kelas }}</option>@endforeach</select></div>
+        <button class="btn btn-primary"><i class="fas fa-chart-bar mr-1"></i>Terapkan</button><a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>
+    </form>
+</section>
 <div class="row">
     <div class="col-md-6 col-xl mb-4">
-        <a href="{{ route('admin.siswa.index') }}" class="simansa-kpi-link">
+        <a href="{{ $listUrl() }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--blue">
                 <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Total Siswa</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['total_siswa']) }}</div>
-                    <div class="simansa-kpi__desc">Seluruh siswa yang saat ini tercatat di SIMANSA.</div>
+                    <div class="simansa-kpi__desc">{{ $scopeLabel }} · {{ number_format($kpi['laki_laki']) }} laki-laki dan {{ number_format($kpi['perempuan']) }} perempuan.</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Semua Siswa</div>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-xl mb-4">
-        <a href="{{ route('admin.siswa.index', ['status' => 'lengkap']) }}" class="simansa-kpi-link">
+        <a href="{{ $listUrl(['status' => 'lengkap']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--green">
                 <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Data Lengkap</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['data_lengkap']) }}</div>
-                    <div class="simansa-kpi__desc">Data diri dan data orang tua sudah lengkap.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_lengkap'] }}% lengkap · {{ number_format($kpi['belum_lengkap']) }} siswa masih perlu melengkapi data.</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-xl mb-4">
-        <a href="{{ route('admin.siswa.index', ['login_status' => 'sudah']) }}" class="simansa-kpi-link">
+        <a href="{{ $listUrl(['login_status' => 'sudah']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--amber">
                 <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Sudah Login</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['sudah_login']) }}</div>
-                    <div class="simansa-kpi__desc">Sudah pernah tercatat login ke sistem.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_login'] }}% dari {{ number_format($kpi['total_siswa']) }} siswa pada filter aktif.</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-xl mb-4">
-        <a href="{{ route('admin.siswa.index', ['login_status' => 'belum']) }}" class="simansa-kpi-link">
+        <a href="{{ $listUrl(['login_status' => 'belum']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--rose">
                 <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Belum Pernah Login</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['belum_pernah_login']) }}</div>
-                    <div class="simansa-kpi__desc">Akun aktif tetapi belum pernah punya riwayat login.</div>
+                    <div class="simansa-kpi__desc">{{ 100 - $kpi['persen_login'] }}% belum login · {{ number_format($kpi['sudah_login']) }} siswa sudah aktif.</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
     <div class="col-md-6 col-xl mb-4">
-        <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong']) }}" class="simansa-kpi-link">
+        <a href="{{ $listUrl(['npsn_status' => 'kosong']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--slate">
                 <div class="simansa-kpi__icon"><i class="fas fa-school"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">NPSN Kosong</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['npsn_kosong']) }}</div>
-                    <div class="simansa-kpi__desc">{{ number_format($kpi['npsn_kosong_kelas_10']) }} siswa kelas 10 perlu dicek dari data PPDB.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_npsn_kosong'] }}% kosong · {{ number_format($kpi['npsn_terisi']) }} siswa sudah memiliki NPSN asal sekolah.</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
@@ -101,14 +115,14 @@
         <section class="simansa-analytics-section">
             <div class="simansa-section-head">
                 <div>
-                    <h3>NPSN Kosong Kelas 10</h3>
+                    <h3>NPSN Kosong · {{ $tingkat ? $scopeLabel : 'Kelas X' }}</h3>
                     <p>Gunakan checker NISN SIMANSA untuk mengisi NPSN asal sekolah. Jika belum ditemukan, sistem mencoba data matrikulasi/PPDB.</p>
                 </div>
                 <div class="simansa-section-actions">
-                    <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNpsn" @if($missingNpsnKelas10->isEmpty()) disabled @endif>
+                    <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNpsn" @if($missingNpsnStudents->isEmpty()) disabled @endif>
                         <i class="fas fa-tasks mr-1"></i>Bulk Check
                     </button>
-                    <a href="{{ route('admin.siswa.index', ['npsn_status' => 'kosong', 'tingkat' => 10]) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ $listUrl(['npsn_status' => 'kosong', 'tingkat' => $tingkat ?: 10]) }}" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-list mr-1"></i>Lihat Semua
                     </a>
                 </div>
@@ -127,7 +141,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($missingNpsnKelas10 as $index => $student)
+                        @forelse($missingNpsnStudents as $index => $student)
                             <tr id="missing-npsn-row-{{ $student['id'] }}">
                                 <td>{{ $index + 1 }}</td>
                                 <td>
@@ -153,7 +167,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Tidak ada siswa kelas 10 dengan NPSN asal sekolah kosong.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Tidak ada siswa pada cakupan ini dengan NPSN asal sekolah kosong.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -309,7 +323,7 @@
                             <div class="simansa-list-title">{{ $item['name'] }}</div>
                             <div class="simansa-list-subtitle">{{ number_format($item['count']) }} siswa</div>
                         </div>
-                        <a href="{{ route('admin.siswa.index', ['address_scope' => 'province', 'address_name' => $item['name']]) }}" class="btn btn-xs btn-outline-primary ml-auto">
+                        <a href="{{ $listUrl(['address_scope' => 'province', 'address_name' => $item['name']]) }}" class="btn btn-xs btn-outline-primary ml-auto">
                             Lihat Siswa
                         </a>
                     </div>
@@ -322,34 +336,35 @@
 </div>
 
 <div class="row">
-    <div class="col-12 col-xl-7 mb-4">
+    <div class="col-12 mb-4">
         @php
-            $nsmCheckCandidates = $topSchools->filter(fn ($school) => filled($school['npsn'] ?? null));
+            $nsmCheckCandidates = $originSchools->filter(fn ($school) => filled($school['npsn'] ?? null));
         @endphp
         <section class="simansa-analytics-section">
             <div class="simansa-section-head">
                 <div>
-                    <h3>Sekolah Terbanyak</h3>
-                    <p>Daftar sekolah asal dengan jumlah siswa tertinggi.</p>
+                    <h3>Data Sekolah Asal</h3>
+                    <p>Seluruh sekolah asal pada {{ strtolower($scopeLabel) }}, diurutkan berdasarkan jumlah siswa · {{ number_format($originSchools->count()) }} sekolah.</p>
                 </div>
                 <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNsm" @if($nsmCheckCandidates->isEmpty()) disabled @endif>
                     <i class="fas fa-database mr-1"></i>Bulk Lengkapi
                 </button>
             </div>
-            <div class="table-responsive simansa-table-shell">
+            <div class="table-responsive simansa-table-shell simansa-school-table-shell">
                 <table class="table table-hover simansa-table">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Sekolah</th>
-                            <th>Bentuk</th>
+                            <th>Status / Bentuk</th>
+                            <th>Akreditasi</th>
                             <th>Wilayah</th>
                             <th class="text-right">Jumlah</th>
                             <th class="text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($topSchools as $index => $school)
+                        @forelse($originSchools as $index => $school)
                             @php
                                 $canCheckNsm = filled($school['npsn'] ?? null);
                             @endphp
@@ -361,8 +376,9 @@
                                         NPSN: {{ $school['npsn'] ?: '-' }} | NSM: {{ $school['nsm'] ?: '-' }}
                                     </div>
                                 </td>
-                                <td>{{ $school['education_form'] }}</td>
-                                <td>{{ collect([$school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
+                                <td><strong>{{ $school['school_status'] }}</strong><div class="simansa-table-subtitle">{{ $school['education_form'] }} · {{ $school['ministry'] }}</div></td>
+                                <td><span class="badge badge-light border">{{ $school['accreditation'] }}</span></td>
+                                <td>{{ collect([$school['district_name'], $school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
                                 <td class="text-right font-weight-bold">{{ number_format($school['count']) }}</td>
                                 <td class="text-right">
                                     @if($canCheckNsm)
@@ -375,14 +391,14 @@
                                             <i class="fas fa-sync-alt mr-1"></i>Lengkapi
                                         </button>
                                     @endif
-                                    <a href="{{ route('admin.siswa.index', ['school_npsn' => $school['npsn'], 'school_name' => $school['school_name'], 'education_form' => $school['education_form'], 'school_city_name' => $school['city_name'], 'school_province_name' => $school['province_name']]) }}" class="btn btn-xs btn-outline-primary">
+                                    <a href="{{ route('admin.siswa.index', array_merge($filterQuery, ['school_npsn' => $school['npsn'], 'school_name' => $school['school_name'], 'education_form' => $school['education_form'], 'school_city_name' => $school['city_name'], 'school_province_name' => $school['province_name']])) }}" class="btn btn-xs btn-outline-primary">
                                         Lihat Siswa
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Belum ada data asal sekolah yang bisa ditampilkan.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Belum ada data asal sekolah pada filter ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -390,7 +406,7 @@
             </div>
         </section>
     </div>
-    <div class="col-12 col-xl-5 mb-4">
+    <div class="col-12 mb-4">
         <section class="simansa-analytics-section">
             <div class="simansa-section-head">
                 <div>
@@ -417,7 +433,7 @@
                                 <td>{{ $city['province_name'] ?: '-' }}</td>
                                 <td class="text-right font-weight-bold">{{ number_format($city['count']) }}</td>
                                 <td class="text-right">
-                                    <a href="{{ route('admin.siswa.index', ['address_scope' => 'city', 'address_name' => $city['name'], 'province_name' => $city['province_name']]) }}" class="btn btn-xs btn-outline-primary">
+                                    <a href="{{ $listUrl(['address_scope' => 'city', 'address_name' => $city['name'], 'province_name' => $city['province_name']]) }}" class="btn btn-xs btn-outline-primary">
                                         Lihat Siswa
                                     </a>
                                 </td>
@@ -507,6 +523,9 @@
             font-size: 1.45rem;
             font-weight: 700;
         }
+
+        .simansa-stat-filter{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;padding:1rem 1.15rem;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#f8fbff,#f0fdfa);box-shadow:0 8px 22px rgba(15,23,42,.04)}
+        .simansa-stat-filter__intro{display:flex;align-items:center;gap:.75rem;min-width:280px}.simansa-stat-filter__intro>i{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#2563eb;color:#fff}.simansa-stat-filter__intro h2{font-size:1rem;font-weight:800;color:#0f172a;margin:0}.simansa-stat-filter__intro p{font-size:.78rem;color:#64748b;margin:.2rem 0 0}.simansa-stat-filter form{display:grid;grid-template-columns:minmax(155px,1fr) minmax(210px,1.4fr) auto auto;align-items:end;gap:.6rem;flex:1;max-width:760px}.simansa-stat-filter label{font-size:.7rem;text-transform:uppercase;color:#64748b;font-weight:800}.simansa-stat-filter .form-control,.simansa-stat-filter .btn{height:38px;border-radius:8px}.simansa-stat-filter .form-control{border-color:#cbd5e1}
 
         .simansa-kpi {
             display: flex;
@@ -725,6 +744,8 @@
             box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
             height: 100%;
         }
+
+        .simansa-school-table-shell{max-height:520px;overflow:auto}.simansa-school-table-shell thead th{position:sticky;top:0;z-index:2;background:#f8fafc}.simansa-school-table-shell .simansa-table{min-width:1120px}
 
         .simansa-section-head {
             display: flex;
@@ -949,6 +970,8 @@
                 min-width: 0;
             }
 
+            .simansa-stat-filter{align-items:stretch;flex-direction:column}.simansa-stat-filter form{max-width:none;width:100%}
+
             .simansa-table-shell,
             .simansa-list-panel--scroll {
                 max-height: none;
@@ -982,6 +1005,8 @@
                 grid-template-columns: 1fr;
             }
 
+            .simansa-stat-filter form{grid-template-columns:1fr 1fr}.simansa-stat-filter form .btn{width:100%}
+
             .simansa-analytics-section,
             .simansa-chart-panel,
             .simansa-list-panel {
@@ -1002,6 +1027,8 @@
                 max-height: 260px;
             }
         }
+
+        @media(max-width:575.98px){.simansa-stat-filter form{grid-template-columns:1fr}.simansa-stat-filter__intro{min-width:0}}
     </style>
 @stop
 
@@ -1025,6 +1052,7 @@
         const mapAddressPoints = @json($mapAddressPoints);
         const mapSchoolPoints = @json($mapSchoolPoints);
         const siswaIndexBaseUrl = @json(route('admin.siswa.index'));
+        const activeStatisticsFilters = @json($filterQuery);
         const csrfToken = @json(csrf_token());
 
         function formatNumber(value) {
@@ -1033,7 +1061,7 @@
 
         function navigateToStudentList(params) {
             const url = new URL(siswaIndexBaseUrl, window.location.origin);
-            Object.entries(params).forEach(([key, value]) => {
+            Object.entries(Object.assign({}, activeStatisticsFilters, params)).forEach(([key, value]) => {
                 if (value !== null && value !== undefined && value !== '') {
                     url.searchParams.set(key, value);
                 }
@@ -1520,6 +1548,23 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            const levelSelect = document.getElementById('statTingkat');
+            const classSelect = document.getElementById('statKelas');
+            if (levelSelect && classSelect) {
+                const refreshClasses = () => {
+                    const level = levelSelect.value;
+                    classSelect.disabled = !level;
+                    Array.from(classSelect.options).forEach((option, index) => {
+                        if (index === 0) return;
+                        option.hidden = option.dataset.level !== level;
+                        option.disabled = option.dataset.level !== level;
+                    });
+                    if (!level || classSelect.selectedOptions[0]?.disabled) classSelect.value = '';
+                    classSelect.options[0].text = level ? 'Semua kelas tingkat ini' : 'Pilih tingkat dahulu';
+                };
+                levelSelect.addEventListener('change', refreshClasses);
+                refreshClasses();
+            }
             const completionChart = buildDoughnutChart('completionChart', completionData, ['#10b981', '#f59e0b']);
             const loginChart = buildDoughnutChart('loginChart', loginData, ['#2563eb', '#f43f5e']);
 
