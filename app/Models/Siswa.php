@@ -147,6 +147,11 @@ class Siswa extends Model
         return $this->hasOne(VerifikasiIjazah::class);
     }
 
+    public function emisStudentSnapshot()
+    {
+        return $this->hasOne(EmisStudentSnapshot::class);
+    }
+
     // Akademik relations
     public function kelasSaatIni()
     {
@@ -261,10 +266,10 @@ class Siswa extends Model
                 return $url;
             }
         }
-        
+
         // Generate avatar animasi dari nama siswa menggunakan UI Avatars
         $name = urlencode($this->nama_lengkap ?? 'Siswa');
-        
+
         // Warna background berdasarkan jenis kelamin dengan gradasi lebih menarik
         if ($this->jenis_kelamin === 'L') {
             // Gradient warna biru untuk laki-laki
@@ -273,17 +278,17 @@ class Siswa extends Model
             // Gradient warna pink/ungu untuk perempuan
             $backgrounds = ['e74c3c', 'e91e63', '9b59b6', 'f39c12', 'c0392b'];
         }
-        
+
         // Pilih warna berdasarkan hash dari nama (konsisten untuk nama yang sama)
         $index = abs(crc32($this->nama_lengkap ?? 'Siswa')) % count($backgrounds);
         $background = $backgrounds[$index];
-        
+
         $color = 'FFFFFF';
         $size = 400;
         $fontSize = 0.45;
         $bold = true;
         $rounded = false; // Gunakan square untuk konsistensi dengan foto upload
-        
+
         return "https://ui-avatars.com/api/?name={$name}&size={$size}&background={$background}&color={$color}&font-size={$fontSize}&bold=" . ($bold ? 'true' : 'false') . "&rounded=" . ($rounded ? 'true' : 'false');
     }
 
@@ -303,7 +308,7 @@ class Siswa extends Model
         if ($this->alamat_sama_ortu && $this->ortu) {
             return $this->ortu->getAlamatLengkap();
         }
-        
+
         $alamat = $this->alamat_siswa;
         if ($this->kelurahanSiswa) {
             $alamat .= ', ' . $this->kelurahanSiswa->name;
@@ -320,7 +325,7 @@ class Siswa extends Model
         if ($this->kodepos_siswa) {
             $alamat .= ' ' . $this->kodepos_siswa;
         }
-        
+
         return $alamat;
     }
 }

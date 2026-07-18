@@ -58,6 +58,8 @@ class PermissionSeeder extends Seeder
                 'import-data' => 'Import Data',
                 'manage-settings' => 'Kelola Pengaturan Sistem',
                 'view-all-data' => 'Lihat Semua Data (Bypass Ownership)',
+                'view-emis-comparison' => 'Lihat Pembanding Data Siswa EMIS',
+                'sync-emis-comparison' => 'Sinkronkan Data Siswa dari EMIS',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {

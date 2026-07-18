@@ -361,6 +361,13 @@ return [
                     'active' => ['admin/siswa-statistik*'],
                 ],
                 [
+                    'text' => 'Cek Data EMIS',
+                    'route' => 'admin.emis-comparison.index',
+                    'icon' => 'fas fa-fw fa-exchange-alt',
+                    'can' => 'view-emis-comparison',
+                    'active' => ['admin/cek-data-emis*'],
+                ],
+                [
                     'text' => 'Sekolah Asal',
                     'route' => 'admin.sekolah-asal.index',
                     'icon' => 'fas fa-fw fa-school',

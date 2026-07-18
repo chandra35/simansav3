@@ -129,6 +129,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');
     Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
     Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
+
+    // Pembanding data siswa SIMANSA dengan snapshot EMIS Lembaga (admin only)
+    Route::middleware('permission:view-emis-comparison')->prefix('cek-data-emis')->name('emis-comparison.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'index'])->name('index');
+        Route::get('/siswa/{siswa}', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'show'])->name('show');
+        Route::get('/emis/{snapshot}', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'showEmis'])->name('show-emis');
+        Route::post('/sync', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'sync'])
+            ->middleware('permission:sync-emis-comparison')
+            ->name('sync');
+    });
     
     // Sekolah Asal Management
     Route::middleware(['permission:view-siswa'])->group(function () {

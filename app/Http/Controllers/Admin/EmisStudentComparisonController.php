@@ -1,0 +1,181 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\EmisStudentSnapshot;
+use App\Models\EmisStudentSync;
+use App\Models\Kelas;
+use App\Models\Siswa;
+use App\Services\EmisInstitutionTokenService;
+use App\Services\EmisStudentSyncService;
+use App\Services\SmartStudentComparator;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use RuntimeException;
+
+class EmisStudentComparisonController extends Controller
+{
+    public function __construct(
+        private readonly EmisInstitutionTokenService $tokenService,
+        private readonly EmisStudentSyncService $syncService,
+        private readonly SmartStudentComparator $comparator,
+    ) {}
+
+    public function index(Request $request): View
+    {
+        $status = (string) $request->get('status', 'all');
+        $search = trim((string) $request->get('search', ''));
+        $kelasId = (string) $request->get('kelas_id', '');
+        $tokenStatus = $this->publicTokenStatus();
+        $latestSync = EmisStudentSync::query()->latest('started_at')->first();
+
+        $activeStudents = Siswa::query()->where('status_siswa', 'aktif');
+        $stats = [
+            'simansa' => (clone $activeStudents)->count(),
+            'emis' => EmisStudentSnapshot::count(),
+            'exact' => EmisStudentSnapshot::whereIn('comparison_status', ['exact', 'normalized'])->count(),
+            'similar' => EmisStudentSnapshot::where('comparison_status', 'similar')->count(),
+            'different' => EmisStudentSnapshot::where('comparison_status', 'different')->count(),
+            'only_simansa' => (clone $activeStudents)->whereDoesntHave('emisStudentSnapshot')->count(),
+            'only_emis' => EmisStudentSnapshot::whereNull('siswa_id')->count(),
+        ];
+
+        $classes = Kelas::query()
+            ->where('is_active', true)
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'tingkat']);
+
+        if ($status === 'only_emis') {
+            $query = EmisStudentSnapshot::query()->whereNull('siswa_id');
+            if ($search !== '') {
+                $query->where(fn ($q) => $q
+                    ->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%"));
+            }
+
+            $items = $query->orderBy('full_name')->paginate(25)->withQueryString();
+            $listMode = 'emis';
+        } else {
+            $query = Siswa::query()
+                ->with(['kelasSaatIni:id,nama_kelas,tingkat', 'emisStudentSnapshot'])
+                ->where('status_siswa', 'aktif');
+
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_lengkap', 'like', "%{$search}%")
+                        ->orWhere('nisn', 'like', "%{$search}%")
+                        ->orWhereHas('emisStudentSnapshot', fn ($snapshot) => $snapshot
+                            ->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('nisn', 'like', "%{$search}%"));
+                });
+            }
+
+            if ($kelasId !== '') {
+                $query->where('kelas_saat_ini_id', $kelasId);
+            }
+
+            if ($status === 'only_simansa') {
+                $query->whereDoesntHave('emisStudentSnapshot');
+            } elseif ($status === 'exact') {
+                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->whereIn('comparison_status', ['exact', 'normalized']));
+            } elseif (in_array($status, ['similar', 'different'], true)) {
+                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->where('comparison_status', $status));
+            }
+
+            $items = $query->orderBy('nama_lengkap')->paginate(25)->withQueryString();
+            $listMode = 'simansa';
+        }
+
+        return view('admin.emis-comparison.index', compact(
+            'items',
+            'listMode',
+            'stats',
+            'status',
+            'search',
+            'kelasId',
+            'classes',
+            'tokenStatus',
+            'latestSync',
+        ));
+    }
+
+    public function show(Siswa $siswa): View
+    {
+        abort_unless($siswa->status_siswa === 'aktif', 404);
+
+        $siswa->load(['kelasSaatIni:id,nama_kelas,tingkat', 'emisStudentSnapshot']);
+        $snapshot = $siswa->emisStudentSnapshot;
+        $comparison = $snapshot
+            ? $this->comparator->compare($this->simansaData($siswa), $this->emisData($snapshot))
+            : null;
+
+        return view('admin.emis-comparison.show', [
+            'siswa' => $siswa,
+            'snapshot' => $snapshot,
+            'comparison' => $comparison,
+            'tokenStatus' => $this->publicTokenStatus(),
+        ]);
+    }
+
+    public function showEmis(EmisStudentSnapshot $snapshot): View
+    {
+        abort_unless($snapshot->siswa_id === null, 404);
+
+        return view('admin.emis-comparison.show', [
+            'siswa' => null,
+            'snapshot' => $snapshot,
+            'comparison' => $this->comparator->compare([], $this->emisData($snapshot)),
+            'tokenStatus' => $this->publicTokenStatus(),
+        ]);
+    }
+
+    public function sync(Request $request): RedirectResponse
+    {
+        try {
+            $result = $this->syncService->sync($request->user());
+
+            return redirect()
+                ->route('admin.emis-comparison.index')
+                ->with('success', "Sinkronisasi selesai: {$result->total_students} siswa EMIS diproses.");
+        } catch (RuntimeException $exception) {
+            return redirect()
+                ->route('admin.emis-comparison.index')
+                ->with('error', $exception->getMessage());
+        }
+    }
+
+    private function publicTokenStatus(): array
+    {
+        $status = $this->tokenService->status();
+        unset($status['token']);
+
+        return $status;
+    }
+
+    private function simansaData(Siswa $siswa): array
+    {
+        return [
+            'nama_lengkap' => $siswa->nama_lengkap,
+            'nisn' => $siswa->nisn,
+            'tempat_lahir' => $siswa->tempat_lahir,
+            'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
+            'jenis_kelamin' => $siswa->jenis_kelamin,
+            'kelas' => $siswa->kelasSaatIni?->nama_kelas,
+        ];
+    }
+
+    private function emisData(EmisStudentSnapshot $snapshot): array
+    {
+        return [
+            'nama_lengkap' => $snapshot->full_name,
+            'nisn' => $snapshot->nisn,
+            'tempat_lahir' => $snapshot->birth_place,
+            'tanggal_lahir' => $snapshot->birth_date?->format('Y-m-d'),
+            'jenis_kelamin' => $snapshot->gender,
+            'kelas' => $snapshot->study_group_name,
+        ];
+    }
+}
