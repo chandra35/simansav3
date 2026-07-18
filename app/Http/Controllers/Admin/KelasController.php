@@ -392,7 +392,7 @@ class KelasController extends Controller
             'kurikulum.jurusans',
             'jurusan',
             'waliKelas',
-            'siswaAktif'
+            'siswaAktif.sekolahAsal'
         ]);
 
         // Statistics

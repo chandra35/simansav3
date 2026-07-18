@@ -2,6 +2,8 @@
 
 @section('title', 'Detail Kelas')
 
+@section('plugins.Datatables', true)
+
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
@@ -168,26 +170,37 @@
         </div>
         <div class="card-body">
             @if($kelas->siswaAktif->count() > 0)
+                <div class="class-table-guide">
+                    <i class="fas fa-sort-amount-down-alt"></i>
+                    <span>Klik judul kolom untuk mengurutkan daftar siswa.</span>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table id="classStudentsTable" class="table table-bordered table-hover class-students-table">
                         <thead class="thead-light">
                             <tr>
-                                <th width="5%">No</th>
-                                <th width="5%">Foto</th>
-                                <th width="7%">Absen</th>
-                                <th width="10%">NISN</th>
+                                <th>No</th>
+                                <th>Foto</th>
+                                <th>Absen</th>
+                                <th>NISN</th>
                                 <th>Nama Lengkap</th>
-                                <th width="6%">JK</th>
-                                <th width="12%">Tanggal Masuk</th>
+                                <th>Asal Sekolah</th>
+                                <th>JK</th>
+                                <th>Tanggal Masuk</th>
                                 @can('remove-siswa-kelas')
-                                <th width="8%">Aksi</th>
+                                <th>Aksi</th>
                                 @endcan
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($kelas->siswaAktif->sortBy('pivot.nomor_urut_absen') as $index => $siswa)
+                                @php
+                                    $tanggalMasuk = $siswa->pivot->tanggal_masuk
+                                        ? \Carbon\Carbon::parse($siswa->pivot->tanggal_masuk)
+                                        : null;
+                                    $asalSekolah = $siswa->sekolahAsal;
+                                @endphp
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
+                                    <td class="text-center row-number">{{ $index + 1 }}</td>
                                     <td class="text-center">
                                         <img src="{{ $siswa->foto_profile_url }}" 
                                              alt="{{ $siswa->nama_lengkap }}" 
@@ -205,6 +218,16 @@
                                             <strong>{{ $siswa->nama_lengkap }}</strong>
                                         </a>
                                     </td>
+                                    <td data-order="{{ $asalSekolah?->nama ?: 'ZZZZ' }}">
+                                        <div class="origin-school">
+                                            <strong>{{ $asalSekolah?->nama ?: 'Sekolah belum terdata' }}</strong>
+                                            <small>
+                                                NPSN: {{ $siswa->npsn_asal_sekolah ?: '-' }}
+                                                <span>|</span>
+                                                NSM: {{ $asalSekolah?->nsm ?: '-' }}
+                                            </small>
+                                        </div>
+                                    </td>
                                     <td class="text-center">
                                         @if($siswa->jenis_kelamin == 'L')
                                             <span class="badge badge-primary"><i class="fas fa-male"></i> L</span>
@@ -212,7 +235,9 @@
                                             <span class="badge badge-danger"><i class="fas fa-female"></i> P</span>
                                         @endif
                                     </td>
-                                    <td>{{ \Carbon\Carbon::parse($siswa->pivot->tanggal_masuk)->format('d/m/Y') }}</td>
+                                    <td data-order="{{ $tanggalMasuk?->format('Y-m-d') }}">
+                                        {{ $tanggalMasuk?->format('d/m/Y') ?: '-' }}
+                                    </td>
                                     @can('remove-siswa-kelas')
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-danger btn-remove-siswa" 
@@ -586,6 +611,50 @@
 
 @section('css')
     <style>
+        .class-table-guide {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: .9rem;
+            padding: .65rem .8rem;
+            border: 1px solid #dbeafe;
+            border-radius: 9px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: .82rem;
+            font-weight: 600;
+        }
+        .class-students-table {
+            min-width: 1120px;
+        }
+        .class-students-table thead th {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .class-students-table tbody td {
+            vertical-align: middle;
+        }
+        .class-students-table .origin-school {
+            min-width: 240px;
+            line-height: 1.25;
+        }
+        .class-students-table .origin-school strong {
+            display: block;
+            color: #172554;
+            font-size: .82rem;
+        }
+        .class-students-table .origin-school small {
+            display: block;
+            margin-top: .3rem;
+            color: #64748b;
+            font-size: .72rem;
+            white-space: nowrap;
+        }
+        .class-students-table .origin-school small span {
+            margin: 0 .25rem;
+            color: #cbd5e1;
+        }
+
         /* Dual Listbox Styling */
         #modalTambahSiswa .list-group-item {
             cursor: pointer;
@@ -707,9 +776,41 @@
 @stop
 
 @section('js')
+    @php
+        $nonSortableStudentColumns = auth()->user()->can('remove-siswa-kelas') ? [0, 1, 8] : [0, 1];
+    @endphp
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            const classStudentsTableElement = $('#classStudentsTable');
+            if (classStudentsTableElement.length) {
+                const classStudentsTable = classStudentsTableElement.DataTable({
+                    paging: false,
+                    searching: false,
+                    info: false,
+                    autoWidth: false,
+                    order: [[2, 'asc']],
+                    columnDefs: [
+                        {
+                            targets: @json($nonSortableStudentColumns),
+                            orderable: false
+                        }
+                    ],
+                    language: {
+                        emptyTable: 'Belum ada siswa di kelas ini',
+                        zeroRecords: 'Tidak ada data yang sesuai'
+                    }
+                });
+
+                const refreshRowNumbers = function() {
+                    classStudentsTable.column(0, { order: 'applied' }).nodes().each(function(cell, index) {
+                        cell.textContent = index + 1;
+                    });
+                };
+                classStudentsTable.on('order.dt draw.dt', refreshRowNumbers);
+                refreshRowNumbers();
+            }
+
             let availableSiswa = [];
             let selectedSiswa = [];
 
