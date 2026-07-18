@@ -154,6 +154,8 @@
                         [$statusText, $statusColor] = $statusLabels[$rowStatus] ?? [ucfirst($rowStatus), 'secondary'];
                         $details = $snapshot?->comparison_details ?? [];
                         $differentFields = collect($details)->filter(fn($detail) => in_array($detail['status'] ?? '', ['different', 'similar', 'simansa_empty'], true))->keys();
+                        $simansaBirthDate = $siswa?->tanggal_lahir?->format('d/m/Y');
+                        $simansaBirth = collect([$siswa?->tempat_lahir, $simansaBirthDate])->filter()->implode(', ');
                         $emisBirthDate = $snapshot?->birth_date?->format('d/m/Y');
                         $emisBirth = collect([$snapshot?->birth_place, $emisBirthDate])->filter()->implode(', ');
                     @endphp
@@ -163,6 +165,7 @@
                             @if($siswa)
                                 <div class="simansa-table-title">{{ $siswa->nama_lengkap }}</div>
                                 <div class="simansa-table-subtitle"><i class="fas fa-id-card mr-1"></i>NISN: {{ $siswa->nisn ?: '-' }}</div>
+                                <div class="simansa-table-subtitle"><i class="fas fa-map-marker-alt mr-1"></i>{{ $simansaBirth ?: 'Tempat/tanggal lahir belum tersedia' }}</div>
                             @else
                                 <div class="simansa-empty-identity"><i class="fas fa-unlink mr-1"></i>Belum memiliki pasangan</div>
                             @endif
