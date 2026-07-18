@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // AdminLTE menggunakan Bootstrap 4; jangan render pagination Tailwind
+        // karena ikon SVG-nya tidak memiliki utility sizing pada layout ini.
+        Paginator::useBootstrapFour();
+
         if (app()->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
