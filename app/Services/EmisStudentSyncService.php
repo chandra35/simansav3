@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\EmisStudentSnapshot;
 use App\Models\EmisStudentSync;
 use App\Models\Siswa;
+use App\Models\TahunPelajaran;
 use App\Models\User;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
@@ -35,6 +36,20 @@ class EmisStudentSyncService
 
     public function syncStudent(Siswa $siswa, User $user): EmisStudentSnapshot
     {
+        $activeYear = TahunPelajaran::query()->active()->first();
+        if (! $activeYear) {
+            throw new RuntimeException('Tahun pelajaran aktif belum ditetapkan. Sinkronisasi EMIS tidak dapat disimpan tanpa periode yang jelas.');
+        }
+
+        $latestCompletedSync = EmisStudentSync::query()
+            ->where('tahun_pelajaran_id', $activeYear->id)
+            ->where('status', 'completed')
+            ->latest('finished_at')
+            ->first();
+        if (! $latestCompletedSync) {
+            throw new RuntimeException("Snapshot awal untuk {$activeYear->nama} belum tersedia. Jalankan Sinkronkan Data terlebih dahulu sebelum memperbarui satu siswa.");
+        }
+
         $nisn = trim((string) $siswa->nisn);
         if ($nisn === '') {
             throw new RuntimeException('NISN siswa kosong sehingga pencarian ke EMIS tidak dapat dilakukan.');
@@ -85,15 +100,22 @@ class EmisStudentSyncService
 
             $siswa->loadMissing('kelasSaatIni:id,nama_kelas,tingkat');
             $emisStudentId = (int) $row['id'];
-            $target = EmisStudentSnapshot::query()->where('emis_student_id', $emisStudentId)->first()
-                ?? EmisStudentSnapshot::query()->where('siswa_id', $siswa->id)->latest('synced_at')->first();
-            $syncId = $target?->sync_id
-                ?? EmisStudentSync::query()->where('status', 'completed')->latest('finished_at')->value('id');
-            $attributes = $this->buildSnapshot($row, $siswa, $syncId, now());
+            $target = EmisStudentSnapshot::query()
+                ->where('tahun_pelajaran_id', $activeYear->id)
+                ->where('emis_student_id', $emisStudentId)
+                ->first()
+                ?? EmisStudentSnapshot::query()
+                    ->where('tahun_pelajaran_id', $activeYear->id)
+                    ->where('siswa_id', $siswa->id)
+                    ->latest('synced_at')
+                    ->first();
+            $attributes = $this->buildSnapshot($row, $siswa, $latestCompletedSync->id, $activeYear->id, now());
             $attributes['comparison_details'] = json_decode($attributes['comparison_details'], true) ?: [];
+            $attributes['simansa_data'] = json_decode((string) $attributes['simansa_data'], true);
 
-            $snapshot = DB::transaction(function () use ($attributes, $target, $siswa, $nisn) {
+            $snapshot = DB::transaction(function () use ($attributes, $target, $siswa, $nisn, $activeYear) {
                 $duplicateQuery = EmisStudentSnapshot::query()
+                    ->where('tahun_pelajaran_id', $activeYear->id)
                     ->where(fn ($query) => $query->where('siswa_id', $siswa->id)->orWhere('nisn', $nisn));
                 if ($target) {
                     $duplicateQuery->where($target->getKeyName(), '<>', $target->getKey());
@@ -139,6 +161,11 @@ class EmisStudentSyncService
 
     public function start(User $user): EmisStudentSync
     {
+        $activeYear = TahunPelajaran::query()->active()->first();
+        if (! $activeYear) {
+            throw new RuntimeException('Tahun pelajaran aktif belum ditetapkan. Tetapkan periode aktif sebelum sinkronisasi EMIS.');
+        }
+
         $tokenStatus = $this->tokenService->status();
         if (! $tokenStatus['usable']) {
             throw new RuntimeException($tokenStatus['message']);
@@ -166,6 +193,7 @@ class EmisStudentSyncService
             }
 
             return EmisStudentSync::create([
+                'tahun_pelajaran_id' => $activeYear->id,
                 'institution_id' => $tokenStatus['institution_id'],
                 'status' => 'queued',
                 'progress_percent' => 5,
@@ -193,6 +221,10 @@ class EmisStudentSyncService
 
             if (! in_array($sync->status, ['queued', 'failed'], true)) {
                 throw new RuntimeException('Status proses sinkronisasi tidak dapat dijalankan.');
+            }
+
+            if (! $sync->tahun_pelajaran_id) {
+                throw new RuntimeException('Periode sinkronisasi tidak ditemukan. Buat permintaan sinkronisasi baru dari halaman Cek Data EMIS.');
             }
 
             $tokenStatus = $this->tokenService->status();
@@ -226,8 +258,10 @@ class EmisStudentSyncService
                 'stage' => 'saving',
                 'progress_message' => 'Menyimpan snapshot dan hasil pembandingan...',
             ]);
-            DB::transaction(function () use ($snapshots) {
-                EmisStudentSnapshot::query()->delete();
+            DB::transaction(function () use ($snapshots, $sync) {
+                EmisStudentSnapshot::query()
+                    ->where('tahun_pelajaran_id', $sync->tahun_pelajaran_id)
+                    ->delete();
                 foreach (array_chunk($snapshots, 250) as $chunk) {
                     DB::table('emis_student_snapshots')->insert($chunk);
                 }
@@ -346,13 +380,13 @@ class EmisStudentSyncService
             $nisn = trim((string) ($row['nisn'] ?? '')) ?: null;
             /** @var Siswa|null $siswa */
             $siswa = $nisn ? $students->get($nisn) : null;
-            $snapshots[] = $this->buildSnapshot($row, $siswa, $sync->id, $now);
+            $snapshots[] = $this->buildSnapshot($row, $siswa, $sync->id, $sync->tahun_pelajaran_id, $now);
         }
 
         return $snapshots;
     }
 
-    private function buildSnapshot(array $row, ?Siswa $siswa, ?string $syncId, mixed $now): array
+    private function buildSnapshot(array $row, ?Siswa $siswa, ?string $syncId, string $tahunPelajaranId, mixed $now): array
     {
         $nisn = trim((string) ($row['nisn'] ?? '')) ?: null;
         $activity = is_array($row['learning_activity'] ?? null) ? $row['learning_activity'] : [];
@@ -380,9 +414,19 @@ class EmisStudentSyncService
             ], $emisData)
             : ['status' => 'only_emis', 'name_similarity' => null, 'details' => [], 'different_fields' => []];
 
+        $simansaData = $siswa ? [
+            'nama_lengkap' => $siswa->nama_lengkap,
+            'nisn' => $siswa->nisn,
+            'tempat_lahir' => $siswa->tempat_lahir,
+            'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
+            'kelas' => $siswa->kelasSaatIni?->nama_kelas,
+            'tingkat' => $siswa->kelasSaatIni?->tingkat,
+        ] : null;
+
         return [
             'id' => (string) Str::uuid(),
             'sync_id' => $syncId,
+            'tahun_pelajaran_id' => $tahunPelajaranId,
             'siswa_id' => $siswa?->id,
             'emis_student_id' => (int) $row['id'],
             'learning_activity_id' => isset($row['learning_activity_id']) ? (int) $row['learning_activity_id'] : null,
@@ -401,6 +445,7 @@ class EmisStudentSyncService
             'major_name' => $major['name'] ?? null,
             'academic_year' => $academicYear['name'] ?? null,
             'academic_year_status' => $row['academic_year_status'] ?? null,
+            'simansa_data' => $simansaData ? json_encode($simansaData, JSON_UNESCAPED_UNICODE) : null,
             'comparison_status' => $comparison['status'],
             'name_similarity' => $comparison['name_similarity'],
             'comparison_details' => json_encode($comparison['details'], JSON_UNESCAPED_UNICODE),

@@ -12,6 +12,7 @@ class EmisStudentSnapshot extends Model
 
     protected $fillable = [
         'sync_id',
+        'tahun_pelajaran_id',
         'siswa_id',
         'emis_student_id',
         'learning_activity_id',
@@ -30,6 +31,7 @@ class EmisStudentSnapshot extends Model
         'major_name',
         'academic_year',
         'academic_year_status',
+        'simansa_data',
         'comparison_status',
         'name_similarity',
         'comparison_details',
@@ -41,6 +43,7 @@ class EmisStudentSnapshot extends Model
         'valid_nisn' => 'boolean',
         'name_similarity' => 'float',
         'comparison_details' => 'array',
+        'simansa_data' => 'array',
         'synced_at' => 'datetime',
     ];
 
@@ -52,5 +55,15 @@ class EmisStudentSnapshot extends Model
     public function sync(): BelongsTo
     {
         return $this->belongsTo(EmisStudentSync::class, 'sync_id');
+    }
+
+    public function tahunPelajaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunPelajaran::class);
+    }
+
+    public function scopeForYear($query, ?string $yearId)
+    {
+        return $query->where('tahun_pelajaran_id', $yearId);
     }
 }

@@ -320,6 +320,8 @@ class PermissionSyncService
                     'view-prestasi-siswa',
                     'view-ekstrakurikuler',
                     'view-catatan-konseling',
+                    'view-osis-election',
+                    'manage-osis-election',
                     'kesiswaan-lulusan-access',
                 ],
             ],

@@ -584,6 +584,13 @@ return [
                     'active' => ['admin/catatan-konseling*'],
                 ],
                 [
+                    'text' => 'Pemilihan OSIS',
+                    'route' => 'admin.osis-election.index',
+                    'icon' => 'fas fa-fw fa-vote-yea',
+                    'can' => 'view-osis-election',
+                    'active' => ['admin/pemilihan-osis*'],
+                ],
+                [
                     'text' => 'Lulusan',
                     'route' => 'admin.lulusan.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
@@ -987,6 +994,14 @@ return [
             'route' => 'siswa.dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
             'can' => 'siswa-access',
+        ],
+        [
+            'key' => 'siswa-osis-election',
+            'text' => 'Pemilihan OSIS',
+            'route' => 'siswa.osis-election.index',
+            'icon' => 'fas fa-fw fa-vote-yea',
+            'can' => 'siswa-access',
+            'active' => ['siswa/pemilihan-osis*'],
         ],
 
         [

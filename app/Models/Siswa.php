@@ -149,7 +149,17 @@ class Siswa extends Model
 
     public function emisStudentSnapshot()
     {
-        return $this->hasOne(EmisStudentSnapshot::class);
+        return $this->hasOne(EmisStudentSnapshot::class)->latestOfMany('synced_at');
+    }
+
+    public function emisStudentSnapshots()
+    {
+        return $this->hasMany(EmisStudentSnapshot::class);
+    }
+
+    public function osisVoterRecords()
+    {
+        return $this->hasMany(OsisVoter::class);
     }
 
     // Akademik relations

@@ -147,6 +147,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/sync/{sync}/status', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'syncStatus'])
             ->name('sync.status');
     });
+
+    Route::middleware('permission:view-osis-election')->prefix('pemilihan-osis')->name('osis-election.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\OsisElectionController::class, 'index'])->name('index');
+        Route::get('/buat', [App\Http\Controllers\Admin\OsisElectionController::class, 'create'])->middleware('permission:manage-osis-election')->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\OsisElectionController::class, 'store'])->middleware('permission:manage-osis-election')->name('store');
+        Route::get('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'show'])->name('show');
+        Route::get('/{election}/edit', [App\Http\Controllers\Admin\OsisElectionController::class, 'edit'])->middleware('permission:manage-osis-election')->name('edit');
+        Route::put('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'update'])->middleware('permission:manage-osis-election')->name('update');
+        Route::delete('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'destroy'])->middleware('permission:manage-osis-election')->name('destroy');
+        Route::post('/{election}/paket', [App\Http\Controllers\Admin\OsisElectionController::class, 'storePackage'])->middleware('permission:manage-osis-election')->name('packages.store');
+        Route::put('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'updatePackage'])->middleware('permission:manage-osis-election')->name('packages.update');
+        Route::delete('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'destroyPackage'])->middleware('permission:manage-osis-election')->name('packages.destroy');
+        Route::post('/{election}/publish', [App\Http\Controllers\Admin\OsisElectionController::class, 'publish'])->middleware('permission:manage-osis-election')->name('publish');
+        Route::post('/{election}/close', [App\Http\Controllers\Admin\OsisElectionController::class, 'close'])->middleware('permission:manage-osis-election')->name('close');
+        Route::post('/{election}/publish-results', [App\Http\Controllers\Admin\OsisElectionController::class, 'publishResults'])->middleware('permission:manage-osis-election')->name('publish-results');
+    });
     
     // Sekolah Asal Management
     Route::middleware(['permission:view-siswa'])->group(function () {
@@ -888,6 +904,8 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::post('/force-setup', [SiswaProfileController::class, 'updateForceSetup'])->name('force-setup.update');
     
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pemilihan-osis', [App\Http\Controllers\Siswa\OsisElectionController::class, 'index'])->name('osis-election.index');
+    Route::post('/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Siswa\OsisElectionController::class, 'vote'])->middleware('throttle:5,1')->name('osis-election.vote');
     
     // Profile Management for Siswa
     Route::get('/profile/password', [SiswaProfileController::class, 'password'])->name('profile.password');

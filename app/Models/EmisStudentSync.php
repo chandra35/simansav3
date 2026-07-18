@@ -13,6 +13,7 @@ class EmisStudentSync extends Model
 
     protected $fillable = [
         'institution_id',
+        'tahun_pelajaran_id',
         'status',
         'progress_percent',
         'stage',
@@ -42,5 +43,10 @@ class EmisStudentSync extends Model
     public function snapshots(): HasMany
     {
         return $this->hasMany(EmisStudentSnapshot::class, 'sync_id');
+    }
+
+    public function tahunPelajaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunPelajaran::class);
     }
 }

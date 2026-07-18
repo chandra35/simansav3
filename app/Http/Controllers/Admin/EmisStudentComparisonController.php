@@ -33,21 +33,35 @@ class EmisStudentComparisonController extends Controller
             $tingkat = '';
         }
         $kelasId = (string) $request->get('kelas_id', '');
+        $activeYear = TahunPelajaran::query()->where('is_active', true)->first();
+        $activeYearId = $activeYear?->id;
         $tokenStatus = $this->publicTokenStatus();
-        $latestSync = EmisStudentSync::query()->latest('started_at')->first();
+        $latestSync = EmisStudentSync::query()
+            ->where('tahun_pelajaran_id', $activeYearId)
+            ->latest('started_at')
+            ->first();
+        $hasCurrentSnapshot = EmisStudentSync::query()
+            ->where('tahun_pelajaran_id', $activeYearId)
+            ->where('status', 'completed')
+            ->exists();
+        $snapshotQuery = EmisStudentSnapshot::query()->where('tahun_pelajaran_id', $activeYearId);
 
         $activeStudents = Siswa::query()->where('status_siswa', 'aktif');
         $stats = [
             'simansa' => (clone $activeStudents)->count(),
-            'emis' => EmisStudentSnapshot::count(),
-            'exact' => EmisStudentSnapshot::whereIn('comparison_status', ['exact', 'normalized'])->count(),
-            'similar' => EmisStudentSnapshot::where('comparison_status', 'similar')->count(),
-            'different' => EmisStudentSnapshot::where('comparison_status', 'different')->count(),
-            'only_simansa' => (clone $activeStudents)->whereDoesntHave('emisStudentSnapshot')->count(),
-            'only_emis' => EmisStudentSnapshot::whereNull('siswa_id')->count(),
+            'emis' => (clone $snapshotQuery)->count(),
+            'exact' => (clone $snapshotQuery)->whereIn('comparison_status', ['exact', 'normalized'])->count(),
+            'similar' => (clone $snapshotQuery)->where('comparison_status', 'similar')->count(),
+            'different' => (clone $snapshotQuery)->where('comparison_status', 'different')->count(),
+            'only_simansa' => (clone $activeStudents)->whereDoesntHave('emisStudentSnapshots', fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId))->count(),
+            'only_emis' => (clone $snapshotQuery)->whereNull('siswa_id')->count(),
         ];
 
-        $activeYear = TahunPelajaran::query()->where('is_active', true)->first();
+        $archivePeriods = TahunPelajaran::query()
+            ->whereHas('emisStudentSyncs', fn ($q) => $q->where('status', 'completed'))
+            ->withCount(['emisStudentSnapshots as snapshot_count'])
+            ->orderByDesc('tahun_mulai')
+            ->get(['id', 'nama', 'semester_aktif', 'is_active']);
         $classes = Kelas::query()
             ->where('is_active', true)
             ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
@@ -63,7 +77,7 @@ class EmisStudentComparisonController extends Controller
         }
 
         if ($status === 'only_emis') {
-            $query = EmisStudentSnapshot::query()->whereNull('siswa_id');
+            $query = EmisStudentSnapshot::query()->where('tahun_pelajaran_id', $activeYearId)->whereNull('siswa_id');
             if ($search !== '') {
                 $query->where(fn ($q) => $q
                     ->where('full_name', 'like', "%{$search}%")
@@ -74,16 +88,18 @@ class EmisStudentComparisonController extends Controller
             $listMode = 'emis';
         } else {
             $query = Siswa::query()
-                ->with(['kelasSaatIni:id,nama_kelas,tingkat', 'emisStudentSnapshot'])
+                ->with(['kelasSaatIni:id,nama_kelas,tingkat', 'emisStudentSnapshots' => fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId)->latest('synced_at')])
                 ->where('status_siswa', 'aktif');
 
             if ($search !== '') {
-                $query->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search, $activeYearId) {
                     $q->where('nama_lengkap', 'like', "%{$search}%")
                         ->orWhere('nisn', 'like', "%{$search}%")
-                        ->orWhereHas('emisStudentSnapshot', fn ($snapshot) => $snapshot
-                            ->where('full_name', 'like', "%{$search}%")
-                            ->orWhere('nisn', 'like', "%{$search}%"));
+                        ->orWhereHas('emisStudentSnapshots', fn ($snapshot) => $snapshot
+                            ->where('tahun_pelajaran_id', $activeYearId)
+                            ->where(fn ($emis) => $emis
+                                ->where('full_name', 'like', "%{$search}%")
+                                ->orWhere('nisn', 'like', "%{$search}%")));
                 });
             }
 
@@ -97,13 +113,13 @@ class EmisStudentComparisonController extends Controller
             }
 
             if ($status === 'only_simansa') {
-                $query->whereDoesntHave('emisStudentSnapshot');
+                $query->whereDoesntHave('emisStudentSnapshots', fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId));
             } elseif ($status === 'exact') {
-                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->whereIn('comparison_status', ['exact', 'normalized']));
+                $query->whereHas('emisStudentSnapshots', fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId)->whereIn('comparison_status', ['exact', 'normalized']));
             } elseif ($status === 'attention') {
-                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->whereIn('comparison_status', ['similar', 'different']));
+                $query->whereHas('emisStudentSnapshots', fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId)->whereIn('comparison_status', ['similar', 'different']));
             } elseif (in_array($status, ['similar', 'different'], true)) {
-                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->where('comparison_status', $status));
+                $query->whereHas('emisStudentSnapshots', fn ($q) => $q->where('tahun_pelajaran_id', $activeYearId)->where('comparison_status', $status));
             }
 
             $items = $query->orderBy('nama_lengkap')->paginate(25)->withQueryString();
@@ -122,6 +138,8 @@ class EmisStudentComparisonController extends Controller
             'activeYear',
             'tokenStatus',
             'latestSync',
+            'hasCurrentSnapshot',
+            'archivePeriods',
         ));
     }
 
@@ -129,14 +147,15 @@ class EmisStudentComparisonController extends Controller
     {
         abort_unless($siswa->status_siswa === 'aktif', 404);
 
+        $activeYear = TahunPelajaran::query()->active()->firstOrFail();
         $siswa->load([
             'kelasSaatIni:id,nama_kelas,tingkat',
-            'emisStudentSnapshot',
+            'emisStudentSnapshots' => fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id)->latest('synced_at'),
             'dokumen' => fn ($query) => $query
                 ->whereIn('jenis_dokumen', ['kk', 'ijazah_smp'])
                 ->latest('created_at'),
         ]);
-        $snapshot = $siswa->emisStudentSnapshot;
+        $snapshot = $siswa->emisStudentSnapshots->first();
         $comparison = $snapshot
             ? $this->comparator->compare($this->simansaData($siswa), $this->emisData($snapshot))
             : null;
@@ -146,6 +165,7 @@ class EmisStudentComparisonController extends Controller
             'snapshot' => $snapshot,
             'comparison' => $comparison,
             'tokenStatus' => $this->publicTokenStatus(),
+            'activeYear' => $activeYear,
             'referenceDocuments' => $siswa->dokumen
                 ->groupBy('jenis_dokumen')
                 ->map(fn ($documents) => $documents->first()),
@@ -155,12 +175,15 @@ class EmisStudentComparisonController extends Controller
     public function showEmis(EmisStudentSnapshot $snapshot): View
     {
         abort_unless($snapshot->siswa_id === null, 404);
+        $activeYear = TahunPelajaran::query()->active()->firstOrFail();
+        abort_unless($snapshot->tahun_pelajaran_id === $activeYear->id, 404);
 
         return view('admin.emis-comparison.show', [
             'siswa' => null,
             'snapshot' => $snapshot,
             'comparison' => $this->comparator->compare([], $this->emisData($snapshot)),
             'tokenStatus' => $this->publicTokenStatus(),
+            'activeYear' => $activeYear,
             'referenceDocuments' => collect(),
         ]);
     }
@@ -265,6 +288,7 @@ class EmisStudentComparisonController extends Controller
             'error_message' => $sync->status === 'failed' ? $sync->error_message : null,
             'started_at' => $sync->started_at?->toIso8601String(),
             'finished_at' => $sync->finished_at?->toIso8601String(),
+            'tahun_pelajaran_id' => $sync->tahun_pelajaran_id,
         ];
     }
 

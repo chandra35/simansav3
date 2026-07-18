@@ -83,6 +83,16 @@ class TahunPelajaran extends Model
         return $this->hasMany(SiswaLulusan::class, 'tahun_pelajaran_id');
     }
 
+    public function emisStudentSyncs(): HasMany
+    {
+        return $this->hasMany(EmisStudentSync::class);
+    }
+
+    public function emisStudentSnapshots(): HasMany
+    {
+        return $this->hasMany(EmisStudentSnapshot::class);
+    }
+
     /**
      * Scope: Get tahun pelajaran aktif
      */
