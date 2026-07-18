@@ -369,6 +369,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // GTK Personal (Dashboard & Profile for GTK users)
     Route::middleware(['permission:view-gtk-dashboard'])->group(function () {
         Route::get('/gtk/dashboard', [App\Http\Controllers\Admin\GtkDashboardController::class, 'index'])->name('gtk.dashboard');
+        Route::get('/gtk/pemilihan-osis', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'index'])->name('gtk.osis-election.index');
+        Route::post('/gtk/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'vote'])
+            ->middleware('throttle:5,1')->name('gtk.osis-election.vote');
     });
     
     Route::middleware(['permission:change-password-gtk'])->group(function () {

@@ -22,13 +22,20 @@ class OsisElectionController extends Controller
         $year = TahunPelajaran::query()->where('is_active', true)->first();
         $election = $year ? OsisElection::query()->where('tahun_pelajaran_id', $year->id)
             ->whereIn('status', ['published', 'closed'])->latest('starts_at')->first() : null;
-        $voter = $election?->voters()->where('siswa_id', $siswa->id)->first();
+        $voter = $election?->voters()->where('user_id', $request->user()->id)->first();
         if ($election) $election->load(['packages.chairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
         $ownPackageIds = $election && $voter?->is_candidate ? $election->packages->filter(fn ($p) => in_array($siswa->id, $p->candidateIds(), true))->pluck('id') : collect();
         $results = $election?->results_visible
             ? $election->packages->map(fn ($p) => ['package' => $p, 'votes' => $p->ballots()->count()])->sortByDesc('votes')->values()
             : collect();
-        return view('siswa.osis-election.index', compact('siswa', 'election', 'voter', 'ownPackageIds', 'results'));
+        return view('siswa.osis-election.index', [
+            'participantName' => $siswa->nama_lengkap,
+            'election' => $election,
+            'voter' => $voter,
+            'ownPackageIds' => $ownPackageIds,
+            'results' => $results,
+            'voteRoute' => $election ? route('siswa.osis-election.vote', $election) : null,
+        ]);
     }
 
     public function vote(Request $request, OsisElection $election): RedirectResponse
@@ -37,7 +44,7 @@ class OsisElectionController extends Controller
         $siswa = $request->user()->siswa; abort_unless($siswa, 403);
         $package = OsisPackage::findOrFail($data['package_id']);
         try {
-            $receipt = $this->service->vote($election, $siswa, $package, $data['password']);
+            $receipt = $this->service->vote($election, $request->user(), $package, $data['password']);
             return back()->with('vote_success', $receipt);
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());

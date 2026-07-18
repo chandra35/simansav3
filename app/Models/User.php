@@ -108,6 +108,11 @@ class User extends Authenticatable
         return $this->hasOne(Gtk::class);
     }
 
+    public function osisVoterRecords()
+    {
+        return $this->hasMany(OsisVoter::class);
+    }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);

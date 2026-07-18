@@ -44,7 +44,13 @@ class OsisElectionController extends Controller
     public function show(OsisElection $election): View
     {
         $election->load(['tahunPelajaran', 'packages.chairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni'])
-            ->loadCount(['voters', 'voters as voted_count' => fn ($q) => $q->where('has_voted', true), 'ballots']);
+            ->loadCount([
+                'voters',
+                'voters as student_voters_count' => fn ($q) => $q->where('participant_type', 'student'),
+                'voters as gtk_voters_count' => fn ($q) => $q->where('participant_type', 'gtk'),
+                'voters as voted_count' => fn ($q) => $q->where('has_voted', true),
+                'ballots',
+            ]);
         $students = Siswa::query()->with('kelasSaatIni:id,nama_kelas,tingkat')->where('status_siswa', 'aktif')
             ->whereHas('kelasSaatIni', fn ($q) => $q->where('tahun_pelajaran_id', $election->tahun_pelajaran_id))
             ->orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile']);
@@ -110,14 +116,22 @@ class OsisElectionController extends Controller
 
     private function validatedElection(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'], 'title' => ['required', 'string', 'max:150'],
             'theme' => ['nullable', 'string', 'max:180'], 'description' => ['nullable', 'string', 'max:3000'],
-            'instructions' => ['nullable', 'string', 'max:3000'], 'eligible_levels' => ['required', 'array', 'min:1'],
-            'eligible_levels.*' => ['integer', Rule::in([10, 11, 12])],
+            'instructions' => ['nullable', 'string', 'max:3000'], 'eligible_levels' => ['nullable', 'array'],
+            'eligible_levels.*' => ['integer', Rule::in([10, 11, 12])], 'include_gtk' => ['required', 'boolean'],
             'candidate_voting_policy' => ['required', Rule::in(['except_own', 'not_allowed'])],
             'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date', 'after:starts_at'],
         ]);
+        if (empty($data['eligible_levels']) && ! $request->boolean('include_gtk')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'eligible_levels' => 'Pilih minimal satu tingkat siswa atau sertakan GTK.',
+            ]);
+        }
+        $data['eligible_levels'] = array_values($data['eligible_levels'] ?? []);
+
+        return $data;
     }
 
     private function validatedPackage(Request $request, OsisElection $election, ?OsisPackage $current = null): array

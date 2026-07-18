@@ -333,6 +333,14 @@ return [
             'icon' => 'fas fa-fw fa-user-circle',
             'can' => 'gtk-menu-only',
         ],
+        [
+            'key' => 'gtk-osis-election',
+            'text' => 'Pemilihan OSIS',
+            'route' => 'admin.gtk.osis-election.index',
+            'icon' => 'fas fa-fw fa-vote-yea',
+            'can' => 'gtk-menu-only',
+            'active' => ['admin/gtk/pemilihan-osis*'],
+        ],
         
         // MANAJEMEN DATA - Collapsible
         [

@@ -13,12 +13,13 @@ class OsisElection extends Model
 
     protected $fillable = [
         'tahun_pelajaran_id', 'title', 'slug', 'theme', 'description', 'instructions',
-        'eligible_levels', 'candidate_voting_policy', 'status', 'starts_at', 'ends_at',
+        'eligible_levels', 'include_gtk', 'candidate_voting_policy', 'status', 'starts_at', 'ends_at',
         'published_at', 'closed_at', 'result_published_at', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
         'eligible_levels' => 'array',
+        'include_gtk' => 'boolean',
         'starts_at' => 'datetime', 'ends_at' => 'datetime', 'published_at' => 'datetime',
         'closed_at' => 'datetime', 'result_published_at' => 'datetime',
     ];
