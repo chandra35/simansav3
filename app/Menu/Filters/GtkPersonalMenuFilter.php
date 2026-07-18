@@ -13,7 +13,7 @@ class GtkPersonalMenuFilter implements FilterInterface
      */
     public function transform($item)
     {
-        $gtkOnlyKeys = ['gtk-dashboard', 'gtk-profile'];
+        $gtkOnlyKeys = ['gtk-dashboard', 'gtk-profile', 'gtk-osis-election'];
 
         if (isset($item['key']) && in_array($item['key'], $gtkOnlyKeys)) {
             $user = auth()->user();

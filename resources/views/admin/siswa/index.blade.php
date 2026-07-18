@@ -96,7 +96,7 @@
                         Manajemen Data Siswa
                     </h3>
                     <div class="card-tools ml-0 simansa-action-bar">
-                        @can('view-siswa')
+                        @can('view-statistik-siswa')
                             <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chart-pie"></i> Statistik Siswa
                             </a>

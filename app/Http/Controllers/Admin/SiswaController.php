@@ -384,6 +384,12 @@ class SiswaController extends Controller
 
     private function getEmisRegisteredBadge(Siswa $siswa): string
     {
+        if (! Auth::user()?->hasRole('Super Admin')) {
+            return $siswa->emis_registered
+                ? '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Sudah</span>'
+                : '<span class="badge badge-secondary"><i class="far fa-circle"></i> Belum</span>';
+        }
+
         $toggleUrl = route('admin.siswa.toggle-emis-registered', $siswa);
 
         if ($siswa->emis_registered) {
@@ -404,6 +410,7 @@ class SiswaController extends Controller
 
     public function toggleEmisRegistered(Siswa $siswa)
     {
+        abort_unless(Auth::user()?->hasRole('Super Admin'), 403);
         $this->authorize('edit-siswa');
 
         $siswa->emis_registered = !$siswa->emis_registered;

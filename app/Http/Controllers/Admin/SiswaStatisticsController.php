@@ -20,7 +20,7 @@ class SiswaStatisticsController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('view-siswa');
+        $this->authorize('view-statistik-siswa');
 
         $activeYear = TahunPelajaran::query()->active()->first();
         $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true)

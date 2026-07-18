@@ -338,7 +338,7 @@ return [
             'text' => 'Pemilihan OSIS',
             'route' => 'admin.gtk.osis-election.index',
             'icon' => 'fas fa-fw fa-vote-yea',
-            'can' => 'gtk-menu-only',
+            'can' => 'sidebar-gtk-menu-only',
             'active' => ['admin/gtk/pemilihan-osis*'],
         ],
         
@@ -365,7 +365,7 @@ return [
                     'text' => 'Statistik Siswa',
                     'route' => 'admin.siswa.statistics',
                     'icon' => 'fas fa-fw fa-chart-pie',
-                    'can' => 'view-siswa',
+                    'can' => 'view-statistik-siswa',
                     'active' => ['admin/siswa-statistik*'],
                 ],
                 [
@@ -1008,7 +1008,7 @@ return [
             'text' => 'Pemilihan OSIS',
             'route' => 'siswa.osis-election.index',
             'icon' => 'fas fa-fw fa-vote-yea',
-            'can' => 'siswa-access',
+            'can' => 'sidebar-siswa-access',
             'active' => ['siswa/pemilihan-osis*'],
         ],
 

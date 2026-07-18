@@ -257,6 +257,16 @@ class PermissionSyncService
                     'view-statistik-siswa',
                 ],
             ],
+            'pembanding-emis' => [
+                'label' => 'Pembanding Data EMIS',
+                'icon' => 'exchange-alt',
+                'color' => 'teal',
+                'description' => 'Melihat dan menyinkronkan snapshot siswa EMIS Lembaga',
+                'permissions' => [
+                    'view-emis-comparison',
+                    'sync-emis-comparison',
+                ],
+            ],
             'mapel' => [
                 'label' => 'Mata Pelajaran',
                 'icon' => 'book',
@@ -320,9 +330,17 @@ class PermissionSyncService
                     'view-prestasi-siswa',
                     'view-ekstrakurikuler',
                     'view-catatan-konseling',
+                    'kesiswaan-lulusan-access',
+                ],
+            ],
+            'pemilihan-osis' => [
+                'label' => 'Pemilihan OSIS',
+                'icon' => 'vote-yea',
+                'color' => 'indigo',
+                'description' => 'Melihat, mengatur kandidat, jadwal, pemilih, dan hasil pemilihan OSIS',
+                'permissions' => [
                     'view-osis-election',
                     'manage-osis-election',
-                    'kesiswaan-lulusan-access',
                 ],
             ],
             'presensi-wajah' => [
