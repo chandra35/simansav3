@@ -108,7 +108,13 @@ class EmisStudentComparisonController extends Controller
     {
         abort_unless($siswa->status_siswa === 'aktif', 404);
 
-        $siswa->load(['kelasSaatIni:id,nama_kelas,tingkat', 'emisStudentSnapshot']);
+        $siswa->load([
+            'kelasSaatIni:id,nama_kelas,tingkat',
+            'emisStudentSnapshot',
+            'dokumen' => fn ($query) => $query
+                ->whereIn('jenis_dokumen', ['kk', 'ijazah_smp'])
+                ->latest('created_at'),
+        ]);
         $snapshot = $siswa->emisStudentSnapshot;
         $comparison = $snapshot
             ? $this->comparator->compare($this->simansaData($siswa), $this->emisData($snapshot))
@@ -119,6 +125,9 @@ class EmisStudentComparisonController extends Controller
             'snapshot' => $snapshot,
             'comparison' => $comparison,
             'tokenStatus' => $this->publicTokenStatus(),
+            'referenceDocuments' => $siswa->dokumen
+                ->groupBy('jenis_dokumen')
+                ->map(fn ($documents) => $documents->first()),
         ]);
     }
 
@@ -131,6 +140,7 @@ class EmisStudentComparisonController extends Controller
             'snapshot' => $snapshot,
             'comparison' => $this->comparator->compare([], $this->emisData($snapshot)),
             'tokenStatus' => $this->publicTokenStatus(),
+            'referenceDocuments' => collect(),
         ]);
     }
 
