@@ -19,7 +19,9 @@ class EmisStudentSyncService
 {
     private const API_URL = 'https://api-emis.kemenag.go.id/v1';
 
-    private const PER_PAGE = 200;
+    // Endpoint EMIS lembaga terbukti lebih stabil dalam satu request besar.
+    // Pagination loop tetap dipertahankan jika batas API berubah di kemudian hari.
+    private const PER_PAGE = 1300;
 
     public function __construct(
         private readonly EmisInstitutionTokenService $tokenService,
@@ -109,7 +111,7 @@ class EmisStudentSyncService
         $allRows = [];
 
         do {
-            $response = Http::timeout(45)
+            $response = Http::timeout(120)
                 ->withToken($tokenStatus['token'])
                 ->acceptJson()
                 ->get(self::API_URL."/students/institution/{$tokenStatus['institution_id']}/student/list", [
