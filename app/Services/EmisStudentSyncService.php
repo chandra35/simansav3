@@ -33,6 +33,110 @@ class EmisStudentSyncService
         return $this->process($this->start($user));
     }
 
+    public function syncStudent(Siswa $siswa, User $user): EmisStudentSnapshot
+    {
+        $nisn = trim((string) $siswa->nisn);
+        if ($nisn === '') {
+            throw new RuntimeException('NISN siswa kosong sehingga pencarian ke EMIS tidak dapat dilakukan.');
+        }
+
+        $tokenStatus = $this->tokenService->status();
+        if (! $tokenStatus['usable']) {
+            throw new RuntimeException($tokenStatus['message']);
+        }
+
+        $lock = Cache::lock('emis-student-comparison-sync', 90);
+        if (! $lock->get()) {
+            throw new RuntimeException('Sinkronisasi EMIS lain masih berjalan. Silakan tunggu sampai selesai.');
+        }
+
+        try {
+            $response = Http::timeout(60)
+                ->withToken($tokenStatus['token'])
+                ->acceptJson()
+                ->get(self::API_URL."/students/institution/{$tokenStatus['institution_id']}/student/list", [
+                    'q' => $nisn,
+                    'student_status_id' => 1,
+                    'page' => 1,
+                    'per_page' => 10,
+                ]);
+
+            if ($response->status() === 401) {
+                throw new RuntimeException('Token EMIS Lembaga ditolak atau sudah kedaluwarsa. Perbarui token sebelum mencoba lagi.');
+            }
+
+            if (! $response->successful()) {
+                throw new RuntimeException("API EMIS gagal merespons (HTTP {$response->status()}). Snapshot lama tetap aman.");
+            }
+
+            $body = $response->json();
+            if (! is_array($body) || ($body['success'] ?? false) !== true || ! is_array($body['results'] ?? null)) {
+                throw new RuntimeException('Struktur respons API EMIS tidak dikenali. Snapshot lama tetap aman.');
+            }
+
+            $row = collect($body['results'])->first(
+                fn ($candidate) => is_array($candidate)
+                    && trim((string) ($candidate['nisn'] ?? '')) === $nisn
+            );
+
+            if (! $row || empty($row['id'])) {
+                throw new RuntimeException("Siswa dengan NISN {$nisn} tidak ditemukan sebagai siswa aktif di EMIS. Snapshot lama tidak diubah.");
+            }
+
+            $siswa->loadMissing('kelasSaatIni:id,nama_kelas,tingkat');
+            $emisStudentId = (int) $row['id'];
+            $target = EmisStudentSnapshot::query()->where('emis_student_id', $emisStudentId)->first()
+                ?? EmisStudentSnapshot::query()->where('siswa_id', $siswa->id)->latest('synced_at')->first();
+            $syncId = $target?->sync_id
+                ?? EmisStudentSync::query()->where('status', 'completed')->latest('finished_at')->value('id');
+            $attributes = $this->buildSnapshot($row, $siswa, $syncId, now());
+            $attributes['comparison_details'] = json_decode($attributes['comparison_details'], true) ?: [];
+
+            $snapshot = DB::transaction(function () use ($attributes, $target, $siswa, $nisn) {
+                $duplicateQuery = EmisStudentSnapshot::query()
+                    ->where(fn ($query) => $query->where('siswa_id', $siswa->id)->orWhere('nisn', $nisn));
+                if ($target) {
+                    $duplicateQuery->where($target->getKeyName(), '<>', $target->getKey());
+                }
+                $duplicateQuery->delete();
+
+                if ($target) {
+                    $target->fill(collect($attributes)->except(['id', 'created_at', 'updated_at'])->all())->save();
+
+                    return $target->fresh();
+                }
+
+                return EmisStudentSnapshot::create(
+                    collect($attributes)->except(['created_at', 'updated_at'])->all()
+                );
+            });
+
+            Log::info('Sinkronisasi pembanding EMIS per siswa selesai', [
+                'siswa_id' => $siswa->id,
+                'snapshot_id' => $snapshot->id,
+                'synced_by' => $user->id,
+                'comparison_status' => $snapshot->comparison_status,
+            ]);
+
+            return $snapshot;
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException('Koneksi ke API EMIS timeout. Snapshot lama tetap aman; silakan coba lagi.', previous: $exception);
+        } catch (RuntimeException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            Log::warning('Sinkronisasi pembanding EMIS per siswa gagal', [
+                'siswa_id' => $siswa->id,
+                'synced_by' => $user->id,
+                'error_type' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw new RuntimeException('Sinkronisasi siswa gagal diproses. Snapshot lama tetap aman; silakan coba lagi.', previous: $exception);
+        } finally {
+            $lock->release();
+        }
+    }
+
     public function start(User $user): EmisStudentSync
     {
         $tokenStatus = $this->tokenService->status();
@@ -242,64 +346,69 @@ class EmisStudentSyncService
             $nisn = trim((string) ($row['nisn'] ?? '')) ?: null;
             /** @var Siswa|null $siswa */
             $siswa = $nisn ? $students->get($nisn) : null;
-            $activity = is_array($row['learning_activity'] ?? null) ? $row['learning_activity'] : [];
-            $studyGroup = is_array($activity['study_group'] ?? null) ? $activity['study_group'] : [];
-            $academicYear = is_array($activity['academic_year'] ?? null) ? $activity['academic_year'] : [];
-            $major = is_array($activity['m_major'] ?? null) ? $activity['m_major'] : [];
-            $status = is_array($activity['student_status'] ?? null) ? $activity['student_status'] : [];
-            $statusDescription = is_array($activity['status_description'] ?? null) ? $activity['status_description'] : [];
-
-            $emisData = [
-                'nama_lengkap' => $row['full_name'] ?? null,
-                'nisn' => $nisn,
-                'tempat_lahir' => $row['birth_place'] ?? null,
-                'tanggal_lahir' => $row['birth_date'] ?? null,
-                'jenis_kelamin' => data_get($row, 'm_gender.name') ?? $row['gender'] ?? null,
-                'kelas' => $row['study_group_name'] ?? $studyGroup['name'] ?? null,
-            ];
-
-            $comparison = $siswa
-                ? $this->comparator->compare([
-                    'nama_lengkap' => $siswa->nama_lengkap,
-                    'nisn' => $siswa->nisn,
-                    'tempat_lahir' => $siswa->tempat_lahir,
-                    'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
-                    'jenis_kelamin' => $siswa->jenis_kelamin,
-                    'kelas' => $siswa->kelasSaatIni?->nama_kelas,
-                ], $emisData)
-                : ['status' => 'only_emis', 'name_similarity' => null, 'details' => [], 'different_fields' => []];
-
-            $snapshots[] = [
-                'id' => (string) Str::uuid(),
-                'sync_id' => $sync->id,
-                'siswa_id' => $siswa?->id,
-                'emis_student_id' => (int) $row['id'],
-                'learning_activity_id' => isset($row['learning_activity_id']) ? (int) $row['learning_activity_id'] : null,
-                'nisn' => $nisn,
-                'full_name' => $row['full_name'] ?? null,
-                'birth_place' => $row['birth_place'] ?? null,
-                'birth_date' => $this->normalizeDate($row['birth_date'] ?? null),
-                'gender' => $emisData['jenis_kelamin'],
-                'student_status_id' => isset($row['student_status_id']) ? (int) $row['student_status_id'] : null,
-                'student_status' => $status['name'] ?? null,
-                'status_description' => $statusDescription['name'] ?? null,
-                'dukcapil_verification_status_id' => isset($row['dukcapil_verification_status_id']) ? (int) $row['dukcapil_verification_status_id'] : null,
-                'valid_nisn' => isset($row['valid_nisn']) ? (bool) $row['valid_nisn'] : null,
-                'level_name' => $row['level_name'] ?? data_get($activity, 'm_level.name'),
-                'study_group_name' => $emisData['kelas'],
-                'major_name' => $major['name'] ?? null,
-                'academic_year' => $academicYear['name'] ?? null,
-                'academic_year_status' => $row['academic_year_status'] ?? null,
-                'comparison_status' => $comparison['status'],
-                'name_similarity' => $comparison['name_similarity'],
-                'comparison_details' => json_encode($comparison['details'], JSON_UNESCAPED_UNICODE),
-                'synced_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
+            $snapshots[] = $this->buildSnapshot($row, $siswa, $sync->id, $now);
         }
 
         return $snapshots;
+    }
+
+    private function buildSnapshot(array $row, ?Siswa $siswa, ?string $syncId, mixed $now): array
+    {
+        $nisn = trim((string) ($row['nisn'] ?? '')) ?: null;
+        $activity = is_array($row['learning_activity'] ?? null) ? $row['learning_activity'] : [];
+        $studyGroup = is_array($activity['study_group'] ?? null) ? $activity['study_group'] : [];
+        $academicYear = is_array($activity['academic_year'] ?? null) ? $activity['academic_year'] : [];
+        $major = is_array($activity['m_major'] ?? null) ? $activity['m_major'] : [];
+        $status = is_array($activity['student_status'] ?? null) ? $activity['student_status'] : [];
+        $statusDescription = is_array($activity['status_description'] ?? null) ? $activity['status_description'] : [];
+
+        $emisData = [
+            'nama_lengkap' => $row['full_name'] ?? null,
+            'nisn' => $nisn,
+            'tempat_lahir' => $row['birth_place'] ?? null,
+            'tanggal_lahir' => $row['birth_date'] ?? null,
+            'jenis_kelamin' => data_get($row, 'm_gender.name') ?? $row['gender'] ?? null,
+            'kelas' => $row['study_group_name'] ?? $studyGroup['name'] ?? null,
+        ];
+        $comparison = $siswa
+            ? $this->comparator->compare([
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'nisn' => $siswa->nisn,
+                'tempat_lahir' => $siswa->tempat_lahir,
+                'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
+                'jenis_kelamin' => $siswa->jenis_kelamin,
+                'kelas' => $siswa->kelasSaatIni?->nama_kelas,
+            ], $emisData)
+            : ['status' => 'only_emis', 'name_similarity' => null, 'details' => [], 'different_fields' => []];
+
+        return [
+            'id' => (string) Str::uuid(),
+            'sync_id' => $syncId,
+            'siswa_id' => $siswa?->id,
+            'emis_student_id' => (int) $row['id'],
+            'learning_activity_id' => isset($row['learning_activity_id']) ? (int) $row['learning_activity_id'] : null,
+            'nisn' => $nisn,
+            'full_name' => $row['full_name'] ?? null,
+            'birth_place' => $row['birth_place'] ?? null,
+            'birth_date' => $this->normalizeDate($row['birth_date'] ?? null),
+            'gender' => $emisData['jenis_kelamin'],
+            'student_status_id' => isset($row['student_status_id']) ? (int) $row['student_status_id'] : null,
+            'student_status' => $status['name'] ?? null,
+            'status_description' => $statusDescription['name'] ?? null,
+            'dukcapil_verification_status_id' => isset($row['dukcapil_verification_status_id']) ? (int) $row['dukcapil_verification_status_id'] : null,
+            'valid_nisn' => isset($row['valid_nisn']) ? (bool) $row['valid_nisn'] : null,
+            'level_name' => $row['level_name'] ?? data_get($activity, 'm_level.name'),
+            'study_group_name' => $emisData['kelas'],
+            'major_name' => $major['name'] ?? null,
+            'academic_year' => $academicYear['name'] ?? null,
+            'academic_year_status' => $row['academic_year_status'] ?? null,
+            'comparison_status' => $comparison['status'],
+            'name_similarity' => $comparison['name_similarity'],
+            'comparison_details' => json_encode($comparison['details'], JSON_UNESCAPED_UNICODE),
+            'synced_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
     }
 
     private function normalizeDate(mixed $value): ?string

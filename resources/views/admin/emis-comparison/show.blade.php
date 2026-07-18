@@ -33,6 +33,17 @@
         </div>
         <div class="simansa-detail-hero__actions">
             <div class="simansa-detail-chip"><span>Field perlu dicek</span><strong>{{ $differentCount }}</strong></div>
+            @if($siswa)
+                @can('sync-emis-comparison')
+                    <button type="button" id="btnSyncCurrentStudent" class="btn btn-light"
+                            data-url="{{ route('admin.emis-comparison.sync-student', $siswa) }}"
+                            data-name="{{ $siswa->nama_lengkap }}"
+                            @disabled(!$tokenStatus['usable'])
+                            title="{{ $tokenStatus['usable'] ? 'Ambil ulang data terbaru siswa ini dari EMIS' : 'Token EMIS Lembaga tidak aktif' }}">
+                        <i class="fas fa-sync-alt mr-1"></i> Sync Siswa Ini
+                    </button>
+                @endcan
+            @endif
             <a href="{{ route('admin.emis-comparison.index') }}" class="btn btn-light"><i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar</a>
         </div>
     </div>
@@ -244,6 +255,7 @@
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
     const modal = $('#referenceDocumentModal');
@@ -279,6 +291,48 @@ $(function () {
         image.attr('src', '').hide();
         frame.attr('src', 'about:blank').hide();
         loading.html('<i class="fas fa-spinner fa-spin"></i><span>Memuat dokumen...</span>').css('display', 'flex');
+    });
+
+    $('#btnSyncCurrentStudent').on('click', function () {
+        const button = $(this);
+        const name = button.data('name');
+        let stageTimer = null;
+
+        Swal.fire({
+            title:'Sinkronkan siswa ini?',
+            text:'Ambil ulang data EMIS terbaru untuk ' + name + ' tanpa menjalankan sinkronisasi seluruh siswa.',
+            icon:'question', showCancelButton:true,
+            confirmButtonText:'Ya, sync sekarang', cancelButtonText:'Batal',
+            confirmButtonColor:'#16a34a', reverseButtons:true
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            button.prop('disabled', true).find('i').addClass('fa-spin');
+            Swal.fire({
+                title:'Memperbarui snapshot siswa',
+                html:'<div id="singleDetailSyncName" class="font-weight-bold text-dark mb-2"></div><div id="singleDetailSyncStage" class="text-muted mb-3">Menghubungkan ke API EMIS Lembaga...</div><div class="progress" style="height:10px;border-radius:999px"><div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width:100%"></div></div><small class="d-block text-muted mt-3">Snapshot sebelumnya tidak diubah jika proses gagal.</small>',
+                showConfirmButton:false, allowOutsideClick:false, allowEscapeKey:false,
+                didOpen:function () {
+                    $('#singleDetailSyncName').text(name);
+                    stageTimer = setTimeout(function () {
+                        $('#singleDetailSyncStage').text('Memvalidasi NISN dan menghitung ulang hasil perbandingan...');
+                    }, 1800);
+                }
+            });
+
+            $.ajax({
+                url:button.data('url'), method:'POST', dataType:'json',
+                headers:{'X-CSRF-TOKEN':@json(csrf_token())}
+            }).done(function (response) {
+                clearTimeout(stageTimer);
+                Swal.fire({icon:'success', title:'Data terbaru diterima', text:response.message, confirmButtonText:'Tampilkan hasil', confirmButtonColor:'#2563eb'})
+                    .then(function () { window.location.reload(); });
+            }).fail(function (xhr) {
+                clearTimeout(stageTimer);
+                button.prop('disabled', false).find('i').removeClass('fa-spin');
+                Swal.fire({icon:'error', title:'Sync siswa gagal', text:xhr.responseJSON?.message || 'Data EMIS siswa belum dapat diperbarui.', confirmButtonText:'Tutup'});
+            });
+        });
     });
 });
 </script>

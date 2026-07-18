@@ -144,6 +144,35 @@ class EmisStudentComparisonController extends Controller
         ]);
     }
 
+    public function syncStudent(Request $request, Siswa $siswa): JsonResponse
+    {
+        abort_unless($siswa->status_siswa === 'aktif', 404);
+
+        try {
+            $snapshot = $this->syncService->syncStudent($siswa, $request->user());
+            Siswa::logCustomActivity(
+                'emis_student_sync',
+                "Menyinkronkan ulang snapshot EMIS siswa: {$siswa->nama_lengkap}",
+                $siswa,
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data EMIS siswa berhasil diperbarui dan dibandingkan ulang.',
+                'snapshot' => [
+                    'status' => $snapshot->comparison_status,
+                    'synced_at' => $snapshot->synced_at?->toIso8601String(),
+                ],
+                'redirect_url' => route('admin.emis-comparison.show', $siswa),
+            ]);
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
     public function sync(Request $request): JsonResponse
     {
         try {
