@@ -2,238 +2,309 @@
 
 @section('title', 'Cek Data EMIS')
 
+@php
+    $statusLabels = [
+        'exact' => ['Sama', 'success'],
+        'normalized' => ['Setara', 'info'],
+        'similar' => ['Mirip', 'warning'],
+        'different' => ['Berbeda', 'danger'],
+        'only_simansa' => ['Hanya SIMANSA', 'secondary'],
+        'only_emis' => ['Hanya EMIS', 'dark'],
+    ];
+    $detailLabels = \App\Services\SmartStudentComparator::LABELS;
+    $syncFinishedAt = $latestSync?->finished_at ?? $latestSync?->started_at;
+@endphp
+
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <h1 class="mb-1"><i class="fas fa-exchange-alt mr-2 text-primary"></i>Cek Data EMIS</h1>
-            <p class="text-muted mb-0">Rekonsiliasi data siswa aktif SIMANSA dengan snapshot EMIS Lembaga.</p>
+    <div class="simansa-emis-hero">
+        <div class="simansa-emis-hero__main">
+            <div class="simansa-emis-hero__eyebrow"><i class="fas fa-exchange-alt"></i> Manajemen Data</div>
+            <h1 class="simansa-emis-hero__title">Cek Data EMIS</h1>
+            <p class="simansa-emis-hero__subtitle">Bandingkan siswa aktif SIMANSA dengan snapshot resmi EMIS Lembaga secara cepat dan terukur.</p>
         </div>
-        @can('sync-emis-comparison')
-            <form method="POST" action="{{ route('admin.emis-comparison.sync') }}" id="syncEmisForm">
-                @csrf
-                <button type="submit" class="btn btn-primary" {{ $tokenStatus['usable'] ? '' : 'disabled' }}>
-                    <i class="fas fa-sync-alt mr-1"></i> Sinkronkan dari EMIS
+        <div class="simansa-emis-hero__meta">
+            <div class="simansa-emis-hero-chip">
+                <span>Snapshot EMIS</span>
+                <strong>{{ number_format($stats['emis']) }}</strong>
+            </div>
+            <div class="simansa-emis-hero-chip">
+                <span>Perlu Diperiksa</span>
+                <strong>{{ number_format($stats['similar'] + $stats['different']) }}</strong>
+            </div>
+            @can('sync-emis-comparison')
+                <button type="button" id="btnSyncEmis" class="btn simansa-emis-sync-btn" @disabled(!$tokenStatus['usable'])>
+                    <i class="fas fa-sync-alt mr-1"></i> Sinkronkan Data
                 </button>
-            </form>
-        @endcan
+            @endcan
+        </div>
     </div>
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
+    <section class="simansa-token-panel simansa-token-panel--{{ $tokenStatus['usable'] ? ($tokenStatus['state'] === 'expiring' ? 'warning' : 'success') : 'danger' }} mb-4">
+        <div class="simansa-token-icon"><i class="fas {{ $tokenStatus['usable'] ? 'fa-key' : 'fa-lock' }}"></i></div>
+        <div class="simansa-token-copy">
+            <h2>{{ $tokenStatus['usable'] ? 'Token EMIS Lembaga siap digunakan' : 'Token EMIS Lembaga perlu diperbarui' }}</h2>
+            <p>
+                {{ $tokenStatus['message'] }}
+                @if($tokenStatus['expires_at']) Kedaluwarsa {{ $tokenStatus['expires_at']->format('d/m/Y H:i') }} WIB. @endif
+                @if(!$tokenStatus['usable']) Snapshot terakhir tetap aman dan halaman ini tidak mengirim request sia-sia ke EMIS. @endif
+            </p>
         </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <i class="fas fa-exclamation-circle mr-1"></i>{{ session('error') }}
-        </div>
-    @endif
-
-    @php
-        $tokenAlert = match($tokenStatus['state']) {
-            'active' => 'success',
-            'expiring' => 'warning',
-            default => 'danger',
-        };
-        $statusLabels = [
-            'exact' => ['Sama', 'success'],
-            'normalized' => ['Setara', 'info'],
-            'similar' => ['Mirip', 'warning'],
-            'different' => ['Berbeda', 'danger'],
-            'only_simansa' => ['Hanya SIMANSA', 'secondary'],
-            'only_emis' => ['Hanya EMIS', 'dark'],
-        ];
-        $detailLabels = \App\Services\SmartStudentComparator::LABELS;
-    @endphp
-
-    <div class="alert alert-{{ $tokenAlert }} d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <i class="fas {{ $tokenStatus['usable'] ? 'fa-key' : 'fa-lock' }} mr-2"></i>
-            <strong>{{ $tokenStatus['message'] }}</strong>
-            @if($tokenStatus['expires_at'])
-                <span class="ml-1">Kedaluwarsa {{ $tokenStatus['expires_at']->format('d/m/Y H:i') }} WIB.</span>
-            @endif
-            @if(!$tokenStatus['usable'] && $latestSync?->finished_at)
-                <span class="d-block small mt-1">Snapshot terakhir tetap dapat digunakan; tidak ada request yang dikirim ke EMIS.</span>
+        <div class="simansa-token-meta">
+            @if($latestSync)
+                <span>Sinkronisasi terakhir</span>
+                <strong>{{ optional($syncFinishedAt)->format('d/m/Y H:i:s') }} WIB</strong>
+                <small>{{ ucfirst($latestSync->status) }}@if($latestSync->status === 'completed') · {{ number_format($latestSync->total_students) }} siswa @endif</small>
+            @else
+                <span>Status snapshot</span><strong>Belum tersedia</strong><small>Lakukan sinkronisasi pertama.</small>
             @endif
         </div>
-        @can('manage-settings')
-            <a href="{{ route('admin.pengaturan.update-api-token.index') }}#emis-institusi" class="btn btn-sm btn-light mt-2 mt-md-0">
-                <i class="fas fa-edit mr-1"></i> Perbarui Token Lembaga
-            </a>
-        @endcan
-    </div>
+        @if(!$tokenStatus['usable'] || $tokenStatus['state'] === 'expiring')
+            @can('manage-settings')
+                <a href="{{ route('admin.pengaturan.update-api-token.index') }}#emis-institusi" class="btn btn-outline-primary btn-sm simansa-token-action">
+                    <i class="fas fa-key mr-1"></i> Buka Pengaturan Token
+                </a>
+            @endcan
+        @endif
+    </section>
 
-    @if($latestSync)
-        <div class="callout callout-{{ $latestSync->status === 'completed' ? 'info' : ($latestSync->status === 'failed' ? 'danger' : 'warning') }} py-2">
-            <div class="d-flex justify-content-between flex-wrap">
-                <span>
-                    <strong>Sinkronisasi terakhir:</strong>
-                    {{ optional($latestSync->finished_at ?? $latestSync->started_at)->format('d/m/Y H:i:s') }} WIB
-                    &middot; {{ ucfirst($latestSync->status) }}
-                    @if($latestSync->status === 'completed')
-                        &middot; {{ number_format($latestSync->total_students) }} siswa EMIS
-                    @endif
-                </span>
-                @if($latestSync->total_pages)
-                    <span>{{ $latestSync->processed_pages }}/{{ $latestSync->total_pages }} halaman API</span>
-                @endif
-            </div>
-        </div>
-    @else
-        <div class="callout callout-info">
-            Belum ada snapshot EMIS. Tekan <strong>Sinkronkan dari EMIS</strong> untuk membuat pembandingan pertama.
-        </div>
-    @endif
-
-    <div class="row">
+    <div class="row simansa-emis-kpi-row">
         @foreach([
-            ['key' => 'simansa', 'label' => 'Siswa Aktif SIMANSA', 'icon' => 'fa-users', 'color' => 'primary', 'filter' => 'all'],
-            ['key' => 'emis', 'label' => 'Siswa Aktif EMIS', 'icon' => 'fa-cloud', 'color' => 'info', 'filter' => 'all'],
-            ['key' => 'exact', 'label' => 'Sama / Setara', 'icon' => 'fa-check-circle', 'color' => 'success', 'filter' => 'exact'],
-            ['key' => 'similar', 'label' => 'Nama Mirip', 'icon' => 'fa-adjust', 'color' => 'warning', 'filter' => 'similar'],
-            ['key' => 'different', 'label' => 'Berbeda', 'icon' => 'fa-exclamation-triangle', 'color' => 'danger', 'filter' => 'different'],
-            ['key' => 'only_simansa', 'label' => 'Hanya SIMANSA', 'icon' => 'fa-arrow-left', 'color' => 'secondary', 'filter' => 'only_simansa'],
-            ['key' => 'only_emis', 'label' => 'Hanya EMIS', 'icon' => 'fa-arrow-right', 'color' => 'dark', 'filter' => 'only_emis'],
+            ['key' => 'simansa', 'label' => 'Siswa Aktif SIMANSA', 'desc' => 'Data aktif lokal', 'icon' => 'fa-users', 'tone' => 'blue', 'filter' => 'all'],
+            ['key' => 'emis', 'label' => 'Siswa Aktif EMIS', 'desc' => 'Snapshot terbaru', 'icon' => 'fa-cloud', 'tone' => 'purple', 'filter' => 'all'],
+            ['key' => 'exact', 'label' => 'Sama / Setara', 'desc' => 'Data sesuai', 'icon' => 'fa-check-circle', 'tone' => 'green', 'filter' => 'exact'],
+            ['key' => 'similar', 'label' => 'Nama Mirip', 'desc' => 'Perlu tinjauan', 'icon' => 'fa-adjust', 'tone' => 'amber', 'filter' => 'similar'],
+            ['key' => 'different', 'label' => 'Berbeda', 'desc' => 'Ada selisih field', 'icon' => 'fa-exclamation-triangle', 'tone' => 'rose', 'filter' => 'different'],
+            ['key' => 'only_simansa', 'label' => 'Hanya SIMANSA', 'desc' => 'Tidak ada di EMIS', 'icon' => 'fa-arrow-left', 'tone' => 'slate', 'filter' => 'only_simansa'],
+            ['key' => 'only_emis', 'label' => 'Hanya EMIS', 'desc' => 'Tidak ada di SIMANSA', 'icon' => 'fa-arrow-right', 'tone' => 'dark', 'filter' => 'only_emis'],
         ] as $card)
-            <div class="col-6 col-md-4 col-xl">
-                <a href="{{ route('admin.emis-comparison.index', ['status' => $card['filter']]) }}" class="text-decoration-none">
-                    <div class="small-box bg-{{ $card['color'] }}">
-                        <div class="inner">
-                            <h3>{{ number_format($stats[$card['key']]) }}</h3>
-                            <p>{{ $card['label'] }}</p>
+            <div class="col-6 col-md-4 emis-kpi-col mb-4">
+                <a href="{{ route('admin.emis-comparison.index', ['status' => $card['filter']]) }}" class="simansa-kpi-link">
+                    <div class="simansa-emis-kpi simansa-emis-kpi--{{ $card['tone'] }} {{ $status === $card['filter'] && !($card['filter'] === 'all' && $status !== 'all') ? 'is-active' : '' }}">
+                        <div class="simansa-emis-kpi__icon"><i class="fas {{ $card['icon'] }}"></i></div>
+                        <div>
+                            <div class="simansa-emis-kpi__label">{{ $card['label'] }}</div>
+                            <div class="simansa-emis-kpi__value">{{ number_format($stats[$card['key']]) }}</div>
+                            <div class="simansa-emis-kpi__desc">{{ $card['desc'] }}</div>
                         </div>
-                        <div class="icon"><i class="fas {{ $card['icon'] }}"></i></div>
                     </div>
                 </a>
             </div>
         @endforeach
     </div>
 
-    <div class="card card-outline card-primary">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-list mr-1"></i>Daftar Pembandingan</h3>
-        </div>
-        <div class="card-body border-bottom">
-            <form method="GET" action="{{ route('admin.emis-comparison.index') }}" class="form-row align-items-end">
-                <div class="col-md-4 mb-2">
-                    <label for="search">Nama atau NISN</label>
-                    <input id="search" type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Cari data siswa...">
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label for="status">Status Pembandingan</label>
-                    <select id="status" name="status" class="form-control">
-                        <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Semua siswa SIMANSA</option>
-                        <option value="exact" {{ $status === 'exact' ? 'selected' : '' }}>Sama / Setara</option>
-                        <option value="similar" {{ $status === 'similar' ? 'selected' : '' }}>Nama Mirip</option>
-                        <option value="different" {{ $status === 'different' ? 'selected' : '' }}>Berbeda</option>
-                        <option value="only_simansa" {{ $status === 'only_simansa' ? 'selected' : '' }}>Hanya di SIMANSA</option>
-                        <option value="only_emis" {{ $status === 'only_emis' ? 'selected' : '' }}>Hanya di EMIS</option>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-2">
-                    <label for="kelas_id">Kelas SIMANSA</label>
-                    <select id="kelas_id" name="kelas_id" class="form-control" {{ $listMode === 'emis' ? 'disabled' : '' }}>
-                        <option value="">Semua kelas</option>
-                        @foreach($classes as $class)
-                            <option value="{{ $class->id }}" {{ $kelasId === $class->id ? 'selected' : '' }}>{{ $class->nama_kelas }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 mb-2">
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-filter mr-1"></i>Filter</button>
-                </div>
-            </form>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
-                    <thead>
-                    <tr>
-                        <th style="width:60px">No</th>
-                        <th>Siswa</th>
-                        <th>Kelas SIMANSA</th>
-                        <th>Rombel EMIS</th>
-                        <th>Status</th>
-                        <th>Field Perlu Dicek</th>
-                        <th style="width:120px">Aksi</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @forelse($items as $index => $item)
-                        @php
-                            $siswa = $listMode === 'simansa' ? $item : null;
-                            $snapshot = $listMode === 'simansa' ? $item->emisStudentSnapshot : $item;
-                            $rowStatus = $snapshot?->comparison_status ?? 'only_simansa';
-                            [$statusText, $statusColor] = $statusLabels[$rowStatus] ?? [ucfirst($rowStatus), 'secondary'];
-                            $details = $snapshot?->comparison_details ?? [];
-                            $differentFields = collect($details)->filter(fn($detail) => in_array($detail['status'] ?? '', ['different', 'similar', 'simansa_empty'], true))->keys();
-                        @endphp
-                        <tr>
-                            <td>{{ $items->firstItem() + $index }}</td>
-                            <td>
-                                <strong>{{ $siswa?->nama_lengkap ?? $snapshot?->full_name ?? '-' }}</strong>
-                                <small class="d-block text-muted">NISN: {{ $siswa?->nisn ?? $snapshot?->nisn ?? '-' }}</small>
-                            </td>
-                            <td>{{ $siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
-                            <td>
-                                {{ $snapshot?->study_group_name ?? '-' }}
-                                @if($snapshot?->level_name)<small class="d-block text-muted">{{ $snapshot->level_name }}</small>@endif
-                            </td>
-                            <td>
-                                <span class="badge badge-{{ $statusColor }}">{{ $statusText }}</span>
-                                @if($rowStatus === 'similar' && $snapshot?->name_similarity)
-                                    <small class="d-block text-muted mt-1">{{ number_format($snapshot->name_similarity, 1) }}% mirip</small>
-                                @endif
-                            </td>
-                            <td>
-                                @forelse($differentFields as $field)
-                                    <span class="badge badge-light border mr-1 mb-1">{{ $detailLabels[$field] ?? $field }}</span>
-                                @empty
-                                    <span class="text-muted">—</span>
-                                @endforelse
-                            </td>
-                            <td>
-                                <a href="{{ $siswa ? route('admin.emis-comparison.show', $siswa) : route('admin.emis-comparison.show-emis', $snapshot) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-columns mr-1"></i>Bandingkan
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="7" class="text-center text-muted py-5">Tidak ada data untuk filter ini.</td></tr>
-                    @endforelse
-                    </tbody>
-                </table>
+    <section class="simansa-analytics-section mb-4">
+        <div class="simansa-section-head">
+            <div>
+                <h3>Daftar Pembandingan</h3>
+                <p>Pilih satu siswa untuk melihat perbedaan field secara berdampingan. Data berasal dari snapshot, sehingga membuka daftar tidak memanggil API EMIS.</p>
             </div>
+            <span class="simansa-result-count">{{ number_format($items->total()) }} data</span>
         </div>
-        @if($items->hasPages())
-            <div class="card-footer">{{ $items->links() }}</div>
-        @endif
+
+        <form method="GET" action="{{ route('admin.emis-comparison.index') }}" class="simansa-filter-panel">
+            <div class="form-group mb-0">
+                <label for="search">Nama atau NISN</label>
+                <input id="search" type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Cari data siswa...">
+            </div>
+            <div class="form-group mb-0">
+                <label for="status">Status Pembandingan</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="all" @selected($status === 'all')>Semua siswa SIMANSA</option>
+                    <option value="exact" @selected($status === 'exact')>Sama / Setara</option>
+                    <option value="similar" @selected($status === 'similar')>Nama Mirip</option>
+                    <option value="different" @selected($status === 'different')>Berbeda</option>
+                    <option value="only_simansa" @selected($status === 'only_simansa')>Hanya di SIMANSA</option>
+                    <option value="only_emis" @selected($status === 'only_emis')>Hanya di EMIS</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label for="kelas_id">Kelas SIMANSA</label>
+                <select id="kelas_id" name="kelas_id" class="form-control" @disabled($listMode === 'emis')>
+                    <option value="">Semua kelas</option>
+                    @foreach($classes as $class)
+                        <option value="{{ $class->id }}" @selected($kelasId === $class->id)>{{ $class->nama_kelas }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter mr-1"></i> Terapkan Filter</button>
+        </form>
+
+        <div class="table-responsive simansa-table-shell">
+            <table class="table table-hover simansa-table mb-0">
+                <thead><tr><th>No</th><th>Siswa</th><th>Kelas SIMANSA</th><th>Rombel EMIS</th><th>Status</th><th>Field Perlu Dicek</th><th class="text-right">Aksi</th></tr></thead>
+                <tbody>
+                @forelse($items as $index => $item)
+                    @php
+                        $siswa = $listMode === 'simansa' ? $item : null;
+                        $snapshot = $listMode === 'simansa' ? $item->emisStudentSnapshot : $item;
+                        $rowStatus = $snapshot?->comparison_status ?? 'only_simansa';
+                        [$statusText, $statusColor] = $statusLabels[$rowStatus] ?? [ucfirst($rowStatus), 'secondary'];
+                        $details = $snapshot?->comparison_details ?? [];
+                        $differentFields = collect($details)->filter(fn($detail) => in_array($detail['status'] ?? '', ['different', 'similar', 'simansa_empty'], true))->keys();
+                    @endphp
+                    <tr>
+                        <td>{{ $items->firstItem() + $index }}</td>
+                        <td><div class="simansa-table-title">{{ $siswa?->nama_lengkap ?? $snapshot?->full_name ?? '-' }}</div><div class="simansa-table-subtitle">NISN: {{ $siswa?->nisn ?? $snapshot?->nisn ?? '-' }}</div></td>
+                        <td>{{ $siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
+                        <td>{{ $snapshot?->study_group_name ?? '-' }}@if($snapshot?->level_name)<div class="simansa-table-subtitle">{{ $snapshot->level_name }}</div>@endif</td>
+                        <td><span class="badge badge-{{ $statusColor }} simansa-status-badge">{{ $statusText }}</span>@if($rowStatus === 'similar' && $snapshot?->name_similarity)<div class="simansa-table-subtitle mt-1">{{ number_format($snapshot->name_similarity, 1) }}% mirip</div>@endif</td>
+                        <td>@forelse($differentFields as $field)<span class="simansa-field-chip">{{ $detailLabels[$field] ?? $field }}</span>@empty<span class="text-muted">—</span>@endforelse</td>
+                        <td class="text-right"><a href="{{ $siswa ? route('admin.emis-comparison.show', $siswa) : route('admin.emis-comparison.show-emis', $snapshot) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-columns mr-1"></i> Bandingkan</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-search d-block mb-2 fa-2x text-light"></i>Tidak ada data untuk filter ini.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($items->hasPages())<div class="simansa-pagination">{{ $items->links() }}</div>@endif
+    </section>
+
+    <div id="emisSyncOverlay" class="simansa-progress-overlay" aria-hidden="true">
+        <div class="simansa-progress-modal" role="dialog" aria-modal="true" aria-labelledby="emisProgressTitle">
+            <div class="simansa-progress-modal__head">
+                <div><div class="simansa-progress-eyebrow"><i class="fas fa-cloud-download-alt mr-1"></i> Sinkronisasi EMIS</div><h3 id="emisProgressTitle">Memperbarui Snapshot Siswa</h3><p id="emisProgressDescription">Proses berjalan di server dan dapat dipantau langsung.</p></div>
+                <button type="button" class="btn btn-sm btn-light" id="btnCloseEmisOverlay" disabled><i class="fas fa-times mr-1"></i> Tutup</button>
+            </div>
+            <div class="simansa-progress-summary">
+                <div><span id="emisProgressText">Menyiapkan proses...</span><strong id="emisProgressCounter">0%</strong></div>
+                <div class="progress simansa-progress-bar"><div id="emisProgressBar" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width:0%"></div></div>
+            </div>
+            <div class="simansa-progress-log" id="emisProgressLog"></div>
+        </div>
     </div>
 @stop
 
 @section('css')
 <style>
-    .small-box .inner p { min-height: 38px; margin-bottom: 0; }
-    .small-box .icon > i { font-size: 55px; top: 14px; }
-    @media (min-width: 1200px) { .col-xl { flex: 1 0 14.285%; max-width: 14.285%; } }
+    .simansa-emis-hero{display:flex;justify-content:space-between;align-items:stretch;gap:1rem;padding:1.35rem 1.45rem;border-radius:16px;background:#3b82f6;color:#fff;box-shadow:0 14px 32px rgba(59,130,246,.22)}
+    .simansa-emis-hero__main{max-width:760px}.simansa-emis-hero__eyebrow{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.65rem;color:rgba(255,255,255,.92)}
+    .simansa-emis-hero__title{font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:.35rem}.simansa-emis-hero__subtitle{margin:0;color:rgba(255,255,255,.9);line-height:1.55}
+    .simansa-emis-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;min-width:340px}.simansa-emis-hero-chip{display:flex;flex-direction:column;justify-content:center;padding:.75rem 1rem;border-radius:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18)}
+    .simansa-emis-hero-chip span{font-size:.78rem;color:rgba(255,255,255,.78)}.simansa-emis-hero-chip strong{font-size:1.35rem}.simansa-emis-sync-btn{grid-column:1/-1;background:#fff;color:#2563eb;font-weight:700;border-radius:9px}.simansa-emis-sync-btn:hover{background:#eff6ff;color:#1d4ed8}.simansa-emis-sync-btn:disabled{opacity:.62}
+    .simansa-token-panel{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;border-left:4px solid #22c55e;box-shadow:0 8px 24px rgba(15,23,42,.04)}.simansa-token-panel--warning{border-left-color:#f59e0b}.simansa-token-panel--danger{border-left-color:#e11d48}
+    .simansa-token-icon{width:46px;height:46px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:12px;background:#ecfdf5;color:#15803d}.simansa-token-panel--warning .simansa-token-icon{background:#fffbeb;color:#b45309}.simansa-token-panel--danger .simansa-token-icon{background:#fff1f2;color:#be123c}
+    .simansa-token-copy{flex:1}.simansa-token-copy h2{font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 .25rem}.simansa-token-copy p{color:#64748b;margin:0;line-height:1.45}.simansa-token-meta{display:flex;flex-direction:column;padding-left:1rem;border-left:1px solid #e2e8f0;min-width:230px}.simansa-token-meta span,.simansa-token-meta small{font-size:.76rem;color:#64748b}.simansa-token-meta strong{color:#1e293b;font-size:.9rem}.simansa-token-action{white-space:nowrap}
+    a.simansa-kpi-link{display:block;text-decoration:none!important;color:inherit}.simansa-emis-kpi{display:flex;gap:.8rem;min-height:132px;padding:1rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;box-shadow:0 10px 28px rgba(15,23,42,.05);transition:.18s}.simansa-emis-kpi:hover,.simansa-emis-kpi.is-active{transform:translateY(-2px);box-shadow:0 16px 34px rgba(15,23,42,.1);border-color:#bfdbfe}
+    .simansa-emis-kpi__icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eef4ff;color:#2563eb}.simansa-emis-kpi__label{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.035em;font-weight:700;line-height:1.3;min-height:30px}.simansa-emis-kpi__value{font-size:1.5rem;font-weight:700;color:#0f172a;line-height:1.2}.simansa-emis-kpi__desc{font-size:.77rem;color:#94a3b8}
+    .simansa-emis-kpi--purple{border-top-color:#8b5cf6}.simansa-emis-kpi--purple .simansa-emis-kpi__icon{background:#f5f3ff;color:#7c3aed}.simansa-emis-kpi--green{border-top-color:#22c55e}.simansa-emis-kpi--green .simansa-emis-kpi__icon{background:#ecfdf5;color:#15803d}.simansa-emis-kpi--amber{border-top-color:#f59e0b}.simansa-emis-kpi--amber .simansa-emis-kpi__icon{background:#fffbeb;color:#b45309}.simansa-emis-kpi--rose{border-top-color:#e11d48}.simansa-emis-kpi--rose .simansa-emis-kpi__icon{background:#fff1f2;color:#be123c}.simansa-emis-kpi--slate{border-top-color:#0f766e}.simansa-emis-kpi--slate .simansa-emis-kpi__icon{background:#f0fdfa;color:#0f766e}.simansa-emis-kpi--dark{border-top-color:#334155}.simansa-emis-kpi--dark .simansa-emis-kpi__icon{background:#f1f5f9;color:#334155}
+    .simansa-analytics-section{padding:1.1rem 1.25rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;box-shadow:0 10px 28px rgba(15,23,42,.05)}.simansa-section-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}.simansa-section-head h3{font-size:1.05rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}.simansa-section-head p{color:#64748b;line-height:1.55;margin:0;max-width:800px}.simansa-result-count{white-space:nowrap;background:#eef4ff;color:#2563eb;border-radius:999px;padding:.4rem .75rem;font-size:.8rem;font-weight:700}
+    .simansa-filter-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:.8rem;align-items:end;padding:1rem;margin-bottom:1rem;border:1px solid #e5edf7;border-radius:12px;background:#f8fafc}.simansa-filter-panel label{font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}.simansa-filter-panel .form-control{border-color:#dbe4f0;border-radius:8px}.simansa-filter-panel .btn{height:38px;border-radius:8px}
+    .simansa-table-shell{border:1px solid #e5edf7;border-radius:12px;overflow:hidden}.simansa-table thead th{border:0;background:#f8fafc;color:#64748b;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:.8rem}.simansa-table td{vertical-align:middle;border-color:#edf2f7;padding:.8rem}.simansa-table-title{font-weight:700;color:#1e293b}.simansa-table-subtitle{font-size:.78rem;color:#94a3b8}.simansa-status-badge{padding:.42rem .58rem;min-width:74px}.simansa-field-chip{display:inline-flex;padding:.25rem .5rem;margin:0 .2rem .2rem 0;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.72rem;font-weight:600}.simansa-pagination{padding-top:1rem}
+    .simansa-progress-overlay{position:fixed;inset:0;z-index:1080;display:none;align-items:center;justify-content:center;padding:1.25rem;background:rgba(15,23,42,.58);backdrop-filter:blur(4px)}.simansa-progress-overlay.is-active{display:flex}.simansa-progress-modal{width:min(760px,100%);max-height:min(720px,92vh);display:flex;flex-direction:column;border-radius:18px;background:#fff;border:1px solid #d9e3f0;box-shadow:0 26px 70px rgba(15,23,42,.28);overflow:hidden}.simansa-progress-modal__head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.2rem;color:#fff;background:linear-gradient(135deg,#2563eb 0%,#0f766e 100%)}.simansa-progress-modal__head h3{font-size:1.25rem;font-weight:700;margin:.2rem 0 .25rem}.simansa-progress-modal__head p{color:rgba(255,255,255,.84);margin:0}.simansa-progress-eyebrow{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.simansa-progress-summary{padding:1rem 1.2rem;border-bottom:1px solid #e5edf7;background:#f8fafc}.simansa-progress-summary>div:first-child{display:flex;justify-content:space-between;gap:1rem;margin-bottom:.75rem;color:#334155}.simansa-progress-bar{height:.72rem;border-radius:999px;background:#e2e8f0}.simansa-progress-log{padding:.25rem 1.2rem 1rem;overflow:auto;min-height:220px;max-height:380px}.simansa-progress-log-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:.75rem;padding:.82rem 0;border-bottom:1px solid #edf2f7;color:#334155}.simansa-progress-log-row strong{color:#0f172a}.simansa-progress-log-meta{color:#64748b;font-size:.82rem;margin-top:.15rem}
+    @media(min-width:1200px){.emis-kpi-col{flex:0 0 14.2857%;max-width:14.2857%}}
+    @media(max-width:991.98px){.simansa-emis-hero{flex-direction:column}.simansa-emis-hero__meta{min-width:0}.simansa-token-panel{align-items:flex-start;flex-wrap:wrap}.simansa-token-meta{border-left:0;padding-left:0;min-width:0;width:100%}.simansa-filter-panel{grid-template-columns:1fr 1fr}.simansa-filter-panel .btn{grid-column:1/-1}}
+    @media(max-width:575.98px){.simansa-emis-hero__meta,.simansa-filter-panel{grid-template-columns:1fr}.simansa-emis-sync-btn,.simansa-filter-panel .btn{grid-column:auto}.simansa-section-head{flex-direction:column}.simansa-progress-log-row{grid-template-columns:1fr}.simansa-emis-kpi{min-height:150px;flex-direction:column}}
 </style>
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
-    $('#syncEmisForm').on('submit', function (event) {
-        if (!confirm('Sinkronkan seluruh siswa aktif dari EMIS sekarang? Snapshot lama baru diganti setelah semua halaman berhasil diambil.')) {
-            event.preventDefault();
+    const startUrl = @json(route('admin.emis-comparison.sync'));
+    const csrfToken = @json(csrf_token());
+    const overlay = $('#emisSyncOverlay');
+    const closeButton = $('#btnCloseEmisOverlay');
+    let pollTimer = null;
+    let lastLogKey = '';
+    let reloadOnClose = false;
+
+    function notify(type, message) {
+        if (window.toastr && typeof window.toastr[type] === 'function') {
+            window.toastr[type](message);
             return;
         }
-        $(this).find('button').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyinkronkan...');
+        Swal.fire({icon: type === 'success' ? 'success' : 'error', title: type === 'success' ? 'Berhasil' : 'Proses gagal', text: message});
+    }
+
+    function addLog(sync) {
+        const key = [sync.stage, sync.progress_message, sync.progress_percent].join('|');
+        if (key === lastLogKey) return;
+        lastLogKey = key;
+        const time = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        const label = String(sync.stage || 'proses').replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+        $('#emisProgressLog').prepend('<div class="simansa-progress-log-row"><strong>' + $('<div>').text(time).html() + '</strong><div><strong>' + $('<div>').text(label).html() + '</strong><div class="simansa-progress-log-meta">' + $('<div>').text(sync.progress_message || 'Proses diperbarui.').html() + '</div></div></div>');
+    }
+
+    function renderProgress(sync) {
+        const percent = Math.max(0, Math.min(100, Number(sync.progress_percent || 0)));
+        $('#emisProgressText').text(sync.progress_message || 'Memproses data...');
+        $('#emisProgressCounter').text(percent + '%');
+        $('#emisProgressBar').css('width', percent + '%').attr('aria-valuenow', percent);
+        addLog(sync);
+
+        if (sync.status === 'completed') finishProgress(true, sync.progress_message || 'Sinkronisasi selesai.');
+        if (sync.status === 'failed') finishProgress(false, sync.error_message || sync.progress_message || 'Sinkronisasi gagal.');
+    }
+
+    function finishProgress(success, message) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+        const bar = $('#emisProgressBar').removeClass('progress-bar-animated bg-primary');
+        bar.addClass(success ? 'bg-success' : 'bg-danger');
+        $('#emisProgressTitle').text(success ? 'Sinkronisasi Selesai' : 'Sinkronisasi Gagal');
+        closeButton.prop('disabled', false).html(success ? '<i class="fas fa-table mr-1"></i> Lihat Hasil' : '<i class="fas fa-times mr-1"></i> Tutup');
+        reloadOnClose = success;
+        notify(success ? 'success' : 'error', message);
+    }
+
+    function poll(statusUrl) {
+        const check = function () {
+            $.getJSON(statusUrl).done(function (response) { renderProgress(response.sync); }).fail(function () {
+                $('#emisProgressText').text('Koneksi pemantauan terputus, mencoba kembali...');
+            });
+        };
+        check();
+        pollTimer = setInterval(check, 700);
+    }
+
+    function beginSync() {
+        lastLogKey = '';
+        reloadOnClose = false;
+        $('#emisProgressLog').empty();
+        $('#emisProgressTitle').text('Memperbarui Snapshot Siswa');
+        $('#emisProgressDescription').text('Proses berjalan di server dan dapat dipantau langsung.');
+        $('#emisProgressBar').removeClass('bg-success bg-danger').addClass('bg-primary progress-bar-animated').css('width', '0%');
+        closeButton.prop('disabled', true).html('<i class="fas fa-times mr-1"></i> Tutup');
+        overlay.addClass('is-active').attr('aria-hidden', 'false');
+
+        $.ajax({url:startUrl, method:'POST', headers:{'X-CSRF-TOKEN':csrfToken}, dataType:'json'})
+            .done(function (response) {
+                renderProgress(response.sync);
+                poll(response.status_url);
+                $.ajax({url:response.process_url, method:'POST', headers:{'X-CSRF-TOKEN':csrfToken}, dataType:'json'})
+                    .fail(function (xhr) {
+                        if (!pollTimer) return;
+                        const message = xhr.responseJSON?.message || 'Server gagal menjalankan sinkronisasi.';
+                        $('#emisProgressText').text(message);
+                    });
+            })
+            .fail(function (xhr) {
+                const message = xhr.responseJSON?.message || 'Permintaan sinkronisasi tidak dapat dimulai.';
+                finishProgress(false, message);
+            });
+    }
+
+    $('#btnSyncEmis').on('click', function () {
+        Swal.fire({
+            title:'Sinkronkan data EMIS?',
+            text:'Snapshot lama baru diganti setelah seluruh data EMIS berhasil diterima dan dibandingkan.',
+            icon:'question', showCancelButton:true, confirmButtonText:'Ya, sinkronkan', cancelButtonText:'Batal',
+            confirmButtonColor:'#2563eb', reverseButtons:true
+        }).then(result => { if (result.isConfirmed) beginSync(); });
     });
+
+    closeButton.on('click', function () {
+        if ($(this).prop('disabled')) return;
+        overlay.removeClass('is-active').attr('aria-hidden', 'true');
+        if (reloadOnClose) window.location.reload();
+    });
+
+    @if(session('success')) notify('success', @json(session('success'))); @endif
+    @if(session('error')) notify('error', @json(session('error'))); @endif
 });
 </script>
 @stop

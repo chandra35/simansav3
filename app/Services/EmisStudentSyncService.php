@@ -30,32 +30,98 @@ class EmisStudentSyncService
 
     public function sync(User $user): EmisStudentSync
     {
+        return $this->process($this->start($user));
+    }
+
+    public function start(User $user): EmisStudentSync
+    {
+        $tokenStatus = $this->tokenService->status();
+        if (! $tokenStatus['usable']) {
+            throw new RuntimeException($tokenStatus['message']);
+        }
+
+        $lock = Cache::lock('emis-student-comparison-start', 10);
+        if (! $lock->get()) {
+            throw new RuntimeException('Sinkronisasi EMIS lain masih berjalan. Pantau proses yang aktif sampai selesai.');
+        }
+
+        try {
+            EmisStudentSync::query()
+                ->whereIn('status', ['queued', 'running'])
+                ->where('created_at', '<', now()->subMinutes(10))
+                ->update([
+                    'status' => 'failed',
+                    'stage' => 'failed',
+                    'progress_message' => 'Proses lama dihentikan karena melewati batas waktu.',
+                    'error_message' => 'Proses sinkronisasi tidak selesai dalam 10 menit.',
+                    'finished_at' => now(),
+                ]);
+
+            if (EmisStudentSync::query()->whereIn('status', ['queued', 'running'])->exists()) {
+                throw new RuntimeException('Sinkronisasi EMIS lain masih berjalan. Pantau proses yang aktif sampai selesai.');
+            }
+
+            return EmisStudentSync::create([
+                'institution_id' => $tokenStatus['institution_id'],
+                'status' => 'queued',
+                'progress_percent' => 5,
+                'stage' => 'queued',
+                'progress_message' => 'Permintaan sinkronisasi diterima.',
+                'synced_by' => $user->id,
+                'started_at' => now(),
+            ]);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    public function process(EmisStudentSync $sync): EmisStudentSync
+    {
         $lock = Cache::lock('emis-student-comparison-sync', 300);
         if (! $lock->get()) {
             throw new RuntimeException('Sinkronisasi EMIS lain masih berjalan. Silakan tunggu sampai selesai.');
         }
 
-        $sync = null;
-
         try {
+            if ($sync->status === 'completed') {
+                return $sync;
+            }
+
+            if (! in_array($sync->status, ['queued', 'failed'], true)) {
+                throw new RuntimeException('Status proses sinkronisasi tidak dapat dijalankan.');
+            }
+
             $tokenStatus = $this->tokenService->status();
             if (! $tokenStatus['usable']) {
                 throw new RuntimeException($tokenStatus['message']);
             }
 
-            $sync = EmisStudentSync::create([
+            $sync->update([
                 'institution_id' => $tokenStatus['institution_id'],
                 'status' => 'running',
-                'synced_by' => $user->id,
-                'started_at' => now(),
+                'progress_percent' => 12,
+                'stage' => 'connecting',
+                'progress_message' => 'Menghubungkan ke API EMIS Lembaga...',
+                'error_message' => null,
             ]);
 
             $rows = $this->fetchAllStudents($tokenStatus, $sync);
             if ($rows === []) {
                 throw new RuntimeException('API EMIS mengembalikan daftar siswa kosong. Snapshot lama tidak diganti untuk mencegah kehilangan hasil sinkronisasi.');
             }
+
+            $sync->update([
+                'progress_percent' => 68,
+                'stage' => 'comparing',
+                'progress_message' => 'Mencocokkan NISN dan membandingkan setiap field...',
+            ]);
             $snapshots = $this->buildSnapshots($rows, $sync);
 
+            $sync->update([
+                'progress_percent' => 86,
+                'stage' => 'saving',
+                'progress_message' => 'Menyimpan snapshot dan hasil pembandingan...',
+            ]);
             DB::transaction(function () use ($snapshots) {
                 EmisStudentSnapshot::query()->delete();
                 foreach (array_chunk($snapshots, 250) as $chunk) {
@@ -68,6 +134,9 @@ class EmisStudentSyncService
 
             $sync->update([
                 'status' => 'completed',
+                'progress_percent' => 100,
+                'stage' => 'completed',
+                'progress_message' => 'Sinkronisasi selesai dan snapshot siap digunakan.',
                 'total_students' => count($snapshots),
                 'matched_students' => $matched->count(),
                 'different_students' => $different,
@@ -84,13 +153,13 @@ class EmisStudentSyncService
 
             return $sync->fresh();
         } catch (Throwable $exception) {
-            if ($sync) {
-                $sync->update([
-                    'status' => 'failed',
-                    'error_message' => Str::limit($this->friendlyError($exception), 2000),
-                    'finished_at' => now(),
-                ]);
-            }
+            $sync->update([
+                'status' => 'failed',
+                'stage' => 'failed',
+                'progress_message' => $this->friendlyError($exception),
+                'error_message' => Str::limit($this->friendlyError($exception), 2000),
+                'finished_at' => now(),
+            ]);
 
             Log::warning('Sinkronisasi pembanding EMIS gagal', [
                 'sync_id' => $sync?->id,
@@ -142,6 +211,9 @@ class EmisStudentSyncService
                 'total_pages' => $lastPage,
                 'processed_pages' => $page,
                 'total_students' => count($allRows),
+                'progress_percent' => min(60, 15 + (int) round(($page / $lastPage) * 45)),
+                'stage' => 'fetching',
+                'progress_message' => "Mengambil halaman {$page} dari {$lastPage}: ".number_format(count($allRows)).' siswa diterima.',
             ]);
 
             $page++;

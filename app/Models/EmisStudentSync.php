@@ -14,6 +14,9 @@ class EmisStudentSync extends Model
     protected $fillable = [
         'institution_id',
         'status',
+        'progress_percent',
+        'stage',
+        'progress_message',
         'total_pages',
         'processed_pages',
         'total_students',
@@ -26,6 +29,7 @@ class EmisStudentSync extends Model
     ];
 
     protected $casts = [
+        'progress_percent' => 'integer',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
     ];

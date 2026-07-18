@@ -10,7 +10,7 @@ use App\Models\Siswa;
 use App\Services\EmisInstitutionTokenService;
 use App\Services\EmisStudentSyncService;
 use App\Services\SmartStudentComparator;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use RuntimeException;
@@ -132,19 +132,51 @@ class EmisStudentComparisonController extends Controller
         ]);
     }
 
-    public function sync(Request $request): RedirectResponse
+    public function sync(Request $request): JsonResponse
     {
         try {
-            $result = $this->syncService->sync($request->user());
+            $sync = $this->syncService->start($request->user());
 
-            return redirect()
-                ->route('admin.emis-comparison.index')
-                ->with('success', "Sinkronisasi selesai: {$result->total_students} siswa EMIS diproses.");
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan sinkronisasi diterima.',
+                'sync' => $this->syncPayload($sync),
+                'process_url' => route('admin.emis-comparison.sync.process', $sync),
+                'status_url' => route('admin.emis-comparison.sync.status', $sync),
+            ]);
         } catch (RuntimeException $exception) {
-            return redirect()
-                ->route('admin.emis-comparison.index')
-                ->with('error', $exception->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
         }
+    }
+
+    public function processSync(EmisStudentSync $sync): JsonResponse
+    {
+        try {
+            $result = $this->syncService->process($sync);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sinkronisasi EMIS selesai.',
+                'sync' => $this->syncPayload($result),
+            ]);
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'sync' => $this->syncPayload($sync->fresh()),
+            ], 422);
+        }
+    }
+
+    public function syncStatus(EmisStudentSync $sync): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'sync' => $this->syncPayload($sync->fresh()),
+        ]);
     }
 
     private function publicTokenStatus(): array
@@ -153,6 +185,25 @@ class EmisStudentComparisonController extends Controller
         unset($status['token']);
 
         return $status;
+    }
+
+    private function syncPayload(EmisStudentSync $sync): array
+    {
+        return [
+            'id' => $sync->id,
+            'status' => $sync->status,
+            'stage' => $sync->stage,
+            'progress_percent' => (int) $sync->progress_percent,
+            'progress_message' => $sync->progress_message,
+            'processed_pages' => (int) $sync->processed_pages,
+            'total_pages' => (int) $sync->total_pages,
+            'total_students' => (int) $sync->total_students,
+            'matched_students' => (int) $sync->matched_students,
+            'different_students' => (int) $sync->different_students,
+            'error_message' => $sync->status === 'failed' ? $sync->error_message : null,
+            'started_at' => $sync->started_at?->toIso8601String(),
+            'finished_at' => $sync->finished_at?->toIso8601String(),
+        ];
     }
 
     private function simansaData(Siswa $siswa): array

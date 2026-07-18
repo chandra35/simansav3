@@ -138,6 +138,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/sync', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'sync'])
             ->middleware('permission:sync-emis-comparison')
             ->name('sync');
+        Route::post('/sync/{sync}/process', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'processSync'])
+            ->middleware('permission:sync-emis-comparison')
+            ->name('sync.process');
+        Route::get('/sync/{sync}/status', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'syncStatus'])
+            ->name('sync.status');
     });
     
     // Sekolah Asal Management
