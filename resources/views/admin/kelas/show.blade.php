@@ -924,35 +924,20 @@
             @if(auth()->user()->hasRole('Super Admin'))
             $(document).on('click', '.class-emis-toggle', function() {
                 const button = $(this);
-                const currentlyRegistered = Number(button.data('registered')) === 1;
-                const targetRegistered = !currentlyRegistered;
-                const studentName = button.data('student') || 'Siswa';
+                if (button.prop('disabled')) return;
 
-                Swal.fire({
-                    icon: 'question',
-                    title: 'Ubah status EMIS?',
-                    text: `${studentName} akan ditandai ${targetRegistered ? 'sudah' : 'belum'} masuk EMIS.`,
-                    showCancelButton: true,
-                    confirmButtonText: targetRegistered ? 'Ya, sudah masuk' : 'Ya, tandai belum',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: targetRegistered ? '#16a34a' : '#64748b',
-                    showLoaderOnConfirm: true,
-                    allowOutsideClick: () => !Swal.isLoading(),
-                    preConfirm: function() {
-                        return $.ajax({
-                            url: button.data('url'),
-                            method: 'POST',
-                            data: {_token: '{{ csrf_token() }}'}
-                        }).then(function(response) {
-                            return response;
-                        }, function(xhr) {
-                            Swal.showValidationMessage(xhr.responseJSON?.message || 'Status EMIS belum berhasil diperbarui.');
-                        });
+                const originalHtml = button.html();
+                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.post(button.data('url'), {_token: '{{ csrf_token() }}'})
+                .done(function(response) {
+                    if (!response.success) {
+                        button.html(originalHtml);
+                        toastr.error('Status EMIS belum berhasil diperbarui.');
+                        return;
                     }
-                }).then(function(result) {
-                    if (!result.isConfirmed || !result.value) return;
 
-                    const registered = Boolean(result.value.emis_registered);
+                    const registered = Boolean(response.emis_registered);
                     const tooltipText = registered ? 'Tandai belum masuk EMIS' : 'Tandai sudah masuk EMIS';
                     button
                         .data('registered', registered ? 1 : 0)
@@ -962,14 +947,14 @@
                             ? '<i class="fas fa-check-circle mr-1"></i><span>Sudah</span>'
                             : '<i class="fas fa-circle mr-1"></i><span>Belum</span>');
                     button.tooltip('dispose').attr('title', tooltipText).tooltip();
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Status EMIS diperbarui',
-                        text: `${studentName} ditandai ${registered ? 'sudah' : 'belum'} masuk EMIS.`,
-                        timer: 1700,
-                        showConfirmButton: false
-                    });
+                    toastr.success(registered ? 'Ditandai sudah masuk EMIS' : 'Tanda masuk EMIS dibatalkan');
+                })
+                .fail(function(xhr) {
+                    button.html(originalHtml);
+                    toastr.error(xhr.responseJSON?.message || 'Gagal mengubah status EMIS');
+                })
+                .always(function() {
+                    button.prop('disabled', false);
                 });
             });
             @endif
