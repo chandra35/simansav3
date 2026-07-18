@@ -6,6 +6,11 @@
     $selectedClass = $kelasId ? $classes->firstWhere('id', $kelasId) : null;
     $scopeLabel = $selectedClass?->nama_kelas ?: ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : 'Semua siswa');
     $listUrl = fn (array $extra = []) => route('admin.siswa.index', array_merge($filterQuery, $extra));
+    $schoolStudentsUrl = fn (array $school) => route('admin.siswa.index', array_filter([
+        'tingkat' => $tingkat,
+        'school_npsn' => $school['npsn'] ?: null,
+        'school_name' => blank($school['npsn']) ? $school['school_name'] : null,
+    ], fn ($value) => filled($value)));
 @endphp
 
 @section('content_header')
@@ -391,7 +396,7 @@
                                             <i class="fas fa-sync-alt mr-1"></i>Lengkapi
                                         </button>
                                     @endif
-                                    <a href="{{ route('admin.siswa.index', array_merge($filterQuery, ['school_npsn' => $school['npsn'], 'school_name' => $school['school_name'], 'education_form' => $school['education_form'], 'school_city_name' => $school['city_name'], 'school_province_name' => $school['province_name']])) }}" class="btn btn-xs btn-outline-primary">
+                                    <a href="{{ $schoolStudentsUrl($school) }}" class="btn btn-xs btn-outline-primary">
                                         Lihat Siswa
                                     </a>
                                 </td>

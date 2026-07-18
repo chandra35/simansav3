@@ -1120,20 +1120,16 @@ class SiswaController extends Controller
             });
         }
 
-        if ($request->filled('school_npsn') || $request->filled('school_name') || $request->filled('school_city_name') || $request->filled('school_province_name') || $request->filled('education_form')) {
+        if ($request->filled('school_npsn')) {
+            // NPSN adalah identitas sekolah yang unik. Metadata sekolah pada URL lama
+            // tidak boleh mempersempit hasil lagi karena penulisannya dapat berubah.
+            $query->where('siswa.npsn_asal_sekolah', $request->school_npsn);
+        } elseif ($request->filled('school_name') || $request->filled('school_city_name') || $request->filled('school_province_name') || $request->filled('education_form')) {
             $query->leftJoin('sekolah as sekolah_asal_filter', 'sekolah_asal_filter.npsn', '=', 'siswa.npsn_asal_sekolah');
-
-            if ($request->filled('school_npsn')) {
-                $query->where('siswa.npsn_asal_sekolah', $request->school_npsn);
-            }
 
             if ($request->filled('school_name')) {
                 $query->where(function ($schoolQuery) use ($request) {
                     $schoolQuery->where('sekolah_asal_filter.nama', $request->school_name);
-
-                    if ($request->filled('school_npsn')) {
-                        $schoolQuery->orWhere('siswa.npsn_asal_sekolah', $request->school_npsn);
-                    }
                 });
             }
 
