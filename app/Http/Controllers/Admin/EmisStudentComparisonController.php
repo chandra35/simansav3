@@ -81,6 +81,8 @@ class EmisStudentComparisonController extends Controller
                 $query->whereDoesntHave('emisStudentSnapshot');
             } elseif ($status === 'exact') {
                 $query->whereHas('emisStudentSnapshot', fn ($q) => $q->whereIn('comparison_status', ['exact', 'normalized']));
+            } elseif ($status === 'attention') {
+                $query->whereHas('emisStudentSnapshot', fn ($q) => $q->whereIn('comparison_status', ['similar', 'different']));
             } elseif (in_array($status, ['similar', 'different'], true)) {
                 $query->whereHas('emisStudentSnapshot', fn ($q) => $q->where('comparison_status', $status));
             }

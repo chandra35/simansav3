@@ -24,12 +24,12 @@
         </div>
         <div class="simansa-emis-hero__meta">
             <div class="simansa-emis-hero-chip">
-                <span>Snapshot EMIS</span>
-                <strong>{{ number_format($stats['emis']) }}</strong>
+                <span>Siswa Aktif SIMANSA</span>
+                <strong>{{ number_format($stats['simansa']) }}</strong>
             </div>
             <div class="simansa-emis-hero-chip">
-                <span>Perlu Diperiksa</span>
-                <strong>{{ number_format($stats['similar'] + $stats['different']) }}</strong>
+                <span>Snapshot EMIS</span>
+                <strong>{{ number_format($stats['emis']) }}</strong>
             </div>
             @can('sync-emis-comparison')
                 <button type="button" id="btnSyncEmis" class="btn simansa-emis-sync-btn" @disabled(!$tokenStatus['usable'])>
@@ -69,25 +69,20 @@
         @endif
     </section>
 
-    <div class="row simansa-emis-kpi-row">
+    <div class="row mb-2">
         @foreach([
-            ['key' => 'simansa', 'label' => 'Siswa Aktif SIMANSA', 'desc' => 'Data aktif lokal', 'icon' => 'fa-users', 'tone' => 'blue', 'filter' => 'all'],
-            ['key' => 'emis', 'label' => 'Siswa Aktif EMIS', 'desc' => 'Snapshot terbaru', 'icon' => 'fa-cloud', 'tone' => 'purple', 'filter' => 'all'],
-            ['key' => 'exact', 'label' => 'Sama / Setara', 'desc' => 'Data sesuai', 'icon' => 'fa-check-circle', 'tone' => 'green', 'filter' => 'exact'],
-            ['key' => 'similar', 'label' => 'Nama Mirip', 'desc' => 'Perlu tinjauan', 'icon' => 'fa-adjust', 'tone' => 'amber', 'filter' => 'similar'],
-            ['key' => 'different', 'label' => 'Berbeda', 'desc' => 'Ada selisih field', 'icon' => 'fa-exclamation-triangle', 'tone' => 'rose', 'filter' => 'different'],
-            ['key' => 'only_simansa', 'label' => 'Hanya SIMANSA', 'desc' => 'Tidak ada di EMIS', 'icon' => 'fa-arrow-left', 'tone' => 'slate', 'filter' => 'only_simansa'],
-            ['key' => 'only_emis', 'label' => 'Hanya EMIS', 'desc' => 'Tidak ada di SIMANSA', 'icon' => 'fa-arrow-right', 'tone' => 'dark', 'filter' => 'only_emis'],
+            ['value' => $stats['exact'], 'label' => 'Sama / Setara', 'desc' => 'Data utama sudah sesuai antara SIMANSA dan snapshot EMIS.', 'tone' => 'green', 'filter' => 'exact'],
+            ['value' => $stats['similar'] + $stats['different'], 'label' => 'Perlu Diperiksa', 'desc' => number_format($stats['similar']).' nama mirip dan '.number_format($stats['different']).' siswa memiliki perbedaan field.', 'tone' => 'amber', 'filter' => 'attention'],
+            ['value' => $stats['only_simansa'], 'label' => 'Hanya SIMANSA', 'desc' => 'Siswa aktif SIMANSA yang belum ditemukan pada snapshot EMIS.', 'tone' => 'slate', 'filter' => 'only_simansa'],
+            ['value' => $stats['only_emis'], 'label' => 'Hanya EMIS', 'desc' => 'Siswa pada snapshot EMIS yang belum memiliki pasangan di SIMANSA.', 'tone' => 'purple', 'filter' => 'only_emis'],
         ] as $card)
-            <div class="col-6 col-md-4 emis-kpi-col mb-4">
+            <div class="col-md-6 col-xl-3 mb-4">
                 <a href="{{ route('admin.emis-comparison.index', ['status' => $card['filter']]) }}" class="simansa-kpi-link">
-                    <div class="simansa-emis-kpi simansa-emis-kpi--{{ $card['tone'] }} {{ $status === $card['filter'] && !($card['filter'] === 'all' && $status !== 'all') ? 'is-active' : '' }}">
-                        <div class="simansa-emis-kpi__icon"><i class="fas {{ $card['icon'] }}"></i></div>
-                        <div>
-                            <div class="simansa-emis-kpi__label">{{ $card['label'] }}</div>
-                            <div class="simansa-emis-kpi__value">{{ number_format($stats[$card['key']]) }}</div>
-                            <div class="simansa-emis-kpi__desc">{{ $card['desc'] }}</div>
-                        </div>
+                    <div class="simansa-emis-kpi simansa-emis-kpi--{{ $card['tone'] }} {{ $status === $card['filter'] ? 'is-active' : '' }}">
+                        <div class="simansa-emis-kpi__label">{{ $card['label'] }}</div>
+                        <div class="simansa-emis-kpi__value">{{ number_format($card['value']) }}</div>
+                        <div class="simansa-emis-kpi__desc">{{ $card['desc'] }}</div>
+                        <div class="simansa-emis-kpi__action"><i class="fas fa-arrow-right mr-1"></i> Tampilkan daftar</div>
                     </div>
                 </a>
             </div>
@@ -113,6 +108,7 @@
                 <select id="status" name="status" class="form-control">
                     <option value="all" @selected($status === 'all')>Semua siswa SIMANSA</option>
                     <option value="exact" @selected($status === 'exact')>Sama / Setara</option>
+                    <option value="attention" @selected($status === 'attention')>Perlu Diperiksa</option>
                     <option value="similar" @selected($status === 'similar')>Nama Mirip</option>
                     <option value="different" @selected($status === 'different')>Berbeda</option>
                     <option value="only_simansa" @selected($status === 'only_simansa')>Hanya di SIMANSA</option>
@@ -187,16 +183,15 @@
     .simansa-token-panel{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;border-left:4px solid #22c55e;box-shadow:0 8px 24px rgba(15,23,42,.04)}.simansa-token-panel--warning{border-left-color:#f59e0b}.simansa-token-panel--danger{border-left-color:#e11d48}
     .simansa-token-icon{width:46px;height:46px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:12px;background:#ecfdf5;color:#15803d}.simansa-token-panel--warning .simansa-token-icon{background:#fffbeb;color:#b45309}.simansa-token-panel--danger .simansa-token-icon{background:#fff1f2;color:#be123c}
     .simansa-token-copy{flex:1}.simansa-token-copy h2{font-size:1rem;font-weight:700;color:#0f172a;margin:0 0 .25rem}.simansa-token-copy p{color:#64748b;margin:0;line-height:1.45}.simansa-token-meta{display:flex;flex-direction:column;padding-left:1rem;border-left:1px solid #e2e8f0;min-width:230px}.simansa-token-meta span,.simansa-token-meta small{font-size:.76rem;color:#64748b}.simansa-token-meta strong{color:#1e293b;font-size:.9rem}.simansa-token-action{white-space:nowrap}
-    a.simansa-kpi-link{display:block;text-decoration:none!important;color:inherit}.simansa-emis-kpi{display:flex;gap:.8rem;min-height:132px;padding:1rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;box-shadow:0 10px 28px rgba(15,23,42,.05);transition:.18s}.simansa-emis-kpi:hover,.simansa-emis-kpi.is-active{transform:translateY(-2px);box-shadow:0 16px 34px rgba(15,23,42,.1);border-color:#bfdbfe}
-    .simansa-emis-kpi__icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eef4ff;color:#2563eb}.simansa-emis-kpi__label{font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.035em;font-weight:700;line-height:1.3;min-height:30px}.simansa-emis-kpi__value{font-size:1.5rem;font-weight:700;color:#0f172a;line-height:1.2}.simansa-emis-kpi__desc{font-size:.77rem;color:#94a3b8}
-    .simansa-emis-kpi--purple{border-top-color:#8b5cf6}.simansa-emis-kpi--purple .simansa-emis-kpi__icon{background:#f5f3ff;color:#7c3aed}.simansa-emis-kpi--green{border-top-color:#22c55e}.simansa-emis-kpi--green .simansa-emis-kpi__icon{background:#ecfdf5;color:#15803d}.simansa-emis-kpi--amber{border-top-color:#f59e0b}.simansa-emis-kpi--amber .simansa-emis-kpi__icon{background:#fffbeb;color:#b45309}.simansa-emis-kpi--rose{border-top-color:#e11d48}.simansa-emis-kpi--rose .simansa-emis-kpi__icon{background:#fff1f2;color:#be123c}.simansa-emis-kpi--slate{border-top-color:#0f766e}.simansa-emis-kpi--slate .simansa-emis-kpi__icon{background:#f0fdfa;color:#0f766e}.simansa-emis-kpi--dark{border-top-color:#334155}.simansa-emis-kpi--dark .simansa-emis-kpi__icon{background:#f1f5f9;color:#334155}
+    a.simansa-kpi-link{display:block;height:100%;text-decoration:none!important;color:inherit}.simansa-emis-kpi{display:flex;flex-direction:column;min-height:158px;height:100%;padding:1.05rem 1.15rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;box-shadow:0 10px 28px rgba(15,23,42,.05);transition:.18s}.simansa-emis-kpi:hover,.simansa-emis-kpi.is-active{transform:translateY(-2px);box-shadow:0 16px 34px rgba(15,23,42,.1);border-color:#bfdbfe}.simansa-emis-kpi.is-active{background:#f8fbff}
+    .simansa-emis-kpi__label{font-size:.76rem;color:#64748b;text-transform:uppercase;letter-spacing:.035em;font-weight:700}.simansa-emis-kpi__value{font-size:1.45rem;font-weight:700;color:#2563eb;line-height:1.25;margin:.18rem 0 .3rem}.simansa-emis-kpi__desc{font-size:.84rem;line-height:1.5;color:#64748b;flex:1}.simansa-emis-kpi__action{margin-top:.55rem;font-size:.78rem;font-weight:700;color:#2563eb;opacity:.68}.simansa-emis-kpi:hover .simansa-emis-kpi__action{opacity:1}
+    .simansa-emis-kpi--purple{border-top-color:#8b5cf6}.simansa-emis-kpi--purple .simansa-emis-kpi__value,.simansa-emis-kpi--purple .simansa-emis-kpi__action{color:#7c3aed}.simansa-emis-kpi--green{border-top-color:#22c55e}.simansa-emis-kpi--green .simansa-emis-kpi__value,.simansa-emis-kpi--green .simansa-emis-kpi__action{color:#15803d}.simansa-emis-kpi--amber{border-top-color:#f59e0b}.simansa-emis-kpi--amber .simansa-emis-kpi__value,.simansa-emis-kpi--amber .simansa-emis-kpi__action{color:#b45309}.simansa-emis-kpi--slate{border-top-color:#0f766e}.simansa-emis-kpi--slate .simansa-emis-kpi__value,.simansa-emis-kpi--slate .simansa-emis-kpi__action{color:#0f766e}
     .simansa-analytics-section{padding:1.1rem 1.25rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;box-shadow:0 10px 28px rgba(15,23,42,.05)}.simansa-section-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}.simansa-section-head h3{font-size:1.05rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}.simansa-section-head p{color:#64748b;line-height:1.55;margin:0;max-width:800px}.simansa-result-count{white-space:nowrap;background:#eef4ff;color:#2563eb;border-radius:999px;padding:.4rem .75rem;font-size:.8rem;font-weight:700}
     .simansa-filter-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:.8rem;align-items:end;padding:1rem;margin-bottom:1rem;border:1px solid #e5edf7;border-radius:12px;background:#f8fafc}.simansa-filter-panel label{font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}.simansa-filter-panel .form-control{border-color:#dbe4f0;border-radius:8px}.simansa-filter-panel .btn{height:38px;border-radius:8px}
     .simansa-table-shell{border:1px solid #e5edf7;border-radius:12px;overflow:hidden}.simansa-table thead th{border:0;background:#f8fafc;color:#64748b;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;padding:.8rem}.simansa-table td{vertical-align:middle;border-color:#edf2f7;padding:.8rem}.simansa-table-title{font-weight:700;color:#1e293b}.simansa-table-subtitle{font-size:.78rem;color:#94a3b8}.simansa-status-badge{padding:.42rem .58rem;min-width:74px}.simansa-field-chip{display:inline-flex;padding:.25rem .5rem;margin:0 .2rem .2rem 0;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.72rem;font-weight:600}.simansa-pagination{padding-top:1rem}
     .simansa-progress-overlay{position:fixed;inset:0;z-index:1080;display:none;align-items:center;justify-content:center;padding:1.25rem;background:rgba(15,23,42,.58);backdrop-filter:blur(4px)}.simansa-progress-overlay.is-active{display:flex}.simansa-progress-modal{width:min(760px,100%);max-height:min(720px,92vh);display:flex;flex-direction:column;border-radius:18px;background:#fff;border:1px solid #d9e3f0;box-shadow:0 26px 70px rgba(15,23,42,.28);overflow:hidden}.simansa-progress-modal__head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.2rem;color:#fff;background:linear-gradient(135deg,#2563eb 0%,#0f766e 100%)}.simansa-progress-modal__head h3{font-size:1.25rem;font-weight:700;margin:.2rem 0 .25rem}.simansa-progress-modal__head p{color:rgba(255,255,255,.84);margin:0}.simansa-progress-eyebrow{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.simansa-progress-summary{padding:1rem 1.2rem;border-bottom:1px solid #e5edf7;background:#f8fafc}.simansa-progress-summary>div:first-child{display:flex;justify-content:space-between;gap:1rem;margin-bottom:.75rem;color:#334155}.simansa-progress-bar{height:.72rem;border-radius:999px;background:#e2e8f0}.simansa-progress-log{padding:.25rem 1.2rem 1rem;overflow:auto;min-height:220px;max-height:380px}.simansa-progress-log-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:.75rem;padding:.82rem 0;border-bottom:1px solid #edf2f7;color:#334155}.simansa-progress-log-row strong{color:#0f172a}.simansa-progress-log-meta{color:#64748b;font-size:.82rem;margin-top:.15rem}
-    @media(min-width:1200px){.emis-kpi-col{flex:0 0 14.2857%;max-width:14.2857%}}
     @media(max-width:991.98px){.simansa-emis-hero{flex-direction:column}.simansa-emis-hero__meta{min-width:0}.simansa-token-panel{align-items:flex-start;flex-wrap:wrap}.simansa-token-meta{border-left:0;padding-left:0;min-width:0;width:100%}.simansa-filter-panel{grid-template-columns:1fr 1fr}.simansa-filter-panel .btn{grid-column:1/-1}}
-    @media(max-width:575.98px){.simansa-emis-hero__meta,.simansa-filter-panel{grid-template-columns:1fr}.simansa-emis-sync-btn,.simansa-filter-panel .btn{grid-column:auto}.simansa-section-head{flex-direction:column}.simansa-progress-log-row{grid-template-columns:1fr}.simansa-emis-kpi{min-height:150px;flex-direction:column}}
+    @media(max-width:575.98px){.simansa-emis-hero__meta,.simansa-filter-panel{grid-template-columns:1fr}.simansa-emis-sync-btn,.simansa-filter-panel .btn{grid-column:auto}.simansa-section-head{flex-direction:column}.simansa-progress-log-row{grid-template-columns:1fr}}
 </style>
 @stop
 
