@@ -1153,6 +1153,7 @@ return [
                     'type' => 'css',
                     'asset' => true,
                     'location' => 'css/custom-compact.css',
+                    'version' => true,
                 ],
             ],
         ],

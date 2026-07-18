@@ -1411,6 +1411,16 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     color: var(--text-primary) !important;
 }
 
+/*
+ * Hero headers define their own foreground color. The generic content-header
+ * rule above must not force them back to the default dark heading color.
+ * This convention protects every *-hero component, including future modules.
+ */
+.content-header [class*="-hero"] h1,
+.content-header [class*="-hero"] .h1 {
+    color: inherit !important;
+}
+
 /* ===============================================
    SELECT2
    =============================================== */

@@ -18,7 +18,13 @@
 
             @php
                 if (! empty($file['asset'])) {
-                    $file['location'] = asset($file['location']);
+                    $location = $file['location'];
+
+                    if (! empty($file['version']) && is_file(public_path($location))) {
+                        $location .= '?v=' . filemtime(public_path($location));
+                    }
+
+                    $file['location'] = asset($location);
                 }
             @endphp
 
