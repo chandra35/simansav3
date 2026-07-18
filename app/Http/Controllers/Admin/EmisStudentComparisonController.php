@@ -7,6 +7,7 @@ use App\Models\EmisStudentSnapshot;
 use App\Models\EmisStudentSync;
 use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Models\TahunPelajaran;
 use App\Services\EmisInstitutionTokenService;
 use App\Services\EmisStudentSyncService;
 use App\Services\SmartStudentComparator;
@@ -27,6 +28,10 @@ class EmisStudentComparisonController extends Controller
     {
         $status = (string) $request->get('status', 'all');
         $search = trim((string) $request->get('search', ''));
+        $tingkat = (string) $request->get('tingkat', '');
+        if (! in_array($tingkat, ['10', '11', '12'], true)) {
+            $tingkat = '';
+        }
         $kelasId = (string) $request->get('kelas_id', '');
         $tokenStatus = $this->publicTokenStatus();
         $latestSync = EmisStudentSync::query()->latest('started_at')->first();
@@ -42,11 +47,20 @@ class EmisStudentComparisonController extends Controller
             'only_emis' => EmisStudentSnapshot::whereNull('siswa_id')->count(),
         ];
 
+        $activeYear = TahunPelajaran::query()->where('is_active', true)->first();
         $classes = Kelas::query()
             ->where('is_active', true)
+            ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
+            ->when(! $activeYear, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('tingkat')
             ->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'tingkat']);
+
+        if ($kelasId !== '' && ! $classes->contains(
+            fn (Kelas $kelas) => $kelas->id === $kelasId && (string) $kelas->tingkat === $tingkat
+        )) {
+            $kelasId = '';
+        }
 
         if ($status === 'only_emis') {
             $query = EmisStudentSnapshot::query()->whereNull('siswa_id');
@@ -75,6 +89,11 @@ class EmisStudentComparisonController extends Controller
 
             if ($kelasId !== '') {
                 $query->where('kelas_saat_ini_id', $kelasId);
+            } elseif ($tingkat !== '') {
+                $query->whereHas('kelasSaatIni', fn ($kelas) => $kelas
+                    ->where('tingkat', (int) $tingkat)
+                    ->when($activeYear, fn ($activeClass) => $activeClass->where('tahun_pelajaran_id', $activeYear->id))
+                    ->when(! $activeYear, fn ($activeClass) => $activeClass->whereRaw('1 = 0')));
             }
 
             if ($status === 'only_simansa') {
@@ -97,8 +116,10 @@ class EmisStudentComparisonController extends Controller
             'stats',
             'status',
             'search',
+            'tingkat',
             'kelasId',
             'classes',
+            'activeYear',
             'tokenStatus',
             'latestSync',
         ));

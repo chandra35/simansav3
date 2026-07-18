@@ -116,10 +116,19 @@
                 </select>
             </div>
             <div class="form-group mb-0">
-                <label for="kelas_id">Kelas SIMANSA</label>
-                <select id="kelas_id" name="kelas_id" class="form-control" @disabled($listMode === 'emis')>
-                    <option value="">Semua kelas</option>
-                    @foreach($classes as $class)
+                <label for="tingkat">Tingkat</label>
+                <select id="tingkat" name="tingkat" class="form-control" @disabled($listMode === 'emis')>
+                    <option value="">Semua tingkat</option>
+                    <option value="10" @selected($tingkat === '10')>Kelas X</option>
+                    <option value="11" @selected($tingkat === '11')>Kelas XI</option>
+                    <option value="12" @selected($tingkat === '12')>Kelas XII</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label for="kelas_id">Kelas SIMANSA <span class="simansa-filter-hint">· {{ $activeYear?->nama ?? 'Tahun aktif belum tersedia' }}</span></label>
+                <select id="kelas_id" name="kelas_id" class="form-control" @disabled($listMode === 'emis' || $tingkat === '')>
+                    <option value="">{{ $tingkat === '' ? 'Pilih tingkat dahulu' : 'Semua kelas' }}</option>
+                    @foreach($classes->where('tingkat', (int) $tingkat) as $class)
                         <option value="{{ $class->id }}" @selected($kelasId === $class->id)>{{ $class->nama_kelas }}</option>
                     @endforeach
                 </select>
@@ -238,7 +247,7 @@
     .simansa-emis-kpi__label{font-size:.76rem;color:#64748b;text-transform:uppercase;letter-spacing:.035em;font-weight:700}.simansa-emis-kpi__value{font-size:1.45rem;font-weight:700;color:#2563eb;line-height:1.25;margin:.18rem 0 .3rem}.simansa-emis-kpi__desc{font-size:.84rem;line-height:1.5;color:#64748b;flex:1}.simansa-emis-kpi__action{margin-top:.55rem;font-size:.78rem;font-weight:700;color:#2563eb;opacity:.68}.simansa-emis-kpi:hover .simansa-emis-kpi__action{opacity:1}
     .simansa-emis-kpi--purple{border-top-color:#8b5cf6}.simansa-emis-kpi--purple .simansa-emis-kpi__value,.simansa-emis-kpi--purple .simansa-emis-kpi__action{color:#7c3aed}.simansa-emis-kpi--green{border-top-color:#22c55e}.simansa-emis-kpi--green .simansa-emis-kpi__value,.simansa-emis-kpi--green .simansa-emis-kpi__action{color:#15803d}.simansa-emis-kpi--amber{border-top-color:#f59e0b}.simansa-emis-kpi--amber .simansa-emis-kpi__value,.simansa-emis-kpi--amber .simansa-emis-kpi__action{color:#b45309}.simansa-emis-kpi--slate{border-top-color:#0f766e}.simansa-emis-kpi--slate .simansa-emis-kpi__value,.simansa-emis-kpi--slate .simansa-emis-kpi__action{color:#0f766e}
     .simansa-analytics-section{padding:1.1rem 1.25rem;border-radius:14px;background:#fff;border:1px solid #dbe4f0;box-shadow:0 10px 28px rgba(15,23,42,.05)}.simansa-section-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}.simansa-section-head h3{font-size:1.05rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}.simansa-section-head p{color:#64748b;line-height:1.55;margin:0;max-width:800px}.simansa-result-count{white-space:nowrap;background:#eef4ff;color:#2563eb;border-radius:999px;padding:.4rem .75rem;font-size:.8rem;font-weight:700}
-    .simansa-filter-panel{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:.8rem;align-items:end;padding:1rem;margin-bottom:1rem;border:1px solid #e5edf7;border-radius:12px;background:#f8fafc}.simansa-filter-panel label{font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}.simansa-filter-panel .form-control{border-color:#dbe4f0;border-radius:8px}.simansa-filter-panel .btn{height:38px;border-radius:8px}
+    .simansa-filter-panel{display:grid;grid-template-columns:1.15fr .95fr .62fr .9fr auto;gap:.8rem;align-items:end;padding:1rem;margin-bottom:1rem;border:1px solid #e5edf7;border-radius:12px;background:#f8fafc}.simansa-filter-panel label{font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:#64748b}.simansa-filter-panel .form-control{border-color:#dbe4f0;border-radius:8px}.simansa-filter-panel .form-control:disabled{background:#eef2f7;color:#94a3b8;cursor:not-allowed}.simansa-filter-panel .btn{height:38px;border-radius:8px}.simansa-filter-hint{color:#94a3b8;font-size:.63rem;font-weight:500;letter-spacing:0;text-transform:none;white-space:nowrap}
     .simansa-table-shell{border:1px solid #e5edf7;border-radius:12px;overflow-x:auto!important;overflow-y:hidden;-webkit-overflow-scrolling:touch}.simansa-table-shell::-webkit-scrollbar{height:9px}.simansa-table-shell::-webkit-scrollbar-track{background:#f1f5f9}.simansa-table-shell::-webkit-scrollbar-thumb{background:#bfdbfe;border-radius:999px}.simansa-table{min-width:1240px}.simansa-table thead th{border:0;background:#f8fafc;color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.035em;padding:.68rem .78rem;vertical-align:middle}.simansa-group-header th{border-bottom:1px solid #dbe4f0!important}.simansa-source-group{text-align:center!important;font-weight:800!important;font-size:.76rem!important}.simansa-source-group--local{background:#eff6ff!important;color:#1d4ed8!important;border-bottom:3px solid #3b82f6!important}.simansa-source-group--emis{background:#ecfdf5!important;color:#15803d!important;border-bottom:3px solid #22c55e!important}.simansa-sub-header th:nth-child(-n+2){background:#f8fbff;color:#2563eb}.simansa-table td{vertical-align:middle;border-color:#edf2f7;padding:.78rem}.simansa-local-identity,.simansa-local-class{background:rgba(239,246,255,.3)}.simansa-local-class{border-right:2px solid #dbeafe}.simansa-table-title{font-weight:700;color:#1e293b}.simansa-table-title--emis{color:#166534}.simansa-table-subtitle{font-size:.76rem;color:#94a3b8;line-height:1.55}.simansa-table-subtitle i{width:13px;text-align:center;color:#94a3b8}.simansa-emis-column-head{background:#f0fdf4!important;color:#15803d!important}.simansa-emis-identity,.simansa-emis-class{background:rgba(240,253,244,.42)}.simansa-emis-class{border-right:2px solid #dcfce7}.simansa-empty-identity{font-size:.78rem;color:#94a3b8;font-style:italic}.simansa-empty-identity--emis{color:#b45309}.simansa-status-badge{padding:.42rem .58rem;min-width:74px}.simansa-field-chip{display:inline-flex;padding:.25rem .5rem;margin:0 .2rem .2rem 0;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.72rem;font-weight:600}.simansa-row-actions{display:flex;justify-content:flex-end;gap:.45rem;white-space:nowrap}.simansa-pagination{padding-top:1rem}.simansa-pagination nav,.simansa-pagination>div{width:100%}.simansa-pagination .pagination{margin-bottom:0}.simansa-pagination .page-link{min-width:36px;text-align:center;border-color:#dbe4f0;color:#2563eb}.simansa-pagination .page-item.active .page-link{background:#2563eb;border-color:#2563eb;color:#fff}
     .simansa-progress-overlay{position:fixed;inset:0;z-index:1080;display:none;align-items:center;justify-content:center;padding:1.25rem;background:rgba(15,23,42,.58);backdrop-filter:blur(4px)}.simansa-progress-overlay.is-active{display:flex}.simansa-progress-modal{width:min(760px,100%);max-height:min(720px,92vh);display:flex;flex-direction:column;border-radius:18px;background:#fff;border:1px solid #d9e3f0;box-shadow:0 26px 70px rgba(15,23,42,.28);overflow:hidden}.simansa-progress-modal__head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.2rem;color:#fff;background:linear-gradient(135deg,#2563eb 0%,#0f766e 100%)}.simansa-progress-modal__head h3{font-size:1.25rem;font-weight:700;margin:.2rem 0 .25rem}.simansa-progress-modal__head p{color:rgba(255,255,255,.84);margin:0}.simansa-progress-eyebrow{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.simansa-progress-summary{padding:1rem 1.2rem;border-bottom:1px solid #e5edf7;background:#f8fafc}.simansa-progress-summary>div:first-child{display:flex;justify-content:space-between;gap:1rem;margin-bottom:.75rem;color:#334155}.simansa-progress-bar{height:.72rem;border-radius:999px;background:#e2e8f0}.simansa-progress-log{padding:.25rem 1.2rem 1rem;overflow:auto;min-height:220px;max-height:380px}.simansa-progress-log-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:.75rem;padding:.82rem 0;border-bottom:1px solid #edf2f7;color:#334155}.simansa-progress-log-row strong{color:#0f172a}.simansa-progress-log-meta{color:#64748b;font-size:.82rem;margin-top:.15rem}
     @media(max-width:991.98px){.simansa-emis-hero{flex-direction:column}.simansa-emis-hero__meta{min-width:0}.simansa-token-panel{align-items:flex-start;flex-wrap:wrap}.simansa-token-meta{border-left:0;padding-left:0;min-width:0;width:100%}.simansa-filter-panel{grid-template-columns:1fr 1fr}.simansa-filter-panel .btn{grid-column:1/-1}.simansa-table-shell{border:0;overflow:visible!important;background:transparent}.simansa-table{display:block;min-width:0}.simansa-table thead{display:none}.simansa-table tbody{display:grid;gap:1rem}.simansa-table .simansa-comparison-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border:1px solid #dbe4f0;border-radius:14px;background:#fff;box-shadow:0 8px 22px rgba(15,23,42,.06);overflow:hidden}.simansa-table .simansa-comparison-row td{display:block;border:0;padding:.82rem}.simansa-table .simansa-comparison-row td::before{content:attr(data-label);display:block;margin-bottom:.4rem;color:#64748b;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.045em}.simansa-table .simansa-col-number{display:none}.simansa-local-identity,.simansa-local-class{background:#f8fbff}.simansa-local-identity{border-top:4px solid #3b82f6!important}.simansa-local-class{border:0;border-top:4px solid #3b82f6!important}.simansa-emis-identity,.simansa-emis-class{background:#f7fef9}.simansa-emis-class{border:0}.simansa-result-cell,.simansa-fields-cell{border-top:1px solid #edf2f7!important}.simansa-actions-cell{grid-column:1/-1;border-top:1px solid #edf2f7!important;background:#f8fafc}.simansa-row-actions{justify-content:stretch}.simansa-row-actions .btn{flex:1}.simansa-table tbody>tr:not(.simansa-comparison-row){display:block;grid-column:1/-1}.simansa-table tbody>tr:not(.simansa-comparison-row) td{display:block}.simansa-pagination{padding-top:1.2rem}}
@@ -252,11 +261,36 @@
 $(function () {
     const startUrl = @json(route('admin.emis-comparison.sync'));
     const csrfToken = @json(csrf_token());
+    const activeClassOptions = @json($classes->map(fn ($class) => ['id' => $class->id, 'name' => $class->nama_kelas, 'level' => (string) $class->tingkat])->values());
+    const initialClassId = @json($kelasId);
+    const hasActiveYear = @json((bool) $activeYear);
     const overlay = $('#emisSyncOverlay');
     const closeButton = $('#btnCloseEmisOverlay');
     let pollTimer = null;
     let lastLogKey = '';
     let reloadOnClose = false;
+
+    function refreshClassOptions(keepSelection) {
+        const statusIsEmisOnly = $('#status').val() === 'only_emis';
+        const level = String($('#tingkat').val() || '');
+        const classSelect = $('#kelas_id');
+        const selectedId = keepSelection ? String(classSelect.val() || initialClassId || '') : '';
+        const matchingClasses = activeClassOptions.filter(item => String(item.level) === level);
+
+        classSelect.empty().append(
+            $('<option>', {value:'', text:level ? 'Semua kelas' : 'Pilih tingkat dahulu'})
+        );
+        matchingClasses.forEach(function (item) {
+            classSelect.append($('<option>', {value:item.id, text:item.name, selected:String(item.id) === selectedId}));
+        });
+
+        $('#tingkat').prop('disabled', statusIsEmisOnly);
+        classSelect.prop('disabled', statusIsEmisOnly || !level || !hasActiveYear);
+    }
+
+    refreshClassOptions(true);
+    $('#tingkat').on('change', function () { refreshClassOptions(false); });
+    $('#status').on('change', function () { refreshClassOptions(true); });
 
     function notify(type, message) {
         if (window.toastr && typeof window.toastr[type] === 'function') {
