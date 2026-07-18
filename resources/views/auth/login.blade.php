@@ -161,6 +161,60 @@ body.login-page {
     transform: translateY(0);
 }
 
+/* Interactive login guide: lightweight vector hand, no extra runtime. */
+.login-button-stage {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding-right: 46px;
+    isolation: isolate;
+}
+.login-guide-hand {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    right: 1px;
+    width: 42px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a73e8;
+    font-size: 2rem;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: 34% 18%;
+    transform: translate(24px, 17px) rotate(-48deg);
+    filter: drop-shadow(0 5px 7px rgba(13, 71, 161, .28));
+    -webkit-text-stroke: 1.5px #fff;
+}
+.login-guide-hand::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 8px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(26, 115, 232, .55);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(.35);
+}
+.login-button-stage.is-guiding .login-guide-hand {
+    animation: loginHandGuide 2.15s cubic-bezier(.22, 1, .36, 1) both;
+}
+.login-button-stage:hover .login-guide-hand,
+.login-button-stage:focus-within .login-guide-hand {
+    animation: loginHandHover .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+.login-button-stage.is-pressing .login-guide-hand {
+    animation: loginHandPress .2s ease-out both;
+}
+.login-button-stage.is-pressing .login-guide-hand::after {
+    animation: loginHandTapRing .42s ease-out both;
+}
+
 /* ── Remember me ── */
 .icheck-primary label {
     font-size: .85rem;
@@ -281,12 +335,37 @@ body.login-page {
 @keyframes spinnerRotate {
     to { transform: rotate(360deg); }
 }
+@keyframes loginHandGuide {
+    0%, 8% { opacity: 0; transform: translate(26px, 18px) rotate(-42deg) scale(.92); }
+    24% { opacity: 1; transform: translate(12px, 10px) rotate(-47deg) scale(1); }
+    43% { opacity: 1; transform: translate(1px, 1px) rotate(-51deg) scale(1); }
+    52% { opacity: 1; transform: translate(-2px, -2px) rotate(-51deg) scale(.88); }
+    62% { opacity: 1; transform: translate(2px, 2px) rotate(-49deg) scale(1); }
+    78% { opacity: 1; transform: translate(9px, 8px) rotate(-46deg) scale(.98); }
+    100% { opacity: 0; transform: translate(25px, 17px) rotate(-42deg) scale(.92); }
+}
+@keyframes loginHandHover {
+    from { opacity: 0; transform: translate(18px, 13px) rotate(-43deg) scale(.94); }
+    to { opacity: 1; transform: translate(2px, 2px) rotate(-50deg) scale(1); }
+}
+@keyframes loginHandPress {
+    from { opacity: 1; transform: translate(2px, 2px) rotate(-50deg) scale(1); }
+    to { opacity: 1; transform: translate(-2px, -2px) rotate(-50deg) scale(.86); }
+}
+@keyframes loginHandTapRing {
+    0% { opacity: .9; transform: scale(.35); }
+    100% { opacity: 0; transform: scale(1.7); }
+}
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
     .login-box { width: 92% !important; }
     .login-box .card-body { padding: 22px 20px 16px !important; }
     .login-box .card-header { padding: 22px 20px 18px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .login-button-stage { padding-right: 0; }
+    .login-guide-hand { display: none; }
 }
 </style>
 @stop
@@ -345,9 +424,14 @@ body.login-page {
             <input type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
             <label for="remember">Ingat Saya</label>
         </div>
-        <button type="submit" class="btn btn-primary px-4" id="btnLogin">
-            <i class="fas fa-sign-in-alt mr-1"></i> Masuk
-        </button>
+        <span class="login-button-stage" id="loginButtonStage">
+            <button type="submit" class="btn btn-primary px-4" id="btnLogin">
+                <i class="fas fa-sign-in-alt mr-1"></i> Masuk
+            </button>
+            <span class="login-guide-hand" aria-hidden="true">
+                <i class="fas fa-hand-pointer"></i>
+            </span>
+        </span>
     </div>
 
     {{-- Location status --}}
@@ -362,9 +446,37 @@ body.login-page {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
     const btn = document.getElementById('btnLogin');
+    const buttonStage = document.getElementById('loginButtonStage');
     const overlay = document.getElementById('loginOverlay');
     const locStatus = document.getElementById('locationStatus');
     let submitted = false;
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        window.setTimeout(function() {
+            if (!submitted && document.activeElement !== btn) {
+                buttonStage.classList.add('is-guiding');
+            }
+        }, 850);
+
+        buttonStage.addEventListener('animationend', function(event) {
+            if (event.animationName === 'loginHandGuide') {
+                buttonStage.classList.remove('is-guiding');
+            }
+        });
+
+        ['mousedown', 'touchstart'].forEach(function(eventName) {
+            btn.addEventListener(eventName, function() {
+                buttonStage.classList.remove('is-guiding');
+                buttonStage.classList.add('is-pressing');
+            }, { passive: true });
+        });
+
+        ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(function(eventName) {
+            btn.addEventListener(eventName, function() {
+                buttonStage.classList.remove('is-pressing');
+            }, { passive: true });
+        });
+    }
 
     form.addEventListener('submit', function(e) {
         if (submitted) { e.preventDefault(); return false; }
@@ -376,6 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('pageshow', function() {
         submitted = false;
         btn.disabled = false;
+        buttonStage.classList.remove('is-guiding', 'is-pressing');
         overlay.style.display = 'none';
     });
 
