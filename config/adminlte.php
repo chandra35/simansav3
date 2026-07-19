@@ -1143,6 +1143,7 @@ return [
         App\Menu\Filters\SnbpMenuFilter::class,
         App\Menu\Filters\SpanPtkinMenuFilter::class,
         App\Menu\Filters\LulusanMenuFilter::class,
+        App\Menu\Filters\OsisElectionMenuFilter::class,
         App\Menu\Filters\GtkPersonalMenuFilter::class,
     ],
 
