@@ -129,8 +129,8 @@ class AuthServiceProvider extends ServiceProvider
             return !$user->hasRole('Siswa') &&
                 !$user->siswa()->exists() &&
                 (
-                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'Kepala Madrasah', 'WAKA']) ||
-                    in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk'])
+                    $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'BK', 'Wali Kelas', 'Kepala Madrasah', 'WAKA']) ||
+                    in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk', 'bk', 'wali_kelas'])
                 );
         });
     }

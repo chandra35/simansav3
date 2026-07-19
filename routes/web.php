@@ -530,10 +530,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/email-templates/{emailTemplate}/reset-default', [App\Http\Controllers\Admin\EmailTemplateController::class, 'resetToDefault'])->name('email-templates.reset-default');
     });
     
-    Route::middleware(['permission:view-kelas'])->group(function () {
+    Route::middleware(['permission:view-student-attendance'])->group(function () {
         Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
         Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
     });
+    Route::middleware(['permission:view-attendance-analytics'])->group(function () {
+        Route::get('/absensi-siswa/analitik', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'index'])->name('absensi-siswa.analytics');
+        Route::get('/absensi-siswa/analitik/siswa/{siswa}', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'student'])->name('absensi-siswa.analytics.student');
+    });
+    Route::post('/absensi-siswa/analitik/generate', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'generate'])
+        ->middleware('permission:manage-attendance-alerts')->name('absensi-siswa.analytics.generate');
+    Route::put('/absensi-siswa/analitik/alert/{alert}', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'updateAlert'])
+        ->middleware('permission:manage-attendance-alerts')->name('absensi-siswa.analytics.alert.update');
 
     // Cetak (Print Reports)
     Route::middleware(['permission:view-kelas'])->group(function () {

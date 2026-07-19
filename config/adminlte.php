@@ -676,8 +676,15 @@ return [
                     'text' => 'Absensi Siswa',
                     'route' => 'admin.absensi-siswa.index',
                     'icon' => 'fas fa-fw fa-user-check',
-                    'can' => 'view-kelas',
-                    'active' => ['admin/absensi-siswa*'],
+                    'can' => 'view-student-attendance',
+                    'active' => ['admin/absensi-siswa'],
+                ],
+                [
+                    'text' => 'Analitik Kehadiran',
+                    'route' => 'admin.absensi-siswa.analytics',
+                    'icon' => 'fas fa-fw fa-chart-line',
+                    'can' => 'view-attendance-analytics',
+                    'active' => ['admin/absensi-siswa/analitik*'],
                 ],
                 [
                     'text' => 'Verifikasi Wajah',

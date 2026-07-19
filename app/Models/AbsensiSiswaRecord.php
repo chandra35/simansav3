@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class AbsensiSiswaRecord extends Model
 {
@@ -16,8 +16,11 @@ class AbsensiSiswaRecord extends Model
         'session_id',
         'siswa_id',
         'status',
+        'late_minutes',
+        'left_early_minutes',
         'notes',
         'attendance_method',
+        'source_reference',
         'face_confidence',
         'checked_at',
         'checked_by',
@@ -26,6 +29,8 @@ class AbsensiSiswaRecord extends Model
     protected $casts = [
         'checked_at' => 'datetime',
         'face_confidence' => 'decimal:4',
+        'late_minutes' => 'integer',
+        'left_early_minutes' => 'integer',
     ];
 
     public function session()

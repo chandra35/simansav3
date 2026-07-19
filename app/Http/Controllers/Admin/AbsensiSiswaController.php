@@ -7,117 +7,112 @@ use App\Models\AbsensiSiswaRecord;
 use App\Models\AbsensiSiswaSession;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
-use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Services\StudentAttendanceAuditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AbsensiSiswaController extends Controller
 {
+    public function __construct(private readonly StudentAttendanceAuditService $audit) {}
+
     public function index(Request $request)
     {
-        $this->authorize('view-kelas');
+        $this->authorize('view-student-attendance');
 
         $user = $request->user();
-        $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
-        $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
+        $tanggal = $this->normalizeDate($request->get('tanggal'));
+        $tahunPelajaran = TahunPelajaran::query()->active()->first();
+        $canManageHarian = $tahunPelajaran && $this->canManageHarian($user, $tahunPelajaran->id);
+        $canManageMapel = $tahunPelajaran && $this->canManageMapel($user, $tahunPelajaran->id);
 
-        $canManageHarian = $this->canManageHarian($user);
-        $canManageMapel = $this->canManageMapel($user);
+        $requestedMode = $request->get('mode');
+        $mode = match (true) {
+            $requestedMode === 'harian' && $canManageHarian => 'harian',
+            $requestedMode === 'mapel' && $canManageMapel => 'mapel',
+            $canManageHarian => 'harian',
+            $canManageMapel => 'mapel',
+            default => null,
+        };
 
-        $mode = $request->get('mode', $canManageHarian ? 'harian' : 'mapel');
-        if ($mode === 'harian' && !$canManageHarian) {
-            $mode = 'mapel';
-        }
-        if ($mode === 'mapel' && !$canManageMapel) {
-            $mode = 'harian';
-        }
-
-        $kelasOptions = $this->getAccessibleClasses($user, $tanggal, $mode);
-        $selectedKelasId = $request->get('kelas_id') ?: optional($kelasOptions->first())->id;
-        $selectedKelas = $selectedKelasId
-            ? $kelasOptions->firstWhere('id', $selectedKelasId)
-            : null;
+        $kelasOptions = $mode && $tahunPelajaran
+            ? $this->getAccessibleClasses($user, $tanggal, $mode, $tahunPelajaran)
+            : collect();
+        $selectedKelasId = (string) ($request->get('kelas_id') ?: optional($kelasOptions->first())->id);
+        $selectedKelas = $selectedKelasId !== '' ? $kelasOptions->firstWhere('id', $selectedKelasId) : null;
 
         $jadwalOptions = collect();
         $selectedJadwalId = null;
-        if ($mode === 'mapel' && $selectedKelas) {
-            $jadwalOptions = $this->getAccessibleSchedules($user, $tanggal, $selectedKelas->id);
-            $selectedJadwalId = $request->get('jadwal_pelajaran_id') ?: optional($jadwalOptions->first())->id;
+        if ($mode === 'mapel' && $selectedKelas && $tahunPelajaran) {
+            $jadwalOptions = $this->getAccessibleSchedules($user, $tanggal, $selectedKelas->id, $tahunPelajaran);
+            $selectedJadwalId = (string) ($request->get('jadwal_pelajaran_id') ?: optional($jadwalOptions->first())->id);
+            if (! $jadwalOptions->contains('id', $selectedJadwalId)) {
+                $selectedJadwalId = null;
+            }
         }
 
         $session = null;
         $students = collect();
         $existingRecords = collect();
-        $summary = [
-            'hadir' => 0,
-            'izin' => 0,
-            'sakit' => 0,
-            'alpa' => 0,
-            'dispen' => 0,
-        ];
+        $summary = collect(['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'])
+            ->mapWithKeys(fn ($status) => [$status => 0])->all();
 
-        if ($selectedKelas) {
+        if ($selectedKelas && ($mode === 'harian' || $selectedJadwalId)) {
             $session = $this->findExistingSession($tanggal, $selectedKelas->id, $mode, $selectedJadwalId);
-            $students = $selectedKelas->siswas()
-                ->wherePivot('status', 'aktif')
-                ->wherePivot('tahun_pelajaran_id', $selectedKelas->tahun_pelajaran_id)
-                ->orderBy('nama_lengkap')
-                ->get();
+            $students = $this->studentsForDate($selectedKelas, $tanggal);
 
             if ($session) {
-                $existingRecords = $session->records()
-                    ->get()
-                    ->keyBy('siswa_id');
-
-                $summary = [
-                    'hadir' => $existingRecords->where('status', 'hadir')->count(),
-                    'izin' => $existingRecords->where('status', 'izin')->count(),
-                    'sakit' => $existingRecords->where('status', 'sakit')->count(),
-                    'alpa' => $existingRecords->where('status', 'alpa')->count(),
-                    'dispen' => $existingRecords->where('status', 'dispen')->count(),
-                ];
+                $existingRecords = $session->records()->get()->keyBy('siswa_id');
+                foreach (array_keys($summary) as $status) {
+                    $summary[$status] = $existingRecords->where('status', $status)->count();
+                }
             }
         }
 
         return view('admin.absensi.siswa', compact(
-            'tanggal',
-            'tahunPelajaran',
-            'mode',
-            'canManageHarian',
-            'canManageMapel',
-            'kelasOptions',
-            'selectedKelas',
-            'jadwalOptions',
-            'selectedJadwalId',
-            'session',
-            'students',
-            'existingRecords',
-            'summary'
+            'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel',
+            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId',
+            'session', 'students', 'existingRecords', 'summary'
         ));
     }
 
     public function store(Request $request)
     {
-        $this->authorize('view-kelas');
+        $this->authorize('view-student-attendance');
 
         $validated = $request->validate([
-            'tanggal' => 'required|date',
-            'mode' => 'required|in:harian,mapel',
-            'kelas_id' => 'required|exists:kelas,id',
-            'jadwal_pelajaran_id' => 'nullable|exists:jadwal_pelajaran,id',
-            'session_notes' => 'nullable|string|max:1000',
-            'statuses' => 'required|array|min:1',
-            'statuses.*' => 'required|in:hadir,izin,sakit,alpa,dispen',
-            'notes' => 'nullable|array',
+            'tanggal' => ['required', 'date', 'before_or_equal:today'],
+            'mode' => ['required', 'in:harian,mapel'],
+            'kelas_id' => ['required', 'exists:kelas,id'],
+            'jadwal_pelajaran_id' => ['nullable', 'exists:jadwal_pelajaran,id'],
+            'submit_action' => ['required', 'in:draft,final'],
+            'session_notes' => ['nullable', 'string', 'max:1000'],
+            'revision_reason' => ['nullable', 'string', 'max:500'],
+            'statuses' => ['required', 'array', 'min:1'],
+            'statuses.*' => ['required', 'in:hadir,terlambat,izin,sakit,alpa,dispen,keluar_awal'],
+            'notes' => ['nullable', 'array'],
+            'late_minutes' => ['nullable', 'array'],
+            'late_minutes.*' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'left_early_minutes' => ['nullable', 'array'],
+            'left_early_minutes.*' => ['nullable', 'integer', 'min:1', 'max:600'],
         ]);
 
         $user = $request->user();
-        $kelas = Kelas::findOrFail($validated['kelas_id']);
+        $tahunPelajaran = TahunPelajaran::query()->active()->firstOrFail();
+        $this->ensureDateBelongsToActiveYear($validated['tanggal'], $tahunPelajaran);
+        $this->authorizeInputMode($user, $validated['mode'], $validated['submit_action']);
+
+        $kelas = Kelas::query()
+            ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+            ->where('is_active', true)
+            ->findOrFail($validated['kelas_id']);
 
         abort_unless(
-            $this->getAccessibleClasses($user, $validated['tanggal'], $validated['mode'])->pluck('id')->contains($kelas->id),
+            $this->getAccessibleClasses($user, $validated['tanggal'], $validated['mode'], $tahunPelajaran)
+                ->contains('id', $kelas->id),
             403,
             'Anda tidak memiliki akses untuk mengabsen kelas ini.'
         );
@@ -125,150 +120,239 @@ class AbsensiSiswaController extends Controller
         $selectedJadwal = null;
         if ($validated['mode'] === 'mapel') {
             abort_unless($validated['jadwal_pelajaran_id'], 422, 'Jadwal pelajaran wajib dipilih untuk absensi per mapel.');
-
-            $selectedJadwal = $this->getAccessibleSchedules($user, $validated['tanggal'], $kelas->id)
+            $selectedJadwal = $this->getAccessibleSchedules($user, $validated['tanggal'], $kelas->id, $tahunPelajaran)
                 ->firstWhere('id', $validated['jadwal_pelajaran_id']);
-
             abort_unless($selectedJadwal, 403, 'Anda tidak memiliki akses untuk jadwal pelajaran ini.');
         }
 
-        $students = $kelas->siswas()
-            ->wherePivot('status', 'aktif')
-            ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-            ->pluck('id');
+        $sessionKey = $this->sessionKey(
+            $validated['tanggal'],
+            $kelas->id,
+            $validated['mode'],
+            $selectedJadwal?->id
+        );
+        $existingSession = AbsensiSiswaSession::query()->where('session_key', $sessionKey)->first();
 
-        DB::transaction(function () use ($validated, $request, $kelas, $selectedJadwal, $students, $user) {
-            $session = AbsensiSiswaSession::firstOrNew([
-                'tanggal' => $validated['tanggal'],
-                'kelas_id' => $kelas->id,
-                'mode' => $validated['mode'],
-                'jadwal_pelajaran_id' => $validated['mode'] === 'mapel' ? $validated['jadwal_pelajaran_id'] : null,
-            ]);
+        if ($existingSession?->status === 'final') {
+            if ($existingSession->locked_at?->isPast() && ! $user->can('edit-final-student-attendance')) {
+                abort(403, 'Sesi sudah dikunci. Hubungi admin untuk melakukan koreksi.');
+            }
+            if (blank($validated['revision_reason'])) {
+                throw ValidationException::withMessages([
+                    'revision_reason' => 'Alasan perubahan wajib diisi karena sesi ini sudah pernah difinalkan.',
+                ]);
+            }
+        }
 
-            if (!$session->exists) {
+        $students = $this->studentsForDate($kelas, $validated['tanggal'])->pluck('id');
+        $recordChanges = 0;
+
+        DB::transaction(function () use (
+            $validated, $request, $kelas, $selectedJadwal, $students, $user,
+            $tahunPelajaran, $sessionKey, &$recordChanges
+        ) {
+            $session = AbsensiSiswaSession::query()->lockForUpdate()->firstOrNew(['session_key' => $sessionKey]);
+            $beforeSession = $session->exists ? $this->sessionAuditValues($session) : [];
+            $wasFinal = $session->status === 'final';
+
+            if (! $session->exists) {
                 $session->created_by = $user->id;
+                $session->tanggal = $validated['tanggal'];
+                $session->kelas_id = $kelas->id;
+                $session->mode = $validated['mode'];
+                $session->jadwal_pelajaran_id = $selectedJadwal?->id;
+            } else {
+                $session->version = max(1, (int) $session->version) + 1;
             }
 
+            $isFinal = $validated['submit_action'] === 'final';
+            $guruUser = $selectedJadwal?->gtk?->user;
             $session->fill([
-                'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                'tahun_pelajaran_id' => $tahunPelajaran->id,
                 'mapel_id' => $selectedJadwal?->mapel_id,
-                'guru_user_id' => $selectedJadwal?->gtk?->user_id ?? $user->id,
+                'guru_user_id' => $guruUser?->id ?? $user->id,
+                'semester' => $tahunPelajaran->semester_aktif,
+                'tingkat' => $kelas->tingkat,
+                'kelas_snapshot' => $kelas->nama_kelas,
+                'mapel_snapshot' => $selectedJadwal?->mapel_nama,
+                'guru_snapshot' => $guruUser?->name ?? $user->name,
+                'scheduled_start' => $selectedJadwal?->jam_mulai,
+                'scheduled_end' => $selectedJadwal?->jam_selesai,
                 'attendance_method' => 'manual',
-                'status' => 'final',
+                'status' => $isFinal ? 'final' : 'draft',
                 'notes' => $validated['session_notes'] ?? null,
+                'revision_reason' => $validated['revision_reason'] ?? null,
                 'updated_by' => $user->id,
+                'finalized_at' => $isFinal ? now() : null,
+                'finalized_by' => $isFinal ? $user->id : null,
+                'locked_at' => $isFinal ? now()->addHours(24) : null,
             ]);
             $session->save();
 
             foreach ($validated['statuses'] as $siswaId => $status) {
-                if (!$students->contains($siswaId)) {
+                if (! $students->contains($siswaId)) {
                     continue;
                 }
 
-                AbsensiSiswaRecord::updateOrCreate(
-                    [
-                        'session_id' => $session->id,
-                        'siswa_id' => $siswaId,
-                    ],
-                    [
-                        'status' => $status,
-                        'notes' => data_get($validated, "notes.$siswaId"),
-                        'attendance_method' => 'manual',
-                        'checked_at' => now(),
-                        'checked_by' => $user->id,
-                    ]
-                );
+                $record = AbsensiSiswaRecord::withTrashed()->firstOrNew([
+                    'session_id' => $session->id,
+                    'siswa_id' => $siswaId,
+                ]);
+                if ($record->trashed()) {
+                    $record->restore();
+                }
+                $beforeRecord = $record->exists ? $this->recordAuditValues($record) : [];
+                $record->fill([
+                    'status' => $status,
+                    'late_minutes' => $status === 'terlambat' ? data_get($validated, "late_minutes.$siswaId") : null,
+                    'left_early_minutes' => $status === 'keluar_awal' ? data_get($validated, "left_early_minutes.$siswaId") : null,
+                    'notes' => data_get($validated, "notes.$siswaId"),
+                    'attendance_method' => 'manual',
+                    'source_reference' => $validated['mode'] === 'mapel' ? 'teacher_marking' : 'homeroom_marking',
+                    'checked_by' => $user->id,
+                ]);
+                $afterRecord = $this->recordAuditValues($record);
+                if (! $record->exists || $beforeRecord !== $afterRecord) {
+                    $record->checked_at = now();
+                    $record->save();
+                    $afterRecord = $this->recordAuditValues($record);
+                    $recordChanges++;
+                    $this->audit->record(
+                        $session,
+                        $record,
+                        $user,
+                        $beforeRecord ? 'record_updated' : 'record_created',
+                        $beforeRecord,
+                        $afterRecord,
+                        $validated['revision_reason'] ?? null,
+                        $request
+                    );
+                }
             }
+
+            $this->audit->session(
+                $session,
+                $user,
+                ! $beforeSession ? 'session_created' : ($isFinal && ! $wasFinal ? 'session_finalized' : 'session_updated'),
+                $beforeSession,
+                $this->sessionAuditValues($session),
+                $validated['revision_reason'] ?? null,
+                $request
+            );
         });
 
-        return redirect()->route('admin.absensi-siswa.index', [
+        return redirect()->route('admin.absensi-siswa.index', array_filter([
             'tanggal' => $validated['tanggal'],
             'mode' => $validated['mode'],
             'kelas_id' => $kelas->id,
             'jadwal_pelajaran_id' => $validated['jadwal_pelajaran_id'] ?? null,
-        ])->with('success', 'Absensi siswa berhasil disimpan.');
+        ]))->with('success', ($validated['submit_action'] === 'final' ? 'Absensi berhasil difinalkan' : 'Draft absensi berhasil disimpan')." ({$recordChanges} perubahan tercatat).");
     }
 
-    protected function getAccessibleClasses($user, string $tanggal, string $mode)
+    protected function getAccessibleClasses($user, string $tanggal, string $mode, TahunPelajaran $year): Collection
     {
+        $query = Kelas::query()
+            ->with(['jurusan', 'tahunPelajaran'])
+            ->where('tahun_pelajaran_id', $year->id)
+            ->where('is_active', true);
+
         if ($this->isUnrestrictedStaff($user)) {
-            return Kelas::query()
-                ->with(['jurusan', 'tahunPelajaran'])
-                ->where('is_active', true)
-                ->orderBy('tingkat')
-                ->orderBy('nama_kelas')
-                ->get();
+            return $query->orderBy('tingkat')->orderBy('nama_kelas')->get();
         }
 
         $classIds = collect();
-
-        if ($mode === 'harian' && $this->canManageHarian($user)) {
-            $classIds = $classIds->merge(
-                Kelas::query()
-                    ->where('wali_kelas_id', $user->id)
-                    ->pluck('id')
-            );
+        if ($mode === 'harian' && $this->canManageHarian($user, $year->id)) {
+            $classIds = $classIds->merge(Kelas::query()
+                ->where('tahun_pelajaran_id', $year->id)
+                ->where('wali_kelas_id', $user->id)
+                ->pluck('id'));
+        }
+        if ($mode === 'mapel' && $this->canManageMapel($user, $year->id) && $user->gtk) {
+            $classIds = $classIds->merge(JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $year->id)
+                ->where('gtk_id', $user->gtk->id)
+                ->where('hari', $this->resolveHari($tanggal))
+                ->where('is_active', true)
+                ->pluck('kelas_id'));
         }
 
-        if ($mode === 'mapel' && $this->canManageMapel($user) && $user->gtk) {
-            $classIds = $classIds->merge(
-                JadwalPelajaran::query()
-                    ->where('gtk_id', $user->gtk->id)
-                    ->where('hari', $this->resolveHari($tanggal))
-                    ->where('is_aktif', true)
-                    ->pluck('kelas_id')
-            );
-        }
-
-        return Kelas::query()
-            ->with(['jurusan', 'tahunPelajaran'])
-            ->whereIn('id', $classIds->unique()->values())
-            ->orderBy('tingkat')
-            ->orderBy('nama_kelas')
-            ->get();
+        return $query->whereIn('id', $classIds->unique())->orderBy('tingkat')->orderBy('nama_kelas')->get();
     }
 
-    protected function getAccessibleSchedules($user, string $tanggal, string $kelasId)
+    protected function getAccessibleSchedules($user, string $tanggal, string $kelasId, TahunPelajaran $year): Collection
     {
+        $semester = strcasecmp((string) $year->semester_aktif, 'Genap') === 0 ? 2 : 1;
         $query = JadwalPelajaran::query()
             ->with(['kelas', 'gtk.user'])
+            ->where('jadwal_pelajaran.tahun_pelajaran_id', $year->id)
             ->where('kelas_id', $kelasId)
             ->where('hari', $this->resolveHari($tanggal))
-            ->where('is_aktif', true)
+            ->where('semester', $semester)
+            ->where('is_active', true)
             ->leftJoin('mata_pelajaran', 'mata_pelajaran.id', '=', 'jadwal_pelajaran.mapel_id')
             ->select('jadwal_pelajaran.*', 'mata_pelajaran.nama_mapel as mapel_nama')
             ->orderBy('jam_ke');
 
-        if (!$this->isUnrestrictedStaff($user) && $user->gtk) {
+        if (! $this->isUnrestrictedStaff($user) && $user->gtk) {
             $query->where('gtk_id', $user->gtk->id);
         }
 
         return $query->get();
     }
 
-    protected function findExistingSession(string $tanggal, string $kelasId, string $mode, ?string $jadwalId)
+    protected function studentsForDate(Kelas $kelas, string $tanggal): Collection
+    {
+        return $kelas->siswas()
+            ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+            ->wherePivot('tanggal_masuk', '<=', $tanggal)
+            ->where(function ($query) use ($tanggal) {
+                $query->whereNull('siswa_kelas.tanggal_keluar')
+                    ->orWhere('siswa_kelas.tanggal_keluar', '>=', $tanggal);
+            })
+            ->orderByRaw('COALESCE(siswa_kelas.nomor_urut_absen, 9999)')
+            ->orderBy('nama_lengkap')
+            ->get();
+    }
+
+    protected function findExistingSession(string $tanggal, string $kelasId, string $mode, ?string $jadwalId): ?AbsensiSiswaSession
     {
         return AbsensiSiswaSession::query()
             ->with(['records'])
-            ->where('tanggal', $tanggal)
-            ->where('kelas_id', $kelasId)
-            ->where('mode', $mode)
-            ->when($mode === 'mapel', fn ($query) => $query->where('jadwal_pelajaran_id', $jadwalId))
-            ->when($mode === 'harian', fn ($query) => $query->whereNull('jadwal_pelajaran_id'))
-            ->latest('updated_at')
+            ->where('session_key', $this->sessionKey($tanggal, $kelasId, $mode, $jadwalId))
             ->first();
     }
 
-    protected function canManageHarian($user): bool
+    protected function canManageHarian($user, string $yearId): bool
     {
+        if (! $user->can('input-daily-attendance')) {
+            return false;
+        }
+
         return $this->isUnrestrictedStaff($user)
-            || ($user->hasRole('Wali Kelas') && Kelas::query()->where('wali_kelas_id', $user->id)->exists());
+            || ($user->hasRole('Wali Kelas') && Kelas::query()
+                ->where('tahun_pelajaran_id', $yearId)
+                ->where('wali_kelas_id', $user->id)->exists());
     }
 
-    protected function canManageMapel($user): bool
+    protected function canManageMapel($user, string $yearId): bool
     {
+        if (! $user->can('input-subject-attendance')) {
+            return false;
+        }
+
         return $this->isUnrestrictedStaff($user)
-            || ($user->gtk && JadwalPelajaran::query()->where('gtk_id', $user->gtk->id)->exists());
+            || ($user->gtk && JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $yearId)
+                ->where('gtk_id', $user->gtk->id)->where('is_active', true)->exists());
+    }
+
+    protected function authorizeInputMode($user, string $mode, string $action): void
+    {
+        $permission = $mode === 'harian' ? 'input-daily-attendance' : 'input-subject-attendance';
+        abort_unless($user->can($permission), 403, 'Anda tidak memiliki permission untuk mode absensi ini.');
+        if ($action === 'final') {
+            abort_unless($user->can('finalize-student-attendance'), 403, 'Anda tidak memiliki permission untuk memfinalkan absensi.');
+        }
     }
 
     protected function isUnrestrictedStaff($user): bool
@@ -276,16 +360,55 @@ class AbsensiSiswaController extends Controller
         return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
     }
 
+    protected function ensureDateBelongsToActiveYear(string $tanggal, TahunPelajaran $year): void
+    {
+        $date = Carbon::parse($tanggal)->startOfDay();
+        if (($year->tanggal_mulai && $date->lt($year->tanggal_mulai)) || ($year->tanggal_selesai && $date->gt($year->tanggal_selesai))) {
+            throw ValidationException::withMessages([
+                'tanggal' => "Tanggal harus berada dalam tahun pelajaran aktif {$year->nama}.",
+            ]);
+        }
+    }
+
+    protected function normalizeDate(?string $date): string
+    {
+        try {
+            $parsed = Carbon::parse($date ?: now());
+        } catch (\Throwable) {
+            $parsed = now();
+        }
+
+        return $parsed->isFuture() ? now()->format('Y-m-d') : $parsed->format('Y-m-d');
+    }
+
+    protected function sessionKey(string $date, string $classId, string $mode, ?string $scheduleId): string
+    {
+        return implode(':', [$date, $classId, $mode, $mode === 'mapel' ? $scheduleId : 'daily']);
+    }
+
     protected function resolveHari(string $tanggal): string
     {
         return match (Carbon::parse($tanggal)->dayOfWeekIso) {
-            1 => 'senin',
-            2 => 'selasa',
-            3 => 'rabu',
-            4 => 'kamis',
-            5 => 'jumat',
-            6 => 'sabtu',
-            default => 'minggu',
+            1 => 'senin', 2 => 'selasa', 3 => 'rabu', 4 => 'kamis',
+            5 => 'jumat', 6 => 'sabtu', default => 'minggu',
         };
+    }
+
+    private function sessionAuditValues(AbsensiSiswaSession $session): array
+    {
+        return collect($session->only([
+            'tahun_pelajaran_id', 'kelas_id', 'jadwal_pelajaran_id', 'mapel_id', 'guru_user_id',
+            'tanggal', 'semester', 'tingkat', 'kelas_snapshot', 'mapel_snapshot', 'guru_snapshot',
+            'mode', 'attendance_method', 'status', 'notes', 'finalized_at', 'locked_at',
+            'finalized_by', 'version', 'revision_reason',
+        ]))->map(fn ($value) => $value instanceof \DateTimeInterface ? $value->format('Y-m-d H:i:s') : $value)->all();
+    }
+
+    private function recordAuditValues(AbsensiSiswaRecord $record): array
+    {
+        return collect($record->only([
+            'status', 'late_minutes', 'left_early_minutes', 'notes', 'attendance_method',
+            'source_reference', 'checked_at', 'checked_by',
+        ]))->map(fn ($value) => $value instanceof \DateTimeInterface ? $value->format('Y-m-d H:i:s') : $value)->all();
     }
 }
