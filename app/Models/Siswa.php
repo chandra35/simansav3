@@ -201,6 +201,23 @@ class Siswa extends Model
                     ->orderByDesc('siswa_kelas.created_at');
     }
 
+    /**
+     * Rombel aktif pada tahun pelajaran yang sedang aktif.
+     * Relasi kelasAktif lama tetap dipertahankan untuk kebutuhan histori.
+     */
+    public function kelasTahunAktif()
+    {
+        return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan'])
+                    ->whereNull('siswa_kelas.deleted_at')
+                    ->where('siswa_kelas.status', 'aktif')
+                    ->where('kelas.is_active', true)
+                    ->whereIn('kelas.tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+                    ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
+                    ->withTimestamps()
+                    ->orderByDesc('siswa_kelas.created_at');
+    }
+
     public function siswaKelasRecords()
     {
         return $this->hasMany(SiswaKelas::class, 'siswa_id');

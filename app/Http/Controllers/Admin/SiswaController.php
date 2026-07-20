@@ -85,13 +85,13 @@ class SiswaController extends Controller
         }
         if ($request->filled('tingkat')) {
             if ($request->tingkat === 'tanpa_rombel') {
-                $query->whereDoesntHave('kelasAktif');
+                $query->whereDoesntHave('kelasTahunAktif');
             } else {
-                $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
+                $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
             }
         }
         if ($request->filled('kelas_id')) {
-            $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
+            $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
         }
         if ($request->filled('status')) {
             if ($request->status == 'lengkap') {
@@ -128,15 +128,15 @@ class SiswaController extends Controller
         }
 
         if ($request->filled('tingkat') && $request->tingkat !== 'tanpa_rombel') {
-            $query->whereHas('kelasAktif', function ($q) use ($request) {
+            $query->whereHas('kelasTahunAktif', function ($q) use ($request) {
                 $q->where('kelas.tingkat', $request->tingkat);
             });
         } elseif ($request->tingkat === 'tanpa_rombel') {
-            $query->whereDoesntHave('kelasAktif');
+            $query->whereDoesntHave('kelasTahunAktif');
         }
 
         if ($request->filled('kelas_id')) {
-            $query->whereHas('kelasAktif', function ($q) use ($request) {
+            $query->whereHas('kelasTahunAktif', function ($q) use ($request) {
                 $q->where('kelas.id', $request->kelas_id);
             });
         }
@@ -154,7 +154,7 @@ class SiswaController extends Controller
             $query->where('siswa.emis_registered', $request->emis_status === 'sudah');
         }
 
-        $rows = $query->with(['user', 'ortu', 'kelasAktif'])->get();
+        $rows = $query->with(['user', 'ortu', 'kelasTahunAktif'])->get();
 
         if (!$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel') {
             $tingkatLabel = $request->filled('tingkat') ? 'tingkat-' . $request->tingkat : 'semua-tingkat';
@@ -176,7 +176,7 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
         
-        $siswa = Siswa::with(['user', 'ortu', 'kelasAktif'])
+        $siswa = Siswa::with(['user', 'ortu', 'kelasTahunAktif'])
             ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
 
         $this->applyRoleScope($siswa);
@@ -191,10 +191,10 @@ class SiswaController extends Controller
         if ($request->filled('tingkat')) {
             if ($request->tingkat === 'tanpa_rombel') {
                 // Filter siswa yang tidak punya kelas aktif
-                $siswa->whereDoesntHave('kelasAktif');
+                $siswa->whereDoesntHave('kelasTahunAktif');
             } else {
                 // Filter by tingkat normal
-                $siswa->whereHas('kelasAktif', function($q) use ($request) {
+                $siswa->whereHas('kelasTahunAktif', function($q) use ($request) {
                     $q->where('kelas.tingkat', $request->tingkat);
                 });
             }
@@ -202,7 +202,7 @@ class SiswaController extends Controller
 
         // Filter by Kelas
         if ($request->filled('kelas_id')) {
-            $siswa->whereHas('kelasAktif', function($q) use ($request) {
+            $siswa->whereHas('kelasTahunAktif', function($q) use ($request) {
                 $q->where('kelas.id', $request->kelas_id);
             });
         }
@@ -278,12 +278,19 @@ class SiswaController extends Controller
 
             // Handle Kelas ordering (index 3, needs join)
             if ($orderColumnIndex == 3) {
-                $siswa->leftJoin('siswa_kelas', function($join) {
+                $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
+                $siswa->leftJoin('siswa_kelas', function($join) use ($activeYearId) {
                     $join->on('siswa.id', '=', 'siswa_kelas.siswa_id')
                          ->where('siswa_kelas.status', '=', 'aktif')
+                         ->where('siswa_kelas.tahun_pelajaran_id', '=', $activeYearId)
                          ->whereNull('siswa_kelas.deleted_at');
                 })
-                ->leftJoin('kelas', 'siswa_kelas.kelas_id', '=', 'kelas.id')
+                ->leftJoin('kelas', function ($join) use ($activeYearId) {
+                    $join->on('siswa_kelas.kelas_id', '=', 'kelas.id')
+                        ->where('kelas.tahun_pelajaran_id', '=', $activeYearId)
+                        ->where('kelas.is_active', '=', true)
+                        ->whereNull('kelas.deleted_at');
+                })
                 ->orderBy('kelas.nama_kelas', $orderDirection)
                 ->select('siswa.*')
                 ->distinct();
@@ -298,11 +305,13 @@ class SiswaController extends Controller
             $siswa->latest();
         }
 
-        $data = $siswa->get()->map(function($item) {
+        $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
+        $data = $siswa->get()->map(function($item) use ($activeYearId) {
             // Get kelas aktif
-            $kelasAktif = $item->kelasAktif()->first();
+            $kelasAktif = $item->kelasTahunAktif->first();
             $aktifRecord = $kelasAktif ? null : $item->siswaKelasRecords()
                 ->where('status', 'aktif')
+                ->where('tahun_pelajaran_id', $activeYearId)
                 ->latest('created_at')
                 ->first();
             $kelasNama = $kelasAktif
@@ -1042,7 +1051,13 @@ class SiswaController extends Controller
             return response()->json([]);
         }
 
+        $activeYear = \App\Models\TahunPelajaran::query()->active()->first();
+        if (! $activeYear) {
+            return response()->json([]);
+        }
+
         $kelas = \App\Models\Kelas::where('tingkat', $tingkat)
+            ->where('tahun_pelajaran_id', $activeYear->id)
             ->where('is_active', true)
             ->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'kode_kelas'])
@@ -1097,10 +1112,13 @@ class SiswaController extends Controller
         $user = Auth::user();
 
         if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
+            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)
+                ->whereIn('tahun_pelajaran_id', \App\Models\TahunPelajaran::query()->active()->select('id'))
+                ->where('is_active', true)
+                ->pluck('id');
 
             if ($kelasIds->isNotEmpty()) {
-                $query->whereHas('kelasAktif', function ($q) use ($kelasIds) {
+                $query->whereHas('kelasTahunAktif', function ($q) use ($kelasIds) {
                     $q->whereIn('kelas.id', $kelasIds);
                 });
             } else {

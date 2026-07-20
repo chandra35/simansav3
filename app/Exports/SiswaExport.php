@@ -79,7 +79,7 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     {
         $this->counter++;
         $ortu  = $siswa->ortu;
-        $kelas = $siswa->kelasAktif->first();
+        $kelas = $siswa->kelasTahunAktif->first();
         $user  = $siswa->user;
 
         return [

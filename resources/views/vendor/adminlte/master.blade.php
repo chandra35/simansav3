@@ -465,6 +465,59 @@
             font-weight: 700;
         }
 
+        .simansa-navbar-academic-year {
+            display: inline-flex;
+            align-items: center;
+            gap: .38rem;
+            padding: .38rem .72rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(187, 247, 208, 0.95);
+            color: #0f172a;
+            font-size: .75rem;
+            white-space: nowrap;
+            box-shadow: 0 3px 10px rgba(15, 23, 42, .06);
+        }
+
+        .simansa-navbar-academic-year__dot {
+            width: 8px;
+            height: 8px;
+            flex: 0 0 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+        }
+
+        .simansa-navbar-academic-year__label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .simansa-navbar-academic-year strong {
+            color: #166534;
+            font-weight: 800;
+        }
+
+        .simansa-navbar-academic-year small {
+            padding-left: .38rem;
+            border-left: 1px solid #d1fae5;
+            color: #15803d;
+            font-size: .68rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 767.98px) {
+            .simansa-navbar-academic-year__label,
+            .simansa-navbar-academic-year small {
+                display: none;
+            }
+
+            .simansa-navbar-academic-year {
+                padding: .34rem .55rem;
+                font-size: .7rem;
+            }
+        }
+
         .simansa-navbar-live__clock {
             color: #1d4ed8;
             font-variant-numeric: tabular-nums;

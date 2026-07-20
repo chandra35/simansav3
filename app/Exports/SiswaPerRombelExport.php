@@ -21,7 +21,7 @@ class SiswaPerRombelExport implements WithMultipleSheets
         }
 
         $sheets = $this->rows
-            ->groupBy(fn ($siswa) => $siswa->kelasAktif->first()?->nama_kelas ?: 'Tanpa Rombel')
+            ->groupBy(fn ($siswa) => $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Tanpa Rombel')
             ->sortKeysUsing(fn ($a, $b) => strnatcasecmp($this->classSortKey($a), $this->classSortKey($b)))
             ->map(fn (Collection $rows, string $kelas) => new SiswaExport(
                 $rows->sortBy('nama_lengkap')->values(),
@@ -62,7 +62,7 @@ class SiswaPerRombelExport implements WithMultipleSheets
 
     private function className($siswa): string
     {
-        return $siswa->kelasAktif->first()?->nama_kelas ?: 'Tanpa Rombel';
+        return $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Tanpa Rombel';
     }
 
     private function classSortKey(string $kelas): string

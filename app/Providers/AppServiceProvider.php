@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\CustomMenu;
+use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Observers\UserObserver;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -11,6 +12,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use JeroenNoten\LaravelAdminLte\Events\BuildingMenu;
 
@@ -66,6 +68,16 @@ class AppServiceProvider extends ServiceProvider
                 // Admin tetap dapat memperbarui beberapa siswa berbeda secara berurutan.
                 Limit::perMinute(30)->by("emis-user:{$userKey}")->response($response),
             ];
+        });
+
+        View::composer([
+            'adminlte::partials.navbar.navbar',
+            'adminlte::partials.navbar.navbar-layout-topnav',
+        ], function ($view) {
+            $view->with('navbarActiveAcademicYear', TahunPelajaran::query()
+                ->active()
+                ->select(['id', 'nama', 'semester_aktif'])
+                ->first());
         });
 
         // Menu items are now configured in config/adminlte.php

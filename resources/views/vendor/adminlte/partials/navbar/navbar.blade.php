@@ -19,6 +19,14 @@
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">
         @if(Auth::check())
+            <li class="nav-item d-flex align-items-center mr-2">
+                <div class="simansa-navbar-academic-year" title="Tahun pelajaran aktif">
+                    <span class="simansa-navbar-academic-year__dot"></span>
+                    <span class="simansa-navbar-academic-year__label">Tahun Aktif</span>
+                    <strong>{{ $navbarActiveAcademicYear?->nama ?? 'Belum diatur' }}</strong>
+                    @if($navbarActiveAcademicYear?->semester_aktif)<small>{{ $navbarActiveAcademicYear->semester_aktif }}</small>@endif
+                </div>
+            </li>
             <li class="nav-item d-none d-md-flex align-items-center mr-2">
                 <div class="simansa-navbar-live">
                     <i class="far fa-clock text-primary"></i>
