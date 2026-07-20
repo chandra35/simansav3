@@ -80,6 +80,16 @@ class EmisStudentSyncService
                 throw new RuntimeException('Token EMIS Lembaga ditolak atau sudah kedaluwarsa. Perbarui token sebelum mencoba lagi.');
             }
 
+            if ($response->status() === 429) {
+                $retryAfter = max(1, (int) $response->header('Retry-After', 60));
+                Log::notice('API EMIS membatasi sinkronisasi per siswa', [
+                    'siswa_id' => $siswa->id,
+                    'nisn' => $nisn,
+                    'retry_after' => $retryAfter,
+                ]);
+                throw new RuntimeException("API EMIS sedang membatasi permintaan. Tunggu {$retryAfter} detik lalu coba kembali; snapshot lama tetap aman.");
+            }
+
             if (! $response->successful()) {
                 throw new RuntimeException("API EMIS gagal merespons (HTTP {$response->status()}). Snapshot lama tetap aman.");
             }

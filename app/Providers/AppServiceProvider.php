@@ -2,19 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\CustomMenu;
+use App\Models\User;
+use App\Observers\UserObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\View;
 use JeroenNoten\LaravelAdminLte\Events\BuildingMenu;
-use Illuminate\Support\Facades\Event;
-use App\Models\CustomMenu;
-use App\Models\CustomMenuSiswa;
-use App\Models\User;
-use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,17 +48,37 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('emis-student-sync', function (Request $request) {
+            $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+            $routeStudent = $request->route('siswa');
+            $studentKey = is_object($routeStudent) && method_exists($routeStudent, 'getRouteKey')
+                ? (string) $routeStudent->getRouteKey()
+                : (string) ($routeStudent ?: 'unknown');
+            $response = fn (Request $request, array $headers) => response()->json([
+                'success' => false,
+                'message' => 'Permintaan sync untuk siswa ini terlalu cepat. Tunggu '.($headers['Retry-After'] ?? 60).' detik lalu coba kembali.',
+                'retry_after' => (int) ($headers['Retry-After'] ?? 60),
+            ], 429, $headers);
+
+            return [
+                // Klik ganda pada siswa yang sama tidak boleh membanjiri API EMIS.
+                Limit::perMinute(4)->by("emis-student:{$userKey}:{$studentKey}")->response($response),
+                // Admin tetap dapat memperbarui beberapa siswa berbeda secara berurutan.
+                Limit::perMinute(30)->by("emis-user:{$userKey}")->response($response),
+            ];
+        });
+
         // Menu items are now configured in config/adminlte.php
         // with proper permission filtering using 'can' => 'siswa-access'
-        
+
         // Register dynamic custom menus for siswa
         Event::listen(BuildingMenu::class, function (BuildingMenu $event) {
             $user = Auth::user();
-            
+
             // Only for siswa users
             if ($user && $user->siswa) {
                 $siswa = $user->siswa;
-                
+
                 // Get active custom menus assigned to this siswa
                 $customMenus = CustomMenu::where('is_active', true)
                     ->whereHas('menuSiswa', function ($q) use ($siswa) {
@@ -91,19 +109,19 @@ class AppServiceProvider extends ServiceProvider
                         'type' => 'header',
                         'text' => $groupInfo['label'],
                         'icon' => $groupInfo['icon'],
-                        'key' => 'custom-menu-header-' . $groupKey,
+                        'key' => 'custom-menu-header-'.$groupKey,
                     ]);
 
                     // Add menu items under this group
                     foreach ($menus as $menu) {
                         $assignment = $menu->menuSiswa->first();
-                        $isUnread = $assignment && !$assignment->is_read;
+                        $isUnread = $assignment && ! $assignment->is_read;
 
                         $menuItem = [
                             'text' => $menu->judul,
                             'url' => route('siswa.menu.show', $menu->slug),
                             'icon' => $menu->icon ?: 'fas fa-file-alt',
-                            'key' => 'custom-menu-' . $menu->id,
+                            'key' => 'custom-menu-'.$menu->id,
                         ];
 
                         // Add badge if unread
@@ -112,7 +130,7 @@ class AppServiceProvider extends ServiceProvider
                             $menuItem['label_color'] = 'danger';
                         }
 
-                        $event->menu->addAfter('custom-menu-header-' . $groupKey, $menuItem);
+                        $event->menu->addAfter('custom-menu-header-'.$groupKey, $menuItem);
                     }
                 }
             }

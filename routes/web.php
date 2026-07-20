@@ -139,7 +139,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'index'])->name('index');
         Route::get('/siswa/{siswa}', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'show'])->name('show');
         Route::post('/siswa/{siswa}/sync', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'syncStudent'])
-            ->middleware(['permission:sync-emis-comparison', 'throttle:10,1'])
+            ->middleware(['permission:sync-emis-comparison', 'throttle:emis-student-sync'])
             ->name('sync-student');
         Route::get('/emis/{snapshot}', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'showEmis'])->name('show-emis');
         Route::post('/sync', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'sync'])
