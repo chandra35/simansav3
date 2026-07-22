@@ -49,8 +49,8 @@
                 <div class="simansa-stat-card__label">Total Siswa</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['total_siswa']) }}</div>
                 <div class="simansa-stat-card__footer">
-                    <span>Seluruh siswa terdaftar</span>
-                    <a href="{{ route('admin.siswa.index') }}">Lihat data</a>
+                    <span>Siswa pada tahun aktif</span>
+                    <a href="{{ route('admin.siswa.statistics') }}">Lihat statistik</a>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 <div class="simansa-stat-card__icon">
                     <i class="fas fa-user-check"></i>
                 </div>
-                <div class="simansa-stat-card__label">Siswa Aktif</div>
+                <div class="simansa-stat-card__label">Sudah Aktivasi</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['siswa_aktif']) }}</div>
                 <div class="simansa-stat-card__footer">
                     <span>Sudah login dan aktif</span>
@@ -72,13 +72,15 @@
         <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--amber">
                 <div class="simansa-stat-card__icon">
-                    <i class="fas fa-user-shield"></i>
+                    <i class="fas fa-chalkboard-teacher"></i>
                 </div>
-                <div class="simansa-stat-card__label">Total Admin</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_admin']) }}</div>
+                <div class="simansa-stat-card__label">Jumlah GTK</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
                 <div class="simansa-stat-card__footer">
-                    <span>Admin, operator, dan GTK</span>
-                    <a href="{{ route('admin.users.index') }}">Kelola akun</a>
+                    <span>Guru dan tenaga kependidikan</span>
+                    @can('view-gtk')
+                        <a href="{{ route('admin.gtk.index') }}">Lihat GTK</a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -169,9 +171,9 @@
                                 <i class="fas fa-users-cog"></i>
                             </div>
                             <div>
-                                <div class="simansa-highlight-item__title">Akun Pengelola</div>
+                                <div class="simansa-highlight-item__title">Guru dan Tenaga Kependidikan</div>
                                 <div class="simansa-highlight-item__desc">
-                                    Saat ini ada {{ $stats['total_admin'] }} akun non-siswa yang aktif untuk operasional sistem.
+                                    Terdapat {{ $stats['total_gtk'] }} GTK yang tercatat di SIMANSA.
                                 </div>
                             </div>
                         </div>

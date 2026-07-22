@@ -221,15 +221,17 @@ class SiswaStatisticsController extends Controller
 
     private function applyDashboardFilters($query, ?TahunPelajaran $activeYear, ?int $tingkat, string $kelasId)
     {
+        if (! $activeYear) {
+            return $query->whereRaw('1 = 0');
+        }
+
         if ($kelasId !== '') {
-            return $query->where('siswa.kelas_saat_ini_id', $kelasId);
+            return $query->whereHas('kelasTahunAktif', fn ($class) => $class
+                ->where('kelas.id', $kelasId));
         }
-        if ($tingkat) {
-            $query->whereHas('kelasSaatIni', fn ($class) => $class
-                ->where('tingkat', $tingkat)
-                ->when($activeYear, fn ($activeClass) => $activeClass->where('tahun_pelajaran_id', $activeYear->id))
-                ->when(! $activeYear, fn ($activeClass) => $activeClass->whereRaw('1 = 0')));
-        }
+
+        $query->whereHas('kelasTahunAktif', fn ($class) => $class
+            ->when($tingkat, fn ($levelQuery) => $levelQuery->where('kelas.tingkat', $tingkat)));
 
         return $query;
     }
