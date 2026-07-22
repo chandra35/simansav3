@@ -73,6 +73,7 @@ class SiswaStatisticsController extends Controller
         $addressProvinceSpread = $this->addressSpreadByLevel(clone $baseQuery, 'province');
         $addressCitySpread = $this->addressSpreadByLevel(clone $baseQuery, 'city');
         $addressDistrictSpread = $this->addressSpreadByLevel(clone $baseQuery, 'district');
+        $addressVillageSpread = $this->addressSpreadByLevel(clone $baseQuery, 'village');
         $schoolCitySpread = $this->schoolSpreadByCity(clone $baseQuery);
 
         $mapAddressPoints = $addressCitySpread
@@ -114,6 +115,7 @@ class SiswaStatisticsController extends Controller
             'addressProvinceSpread' => $addressProvinceSpread,
             'addressCitySpread' => $addressCitySpread,
             'addressDistrictSpread' => $addressDistrictSpread,
+            'addressVillageSpread' => $addressVillageSpread,
             'schoolCitySpread' => $schoolCitySpread,
             'mapAddressPoints' => $mapAddressPoints,
             'mapSchoolPoints' => $mapSchoolPoints,
@@ -544,6 +546,9 @@ class SiswaStatisticsController extends Controller
         $base = $baseQuery
             ->leftJoin('ortu as ortu_siswa', 'ortu_siswa.siswa_id', '=', 'siswa.id');
 
+        $cityExpr = 'NULL';
+        $districtExpr = 'NULL';
+
         if ($level === 'province') {
             $base->leftJoin('indonesia_provinces as siswa_prov', 'siswa_prov.code', '=', 'siswa.provinsi_id_siswa')
                 ->leftJoin('indonesia_provinces as ortu_prov', 'ortu_prov.code', '=', 'ortu_siswa.provinsi_id');
@@ -558,9 +563,10 @@ class SiswaStatisticsController extends Controller
                 ->leftJoin('indonesia_provinces as ortu_prov', 'ortu_prov.code', '=', 'ortu_siswa.provinsi_id');
 
             $nameExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_city.name ELSE siswa_city.name END';
+            $cityExpr = $nameExpr;
             $provinceExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_prov.name ELSE siswa_prov.name END';
             $queryExpr = "CONCAT($nameExpr, ', ', $provinceExpr, ', Indonesia')";
-        } else {
+        } elseif ($level === 'district') {
             $base->leftJoin('indonesia_districts as siswa_district', 'siswa_district.code', '=', 'siswa.kecamatan_id_siswa')
                 ->leftJoin('indonesia_districts as ortu_district', 'ortu_district.code', '=', 'ortu_siswa.kecamatan_id')
                 ->leftJoin('indonesia_cities as siswa_city', 'siswa_city.code', '=', 'siswa.kabupaten_id_siswa')
@@ -569,28 +575,48 @@ class SiswaStatisticsController extends Controller
                 ->leftJoin('indonesia_provinces as ortu_prov', 'ortu_prov.code', '=', 'ortu_siswa.provinsi_id');
 
             $nameExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_district.name ELSE siswa_district.name END';
+            $districtExpr = $nameExpr;
             $cityExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_city.name ELSE siswa_city.name END';
             $provinceExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_prov.name ELSE siswa_prov.name END';
             $queryExpr = "CONCAT($nameExpr, ', ', $cityExpr, ', ', $provinceExpr, ', Indonesia')";
+        } else {
+            $base->leftJoin('indonesia_villages as siswa_village', 'siswa_village.code', '=', 'siswa.kelurahan_id_siswa')
+                ->leftJoin('indonesia_villages as ortu_village', 'ortu_village.code', '=', 'ortu_siswa.kelurahan_id')
+                ->leftJoin('indonesia_districts as siswa_district', 'siswa_district.code', '=', 'siswa.kecamatan_id_siswa')
+                ->leftJoin('indonesia_districts as ortu_district', 'ortu_district.code', '=', 'ortu_siswa.kecamatan_id')
+                ->leftJoin('indonesia_cities as siswa_city', 'siswa_city.code', '=', 'siswa.kabupaten_id_siswa')
+                ->leftJoin('indonesia_cities as ortu_city', 'ortu_city.code', '=', 'ortu_siswa.kabupaten_id')
+                ->leftJoin('indonesia_provinces as siswa_prov', 'siswa_prov.code', '=', 'siswa.provinsi_id_siswa')
+                ->leftJoin('indonesia_provinces as ortu_prov', 'ortu_prov.code', '=', 'ortu_siswa.provinsi_id');
+
+            $nameExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_village.name ELSE siswa_village.name END';
+            $districtExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_district.name ELSE siswa_district.name END';
+            $cityExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_city.name ELSE siswa_city.name END';
+            $provinceExpr = 'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_prov.name ELSE siswa_prov.name END';
+            $queryExpr = "CONCAT($nameExpr, ', ', $districtExpr, ', ', $cityExpr, ', ', $provinceExpr, ', Indonesia')";
         }
 
         $locationBase = $base
             ->selectRaw("$nameExpr as name")
+            ->selectRaw("$districtExpr as district_name")
+            ->selectRaw("$cityExpr as city_name")
             ->selectRaw("$provinceExpr as province_name")
             ->selectRaw("$queryExpr as location_query")
             ->whereNotNull(DB::raw($nameExpr));
 
         return DB::query()
             ->fromSub($locationBase, 'location_points')
-            ->select('name', 'province_name', 'location_query')
+            ->select('name', 'district_name', 'city_name', 'province_name', 'location_query')
             ->selectRaw('COUNT(*) as count')
-            ->groupBy('name', 'province_name', 'location_query')
+            ->groupBy('name', 'district_name', 'city_name', 'province_name', 'location_query')
             ->orderByDesc('count')
             ->limit(20)
             ->get()
             ->map(function ($item) {
                 return [
                     'name' => $item->name,
+                    'district_name' => $item->district_name,
+                    'city_name' => $item->city_name,
                     'province_name' => $item->province_name,
                     'location_query' => $item->location_query,
                     'count' => (int) $item->count,

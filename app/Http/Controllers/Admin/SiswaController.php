@@ -58,6 +58,8 @@ class SiswaController extends Controller
             'school_province_name',
             'address_scope',
             'address_name',
+            'district_name',
+            'city_name',
             'province_name',
             'status',
             'login_status',
@@ -1194,7 +1196,34 @@ class SiswaController extends Controller
                     );
             }
 
-            if ($request->filled('province_name') && in_array($request->address_scope, ['city', 'district'], true)) {
+            if ($request->address_scope === 'village') {
+                $query->leftJoin('indonesia_villages as siswa_village_filter', 'siswa_village_filter.code', '=', 'siswa.kelurahan_id_siswa')
+                    ->leftJoin('indonesia_villages as ortu_village_filter', 'ortu_village_filter.code', '=', 'ortu_siswa_filter.kelurahan_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_village_filter.name ELSE siswa_village_filter.name END = ?',
+                        [$request->address_name]
+                    );
+            }
+
+            if ($request->filled('district_name') && $request->address_scope === 'village') {
+                $query->leftJoin('indonesia_districts as siswa_district_scope_filter', 'siswa_district_scope_filter.code', '=', 'siswa.kecamatan_id_siswa')
+                    ->leftJoin('indonesia_districts as ortu_district_scope_filter', 'ortu_district_scope_filter.code', '=', 'ortu_siswa_filter.kecamatan_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_district_scope_filter.name ELSE siswa_district_scope_filter.name END = ?',
+                        [$request->district_name]
+                    );
+            }
+
+            if ($request->filled('city_name') && $request->address_scope === 'village') {
+                $query->leftJoin('indonesia_cities as siswa_city_scope_filter', 'siswa_city_scope_filter.code', '=', 'siswa.kabupaten_id_siswa')
+                    ->leftJoin('indonesia_cities as ortu_city_scope_filter', 'ortu_city_scope_filter.code', '=', 'ortu_siswa_filter.kabupaten_id')
+                    ->whereRaw(
+                        'CASE WHEN siswa.alamat_sama_ortu = 1 THEN ortu_city_scope_filter.name ELSE siswa_city_scope_filter.name END = ?',
+                        [$request->city_name]
+                    );
+            }
+
+            if ($request->filled('province_name') && in_array($request->address_scope, ['city', 'district', 'village'], true)) {
                 $query->leftJoin('indonesia_provinces as siswa_prov_scope_filter', 'siswa_prov_scope_filter.code', '=', 'siswa.provinsi_id_siswa')
                     ->leftJoin('indonesia_provinces as ortu_prov_scope_filter', 'ortu_prov_scope_filter.code', '=', 'ortu_siswa_filter.provinsi_id')
                     ->whereRaw(
@@ -1258,11 +1287,17 @@ class SiswaController extends Controller
                 'province' => 'Provinsi',
                 'city' => 'Kabupaten / Kota',
                 'district' => 'Kecamatan',
+                'village' => 'Kelurahan / Desa',
             ];
 
             return [
                 'title' => 'Filter Statistik: Sebaran Alamat',
-                'description' => ($scopeLabels[$request->address_scope] ?? 'Wilayah') . ' - ' . $request->address_name . ($request->filled('province_name') ? ' | ' . $request->province_name : ''),
+                'description' => ($scopeLabels[$request->address_scope] ?? 'Wilayah') . ' - ' . collect([
+                    $request->address_name,
+                    $request->district_name,
+                    $request->city_name,
+                    $request->province_name,
+                ])->filter()->implode(', '),
             ];
         }
 

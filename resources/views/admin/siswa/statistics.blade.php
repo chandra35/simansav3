@@ -272,6 +272,13 @@
                         <canvas id="addressDistrictChart"></canvas>
                     </div>
                 </div>
+                <div class="simansa-chart-panel simansa-chart-panel--span">
+                    <h4>Kelurahan / Desa Terbanyak</h4>
+                    <p class="simansa-chart-hint">Klik batang untuk melihat siswa dari kelurahan tersebut sesuai filter tingkat dan kelas.</p>
+                    <div class="simansa-chart-canvas simansa-chart-canvas--wide">
+                        <canvas id="addressVillageChart"></canvas>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -797,6 +804,16 @@
             min-height: 100%;
         }
 
+        .simansa-chart-panel--span {
+            grid-column: 1 / -1;
+        }
+
+        .simansa-chart-hint {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin: -0.15rem 0 0.7rem;
+        }
+
         .simansa-chart-panel h4 {
             font-size: 0.96rem;
             font-weight: 700;
@@ -1053,6 +1070,7 @@
         const educationSpread = @json($educationSpread);
         const addressCitySpread = @json($addressCitySpread);
         const addressDistrictSpread = @json($addressDistrictSpread);
+        const addressVillageSpread = @json($addressVillageSpread);
         const schoolCitySpread = @json($schoolCitySpread);
         const mapAddressPoints = @json($mapAddressPoints);
         const mapSchoolPoints = @json($mapSchoolPoints);
@@ -1591,6 +1609,7 @@
             const educationChartItems = educationSpread;
             const addressCityChartItems = addressCitySpread.slice(0, 10);
             const addressDistrictChartItems = addressDistrictSpread.slice(0, 10);
+            const addressVillageChartItems = addressVillageSpread.slice(0, 10);
             const schoolCityChartItems = schoolCitySpread.slice(0, 10);
 
             const educationChart = buildBarChart(
@@ -1617,6 +1636,14 @@
                 true
             );
 
+            const addressVillageChart = buildBarChart(
+                'addressVillageChart',
+                addressVillageChartItems.map(item => item.name),
+                addressVillageChartItems.map(item => item.count),
+                '#10b981',
+                true
+            );
+
             const schoolCityChart = buildBarChart(
                 'schoolCityChart',
                 schoolCityChartItems.map(item => item.name),
@@ -1635,6 +1662,16 @@
 
             bindChartDrilldown('addressDistrictChart', addressDistrictChart, addressDistrictChartItems, function(item) {
                 return { address_scope: 'district', address_name: item.name, province_name: item.province_name };
+            });
+
+            bindChartDrilldown('addressVillageChart', addressVillageChart, addressVillageChartItems, function(item) {
+                return {
+                    address_scope: 'village',
+                    address_name: item.name,
+                    district_name: item.district_name,
+                    city_name: item.city_name,
+                    province_name: item.province_name
+                };
             });
 
             bindChartDrilldown('schoolCityChart', schoolCityChart, schoolCityChartItems, function(item) {
