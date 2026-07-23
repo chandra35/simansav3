@@ -188,7 +188,7 @@
                                 </td>
                                 <td>
                                     @if($isMapped)
-                                        <span class="badge badge-light">{{ $mapping->mataPelajaran?->kelompok ?? '-' }}</span>
+                                        {!! $mapping->mataPelajaran?->kelompok_badge ?? '<span class="badge badge-light">-</span>' !!}
                                     @endif
                                 </td>
                                 <td>
@@ -261,7 +261,7 @@
                                 <option value="">-- Pilih --</option>
                                 @foreach($simansaMapels as $mp)
                                     <option value="{{ $mp->id }}" data-kelompok="{{ $mp->kelompok }}">
-                                        {{ $mp->nama_mapel }} {{ $mp->kelompok ? '('.$mp->kelompok.')' : '' }}
+                                        [{{ $mp->kode_mapel }}] {{ $mp->nama_mapel }} · {{ $mp->struktur_label }} · {{ $mp->fase_text }}
                                     </option>
                                 @endforeach
                             </select>
@@ -325,7 +325,7 @@
                                                     <option value="">-- Lewati --</option>
                                                     @foreach($simansaMapels as $mp)
                                                         <option value="{{ $mp->id }}" {{ ($suggestion && $suggestion['simansa_id'] === $mp->id) ? 'selected' : '' }}>
-                                                            {{ $mp->nama_mapel }} {{ $mp->kelompok ? '('.$mp->kelompok.')' : '' }}
+                                                            [{{ $mp->kode_mapel }}] {{ $mp->nama_mapel }} · {{ $mp->struktur_label }} · {{ $mp->fase_text }}
                                                         </option>
                                                     @endforeach
                                                 </select>

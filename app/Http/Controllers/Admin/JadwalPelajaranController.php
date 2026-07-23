@@ -190,28 +190,54 @@ class JadwalPelajaranController extends Controller
         $kelasId = $request->kelas_id;
 
         $tingkat = null;
+        $kelas = null;
         if ($kelasId) {
-            $tingkat = Kelas::find($kelasId)?->tingkat;
+            $kelas = Kelas::find($kelasId);
+            $tingkat = $kelas?->tingkat;
         }
 
         $query = MataPelajaran::where('is_active', true)
+            ->where('is_schedulable', true)
             ->orderBy('nama_mapel');
 
-        if ($tahunId) {
-            $query->where('tahun_pelajaran_id', $tahunId);
+        if ($kelas?->kurikulum_id) {
+            $query->where('kurikulum_id', $kelas->kurikulum_id);
         }
 
         if ($tingkat) {
-            $query->whereJsonContains('tingkat', (int) $tingkat);
+            $faseColumn = (int) $tingkat === 10 ? 'struktur_fase_e' : 'struktur_fase_f';
+            $query->whereJsonContains('tingkat', (int) $tingkat)
+                ->whereNotNull($faseColumn);
         }
 
-        $mapels = $query->get(['id', 'kode_mapel', 'nama_mapel', 'kelompok'])
-            ->map(fn($m) => [
+        $mapels = $query->get([
+            'id',
+            'kode_mapel',
+            'nama_mapel',
+            'kelompok',
+            'struktur_fase_e',
+            'struktur_fase_f',
+            'alokasi_jp',
+            'jam_pelajaran',
+        ])->map(function ($m) use ($tingkat) {
+            $structure = $tingkat
+                ? $m->strukturUntukTingkat((int) $tingkat)
+                : ($m->kelompok ?? '');
+
+            return [
                 'id'       => $m->id,
                 'nama'     => $m->nama_mapel,
                 'kode'     => $m->kode_mapel ?? '',
-                'kelompok' => $m->kelompok ?? '',
-            ]);
+                'kelompok' => match ($structure) {
+                    'wajib_umum' => (int) $tingkat === 10 ? 'Wajib · Fase E' : 'Umum · Fase F',
+                    'pilihan' => 'Pilihan',
+                    'muatan_lokal' => 'Muatan Lokal',
+                    'penguatan_program' => 'Penguatan Program',
+                    default => $structure ?: 'Lainnya',
+                },
+                'jp_target' => $tingkat ? $m->jpUntukTingkat((int) $tingkat) : $m->jam_pelajaran,
+            ];
+        });
 
         return response()->json(['success' => true, 'data' => $mapels]);
     }

@@ -89,17 +89,18 @@
 
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="kelompok">Kelompok</label>
-                            <select name="kelompok" id="kelompok" class="form-control @error('kelompok') is-invalid @enderror">
-                                <option value="">-- Pilih Kelompok --</option>
-                                <option value="A" {{ old('kelompok', $mapel->kelompok) == 'A' ? 'selected' : '' }}>Kelompok A (Umum)</option>
-                                <option value="B" {{ old('kelompok', $mapel->kelompok) == 'B' ? 'selected' : '' }}>Kelompok B (Umum)</option>
-                                <option value="C" {{ old('kelompok', $mapel->kelompok) == 'C' ? 'selected' : '' }}>Kelompok C (Peminatan)</option>
+                            <label for="rumpun">Rumpun</label>
+                            <select name="rumpun" id="rumpun" class="form-control @error('rumpun') is-invalid @enderror">
+                                <option value="">-- Pilih Rumpun --</option>
+                                @foreach(['pai' => 'PAI', 'mipa' => 'MIPA', 'ips' => 'IPS', 'bahasa' => 'Bahasa', 'teknologi' => 'Teknologi', 'seni_prakarya' => 'Seni & Prakarya', 'pjok' => 'PJOK', 'umum' => 'Umum'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('rumpun', $mapel->rumpun) === $value)>{{ $label }}</option>
+                                @endforeach
                             </select>
-                            @error('kelompok')
+                            @error('rumpun')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Untuk Kurikulum 2013</small>
+                            <input type="hidden" name="kelompok" value="{{ $mapel->kelompok }}">
+                            <small class="text-muted">Kode kelompok lama tetap disimpan untuk kompatibilitas.</small>
                         </div>
                     </div>
 
@@ -118,7 +119,29 @@
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="jam_pelajaran">Jam Pelajaran / Minggu <span class="text-danger">*</span></label>
+                            <label for="struktur_fase_e">Struktur Fase E · X</label>
+                            <select name="struktur_fase_e" id="struktur_fase_e" class="form-control">
+                                <option value="">Tidak berlaku</option>
+                                @foreach(['wajib_umum' => 'Wajib', 'pilihan' => 'Pilihan', 'muatan_lokal' => 'Muatan Lokal', 'penguatan_program' => 'Penguatan Program', 'kokurikuler' => 'Kokurikuler'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('struktur_fase_e', $mapel->struktur_fase_e) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="struktur_fase_f">Struktur Fase F · XI–XII</label>
+                            <select name="struktur_fase_f" id="struktur_fase_f" class="form-control">
+                                <option value="">Tidak berlaku</option>
+                                @foreach(['wajib_umum' => 'Umum', 'pilihan' => 'Pilihan', 'muatan_lokal' => 'Muatan Lokal', 'penguatan_program' => 'Penguatan Program', 'kokurikuler' => 'Kokurikuler'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('struktur_fase_f', $mapel->struktur_fase_f) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="jam_pelajaran">JP Acuan <span class="text-danger">*</span></label>
                             <input type="number" name="jam_pelajaran" id="jam_pelajaran" class="form-control @error('jam_pelajaran') is-invalid @enderror" 
                                    value="{{ old('jam_pelajaran', $mapel->jam_pelajaran) }}" min="1" max="10" required>
                             @error('jam_pelajaran')
@@ -129,32 +152,35 @@
 
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="kkm">KKM (Kriteria Ketuntasan Minimal)</label>
+                            <label for="kkm">KKTP Angka (opsional)</label>
                             <input type="number" name="kkm" id="kkm" class="form-control @error('kkm') is-invalid @enderror" 
-                                   value="{{ old('kkm', $mapel->kkm) }}" min="0" max="100" placeholder="Contoh: 75">
+                                   value="{{ old('kkm', $mapel->kkm) }}" min="0" max="100" placeholder="Tidak wajib">
                             @error('kkm')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="form-group">
-                            <label>Tingkat</label>
+                            <label>Tingkat dan Alokasi JP</label>
                             <div class="row">
                                 @php
                                     $tingkatArray = old('tingkat', $mapel->tingkat ?? []);
                                 @endphp
-                                @for($i = 1; $i <= 12; $i++)
-                                    <div class="col-md-2 col-sm-4 col-6">
+                                @foreach([10 => 'X', 11 => 'XI', 12 => 'XII'] as $i => $label)
+                                    <div class="col-md-4 col-sm-4 col-12">
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" id="tingkat{{ $i }}" 
                                                    name="tingkat[]" value="{{ $i }}" 
                                                    {{ is_array($tingkatArray) && in_array($i, $tingkatArray) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="tingkat{{ $i }}">{{ $i }}</label>
+                                            <label class="custom-control-label" for="tingkat{{ $i }}">Kelas {{ $label }}</label>
                                         </div>
+                                        <input type="number" name="alokasi_jp[{{ $i }}]" class="form-control form-control-sm mt-2"
+                                               value="{{ old("alokasi_jp.$i", $mapel->alokasi_jp[(string) $i] ?? '') }}"
+                                               min="0" max="10" placeholder="JP/minggu">
                                     </div>
-                                @endfor
+                                @endforeach
                             </div>
                             <small class="text-muted">Pilih tingkat kelas yang diajar</small>
                         </div>
@@ -265,6 +291,14 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="is_schedulable" name="is_schedulable" value="1"
+                                   {{ old('is_schedulable', $mapel->is_schedulable) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="is_schedulable">Tampil pada pilihan jadwal</label>
+                        </div>
+                        <small class="text-muted">Matikan untuk kokurikuler/non-intrakurikuler.</small>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" id="is_mapel_pilihan" name="is_mapel_pilihan" value="1" 
                                    {{ old('is_mapel_pilihan', $mapel->is_mapel_pilihan) ? 'checked' : '' }}>
                             <label class="custom-control-label" for="is_mapel_pilihan">Mapel Pilihan (Merdeka)</label>
@@ -275,19 +309,20 @@
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" id="is_projek_p5" name="is_projek_p5" value="1" 
                                    {{ old('is_projek_p5', $mapel->is_projek_p5) ? 'checked' : '' }}>
-                            <label class="custom-control-label" for="is_projek_p5">Projek P5 (Merdeka)</label>
+                            <label class="custom-control-label" for="is_projek_p5">Kokurikuler</label>
                         </div>
-                        <small class="text-muted">Projek Penguatan Profil Pelajar Pancasila</small>
+                        <small class="text-muted">Istilah P5RA lama dipetakan ke kokurikuler.</small>
                     </div>
                     <div class="col-md-4">
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" id="is_muatan_lokal" name="is_muatan_lokal" value="1" 
                                    {{ old('is_muatan_lokal', $mapel->is_muatan_lokal) ? 'checked' : '' }}>
-                            <label class="custom-control-label" for="is_muatan_lokal">Muatan Lokal (KTSP)</label>
+                            <label class="custom-control-label" for="is_muatan_lokal">Muatan Lokal</label>
                         </div>
-                        <small class="text-muted">Untuk KTSP</small>
+                        <small class="text-muted">Dapat digunakan pada Kurikulum Merdeka.</small>
                     </div>
                 </div>
+                <input type="hidden" name="regulasi" value="{{ old('regulasi', $mapel->regulasi ?: 'KMA 1503 Tahun 2025') }}">
 
                 <div class="row mt-3">
                     <div class="col-md-12">

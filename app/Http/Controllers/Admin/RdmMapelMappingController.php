@@ -27,13 +27,30 @@ class RdmMapelMappingController extends Controller
 
         $simansaMapels = MataPelajaran::query()
             ->where('is_active', true)
+            ->where(function ($levels) {
+                $levels->whereJsonContains('tingkat', 10)
+                    ->orWhereJsonContains('tingkat', 11)
+                    ->orWhereJsonContains('tingkat', 12);
+            })
             ->orderBy('nama_mapel')
-            ->get(['id', 'nama_mapel', 'kelompok', 'kode_mapel', 'kurikulum_id']);
+            ->get([
+                'id',
+                'nama_mapel',
+                'kelompok',
+                'kode_mapel',
+                'kurikulum_id',
+                'struktur_fase_e',
+                'struktur_fase_f',
+                'rumpun',
+            ]);
 
         // Preload kurikulum names for display
         $kurikulumMap = \App\Models\Kurikulum::pluck('kode', 'id');
 
-        $mappings = RdmMapelMapping::with(['mataPelajaran:id,nama_mapel,kelompok,kurikulum_id', 'mappedByUser:id,name'])
+        $mappings = RdmMapelMapping::with([
+            'mataPelajaran:id,nama_mapel,kelompok,kurikulum_id,struktur_fase_e,struktur_fase_f,rumpun',
+            'mappedByUser:id,name',
+        ])
             ->get()
             ->keyBy('rdm_mapel_id');
 
@@ -95,6 +112,11 @@ class RdmMapelMappingController extends Controller
     {
         $rdmMapels = $this->getRdmMapels();
         $simansaMapels = MataPelajaran::where('is_active', true)
+            ->where(function ($levels) {
+                $levels->whereJsonContains('tingkat', 10)
+                    ->orWhereJsonContains('tingkat', 11)
+                    ->orWhereJsonContains('tingkat', 12);
+            })
             ->with('kurikulum:id,kode')
             ->get(['id', 'nama_mapel', 'kurikulum_id']);
         $existingMappings = RdmMapelMapping::pluck('rdm_mapel_id')->toArray();

@@ -911,7 +911,10 @@ function loadMapelOptions(gtkId, doAutoFill) {
                 });
                 Object.entries(groups).forEach(([grp, items]) => {
                     let html = `<optgroup label="${grp}">`;
-                    items.forEach(m => { html += `<option value="${m.id}" data-kode="${m.kode}">[${m.kode||'-'}] ${m.nama}</option>`; });
+                    items.forEach(m => {
+                        const jp = m.jp_target ? ` · acuan ${m.jp_target} JP` : '';
+                        html += `<option value="${m.id}" data-kode="${m.kode}" data-jp-target="${m.jp_target || 0}">[${m.kode||'-'}] ${m.nama}${jp}</option>`;
+                    });
                     html += '</optgroup>';
                     sel.append(html);
                 });

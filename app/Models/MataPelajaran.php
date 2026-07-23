@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MataPelajaran extends Model
 {
@@ -21,6 +22,9 @@ class MataPelajaran extends Model
         'nama_mapel',
         'kelompok',
         'kategori',
+        'struktur_fase_e',
+        'struktur_fase_f',
+        'rumpun',
         'kkm',
         'capaian_pembelajaran',
         'is_mapel_agama',
@@ -32,6 +36,9 @@ class MataPelajaran extends Model
         'is_projek_p5',
         'is_muatan_lokal',
         'jam_pelajaran',
+        'alokasi_jp',
+        'regulasi',
+        'is_schedulable',
         'tingkat',
         'semester',
         'deskripsi',
@@ -48,8 +55,10 @@ class MataPelajaran extends Model
         'is_projek_p5' => 'boolean',
         'is_muatan_lokal' => 'boolean',
         'is_active' => 'boolean',
+        'is_schedulable' => 'boolean',
         'kkm' => 'integer',
         'jam_pelajaran' => 'integer',
+        'alokasi_jp' => 'array',
     ];
 
     /**
@@ -73,6 +82,16 @@ class MataPelajaran extends Model
     public function nilaiSiswa()
     {
         return $this->hasMany(NilaiSiswa::class);
+    }
+
+    public function rdmMappings(): HasMany
+    {
+        return $this->hasMany(RdmMapelMapping::class, 'mata_pelajaran_id');
+    }
+
+    public function jadwalPelajaran(): HasMany
+    {
+        return $this->hasMany(JadwalPelajaran::class, 'mapel_id');
     }
 
     /**
@@ -100,7 +119,11 @@ class MataPelajaran extends Model
 
     public function scopeByTingkat($query, $tingkat)
     {
-        return $query->whereJsonContains('tingkat', (int) $tingkat);
+        $faseColumn = (int) $tingkat === 10 ? 'struktur_fase_e' : 'struktur_fase_f';
+
+        return $query
+            ->whereJsonContains('tingkat', (int) $tingkat)
+            ->whereNotNull($faseColumn);
     }
 
     public function scopeByKurikulum($query, $kurikulumId)
@@ -118,6 +141,20 @@ class MataPelajaran extends Model
      */
     public function getKelompokBadgeAttribute()
     {
+        $struktur = $this->struktur_label;
+        if ($struktur !== 'Belum ditetapkan') {
+            $colors = [
+                'Wajib / Umum' => 'primary',
+                'Pilihan' => 'warning',
+                'Muatan Lokal' => 'success',
+                'Penguatan Program' => 'info',
+                'Kokurikuler' => 'purple',
+            ];
+            $color = $colors[$struktur] ?? 'secondary';
+
+            return "<span class='badge badge-{$color}'>{$struktur}</span>";
+        }
+
         $colors = [
             'A' => 'primary',
             'B' => 'success',
@@ -180,6 +217,54 @@ class MataPelajaran extends Model
         }
 
         return implode(', ', $this->semester);
+    }
+
+    public function getFaseTextAttribute(): string
+    {
+        $fase = [];
+        if ($this->struktur_fase_e) {
+            $fase[] = 'E · X';
+        }
+        if ($this->struktur_fase_f) {
+            $fase[] = 'F · XI–XII';
+        }
+
+        return $fase ? implode(', ', $fase) : '-';
+    }
+
+    public function getStrukturLabelAttribute(): string
+    {
+        $structures = array_values(array_unique(array_filter([
+            $this->struktur_fase_e,
+            $this->struktur_fase_f,
+        ])));
+
+        if (!$structures) {
+            return 'Belum ditetapkan';
+        }
+
+        if (count($structures) > 1) {
+            return 'Lintas Fase';
+        }
+
+        return match ($structures[0]) {
+            'wajib_umum' => 'Wajib / Umum',
+            'pilihan' => 'Pilihan',
+            'muatan_lokal' => 'Muatan Lokal',
+            'penguatan_program' => 'Penguatan Program',
+            'kokurikuler' => 'Kokurikuler',
+            default => ucfirst(str_replace('_', ' ', $structures[0])),
+        };
+    }
+
+    public function strukturUntukTingkat(int $tingkat): ?string
+    {
+        return $tingkat === 10 ? $this->struktur_fase_e : $this->struktur_fase_f;
+    }
+
+    public function jpUntukTingkat(int $tingkat): int
+    {
+        return (int) ($this->alokasi_jp[(string) $tingkat] ?? $this->jam_pelajaran ?? 0);
     }
 
     /**

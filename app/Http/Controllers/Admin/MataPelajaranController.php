@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MataPelajaran;
 use App\Models\Kurikulum;
 use App\Models\Jurusan;
+use App\Models\RdmMapelMapping;
+use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +20,35 @@ class MataPelajaranController extends Controller
         try {
             $kurikulums = Kurikulum::where('is_active', true)->get();
             $jurusans = Jurusan::where('is_active', true)->get();
-            $tahunPelajarans = \App\Models\TahunPelajaran::orderBy('is_active', 'desc')->orderBy('tahun_mulai', 'desc')->get();
+            $tahunPelajarans = TahunPelajaran::orderBy('is_active', 'desc')->orderBy('tahun_mulai', 'desc')->get();
+            $tahunAktif = $tahunPelajarans->firstWhere('is_active', true);
+            $kurikulumAktifId = $tahunAktif?->kurikulum_id;
+
+            $catalogQuery = MataPelajaran::query()
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereJsonContains('tingkat', 10)
+                        ->orWhereJsonContains('tingkat', 11)
+                        ->orWhereJsonContains('tingkat', 12);
+                });
+
+            if ($kurikulumAktifId) {
+                $catalogQuery->where('kurikulum_id', $kurikulumAktifId);
+            }
+
+            $catalogIds = (clone $catalogQuery)->pluck('id');
+            $stats = [
+                'total' => $catalogIds->count(),
+                'ready' => (clone $catalogQuery)->where('is_schedulable', true)->count(),
+                'mapped' => RdmMapelMapping::whereIn('mata_pelajaran_id', $catalogIds)
+                    ->distinct('mata_pelajaran_id')
+                    ->count('mata_pelajaran_id'),
+                'scheduled' => DB::table('jadwal_pelajaran')
+                    ->whereIn('mapel_id', $catalogIds)
+                    ->whereNull('deleted_at')
+                    ->distinct('mapel_id')
+                    ->count('mapel_id'),
+            ];
             
             \Log::info('MapelController@index - Data loaded', [
                 'kurikulums' => $kurikulums->count(),
@@ -26,7 +56,14 @@ class MataPelajaranController extends Controller
                 'tahunPelajarans' => $tahunPelajarans->count()
             ]);
             
-            return view('admin.mapel.index', compact('kurikulums', 'jurusans', 'tahunPelajarans'));
+            return view('admin.mapel.index', compact(
+                'kurikulums',
+                'jurusans',
+                'tahunPelajarans',
+                'tahunAktif',
+                'kurikulumAktifId',
+                'stats'
+            ));
         } catch (\Exception $e) {
             \Log::error('MapelController@index Error: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -39,7 +76,8 @@ class MataPelajaranController extends Controller
             'filters' => $request->all()
         ]);
         
-        $query = MataPelajaran::with(['kurikulum', 'jurusan', 'tahunPelajaran']);
+        $query = MataPelajaran::with(['kurikulum', 'jurusan', 'tahunPelajaran'])
+            ->withCount(['rdmMappings', 'jadwalPelajaran']);
         
         $totalBefore = MataPelajaran::count();
         \Log::info('Total mapel before filters', ['total' => $totalBefore]);
@@ -61,12 +99,21 @@ class MataPelajaranController extends Controller
 
         // Filter by kelompok
         if ($request->kelompok) {
-            $query->where('kelompok', $request->kelompok);
+            $query->where(function ($filter) use ($request) {
+                $filter->where('struktur_fase_e', $request->kelompok)
+                    ->orWhere('struktur_fase_f', $request->kelompok);
+            });
         }
 
         // Filter by tingkat
         if ($request->tingkat) {
             $query->whereJsonContains('tingkat', (int) $request->tingkat);
+        } else {
+            $query->where(function ($levels) {
+                $levels->whereJsonContains('tingkat', 10)
+                    ->orWhereJsonContains('tingkat', 11)
+                    ->orWhereJsonContains('tingkat', 12);
+            });
         }
 
         // Filter by kategori
@@ -95,14 +142,25 @@ class MataPelajaranController extends Controller
                 return $mapel->tahunPelajaran ? $mapel->tahunPelajaran->nama_tahun_pelajaran : '-';
             })
             ->addColumn('kelompok_badge', function ($mapel) {
-                if (!$mapel->kelompok) return '-';
-                $colors = [
-                    'A' => 'primary',
-                    'B' => 'success',
-                    'C' => 'warning',
-                ];
-                $color = $colors[$mapel->kelompok] ?? 'secondary';
-                return '<span class="badge badge-' . $color . '">' . $mapel->kelompok . '</span>';
+                return $mapel->kelompok_badge;
+            })
+            ->addColumn('fase_display', function ($mapel) {
+                return $mapel->fase_text;
+            })
+            ->addColumn('rumpun_display', function ($mapel) {
+                return $mapel->rumpun
+                    ? ucfirst(str_replace('_', ' & ', $mapel->rumpun))
+                    : '-';
+            })
+            ->addColumn('integrasi_badge', function ($mapel) {
+                $rdm = $mapel->rdm_mappings_count > 0
+                    ? '<span class="badge badge-success"><i class="fas fa-link"></i> RDM</span>'
+                    : '<span class="badge badge-light border"><i class="fas fa-unlink"></i> Belum RDM</span>';
+                $jadwal = $mapel->jadwal_pelajaran_count > 0
+                    ? '<span class="badge badge-primary ml-1"><i class="fas fa-calendar-check"></i> Terjadwal</span>'
+                    : '';
+
+                return $rdm . $jadwal;
             })
             ->addColumn('status_badge', function ($mapel) {
                 if ($mapel->is_active) {
@@ -121,7 +179,7 @@ class MataPelajaranController extends Controller
                 
                 return $showBtn . ' ' . $editBtn . ' ' . $duplicateBtn . ' ' . $deleteBtn;
             })
-            ->rawColumns(['kelompok_badge', 'status_badge', 'action'])
+            ->rawColumns(['kelompok_badge', 'integrasi_badge', 'status_badge', 'action'])
             ->make(true);
     }
 
@@ -131,7 +189,15 @@ class MataPelajaranController extends Controller
         $jurusans = \App\Models\Jurusan::where('is_active', true)->get();
         $tahunPelajarans = \App\Models\TahunPelajaran::orderBy('is_active', 'desc')->orderBy('tahun_mulai', 'desc')->get();
         
-        return view('admin.mapel.create-dragdrop', compact('kurikulums', 'jurusans', 'tahunPelajarans'));
+        $mapelTemplates = config('mapel_template');
+        $mapelTemplates['MERDEKA'] = config('mapel_man');
+
+        return view('admin.mapel.create-dragdrop', compact(
+            'kurikulums',
+            'jurusans',
+            'tahunPelajarans',
+            'mapelTemplates'
+        ));
     }
 
     public function bulkStore(Request $request)
@@ -155,6 +221,7 @@ class MataPelajaranController extends Controller
             DB::beginTransaction();
 
             $successCount = 0;
+            $updatedCount = 0;
             $errorCount = 0;
             $errors = [];
 
@@ -171,16 +238,19 @@ class MataPelajaranController extends Controller
                     $kkmKey = "kkm_{$groupIdx}_{$itemIdx}";
                     $kkm = $request->input($kkmKey, $mapelData['kkm_default'] ?? null);
 
-                    // Cek apakah kode mapel sudah ada untuk kurikulum ini
-                    $exists = MataPelajaran::where('kode_mapel', $mapelData['kode_mapel'])
+                    $existing = MataPelajaran::withTrashed()
+                        ->where('kode_mapel', $mapelData['kode_mapel'])
                         ->where('kurikulum_id', $validated['kurikulum_id'])
-                        ->exists();
+                        ->first();
 
-                    if ($exists) {
-                        $errors[] = "Kode mapel {$mapelData['kode_mapel']} sudah ada untuk kurikulum ini";
-                        $errorCount++;
-                        continue;
-                    }
+                    $selectedLevels = array_values(array_map('intval', $validated['tingkat']));
+                    $allocation = collect($mapelData['alokasi_jp'] ?? [])
+                        ->filter(fn ($jp, $level) => in_array((int) $level, $selectedLevels, true))
+                        ->map(fn ($jp) => (int) $jp)
+                        ->all();
+                    $defaultJp = $allocation
+                        ? (int) round(array_sum($allocation) / count($allocation))
+                        : (int) ($mapelData['jam_pelajaran'] ?? 2);
 
                     // Prepare data for insert
                     $insertData = [
@@ -191,9 +261,20 @@ class MataPelajaranController extends Controller
                         'nama_mapel' => $mapelData['nama_mapel'],
                         'kelompok' => $mapelData['kelompok'] ?? null,
                         'kategori' => $mapelData['kategori'] ?? null,
-                        'kkm' => $kkm,
-                        'jam_pelajaran' => $mapelData['jam_pelajaran'],
-                        'tingkat' => $validated['tingkat'],
+                        'struktur_fase_e' => in_array(10, $selectedLevels, true)
+                            ? ($mapelData['struktur_dipilih'] ?? $mapelData['struktur_fase_e'] ?? null)
+                            : null,
+                        'struktur_fase_f' => (in_array(11, $selectedLevels, true) || in_array(12, $selectedLevels, true))
+                            ? ($mapelData['struktur_dipilih'] ?? $mapelData['struktur_fase_f'] ?? null)
+                            : null,
+                        'rumpun' => $mapelData['rumpun'] ?? null,
+                        'kkm' => $kkm !== null && $kkm !== '' ? $kkm : null,
+                        'jam_pelajaran' => $defaultJp,
+                        'alokasi_jp' => $allocation ?: null,
+                        'regulasi' => 'KMA 1503 Tahun 2025',
+                        'is_schedulable' => ($mapelData['is_schedulable'] ?? true)
+                            && !($mapelData['is_projek_p5'] ?? false),
+                        'tingkat' => $selectedLevels,
                         'semester' => $validated['semester'],
                         'is_mapel_agama' => $mapelData['is_mapel_agama'] ?? false,
                         'jenis_agama' => $mapelData['jenis_agama'] ?? null,
@@ -207,8 +288,14 @@ class MataPelajaranController extends Controller
                         'is_active' => true,
                     ];
 
-                    MataPelajaran::create($insertData);
-                    $successCount++;
+                    if ($existing) {
+                        $existing->restore();
+                        $existing->update($insertData);
+                        $updatedCount++;
+                    } else {
+                        MataPelajaran::create($insertData);
+                        $successCount++;
+                    }
 
                 } catch (\Exception $e) {
                     Log::error('Error creating mapel: ' . $e->getMessage());
@@ -219,7 +306,7 @@ class MataPelajaranController extends Controller
 
             DB::commit();
 
-            $message = "Berhasil menambahkan {$successCount} mata pelajaran";
+            $message = "Katalog mapel diperbarui: {$successCount} ditambahkan dan {$updatedCount} diselaraskan tanpa mengubah mapping RDM";
             if ($errorCount > 0) {
                 $message .= ". {$errorCount} mapel gagal ditambahkan.";
             }
@@ -254,6 +341,9 @@ class MataPelajaranController extends Controller
             'nama_mapel' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:20',
             'kategori' => 'nullable|string|max:50',
+            'struktur_fase_e' => 'nullable|in:wajib_umum,pilihan,muatan_lokal,penguatan_program,kokurikuler',
+            'struktur_fase_f' => 'nullable|in:wajib_umum,pilihan,muatan_lokal,penguatan_program,kokurikuler',
+            'rumpun' => 'nullable|in:pai,mipa,ips,bahasa,teknologi,seni_prakarya,pjok,umum',
             'kkm' => 'nullable|integer|min:0|max:100',
             'capaian_pembelajaran' => 'nullable|string',
             'is_mapel_agama' => 'boolean',
@@ -273,6 +363,10 @@ class MataPelajaranController extends Controller
             'is_projek_p5' => 'boolean',
             'is_muatan_lokal' => 'boolean',
             'jam_pelajaran' => 'required|integer|min:1|max:10',
+            'alokasi_jp' => 'nullable|array',
+            'alokasi_jp.*' => 'nullable|integer|min:0|max:10',
+            'regulasi' => 'nullable|string|max:80',
+            'is_schedulable' => 'boolean',
             'tingkat' => 'nullable|array',
             'semester' => 'nullable|array',
             'deskripsi' => 'nullable|string',
@@ -308,6 +402,16 @@ class MataPelajaranController extends Controller
 
     public function update(Request $request, MataPelajaran $mapel)
     {
+        $request->merge([
+            'is_mapel_agama' => $request->boolean('is_mapel_agama'),
+            'is_rumpun_pai' => $request->boolean('is_rumpun_pai'),
+            'is_bahasa_arab' => $request->boolean('is_bahasa_arab'),
+            'is_mapel_pilihan' => $request->boolean('is_mapel_pilihan'),
+            'is_projek_p5' => $request->boolean('is_projek_p5'),
+            'is_muatan_lokal' => $request->boolean('is_muatan_lokal'),
+            'is_schedulable' => $request->boolean('is_schedulable'),
+        ]);
+
         $validated = $request->validate([
             'kurikulum_id' => 'required|exists:kurikulum,id',
             'jurusan_id' => 'nullable|exists:jurusan,id',
@@ -320,6 +424,9 @@ class MataPelajaranController extends Controller
             'nama_mapel' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:20',
             'kategori' => 'nullable|string|max:50',
+            'struktur_fase_e' => 'nullable|in:wajib_umum,pilihan,muatan_lokal,penguatan_program,kokurikuler',
+            'struktur_fase_f' => 'nullable|in:wajib_umum,pilihan,muatan_lokal,penguatan_program,kokurikuler',
+            'rumpun' => 'nullable|in:pai,mipa,ips,bahasa,teknologi,seni_prakarya,pjok,umum',
             'kkm' => 'nullable|integer|min:0|max:100',
             'capaian_pembelajaran' => 'nullable|string',
             'is_mapel_agama' => 'boolean',
@@ -339,6 +446,10 @@ class MataPelajaranController extends Controller
             'is_projek_p5' => 'boolean',
             'is_muatan_lokal' => 'boolean',
             'jam_pelajaran' => 'required|integer|min:1|max:10',
+            'alokasi_jp' => 'nullable|array',
+            'alokasi_jp.*' => 'nullable|integer|min:0|max:10',
+            'regulasi' => 'nullable|string|max:80',
+            'is_schedulable' => 'boolean',
             'tingkat' => 'nullable|array',
             'semester' => 'nullable|array',
             'deskripsi' => 'nullable|string',
@@ -361,6 +472,16 @@ class MataPelajaranController extends Controller
     public function destroy(MataPelajaran $mapel)
     {
         try {
+            $rdmCount = $mapel->rdmMappings()->count();
+            $jadwalCount = $mapel->jadwalPelajaran()->count();
+
+            if ($rdmCount > 0 || $jadwalCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Mapel tidak dihapus karena dipakai {$rdmCount} mapping RDM dan {$jadwalCount} jadwal. Nonaktifkan mapel jika tidak lagi digunakan.",
+                ], 422);
+            }
+
             $mapel->delete();
 
             return response()->json([
