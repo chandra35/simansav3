@@ -28,7 +28,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("name('candidates')", $routes);
         $this->assertStringContainsString('function livePolling', $controller);
         $this->assertStringContainsString('function candidateOptions', $controller);
-        $this->assertStringContainsString('live-polling__packages', $view);
+        $this->assertStringContainsString('package-live-result', $view);
+        $this->assertStringContainsString('Live Polling Paket', $view);
         $this->assertStringContainsString('candidate-browser__grid', $view);
         $this->assertStringContainsString("setInterval(()=>{if(!document.hidden)refreshLivePolling()},3000)", $view);
         $this->assertStringContainsString("params.append('exclude_ids[]',id)", $view);
