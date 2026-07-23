@@ -9,7 +9,10 @@ use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\OsisElectionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -21,22 +24,41 @@ class OsisElectionController extends Controller
 
     public function index(): View
     {
+        $ongoingElection = OsisElection::query()->whereIn('status', ['draft', 'published'])->latest('starts_at')->first();
         $elections = OsisElection::query()->with('tahunPelajaran')
             ->withCount(['packages', 'voters', 'voters as voted_count' => fn ($q) => $q->where('has_voted', true)])
             ->latest('starts_at')->paginate(12);
-        return view('admin.osis-election.index', compact('elections'));
+        return view('admin.osis-election.index', compact('elections', 'ongoingElection'));
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if ($ongoing = OsisElection::query()->whereIn('status', ['draft', 'published'])->latest('starts_at')->first()) {
+            return redirect()->route('admin.osis-election.show', $ongoing)
+                ->with('error', 'Selesaikan atau hapus pemilihan yang sedang dikelola sebelum membuat pemilihan baru.');
+        }
+
         return view('admin.osis-election.form', ['election' => new OsisElection, 'years' => TahunPelajaran::latest('tahun_mulai')->get()]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedElection($request);
-        $data += ['slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(5)), 'created_by' => $request->user()->id, 'updated_by' => $request->user()->id];
-        $election = OsisElection::create($data);
+        $election = Cache::lock('osis-election-single-ongoing', 10)->block(5, function () use ($data, $request) {
+            if (OsisElection::query()->whereIn('status', ['draft', 'published'])->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'title' => 'Hanya satu pemilihan yang boleh dikelola. Selesaikan atau hapus pemilihan sebelumnya.',
+                ]);
+            }
+
+            $payload = $data + [
+                'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(5)),
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
+            ];
+
+            return OsisElection::create($payload);
+        });
         Siswa::logCustomActivity('osis_election_created', "Membuat draft pemilihan: {$election->title}", $election);
         return redirect()->route('admin.osis-election.show', $election)->with('success', 'Pengaturan pemilihan berhasil dibuat. Tambahkan paket kandidat.');
     }
@@ -51,13 +73,90 @@ class OsisElectionController extends Controller
                 'voters as voted_count' => fn ($q) => $q->where('has_voted', true),
                 'ballots',
             ]);
-        $students = Siswa::query()->with('kelasSaatIni:id,nama_kelas,tingkat')->where('status_siswa', 'aktif')
-            ->whereHas('kelasSaatIni', fn ($q) => $q->where('tahun_pelajaran_id', $election->tahun_pelajaran_id))
-            ->orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile']);
-        $results = $election->phase === 'closed'
-            ? $election->packages->map(fn ($package) => ['package' => $package, 'votes' => $package->ballots()->count()])
-            : collect();
-        return view('admin.osis-election.show', compact('election', 'students', 'results'));
+        $results = $election->packages->map(fn ($package) => [
+            'package' => $package,
+            'votes' => $package->ballots()->count(),
+        ]);
+        return view('admin.osis-election.show', compact('election', 'results'));
+    }
+
+    public function candidateOptions(Request $request, OsisElection $election): JsonResponse
+    {
+        $this->ensureDraft($election);
+        $data = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'current_package_id' => ['nullable', 'uuid'],
+            'exclude_ids' => ['nullable', 'array', 'max:3'],
+            'exclude_ids.*' => ['uuid'],
+            'selected_ids' => ['nullable', 'array', 'max:3'],
+            'selected_ids.*' => ['uuid'],
+        ]);
+
+        $currentPackageId = $data['current_package_id'] ?? null;
+        if ($currentPackageId && ! $election->packages()->whereKey($currentPackageId)->exists()) {
+            abort(404);
+        }
+
+        $query = Siswa::query()
+            ->with('kelasSaatIni:id,nama_kelas,tingkat')
+            ->where('status_siswa', 'aktif')
+            ->whereHas('kelasSaatIni', fn ($class) => $class
+                ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id));
+
+        if (! empty($data['selected_ids'])) {
+            $query->whereIn('id', $data['selected_ids']);
+        } else {
+            $usedIds = $election->packages()
+                ->when($currentPackageId, fn ($packages) => $packages->where('id', '<>', $currentPackageId))
+                ->get(['chairman_id', 'secretary_id', 'treasurer_id'])
+                ->flatMap->candidateIds()
+                ->filter()
+                ->merge($data['exclude_ids'] ?? [])
+                ->unique();
+
+            $query->when($usedIds->isNotEmpty(), fn ($students) => $students->whereNotIn('id', $usedIds))
+                ->when(filled($data['search'] ?? null), function ($students) use ($data) {
+                    $term = trim($data['search']);
+                    $students->where(function ($search) use ($term) {
+                        $search->where('nama_lengkap', 'like', "%{$term}%")
+                            ->orWhere('nisn', 'like', "%{$term}%")
+                            ->orWhereHas('kelasSaatIni', fn ($class) => $class->where('nama_kelas', 'like', "%{$term}%"));
+                    });
+                })
+                ->orderBy('nama_lengkap')
+                ->limit(24);
+        }
+
+        return response()->json([
+            'students' => $query->get(['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile'])
+                ->map(fn (Siswa $student) => $this->candidatePayload($student))->values(),
+        ]);
+    }
+
+    public function livePolling(OsisElection $election): JsonResponse
+    {
+        abort_if($election->status === 'draft', 404);
+
+        $voters = $election->voters()->count();
+        $voted = $election->voters()->where('has_voted', true)->count();
+        $votes = $election->ballots()->select('package_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('package_id')->pluck('total', 'package_id');
+
+        return response()->json([
+            'phase' => $election->phase,
+            'voters' => $voters,
+            'voted' => $voted,
+            'remaining' => max($voters - $voted, 0),
+            'turnout' => $voters ? round(($voted / $voters) * 100, 1) : 0,
+            'packages' => $election->packages()->get()->map(fn (OsisPackage $package) => [
+                'id' => $package->id,
+                'number' => $package->number,
+                'name' => $package->name ?: 'Paket '.$package->number,
+                'votes' => (int) ($votes[$package->id] ?? 0),
+                'percentage' => $voted ? round(((int) ($votes[$package->id] ?? 0) / $voted) * 100, 1) : 0,
+            ]),
+            'updated_at' => now()->format('H:i:s'),
+        ]);
     }
 
     public function edit(OsisElection $election): View
@@ -156,5 +255,16 @@ class OsisElectionController extends Controller
             ->flatMap->candidateIds();
         if ($candidateIds->intersect($used)->isNotEmpty()) throw \Illuminate\Validation\ValidationException::withMessages(['chairman_id' => 'Satu siswa hanya boleh berada pada satu paket.']);
         return $data;
+    }
+
+    private function candidatePayload(Siswa $student): array
+    {
+        return [
+            'id' => $student->id,
+            'name' => $student->nama_lengkap,
+            'nisn' => $student->nisn,
+            'class' => $student->kelasSaatIni?->nama_kelas ?: 'Tanpa rombel',
+            'photo' => $student->foto_profile_url,
+        ];
     }
 }

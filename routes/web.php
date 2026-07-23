@@ -156,6 +156,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [App\Http\Controllers\Admin\OsisElectionController::class, 'index'])->name('index');
         Route::get('/buat', [App\Http\Controllers\Admin\OsisElectionController::class, 'create'])->middleware('permission:manage-osis-election')->name('create');
         Route::post('/', [App\Http\Controllers\Admin\OsisElectionController::class, 'store'])->middleware('permission:manage-osis-election')->name('store');
+        Route::get('/{election}/kandidat', [App\Http\Controllers\Admin\OsisElectionController::class, 'candidateOptions'])->middleware('permission:manage-osis-election')->name('candidates');
+        Route::get('/{election}/live-polling', [App\Http\Controllers\Admin\OsisElectionController::class, 'livePolling'])->name('live-polling');
         Route::get('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'show'])->name('show');
         Route::get('/{election}/edit', [App\Http\Controllers\Admin\OsisElectionController::class, 'edit'])->middleware('permission:manage-osis-election')->name('edit');
         Route::put('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'update'])->middleware('permission:manage-osis-election')->name('update');

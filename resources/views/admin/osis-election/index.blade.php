@@ -4,7 +4,13 @@
 @section('content_header')
 <div class="osis-hero">
     <div><span><i class="fas fa-vote-yea mr-2"></i>Kesiswaan Digital</span><h1>Pemilihan OSIS</h1><p>Kelola paket kandidat, hak pilih, jadwal, dan hasil pemilihan dalam satu alur yang transparan.</p></div>
-    @can('manage-osis-election')<a href="{{ route('admin.osis-election.create') }}" class="btn btn-light"><i class="fas fa-plus mr-1"></i> Buat Pemilihan</a>@endcan
+    @can('manage-osis-election')
+        @if($ongoingElection)
+            <a href="{{ route('admin.osis-election.show', $ongoingElection) }}" class="btn btn-light"><i class="fas fa-arrow-right mr-1"></i> Buka Pemilihan Aktif</a>
+        @else
+            <a href="{{ route('admin.osis-election.create') }}" class="btn btn-light"><i class="fas fa-plus mr-1"></i> Buat Pemilihan</a>
+        @endif
+    @endcan
 </div>
 @stop
 
