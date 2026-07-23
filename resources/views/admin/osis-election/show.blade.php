@@ -12,7 +12,7 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 @endphp
 
 @section('content_header')
-<div class="osis-detail-hero"><div><span><i class="fas fa-vote-yea mr-2"></i>Panel Pemilihan OSIS</span><h1>{{ $election->title }}</h1><p>{{ $election->theme ?: $election->tahunPelajaran?->nama }}</p></div><div class="hero-actions"><span class="badge badge-{{ $phaseColor }}"><i class="fas {{ $phaseIcon }} mr-1"></i>{{ $phaseLabel }}</span><a href="{{ route('admin.osis-election.index') }}" class="btn btn-light"><i class="fas fa-arrow-left mr-1"></i> Daftar</a></div></div>
+<div class="osis-detail-hero"><div><span><i class="fas fa-vote-yea mr-2"></i>Panel Pemilihan OSIS</span><h1>{{ $election->title }}</h1><p>{{ $election->theme ?: $election->tahunPelajaran?->nama }}</p></div><div class="hero-actions"><span class="badge badge-{{ $phaseColor }}"><i class="fas {{ $phaseIcon }} mr-1"></i>{{ $phaseLabel }}</span>@if($election->status === 'published')<a href="{{ route('public.osis-polling.index') }}" target="_blank" rel="noopener" class="btn btn-outline-light"><i class="fas fa-broadcast-tower mr-1"></i> Layar Publik</a>@endif<a href="{{ route('admin.osis-election.index') }}" class="btn btn-light"><i class="fas fa-arrow-left mr-1"></i> Daftar</a></div></div>
 @stop
 
 @section('content')

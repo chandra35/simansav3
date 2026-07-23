@@ -4,6 +4,10 @@
 @section('content_header')
 <div class="osis-hero">
     <div><span><i class="fas fa-vote-yea mr-2"></i>Kesiswaan Digital</span><h1>Pemilihan OSIS</h1><p>Kelola paket kandidat, hak pilih, jadwal, dan hasil pemilihan dalam satu alur yang transparan.</p></div>
+    <div class="osis-hero-actions">
+    @if($ongoingElection?->status === 'published')
+        <a href="{{ route('public.osis-polling.index') }}" target="_blank" rel="noopener" class="btn btn-outline-light"><i class="fas fa-broadcast-tower mr-1"></i> Layar Publik</a>
+    @endif
     @can('manage-osis-election')
         @if($ongoingElection)
             <a href="{{ route('admin.osis-election.show', $ongoingElection) }}" class="btn btn-light"><i class="fas fa-arrow-right mr-1"></i> Buka Pemilihan Aktif</a>
@@ -11,6 +15,7 @@
             <a href="{{ route('admin.osis-election.create') }}" class="btn btn-light"><i class="fas fa-plus mr-1"></i> Buat Pemilihan</a>
         @endif
     @endcan
+    </div>
 </div>
 @stop
 
@@ -48,6 +53,7 @@
 @section('css')
 <style>
 .osis-hero{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.4rem 1.55rem;border-radius:17px;background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;box-shadow:0 16px 36px rgba(37,99,235,.2)}.osis-hero span{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.osis-hero h1{font-size:1.55rem;font-weight:800;color:#fff;margin:.35rem 0}.osis-hero p{margin:0;color:rgba(255,255,255,.86)}.osis-hero .btn{font-weight:700;border-radius:10px;white-space:nowrap}.osis-stat{padding:1rem 1.1rem;border-radius:13px;background:#fff;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;box-shadow:0 8px 22px rgba(15,23,42,.05)}.osis-stat span{display:block;color:#64748b;font-size:.72rem;font-weight:800;text-transform:uppercase}.osis-stat strong{font-size:1.55rem;color:#1d4ed8}.osis-stat--success{border-top-color:#22c55e}.osis-stat--success strong{color:#15803d}.osis-stat--info{border-top-color:#06b6d4}.osis-stat--info strong{color:#0e7490}.osis-stat--secondary{border-top-color:#94a3b8}.osis-stat--secondary strong{color:#475569}.osis-panel{padding:1.25rem;border:1px solid #dbe4f0;border-radius:15px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.05)}.osis-panel-head h2{font-size:1.15rem;font-weight:800;color:#0f172a;margin:0}.osis-panel-head p{color:#64748b;margin:.25rem 0 1.1rem}.election-card{height:100%;padding:1.1rem;border:1px solid #dbe4f0;border-radius:14px;background:#fff;box-shadow:0 8px 22px rgba(15,23,42,.04);transition:.18s}.election-card:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(15,23,42,.09)}.election-card-top{display:flex;justify-content:space-between;color:#64748b;font-size:.76rem}.election-card h3{font-size:1.05rem;font-weight:800;color:#0f172a;margin:1rem 0 .3rem}.election-card>p{color:#64748b;min-height:42px}.election-dates{display:grid;gap:.5rem;padding:.8rem 0;border-top:1px solid #edf2f7}.election-dates div{display:flex;gap:.65rem;color:#3b82f6}.election-dates span{font-size:.7rem;color:#94a3b8}.election-dates strong{display:block;color:#334155;font-size:.8rem}.election-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:.7rem 0 1rem}.election-metrics span{text-align:center;padding:.55rem;border-radius:9px;background:#f8fafc;color:#64748b;font-size:.68rem}.election-metrics strong{display:block;color:#0f172a;font-size:1rem}.osis-empty{text-align:center;padding:3.5rem 1rem;color:#64748b}.osis-empty>i{font-size:2.6rem;color:#bfdbfe}.osis-empty h3{font-size:1.1rem;color:#1e293b;margin:1rem 0 .3rem}@media(max-width:767.98px){.osis-hero{align-items:flex-start;flex-direction:column}.osis-hero .btn{width:100%}}
+.osis-hero-actions{display:flex;align-items:center;gap:.6rem}.osis-hero-actions .btn{margin:0}@media(max-width:767.98px){.osis-hero-actions{width:100%;flex-direction:column}.osis-hero-actions .btn{width:100%}}
 </style>
 @stop
 

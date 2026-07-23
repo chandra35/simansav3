@@ -54,4 +54,21 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('width:min(100%,230px)', $view);
         $this->assertStringContainsString('<div class="col-12 mb-4">', $view);
     }
+
+    public function test_public_live_polling_is_anonymous_fullscreen_and_resource_aware(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/PublicOsisPollingController.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
+
+        $this->assertStringContainsString("Route::get('/live-polling-osis'", $routes);
+        $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
+        $this->assertStringContainsString("TahunPelajaran::active()", $controller);
+        $this->assertStringContainsString("->where('status', 'published')", $controller);
+        $this->assertStringContainsString('Cache::remember(', $controller);
+        $this->assertStringNotContainsString('participant_id', $controller);
+        $this->assertStringNotContainsString('<form', $view);
+        $this->assertStringContainsString('min-height:100vh', $view);
+        $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
+    }
 }

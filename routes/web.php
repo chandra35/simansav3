@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\MutasiSiswaController;
 use App\Http\Controllers\Admin\MatrikulasiPpdbController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
+use App\Http\Controllers\PublicOsisPollingController;
 
 // Redirect root: if logged in go to appropriate dashboard, else go to login
 Route::get('/', function () {
@@ -48,6 +49,12 @@ Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController:
 // Public Download Center
 Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
 Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
+
+// Public live polling (aggregate results only; no voter identity or voting action)
+Route::get('/live-polling-osis', [PublicOsisPollingController::class, 'index'])->name('public.osis-polling.index');
+Route::get('/live-polling-osis/data', [PublicOsisPollingController::class, 'data'])
+    ->middleware('throttle:30,1')
+    ->name('public.osis-polling.data');
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
