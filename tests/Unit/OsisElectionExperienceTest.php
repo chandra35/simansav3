@@ -33,6 +33,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('candidate-browser__grid', $view);
         $this->assertStringContainsString("setInterval(()=>{if(!document.hidden)refreshLivePolling()},3000)", $view);
         $this->assertStringContainsString("params.append('exclude_ids[]',id)", $view);
+        $this->assertStringContainsString("->where('tingkat', 11)", $controller);
+        $this->assertStringContainsString('KHUSUS KELAS XI', $view);
     }
 
     public function test_voter_is_still_limited_to_one_irreversible_vote(): void

@@ -101,7 +101,8 @@ class OsisElectionController extends Controller
             ->with('kelasSaatIni:id,nama_kelas,tingkat')
             ->where('status_siswa', 'aktif')
             ->whereHas('kelasSaatIni', fn ($class) => $class
-                ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id));
+                ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
+                ->where('tingkat', 11));
 
         if (! empty($data['selected_ids'])) {
             $query->whereIn('id', $data['selected_ids']);
@@ -248,9 +249,11 @@ class OsisElectionController extends Controller
         $candidateIds = collect([$data['chairman_id'], $data['secretary_id'], $data['treasurer_id']]);
         $eligibleCandidates = Siswa::query()->whereIn('id', $candidateIds)
             ->where('status_siswa', 'aktif')
-            ->whereHas('kelasSaatIni', fn ($q) => $q->where('tahun_pelajaran_id', $election->tahun_pelajaran_id))
+            ->whereHas('kelasSaatIni', fn ($q) => $q
+                ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
+                ->where('tingkat', 11))
             ->count();
-        if ($eligibleCandidates !== 3) throw \Illuminate\Validation\ValidationException::withMessages(['chairman_id' => 'Semua kandidat harus merupakan siswa aktif pada tahun pelajaran pemilihan.']);
+        if ($eligibleCandidates !== 3) throw \Illuminate\Validation\ValidationException::withMessages(['chairman_id' => 'Semua kandidat harus merupakan siswa aktif kelas XI pada tahun pelajaran pemilihan.']);
         $used = $election->packages()->when($current, fn ($q) => $q->where('id', '<>', $current->id))->get()
             ->flatMap->candidateIds();
         if ($candidateIds->intersect($used)->isNotEmpty()) throw \Illuminate\Validation\ValidationException::withMessages(['chairman_id' => 'Satu siswa hanya boleh berada pada satu paket.']);
