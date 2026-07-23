@@ -433,6 +433,13 @@ return [
                     'active' => ['admin/jadwal-pelajaran*'],
                 ],
                 [
+                    'text' => 'Mapping Jadwal',
+                    'route' => 'admin.jadwal-mapping.index',
+                    'icon' => 'fas fa-fw fa-link',
+                    'can' => 'view-jadwal-mapping',
+                    'active' => ['admin/jadwal-mapping*'],
+                ],
+                [
                     'text' => 'Manajemen Kelas',
                     'route' => 'admin.kelas.index',
                     'icon' => 'fas fa-fw fa-school',

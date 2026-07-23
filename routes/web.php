@@ -604,6 +604,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/jadwal-pelajaran/guru-jtm-summary', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'guruJtmSummary'])->name('jadwal-pelajaran.guru-jtm-summary');
         Route::get('/jadwal-hari-jam', [App\Http\Controllers\Admin\JadwalHariJamController::class, 'index'])->name('jadwal-hari-jam.index');
     });
+    Route::middleware(['permission:view-jadwal-mapping'])->group(function () {
+        Route::get('/jadwal-mapping', [App\Http\Controllers\Admin\JadwalMappingController::class, 'index'])->name('jadwal-mapping.index');
+    });
+    Route::middleware(['permission:manage-jadwal-mapping'])->group(function () {
+        Route::post('/jadwal-mapping/refresh', [App\Http\Controllers\Admin\JadwalMappingController::class, 'refresh'])->name('jadwal-mapping.refresh');
+        Route::put('/jadwal-mapping/guru/{alias}', [App\Http\Controllers\Admin\JadwalMappingController::class, 'updateGuru'])->name('jadwal-mapping.guru.update');
+        Route::put('/jadwal-mapping/mapel/{alias}', [App\Http\Controllers\Admin\JadwalMappingController::class, 'updateMapel'])->name('jadwal-mapping.mapel.update');
+    });
     Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
         Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
         Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');

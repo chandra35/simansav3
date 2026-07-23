@@ -28,6 +28,7 @@ class Gtk extends Model
         'nik',
         'nuptk',
         'nip',
+        'kode_gtk',
         'jenis_kelamin',
         'tempat_lahir',
         'tanggal_lahir',

@@ -309,6 +309,8 @@ class PermissionSyncService
                 'permissions' => [
                     'view-jadwal-pelajaran',
                     'manage-jadwal-pelajaran',
+                    'view-jadwal-mapping',
+                    'manage-jadwal-mapping',
                 ],
             ],
             'kalender-akademik' => [

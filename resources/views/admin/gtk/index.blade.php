@@ -181,6 +181,7 @@
                         <th style="width: 40px;">No</th>
                         <th>Nama Lengkap</th>
                         <th>NIK</th>
+                        <th>Kode Guru</th>
                         <th>Kategori PTK</th>
                         <th>Jenis PTK</th>
                         <th>Status Kepeg</th>
@@ -386,6 +387,7 @@ $(document).ready(function() {
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'nama_lengkap', name: 'nama_lengkap' },
             { data: 'nik', name: 'nik' },
+            { data: 'kode_gtk', name: 'kode_gtk' },
             { data: 'kategori_ptk', name: 'kategori_ptk' },
             { data: 'jenis_ptk', name: 'jenis_ptk' },
             { data: 'status_kepegawaian', name: 'status_kepegawaian' },
@@ -937,6 +939,5 @@ function deleteGtk(id) {
 }
 </script>
 @stop
-
 
 

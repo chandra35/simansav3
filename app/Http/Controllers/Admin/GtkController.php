@@ -50,7 +50,7 @@ class GtkController extends Controller
     public function data(Request $request)
     {
         $gtk = Gtk::with('user')
-            ->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+            ->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'kode_gtk', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
 
         // Filter by Kategori PTK
         if ($request->filled('kategori_ptk')) {
@@ -92,7 +92,8 @@ class GtkController extends Controller
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('nik', 'like', "%{$search}%")
                   ->orWhere('nuptk', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%");
+                  ->orWhere('nip', 'like', "%{$search}%")
+                  ->orWhere('kode_gtk', 'like', "%{$search}%");
             });
         }
 
@@ -109,7 +110,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = ['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'created_at'];
+            $columns = [null, 'nama_lengkap', 'nik', 'kode_gtk', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', null, null, null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -125,6 +126,9 @@ class GtkController extends Controller
                 'DT_RowIndex' => $request->start + $index + 1,
                 'nama_lengkap' => $item->nama_lengkap,
                 'nik' => $item->nik,
+                'kode_gtk' => $item->kode_gtk
+                    ? '<span class="badge badge-primary px-2 py-1">'.$item->kode_gtk.'</span>'
+                    : '<span class="text-muted">-</span>',
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',

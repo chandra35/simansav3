@@ -87,11 +87,18 @@
             <h3><i class="fas fa-search"></i> Buka Jadwal Kelas</h3>
             <p>Pilih tahun pelajaran, kelas, dan semester untuk membuka timetable.</p>
         </div>
-        @can('manage-jadwal-pelajaran')
-        <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-sliders-h"></i> Konfigurasi Jam
-        </a>
-        @endcan
+        <div class="d-flex flex-wrap" style="gap:8px">
+            @can('view-jadwal-mapping')
+                <a href="{{ route('admin.jadwal-mapping.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-link"></i> Mapping Kode
+                </a>
+            @endcan
+            @can('manage-jadwal-pelajaran')
+                <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-sliders-h"></i> Konfigurasi Jam
+                </a>
+            @endcan
+        </div>
     </div>
     <div class="simansa-jadwal-panel__body">
         <form method="GET" action="{{ route('admin.jadwal-pelajaran.timetable') }}" id="formPilihKelas">
