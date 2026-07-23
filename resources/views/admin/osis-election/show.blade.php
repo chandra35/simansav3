@@ -35,7 +35,14 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 @forelse($election->packages as $package)
 <div class="col-xl-6 mb-4"><article class="package-card"><div class="package-banner"><strong>{{ $package->number }}</strong><div><span>PAKET {{ $package->number }}</span><h3>{{ $package->name ?: 'Paket '.$package->number }}</h3><p>{{ $package->slogan ?: 'Bersama membangun OSIS yang lebih baik.' }}</p></div></div>
 <div class="candidate-grid">@foreach([['Ketua',$package->chairman],['Sekretaris',$package->secretary],['Bendahara',$package->treasurer]] as [$role,$candidate])<div><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $role }}</span><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>@endforeach</div>
-@if($election->status==='published')@php($packageResult=$resultsByPackage->get($package->id);$packageVotes=$packageResult['votes']??0;$packageShare=$election->voted_count?round(($packageVotes/$election->voted_count)*100,1):0)<div class="package-live-result" data-package-id="{{ $package->id }}"><div class="package-live-result__head"><span><i class="live-dot"></i>Live Polling Paket {{ $package->number }}</span><div class="live-package-value"><strong>{{ number_format($packageVotes) }}</strong><span>{{ $packageShare }}%</span></div></div><div class="live-bar"><span style="width:{{ $packageShare }}%"></span></div><small>Persentase dari seluruh suara yang sudah masuk.</small></div>@endif
+@if($election->status==='published')
+@php
+    $packageResult = $resultsByPackage->get($package->id);
+    $packageVotes = $packageResult['votes'] ?? 0;
+    $packageShare = $election->voted_count ? round(($packageVotes / $election->voted_count) * 100, 1) : 0;
+@endphp
+<div class="package-live-result" data-package-id="{{ $package->id }}"><div class="package-live-result__head"><span><i class="live-dot"></i>Live Polling Paket {{ $package->number }}</span><div class="live-package-value"><strong>{{ number_format($packageVotes) }}</strong><span>{{ $packageShare }}%</span></div></div><div class="live-bar"><span style="width:{{ $packageShare }}%"></span></div><small>Persentase dari seluruh suara yang sudah masuk.</small></div>
+@endif
 <div class="package-copy"><h4>Visi</h4><p>{{ $package->vision }}</p><h4>Misi</h4><p>{!! nl2br(e($package->mission)) !!}</p></div>
 @if($election->status==='draft')<div class="package-actions"><button class="btn btn-sm btn-outline-primary btn-edit-package" data-id="{{ $package->id }}"><i class="fas fa-edit mr-1"></i>Edit</button><form method="POST" action="{{ route('admin.osis-election.packages.destroy',[$election,$package]) }}" class="confirm-form" data-confirm="Hapus Paket {{ $package->number }}?"><input type="hidden" name="_token" value="{{ csrf_token() }}">@method('DELETE')<button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash mr-1"></i>Hapus</button></form></div>@endif
 </article></div>
