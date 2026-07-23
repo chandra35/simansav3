@@ -353,7 +353,9 @@
                             <select class="form-control" id="targetKelasId" name="target_kelas_id" required>
                                 <option value="">Pilih rombel tujuan</option>
                                 @foreach($transferClasses as $targetClass)
-                                    @php($targetFull = $targetClass->siswa_aktif_count >= $targetClass->kapasitas)
+                                    @php
+                                        $targetFull = $targetClass->siswa_aktif_count >= $targetClass->kapasitas;
+                                    @endphp
                                     <option value="{{ $targetClass->id }}" @disabled($targetFull)>
                                         {{ $targetClass->nama_lengkap }} · {{ $targetClass->siswa_aktif_count }}/{{ $targetClass->kapasitas }} siswa{{ $targetFull ? ' · PENUH' : '' }}
                                     </option>
