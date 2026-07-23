@@ -71,5 +71,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('min-height:100vh', $view);
         $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
         $this->assertStringContainsString('function renderPackages(packages)', $view);
+        $this->assertStringContainsString('Logo MAN 1 Metro', $view);
+        $this->assertStringContainsString('AppSetting::first()?->logo_sekolah_url', $controller);
     }
 }

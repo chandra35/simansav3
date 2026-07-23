@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
 use App\Models\TahunPelajaran;
+use App\Models\AppSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ class PublicOsisPollingController extends Controller
         return view('public.osis-polling', [
             'election' => $election,
             'initialPolling' => $election ? $this->snapshot($election) : null,
+            'schoolLogo' => AppSetting::first()?->logo_sekolah_url
+                ?? asset('vendor/adminlte/dist/img/logo-sekolah.png'),
         ]);
     }
 
