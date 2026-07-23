@@ -70,5 +70,6 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringNotContainsString('<form', $view);
         $this->assertStringContainsString('min-height:100vh', $view);
         $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
+        $this->assertStringContainsString('function renderPackages(packages)', $view);
     }
 }
