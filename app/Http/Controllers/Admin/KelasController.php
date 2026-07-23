@@ -404,7 +404,18 @@ class KelasController extends Controller
             'perempuan' => $kelas->siswaAktif->where('jenis_kelamin', 'P')->count(),
         ];
 
-        return view('admin.kelas.show', compact('kelas', 'stats'));
+        $transferClasses = Auth::user()->can('transfer-siswa-kelas')
+            ? Kelas::query()
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('tingkat', $kelas->tingkat)
+                ->where('is_active', true)
+                ->where('id', '<>', $kelas->id)
+                ->withCount('siswaAktif')
+                ->orderBy('nama_kelas')
+                ->get()
+            : collect();
+
+        return view('admin.kelas.show', compact('kelas', 'stats', 'transferClasses'));
     }
 
     /**
@@ -1071,6 +1082,152 @@ class KelasController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengeluarkan siswa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Transfer an active student to another class in the same academic period and level.
+     */
+    public function transferSiswa(Request $request, Kelas $kelas, Siswa $siswa)
+    {
+        $this->authorize('transfer-siswa-kelas');
+
+        $validator = Validator::make($request->all(), [
+            'target_kelas_id' => ['required', 'uuid', 'exists:kelas,id'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ], [
+            'target_kelas_id.required' => 'Pilih rombel tujuan.',
+            'target_kelas_id.exists' => 'Rombel tujuan tidak ditemukan.',
+            'reason.max' => 'Catatan perpindahan maksimal 500 karakter.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        try {
+            $result = DB::transaction(function () use ($request, $kelas, $siswa) {
+                $sourceClass = Kelas::query()->lockForUpdate()->findOrFail($kelas->id);
+                $targetClass = Kelas::query()->lockForUpdate()->findOrFail($request->target_kelas_id);
+
+                if ($sourceClass->id === $targetClass->id) {
+                    throw new \DomainException('Rombel tujuan harus berbeda dari rombel asal.');
+                }
+
+                if (
+                    $targetClass->tahun_pelajaran_id !== $sourceClass->tahun_pelajaran_id
+                    || (int) $targetClass->tingkat !== (int) $sourceClass->tingkat
+                    || ! $targetClass->is_active
+                ) {
+                    throw new \DomainException('Rombel tujuan harus aktif, satu tingkat, dan berada pada tahun pelajaran yang sama.');
+                }
+
+                $sourceEnrollment = SiswaKelas::query()
+                    ->where('siswa_id', $siswa->id)
+                    ->where('kelas_id', $sourceClass->id)
+                    ->where('tahun_pelajaran_id', $sourceClass->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $sourceEnrollment) {
+                    throw new \DomainException('Siswa tidak lagi tercatat aktif pada rombel asal. Muat ulang halaman.');
+                }
+
+                $targetCount = SiswaKelas::query()
+                    ->where('kelas_id', $targetClass->id)
+                    ->where('tahun_pelajaran_id', $targetClass->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->count();
+
+                if ($targetCount >= $targetClass->kapasitas) {
+                    throw new \DomainException("Rombel {$targetClass->nama_lengkap} sudah penuh.");
+                }
+
+                $reason = trim((string) $request->reason);
+                $reasonText = $reason !== '' ? " Alasan: {$reason}" : '';
+                $transferDate = now()->toDateString();
+                $nextAttendanceNumber = ((int) SiswaKelas::query()
+                    ->where('kelas_id', $targetClass->id)
+                    ->where('tahun_pelajaran_id', $targetClass->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->max('nomor_urut_absen')) + 1;
+
+                $sourceEnrollment->update([
+                    'status' => 'keluar',
+                    'tanggal_keluar' => $transferDate,
+                    'catatan_perpindahan' => trim(($sourceEnrollment->catatan_perpindahan ? $sourceEnrollment->catatan_perpindahan.' ' : '')."Pindah rombel ke {$targetClass->nama_lengkap}.{$reasonText}"),
+                ]);
+
+                $targetEnrollment = SiswaKelas::withTrashed()
+                    ->where('siswa_id', $siswa->id)
+                    ->where('kelas_id', $targetClass->id)
+                    ->where('tahun_pelajaran_id', $targetClass->tahun_pelajaran_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                $targetPayload = [
+                    'tingkat' => $targetClass->tingkat,
+                    'tanggal_masuk' => $transferDate,
+                    'tanggal_keluar' => null,
+                    'status' => 'aktif',
+                    'nomor_urut_absen' => $nextAttendanceNumber,
+                    'catatan_perpindahan' => "Pindah rombel dari {$sourceClass->nama_lengkap}.{$reasonText}",
+                ];
+
+                if ($targetEnrollment) {
+                    if ($targetEnrollment->trashed()) {
+                        $targetEnrollment->restore();
+                    }
+                    $targetEnrollment->update($targetPayload);
+                } else {
+                    $targetEnrollment = SiswaKelas::create($targetPayload + [
+                        'siswa_id' => $siswa->id,
+                        'kelas_id' => $targetClass->id,
+                        'tahun_pelajaran_id' => $targetClass->tahun_pelajaran_id,
+                    ]);
+                }
+
+                $siswa->update(['kelas_saat_ini_id' => $targetClass->id]);
+
+                activity()
+                    ->performedOn($siswa)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'tahun_pelajaran_id' => $sourceClass->tahun_pelajaran_id,
+                        'kelas_asal' => ['id' => $sourceClass->id, 'nama' => $sourceClass->nama_lengkap],
+                        'kelas_tujuan' => ['id' => $targetClass->id, 'nama' => $targetClass->nama_lengkap],
+                        'tanggal_pindah' => $transferDate,
+                        'nomor_absen_baru' => $nextAttendanceNumber,
+                        'alasan' => $reason ?: null,
+                        'pelaksana_id' => Auth::id(),
+                    ])
+                    ->log("Memindahkan siswa {$siswa->nama_lengkap} dari {$sourceClass->nama_lengkap} ke {$targetClass->nama_lengkap}");
+
+                return [
+                    'message' => "{$siswa->nama_lengkap} berhasil dipindahkan ke {$targetClass->nama_lengkap}.",
+                    'redirect' => route('admin.kelas.show', $targetClass),
+                ];
+            });
+
+            return response()->json(['success' => true] + $result);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            Log::error('Gagal memindahkan rombel siswa', [
+                'siswa_id' => $siswa->id,
+                'kelas_asal_id' => $kelas->id,
+                'kelas_tujuan_id' => $request->target_kelas_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memindahkan siswa. Silakan coba lagi.',
             ], 500);
         }
     }

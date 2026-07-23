@@ -189,9 +189,9 @@
                                 <th class="text-center">EMIS</th>
                                 @endif
                                 <th>Tanggal Masuk</th>
-                                @can('remove-siswa-kelas')
+                                @canany(['transfer-siswa-kelas', 'remove-siswa-kelas'])
                                 <th>Aksi</th>
-                                @endcan
+                                @endcanany
                             </tr>
                         </thead>
                         <tbody>
@@ -291,15 +291,32 @@
                                     <td data-order="{{ $tanggalMasuk?->format('Y-m-d') }}">
                                         {{ $tanggalMasuk?->format('d/m/Y') ?: '-' }}
                                     </td>
-                                    @can('remove-siswa-kelas')
+                                    @canany(['transfer-siswa-kelas', 'remove-siswa-kelas'])
                                     <td class="text-center">
+                                        <div class="class-row-actions">
+                                        @can('transfer-siswa-kelas')
+                                            @if($transferClasses->isNotEmpty())
+                                            <button type="button" class="btn btn-sm btn-primary btn-transfer-siswa"
+                                                data-siswa-id="{{ $siswa->id }}"
+                                                data-siswa-nama="{{ $siswa->nama_lengkap }}"
+                                                data-siswa-nisn="{{ $siswa->nisn ?: '-' }}"
+                                                data-siswa-foto="{{ $siswa->foto_profile_url }}"
+                                                data-toggle="tooltip"
+                                                title="Pindah ke rombel lain">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </button>
+                                            @endif
+                                        @endcan
+                                        @can('remove-siswa-kelas')
                                         <button type="button" class="btn btn-sm btn-danger btn-remove-siswa" 
                                             data-siswa-id="{{ $siswa->id }}"
                                             data-siswa-nama="{{ $siswa->nama_lengkap }}">
                                             <i class="fas fa-user-minus"></i>
                                         </button>
+                                        @endcan
+                                        </div>
                                     </td>
-                                    @endcan
+                                    @endcanany
                                 </tr>
                             @endforeach
                         </tbody>
@@ -312,6 +329,45 @@
             @endif
         </div>
     </div>
+
+    {{-- Modal Pindah Rombel --}}
+    @can('transfer-siswa-kelas')
+    <div class="modal fade" id="modalTransferSiswa" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content transfer-modal">
+                <form id="formTransferSiswa">
+                    @csrf
+                    <div class="modal-header transfer-modal__header">
+                        <div><small>ADMINISTRASI ROMBEL</small><h5 class="modal-title"><i class="fas fa-exchange-alt mr-2"></i>Pindah Rombel Siswa</h5></div>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="transfer-student">
+                            <img id="transferStudentPhoto" src="" alt="Foto siswa">
+                            <div><small>SISWA YANG DIPINDAHKAN</small><strong id="transferStudentName">-</strong><span id="transferStudentMeta">-</span></div>
+                            <span class="transfer-origin"><small>DARI</small><b>{{ $kelas->nama_lengkap }}</b></span>
+                        </div>
+                        <div class="transfer-rule"><i class="fas fa-shield-alt"></i><span>Tujuan dibatasi ke tingkat {{ $kelas->getTingkatRomawi() }} dan tahun pelajaran {{ $kelas->tahunPelajaran->nama ?? '-' }}. Riwayat rombel asal tetap disimpan.</span></div>
+                        <div class="form-group mt-3">
+                            <label for="targetKelasId">Rombel Tujuan</label>
+                            <select class="form-control" id="targetKelasId" name="target_kelas_id" required>
+                                <option value="">Pilih rombel tujuan</option>
+                                @foreach($transferClasses as $targetClass)
+                                    @php($targetFull = $targetClass->siswa_aktif_count >= $targetClass->kapasitas)
+                                    <option value="{{ $targetClass->id }}" @disabled($targetFull)>
+                                        {{ $targetClass->nama_lengkap }} · {{ $targetClass->siswa_aktif_count }}/{{ $targetClass->kapasitas }} siswa{{ $targetFull ? ' · PENUH' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-0"><label for="transferReason">Catatan <span class="text-muted font-weight-normal">(opsional)</span></label><textarea class="form-control" id="transferReason" name="reason" rows="3" maxlength="500" placeholder="Contoh: Penyesuaian pembagian rombel"></textarea></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary" id="btnSubmitTransfer"><i class="fas fa-exchange-alt mr-1"></i> Pindahkan Sekarang</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endcan
 
     {{-- Action Buttons --}}
     <div class="card">
@@ -873,6 +929,106 @@
         #modalTambahSiswa .alert {
             border-radius: 10px;
         }
+        .class-row-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            white-space: nowrap;
+        }
+        .class-row-actions .btn {
+            display: inline-grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border-radius: 9px;
+        }
+        .transfer-modal {
+            overflow: hidden;
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, .24);
+        }
+        .transfer-modal__header {
+            align-items: center;
+            border: 0;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff;
+        }
+        .transfer-modal__header small {
+            display: block;
+            font-size: .64rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            opacity: .78;
+        }
+        .transfer-modal__header h5 {
+            margin: .15rem 0 0;
+            color: #fff;
+            font-weight: 800;
+        }
+        .transfer-student {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: .8rem;
+            padding: .85rem;
+            border: 1px solid #dbeafe;
+            border-radius: 13px;
+            background: #f8fbff;
+        }
+        .transfer-student img {
+            width: 58px;
+            height: 68px;
+            border-radius: 11px;
+            object-fit: cover;
+        }
+        .transfer-student small,
+        .transfer-student strong,
+        .transfer-student span {
+            display: block;
+        }
+        .transfer-student>div small,
+        .transfer-origin small {
+            color: #64748b;
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+        }
+        .transfer-student>div strong {
+            margin: .15rem 0;
+            color: #0f172a;
+            font-size: .9rem;
+        }
+        .transfer-student>div span {
+            color: #64748b;
+            font-size: .72rem;
+        }
+        .transfer-origin {
+            max-width: 120px;
+            padding: .5rem .65rem;
+            border-radius: 9px;
+            background: #e0e7ff;
+            color: #3730a3;
+            text-align: right;
+        }
+        .transfer-origin b { font-size: .76rem; }
+        .transfer-rule {
+            display: flex;
+            align-items: flex-start;
+            gap: .65rem;
+            margin-top: .8rem;
+            padding: .7rem .8rem;
+            border-radius: 10px;
+            background: #ecfdf5;
+            color: #166534;
+            font-size: .75rem;
+        }
+        @media(max-width:575.98px) {
+            .transfer-student { grid-template-columns: 52px 1fr; }
+            .transfer-student img { width: 52px; height: 62px; }
+            .transfer-origin { grid-column: 1 / -1; max-width: none; text-align: left; }
+        }
     </style>
 @stop
 
@@ -883,7 +1039,7 @@
         if ($hasClassEmisColumn) {
             $nonSortableStudentColumns[] = 7;
         }
-        if (auth()->user()->can('remove-siswa-kelas')) {
+        if (auth()->user()->canAny(['transfer-siswa-kelas', 'remove-siswa-kelas'])) {
             $nonSortableStudentColumns[] = $hasClassEmisColumn ? 9 : 8;
         }
     @endphp
@@ -1534,6 +1690,55 @@
             });
 
             // Remove Siswa - Show Modal
+            @can('transfer-siswa-kelas')
+            let transferSiswaId = null;
+            $('.btn-transfer-siswa').on('click', function() {
+                transferSiswaId = $(this).data('siswa-id');
+                $('#formTransferSiswa')[0].reset();
+                $('#transferStudentPhoto').attr('src', $(this).data('siswa-foto'));
+                $('#transferStudentName').text($(this).data('siswa-nama'));
+                $('#transferStudentMeta').text('NISN ' + $(this).data('siswa-nisn'));
+                $('#modalTransferSiswa').modal('show');
+            });
+
+            $('#formTransferSiswa').on('submit', function(event) {
+                event.preventDefault();
+                if (!transferSiswaId || !$('#targetKelasId').val()) {
+                    Swal.fire({icon:'warning', title:'Pilih rombel tujuan', text:'Tentukan rombel tujuan sebelum melanjutkan.'});
+                    return;
+                }
+
+                const submitButton = $('#btnSubmitTransfer').prop('disabled', true);
+                const transferUrl = @json(route('admin.kelas.siswa.transfer', ['kelas' => $kelas->id, 'siswa' => ':siswa']));
+                Swal.fire({
+                    title: 'Memindahkan siswa',
+                    html: '<p class="mb-1">Memperbarui rombel aktif dan menyimpan riwayat perpindahan.</p><small class="text-muted">Mohon tunggu, jangan tutup halaman.</small>',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.ajax({
+                    url: transferUrl.replace(':siswa', transferSiswaId),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#modalTransferSiswa').modal('hide');
+                        Swal.fire({icon:'success', title:'Rombel berhasil dipindahkan', text:response.message, confirmButtonText:'Lihat rombel tujuan'})
+                            .then(() => window.location.href = response.redirect || window.location.href);
+                    },
+                    error: function(xhr) {
+                        Swal.fire({icon:'error', title:'Perpindahan gagal', text:xhr.responseJSON?.message || 'Terjadi kesalahan saat memindahkan siswa.'});
+                    },
+                    complete: function() {
+                        submitButton.prop('disabled', false);
+                    }
+                });
+            });
+
+            $('#modalTransferSiswa').on('hidden.bs.modal', function() { transferSiswaId = null; });
+            @endcan
+
             let _removeSiswaId = null;
             $('.btn-remove-siswa').on('click', function() {
                 _removeSiswaId = $(this).data('siswa-id');

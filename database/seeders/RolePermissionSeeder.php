@@ -58,6 +58,7 @@ class RolePermissionSeeder extends Seeder
             'delete-kelas',
             'assign-siswa-kelas',
             'remove-siswa-kelas',
+            'transfer-siswa-kelas',
             'assign-wali-kelas',
             'view-detail-kelas',
             
@@ -197,7 +198,7 @@ class RolePermissionSeeder extends Seeder
             'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip',
             'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran',
             'view-kurikulum',
-            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
+            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'transfer-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'upload-dokumen-mutasi',
             'view-gtk', 'create-gtk', 'edit-gtk', 'reset-password-gtk',
             'view-laporan', 'export-laporan',
@@ -327,4 +328,3 @@ class RolePermissionSeeder extends Seeder
         $this->command->info('ℹ️  Use Tugas Tambahan feature to assign additional roles to GTK');
     }
 }
-
