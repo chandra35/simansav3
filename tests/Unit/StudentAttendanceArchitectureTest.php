@@ -6,6 +6,18 @@ use PHPUnit\Framework\TestCase;
 
 class StudentAttendanceArchitectureTest extends TestCase
 {
+    public function test_joined_subject_schedule_query_qualifies_ambiguous_columns(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+
+        foreach (['kelas_id', 'hari', 'semester', 'is_active', 'jam_ke', 'gtk_id'] as $column) {
+            $this->assertStringContainsString("jadwal_pelajaran.{$column}", $controller);
+        }
+
+        $this->assertStringNotContainsString("->where('semester', \$semester)", $controller);
+        $this->assertStringNotContainsString("->orderBy('jam_ke')", $controller);
+    }
+
     public function test_subject_attendance_is_manual_and_finalized_before_analytics(): void
     {
         $input = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/AbsensiSiswaController.php');

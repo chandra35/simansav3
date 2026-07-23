@@ -285,16 +285,16 @@ class AbsensiSiswaController extends Controller
         $query = JadwalPelajaran::query()
             ->with(['kelas', 'gtk.user'])
             ->where('jadwal_pelajaran.tahun_pelajaran_id', $year->id)
-            ->where('kelas_id', $kelasId)
-            ->where('hari', $this->resolveHari($tanggal))
-            ->where('semester', $semester)
-            ->where('is_active', true)
+            ->where('jadwal_pelajaran.kelas_id', $kelasId)
+            ->where('jadwal_pelajaran.hari', $this->resolveHari($tanggal))
+            ->where('jadwal_pelajaran.semester', $semester)
+            ->where('jadwal_pelajaran.is_active', true)
             ->leftJoin('mata_pelajaran', 'mata_pelajaran.id', '=', 'jadwal_pelajaran.mapel_id')
             ->select('jadwal_pelajaran.*', 'mata_pelajaran.nama_mapel as mapel_nama')
-            ->orderBy('jam_ke');
+            ->orderBy('jadwal_pelajaran.jam_ke');
 
         if (! $this->isUnrestrictedStaff($user) && $user->gtk) {
-            $query->where('gtk_id', $user->gtk->id);
+            $query->where('jadwal_pelajaran.gtk_id', $user->gtk->id);
         }
 
         return $query->get();
