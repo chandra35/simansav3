@@ -34,7 +34,7 @@
             <div class="col-lg-4 mt-3 mt-lg-0">
                 <div class="row text-center">
                     <div class="col-6">
-                        <div class="text-white-50 small text-uppercase font-weight-bold">Total Siswa</div>
+                        <div class="text-white-50 small text-uppercase font-weight-bold" id="hero-stat-label">Siswa Tahun Aktif</div>
                         <h3 class="mb-0 text-white" id="hero-stat-total">{{ number_format($stats['total_siswa']) }}</h3>
                     </div>
                     <div class="col-6">
@@ -51,9 +51,9 @@
     <div class="col-md-6 col-xl-3 mb-4">
         <div class="card card-outline card-primary h-100">
             <div class="card-body">
-                <div class="text-muted small text-uppercase font-weight-bold">Total Siswa</div>
+                <div class="text-muted small text-uppercase font-weight-bold" id="stat-total-label">Siswa Tahun Aktif</div>
                 <h3 class="text-primary mb-1" id="stat-total">{{ number_format($stats['total_siswa']) }}</h3>
-                <div class="text-muted">Semua siswa yang saat ini tercatat di SIMANSA.</div>
+                <div class="text-muted">Jumlah siswa sesuai kelompok data dan filter yang sedang dipakai.</div>
             </div>
         </div>
     </div>
@@ -122,6 +122,29 @@
                 <div class="simansa-filter-panel">
                     <div class="row">
                         <div class="col-md-6 col-xl-3 mb-3">
+                            <label for="filterPopulation" class="simansa-filter-label">
+                                <i class="fas fa-users mr-1"></i> Kelompok Data
+                            </label>
+                            <select id="filterPopulation" class="form-control form-control-sm">
+                                <option value="active_year" @selected($population === 'active_year')>
+                                    Tahun Aktif {{ $activeYear?->nama ?: '-' }} ({{ number_format($populationCounts['active_year']) }})
+                                </option>
+                                <option value="unassigned" @selected($population === 'unassigned')>
+                                    Aktif Belum Masuk Rombel ({{ number_format($populationCounts['unassigned']) }})
+                                </option>
+                                <option value="graduated" @selected($population === 'graduated')>
+                                    Lulus / Alumni ({{ number_format($populationCounts['graduated']) }})
+                                </option>
+                                <option value="transferred_out" @selected($population === 'transferred_out')>
+                                    Mutasi Keluar ({{ number_format($populationCounts['transferred_out']) }})
+                                </option>
+                                <option value="all" @selected($population === 'all')>
+                                    Semua Riwayat ({{ number_format($populationCounts['all']) }})
+                                </option>
+                            </select>
+                            <small class="text-muted">Default hanya siswa pada rombel tahun aktif.</small>
+                        </div>
+                        <div class="col-md-6 col-xl-3 mb-3">
                             <label for="filterJenisKelamin" class="simansa-filter-label">
                                 <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
                             </label>
@@ -141,7 +164,6 @@
                                     @foreach($tingkatOptions as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
-                                    <option value="tanpa_rombel">Tanpa Rombel</option>
                                 </select>
                             </div>
                             <div class="col-md-6 col-xl-3 mb-3">
@@ -732,6 +754,13 @@ let ocrText = '';
 let selectMode = false;
 let selDown = false, selSX = 0, selSY = 0, selEX = 0, selEY = 0;
 const statsContextFilters = @json($contextQuery ?? []);
+const populationLabels = {
+    active_year: 'Siswa Tahun Aktif',
+    unassigned: 'Aktif Belum Rombel',
+    graduated: 'Lulus / Alumni',
+    transferred_out: 'Mutasi Keluar',
+    all: 'Semua Riwayat'
+};
 
 // Buka gambar di modal preview
 function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
@@ -965,6 +994,7 @@ $(document).ready(function() {
     @if(!empty($contextQuery['status']))
         $('#filterStatus').val('{{ $contextQuery["status"] }}');
     @endif
+    $('#filterPopulation').val(statsContextFilters.population || 'active_year');
 
     // Auto-open edit modal jika URL mengandung ?edit={id} (dari show.blade.php)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1703,6 +1733,30 @@ function clearForm() {
 
 // Filter Functions
 $(document).ready(function() {
+    function syncAcademicFilters() {
+        const isActiveRoster = $('#filterPopulation').val() === 'active_year';
+        const $tingkat = $('#filterTingkat');
+        const $kelas = $('#filterKelas');
+
+        $tingkat.prop('disabled', !isActiveRoster);
+        if (!isActiveRoster) {
+            $tingkat.val('');
+            $kelas.val('').prop('disabled', true).html('<option value="">Tidak berlaku</option>');
+        } else if (!$tingkat.val()) {
+            $kelas.prop('disabled', true).html('<option value="">Pilih Tingkat Dulu</option>');
+        }
+
+        const label = populationLabels[$('#filterPopulation').val()] || populationLabels.active_year;
+        $('#hero-stat-label, #stat-total-label').text(label);
+    }
+
+    syncAcademicFilters();
+
+    $('#filterPopulation').on('change', function() {
+        syncAcademicFilters();
+        applyFilters();
+    });
+
     // Filter Tingkat - Load Kelas
     $('#filterTingkat').on('change', function() {
         let tingkat = $(this).val();
@@ -1749,15 +1803,18 @@ $(document).ready(function() {
     // Reset Filter
     $('#btnResetFilter').on('click', function() {
         $('#filterJenisKelamin').val('');
+        $('#filterPopulation').val('active_year');
         $('#filterTingkat').val('');
         $('#filterKelas').val('').prop('disabled', true).html('<option value="">Pilih Tingkat Dulu</option>');
         $('#filterStatus').val('');
         $('#filterEmisStatus').val('');
+        syncAcademicFilters();
         applyFilters();
     });
     
     function applyFilters() {
         let jk = $('#filterJenisKelamin').val();
+        let population = $('#filterPopulation').val() || 'active_year';
         let tingkat = $('#filterTingkat').val();
         let kelas = $('#filterKelas').val();
         let status = $('#filterStatus').val();
@@ -1765,6 +1822,7 @@ $(document).ready(function() {
         
         // Build filter parameters
         let filterParams = Object.assign({}, statsContextFilters);
+        filterParams.population = population;
         if (jk) filterParams.jenis_kelamin = jk;
         if (tingkat) filterParams.tingkat = tingkat;
         if (kelas) filterParams.kelas_id = kelas;

@@ -32,7 +32,10 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
 
         $siswaQuery = $this->baseSiswaQuery();
+        $population = $this->resolvePopulation($request);
+        $this->applyPopulationScope($siswaQuery, $population);
         $this->applyStatisticsDrilldownFilters($siswaQuery, $request);
+        $this->applyOperationalFilters($siswaQuery, $request);
 
         // Statistics (dengan filter role)
         $stats = [
@@ -48,6 +51,8 @@ class SiswaController extends Controller
             11 => 'Kelas XI',
             12 => 'Kelas XII',
         ];
+        $activeYear = \App\Models\TahunPelajaran::query()->active()->first();
+        $populationCounts = $this->populationCounts();
 
         $contextScope = $this->buildStatisticsContext($request);
         $contextQuery = collect($request->only([
@@ -64,11 +69,23 @@ class SiswaController extends Controller
             'status',
             'login_status',
             'npsn_status',
+            'jenis_kelamin',
+            'emis_status',
             'tingkat',
             'kelas_id',
+            'population',
         ]))->filter(fn ($value) => filled($value))->all();
+        $contextQuery['population'] = $population;
 
-        return view('admin.siswa.index', compact('stats', 'tingkatOptions', 'contextScope', 'contextQuery'));
+        return view('admin.siswa.index', compact(
+            'stats',
+            'tingkatOptions',
+            'contextScope',
+            'contextQuery',
+            'population',
+            'populationCounts',
+            'activeYear'
+        ));
     }
 
     /**
@@ -79,32 +96,9 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
 
         $query = $this->baseSiswaQuery();
+        $this->applyPopulationScope($query, $this->resolvePopulation($request));
         $this->applyStatisticsDrilldownFilters($query, $request);
-
-        // Apply same filters as data()
-        if ($request->filled('jenis_kelamin')) {
-            $query->where('jenis_kelamin', $request->jenis_kelamin);
-        }
-        if ($request->filled('tingkat')) {
-            if ($request->tingkat === 'tanpa_rombel') {
-                $query->whereDoesntHave('kelasTahunAktif');
-            } else {
-                $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
-            }
-        }
-        if ($request->filled('kelas_id')) {
-            $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
-        }
-        if ($request->filled('status')) {
-            if ($request->status == 'lengkap') {
-                $query->where('data_diri_completed', true)->where('data_ortu_completed', true);
-            } elseif ($request->status == 'belum') {
-                $query->where(fn($q) => $q->where('data_diri_completed', false)->orWhere('data_ortu_completed', false));
-            }
-        }
-        if ($request->filled('emis_status')) {
-            $query->where('emis_registered', $request->emis_status === 'sudah');
-        }
+        $this->applyOperationalFilters($query, $request);
 
         return response()->json([
             'total_siswa' => (clone $query)->count(),
@@ -122,43 +116,14 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
 
         $query = $this->baseSiswaQuery();
+        $population = $this->resolvePopulation($request);
+        $this->applyPopulationScope($query, $population);
         $this->applyStatisticsDrilldownFilters($query, $request);
-
-        // Apply same filters as DataTable
-        if ($request->filled('jenis_kelamin')) {
-            $query->where('siswa.jenis_kelamin', $request->jenis_kelamin);
-        }
-
-        if ($request->filled('tingkat') && $request->tingkat !== 'tanpa_rombel') {
-            $query->whereHas('kelasTahunAktif', function ($q) use ($request) {
-                $q->where('kelas.tingkat', $request->tingkat);
-            });
-        } elseif ($request->tingkat === 'tanpa_rombel') {
-            $query->whereDoesntHave('kelasTahunAktif');
-        }
-
-        if ($request->filled('kelas_id')) {
-            $query->whereHas('kelasTahunAktif', function ($q) use ($request) {
-                $q->where('kelas.id', $request->kelas_id);
-            });
-        }
-
-        if ($request->filled('status')) {
-            if ($request->status === 'lengkap') {
-                $query->where('siswa.data_diri_completed', true)->where('siswa.data_ortu_completed', true);
-            } elseif ($request->status === 'belum') {
-                $query->where(function ($q) {
-                    $q->where('siswa.data_diri_completed', false)->orWhere('siswa.data_ortu_completed', false);
-                });
-            }
-        }
-        if ($request->filled('emis_status')) {
-            $query->where('siswa.emis_registered', $request->emis_status === 'sudah');
-        }
+        $this->applyOperationalFilters($query, $request);
 
         $rows = $query->with(['user', 'ortu', 'kelasTahunAktif'])->get();
 
-        if (!$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel') {
+        if ($population === 'active_year' && !$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel') {
             $tingkatLabel = $request->filled('tingkat') ? 'tingkat-' . $request->tingkat : 'semua-tingkat';
             $filename = 'data-siswa-' . $tingkatLabel . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
             $tingkat = $request->filled('tingkat') ? (int) $request->tingkat : null;
@@ -182,69 +147,10 @@ class SiswaController extends Controller
             ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
 
         $this->applyRoleScope($siswa);
+        $population = $this->resolvePopulation($request);
+        $this->applyPopulationScope($siswa, $population);
         $this->applyStatisticsDrilldownFilters($siswa, $request);
-
-        // Filter by Jenis Kelamin
-        if ($request->filled('jenis_kelamin')) {
-            $siswa->where('jenis_kelamin', $request->jenis_kelamin);
-        }
-
-        // Filter by Tingkat (through kelas aktif)
-        if ($request->filled('tingkat')) {
-            if ($request->tingkat === 'tanpa_rombel') {
-                // Filter siswa yang tidak punya kelas aktif
-                $siswa->whereDoesntHave('kelasTahunAktif');
-            } else {
-                // Filter by tingkat normal
-                $siswa->whereHas('kelasTahunAktif', function($q) use ($request) {
-                    $q->where('kelas.tingkat', $request->tingkat);
-                });
-            }
-        }
-
-        // Filter by Kelas
-        if ($request->filled('kelas_id')) {
-            $siswa->whereHas('kelasTahunAktif', function($q) use ($request) {
-                $q->where('kelas.id', $request->kelas_id);
-            });
-        }
-
-        // Filter by Status Data
-        if ($request->filled('status')) {
-            if ($request->status == 'lengkap') {
-                $siswa->where('data_diri_completed', true)
-                      ->where('data_ortu_completed', true);
-            } elseif ($request->status == 'belum') {
-                $siswa->where(function($q) {
-                    $q->where('data_diri_completed', false)
-                      ->orWhere('data_ortu_completed', false);
-                });
-            }
-        }
-
-        // Filter by EMIS registration flag
-        if ($request->filled('emis_status')) {
-            $siswa->where('emis_registered', $request->emis_status === 'sudah');
-        }
-
-        // Filter by Login Status
-        if ($request->filled('login_status')) {
-            if ($request->login_status === 'sudah') {
-                $siswa->whereExists(function ($q) {
-                    $q->select(DB::raw(1))
-                        ->from('activity_logs')
-                        ->whereColumn('activity_logs.user_id', 'siswa.user_id')
-                        ->where('activity_logs.activity_type', 'login');
-                });
-            } elseif ($request->login_status === 'belum') {
-                $siswa->whereNotExists(function ($q) {
-                    $q->select(DB::raw(1))
-                        ->from('activity_logs')
-                        ->whereColumn('activity_logs.user_id', 'siswa.user_id')
-                        ->where('activity_logs.activity_type', 'login');
-                });
-            }
-        }
+        $this->applyOperationalFilters($siswa, $request);
 
         // Search functionality
         if ($request->has('search') && $request->search['value']) {
@@ -256,7 +162,9 @@ class SiswaController extends Controller
             });
         }
 
-        $totalRecords = (clone $this->baseSiswaQuery())->count();
+        $totalQuery = $this->baseSiswaQuery();
+        $this->applyPopulationScope($totalQuery, $population);
+        $totalRecords = $totalQuery->count();
         $filteredRecords = $siswa->count();
         
         // Pagination
@@ -1105,6 +1013,103 @@ class SiswaController extends Controller
     {
         $query = Siswa::query();
         $this->applyRoleScope($query);
+
+        return $query;
+    }
+
+    /**
+     * Population shown on the operational student page.
+     *
+     * The default is deliberately the active-year roster, so headline numbers,
+     * table rows, statistics, and exports all use the same definition.
+     */
+    private function resolvePopulation(Request $request): string
+    {
+        $population = (string) $request->input('population', 'active_year');
+
+        return in_array($population, [
+            'active_year',
+            'unassigned',
+            'graduated',
+            'transferred_out',
+            'all',
+        ], true) ? $population : 'active_year';
+    }
+
+    private function applyPopulationScope($query, string $population)
+    {
+        return match ($population) {
+            'unassigned' => $query
+                ->where('siswa.status_siswa', 'aktif')
+                ->whereDoesntHave('kelasTahunAktif'),
+            'graduated' => $query->whereIn('siswa.status_siswa', ['lulus', 'alumni']),
+            'transferred_out' => $query->whereIn('siswa.status_siswa', ['mutasi_keluar', 'keluar']),
+            'all' => $query,
+            default => $query
+                ->where('siswa.status_siswa', 'aktif')
+                ->whereHas('kelasTahunAktif'),
+        };
+    }
+
+    private function populationCounts(): array
+    {
+        $counts = [];
+
+        foreach (['active_year', 'unassigned', 'graduated', 'transferred_out', 'all'] as $population) {
+            $query = $this->baseSiswaQuery();
+            $this->applyPopulationScope($query, $population);
+            $counts[$population] = $query->count();
+        }
+
+        return $counts;
+    }
+
+    private function applyOperationalFilters($query, Request $request)
+    {
+        if ($request->filled('jenis_kelamin')) {
+            $query->where('siswa.jenis_kelamin', $request->jenis_kelamin);
+        }
+
+        if ($request->filled('tingkat')) {
+            if ($request->tingkat === 'tanpa_rombel') {
+                $query->whereDoesntHave('kelasTahunAktif');
+            } else {
+                $query->whereHas('kelasTahunAktif', fn ($kelasQuery) => $kelasQuery
+                    ->where('kelas.tingkat', $request->tingkat));
+            }
+        }
+
+        if ($request->filled('kelas_id')) {
+            $query->whereHas('kelasTahunAktif', fn ($kelasQuery) => $kelasQuery
+                ->where('kelas.id', $request->kelas_id));
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'lengkap') {
+                $query->where('siswa.data_diri_completed', true)
+                    ->where('siswa.data_ortu_completed', true);
+            } elseif ($request->status === 'belum') {
+                $query->where(fn ($statusQuery) => $statusQuery
+                    ->where('siswa.data_diri_completed', false)
+                    ->orWhere('siswa.data_ortu_completed', false));
+            }
+        }
+
+        if ($request->filled('emis_status')) {
+            $query->where('siswa.emis_registered', $request->emis_status === 'sudah');
+        }
+
+        if ($request->filled('login_status')) {
+            $method = $request->login_status === 'sudah' ? 'whereExists' : 'whereNotExists';
+            if (in_array($request->login_status, ['sudah', 'belum'], true)) {
+                $query->{$method}(function ($loginQuery) {
+                    $loginQuery->select(DB::raw(1))
+                        ->from('activity_logs')
+                        ->whereColumn('activity_logs.user_id', 'siswa.user_id')
+                        ->where('activity_logs.activity_type', 'login');
+                });
+            }
+        }
 
         return $query;
     }
