@@ -16,6 +16,10 @@ class MaintenancePageArchitectureTest extends TestCase
         $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $view);
         $this->assertStringContainsString('grid-template-columns: minmax(0, 1fr)', $view);
         $this->assertStringContainsString('overflow-wrap: anywhere', $view);
+        $this->assertStringContainsString('height: 100dvh', $view);
+        $this->assertStringContainsString('max-height: calc(100dvh', $view);
+        $this->assertStringContainsString('@media (max-height: 560px)', $view);
+        $this->assertStringContainsString('Single viewport contract', $view);
     }
 
     public function test_maintenance_page_has_clear_recovery_controls(): void

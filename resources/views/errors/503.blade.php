@@ -689,6 +689,306 @@
             }
         }
 
+        /*
+         * Single viewport contract:
+         * halaman 503 harus selalu muat tanpa scroll vertikal maupun horizontal.
+         */
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .maintenance-page {
+            width: 100%;
+            max-width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 0;
+            padding: clamp(12px, 2vw, 24px);
+            overflow: hidden;
+        }
+
+        .maintenance-card {
+            max-width: 100%;
+            height: min(680px, calc(100dvh - clamp(24px, 4vw, 48px)));
+            max-height: calc(100dvh - clamp(24px, 4vw, 48px));
+            display: flex;
+            flex-direction: column;
+            border-radius: 24px;
+        }
+
+        .brand-bar {
+            flex: 0 0 auto;
+            padding: 12px clamp(18px, 3vw, 30px);
+        }
+
+        .brand__logo {
+            width: 42px;
+            height: 42px;
+            flex-basis: 42px;
+            border-radius: 12px;
+        }
+
+        .brand__logo img {
+            width: 34px;
+            height: 34px;
+        }
+
+        .layout {
+            width: 100%;
+            max-width: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+            grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+        }
+
+        .content {
+            width: 100%;
+            max-width: 100%;
+            min-height: 0;
+            overflow: hidden;
+            padding: clamp(24px, 4vh, 42px) clamp(24px, 4vw, 48px);
+        }
+
+        .status-badge {
+            padding: 7px 11px;
+            font-size: 11px;
+        }
+
+        h1 {
+            margin: clamp(14px, 2.5vh, 22px) 0 12px;
+            font-size: clamp(34px, 4.1vw, 52px);
+            line-height: 1.04;
+        }
+
+        .intro {
+            font-size: clamp(14px, 1.35vw, 16px);
+            line-height: 1.55;
+        }
+
+        .notice {
+            margin-top: clamp(16px, 2.8vh, 24px);
+            padding: 15px 17px;
+            border-radius: 16px;
+        }
+
+        .activity-track {
+            margin: 13px 0 10px;
+        }
+
+        .actions {
+            gap: 12px;
+            margin-top: clamp(14px, 2.5vh, 20px);
+        }
+
+        .retry-button {
+            min-height: 42px;
+        }
+
+        .visual {
+            min-height: 0;
+            padding: clamp(24px, 4vh, 38px) clamp(24px, 3vw, 38px);
+        }
+
+        .maintenance-icon {
+            width: 68px;
+            height: 68px;
+            margin-bottom: 18px;
+            border-radius: 20px;
+        }
+
+        .maintenance-icon svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .visual h2 {
+            font-size: clamp(24px, 2.4vw, 32px);
+        }
+
+        .visual__description {
+            margin-top: 10px;
+            line-height: 1.55;
+        }
+
+        .service-list {
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .service-item {
+            padding: 9px 11px;
+        }
+
+        .visual__footer {
+            margin-top: 18px;
+            padding-top: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .maintenance-page {
+                align-items: center;
+                padding: clamp(10px, 2.5vw, 20px);
+                overflow: hidden;
+            }
+
+            .maintenance-card {
+                width: min(680px, 100%);
+                height: min(620px, calc(100dvh - clamp(20px, 5vw, 40px)));
+                max-height: calc(100dvh - clamp(20px, 5vw, 40px));
+            }
+
+            .layout {
+                display: block;
+                min-height: 0;
+            }
+
+            .content {
+                height: 100%;
+                justify-content: center;
+                padding: clamp(22px, 5vh, 40px) clamp(22px, 6vw, 42px);
+            }
+
+            .visual {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .maintenance-page {
+                padding: 0;
+            }
+
+            .maintenance-card {
+                width: 100%;
+                height: 100dvh;
+                max-height: 100dvh;
+                min-height: 0;
+            }
+
+            .brand-bar {
+                padding: 10px 16px;
+            }
+
+            .brand__logo {
+                width: 38px;
+                height: 38px;
+                flex-basis: 38px;
+            }
+
+            .brand__logo img {
+                width: 31px;
+                height: 31px;
+            }
+
+            .content {
+                height: 100%;
+                padding: clamp(18px, 4vh, 28px) 18px;
+            }
+
+            .content > *,
+            .notice,
+            .actions {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+
+            h1 {
+                margin: 13px 0 9px;
+                font-size: clamp(29px, 9vw, 40px);
+                overflow-wrap: anywhere;
+            }
+
+            .intro {
+                font-size: 14px;
+                line-height: 1.48;
+            }
+
+            .notice {
+                margin-top: 15px;
+                padding: 13px 14px;
+            }
+
+            .notice__top {
+                gap: 6px;
+            }
+
+            .notice__title,
+            .countdown {
+                min-width: 0;
+                white-space: normal;
+            }
+
+            .notice__text {
+                font-size: 12px;
+                line-height: 1.45;
+            }
+
+            .activity-track {
+                margin: 10px 0 8px;
+            }
+
+            .actions {
+                gap: 8px;
+                margin-top: 13px;
+            }
+
+            .retry-button {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-height: 560px) {
+            .maintenance-card {
+                width: min(760px, 100%);
+            }
+
+            .layout {
+                display: block;
+            }
+
+            .visual {
+                display: none;
+            }
+
+            .brand__name span,
+            .notice__text,
+            .actions__hint {
+                display: none;
+            }
+
+            .content {
+                padding-top: 14px;
+                padding-bottom: 14px;
+            }
+
+            h1 {
+                margin: 9px 0 7px;
+                font-size: clamp(27px, 7vh, 36px);
+            }
+
+            .intro {
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .notice {
+                margin-top: 10px;
+                padding: 10px 12px;
+            }
+
+            .activity-track {
+                margin: 8px 0 0;
+            }
+
+            .actions {
+                margin-top: 10px;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *,
             *::before,
