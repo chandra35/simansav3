@@ -21,6 +21,11 @@ class ActiveYearDashboardStatisticsTest extends TestCase
         $this->assertStringContainsString('Sudah Aktivasi', $view);
         $this->assertStringContainsString("route('admin.gtk.index')", $view);
         $this->assertStringContainsString('Siswa pada tahun aktif', $view);
+        $this->assertStringContainsString('data-count-target=', $view);
+        $this->assertStringContainsString('function animateCounter(', $view);
+        $this->assertStringContainsString("new Intl.NumberFormat('id-ID'", $view);
+        $this->assertStringContainsString("prefers-reduced-motion: reduce", $view);
+        $this->assertStringContainsString('animateCounter(statEl, data.total || 0, 450)', $view);
         $this->assertStringNotContainsString('total_admin', $view);
     }
 

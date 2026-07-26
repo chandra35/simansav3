@@ -31,7 +31,10 @@
             </div>
             <div class="simansa-dashboard-chip">
                 <span class="simansa-dashboard-chip__label">Aktivasi Siswa</span>
-                <span class="simansa-dashboard-chip__value">{{ $persenAktif }}%</span>
+                <span class="simansa-dashboard-chip__value"
+                      data-count-target="{{ $persenAktif }}"
+                      data-count-suffix="%"
+                      aria-label="{{ $persenAktif }} persen">{{ $persenAktif }}%</span>
             </div>
         </div>
     </div>
@@ -47,7 +50,9 @@
                     <i class="fas fa-user-graduate"></i>
                 </div>
                 <div class="simansa-stat-card__label">Total Siswa</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_siswa']) }}</div>
+                <div class="simansa-stat-card__value"
+                     data-count-target="{{ $stats['total_siswa'] }}"
+                     aria-label="{{ number_format($stats['total_siswa'], 0, ',', '.') }} siswa">{{ number_format($stats['total_siswa']) }}</div>
                 <div class="simansa-stat-card__footer">
                     <span>Siswa pada tahun aktif</span>
                     <a href="{{ route('admin.siswa.statistics') }}">Lihat statistik</a>
@@ -61,7 +66,9 @@
                     <i class="fas fa-user-check"></i>
                 </div>
                 <div class="simansa-stat-card__label">Sudah Aktivasi</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['siswa_aktif']) }}</div>
+                <div class="simansa-stat-card__value"
+                     data-count-target="{{ $stats['siswa_aktif'] }}"
+                     aria-label="{{ number_format($stats['siswa_aktif'], 0, ',', '.') }} siswa sudah aktivasi">{{ number_format($stats['siswa_aktif']) }}</div>
                 <div class="simansa-stat-card__footer">
                     <span>Sudah login dan aktif</span>
                     <span>{{ $persenAktif }}% dari total siswa</span>
@@ -75,7 +82,9 @@
                     <i class="fas fa-chalkboard-teacher"></i>
                 </div>
                 <div class="simansa-stat-card__label">Jumlah GTK</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
+                <div class="simansa-stat-card__value"
+                     data-count-target="{{ $stats['total_gtk'] }}"
+                     aria-label="{{ number_format($stats['total_gtk'], 0, ',', '.') }} GTK">{{ number_format($stats['total_gtk']) }}</div>
                 <div class="simansa-stat-card__footer">
                     <span>Guru dan tenaga kependidikan</span>
                     @can('view-gtk')
@@ -91,7 +100,10 @@
                     <i class="fas fa-circle" style="font-size:0.85rem; color:#4ade80;"></i>
                 </div>
                 <div class="simansa-stat-card__label">Sedang Online</div>
-                <div class="simansa-stat-card__value" id="stat-online-count">{{ number_format($stats['online_count']) }}</div>
+                <div class="simansa-stat-card__value"
+                     id="stat-online-count"
+                     data-count-target="{{ $stats['online_count'] }}"
+                     aria-label="{{ number_format($stats['online_count'], 0, ',', '.') }} pengguna sedang online">{{ number_format($stats['online_count']) }}</div>
                 <div class="simansa-stat-card__footer">
                     <span>Aktif dalam 5 menit</span>
                     <a href="#online-panel" onclick="document.getElementById('online-panel').scrollIntoView({behavior:'smooth'}); return false;">Lihat siapa</a>
@@ -390,6 +402,14 @@
             font-size: 1.8rem;
             line-height: 1.05;
             font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .simansa-stat-card__value.is-counting,
+        .simansa-dashboard-chip__value.is-counting {
+            opacity: .96;
+            transform: translateY(-1px);
         }
 
         .simansa-stat-card__footer {
@@ -825,6 +845,70 @@
 @section('js')
     <script>
         const onlineApiUrl = '{{ route('admin.dashboard.online-users') }}';
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const counterAnimations = new WeakMap();
+        const counterFormatter = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+
+        function renderCounterValue(element, value) {
+            const suffix = element.dataset.countSuffix || '';
+            element.textContent = `${counterFormatter.format(Math.round(value))}${suffix}`;
+        }
+
+        function animateCounter(element, target, duration = 950) {
+            if (!element) return;
+
+            const normalizedTarget = Math.max(0, Number(target) || 0);
+            const runningAnimation = counterAnimations.get(element);
+            if (runningAnimation) cancelAnimationFrame(runningAnimation);
+
+            const currentValue = Number(element.dataset.countCurrent ?? normalizedTarget);
+            if (prefersReducedMotion.matches || currentValue === normalizedTarget) {
+                renderCounterValue(element, normalizedTarget);
+                element.dataset.countCurrent = String(normalizedTarget);
+                element.classList.remove('is-counting');
+                return;
+            }
+
+            const startedAt = performance.now();
+            element.classList.add('is-counting');
+
+            const frame = now => {
+                const progress = Math.min((now - startedAt) / duration, 1);
+                const easedProgress = 1 - Math.pow(1 - progress, 3);
+                const nextValue = currentValue + ((normalizedTarget - currentValue) * easedProgress);
+
+                renderCounterValue(element, nextValue);
+                element.dataset.countCurrent = String(nextValue);
+
+                if (progress < 1) {
+                    counterAnimations.set(element, requestAnimationFrame(frame));
+                    return;
+                }
+
+                renderCounterValue(element, normalizedTarget);
+                element.dataset.countCurrent = String(normalizedTarget);
+                element.classList.remove('is-counting');
+                counterAnimations.delete(element);
+            };
+
+            counterAnimations.set(element, requestAnimationFrame(frame));
+        }
+
+        function initializeDashboardCounters() {
+            document.querySelectorAll('[data-count-target]').forEach((element, index) => {
+                const target = Number(element.dataset.countTarget) || 0;
+
+                if (prefersReducedMotion.matches) {
+                    renderCounterValue(element, target);
+                    element.dataset.countCurrent = String(target);
+                    return;
+                }
+
+                element.dataset.countCurrent = '0';
+                renderCounterValue(element, 0);
+                requestAnimationFrame(() => animateCounter(element, target, 850 + (index * 55)));
+            });
+        }
 
         // Role badge hidden in card for these roles (still visible in tooltip)
         const HIDE_BADGE = ['Super Admin', 'Admin'];
@@ -946,7 +1030,7 @@
                     const newIdSet = new Set(users.map(u => String(u.id)));
 
                     if (updEl)  updEl.textContent  = data.updated_at || '';
-                    if (statEl) statEl.textContent = String(data.total || 0);
+                    if (statEl) animateCounter(statEl, data.total || 0, 450);
 
                     // Animate out users that went offline
                     for (const [uid, el] of onlineState) {
@@ -982,6 +1066,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            initializeDashboardCounters();
             loadOnlineUsers();
             setInterval(loadOnlineUsers, 15000);
             const btnRef = document.getElementById('btn-refresh-online');
