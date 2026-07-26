@@ -908,45 +908,57 @@
         .simansa-emis-modal__header {
             align-items: flex-start;
             padding: 1.2rem 1.35rem;
-            color: #fff;
+            color: #fff !important;
             border: 0;
-            background: linear-gradient(135deg, #dc2626 0%, #7c3aed 55%, #2563eb 100%);
+            background: linear-gradient(135deg, #b91c1c 0%, #6d28d9 52%, #1d4ed8 100%) !important;
         }
 
         .simansa-emis-modal__header h4 {
             margin: .2rem 0 .25rem;
+            color: #fff !important;
             font-weight: 800;
+            text-shadow: 0 1px 2px rgba(15, 23, 42, .22);
         }
 
         .simansa-emis-modal__header p {
             margin: .35rem 0 0;
-            color: rgba(255, 255, 255, .82);
+            color: rgba(255, 255, 255, .9) !important;
         }
 
         .simansa-emis-modal__school-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: .35rem .85rem;
-            color: rgba(255, 255, 255, .96);
+            gap: .4rem;
+            margin-top: .45rem;
+            color: #fff !important;
             font-size: .82rem;
             font-weight: 700;
         }
 
-        .simansa-emis-modal__school-meta span + span::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            margin: 0 .65rem .12rem 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .55);
+        .simansa-emis-modal__school-meta span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
+            padding: .25rem .58rem;
+            border: 1px solid rgba(255, 255, 255, .3);
+            border-radius: 999px;
+            color: #fff !important;
+            background: rgba(15, 23, 42, .2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
         }
 
         .simansa-emis-modal__eyebrow {
+            color: rgba(255, 255, 255, .92) !important;
             font-size: .75rem;
             font-weight: 800;
             letter-spacing: .06em;
             text-transform: uppercase;
+        }
+
+        .simansa-emis-modal__header .close {
+            color: #fff !important;
+            opacity: .9;
+            text-shadow: none;
         }
 
         .simansa-emis-school-summary {
