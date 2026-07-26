@@ -372,6 +372,7 @@
                             <th>Akreditasi</th>
                             <th>Wilayah</th>
                             <th class="text-right">Jumlah</th>
+                            <th class="text-center">Belum Ada di EMIS</th>
                             <th class="text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -392,6 +393,20 @@
                                 <td><span class="badge badge-light border">{{ $school['accreditation'] }}</span></td>
                                 <td>{{ collect([$school['district_name'], $school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
                                 <td class="text-right font-weight-bold">{{ number_format($school['count']) }}</td>
+                                <td class="text-center">
+                                    @if($school['missing_emis_count'] > 0)
+                                        <button
+                                            type="button"
+                                            class="btn btn-xs btn-outline-danger btn-school-missing-emis"
+                                            data-url="{{ route('admin.siswa.statistics.school-missing-emis', array_merge(['sekolah' => $school['npsn']], $filterQuery)) }}"
+                                            data-school="{{ $school['school_name'] }}"
+                                            data-count="{{ $school['missing_emis_count'] }}">
+                                            <i class="fas fa-user-clock mr-1"></i>{{ number_format($school['missing_emis_count']) }}
+                                        </button>
+                                    @else
+                                        <span class="badge badge-success"><i class="fas fa-check mr-1"></i>0</span>
+                                    @endif
+                                </td>
                                 <td class="text-right">
                                     @if($canCheckNsm)
                                         <button
@@ -410,7 +425,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Belum ada data asal sekolah pada filter ini.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Belum ada data asal sekolah pada filter ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -459,6 +474,36 @@
                 </table>
             </div>
         </section>
+    </div>
+</div>
+
+<div class="modal fade" id="schoolMissingEmisModal" tabindex="-1" role="dialog" aria-labelledby="schoolMissingEmisTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content simansa-emis-modal">
+            <div class="modal-header simansa-emis-modal__header">
+                <div>
+                    <div class="simansa-emis-modal__eyebrow"><i class="fas fa-cloud mr-1"></i>Monitoring EMIS</div>
+                    <h4 class="modal-title" id="schoolMissingEmisTitle">Siswa Belum Ada di EMIS</h4>
+                    <p id="schoolMissingEmisSubtitle">Memuat informasi sekolah...</p>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="schoolMissingEmisSummary" class="simansa-emis-school-summary"></div>
+                <div id="schoolMissingEmisLoading" class="simansa-emis-loading">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <strong>Memuat siswa...</strong>
+                    <span>Data dibatasi sesuai tingkat dan kelas yang sedang dipilih.</span>
+                </div>
+                <div id="schoolMissingEmisStudents" class="simansa-emis-student-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted mr-auto"><i class="fas fa-info-circle mr-1"></i>Status berdasarkan penandaan EMIS pada data siswa SIMANSA.</small>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
     </div>
 </div>
 @stop
@@ -757,7 +802,132 @@
             height: 100%;
         }
 
-        .simansa-school-table-shell{max-height:520px;overflow:auto}.simansa-school-table-shell thead th{position:sticky;top:0;z-index:2;background:#f8fafc}.simansa-school-table-shell .simansa-table{min-width:1120px}
+        .simansa-school-table-shell{max-height:520px;overflow:auto}.simansa-school-table-shell thead th{position:sticky;top:0;z-index:2;background:#f8fafc}.simansa-school-table-shell .simansa-table{min-width:1260px}
+
+        .simansa-emis-modal {
+            border: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+        }
+
+        .simansa-emis-modal__header {
+            align-items: flex-start;
+            padding: 1.2rem 1.35rem;
+            color: #fff;
+            border: 0;
+            background: linear-gradient(135deg, #dc2626 0%, #7c3aed 55%, #2563eb 100%);
+        }
+
+        .simansa-emis-modal__header h4 {
+            margin: .2rem 0 .25rem;
+            font-weight: 800;
+        }
+
+        .simansa-emis-modal__header p {
+            margin: 0;
+            color: rgba(255, 255, 255, .82);
+        }
+
+        .simansa-emis-modal__eyebrow {
+            font-size: .75rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .simansa-emis-school-summary {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(120px, .65fr));
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .simansa-emis-summary-card {
+            min-width: 0;
+            padding: .85rem 1rem;
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .simansa-emis-summary-card span {
+            display: block;
+            margin-bottom: .25rem;
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .simansa-emis-summary-card strong {
+            display: block;
+            color: #0f172a;
+            overflow-wrap: anywhere;
+        }
+
+        .simansa-emis-loading,
+        .simansa-emis-empty {
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .simansa-emis-loading i,
+        .simansa-emis-empty i {
+            color: #6366f1;
+            font-size: 2rem;
+        }
+
+        .simansa-emis-student-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .simansa-emis-student {
+            display: grid;
+            grid-template-columns: 62px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: .85rem;
+            padding: .8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #fff;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .simansa-emis-student:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 10px 24px rgba(79, 70, 229, .1);
+        }
+
+        .simansa-emis-student img {
+            width: 62px;
+            height: 72px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #eef2ff;
+        }
+
+        .simansa-emis-student__name {
+            color: #0f172a;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .simansa-emis-student__meta {
+            margin-top: .22rem;
+            color: #64748b;
+            font-size: .82rem;
+            line-height: 1.45;
+        }
 
         .simansa-section-head {
             display: flex;
@@ -1048,6 +1218,25 @@
                 height: 260px;
                 max-height: 260px;
             }
+
+            .simansa-emis-school-summary,
+            .simansa-emis-student-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .simansa-emis-student {
+                grid-template-columns: 54px minmax(0, 1fr);
+            }
+
+            .simansa-emis-student img {
+                width: 54px;
+                height: 64px;
+            }
+
+            .simansa-emis-student .btn {
+                grid-column: 1 / -1;
+                width: 100%;
+            }
         }
 
         @media(max-width:575.98px){.simansa-stat-filter form{grid-template-columns:1fr}.simansa-stat-filter__intro{min-width:0}}
@@ -1103,6 +1292,89 @@
                 }[char];
             });
         }
+
+        function renderMissingEmisSummary(school, count) {
+            const items = [
+                ['Sekolah Asal', school.name || '-'],
+                ['NPSN', school.npsn || '-'],
+                ['NSM', school.nsm || '-'],
+                ['Belum di EMIS', formatNumber(count)]
+            ];
+
+            $('#schoolMissingEmisSummary').html(items.map(([label, value]) => `
+                <div class="simansa-emis-summary-card">
+                    <span>${escapeHtml(label)}</span>
+                    <strong>${escapeHtml(value)}</strong>
+                </div>
+            `).join(''));
+        }
+
+        function renderMissingEmisStudents(students) {
+            if (!students.length) {
+                $('#schoolMissingEmisStudents').html(`
+                    <div class="simansa-emis-empty" style="grid-column:1/-1">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Semua siswa sudah ditandai masuk EMIS</strong>
+                        <span>Tidak ada data yang perlu ditampilkan pada filter ini.</span>
+                    </div>
+                `);
+                return;
+            }
+
+            $('#schoolMissingEmisStudents').html(students.map(student => {
+                const birth = [student.tempat_lahir, student.tanggal_lahir].filter(Boolean).join(', ') || '-';
+                return `
+                    <article class="simansa-emis-student">
+                        <img src="${escapeHtml(student.foto_url)}" alt="Foto ${escapeHtml(student.nama_lengkap)}" loading="lazy">
+                        <div>
+                            <div class="simansa-emis-student__name">${escapeHtml(student.nama_lengkap)}</div>
+                            <div class="simansa-emis-student__meta">
+                                <i class="fas fa-id-card mr-1"></i>NISN: ${escapeHtml(student.nisn || '-')}<br>
+                                <i class="fas fa-map-marker-alt mr-1"></i>${escapeHtml(birth)}<br>
+                                <i class="fas fa-door-open mr-1"></i>${escapeHtml(student.kelas || '-')}
+                            </div>
+                        </div>
+                        <a href="${escapeHtml(student.detail_url)}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye mr-1"></i>Detail
+                        </a>
+                    </article>
+                `;
+            }).join(''));
+        }
+
+        $('.btn-school-missing-emis').on('click', function () {
+            const button = $(this);
+            const schoolName = button.data('school') || 'Sekolah asal';
+
+            $('#schoolMissingEmisTitle').text('Siswa Belum Ada di EMIS');
+            $('#schoolMissingEmisSubtitle').text(schoolName);
+            $('#schoolMissingEmisSummary, #schoolMissingEmisStudents').empty();
+            $('#schoolMissingEmisLoading').show();
+            $('#schoolMissingEmisModal').modal('show');
+
+            $.get(button.data('url'))
+                .done(function (response) {
+                    renderMissingEmisSummary(response.school || {}, response.count || 0);
+                    $('#schoolMissingEmisSubtitle').text([
+                        response.school?.name,
+                        response.school?.education_form,
+                        response.school?.location
+                    ].filter(Boolean).join(' · '));
+                    renderMissingEmisStudents(response.students || []);
+                })
+                .fail(function (xhr) {
+                    $('#schoolMissingEmisStudents').html(`
+                        <div class="simansa-emis-empty" style="grid-column:1/-1">
+                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                            <strong>Data gagal dimuat</strong>
+                            <span>${escapeHtml(xhr.responseJSON?.message || 'Silakan tutup modal dan coba kembali.')}</span>
+                        </div>
+                    `);
+                })
+                .always(function () {
+                    $('#schoolMissingEmisLoading').hide();
+                });
+        });
 
         function appendBulkLog(statusClass, title, message) {
             const badgeClass = statusClass === 'success'

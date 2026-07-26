@@ -127,6 +127,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
     Route::middleware('permission:view-statistik-siswa')->group(function () {
         Route::get('/siswa-statistik', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'index'])->name('siswa.statistics');
+        Route::get('/siswa-statistik/sekolah/{sekolah}/belum-emis', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'studentsMissingEmis'])->name('siswa.statistics.school-missing-emis');
         Route::post('/siswa-statistik/sekolah/{sekolah}/check-nsm', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'checkSchoolNsm'])->name('siswa.statistics.check-school-nsm');
         Route::post('/siswa-statistik/{siswa}/check-npsn-ppdb', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'checkNpsnFromPpdb'])->name('siswa.statistics.check-npsn-ppdb');
     });

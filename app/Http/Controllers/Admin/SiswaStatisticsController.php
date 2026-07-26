@@ -183,6 +183,82 @@ class SiswaStatisticsController extends Controller
         ]);
     }
 
+    public function studentsMissingEmis(Request $request, Sekolah $sekolah)
+    {
+        $this->authorize('view-statistik-siswa');
+
+        $activeYear = TahunPelajaran::query()->active()->first();
+        $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true)
+            ? (int) $request->get('tingkat') : null;
+        $kelasId = (string) $request->get('kelas_id', '');
+
+        if ($kelasId !== '' && ! Kelas::query()
+            ->whereKey($kelasId)
+            ->where('is_active', true)
+            ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
+            ->when($tingkat, fn ($query) => $query->where('tingkat', $tingkat))
+            ->exists()) {
+            $kelasId = '';
+        }
+
+        $query = $this->applyDashboardFilters(
+            $this->baseSiswaQuery(),
+            $activeYear,
+            $tingkat,
+            $kelasId
+        );
+
+        $students = $query
+            ->where('siswa.npsn_asal_sekolah', $sekolah->npsn)
+            ->where(function ($emisQuery) {
+                $emisQuery->whereNull('siswa.emis_registered')
+                    ->orWhere('siswa.emis_registered', false);
+            })
+            ->with('kelasTahunAktif')
+            ->orderBy('siswa.nama_lengkap')
+            ->get([
+                'siswa.id',
+                'siswa.nisn',
+                'siswa.nomor_tes',
+                'siswa.nama_lengkap',
+                'siswa.jenis_kelamin',
+                'siswa.tempat_lahir',
+                'siswa.tanggal_lahir',
+                'siswa.foto_profile',
+            ])
+            ->map(function (Siswa $siswa) {
+                return [
+                    'id' => $siswa->id,
+                    'nama_lengkap' => $siswa->nama_lengkap,
+                    'nisn' => $siswa->nisn,
+                    'nomor_tes' => $siswa->nomor_tes,
+                    'jenis_kelamin' => $siswa->jenis_kelamin,
+                    'tempat_lahir' => $siswa->tempat_lahir,
+                    'tanggal_lahir' => $siswa->tanggal_lahir?->format('d/m/Y'),
+                    'kelas' => $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Belum masuk rombel',
+                    'foto_url' => $siswa->foto_profile_url,
+                    'detail_url' => route('admin.siswa.show', $siswa),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'school' => [
+                'npsn' => $sekolah->npsn,
+                'nsm' => $sekolah->nsm,
+                'name' => $sekolah->nama,
+                'education_form' => $sekolah->bentuk_pendidikan,
+                'location' => collect([
+                    $sekolah->kecamatan,
+                    $sekolah->kabupaten_kota,
+                    $sekolah->provinsi,
+                ])->filter()->implode(', '),
+            ],
+            'count' => $students->count(),
+            'students' => $students,
+        ]);
+    }
+
     public function checkSchoolNsm(Request $request, Sekolah $sekolah)
     {
         $this->authorize('edit-siswa');
@@ -478,6 +554,7 @@ class SiswaStatisticsController extends Controller
                 DB::raw('COALESCE(sekolah_asal.provinsi, "") as province_name'),
                 'sekolah_asal.last_fetched_at as last_fetched_at',
                 DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(CASE WHEN siswa.emis_registered IS NULL OR siswa.emis_registered = 0 THEN 1 ELSE 0 END) as missing_emis_count'),
             ])
             ->map(function ($item) {
                 return [
@@ -493,6 +570,7 @@ class SiswaStatisticsController extends Controller
                     'province_name' => $item->province_name,
                     'last_fetched_at' => $item->last_fetched_at,
                     'count' => (int) $item->count,
+                    'missing_emis_count' => (int) $item->missing_emis_count,
                 ];
             });
     }
