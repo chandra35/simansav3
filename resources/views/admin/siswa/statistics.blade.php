@@ -363,14 +363,22 @@
                 </button>
             </div>
             <div class="table-responsive simansa-table-shell simansa-school-table-shell">
-                <table class="table table-hover simansa-table">
+                <table class="table table-hover simansa-table simansa-school-table">
+                    <colgroup>
+                        <col class="simansa-school-col-number">
+                        <col class="simansa-school-col-name">
+                        <col class="simansa-school-col-region">
+                        <col class="simansa-school-col-total">
+                        <col class="simansa-school-col-emis">
+                        <col class="simansa-school-col-action">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Sekolah</th>
                             <th>Wilayah</th>
                             <th class="text-right">Jumlah</th>
-                            <th class="text-center">Belum Ada di EMIS</th>
+                            <th class="text-center" title="Siswa yang belum ditandai masuk EMIS">Belum Ada di EMIS</th>
                             <th class="text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -393,7 +401,7 @@
                                         <span>Akreditasi {{ $school['accreditation'] }}</span>
                                     </div>
                                 </td>
-                                <td>{{ collect([$school['district_name'], $school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
+                                <td class="simansa-school-region">{{ collect([$school['district_name'], $school['city_name'], $school['province_name']])->filter()->implode(', ') ?: '-' }}</td>
                                 <td class="text-right font-weight-bold">{{ number_format($school['count']) }}</td>
                                 <td class="text-center">
                                     @if($school['missing_emis_count'] > 0)
@@ -410,10 +418,11 @@
                                     @endif
                                 </td>
                                 <td class="text-right">
+                                    <div class="simansa-school-actions">
                                     @if($canCheckNsm)
                                         <button
                                             type="button"
-                                            class="btn btn-xs btn-primary btn-check-school-nsm mb-1"
+                                            class="btn btn-xs btn-primary btn-check-school-nsm"
                                             data-url="{{ route('admin.siswa.statistics.check-school-nsm', $school['npsn']) }}"
                                             data-npsn="{{ $school['npsn'] }}"
                                             data-school="{{ $school['school_name'] }}">
@@ -423,6 +432,7 @@
                                     <a href="{{ $schoolStudentsUrl($school) }}" class="btn btn-xs btn-outline-primary">
                                         Lihat Siswa
                                     </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -804,25 +814,84 @@
             height: 100%;
         }
 
-        .simansa-school-table-shell{max-height:520px;overflow-y:auto;overflow-x:hidden}.simansa-school-table-shell thead th{position:sticky;top:0;z-index:2;background:#f8fafc}.simansa-school-table-shell .simansa-table{width:100%;min-width:0}
+        .simansa-school-table-shell{max-height:520px;overflow-y:auto;overflow-x:hidden}
+        .simansa-school-table-shell thead th{position:sticky;top:0;z-index:2;background:#f8fafc}
+        .simansa-school-table-shell .simansa-table{width:100%;min-width:0}
+
+        .simansa-school-table {
+            table-layout: fixed;
+        }
+
+        .simansa-school-table .simansa-school-col-number { width: 4%; }
+        .simansa-school-table .simansa-school-col-name { width: 34%; }
+        .simansa-school-table .simansa-school-col-region { width: 26%; }
+        .simansa-school-table .simansa-school-col-total { width: 8%; }
+        .simansa-school-table .simansa-school-col-emis { width: 13%; }
+        .simansa-school-table .simansa-school-col-action { width: 15%; }
+
+        .simansa-school-table th,
+        .simansa-school-table td {
+            padding: .62rem .55rem;
+            vertical-align: middle;
+        }
+
+        .simansa-school-table thead th {
+            font-size: .7rem;
+            line-height: 1.25;
+        }
+
+        .simansa-school-table .simansa-table-title {
+            font-size: .84rem;
+            line-height: 1.28;
+        }
+
+        .simansa-school-table .simansa-table-subtitle {
+            font-size: .76rem;
+            line-height: 1.3;
+        }
+
+        .simansa-school-region {
+            color: #334155;
+            font-size: .77rem;
+            line-height: 1.4;
+        }
 
         .simansa-school-metadata {
             display: flex;
             flex-wrap: wrap;
-            gap: .3rem;
-            margin-top: .38rem;
+            gap: .12rem .35rem;
+            margin-top: .24rem;
+            color: #64748b;
+            font-size: .69rem;
+            line-height: 1.3;
         }
 
         .simansa-school-metadata span {
             display: inline-flex;
             align-items: center;
-            padding: .16rem .42rem;
-            color: #475569;
-            background: #eef2f7;
-            border: 1px solid #e2e8f0;
-            border-radius: 999px;
-            font-size: .7rem;
-            line-height: 1.25;
+        }
+
+        .simansa-school-metadata span + span::before {
+            content: "•";
+            margin-right: .35rem;
+            color: #cbd5e1;
+        }
+
+        .simansa-school-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .3rem;
+        }
+
+        .simansa-school-actions .btn,
+        .simansa-school-table .btn-school-missing-emis {
+            white-space: nowrap;
+            line-height: 1.35;
+        }
+
+        .simansa-school-table tbody tr {
+            transition: background-color .18s ease;
         }
 
         .simansa-emis-modal {
@@ -1294,6 +1363,10 @@
                 width: 100%;
             }
 
+            .simansa-school-table colgroup {
+                display: none;
+            }
+
             .simansa-school-table-shell .simansa-table tr {
                 margin-bottom: .75rem;
                 padding: .85rem;
@@ -1310,6 +1383,15 @@
 
             .simansa-school-table-shell .simansa-table td:first-child {
                 display: none;
+            }
+
+            .simansa-school-actions {
+                justify-content: flex-start;
+                margin-top: .15rem;
+            }
+
+            .simansa-school-actions .btn {
+                flex: 1 1 120px;
             }
         }
 
