@@ -929,23 +929,28 @@
         #schoolMissingEmisModal .simansa-emis-modal__school-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: .4rem;
-            margin-top: .45rem;
-            color: #334155 !important;
+            gap: 0;
+            margin-top: .25rem;
+            color: #64748b !important;
             font-size: .82rem;
-            font-weight: 700;
+            font-weight: 400;
+            line-height: 1.45;
         }
 
         #schoolMissingEmisModal .simansa-emis-modal__school-meta span {
-            display: inline-flex;
-            align-items: center;
-            min-height: 26px;
-            padding: .25rem .58rem;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 999px;
-            color: #1e3a8a !important;
-            background: #eff6ff !important;
+            min-height: 0;
+            padding: 0;
+            border: 0 !important;
+            border-radius: 0;
+            color: #64748b !important;
+            background: transparent !important;
             box-shadow: none !important;
+        }
+
+        #schoolMissingEmisModal .simansa-emis-modal__school-meta span + span::before {
+            content: '|';
+            margin: 0 .38rem;
+            color: #cbd5e1;
         }
 
         #schoolMissingEmisModal .simansa-emis-modal__eyebrow {
