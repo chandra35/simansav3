@@ -26,5 +26,9 @@ class SchoolMissingEmisStatisticsTest extends TestCase
         $this->assertStringContainsString('simansa-emis-student-grid', $view);
         $this->assertStringContainsString('NPSN', $view);
         $this->assertStringContainsString('NSM', $view);
+        $this->assertStringContainsString('btn-modal-toggle-emis', $view);
+        $this->assertStringContainsString('simansa-school-metadata', $view);
+        $this->assertStringNotContainsString('<th>Status / Bentuk</th>', $view);
+        $this->assertStringNotContainsString('<th>Akreditasi</th>', $view);
     }
 }

@@ -332,10 +332,31 @@ class SiswaController extends Controller
         abort_unless(Auth::user()?->hasRole('Super Admin'), 403);
         $this->authorize('edit-siswa');
 
+        $previousStatus = (bool) $siswa->emis_registered;
         $siswa->emis_registered = !$siswa->emis_registered;
         $siswa->emis_registered_at = $siswa->emis_registered ? now() : null;
         $siswa->emis_registered_by = $siswa->emis_registered ? Auth::id() : null;
         $siswa->save();
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity_type' => 'update_emis_status',
+            'model_type' => Siswa::class,
+            'model_id' => $siswa->id,
+            'description' => sprintf(
+                'Mengubah status EMIS siswa %s (%s) menjadi %s.',
+                $siswa->nama_lengkap,
+                $siswa->nisn,
+                $siswa->emis_registered ? 'Sudah' : 'Belum'
+            ),
+            'old_values' => ['emis_registered' => $previousStatus],
+            'new_values' => ['emis_registered' => (bool) $siswa->emis_registered],
+            'changed_fields' => ['emis_registered'],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+        ]);
 
         return response()->json([
             'success' => true,

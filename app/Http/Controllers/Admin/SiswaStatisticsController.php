@@ -208,6 +208,7 @@ class SiswaStatisticsController extends Controller
             $kelasId
         );
 
+        $canToggleEmis = Auth::user()?->hasRole('Super Admin') ?? false;
         $students = $query
             ->where('siswa.npsn_asal_sekolah', $sekolah->npsn)
             ->where(function ($emisQuery) {
@@ -226,7 +227,7 @@ class SiswaStatisticsController extends Controller
                 'siswa.tanggal_lahir',
                 'siswa.foto_profile',
             ])
-            ->map(function (Siswa $siswa) {
+            ->map(function (Siswa $siswa) use ($canToggleEmis) {
                 return [
                     'id' => $siswa->id,
                     'nama_lengkap' => $siswa->nama_lengkap,
@@ -238,6 +239,10 @@ class SiswaStatisticsController extends Controller
                     'kelas' => $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Belum masuk rombel',
                     'foto_url' => $siswa->foto_profile_url,
                     'detail_url' => route('admin.siswa.show', $siswa),
+                    'can_toggle_emis' => $canToggleEmis,
+                    'toggle_emis_url' => $canToggleEmis
+                        ? route('admin.siswa.toggle-emis-registered', $siswa)
+                        : null,
                 ];
             });
 
