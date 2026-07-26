@@ -494,8 +494,12 @@
         <div class="modal-content simansa-emis-modal">
             <div class="modal-header simansa-emis-modal__header">
                 <div>
-                    <div class="simansa-emis-modal__eyebrow"><i class="fas fa-cloud mr-1"></i>Monitoring EMIS</div>
-                    <h4 class="modal-title" id="schoolMissingEmisTitle">Siswa Belum Ada di EMIS</h4>
+                    <div class="simansa-emis-modal__eyebrow"><i class="fas fa-cloud mr-1"></i>Monitoring EMIS · Siswa Belum Terdaftar</div>
+                    <h4 class="modal-title" id="schoolMissingEmisTitle">Memuat nama sekolah...</h4>
+                    <div class="simansa-emis-modal__school-meta" id="schoolMissingEmisIdentity">
+                        <span>NPSN: -</span>
+                        <span>NSM: -</span>
+                    </div>
                     <p id="schoolMissingEmisSubtitle">Memuat informasi sekolah...</p>
                 </div>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup">
@@ -915,8 +919,27 @@
         }
 
         .simansa-emis-modal__header p {
-            margin: 0;
+            margin: .35rem 0 0;
             color: rgba(255, 255, 255, .82);
+        }
+
+        .simansa-emis-modal__school-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem .85rem;
+            color: rgba(255, 255, 255, .96);
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .simansa-emis-modal__school-meta span + span::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            margin: 0 .65rem .12rem 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .55);
         }
 
         .simansa-emis-modal__eyebrow {
@@ -928,7 +951,7 @@
 
         .simansa-emis-school-summary {
             display: grid;
-            grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(120px, .65fr));
+            grid-template-columns: minmax(180px, 280px);
             gap: .75rem;
             margin-bottom: 1rem;
         }
@@ -1452,19 +1475,17 @@
         }
 
         function renderMissingEmisSummary(school, count) {
-            const items = [
-                ['Sekolah Asal', school.name || '-'],
-                ['NPSN', school.npsn || '-'],
-                ['NSM', school.nsm || '-'],
-                ['Belum di EMIS', formatNumber(count)]
-            ];
-
-            $('#schoolMissingEmisSummary').html(items.map(([label, value], index) => `
+            $('#schoolMissingEmisTitle').text(school.name || 'Sekolah asal');
+            $('#schoolMissingEmisIdentity').html(`
+                <span>NPSN: ${escapeHtml(school.npsn || '-')}</span>
+                <span>NSM: ${escapeHtml(school.nsm || '-')}</span>
+            `);
+            $('#schoolMissingEmisSummary').html(`
                 <div class="simansa-emis-summary-card">
-                    <span>${escapeHtml(label)}</span>
-                    <strong${index === 3 ? ' id="schoolMissingEmisCount"' : ''}>${escapeHtml(value)}</strong>
+                    <span>Belum di EMIS</span>
+                    <strong id="schoolMissingEmisCount">${escapeHtml(formatNumber(count))} siswa</strong>
                 </div>
-            `).join(''));
+            `);
         }
 
         function renderMissingEmisStudents(students) {
@@ -1517,8 +1538,9 @@
             activeMissingEmisSchoolButton = button;
             activeMissingEmisCount = Number(button.data('count')) || 0;
 
-            $('#schoolMissingEmisTitle').text('Siswa Belum Ada di EMIS');
-            $('#schoolMissingEmisSubtitle').text(schoolName);
+            $('#schoolMissingEmisTitle').text(schoolName);
+            $('#schoolMissingEmisIdentity').html('<span>NPSN: -</span><span>NSM: -</span>');
+            $('#schoolMissingEmisSubtitle').text('Memuat detail sekolah...');
             $('#schoolMissingEmisSummary, #schoolMissingEmisStudents').empty();
             $('#schoolMissingEmisLoading').show();
             $('#schoolMissingEmisModal').modal('show');
@@ -1527,7 +1549,6 @@
                 .done(function (response) {
                     renderMissingEmisSummary(response.school || {}, response.count || 0);
                     $('#schoolMissingEmisSubtitle').text([
-                        response.school?.name,
                         response.school?.education_form,
                         response.school?.location
                     ].filter(Boolean).join(' · '));
@@ -1567,7 +1588,7 @@
                         .html('<i class="fas fa-check-circle mr-1"></i>Sudah EMIS');
 
                     activeMissingEmisCount = Math.max(activeMissingEmisCount - 1, 0);
-                    $('#schoolMissingEmisCount').text(formatNumber(activeMissingEmisCount));
+                    $('#schoolMissingEmisCount').text(`${formatNumber(activeMissingEmisCount)} siswa`);
 
                     if (activeMissingEmisSchoolButton) {
                         activeMissingEmisSchoolButton.data('count', activeMissingEmisCount);

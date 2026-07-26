@@ -27,6 +27,11 @@ class SchoolMissingEmisStatisticsTest extends TestCase
         $this->assertStringContainsString('NPSN', $view);
         $this->assertStringContainsString('NSM', $view);
         $this->assertStringContainsString('btn-modal-toggle-emis', $view);
+        $this->assertStringContainsString('schoolMissingEmisIdentity', $view);
+        $this->assertStringContainsString('simansa-emis-modal__school-meta', $view);
+        $this->assertStringContainsString("<span>NPSN: \${escapeHtml(school.npsn || '-')}</span>", $view);
+        $this->assertStringContainsString("<span>NSM: \${escapeHtml(school.nsm || '-')}</span>", $view);
+        $this->assertStringNotContainsString("['Sekolah Asal', school.name || '-']", $view);
         $this->assertStringContainsString('simansa-school-metadata', $view);
         $this->assertStringContainsString('simansa-school-col-name', $view);
         $this->assertStringContainsString('table-layout: fixed', $view);
