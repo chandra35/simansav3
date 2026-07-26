@@ -502,7 +502,7 @@
                     </div>
                     <p id="schoolMissingEmisSubtitle">Memuat informasi sekolah...</p>
                 </div>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -905,59 +905,60 @@
             box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
         }
 
-        .simansa-emis-modal__header {
+        #schoolMissingEmisModal .simansa-emis-modal__header {
             align-items: flex-start;
             padding: 1.2rem 1.35rem;
-            color: #fff !important;
-            border: 0;
-            background: linear-gradient(135deg, #b91c1c 0%, #6d28d9 52%, #1d4ed8 100%) !important;
+            color: #0f172a !important;
+            border: 0 !important;
+            border-bottom: 1px solid #dbe4f0 !important;
+            background: #fff !important;
         }
 
-        .simansa-emis-modal__header h4 {
+        #schoolMissingEmisModal .simansa-emis-modal__header h4 {
             margin: .2rem 0 .25rem;
-            color: #fff !important;
+            color: #0f172a !important;
             font-weight: 800;
-            text-shadow: 0 1px 2px rgba(15, 23, 42, .22);
+            text-shadow: none !important;
         }
 
-        .simansa-emis-modal__header p {
+        #schoolMissingEmisModal .simansa-emis-modal__header p {
             margin: .35rem 0 0;
-            color: rgba(255, 255, 255, .9) !important;
+            color: #64748b !important;
         }
 
-        .simansa-emis-modal__school-meta {
+        #schoolMissingEmisModal .simansa-emis-modal__school-meta {
             display: flex;
             flex-wrap: wrap;
             gap: .4rem;
             margin-top: .45rem;
-            color: #fff !important;
+            color: #334155 !important;
             font-size: .82rem;
             font-weight: 700;
         }
 
-        .simansa-emis-modal__school-meta span {
+        #schoolMissingEmisModal .simansa-emis-modal__school-meta span {
             display: inline-flex;
             align-items: center;
             min-height: 26px;
             padding: .25rem .58rem;
-            border: 1px solid rgba(255, 255, 255, .3);
+            border: 1px solid #cbd5e1 !important;
             border-radius: 999px;
-            color: #fff !important;
-            background: rgba(15, 23, 42, .2);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+            color: #1e3a8a !important;
+            background: #eff6ff !important;
+            box-shadow: none !important;
         }
 
-        .simansa-emis-modal__eyebrow {
-            color: rgba(255, 255, 255, .92) !important;
+        #schoolMissingEmisModal .simansa-emis-modal__eyebrow {
+            color: #2563eb !important;
             font-size: .75rem;
             font-weight: 800;
             letter-spacing: .06em;
             text-transform: uppercase;
         }
 
-        .simansa-emis-modal__header .close {
-            color: #fff !important;
-            opacity: .9;
+        #schoolMissingEmisModal .simansa-emis-modal__header .close {
+            color: #475569 !important;
+            opacity: 1 !important;
             text-shadow: none;
         }
 
