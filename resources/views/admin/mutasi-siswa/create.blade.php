@@ -240,8 +240,15 @@
                 <div class="wz-section-title text-danger">
                     <i class="fas fa-school"></i>
                     <div>
-                        <strong>Sekolah Tujuan</strong>
-                        <span>Ke mana siswa ini akan pindah?</span>
+                        <strong>Sekolah Tujuan <small class="font-weight-normal">(opsional)</small></strong>
+                        <span>Dapat dilengkapi sekarang atau setelah mutasi diproses.</span>
+                    </div>
+                </div>
+                <div class="wz-info-box mb-3">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="small">
+                        <strong>Sekolah tujuan boleh dikosongkan.</strong>
+                        Siswa tetap dapat dimutasikan dari daftar aktif setelah mutasi disetujui, lalu data tujuan dapat dilengkapi melalui menu Edit Mutasi.
                     </div>
                 </div>
                 <div class="form-group">
@@ -266,10 +273,9 @@
                     <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Data tidak ditemukan.</strong> Isi nama sekolah secara manual.
                 </div>
                 <div class="form-group">
-                    <label class="wz-label">Nama Sekolah Tujuan <span class="text-danger">*</span></label>
+                    <label class="wz-label">Nama Sekolah Tujuan <small class="text-muted font-weight-normal">(opsional)</small></label>
                     <input type="text" name="sekolah_tujuan" id="sekolah_tujuan" class="form-control"
                         placeholder="Nama lengkap sekolah tujuan" value="{{ old('sekolah_tujuan') }}">
-                    <div class="invalid-feedback">Nama sekolah tujuan wajib diisi</div>
                 </div>
                 <div class="form-group">
                     <label class="wz-label">Kota / Kabupaten</label>
@@ -537,7 +543,7 @@
     var s2Inited  = {};
     var stepLabels = {
         masuk:  ['Sekolah Asal', 'Data Siswa',     'Dokumen'],
-        keluar: ['Cari Siswa',   'Sekolah Tujuan', 'Dokumen'],
+        keluar: ['Cari Siswa',   'Sekolah Tujuan (Opsional)', 'Dokumen'],
     };
 
     function paneId(s) {
@@ -664,13 +670,6 @@
             } else { jk.classList.remove('is-invalid'); }
             if (!valid) return false;
         }
-        if (s === 2 && jenis === 'keluar') {
-            var f = document.getElementById('sekolah_tujuan');
-            if (!f.value.trim()) {
-                f.classList.add('is-invalid'); f.focus(); return false;
-            }
-            f.classList.remove('is-invalid');
-        }
         return true;
     }
 
@@ -771,7 +770,7 @@
             document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_asal]') || {}).value || '—';
         } else {
             document.getElementById('sum-sekolah-lbl').textContent = 'Sekolah Tujuan';
-            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_tujuan]') || {}).value || '—';
+            document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_tujuan]') || {}).value || 'Belum ditentukan';
         }
     }
 

@@ -172,7 +172,7 @@ class MutasiSiswaController extends Controller
             $rules['alasan_mutasi_masuk'] = 'nullable|string';
         } else {
             $rules['siswa_id']              = 'required|exists:siswa,id';
-            $rules['sekolah_tujuan']        = 'required|string|max:200';
+            $rules['sekolah_tujuan']        = 'nullable|string|max:200';
             $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
             $rules['alasan_mutasi_keluar']  = 'nullable|string';
@@ -291,7 +291,7 @@ class MutasiSiswaController extends Controller
             $rules['kelas_asal']          = 'nullable|string|max:50';
             $rules['alasan_mutasi_masuk'] = 'nullable|string';
         } else {
-            $rules['sekolah_tujuan']        = 'required|string|max:200';
+            $rules['sekolah_tujuan']        = 'nullable|string|max:200';
             $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
             $rules['alasan_mutasi_keluar']  = 'nullable|string';

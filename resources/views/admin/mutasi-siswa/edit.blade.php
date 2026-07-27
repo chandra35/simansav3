@@ -147,9 +147,10 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Nama Sekolah Tujuan <span class="text-danger">*</span></label>
+                        <label>Nama Sekolah Tujuan <small class="text-muted font-weight-normal">(opsional)</small></label>
                         <input type="text" name="sekolah_tujuan" class="form-control"
-                            value="{{ old('sekolah_tujuan', $mutasiSiswa->sekolah_tujuan) }}" required>
+                            value="{{ old('sekolah_tujuan', $mutasiSiswa->sekolah_tujuan) }}">
+                        <small class="form-text text-muted">Dapat dilengkapi setelah mutasi diproses.</small>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -356,9 +357,10 @@ $(function () {
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Nama Sekolah Tujuan <span class="text-danger">*</span></label>
+                        <label>Nama Sekolah Tujuan <small class="text-muted font-weight-normal">(opsional)</small></label>
                         <input type="text" name="sekolah_tujuan" class="form-control"
-                            value="{{ old('sekolah_tujuan', $mutasiSiswa->sekolah_tujuan) }}" required>
+                            value="{{ old('sekolah_tujuan', $mutasiSiswa->sekolah_tujuan) }}">
+                        <small class="form-text text-muted">Dapat dilengkapi setelah mutasi diproses.</small>
                     </div>
                     <div class="row">
                         <div class="col-md-6">

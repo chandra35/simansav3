@@ -159,13 +159,30 @@ class MutasiSiswa extends Model
         if ($this->save()) {
             // Update status siswa jika mutasi keluar
             if ($this->isMutasiKeluar()) {
+                SiswaKelas::query()
+                    ->where('siswa_id', $this->siswa_id)
+                    ->where('status', 'aktif')
+                    ->get()
+                    ->each(function (SiswaKelas $riwayatKelas): void {
+                        $catatan = trim(implode(' ', array_filter([
+                            $riwayatKelas->catatan_perpindahan,
+                            'Ditutup karena mutasi keluar.',
+                        ])));
+
+                        $riwayatKelas->update([
+                            'status' => 'keluar',
+                            'tanggal_keluar' => $this->tanggal_mutasi ?? today(),
+                            'catatan_perpindahan' => $catatan,
+                        ]);
+                    });
+
                 $this->siswa->update([
                     'status_siswa' => 'mutasi_keluar',
                     'kelas_saat_ini_id' => null,
                 ]);
                 
                 // Disable user account
-                $this->siswa->user->update(['is_active' => false]);
+                $this->siswa->user?->update(['is_active' => false]);
             }
             
             return true;
@@ -240,7 +257,7 @@ class MutasiSiswa extends Model
     {
         return $this->isMutasiMasuk() 
             ? $this->sekolah_asal ?? 'N/A'
-            : $this->sekolah_tujuan ?? 'N/A';
+            : $this->sekolah_tujuan ?? 'Belum ditentukan';
     }
 
     /**

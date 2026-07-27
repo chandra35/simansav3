@@ -173,7 +173,13 @@
                 <table class="table table-sm mb-0">
                     <tr>
                         <td class="text-muted pl-3" width="35%">Nama Sekolah</td>
-                        <td><strong>{{ $mutasiSiswa->sekolah_tujuan ?? '-' }}</strong></td>
+                        <td>
+                            @if($mutasiSiswa->sekolah_tujuan)
+                                <strong>{{ $mutasiSiswa->sekolah_tujuan }}</strong>
+                            @else
+                                <span class="text-muted"><i class="fas fa-clock mr-1"></i>Belum ditentukan</span>
+                            @endif
+                        </td>
                     </tr>
                     @if($mutasiSiswa->npsn_sekolah_tujuan)
                     <tr>
@@ -486,7 +492,7 @@ $(function () {
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Nama Sekolah</dt>
-                    <dd class="col-sm-8">{{ $mutasiSiswa->sekolah_tujuan ?? '-' }}</dd>
+                    <dd class="col-sm-8">{{ $mutasiSiswa->sekolah_tujuan ?? 'Belum ditentukan' }}</dd>
                     <dt class="col-sm-4">NPSN</dt>
                     <dd class="col-sm-8">{{ $mutasiSiswa->npsn_sekolah_tujuan ?? '-' }}</dd>
                     <dt class="col-sm-4">Alamat</dt>
