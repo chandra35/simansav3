@@ -2,7 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Services\StudentPhotoArchiveService;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 class StudentPhotoArchiveArchitectureTest extends TestCase
 {
@@ -44,5 +46,22 @@ class StudentPhotoArchiveArchitectureTest extends TestCase
         $this->assertStringContainsString('download-foto-kelas', $permissions);
         $this->assertStringContainsString('prepare_student_photo_archive', $controller);
         $this->assertStringContainsString('download_student_photo_archive', $controller);
+    }
+
+    public function test_three_requested_photo_filename_patterns_are_supported(): void
+    {
+        $service = new StudentPhotoArchiveService;
+        $method = new ReflectionMethod($service, 'archiveName');
+        $row = [
+            'id' => 'student-id',
+            'nisn' => '0012345678',
+            'name' => 'SISWA CONTOH LENGKAP',
+            'class_name' => 'X-1',
+            'photo_path' => '/tmp/photo.JPG',
+        ];
+
+        $this->assertSame('X-1/0012345678.jpg', $method->invoke($service, $row, 'nisn'));
+        $this->assertSame('X-1/SISWA CONTOH LENGKAP.jpg', $method->invoke($service, $row, 'nama'));
+        $this->assertSame('X-1/0012345678_SISWA-CONTOH-LENGKAP.jpg', $method->invoke($service, $row, 'nisn_nama'));
     }
 }

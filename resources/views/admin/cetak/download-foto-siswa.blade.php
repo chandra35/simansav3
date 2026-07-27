@@ -58,9 +58,17 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="form-group mb-0">
+                        <label for="fileNamingSelect">Penamaan Foto <span class="text-danger">*</span></label>
+                        <select id="fileNamingSelect" class="form-control">
+                            <option value="nisn">NISN</option>
+                            <option value="nama">NAMA LENGKAP</option>
+                            <option value="nisn_nama" selected>NISN_NAMA-LENGKAP</option>
+                        </select>
+                    </div>
                     <div class="photo-filter__hint">
                         <i class="fas fa-info-circle"></i>
-                        Pilih satu tingkat untuk menampilkan rombel aktif.
+                        Ekstensi asli foto tetap dipertahankan.
                     </div>
                 </div>
 
@@ -138,7 +146,7 @@
             <div class="photo-actions photo-actions--preview">
                 <div class="photo-actions__note">
                     <i class="fas fa-folder-open"></i>
-                    Struktur ZIP: <strong>Nama Kelas / NISN - Nama Siswa.ext</strong>
+                    Struktur ZIP: <strong>Nama Kelas / <span id="archivePattern">NISN_NAMA-LENGKAP.ext</span></strong>
                 </div>
                 <button type="button" id="startArchiveButton" class="btn btn-success btn-lg">
                     <i class="fas fa-file-archive mr-1"></i> Proses dan Download ZIP
@@ -184,14 +192,14 @@
 .photo-flow{display:flex;align-items:center;justify-content:center;padding:5px 10%}.photo-flow__item{display:flex;align-items:center;gap:10px;color:#8694ad}.photo-flow__item>span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e8edf6;font-weight:800}.photo-flow__item div{display:flex;flex-direction:column}.photo-flow__item strong{font-size:.86rem}.photo-flow__item small{font-size:.72rem}.photo-flow__item.is-active{color:var(--pa-blue)}.photo-flow__item.is-active>span{background:var(--pa-blue);color:#fff;box-shadow:0 6px 15px rgba(63,103,243,.25)}.photo-flow__line{height:2px;background:#dfe6f1;min-width:80px;max-width:180px;flex:1;margin:0 18px}
 .photo-card{border:1px solid var(--pa-line);border-radius:20px;box-shadow:0 12px 32px rgba(30,58,110,.07);overflow:hidden}.photo-card .card-body{padding:24px}
 .photo-section-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}.photo-section-heading>div{display:flex;align-items:center;gap:13px}.photo-section-heading__icon{width:44px;height:44px;border-radius:13px;background:#edf2ff;color:var(--pa-blue);display:grid;place-items:center;font-size:1.1rem}.photo-section-heading__icon--green{background:#e9fbf3;color:#19a769}.photo-section-heading h2{font-size:1.2rem;font-weight:800;margin:0 0 3px}.photo-section-heading p{color:var(--pa-muted);margin:0}.photo-selection-count{padding:8px 13px;background:#f1f5ff;border-radius:20px;color:var(--pa-blue);font-size:.82rem;font-weight:700}
-.photo-filter{display:grid;grid-template-columns:minmax(260px,420px) 1fr;align-items:end;gap:18px;background:var(--pa-bg);border:1px solid var(--pa-line);border-radius:15px;padding:17px}.photo-filter label{font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.photo-filter__hint{color:var(--pa-muted);padding-bottom:9px}.photo-filter__hint i{color:var(--pa-blue)}
+.photo-filter{display:grid;grid-template-columns:minmax(220px,1fr) minmax(260px,1.25fr) 1fr;align-items:end;gap:18px;background:var(--pa-bg);border:1px solid var(--pa-line);border-radius:15px;padding:17px}.photo-filter label{font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.photo-filter__hint{color:var(--pa-muted);padding-bottom:9px}.photo-filter__hint i{color:var(--pa-blue)}
 .photo-empty{min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--pa-muted)}.photo-empty>span{width:58px;height:58px;border-radius:18px;background:#eef3ff;color:var(--pa-blue);display:grid;place-items:center;font-size:1.35rem;margin-bottom:12px}.photo-empty strong{color:var(--pa-navy);font-size:1rem}.photo-empty p{margin:4px 0 0}
 .photo-loading{min-height:170px;align-items:center;justify-content:center;gap:16px}.photo-loading:not(.d-none){display:flex!important}.photo-loading div:last-child{display:flex;flex-direction:column}.photo-loading small{color:var(--pa-muted)}
 .photo-class-toolbar{display:flex;align-items:center;justify-content:space-between;margin:18px 0 12px}.photo-check-all{display:flex;align-items:center;gap:9px;margin:0;font-weight:700}.photo-check-all input{width:18px;height:18px}.photo-class-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.photo-class-option{position:relative;display:block;margin:0;cursor:pointer}.photo-class-option input{position:absolute;opacity:0;pointer-events:none}.photo-class-option__body{height:100%;padding:15px;border:1px solid var(--pa-line);border-radius:14px;background:#fff;display:flex;align-items:center;gap:12px;transition:.18s ease}.photo-class-option__check{width:25px;height:25px;border:2px solid #cbd6e8;border-radius:8px;display:grid;place-items:center;color:transparent;flex:0 0 auto}.photo-class-option__copy{display:flex;flex-direction:column;min-width:0}.photo-class-option__copy strong{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.photo-class-option__copy small{color:var(--pa-muted)}.photo-class-option input:checked+.photo-class-option__body{border-color:var(--pa-blue);background:#f2f5ff;box-shadow:0 7px 16px rgba(63,103,243,.1)}.photo-class-option input:checked+.photo-class-option__body .photo-class-option__check{border-color:var(--pa-blue);background:var(--pa-blue);color:#fff}
 .photo-actions{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid var(--pa-line);margin-top:20px;padding-top:20px}.photo-actions__note{color:var(--pa-muted)}.photo-actions__note i{color:var(--pa-blue);margin-right:4px}.photo-actions .btn{border-radius:11px;font-weight:700;padding:10px 20px}
 .photo-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.photo-summary{border:1px solid var(--pa-line);border-top:4px solid var(--pa-blue);border-radius:14px;padding:15px 17px}.photo-summary span{display:block;color:var(--pa-muted);font-size:.73rem;font-weight:800;text-transform:uppercase}.photo-summary strong{display:block;font-size:1.65rem;line-height:1.1;margin:5px 0;color:var(--pa-blue)}.photo-summary small{color:var(--pa-muted)}.photo-summary--success{border-top-color:#20b878}.photo-summary--success strong{color:#16985f}.photo-summary--danger{border-top-color:#ef5d69}.photo-summary--danger strong{color:#dc4050}
 .photo-preview-layout{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(500px,1.6fr);gap:25px;margin-top:25px}.photo-subtitle{font-size:.92rem;font-weight:800;margin:0 0 12px}.photo-subtitle i{color:var(--pa-blue);margin-right:5px}.photo-class-summary{display:flex;flex-direction:column;gap:8px}.photo-class-summary__row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 13px;border:1px solid var(--pa-line);border-radius:11px}.photo-class-summary__row strong{font-size:.88rem}.photo-class-summary__meta{display:flex;gap:8px;font-size:.72rem}.photo-class-summary__meta .ok{color:#15965f}.photo-class-summary__meta .missing{color:#d64552}
-.photo-student-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.photo-student{position:relative;min-width:0}.photo-student__image{aspect-ratio:1/1.18;border-radius:11px;background:#eff3f9;overflow:hidden;border:1px solid var(--pa-line);display:grid;place-items:center;color:#9aa8be}.photo-student__image img{width:100%;height:100%;object-fit:cover}.photo-student__name{font-weight:700;font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}.photo-student__meta{color:var(--pa-muted);font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.photo-student__missing{position:absolute;top:5px;right:5px;background:#fff0f1;color:#d94150;border-radius:8px;padding:3px 5px;font-size:.58rem;font-weight:700}.photo-preview-note{font-size:.75rem;color:var(--pa-muted);margin:10px 0 0}
+.photo-student-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.photo-student{position:relative;min-width:0}.photo-student__image{aspect-ratio:1/1.18;border-radius:11px;background:#eff3f9;overflow:hidden;border:1px solid var(--pa-line);display:grid;place-items:center;color:#9aa8be}.photo-student__image img{width:100%;height:100%;object-fit:cover}.photo-student__name{font-weight:700;font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}.photo-student__meta{color:var(--pa-muted);font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.photo-student__filename{color:var(--pa-blue);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.photo-student__missing{position:absolute;top:5px;right:5px;background:#fff0f1;color:#d94150;border-radius:8px;padding:3px 5px;font-size:.58rem;font-weight:700}.photo-preview-note{font-size:.75rem;color:var(--pa-muted);margin:10px 0 0}
 .photo-progress-modal .modal-content{border:0;border-radius:22px;box-shadow:0 25px 70px rgba(15,31,66,.28)}.photo-progress-modal .modal-body{text-align:center;padding:34px}.photo-progress-icon{width:70px;height:70px;border-radius:22px;background:linear-gradient(135deg,#416cf3,#7359e8);color:#fff;display:grid;place-items:center;margin:0 auto 15px;font-size:1.7rem;box-shadow:0 12px 25px rgba(72,91,220,.28)}.photo-progress-kicker{color:var(--pa-blue);font-weight:800;font-size:.7rem;letter-spacing:.08em}.photo-progress-modal h3{font-size:1.25rem;font-weight:800;margin:7px 0}.photo-progress-modal p{color:var(--pa-muted);min-height:22px}.photo-progress-track{height:12px;background:#e9eef7;border-radius:8px;overflow:hidden;margin-top:20px}.photo-progress-bar{height:100%;border-radius:8px;background:linear-gradient(90deg,#416cf3,#35b98a);transition:width .25s ease}.photo-progress-meta{display:flex;justify-content:space-between;margin:8px 0 22px;color:var(--pa-muted)}.photo-progress-meta strong{color:var(--pa-blue)}
 @media(max-width:1199px){.photo-class-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.photo-student-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.photo-preview-layout{grid-template-columns:1fr 1.4fr}}
 @media(max-width:767px){.photo-archive-hero{align-items:flex-start;flex-direction:column;padding:21px}.photo-archive-year{width:100%;min-width:0}.photo-flow{padding:4px 0}.photo-flow__item div{display:none}.photo-flow__line{min-width:20px;margin:0 8px}.photo-card .card-body{padding:17px}.photo-section-heading{align-items:flex-start}.photo-section-heading p{font-size:.82rem}.photo-filter{grid-template-columns:1fr}.photo-filter__hint{padding:0}.photo-class-grid{grid-template-columns:1fr 1fr}.photo-summary-grid{grid-template-columns:1fr 1fr}.photo-preview-layout{grid-template-columns:1fr}.photo-student-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.photo-actions{align-items:stretch;flex-direction:column}.photo-actions .btn{width:100%}}
@@ -211,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || @json(csrf_token());
     const levelSelect = document.getElementById('tingkatSelect');
+    const fileNamingSelect = document.getElementById('fileNamingSelect');
     if (!levelSelect) return;
 
     const classEmpty = document.getElementById('classEmpty');
@@ -227,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }[char]));
 
     const selectedIds = () => Array.from(document.querySelectorAll('.class-checkbox:checked')).map(input => input.value);
-    const signature = () => `${levelSelect.value}:${selectedIds().sort().join(',')}`;
+    const signature = () => `${levelSelect.value}:${fileNamingSelect.value}:${selectedIds().sort().join(',')}`;
 
     function showError(title, message) {
         if (window.Swal) {
@@ -313,6 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showError('Gagal Memuat Kelas', error.message);
         }
     });
+    fileNamingSelect.addEventListener('change', updateSelection);
 
     selectAll.addEventListener('change', function () {
         document.querySelectorAll('.class-checkbox').forEach(input => { input.checked = this.checked; });
@@ -330,7 +340,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const result = await jsonRequest(routes.preview, {
                 method: 'POST',
-                body: JSON.stringify({ tingkat: Number(levelSelect.value), kelas_ids: selectedIds() }),
+                body: JSON.stringify({
+                    tingkat: Number(levelSelect.value),
+                    file_naming: fileNamingSelect.value,
+                    kelas_ids: selectedIds()
+                }),
             });
             renderPreview(result.data);
             previewSignature = signature();
@@ -369,9 +383,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 ${student.has_photo ? '' : '<span class="photo-student__missing">Kosong</span>'}
                 <div class="photo-student__name">${escapeHtml(student.name)}</div>
-                <div class="photo-student__meta">${escapeHtml(student.class_name)} · ${escapeHtml(student.nisn)}</div>
+                <div class="photo-student__meta">${escapeHtml(student.class_name)} &middot; ${escapeHtml(student.nisn)}</div>
+                ${student.file_name
+                    ? `<div class="photo-student__filename" title="${escapeHtml(student.file_name)}">${escapeHtml(student.file_name)}</div>`
+                    : ''}
             </div>
         `).join('');
+        const patterns = {
+            nisn: 'NISN.ext',
+            nama: 'NAMA LENGKAP.ext',
+            nisn_nama: 'NISN_NAMA-LENGKAP.ext',
+        };
+        document.getElementById('archivePattern').textContent = patterns[data.file_naming] || patterns.nisn_nama;
         document.getElementById('previewLimitNote').classList.toggle('d-none', !data.preview_limited);
     }
 
@@ -401,7 +424,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const result = await jsonRequest(routes.start, {
                 method: 'POST',
-                body: JSON.stringify({ tingkat: Number(levelSelect.value), kelas_ids: selectedIds() }),
+                body: JSON.stringify({
+                    tingkat: Number(levelSelect.value),
+                    file_naming: fileNamingSelect.value,
+                    kelas_ids: selectedIds()
+                }),
             });
             updateProgress(result.data);
             await processArchive(result.data.token);

@@ -59,7 +59,8 @@ class CetakController extends Controller
                 'success' => true,
                 'data' => $archiveService->preview(
                     (int) $validated['tingkat'],
-                    $validated['kelas_ids']
+                    $validated['kelas_ids'],
+                    $validated['file_naming']
                 ),
             ]);
         } catch (\RuntimeException $exception) {
@@ -80,7 +81,8 @@ class CetakController extends Controller
             $state = $archiveService->start(
                 (string) $request->user()->id,
                 (int) $validated['tingkat'],
-                $validated['kelas_ids']
+                $validated['kelas_ids'],
+                $validated['file_naming']
             );
 
             ActivityLogService::log([
@@ -90,6 +92,7 @@ class CetakController extends Controller
                 'properties' => [
                     'tingkat' => (int) $validated['tingkat'],
                     'kelas_ids' => $validated['kelas_ids'],
+                    'pola_nama_file' => $validated['file_naming'],
                     'jumlah_foto' => $state['total'],
                     'foto_kosong' => $state['missing'],
                     'token' => $state['token'],
@@ -144,6 +147,7 @@ class CetakController extends Controller
                     'tahun_pelajaran_id' => $state['year_id'],
                     'kelas_ids' => $state['class_ids'],
                     'kelas' => $state['class_names'],
+                    'pola_nama_file' => $state['file_naming'],
                     'jumlah_foto' => $state['total'] - $state['failed'],
                     'gagal' => $state['failed'],
                     'foto_kosong' => $state['missing'],
@@ -167,6 +171,7 @@ class CetakController extends Controller
     {
         return $request->validate([
             'tingkat' => ['required', 'integer', 'in:10,11,12'],
+            'file_naming' => ['required', 'string', 'in:nisn,nama,nisn_nama'],
             'kelas_ids' => ['required', 'array', 'min:1', 'max:50'],
             'kelas_ids.*' => ['required', 'uuid', 'distinct'],
         ]);

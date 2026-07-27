@@ -15,6 +15,8 @@ class StudentPhotoArchiveService
 {
     public const BATCH_SIZE = 12;
 
+    public const FILE_NAMING_OPTIONS = ['nisn', 'nama', 'nisn_nama'];
+
     public function activeYear(): ?TahunPelajaran
     {
         return TahunPelajaran::query()->active()->orderByDesc('tahun_mulai')->first();
@@ -41,8 +43,9 @@ class StudentPhotoArchiveService
             ->get();
     }
 
-    public function preview(int $level, array $classIds): array
+    public function preview(int $level, array $classIds, string $fileNaming): array
     {
+        $this->assertFileNaming($fileNaming);
         [$activeYear, $classes] = $this->selectedClasses($level, $classIds);
         $students = $this->studentsFromClasses($classes, $activeYear->id);
         $available = $students->filter(fn ($row) => $row['has_photo']);
@@ -74,28 +77,42 @@ class StudentPhotoArchiveService
                 'class_name' => $row['class_name'],
                 'has_photo' => $row['has_photo'],
                 'photo_url' => $row['photo_url'],
+                'file_name' => $row['has_photo']
+                    ? basename($this->archiveName($row, $fileNaming))
+                    : null,
             ])->values(),
             'preview_limited' => $students->count() > 36,
+            'file_naming' => $fileNaming,
         ];
     }
 
-    public function start(string $userId, int $level, array $classIds): array
+    public function start(string $userId, int $level, array $classIds, string $fileNaming): array
     {
+        $this->assertFileNaming($fileNaming);
+
         if (! class_exists(ZipArchive::class)) {
             throw new RuntimeException('Ekstensi ZIP belum tersedia pada server.');
         }
 
         [$activeYear, $classes] = $this->selectedClasses($level, $classIds);
         $students = $this->studentsFromClasses($classes, $activeYear->id);
+        $usedArchiveNames = [];
         $entries = $students
             ->filter(fn ($row) => $row['has_photo'])
-            ->map(fn ($row) => [
-                'student_id' => $row['id'],
-                'source' => $row['photo_path'],
-                'archive_name' => $this->archiveName($row),
-                'student_name' => $row['name'],
-                'class_name' => $row['class_name'],
-            ])
+            ->map(function ($row) use ($fileNaming, &$usedArchiveNames) {
+                $archiveName = $this->uniqueArchiveName(
+                    $this->archiveName($row, $fileNaming),
+                    $usedArchiveNames
+                );
+
+                return [
+                    'student_id' => $row['id'],
+                    'source' => $row['photo_path'],
+                    'archive_name' => $archiveName,
+                    'student_name' => $row['name'],
+                    'class_name' => $row['class_name'],
+                ];
+            })
             ->values();
 
         if ($entries->isEmpty()) {
@@ -112,6 +129,7 @@ class StudentPhotoArchiveService
             'token' => $token,
             'user_id' => $userId,
             'level' => $level,
+            'file_naming' => $fileNaming,
             'year_id' => $activeYear->id,
             'year' => $activeYear->nama,
             'class_ids' => $classes->pluck('id')->values()->all(),
@@ -274,14 +292,50 @@ class StudentPhotoArchiveService
         return $rows->unique('id')->values();
     }
 
-    private function archiveName(array $row): string
+    private function archiveName(array $row, string $fileNaming): string
     {
         $extension = strtolower(pathinfo($row['photo_path'], PATHINFO_EXTENSION)) ?: 'jpg';
         $class = $this->safeName($row['class_name']);
         $identity = $row['nisn'] !== '-' ? $row['nisn'] : $row['id'];
-        $student = $this->safeName($identity.' - '.$row['name']);
+        $name = $this->safeName($row['name']);
+        $student = match ($fileNaming) {
+            'nisn' => $this->safeName($identity),
+            'nama' => $name,
+            'nisn_nama' => $this->safeName($identity.'_'.str_replace(' ', '-', $name)),
+        };
 
         return "{$class}/{$student}.{$extension}";
+    }
+
+    private function uniqueArchiveName(string $archiveName, array &$usedArchiveNames): string
+    {
+        $key = mb_strtolower($archiveName);
+        if (! isset($usedArchiveNames[$key])) {
+            $usedArchiveNames[$key] = true;
+
+            return $archiveName;
+        }
+
+        $extension = pathinfo($archiveName, PATHINFO_EXTENSION);
+        $withoutExtension = substr($archiveName, 0, -1 * (strlen($extension) + 1));
+        $counter = 2;
+
+        do {
+            $candidate = $withoutExtension.'-'.$counter.'.'.$extension;
+            $candidateKey = mb_strtolower($candidate);
+            $counter++;
+        } while (isset($usedArchiveNames[$candidateKey]));
+
+        $usedArchiveNames[$candidateKey] = true;
+
+        return $candidate;
+    }
+
+    private function assertFileNaming(string $fileNaming): void
+    {
+        if (! in_array($fileNaming, self::FILE_NAMING_OPTIONS, true)) {
+            throw new RuntimeException('Pola penamaan foto tidak valid.');
+        }
     }
 
     private function safeName(string $value): string
