@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
 class MutasiSiswa extends Model
@@ -151,44 +151,55 @@ class MutasiSiswa extends Model
      */
     public function approveMutasi(User $verifikator, ?string $catatan = null): bool
     {
+        if (! $this->isPending()) {
+            throw new \DomainException('Mutasi ini sudah diverifikasi.');
+        }
+
+        $siswa = $this->siswa()->lockForUpdate()->first();
+
+        if (! $siswa) {
+            throw new \DomainException('Data siswa pada mutasi ini tidak ditemukan.');
+        }
+
         $this->status_verifikasi = 'approved';
         $this->verifikator_id = $verifikator->id;
         $this->tanggal_verifikasi = now();
         $this->catatan_verifikasi = $catatan;
+        $this->saveOrFail();
 
-        if ($this->save()) {
-            // Update status siswa jika mutasi keluar
-            if ($this->isMutasiKeluar()) {
-                SiswaKelas::query()
-                    ->where('siswa_id', $this->siswa_id)
-                    ->where('status', 'aktif')
-                    ->get()
-                    ->each(function (SiswaKelas $riwayatKelas): void {
-                        $catatan = trim(implode(' ', array_filter([
-                            $riwayatKelas->catatan_perpindahan,
-                            'Ditutup karena mutasi keluar.',
-                        ])));
+        if ($this->isMutasiKeluar()) {
+            SiswaKelas::query()
+                ->where('siswa_id', $this->siswa_id)
+                ->where('status', 'aktif')
+                ->lockForUpdate()
+                ->get()
+                ->each(function (SiswaKelas $riwayatKelas): void {
+                    $catatan = trim(implode(' ', array_filter([
+                        $riwayatKelas->catatan_perpindahan,
+                        'Ditutup karena mutasi keluar.',
+                    ])));
 
-                        $riwayatKelas->update([
-                            'status' => 'keluar',
-                            'tanggal_keluar' => $this->tanggal_mutasi ?? today(),
-                            'catatan_perpindahan' => $catatan,
-                        ]);
-                    });
+                    $riwayatKelas->updateOrFail([
+                        'status' => 'keluar',
+                        'tanggal_keluar' => $this->tanggal_mutasi ?? today(),
+                        'catatan_perpindahan' => $catatan,
+                    ]);
+                });
 
-                $this->siswa->update([
-                    'status_siswa' => 'mutasi_keluar',
-                    'kelas_saat_ini_id' => null,
-                ]);
-                
-                // Disable user account
-                $this->siswa->user?->update(['is_active' => false]);
+            $siswa->updateOrFail([
+                'status_siswa' => 'mutasi_keluar',
+                'kelas_saat_ini_id' => null,
+            ]);
+
+            if ($siswa->user) {
+                $siswa->user->updateOrFail(['is_active' => false]);
+                UserSession::query()
+                    ->where('user_id', $siswa->user->id)
+                    ->update(['is_online' => false]);
             }
-            
-            return true;
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -209,7 +220,7 @@ class MutasiSiswa extends Model
      */
     public function getFileSuratUrlAttribute(): ?string
     {
-        if (!$this->file_surat_mutasi) {
+        if (! $this->file_surat_mutasi) {
             return null;
         }
 
@@ -221,7 +232,7 @@ class MutasiSiswa extends Model
      */
     public function getStatusBadgeColorAttribute(): string
     {
-        return match($this->status_verifikasi) {
+        return match ($this->status_verifikasi) {
             'pending' => 'warning',
             'approved' => 'success',
             'rejected' => 'danger',
@@ -242,7 +253,7 @@ class MutasiSiswa extends Model
      */
     public function getStatusTextAttribute(): string
     {
-        return match($this->status_verifikasi) {
+        return match ($this->status_verifikasi) {
             'pending' => 'Menunggu Verifikasi',
             'approved' => 'Disetujui',
             'rejected' => 'Ditolak',
@@ -255,7 +266,7 @@ class MutasiSiswa extends Model
      */
     public function getNamaSekolahAttribute(): string
     {
-        return $this->isMutasiMasuk() 
+        return $this->isMutasiMasuk()
             ? $this->sekolah_asal ?? 'N/A'
             : $this->sekolah_tujuan ?? 'Belum ditentukan';
     }

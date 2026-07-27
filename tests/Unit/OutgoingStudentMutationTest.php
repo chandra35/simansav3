@@ -14,10 +14,10 @@ class OutgoingStudentMutationTest extends TestCase
 
         $this->assertSame(
             2,
-            substr_count($controller, "\$rules['sekolah_tujuan']        = 'nullable|string|max:200';")
+            substr_count($controller, "\$rules['sekolah_tujuan'] = 'nullable|string|max:200';")
         );
         $this->assertStringNotContainsString(
-            "\$rules['sekolah_tujuan']        = 'required|string|max:200';",
+            "\$rules['sekolah_tujuan'] = 'required|string|max:200';",
             $controller
         );
         $this->assertStringContainsString('Sekolah tujuan boleh dikosongkan.', $createView);
@@ -37,6 +37,24 @@ class OutgoingStudentMutationTest extends TestCase
         $this->assertStringContainsString("'tanggal_keluar' => \$this->tanggal_mutasi ?? today()", $model);
         $this->assertStringContainsString("'status_siswa' => 'mutasi_keluar'", $model);
         $this->assertStringContainsString("'kelas_saat_ini_id' => null", $model);
-        $this->assertStringContainsString("user?->update(['is_active' => false])", $model);
+        $this->assertStringContainsString("updateOrFail(['is_active' => false])", $model);
+        $this->assertStringContainsString("->update(['is_online' => false])", $model);
+    }
+
+    public function test_approval_is_locked_audited_and_has_a_native_post_fallback(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/MutasiSiswaController.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/mutasi-siswa/show.blade.php');
+
+        $this->assertStringContainsString('->lockForUpdate()', $controller);
+        $this->assertStringContainsString('DB::transaction(function ()', $controller);
+        $this->assertStringContainsString("'before' => \$before", $controller);
+        $this->assertStringContainsString("'after' => [", $controller);
+        $this->assertSame(1, substr_count($view, "@section('content')"));
+        $this->assertSame(1, substr_count($view, "@section('js')"));
+        $this->assertSame(1, substr_count($view, 'id="btnApprove"'));
+        $this->assertStringContainsString('id="formApproveMutation"', $view);
+        $this->assertStringContainsString('fetch(form.action, {', $view);
+        $this->assertStringContainsString("'Accept': 'application/json'", $view);
     }
 }

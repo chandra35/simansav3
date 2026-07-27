@@ -42,7 +42,7 @@ class MutasiSiswaController extends Controller
             $search = $request->search;
             $query->whereHas('siswa', function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
-                  ->orWhere('nisn', 'like', "%{$search}%");
+                    ->orWhere('nisn', 'like', "%{$search}%");
             });
         }
 
@@ -51,10 +51,10 @@ class MutasiSiswaController extends Controller
         $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
 
         $stats = [
-            'total'    => MutasiSiswa::count(),
-            'masuk'    => MutasiSiswa::masuk()->count(),
-            'keluar'   => MutasiSiswa::keluar()->count(),
-            'pending'  => MutasiSiswa::pending()->count(),
+            'total' => MutasiSiswa::count(),
+            'masuk' => MutasiSiswa::masuk()->count(),
+            'keluar' => MutasiSiswa::keluar()->count(),
+            'pending' => MutasiSiswa::pending()->count(),
             'approved' => MutasiSiswa::approved()->count(),
             'rejected' => MutasiSiswa::rejected()->count(),
         ];
@@ -73,17 +73,17 @@ class MutasiSiswaController extends Controller
         }
 
         $results = Siswa::where(function ($query) use ($q) {
-                $query->where('nama_lengkap', 'like', "%{$q}%")
-                      ->orWhere('nisn', 'like', "%{$q}%");
-            })
+            $query->where('nama_lengkap', 'like', "%{$q}%")
+                ->orWhere('nisn', 'like', "%{$q}%");
+        })
             ->limit(25)
             ->get(['id', 'nama_lengkap', 'nisn', 'status_siswa'])
             ->map(fn ($s) => [
-                'id'           => $s->id,
-                'nama_lengkap' => $s->nama_lengkap,
-                'nisn'         => $s->nisn ?? '-',
-                'status_siswa' => $s->status_siswa ?? 'aktif',
-            ]);
+            'id' => $s->id,
+            'nama_lengkap' => $s->nama_lengkap,
+            'nisn' => $s->nisn ?? '-',
+            'status_siswa' => $s->status_siswa ?? 'aktif',
+        ]);
 
         return response()->json($results);
     }
@@ -95,14 +95,14 @@ class MutasiSiswaController extends Controller
     {
         $npsn = trim($request->get('npsn', ''));
 
-        if (!preg_match('/^\d{8}$/', $npsn)) {
+        if (! preg_match('/^\d{8}$/', $npsn)) {
             return response()->json(['success' => false, 'message' => 'NPSN harus 8 digit angka']);
         }
 
-        $service = new KemendikbudApiService();
-        $result  = $service->getSekolah($npsn);
+        $service = new KemendikbudApiService;
+        $result = $service->getSekolah($npsn);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return response()->json(['success' => false, 'message' => $result['message'] ?? 'Data tidak ditemukan']);
         }
 
@@ -110,16 +110,16 @@ class MutasiSiswaController extends Controller
 
         return response()->json([
             'success' => true,
-            'nama'    => $s->nama            ?? '',
-            'alamat'  => implode(', ', array_filter([
-                $s->alamat_jalan      ?? null,
-                $s->desa_kelurahan    ?? null,
-                $s->kecamatan         ?? null,
-                $s->kabupaten_kota    ?? null,
-                $s->provinsi          ?? null,
+            'nama' => $s->nama ?? '',
+            'alamat' => implode(', ', array_filter([
+                $s->alamat_jalan ?? null,
+                $s->desa_kelurahan ?? null,
+                $s->kecamatan ?? null,
+                $s->kabupaten_kota ?? null,
+                $s->provinsi ?? null,
             ])),
-            'kota'    => $s->kabupaten_kota  ?? '',
-            'provinsi'=> $s->provinsi        ?? '',
+            'kota' => $s->kabupaten_kota ?? '',
+            'provinsi' => $s->provinsi ?? '',
         ]);
     }
 
@@ -153,29 +153,29 @@ class MutasiSiswaController extends Controller
         $jenis = $request->jenis_mutasi;
 
         $rules = [
-            'jenis_mutasi'       => 'required|in:masuk,keluar',
+            'jenis_mutasi' => 'required|in:masuk,keluar',
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'tanggal_mutasi'     => 'required|date',
+            'tanggal_mutasi' => 'required|date',
             'nomor_surat_mutasi' => 'nullable|string|max:100',
-            'catatan'            => 'nullable|string',
-            'file_surat_mutasi'  => 'nullable|file|mimes:pdf|max:5120',
+            'catatan' => 'nullable|string',
+            'file_surat_mutasi' => 'nullable|file|mimes:pdf|max:5120',
         ];
 
         if ($jenis === 'masuk') {
-            $rules['nisn_siswa_baru']     = 'required|string|digits:10|unique:siswa,nisn|unique:users,username';
-            $rules['nama_lengkap_baru']   = 'required|string|max:255';
-            $rules['jenis_kelamin_baru']  = 'required|in:L,P';
-            $rules['sekolah_asal']        = 'required|string|max:200';
-            $rules['npsn_sekolah_asal']   = 'nullable|string|max:20';
+            $rules['nisn_siswa_baru'] = 'required|string|digits:10|unique:siswa,nisn|unique:users,username';
+            $rules['nama_lengkap_baru'] = 'required|string|max:255';
+            $rules['jenis_kelamin_baru'] = 'required|in:L,P';
+            $rules['sekolah_asal'] = 'required|string|max:200';
+            $rules['npsn_sekolah_asal'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_asal'] = 'nullable|string';
-            $rules['kelas_asal']          = 'nullable|string|max:50';
+            $rules['kelas_asal'] = 'nullable|string|max:50';
             $rules['alasan_mutasi_masuk'] = 'nullable|string';
         } else {
-            $rules['siswa_id']              = 'required|exists:siswa,id';
-            $rules['sekolah_tujuan']        = 'nullable|string|max:200';
-            $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
+            $rules['siswa_id'] = 'required|exists:siswa,id';
+            $rules['sekolah_tujuan'] = 'nullable|string|max:200';
+            $rules['npsn_sekolah_tujuan'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
-            $rules['alasan_mutasi_keluar']  = 'nullable|string';
+            $rules['alasan_mutasi_keluar'] = 'nullable|string';
         }
 
         $validated = $request->validate($rules);
@@ -185,20 +185,20 @@ class MutasiSiswaController extends Controller
             // Mutasi Masuk: buat siswa baru terlebih dahulu
             if ($jenis === 'masuk') {
                 $user = User::create([
-                    'name'           => $validated['nama_lengkap_baru'],
-                    'username'       => $validated['nisn_siswa_baru'],
-                    'email'          => $validated['nisn_siswa_baru'] . '@student.man1metro.sch.id',
-                    'password'       => Hash::make($validated['nisn_siswa_baru']),
-                    'role'           => 'siswa',
+                    'name' => $validated['nama_lengkap_baru'],
+                    'username' => $validated['nisn_siswa_baru'],
+                    'email' => $validated['nisn_siswa_baru'].'@student.man1metro.sch.id',
+                    'password' => Hash::make($validated['nisn_siswa_baru']),
+                    'role' => 'siswa',
                     'is_first_login' => true,
                 ]);
                 $user->readable_password = $validated['nisn_siswa_baru'];
                 $user->save();
 
                 $siswa = Siswa::create([
-                    'user_id'       => $user->id,
-                    'nisn'          => $validated['nisn_siswa_baru'],
-                    'nama_lengkap'  => $validated['nama_lengkap_baru'],
+                    'user_id' => $user->id,
+                    'nisn' => $validated['nisn_siswa_baru'],
+                    'nama_lengkap' => $validated['nama_lengkap_baru'],
                     'jenis_kelamin' => $validated['jenis_kelamin_baru'],
                 ]);
 
@@ -222,7 +222,7 @@ class MutasiSiswaController extends Controller
             activity()
                 ->performedOn($mutasi)
                 ->causedBy(Auth::user())
-                ->log('Menambahkan mutasi ' . $mutasi->jenisMutasiText . ' untuk siswa: ' . $mutasi->siswa->nama_lengkap);
+                ->log('Menambahkan mutasi '.$mutasi->jenisMutasiText.' untuk siswa: '.$mutasi->siswa->nama_lengkap);
 
             DB::commit();
 
@@ -231,7 +231,8 @@ class MutasiSiswaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Gagal menyimpan mutasi: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal menyimpan mutasi: '.$e->getMessage());
         }
     }
 
@@ -242,6 +243,7 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('view-mutasi');
         $mutasiSiswa->load(['siswa', 'tahunPelajaran', 'verifikator']);
+
         return view('admin.mutasi-siswa.show', compact('mutasiSiswa'));
     }
 
@@ -252,7 +254,7 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('edit-mutasi');
 
-        if (!$mutasiSiswa->isPending()) {
+        if (! $mutasiSiswa->isPending()) {
             return redirect()->route('admin.mutasi-siswa.show', $mutasiSiswa)
                 ->with('error', 'Mutasi yang sudah diverifikasi tidak dapat diedit.');
         }
@@ -270,7 +272,7 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('edit-mutasi');
 
-        if (!$mutasiSiswa->isPending()) {
+        if (! $mutasiSiswa->isPending()) {
             return response()->json(['success' => false, 'message' => 'Mutasi yang sudah diverifikasi tidak dapat diedit.'], 422);
         }
 
@@ -278,23 +280,23 @@ class MutasiSiswaController extends Controller
 
         $rules = [
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'tanggal_mutasi'     => 'required|date',
+            'tanggal_mutasi' => 'required|date',
             'nomor_surat_mutasi' => 'nullable|string|max:100',
-            'catatan'            => 'nullable|string',
-            'file_surat_mutasi'  => 'nullable|file|mimes:pdf|max:5120',
+            'catatan' => 'nullable|string',
+            'file_surat_mutasi' => 'nullable|file|mimes:pdf|max:5120',
         ];
 
         if ($jenis === 'masuk') {
-            $rules['sekolah_asal']        = 'required|string|max:200';
-            $rules['npsn_sekolah_asal']   = 'nullable|string|max:20';
+            $rules['sekolah_asal'] = 'required|string|max:200';
+            $rules['npsn_sekolah_asal'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_asal'] = 'nullable|string';
-            $rules['kelas_asal']          = 'nullable|string|max:50';
+            $rules['kelas_asal'] = 'nullable|string|max:50';
             $rules['alasan_mutasi_masuk'] = 'nullable|string';
         } else {
-            $rules['sekolah_tujuan']        = 'nullable|string|max:200';
-            $rules['npsn_sekolah_tujuan']   = 'nullable|string|max:20';
+            $rules['sekolah_tujuan'] = 'nullable|string|max:200';
+            $rules['npsn_sekolah_tujuan'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
-            $rules['alasan_mutasi_keluar']  = 'nullable|string';
+            $rules['alasan_mutasi_keluar'] = 'nullable|string';
         }
 
         $validated = $request->validate($rules);
@@ -315,7 +317,7 @@ class MutasiSiswaController extends Controller
             activity()
                 ->performedOn($mutasiSiswa)
                 ->causedBy(Auth::user())
-                ->log('Mengubah data mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+                ->log('Mengubah data mutasi untuk siswa: '.$mutasiSiswa->siswa->nama_lengkap);
 
             DB::commit();
 
@@ -324,7 +326,8 @@ class MutasiSiswaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Gagal memperbarui mutasi: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal memperbarui mutasi: '.$e->getMessage());
         }
     }
 
@@ -335,7 +338,7 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('delete-mutasi');
 
-        if (!$mutasiSiswa->isPending()) {
+        if (! $mutasiSiswa->isPending()) {
             return response()->json(['success' => false, 'message' => 'Mutasi yang sudah diverifikasi tidak dapat dihapus.'], 422);
         }
 
@@ -351,7 +354,7 @@ class MutasiSiswaController extends Controller
 
             activity()
                 ->causedBy(Auth::user())
-                ->log('Menghapus data mutasi untuk siswa: ' . $siswaName);
+                ->log('Menghapus data mutasi untuk siswa: '.$siswaName);
 
             DB::commit();
 
@@ -359,7 +362,8 @@ class MutasiSiswaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus: '.$e->getMessage()], 500);
         }
     }
 
@@ -369,29 +373,74 @@ class MutasiSiswaController extends Controller
     public function approve(Request $request, MutasiSiswa $mutasiSiswa)
     {
         $this->authorize('approve-mutasi');
+        $validated = $request->validate([
+            'catatan' => 'nullable|string|max:2000',
+        ]);
 
-        if (!$mutasiSiswa->isPending()) {
-            return response()->json(['success' => false, 'message' => 'Mutasi ini sudah diverifikasi.'], 422);
-        }
-
-        $request->validate(['catatan' => 'nullable|string']);
-
-        DB::beginTransaction();
         try {
-            $mutasiSiswa->approveMutasi(Auth::user(), $request->catatan);
+            DB::transaction(function () use ($mutasiSiswa, $validated): void {
+                $lockedMutation = MutasiSiswa::query()
+                    ->with('siswa')
+                    ->lockForUpdate()
+                    ->findOrFail($mutasiSiswa->getKey());
 
-            activity()
-                ->performedOn($mutasiSiswa)
-                ->causedBy(Auth::user())
-                ->log('Menyetujui mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+                if (! $lockedMutation->isPending()) {
+                    throw new \DomainException('Mutasi ini sudah diverifikasi oleh pengguna lain.');
+                }
 
-            DB::commit();
+                if (! $lockedMutation->siswa) {
+                    throw new \DomainException('Data siswa pada mutasi ini tidak ditemukan.');
+                }
 
-            return response()->json(['success' => true, 'message' => 'Mutasi berhasil disetujui.']);
+                $before = [
+                    'status_verifikasi' => $lockedMutation->status_verifikasi,
+                    'status_siswa' => $lockedMutation->siswa->status_siswa,
+                    'kelas_saat_ini_id' => $lockedMutation->siswa->kelas_saat_ini_id,
+                ];
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal menyetujui: ' . $e->getMessage()], 500);
+                $lockedMutation->approveMutasi(Auth::user(), $validated['catatan'] ?? null);
+                $lockedMutation->refresh()->load('siswa');
+
+                activity()
+                    ->performedOn($lockedMutation)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'before' => $before,
+                        'after' => [
+                            'status_verifikasi' => $lockedMutation->status_verifikasi,
+                            'status_siswa' => $lockedMutation->siswa->status_siswa,
+                            'kelas_saat_ini_id' => $lockedMutation->siswa->kelas_saat_ini_id,
+                        ],
+                        'jenis_mutasi' => $lockedMutation->jenis_mutasi,
+                    ])
+                    ->log('Menyetujui mutasi untuk siswa: '.$lockedMutation->siswa->nama_lengkap);
+            }, 3);
+
+            $message = 'Mutasi berhasil disetujui. Status siswa, riwayat kelas, dan akses akun telah diperbarui.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+
+            return redirect()
+                ->route('admin.mutasi-siswa.show', $mutasiSiswa)
+                ->with('success', $message);
+        } catch (\DomainException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $exception->getMessage()], 422);
+            }
+
+            return back()->with('error', $exception->getMessage());
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $message = 'Mutasi belum dapat disetujui. Silakan muat ulang halaman dan coba kembali.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+
+            return back()->with('error', $message);
         }
     }
 
@@ -402,7 +451,7 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('reject-mutasi');
 
-        if (!$mutasiSiswa->isPending()) {
+        if (! $mutasiSiswa->isPending()) {
             return response()->json(['success' => false, 'message' => 'Mutasi ini sudah diverifikasi.'], 422);
         }
 
@@ -415,7 +464,7 @@ class MutasiSiswaController extends Controller
             activity()
                 ->performedOn($mutasiSiswa)
                 ->causedBy(Auth::user())
-                ->log('Menolak mutasi untuk siswa: ' . $mutasiSiswa->siswa->nama_lengkap);
+                ->log('Menolak mutasi untuk siswa: '.$mutasiSiswa->siswa->nama_lengkap);
 
             DB::commit();
 
@@ -423,7 +472,8 @@ class MutasiSiswaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal menolak: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Gagal menolak: '.$e->getMessage()], 500);
         }
     }
 
@@ -449,7 +499,7 @@ class MutasiSiswaController extends Controller
             return response()->json(['success' => true, 'message' => 'Dokumen berhasil diunggah.']);
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal mengunggah: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal mengunggah: '.$e->getMessage()], 500);
         }
     }
 }
