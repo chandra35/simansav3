@@ -570,7 +570,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/cetak/id-card-gtk', [App\Http\Controllers\Admin\CetakController::class, 'idCardGtkIndex'])->name('cetak.id-card-gtk.index')->middleware('permission:view-gtk');
     Route::post('/cetak/id-card-gtk', [App\Http\Controllers\Admin\CetakController::class, 'cetakIdCardGtk'])->name('cetak.id-card-gtk')->middleware('permission:view-gtk');
     Route::get('/cetak/gtk-by-filter', [App\Http\Controllers\Admin\CetakController::class, 'getGtkByFilter'])->name('cetak.gtk-by-filter')->middleware('permission:view-gtk');
-    
+
+    // Download foto siswa asli per kelas (tahun pelajaran aktif)
+    Route::middleware(['permission:download-foto-kelas'])->prefix('cetak/download-foto-siswa')->name('cetak.download-foto-siswa.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\CetakController::class, 'photoDownloadIndex'])->name('index');
+        Route::get('/kelas', [App\Http\Controllers\Admin\CetakController::class, 'photoClasses'])->name('classes');
+        Route::post('/preview', [App\Http\Controllers\Admin\CetakController::class, 'photoPreview'])->name('preview');
+        Route::post('/arsip', [App\Http\Controllers\Admin\CetakController::class, 'photoArchiveStart'])->name('archive.start');
+        Route::post('/arsip/{token}/proses', [App\Http\Controllers\Admin\CetakController::class, 'photoArchiveProcess'])->name('archive.process');
+        Route::get('/arsip/{token}/download', [App\Http\Controllers\Admin\CetakController::class, 'photoArchiveDownload'])->name('archive.download');
+    });
+
     // ==================== FITUR BARU: PENGUMUMAN ====================
     Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class);
     

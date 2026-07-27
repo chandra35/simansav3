@@ -327,11 +327,12 @@ class PermissionSyncService
                 'label' => 'Cetak Dokumen',
                 'icon' => 'print',
                 'color' => 'success',
-                'description' => 'Cetak absensi dan kartu identitas',
+                'description' => 'Cetak absensi, kartu identitas, dan arsip foto siswa',
                 'permissions' => [
                     'print-kelas',
                     'print-siswa',
                     'print-gtk',
+                    'download-foto-kelas',
                 ],
             ],
             'kesiswaan' => [

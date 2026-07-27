@@ -4,33 +4,187 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\AbsensiKelasExport;
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
+use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\Siswa;
-use App\Models\Gtk;
 use App\Models\TahunPelajaran;
-use App\Models\AppSetting;
+use App\Services\ActivityLogService;
+use App\Services\StudentPhotoArchiveService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CetakController extends Controller
 {
+    public function photoDownloadIndex(StudentPhotoArchiveService $archiveService)
+    {
+        $this->authorize('download-foto-kelas');
+
+        $activeYear = $archiveService->activeYear();
+        $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
+
+        return view('admin.cetak.download-foto-siswa', compact('activeYear', 'tingkatOptions'));
+    }
+
+    public function photoClasses(Request $request, StudentPhotoArchiveService $archiveService)
+    {
+        $this->authorize('download-foto-kelas');
+
+        $validated = $request->validate([
+            'tingkat' => ['required', 'integer', 'in:10,11,12'],
+        ]);
+
+        $classes = $archiveService->classesForLevel((int) $validated['tingkat']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $classes->map(fn (Kelas $class) => [
+                'id' => $class->id,
+                'name' => $class->nama_lengkap,
+                'students' => (int) $class->active_students_count,
+            ])->values(),
+        ]);
+    }
+
+    public function photoPreview(Request $request, StudentPhotoArchiveService $archiveService)
+    {
+        $this->authorize('download-foto-kelas');
+
+        $validated = $this->validatePhotoArchiveRequest($request);
+
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => $archiveService->preview(
+                    (int) $validated['tingkat'],
+                    $validated['kelas_ids']
+                ),
+            ]);
+        } catch (\RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function photoArchiveStart(Request $request, StudentPhotoArchiveService $archiveService)
+    {
+        $this->authorize('download-foto-kelas');
+
+        $validated = $this->validatePhotoArchiveRequest($request);
+
+        try {
+            $state = $archiveService->start(
+                (string) $request->user()->id,
+                (int) $validated['tingkat'],
+                $validated['kelas_ids']
+            );
+
+            ActivityLogService::log([
+                'activity_type' => 'prepare_student_photo_archive',
+                'model_type' => Kelas::class,
+                'description' => 'Memulai pembuatan ZIP foto siswa per kelas',
+                'properties' => [
+                    'tingkat' => (int) $validated['tingkat'],
+                    'kelas_ids' => $validated['kelas_ids'],
+                    'jumlah_foto' => $state['total'],
+                    'foto_kosong' => $state['missing'],
+                    'token' => $state['token'],
+                ],
+            ]);
+
+            return response()->json(['success' => true, 'data' => $state]);
+        } catch (\RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function photoArchiveProcess(
+        Request $request,
+        string $token,
+        StudentPhotoArchiveService $archiveService
+    ) {
+        $this->authorize('download-foto-kelas');
+
+        try {
+            $state = $archiveService->process((string) $request->user()->id, $token);
+
+            return response()->json(['success' => true, 'data' => $state]);
+        } catch (\RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function photoArchiveDownload(
+        Request $request,
+        string $token,
+        StudentPhotoArchiveService $archiveService
+    ) {
+        $this->authorize('download-foto-kelas');
+
+        try {
+            $archive = $archiveService->download((string) $request->user()->id, $token);
+            $state = $archive['state'];
+
+            ActivityLogService::log([
+                'activity_type' => 'download_student_photo_archive',
+                'model_type' => Kelas::class,
+                'description' => 'Mengunduh ZIP foto siswa per kelas',
+                'properties' => [
+                    'tingkat' => $state['level'],
+                    'tahun_pelajaran_id' => $state['year_id'],
+                    'kelas_ids' => $state['class_ids'],
+                    'kelas' => $state['class_names'],
+                    'jumlah_foto' => $state['total'] - $state['failed'],
+                    'gagal' => $state['failed'],
+                    'foto_kosong' => $state['missing'],
+                    'filename' => $state['filename'],
+                ],
+            ]);
+
+            return response()->download(
+                $archive['path'],
+                $state['filename'],
+                ['Content-Type' => 'application/zip']
+            );
+        } catch (\RuntimeException $exception) {
+            return redirect()
+                ->route('admin.cetak.download-foto-siswa.index')
+                ->with('error', $exception->getMessage());
+        }
+    }
+
+    private function validatePhotoArchiveRequest(Request $request): array
+    {
+        return $request->validate([
+            'tingkat' => ['required', 'integer', 'in:10,11,12'],
+            'kelas_ids' => ['required', 'array', 'min:1', 'max:50'],
+            'kelas_ids.*' => ['required', 'uuid', 'distinct'],
+        ]);
+    }
+
     /**
      * Display cetak page
      */
     public function index()
     {
         $this->authorize('view-kelas');
-        
+
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
         $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
             ?? optional($tahunPelajarans->first())->id;
-        
+
         return view('admin.cetak.index', compact(
             'tahunPelajarans',
             'tingkatOptions',
@@ -76,63 +230,63 @@ class CetakController extends Controller
     public function cetakAbsensiBatch(Request $request)
     {
         $this->authorize('view-kelas');
-        
+
         // Increase memory limit for multiple PDF
         ini_set('memory_limit', '512M');
         set_time_limit(300); // 5 minutes
-        
+
         // Get filter parameters
         $tahunPelajaranId = $request->input('tahun_pelajaran_id');
         $tingkat = $request->input('tingkat');
         $rombel = $request->input('rombel');
         $kelasIds = $request->input('kelas_ids', []);
-        
+
         // Build query
         $query = Kelas::with([
             'tahunPelajaran',
             'jurusan',
             'waliKelas',
-            'siswas' => function($q) use ($tahunPelajaranId) {
+            'siswas' => function ($q) use ($tahunPelajaranId) {
                 $q->wherePivot('status', 'aktif')
-                  ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
-                  ->orderBy('nama_lengkap');
-            }
+                    ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                    ->orderBy('nama_lengkap');
+            },
         ]);
         $this->applyWaliKelasScope($query, $request->user());
-        
+
         // Apply filters
         if ($tahunPelajaranId) {
             $query->where('tahun_pelajaran_id', $tahunPelajaranId);
         }
-        
+
         if ($tingkat) {
             $query->where('tingkat', $tingkat);
         }
-        
+
         if ($rombel) {
             $query->where('nama_kelas', $rombel);
         }
-        
-        if (!empty($kelasIds)) {
+
+        if (! empty($kelasIds)) {
             $query->whereIn('id', $kelasIds);
         }
-        
+
         $kelasList = $query->orderBy('tingkat')->orderBy('nama_kelas')->get();
-        
+
         if ($kelasList->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada kelas yang ditemukan dengan filter tersebut.');
         }
-        
+
         // Load app settings
         $setting = AppSetting::with('kota')->first();
-        if (!$setting) {
+        if (! $setting) {
             $setting = AppSetting::getInstance()->load('kota');
         }
-        
+
         // Process logos once
         $logoKemenagBase64 = $this->processLogo($setting, 'logo_kemenag_path', 'logo_kemenag_height');
         $logoSekolahBase64 = $this->processLogo($setting, 'logo_sekolah_path', 'logo_sekolah_height');
-        
+
         $data = [
             'kelasList' => $kelasList,
             'setting' => $setting,
@@ -140,13 +294,13 @@ class CetakController extends Controller
             'logoSekolahBase64' => $logoSekolahBase64,
             'schoolCityName' => $this->resolveSchoolCityName($setting),
         ];
-        
+
         // Generate PDF
         $pdf = \PDF::loadView('admin.cetak.absensi-batch', $data);
         $pdf->setPaper('legal', 'portrait');
-        
-        $filename = 'Absensi_Batch_Tingkat_' . ($tingkat ?? 'All') . '.pdf';
-        
+
+        $filename = 'Absensi_Batch_Tingkat_'.($tingkat ?? 'All').'.pdf';
+
         return $pdf->stream($filename);
     }
 
@@ -162,11 +316,11 @@ class CetakController extends Controller
         $query = Kelas::with([
             'tahunPelajaran',
             'waliKelas',
-            'siswas' => function($q) use ($tahunPelajaranId) {
+            'siswas' => function ($q) use ($tahunPelajaranId) {
                 $q->wherePivot('status', 'aktif')
-                  ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
-                  ->orderBy('nama_lengkap');
-            }
+                    ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                    ->orderBy('nama_lengkap');
+            },
         ]);
         $this->applyWaliKelasScope($query, $request->user());
 
@@ -182,7 +336,7 @@ class CetakController extends Controller
             $query->where('nama_kelas', $rombel);
         }
 
-        if (!empty($kelasIds)) {
+        if (! empty($kelasIds)) {
             $query->whereIn('id', $kelasIds);
         }
 
@@ -192,80 +346,80 @@ class CetakController extends Controller
             return redirect()->back()->with('error', 'Tidak ada kelas yang ditemukan dengan filter tersebut.');
         }
 
-        $filename = 'Absensi_Kelas_' . ($tingkat ? 'Tingkat_' . $tingkat : 'Semua') . '_' . date('Ymd_His') . '.xlsx';
+        $filename = 'Absensi_Kelas_'.($tingkat ? 'Tingkat_'.$tingkat : 'Semua').'_'.date('Ymd_His').'.xlsx';
 
         return Excel::download(new AbsensiKelasExport($kelasList), $filename);
     }
-    
+
     /**
      * Process logo (resize and encode to base64)
      */
     private function processLogo($setting, $pathField, $heightField)
     {
-        if (!$setting || !$setting->$pathField) {
+        if (! $setting || ! $setting->$pathField) {
             return null;
         }
-        
-        $logoPath = storage_path('app/public/' . $setting->$pathField);
-        
-        if (!file_exists($logoPath)) {
+
+        $logoPath = storage_path('app/public/'.$setting->$pathField);
+
+        if (! file_exists($logoPath)) {
             return null;
         }
-        
+
         $image = imagecreatefromstring(file_get_contents($logoPath));
-        
+
         if ($image === false) {
             return null;
         }
-        
+
         $width = imagesx($image);
         $height = imagesy($image);
         $newHeight = $setting->$heightField ?? 100;
         $newWidth = ($width / $height) * $newHeight;
-        
+
         $resized = imagecreatetruecolor($newWidth, $newHeight);
         imagealphablending($resized, false);
         imagesavealpha($resized, true);
         imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        
+
         ob_start();
         imagepng($resized, null, 6);
         $imageData = ob_get_clean();
-        $base64 = 'data:image/png;base64,' . base64_encode($imageData);
-        
+        $base64 = 'data:image/png;base64,'.base64_encode($imageData);
+
         imagedestroy($image);
         imagedestroy($resized);
-        
+
         return $base64;
     }
-    
+
     /**
      * Get kelas by filter (AJAX)
      */
     public function getKelasByFilter(Request $request)
     {
         $this->authorize('view-kelas');
-        
+
         $query = Kelas::with(['tahunPelajaran', 'jurusan'])->withCount('siswaAktif');
         $this->applyWaliKelasScope($query, $request->user());
-        
+
         if ($request->filled('tahun_pelajaran_id')) {
             $query->where('tahun_pelajaran_id', $request->tahun_pelajaran_id);
         }
-        
+
         if ($request->filled('tingkat')) {
             $query->where('tingkat', $request->tingkat);
         }
-        
+
         if ($request->filled('rombel')) {
             $query->where('nama_kelas', $request->rombel);
         }
-        
+
         $kelasList = $query->orderBy('tingkat')->orderBy('nama_kelas')->get();
-        
+
         return response()->json([
             'success' => true,
-            'data' => $kelasList->map(function($kelas) {
+            'data' => $kelasList->map(function ($kelas) {
                 return [
                     'id' => $kelas->id,
                     'nama_lengkap' => $kelas->nama_lengkap,
@@ -275,7 +429,7 @@ class CetakController extends Controller
                     'jurusan' => $kelas->jurusan?->nama ?? '-',
                     'siswa_count' => $kelas->siswa_aktif_count,
                 ];
-            })
+            }),
         ]);
     }
 
@@ -283,7 +437,7 @@ class CetakController extends Controller
     {
         $cityName = $setting?->kota?->name;
 
-        if (!$cityName) {
+        if (! $cityName) {
             return 'Kota Metro';
         }
 
@@ -312,9 +466,9 @@ class CetakController extends Controller
             'tahunPelajaran',
             'siswas' => function ($q) use ($tahunPelajaranId) {
                 $q->wherePivot('status', 'aktif')
-                  ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
-                  ->orderBy('nama_lengkap');
-            }
+                    ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                    ->orderBy('nama_lengkap');
+            },
         ])->whereIn('id', $kelasIds);
         $this->applyWaliKelasScope($query, $request->user());
 
@@ -339,7 +493,7 @@ class CetakController extends Controller
         }
 
         // Generate card backgrounds
-        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/' . $setting->logo_sekolah_path) : null;
+        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/'.$setting->logo_sekolah_path) : null;
         $bgFrontBase64 = $this->generateCardFrontBg();
         $bgBackBase64 = $this->generateCardGradient(true, $sekolahLogoPath);
 
@@ -360,13 +514,14 @@ class CetakController extends Controller
 
     protected function applyWaliKelasScope($query, $user): void
     {
-        if (!$this->isRestrictedWaliKelas($user)) {
+        if (! $this->isRestrictedWaliKelas($user)) {
             return;
         }
 
         $kelasIds = $this->getAssignedKelasIds($user);
         if ($kelasIds->isEmpty()) {
             $query->whereRaw('1 = 0');
+
             return;
         }
 
@@ -377,7 +532,7 @@ class CetakController extends Controller
     {
         return $user &&
             $user->hasRole('Wali Kelas') &&
-            !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
+            ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
     }
 
     protected function getAssignedKelasIds($user)
@@ -402,7 +557,7 @@ class CetakController extends Controller
 
         $query = Gtk::query();
 
-        if (!empty($gtkIds)) {
+        if (! empty($gtkIds)) {
             $query->whereIn('id', $gtkIds);
         }
 
@@ -427,7 +582,7 @@ class CetakController extends Controller
         }
 
         // Generate card backgrounds
-        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/' . $setting->logo_sekolah_path) : null;
+        $sekolahLogoPath = $setting && $setting->logo_sekolah_path ? storage_path('app/public/'.$setting->logo_sekolah_path) : null;
         $bgFrontBase64 = $this->generateCardFrontBg();
         $bgBackBase64 = $this->generateCardGradient(true, $sekolahLogoPath);
 
@@ -476,7 +631,7 @@ class CetakController extends Controller
                     'kategori_ptk' => $gtk->kategori_ptk ?? '-',
                     'status_kepegawaian' => $gtk->status_kepegawaian ?? '-',
                 ];
-            })
+            }),
         ]);
     }
 
@@ -493,7 +648,7 @@ class CetakController extends Controller
             ->errorCorrection('M')
             ->generate($url);
 
-        return 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+        return 'data:image/svg+xml;base64,'.base64_encode($qrSvg);
     }
 
     /**
@@ -537,6 +692,7 @@ class CetakController extends Controller
         }
 
         imagesavealpha($rounded, true);
+
         return $rounded;
     }
 
@@ -552,25 +708,29 @@ class CetakController extends Controller
         imagealphablending($img, true);
 
         // Diagonal gradient: teal → purple
-        $r1 = 68; $g1 = 152; $b1 = 158;   // #44989e teal
-        $r2 = 118; $g2 = 88; $b2 = 158;   // #76589e purple
+        $r1 = 68;
+        $g1 = 152;
+        $b1 = 158;   // #44989e teal
+        $r2 = 118;
+        $g2 = 88;
+        $b2 = 158;   // #76589e purple
 
         for ($y = 0; $y < $height; $y++) {
             $ry = $y / $height;
             for ($x = 0; $x < $width; $x++) {
                 $rx = $x / $width;
                 $ratio = $rx * 0.4 + $ry * 0.6;
-                $r = (int)($r1 + ($r2 - $r1) * $ratio);
-                $g = (int)($g1 + ($g2 - $g1) * $ratio);
-                $b = (int)($b1 + ($b2 - $b1) * $ratio);
+                $r = (int) ($r1 + ($r2 - $r1) * $ratio);
+                $g = (int) ($g1 + ($g2 - $g1) * $ratio);
+                $b = (int) ($b1 + ($b2 - $b1) * $ratio);
                 imagesetpixel($img, $x, $y, imagecolorallocate($img, $r, $g, $b));
             }
         }
 
         // Decorative semi-transparent circles at bottom
         $circle = imagecolorallocatealpha($img, 255, 255, 255, 115);
-        imagefilledellipse($img, (int)($width * 0.25), (int)($height * 0.87), (int)($width * 0.45), (int)($width * 0.45), $circle);
-        imagefilledellipse($img, (int)($width * 0.72), (int)($height * 0.80), (int)($width * 0.30), (int)($width * 0.30), $circle);
+        imagefilledellipse($img, (int) ($width * 0.25), (int) ($height * 0.87), (int) ($width * 0.45), (int) ($width * 0.45), $circle);
+        imagefilledellipse($img, (int) ($width * 0.72), (int) ($height * 0.80), (int) ($width * 0.30), (int) ($width * 0.30), $circle);
 
         // Semi-transparent watermark logo
         if ($withWatermark && $watermarkLogoPath && file_exists($watermarkLogoPath)) {
@@ -578,8 +738,8 @@ class CetakController extends Controller
             if ($logo) {
                 $lw = imagesx($logo);
                 $lh = imagesy($logo);
-                $tw = (int)($width * 0.50);
-                $th = (int)($tw * $lh / $lw);
+                $tw = (int) ($width * 0.50);
+                $th = (int) ($tw * $lh / $lw);
                 $scaled = imagecreatetruecolor($tw, $th);
                 imagealphablending($scaled, false);
                 imagesavealpha($scaled, true);
@@ -587,15 +747,17 @@ class CetakController extends Controller
                 imagecopyresampled($scaled, $logo, 0, 0, 0, 0, $tw, $th, $lw, $lh);
 
                 // Manual alpha-aware merge (imagecopymerge ignores transparency)
-                $dstX = (int)(($width - $tw) / 2);
-                $dstY = (int)(($height - $th) / 2) - 30;
+                $dstX = (int) (($width - $tw) / 2);
+                $dstY = (int) (($height - $th) / 2) - 30;
                 $opacity = 0.10; // 10% opacity
 
                 for ($y = 0; $y < $th; $y++) {
                     for ($x = 0; $x < $tw; $x++) {
                         $srcColor = imagecolorat($scaled, $x, $y);
                         $srcA = ($srcColor >> 24) & 0x7F; // 0=opaque, 127=transparent
-                        if ($srcA >= 127) continue; // fully transparent, skip
+                        if ($srcA >= 127) {
+                            continue;
+                        } // fully transparent, skip
 
                         $srcR = ($srcColor >> 16) & 0xFF;
                         $srcG = ($srcColor >> 8) & 0xFF;
@@ -603,7 +765,9 @@ class CetakController extends Controller
 
                         $px = $dstX + $x;
                         $py = $dstY + $y;
-                        if ($px < 0 || $px >= $width || $py < 0 || $py >= $height) continue;
+                        if ($px < 0 || $px >= $width || $py < 0 || $py >= $height) {
+                            continue;
+                        }
 
                         $dstColor = imagecolorat($img, $px, $py);
                         $dstR = ($dstColor >> 16) & 0xFF;
@@ -612,9 +776,9 @@ class CetakController extends Controller
 
                         // Combine source alpha with desired opacity
                         $srcAlpha = (1 - $srcA / 127) * $opacity;
-                        $newR = (int)($dstR * (1 - $srcAlpha) + $srcR * $srcAlpha);
-                        $newG = (int)($dstG * (1 - $srcAlpha) + $srcG * $srcAlpha);
-                        $newB = (int)($dstB * (1 - $srcAlpha) + $srcB * $srcAlpha);
+                        $newR = (int) ($dstR * (1 - $srcAlpha) + $srcR * $srcAlpha);
+                        $newG = (int) ($dstG * (1 - $srcAlpha) + $srcG * $srcAlpha);
+                        $newB = (int) ($dstB * (1 - $srcAlpha) + $srcB * $srcAlpha);
 
                         imagesetpixel($img, $px, $py, imagecolorallocate($img, $newR, $newG, $newB));
                     }
@@ -634,7 +798,7 @@ class CetakController extends Controller
         $data = ob_get_clean();
         imagedestroy($rounded);
 
-        return 'data:image/png;base64,' . base64_encode($data);
+        return 'data:image/png;base64,'.base64_encode($data);
     }
 
     /**
@@ -656,35 +820,39 @@ class CetakController extends Controller
         imagefilledrectangle($img, 0, 0, 8, $height, $navyBar);
 
         // Keep the colored bottom band compact so the card feels closer to a standard ID layout.
-        $gradStart = (int)($height * 0.72);
+        $gradStart = (int) ($height * 0.72);
 
         // Smooth fade zone: white → gradient (feather ~30px)
         $fadeZone = 40;
         for ($y = $gradStart - $fadeZone; $y < $gradStart; $y++) {
-            $alpha = (int)(127 * (1 - ($y - ($gradStart - $fadeZone)) / $fadeZone));
+            $alpha = (int) (127 * (1 - ($y - ($gradStart - $fadeZone)) / $fadeZone));
             for ($x = 9; $x < $width; $x++) {
                 $rx = $x / $width;
                 $ratio = $rx * 0.3;
-                $r = (int)(35 + 55 * $ratio);
-                $g = (int)(75 + (-20) * $ratio);
-                $b = (int)(95 + 35 * $ratio);
+                $r = (int) (35 + 55 * $ratio);
+                $g = (int) (75 + (-20) * $ratio);
+                $b = (int) (95 + 35 * $ratio);
                 $col = imagecolorallocatealpha($img, $r, $g, $b, $alpha);
                 imagesetpixel($img, $x, $y, $col);
             }
         }
 
         // Gradient: dark teal → deep purple (bottom section)
-        $r1 = 35; $g1 = 75; $b1 = 95;
-        $r2 = 85; $g2 = 50; $b2 = 120;
+        $r1 = 35;
+        $g1 = 75;
+        $b1 = 95;
+        $r2 = 85;
+        $g2 = 50;
+        $b2 = 120;
 
         for ($y = $gradStart; $y < $height; $y++) {
             $ry = ($y - $gradStart) / ($height - $gradStart);
             for ($x = 9; $x < $width; $x++) {
                 $rx = $x / $width;
                 $ratio = $rx * 0.3 + $ry * 0.7;
-                $r = (int)($r1 + ($r2 - $r1) * $ratio);
-                $g = (int)($g1 + ($g2 - $g1) * $ratio);
-                $b = (int)($b1 + ($b2 - $b1) * $ratio);
+                $r = (int) ($r1 + ($r2 - $r1) * $ratio);
+                $g = (int) ($g1 + ($g2 - $g1) * $ratio);
+                $b = (int) ($b1 + ($b2 - $b1) * $ratio);
                 imagesetpixel($img, $x, $y, imagecolorallocate($img, $r, $g, $b));
             }
         }
@@ -697,11 +865,11 @@ class CetakController extends Controller
 
         // Large decorative rose/pink circle at bottom-left
         $rose = imagecolorallocatealpha($img, 190, 100, 130, 80);
-        imagefilledellipse($img, (int)($width * 0.08), (int)($height * 0.88), (int)($width * 0.55), (int)($width * 0.55), $rose);
+        imagefilledellipse($img, (int) ($width * 0.08), (int) ($height * 0.88), (int) ($width * 0.55), (int) ($width * 0.55), $rose);
 
         // Subtle light circle at right for depth
         $lightCircle = imagecolorallocatealpha($img, 120, 160, 180, 110);
-        imagefilledellipse($img, (int)($width * 0.88), (int)($height * 0.72), (int)($width * 0.30), (int)($width * 0.30), $lightCircle);
+        imagefilledellipse($img, (int) ($width * 0.88), (int) ($height * 0.72), (int) ($width * 0.30), (int) ($width * 0.30), $lightCircle);
 
         // Small decorative colored bars at bottom-left (= pattern)
         $barY = $height - 60;
@@ -725,7 +893,7 @@ class CetakController extends Controller
         $data = ob_get_clean();
         imagedestroy($rounded);
 
-        return 'data:image/png;base64,' . base64_encode($data);
+        return 'data:image/png;base64,'.base64_encode($data);
     }
 
     /**
@@ -733,13 +901,13 @@ class CetakController extends Controller
      */
     private function processFotoProfile($fotoPath, $shape = 'portrait')
     {
-        if (!$fotoPath) {
+        if (! $fotoPath) {
             return null;
         }
 
         $fullPath = \App\Helpers\StorageHelper::publicFilePath($fotoPath);
 
-        if (!$fullPath || !file_exists($fullPath)) {
+        if (! $fullPath || ! file_exists($fullPath)) {
             return null;
         }
 
@@ -752,8 +920,8 @@ class CetakController extends Controller
         $height = imagesy($image);
         if (in_array($shape, ['square', 'circle'], true)) {
             $side = min($width, $height);
-            $srcX = (int)(($width - $side) / 2);
-            $srcY = (int)(($height - $side) / 2);
+            $srcX = (int) (($width - $side) / 2);
+            $srcY = (int) (($height - $side) / 2);
             $newWidth = 500;
             $newHeight = 500;
 
@@ -787,7 +955,7 @@ class CetakController extends Controller
         } else {
             // Resize to max 400px height for sharp ID card rendering
             $newHeight = 400;
-            $newWidth = (int)(($width / $height) * $newHeight);
+            $newWidth = (int) (($width / $height) * $newHeight);
 
             $resized = imagecreatetruecolor($newWidth, $newHeight);
             imagealphablending($resized, false);
@@ -803,7 +971,7 @@ class CetakController extends Controller
         }
         $imageData = ob_get_clean();
         $mime = $shape === 'circle' ? 'image/png' : 'image/jpeg';
-        $base64 = 'data:' . $mime . ';base64,' . base64_encode($imageData);
+        $base64 = 'data:'.$mime.';base64,'.base64_encode($imageData);
 
         imagedestroy($image);
         imagedestroy($resized);

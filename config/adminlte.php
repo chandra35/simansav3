@@ -522,6 +522,13 @@ return [
                             'can' => 'view-gtk',
                             'active' => ['admin/cetak/id-card-gtk*'],
                         ],
+                        [
+                            'text' => 'Download Foto Siswa',
+                            'route' => 'admin.cetak.download-foto-siswa.index',
+                            'icon' => 'fas fa-fw fa-file-archive',
+                            'can' => 'download-foto-kelas',
+                            'active' => ['admin/cetak/download-foto-siswa*'],
+                        ],
                     ],
                 ],
                 [
