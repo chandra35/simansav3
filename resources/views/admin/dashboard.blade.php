@@ -116,29 +116,128 @@
     <div class="row" id="online-panel">
         <div class="col-12 mb-4">
             <div class="card simansa-panel simansa-online-card">
-                <div class="card-header border-0 pb-0 d-flex align-items-center justify-content-between flex-wrap" style="gap:.5rem">
-                    <h3 class="card-title mb-0">
-                        <span class="simansa-pulse-dot"></span>
-                        Sedang Online Sekarang
-                    </h3>
-                    <div class="d-flex align-items-center" style="gap:.75rem">
-                        <span class="text-muted" style="font-size:.8rem">Diperbarui: <span id="online-updated-at">—</span></span>
-                        <button class="btn btn-sm btn-light" id="btn-refresh-online" title="Refresh">
-                            <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                <div class="card-header border-0 simansa-online-card__header">
+                    <div>
+                        <h3 class="card-title mb-1">
+                            <span class="simansa-pulse-dot"></span>
+                            Sedang Online Sekarang
+                        </h3>
+                        <p class="simansa-online-card__subtitle mb-0">Pengguna aktif dalam lima menit terakhir.</p>
+                    </div>
+                    <div class="simansa-online-card__actions">
+                        <span class="simansa-online-updated">Diperbarui <strong id="online-updated-at">—</strong></span>
+                        <button class="btn simansa-online-icon-btn" id="btn-refresh-online" type="button" title="Perbarui data" aria-label="Perbarui data pengguna online">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn simansa-online-view-all" type="button" data-toggle="modal" data-target="#onlineUsersModal">
+                            Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
                         </button>
                     </div>
                 </div>
-                <div class="card-body pt-3">
-                    <div id="online-users-grid" class="simansa-online-grid">
-                        <div class="simansa-online-skeleton" id="online-loading">
-                            @for($i=0;$i<6;$i++)
-                            <div class="simansa-online-skeleton__item"></div>
-                            @endfor
+                <div class="card-body pt-2">
+                    <div class="simansa-online-summary" aria-label="Ringkasan pengguna online">
+                        <div class="simansa-online-summary__item is-all">
+                            <span class="simansa-online-summary__icon"><i class="fas fa-users"></i></span>
+                            <span><strong id="online-summary-all">0</strong><small>Semua</small></span>
                         </div>
+                        <div class="simansa-online-summary__item is-student">
+                            <span class="simansa-online-summary__icon"><i class="fas fa-user-graduate"></i></span>
+                            <span><strong id="online-summary-siswa">0</strong><small>Siswa</small></span>
+                        </div>
+                        <div class="simansa-online-summary__item is-gtk">
+                            <span class="simansa-online-summary__icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                            <span><strong id="online-summary-gtk">0</strong><small>GTK</small></span>
+                        </div>
+                        <div class="simansa-online-summary__item is-staff">
+                            <span class="simansa-online-summary__icon"><i class="fas fa-user-shield"></i></span>
+                            <span><strong id="online-summary-staff">0</strong><small>Admin &amp; Staf</small></span>
+                        </div>
+                    </div>
+                    <div class="simansa-online-table-wrap">
+                        <table class="table simansa-online-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Pengguna</th>
+                                    <th>Peran</th>
+                                    <th>Perangkat</th>
+                                    <th class="text-right">Terakhir Aktif</th>
+                                </tr>
+                            </thead>
+                            <tbody id="online-users-table-body">
+                                @for($i=0;$i<4;$i++)
+                                    <tr class="simansa-online-skeleton-row">
+                                        <td colspan="4"><span></span></td>
+                                    </tr>
+                                @endfor
+                            </tbody>
+                        </table>
                     </div>
                     <div id="online-empty" class="simansa-online-empty d-none">
                         <i class="fas fa-moon"></i>
                         <p>Tidak ada pengguna yang sedang online.</p>
+                    </div>
+                    <div class="simansa-online-card__footer">
+                        <span id="online-list-caption">Menampilkan pengguna yang paling baru aktif.</span>
+                        <button type="button" class="btn btn-link p-0" data-toggle="modal" data-target="#onlineUsersModal">Buka daftar lengkap</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade simansa-online-modal" id="onlineUsersModal" tabindex="-1" role="dialog" aria-labelledby="onlineUsersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <span class="simansa-online-modal__eyebrow"><span class="simansa-pulse-dot"></span>Monitoring Langsung</span>
+                        <h4 class="modal-title" id="onlineUsersModalLabel">Pengguna Sedang Online</h4>
+                        <p class="mb-0">Cari pengguna dan pantau perangkat serta aktivitas terakhirnya.</p>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="simansa-online-toolbar">
+                        <div class="simansa-online-search">
+                            <i class="fas fa-search"></i>
+                            <input type="search" id="online-search" class="form-control" placeholder="Cari nama, username, NISN, NIP..." autocomplete="off">
+                        </div>
+                        <select id="online-role-filter" class="form-control" aria-label="Filter peran">
+                            <option value="">Semua Peran</option>
+                            <option value="siswa">Siswa</option>
+                            <option value="gtk">GTK</option>
+                            <option value="staff">Admin &amp; Staf</option>
+                        </select>
+                        <button type="button" class="btn simansa-online-icon-btn" id="btn-refresh-online-modal" title="Perbarui daftar">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="simansa-online-modal__result" id="online-modal-result">Memuat data pengguna...</div>
+                    <div class="simansa-online-table-wrap is-modal">
+                        <table class="table simansa-online-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Pengguna</th>
+                                    <th>Peran</th>
+                                    <th>Perangkat</th>
+                                    <th class="text-right">Terakhir Aktif</th>
+                                </tr>
+                            </thead>
+                            <tbody id="online-modal-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="online-modal-empty" class="simansa-online-empty d-none">
+                        <i class="fas fa-search"></i>
+                        <p>Pengguna tidak ditemukan.</p>
+                    </div>
+                </div>
+                <div class="modal-footer simansa-online-pagination">
+                    <span id="online-modal-page-info">Halaman 1</span>
+                    <div>
+                        <button class="btn btn-outline-primary" type="button" id="online-page-prev"><i class="fas fa-chevron-left mr-1"></i> Sebelumnya</button>
+                        <button class="btn btn-outline-primary" type="button" id="online-page-next">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></button>
                     </div>
                 </div>
             </div>
@@ -590,255 +689,306 @@
             .simansa-stat-card__footer { font-size: 0.68rem; margin-top: 0.45rem; padding-top: 0.45rem; }
         }
 
-        /* ── Online Panel ── */
+        /* Online users */
         .simansa-online-card {
             border: 1px solid #d8e3f4 !important;
             box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06) !important;
-            overflow: visible !important;
+            overflow: hidden;
         }
 
-        .simansa-online-card .card-body { overflow: visible !important; }
+        .simansa-online-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.15rem .8rem;
+        }
+
+        .simansa-online-card__subtitle,
+        .simansa-online-updated {
+            color: #71809a;
+            font-size: .76rem;
+        }
+
+        .simansa-online-card__actions,
+        .simansa-online-toolbar,
+        .simansa-online-pagination,
+        .simansa-online-pagination > div {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+        }
 
         .simansa-pulse-dot {
             display: inline-block;
-            width: 10px; height: 10px;
+            width: 9px;
+            height: 9px;
+            margin-right: 8px;
             border-radius: 50%;
             background: #22c55e;
-            margin-right: 8px;
-            position: relative; top: -1px;
             animation: simansa-pulse 2s infinite;
         }
 
         @keyframes simansa-pulse {
-            0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-            70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .48); }
+            70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
 
-        .simansa-online-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
+        .simansa-online-icon-btn,
+        .simansa-online-view-all {
+            height: 36px;
+            border: 1px solid #d6e1f2;
+            border-radius: 10px;
+            background: #fff;
+            color: #3154cf;
+            font-weight: 700;
+            font-size: .78rem;
         }
 
-        /* Card base */
-        .simansa-online-user {
-            position: relative;
+        .simansa-online-icon-btn {
+            width: 36px;
+            padding: 0;
+        }
+
+        .simansa-online-view-all { padding: 0 .85rem; }
+        .simansa-online-icon-btn:hover,
+        .simansa-online-view-all:hover { background: #eef4ff; color: #2347c2; }
+        .simansa-online-icon-btn.spinning i,
+        #btn-refresh-online.spinning i { animation: simansa-spin .7s linear infinite; }
+        @keyframes simansa-spin { to { transform: rotate(360deg); } }
+
+        .simansa-online-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .65rem;
+            margin-bottom: .8rem;
+        }
+
+        .simansa-online-summary__item {
             display: flex;
             align-items: center;
-            gap: 0.62rem;
-            padding: 0.52rem 0.78rem;
-            background: #f8fbff;
-            border: 1px solid #dce7f5;
-            border-radius: 0.85rem;
-            min-width: 170px;
-            max-width: 225px;
-            flex: 1 1 170px;
-            cursor: default;
-            /* Base transition — hover + exit */
-            transition: box-shadow 0.22s ease, transform 0.22s ease, opacity 0.32s ease;
+            gap: .65rem;
+            min-width: 0;
+            padding: .65rem .75rem;
+            border: 1px solid #e1e9f5;
+            border-radius: 12px;
+            background: #f8faff;
         }
 
-        /* Enter: start hidden so transition can play */
-        .simansa-online-user.entering {
-            opacity: 0;
-            transform: scale(0.88) translateY(10px);
-            transition: none !important;
+        .simansa-online-summary__icon {
+            display: grid;
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border-radius: 10px;
+            color: #315bea;
+            background: #e9efff;
         }
 
-        /* Exit: fade + shrink up */
-        .simansa-online-user.exiting {
-            opacity: 0 !important;
-            transform: scale(0.84) translateY(-8px) !important;
-            pointer-events: none;
+        .simansa-online-summary__item.is-student .simansa-online-summary__icon { color: #c02663; background: #fff0f6; }
+        .simansa-online-summary__item.is-gtk .simansa-online-summary__icon { color: #07875c; background: #eafaf4; }
+        .simansa-online-summary__item.is-staff .simansa-online-summary__icon { color: #9a5d08; background: #fff7e5; }
+        .simansa-online-summary__item strong { display: block; color: #172036; font-size: 1rem; line-height: 1.05; }
+        .simansa-online-summary__item small { display: block; margin-top: 2px; color: #71809a; font-size: .68rem; font-weight: 600; }
+
+        .simansa-online-table-wrap {
+            overflow: hidden;
+            border: 1px solid #e1e8f3;
+            border-radius: 12px;
         }
 
-        .simansa-online-user:hover:not(.exiting) {
-            box-shadow: 0 6px 20px rgba(37,99,235,0.14);
-            transform: translateY(-2px);
-            z-index: 200;
+        .simansa-online-table { table-layout: fixed; }
+        .simansa-online-table thead th {
+            padding: .62rem .8rem;
+            border: 0;
+            background: #f5f8fc;
+            color: #64748b;
+            font-size: .67rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .035em;
         }
-
-        /* photo wrapper for green dot */
-        .simansa-online-user__photo-wrap {
-            position: relative;
-            flex-shrink: 0;
-            width: 40px; height: 40px;
+        .simansa-online-table th:first-child { width: 38%; }
+        .simansa-online-table th:nth-child(2) { width: 18%; }
+        .simansa-online-table th:nth-child(3) { width: 26%; }
+        .simansa-online-table th:last-child { width: 18%; }
+        .simansa-online-table td {
+            padding: .62rem .8rem;
+            border-top: 1px solid #edf1f7;
+            vertical-align: middle;
+            color: #34425a;
+            font-size: .76rem;
         }
+        .simansa-online-table tbody tr { transition: background .2s ease; }
+        .simansa-online-table tbody tr:hover { background: #f8fbff; }
 
-        .simansa-online-user__photo {
-            width: 40px; height: 40px;
+        .simansa-online-identity {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: .65rem;
+        }
+        .simansa-online-avatar-wrap { position: relative; flex: 0 0 38px; }
+        .simansa-online-avatar {
+            width: 38px;
+            height: 38px;
+            border: 2px solid #e4eaf4;
             border-radius: 50%;
             object-fit: cover;
-            display: block;
-            border: 2px solid #e2eaf5;
-            transition: border-color 0.2s;
         }
-
-        .simansa-online-user:hover .simansa-online-user__photo { border-color: #93c5fd; }
-
         .simansa-online-dot {
             position: absolute;
-            bottom: 0; right: 0;
-            width: 11px; height: 11px;
+            right: 0;
+            bottom: 1px;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #fff;
             border-radius: 50%;
             background: #22c55e;
-            border: 2px solid #fff;
-            animation: simansa-pulse 2.2s ease infinite;
         }
-
-        .simansa-online-user__name {
-            font-weight: 700;
-            font-size: 0.82rem;
-            color: #0f172a;
-            white-space: nowrap;
+        .simansa-online-name {
             overflow: hidden;
+            color: #142037;
+            font-size: .79rem;
+            font-weight: 800;
             text-overflow: ellipsis;
-            max-width: 115px;
-        }
-
-        .simansa-online-user__meta {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            margin-top: 0.08rem;
-        }
-
-        .simansa-online-user__role {
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 0.12rem 0.4rem;
-            border-radius: 999px;
-        }
-
-        .simansa-online-user__device {
-            font-size: 0.66rem;
-            color: #94a3b8;
-        }
-
-        .simansa-online-user__time {
-            font-size: 0.65rem;
-            color: #94a3b8;
-            margin-top: 0.06rem;
-            transition: opacity 0.25s;
-        }
-
-        /* ── Tooltip ── */
-        .simansa-online-tt {
-            position: absolute;
-            bottom: calc(100% + 11px);
-            left: 50%;
-            transform: translateX(-50%) translateY(8px);
-            background: #1e293b;
-            border-radius: 14px;
-            padding: 12px 14px 10px;
-            min-width: 200px;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1050;
-            box-shadow: 0 14px 38px rgba(0,0,0,0.28);
-            transition: opacity 0.22s ease, transform 0.22s ease;
             white-space: nowrap;
         }
-
-        .simansa-online-tt::after {
-            content: '';
-            position: absolute;
-            top: 100%; left: 50%;
-            transform: translateX(-50%);
-            border: 7px solid transparent;
-            border-top-color: #1e293b;
+        .simansa-online-role {
+            display: inline-flex;
+            padding: .2rem .52rem;
+            border-radius: 999px;
+            background: #eef2f7;
+            color: #516078;
+            font-size: .67rem;
+            font-weight: 800;
         }
-
-        .simansa-online-user:hover .simansa-online-tt {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .simansa-online-tt__head {
+        .simansa-online-role.is-siswa { color: #ae1f5a; background: #fff0f6; }
+        .simansa-online-role.is-gtk { color: #087553; background: #eaf9f3; }
+        .simansa-online-device {
             display: flex;
             align-items: center;
-            gap: 9px;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            gap: .55rem;
+            min-width: 0;
         }
-
-        .simansa-online-tt__photo {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.22);
-            flex-shrink: 0;
+        .simansa-online-device__icons {
+            display: inline-flex;
+            gap: .25rem;
+            color: #5270ca;
         }
+        .simansa-online-device strong,
+        .simansa-online-device small { display: block; }
+        .simansa-online-device strong { color: #34425a; font-size: .73rem; }
+        .simansa-online-device small,
+        .simansa-online-time small { color: #8390a6; font-size: .66rem; }
+        .simansa-online-time { text-align: right; }
+        .simansa-online-time strong { display: block; color: #34425a; font-size: .73rem; }
 
-        .simansa-online-tt__name {
-            font-weight: 700;
-            font-size: 0.83rem;
-            color: #f1f5f9;
-            line-height: 1.25;
-        }
-
-        .simansa-online-tt__role {
-            font-size: 0.7rem;
-            color: #7dd3fc;
-            margin-top: 1px;
-        }
-
-        .simansa-online-tt__row {
+        .simansa-online-card__footer {
             display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 0.72rem;
-            color: #cbd5e1;
-            line-height: 1.6;
+            justify-content: space-between;
+            gap: .75rem;
+            padding-top: .7rem;
+            color: #75839a;
+            font-size: .7rem;
         }
+        .simansa-online-card__footer .btn-link { font-size: .7rem; font-weight: 700; }
 
-        .simansa-online-tt__row i {
-            width: 13px;
-            text-align: center;
-            color: #7dd3fc;
-            flex-shrink: 0;
-        }
-
-        .simansa-online-tt__row + .simansa-online-tt__row { margin-top: 2px; }
-
-        /* Skeleton */
-        .simansa-online-skeleton {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            width: 100%;
-        }
-
-        .simansa-online-skeleton__item {
-            min-width: 170px;
-            max-width: 225px;
-            flex: 1 1 170px;
-            height: 60px;
-            border-radius: 0.85rem;
-            background: linear-gradient(90deg, #f0f5fc 25%, #e2ecf9 50%, #f0f5fc 75%);
+        .simansa-online-skeleton-row td { padding: .68rem .8rem; }
+        .simansa-online-skeleton-row span {
+            display: block;
+            height: 34px;
+            border-radius: 9px;
+            background: linear-gradient(90deg, #f1f5fa 25%, #e5edf7 50%, #f1f5fa 75%);
             background-size: 200% 100%;
-            animation: shimmer 1.4s infinite;
+            animation: simansa-shimmer 1.35s infinite;
         }
-
-        @keyframes shimmer {
-            0%   { background-position: 200% 0; }
+        @keyframes simansa-shimmer {
+            0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
 
         .simansa-online-empty {
+            padding: 2rem 1rem;
             text-align: center;
-            padding: 2.5rem 1rem;
-            color: #94a3b8;
+            color: #8b98ad;
+        }
+        .simansa-online-empty i { display: block; margin-bottom: .45rem; font-size: 1.8rem; }
+        .simansa-online-empty p { margin: 0; font-size: .82rem; }
+
+        .simansa-online-modal .modal-content {
+            overflow: hidden;
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 25px 70px rgba(15, 23, 42, .22);
+        }
+        .simansa-online-modal .modal-header {
+            align-items: flex-start;
+            padding: 1.15rem 1.25rem;
+            border-bottom: 1px solid #dce6f4;
+            background: linear-gradient(135deg, #eff4ff, #f8fbff);
+        }
+        .simansa-online-modal .modal-header h4 { color: #172036; font-size: 1.25rem; font-weight: 800; }
+        .simansa-online-modal .modal-header p { color: #71809a; font-size: .77rem; }
+        .simansa-online-modal__eyebrow { color: #315bea; font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+        .simansa-online-modal .modal-body { padding: 1rem 1.25rem; }
+        .simansa-online-toolbar { margin-bottom: .75rem; }
+        .simansa-online-search { position: relative; flex: 1; }
+        .simansa-online-search i { position: absolute; top: 50%; left: .85rem; z-index: 2; color: #8290a5; transform: translateY(-50%); }
+        .simansa-online-search .form-control { height: 40px; padding-left: 2.35rem; border-color: #d7e1ef; border-radius: 10px; }
+        .simansa-online-toolbar select { flex: 0 0 190px; height: 40px; border-color: #d7e1ef; border-radius: 10px; }
+        .simansa-online-modal__result { margin-bottom: .55rem; color: #71809a; font-size: .72rem; }
+        .simansa-online-table-wrap.is-modal { max-height: 52vh; overflow-y: auto; }
+        .simansa-online-pagination { justify-content: space-between; padding: .8rem 1.25rem; }
+        .simansa-online-pagination > span { color: #71809a; font-size: .74rem; }
+        .simansa-online-pagination .btn { border-radius: 9px; font-size: .73rem; font-weight: 700; }
+
+        @media (max-width: 767.98px) {
+            .simansa-online-card__header { align-items: flex-start; }
+            .simansa-online-updated { display: none; }
+            .simansa-online-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .simansa-online-table-wrap { overflow: visible; border: 0; }
+            .simansa-online-table,
+            .simansa-online-table tbody,
+            .simansa-online-table tr,
+            .simansa-online-table td { display: block; width: 100%; }
+            .simansa-online-table thead { display: none; }
+            .simansa-online-table tbody { display: grid; gap: .6rem; }
+            .simansa-online-table tbody tr {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                padding: .7rem;
+                border: 1px solid #e1e8f3;
+                border-radius: 12px;
+                background: #fff;
+            }
+            .simansa-online-table td {
+                padding: .25rem;
+                border: 0;
+                text-align: left !important;
+            }
+            .simansa-online-table td:first-child { grid-column: 1 / -1; padding-bottom: .55rem; border-bottom: 1px solid #edf1f7; }
+            .simansa-online-table td:nth-child(2) { grid-column: 1; }
+            .simansa-online-table td:nth-child(3) { grid-column: 1 / -1; }
+            .simansa-online-table td:nth-child(4) { grid-column: 2; grid-row: 2; }
+            .simansa-online-time { text-align: right; }
+            .simansa-online-skeleton-row td { grid-column: 1 / -1 !important; }
+            .simansa-online-toolbar { align-items: stretch; flex-wrap: wrap; }
+            .simansa-online-search { flex: 1 1 100%; }
+            .simansa-online-toolbar select { flex: 1; }
         }
 
-        .simansa-online-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
-        .simansa-online-empty p { margin: 0; font-size: 0.9rem; }
-
-        #btn-refresh-online.spinning i { animation: spin 0.7s linear infinite; }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 575.98px) {
+            .simansa-online-card__header { flex-direction: column; }
+            .simansa-online-card__actions { width: 100%; justify-content: flex-end; }
+            .simansa-online-card__footer { flex-direction: column; }
+            .simansa-online-modal .modal-dialog { margin: .5rem; }
+            .simansa-online-pagination { align-items: stretch; flex-direction: column; }
+            .simansa-online-pagination > div,
+            .simansa-online-pagination .btn { flex: 1; }
+        }
     </style>
 @endsection
 
@@ -910,167 +1060,218 @@
             });
         }
 
-        // Role badge hidden in card for these roles (still visible in tooltip)
-        const HIDE_BADGE = ['Super Admin', 'Admin'];
-
-        // Persistent state: userId (string) → card DOM element
-        const onlineState = new Map();
-
-        function roleColor(role) {
-            const map = {
-                'Operator': 'background:#e0f2fe;color:#0369a1',
-                'GTK':      'background:#d1fae5;color:#065f46',
-                'Siswa':    'background:#fce7f3;color:#9d174d',
-                'WAKA':     'background:#fef9c3;color:#854d0e',
-            };
-            return map[role] || 'background:#f1f5f9;color:#334155';
-        }
-
         function esc(s) {
             return String(s ?? '')
                 .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        function buildCard(u) {
-            const el = document.createElement('div');
-            el.className = 'simansa-online-user entering';
-            el.dataset.uid = String(u.id);
-
-            const showBadge = !HIDE_BADGE.includes(u.role);
-            const badge = showBadge
-                ? `<span class="simansa-online-user__role" style="${esc(roleColor(u.role))}">${esc(u.role)}</span>`
-                : '';
+        function buildOnlineRow(u) {
             const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=80&background=64748b&color=fff&bold=true`;
-
-            el.innerHTML = `
-                <div class="simansa-online-user__photo-wrap">
-                    <img src="${esc(u.photo)}" alt="${esc(u.name)}" class="simansa-online-user__photo"
-                         onerror="this.onerror=null;this.src='${fallback}'">
-                    <span class="simansa-online-dot"></span>
-                </div>
-                <div style="min-width:0;flex:1">
-                    <div class="simansa-online-user__name">${esc(u.name)}</div>
-                    <div class="simansa-online-user__meta">
-                        ${badge}
-                        <span class="simansa-online-user__device">
-                            <i class="${esc(u.device_icon)}"></i>
-                            <i class="${esc(u.browser_icon)}"></i>
-                        </span>
-                    </div>
-                    <div class="simansa-online-user__time">
-                        <i class="fas fa-clock" style="font-size:.58rem;margin-right:2px"></i>
-                        <span class="ou-time">${esc(u.last_activity)}</span>
-                    </div>
-                </div>
-                <div class="simansa-online-tt">
-                    <div class="simansa-online-tt__head">
-                        <img src="${esc(u.photo)}" class="simansa-online-tt__photo"
-                             onerror="this.onerror=null;this.src='${fallback}'">
-                        <div>
-                            <div class="simansa-online-tt__name">${esc(u.name)}</div>
-                            <div class="simansa-online-tt__role">${esc(u.role)}</div>
+            return `
+                <tr>
+                    <td>
+                        <div class="simansa-online-identity">
+                            <span class="simansa-online-avatar-wrap">
+                                <img src="${esc(u.photo)}" alt="${esc(u.name)}" class="simansa-online-avatar"
+                                     onerror="this.onerror=null;this.src='${fallback}'">
+                                <span class="simansa-online-dot"></span>
+                            </span>
+                            <span class="simansa-online-name" title="${esc(u.name)}">${esc(u.name)}</span>
                         </div>
-                    </div>
-                    <div class="simansa-online-tt__row">
-                        <i class="${esc(u.device_icon)}"></i>
-                        <i class="${esc(u.browser_icon)}"></i>
-                        <span>Perangkat &amp; Browser</span>
-                    </div>
-                    <div class="simansa-online-tt__row">
-                        <i class="fas fa-clock"></i>
-                        <span class="tt-time">${esc(u.last_activity)}</span>
-                    </div>
-                </div>`;
-            return el;
+                    </td>
+                    <td><span class="simansa-online-role is-${esc(u.role_group)}">${esc(u.role)}</span></td>
+                    <td>
+                        <div class="simansa-online-device">
+                            <span class="simansa-online-device__icons">
+                                <i class="${esc(u.device_icon)}"></i>
+                                <i class="${esc(u.browser_icon)}"></i>
+                            </span>
+                            <span>
+                                <strong>${esc(u.device)}</strong>
+                                <small>${esc(u.device_details)}</small>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="simansa-online-time">
+                            <strong>${esc(u.last_activity)}</strong>
+                            <small>${esc(u.last_activity_time)} WIB</small>
+                        </div>
+                    </td>
+                </tr>`;
         }
 
-        function updateCard(el, u) {
-            // Smoothly update last_activity text
-            const timeEl = el.querySelector('.ou-time');
-            if (timeEl && timeEl.textContent !== u.last_activity) {
-                timeEl.style.opacity = '0';
-                setTimeout(() => {
-                    timeEl.textContent = u.last_activity;
-                    timeEl.style.opacity = '1';
-                }, 220);
+        function renderOnlineTable(body, users, emptyElement) {
+            if (!body) return;
+            body.innerHTML = users.map(buildOnlineRow).join('');
+            const wrap = body.closest('.simansa-online-table-wrap');
+
+            if (users.length === 0) {
+                wrap?.classList.add('d-none');
+                emptyElement?.classList.remove('d-none');
+            } else {
+                wrap?.classList.remove('d-none');
+                emptyElement?.classList.add('d-none');
             }
-            const ttTime = el.querySelector('.tt-time');
-            if (ttTime) ttTime.textContent = u.last_activity;
         }
 
-        function removeCard(el) {
-            el.classList.add('exiting');
-            setTimeout(() => el.remove(), 380);
-        }
-
-        function animateIn(el) {
-            // Double rAF: paint 'entering' state first, then remove it so CSS transition plays
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => { el.classList.remove('entering'); });
+        function renderOnlineSummary(summary = {}) {
+            ['all', 'siswa', 'gtk', 'staff'].forEach(key => {
+                const element = document.getElementById(`online-summary-${key}`);
+                if (element) element.textContent = counterFormatter.format(Number(summary[key]) || 0);
             });
         }
 
+        const onlineModalState = {
+            page: 1,
+            lastPage: 1,
+            search: '',
+            role: '',
+            timer: null,
+        };
+
+        function onlineRequest(params = {}) {
+            const url = new URL(onlineApiUrl, window.location.origin);
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== '' && value !== null && value !== undefined) {
+                    url.searchParams.set(key, value);
+                }
+            });
+
+            return fetch(url.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            }).then(response => {
+                if (!response.ok) throw new Error('Gagal memuat pengguna online.');
+                return response.json();
+            });
+        }
+
+        function setOnlineLoading(button, loading) {
+            if (!button) return;
+            button.classList.toggle('spinning', loading);
+            button.disabled = loading;
+        }
+
         function loadOnlineUsers() {
-            const grid    = document.getElementById('online-users-grid');
-            const empty   = document.getElementById('online-empty');
-            const loading = document.getElementById('online-loading');
-            const btnRef  = document.getElementById('btn-refresh-online');
-            const updEl   = document.getElementById('online-updated-at');
-            const statEl  = document.getElementById('stat-online-count');
+            const button = document.getElementById('btn-refresh-online');
+            setOnlineLoading(button, true);
 
-            if (btnRef) btnRef.classList.add('spinning');
-
-            fetch(onlineApiUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json())
+            return onlineRequest({ per_page: 8, page: 1 })
                 .then(data => {
-                    if (loading) loading.remove();
+                    const users = data.users || [];
+                    renderOnlineTable(
+                        document.getElementById('online-users-table-body'),
+                        users,
+                        document.getElementById('online-empty')
+                    );
+                    renderOnlineSummary(data.summary);
 
-                    const users   = data.users || [];
-                    const newIdSet = new Set(users.map(u => String(u.id)));
-
-                    if (updEl)  updEl.textContent  = data.updated_at || '';
+                    const updated = document.getElementById('online-updated-at');
+                    const statEl = document.getElementById('stat-online-count');
+                    const caption = document.getElementById('online-list-caption');
+                    if (updated) updated.textContent = data.updated_at || '—';
                     if (statEl) animateCounter(statEl, data.total || 0, 450);
-
-                    // Animate out users that went offline
-                    for (const [uid, el] of onlineState) {
-                        if (!newIdSet.has(uid)) {
-                            removeCard(el);
-                            onlineState.delete(uid);
-                        }
+                    if (caption) {
+                        const shown = data.pagination?.to || 0;
+                        caption.textContent = shown
+                            ? `Menampilkan ${shown} dari ${counterFormatter.format(data.total || 0)} pengguna yang paling baru aktif.`
+                            : 'Belum ada pengguna yang aktif dalam lima menit terakhir.';
                     }
-
-                    // Add new users / update existing ones
-                    users.forEach(u => {
-                        const uid = String(u.id);
-                        if (onlineState.has(uid)) {
-                            updateCard(onlineState.get(uid), u);
-                        } else {
-                            const el = buildCard(u);
-                            grid.appendChild(el);
-                            onlineState.set(uid, el);
-                            animateIn(el);
-                        }
-                    });
-
-                    // Empty state
-                    (onlineState.size === 0)
-                        ? empty.classList.remove('d-none')
-                        : empty.classList.add('d-none');
-
-                    if (btnRef) btnRef.classList.remove('spinning');
                 })
                 .catch(() => {
-                    if (btnRef) btnRef.classList.remove('spinning');
-                });
+                    const caption = document.getElementById('online-list-caption');
+                    if (caption) caption.textContent = 'Data online belum dapat diperbarui. Silakan coba kembali.';
+                })
+                .finally(() => setOnlineLoading(button, false));
+        }
+
+        function loadOnlineModal(page = onlineModalState.page) {
+            const button = document.getElementById('btn-refresh-online-modal');
+            const body = document.getElementById('online-modal-table-body');
+            const result = document.getElementById('online-modal-result');
+            setOnlineLoading(button, true);
+            onlineModalState.page = page;
+            if (result) result.textContent = 'Memuat data pengguna...';
+
+            return onlineRequest({
+                per_page: 20,
+                page,
+                search: onlineModalState.search,
+                role: onlineModalState.role,
+            })
+                .then(data => {
+                    const users = data.users || [];
+                    const pagination = data.pagination || {};
+                    onlineModalState.page = pagination.current_page || 1;
+                    onlineModalState.lastPage = pagination.last_page || 1;
+                    renderOnlineTable(body, users, document.getElementById('online-modal-empty'));
+
+                    if (result) {
+                        const from = pagination.from || 0;
+                        const to = pagination.to || 0;
+                        result.textContent = pagination.filtered_total
+                            ? `Menampilkan ${from}–${to} dari ${counterFormatter.format(pagination.filtered_total)} pengguna.`
+                            : 'Tidak ada pengguna yang sesuai dengan pencarian.';
+                    }
+
+                    const pageInfo = document.getElementById('online-modal-page-info');
+                    const previous = document.getElementById('online-page-prev');
+                    const next = document.getElementById('online-page-next');
+                    if (pageInfo) pageInfo.textContent = `Halaman ${onlineModalState.page} dari ${onlineModalState.lastPage}`;
+                    if (previous) previous.disabled = onlineModalState.page <= 1;
+                    if (next) next.disabled = onlineModalState.page >= onlineModalState.lastPage;
+                })
+                .catch(() => {
+                    if (result) result.textContent = 'Data tidak dapat dimuat. Silakan coba kembali.';
+                })
+                .finally(() => setOnlineLoading(button, false));
+        }
+
+        function debounceOnlineSearch() {
+            window.clearTimeout(onlineModalState.timer);
+            onlineModalState.timer = window.setTimeout(() => {
+                onlineModalState.search = document.getElementById('online-search')?.value.trim() || '';
+                loadOnlineModal(1);
+            }, 350);
         }
 
         document.addEventListener('DOMContentLoaded', function () {
             initializeDashboardCounters();
             loadOnlineUsers();
-            setInterval(loadOnlineUsers, 15000);
-            const btnRef = document.getElementById('btn-refresh-online');
-            if (btnRef) btnRef.addEventListener('click', loadOnlineUsers);
+            window.setInterval(() => {
+                loadOnlineUsers();
+                if ($('#onlineUsersModal').hasClass('show')) loadOnlineModal();
+            }, 15000);
+
+            document.getElementById('btn-refresh-online')?.addEventListener('click', loadOnlineUsers);
+            document.getElementById('btn-refresh-online-modal')?.addEventListener('click', () => loadOnlineModal());
+            document.getElementById('online-search')?.addEventListener('input', debounceOnlineSearch);
+            document.getElementById('online-role-filter')?.addEventListener('change', event => {
+                onlineModalState.role = event.target.value;
+                loadOnlineModal(1);
+            });
+            document.getElementById('online-page-prev')?.addEventListener('click', () => {
+                if (onlineModalState.page > 1) loadOnlineModal(onlineModalState.page - 1);
+            });
+            document.getElementById('online-page-next')?.addEventListener('click', () => {
+                if (onlineModalState.page < onlineModalState.lastPage) loadOnlineModal(onlineModalState.page + 1);
+            });
+
+            $('#onlineUsersModal').on('shown.bs.modal', () => {
+                loadOnlineModal(1);
+                document.getElementById('online-search')?.focus();
+            });
+            $('#onlineUsersModal').on('hidden.bs.modal', () => {
+                onlineModalState.page = 1;
+                onlineModalState.search = '';
+                onlineModalState.role = '';
+                const search = document.getElementById('online-search');
+                const role = document.getElementById('online-role-filter');
+                if (search) search.value = '';
+                if (role) role.value = '';
+            });
         });
     </script>
 @endsection
