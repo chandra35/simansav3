@@ -421,6 +421,29 @@ class KelasController extends Controller
             }
         }
 
+        $availableGtk = collect();
+        $waliKelasRombelByUser = collect();
+        if (Auth::user()->can('assign-wali-kelas')) {
+            $availableGtk = User::query()
+                ->where('is_active', true)
+                ->whereHas('gtk', function ($query) {
+                    $query->where('kategori_ptk', 'Pendidik')
+                        ->whereIn('jenis_ptk', ['Guru Mapel', 'Guru BK']);
+                })
+                ->with('gtk')
+                ->orderBy('name')
+                ->get();
+
+            $waliKelasRombelByUser = Kelas::query()
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('is_active', true)
+                ->whereIn('wali_kelas_id', $availableGtk->pluck('id'))
+                ->orderBy('nama_kelas')
+                ->get(['wali_kelas_id', 'nama_kelas'])
+                ->groupBy('wali_kelas_id')
+                ->map(fn ($classes) => $classes->pluck('nama_kelas')->filter()->values());
+        }
+
         // Statistics
         $stats = [
             'total_siswa' => $students->count(),
@@ -445,6 +468,8 @@ class KelasController extends Controller
             'kelas',
             'students',
             'kelasAsalBySiswa',
+            'availableGtk',
+            'waliKelasRombelByUser',
             'stats',
             'transferClasses'
         ));
@@ -1286,19 +1311,26 @@ class KelasController extends Controller
             ], 422);
         }
 
+        $waliKelas = User::query()
+            ->whereKey($request->wali_kelas_id)
+            ->where('is_active', true)
+            ->whereHas('gtk', function ($query) {
+                $query->where('kategori_ptk', 'Pendidik')
+                    ->whereIn('jenis_ptk', ['Guru Mapel', 'Guru BK']);
+            })
+            ->first();
+
+        if (!$waliKelas) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wali kelas harus dipilih dari GTK aktif yang berstatus guru.',
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             $oldWaliKelasId = $kelas->wali_kelas_id;
             $oldWaliKelasName = $kelas->waliKelas->name ?? 'Tidak ada';
-            
-            $waliKelas = User::where('id', $request->wali_kelas_id)->first();
-            
-            if (!$waliKelas) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User dengan ID tersebut tidak ditemukan'
-                ], 404);
-            }
             
             // Update kelas dengan wali kelas baru
             $kelas->update([

@@ -4,6 +4,25 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modal penugasan wali kelas
+
+Modal `Tugaskan Wali Kelas` pada detail rombel telah diperbarui:
+
+1. Dropdown memakai Select2 dan selalu menyediakan kolom pencarian.
+2. Pencarian dapat memakai nama guru, jenis guru, atau nama rombel.
+3. Kandidat hanya user aktif dengan data GTK berkategori `Pendidik` dan jenis `Guru Mapel`/`Guru BK`.
+4. Tenaga kependidikan tidak lagi muncul dan ditolak pula oleh validasi server.
+5. Guru yang sudah menjadi wali kelas lain tetap tersedia.
+6. Di samping nama guru ditampilkan jenis guru dan metadata rombel aktif, misalnya `Wali: XII-A6`.
+7. Guru yang belum memiliki rombel diberi metadata `Belum menjadi wali kelas`.
+8. Tampilan modal dibuat lebih lebar, responsif, dan dilengkapi konteks rombel tujuan.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/KelasController.php`
+- `resources/views/admin/kelas/show.blade.php`
+- `tests/Unit/WaliKelasAssignmentUiTest.php`
+
 Koreksi terbaru menempatkan tiga menu operasional sebagai item pertama tepat di bawah menu Akademik dengan urutan:
 
 1. Manajemen Kelas
@@ -38,7 +57,7 @@ Perubahan yang dilakukan:
 
 ## Validasi terakhir
 
-- Unit test SIMANSA: 58 lulus, 300 assertions.
+- Unit test SIMANSA: 60 lulus, 315 assertions.
 - Blade template berhasil dikompilasi.
 - GitHub dan VM telah sinkron pada commit aplikasi `9c283eb28b1ef24b95751a8c3be563f50f1829db`.
 - Maintenance mode produksi: OFF.
