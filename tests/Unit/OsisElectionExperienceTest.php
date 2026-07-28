@@ -80,6 +80,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringNotContainsString('<form', $view);
         $this->assertStringContainsString('height:100dvh', $view);
         $this->assertStringContainsString('grid-template-rows:auto auto minmax(0,1fr) auto', $view);
+        $this->assertStringContainsString('#emptyState[hidden]{display:none}', $view);
         $this->assertStringContainsString('@media(max-height:760px) and (min-width:901px)', $view);
         $this->assertStringContainsString('body{overflow-x:hidden;overflow-y:auto}', $view);
         $this->assertStringContainsString("Math.min(Math.max(packages.length,1),4)", $view);

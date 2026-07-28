@@ -16,6 +16,7 @@ Layar publik `live-polling-osis` disempurnakan sebagai dashboard monitoring satu
 6. Hingga empat paket dapat berjajar dalam satu baris desktop.
 7. Tablet dan ponsel tetap memakai alur vertikal dengan scroll normal agar tidak memaksa konten menjadi terlalu kecil.
 8. Live refresh, countdown, mode readonly, anonimitas pemilih, dan tombol fullscreen tetap dipertahankan.
+9. Konflik CSS pada empty state diperbaiki sehingga panel `Belum Ada Live Polling` tidak muncul ketika pemilihan aktif.
 
 File terkait:
 
