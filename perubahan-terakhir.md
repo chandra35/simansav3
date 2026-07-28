@@ -4,6 +4,10 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Hotfix kompilasi detail Pemilihan OSIS
+
+Sintaks Blade singkat `@php(...)` yang menempel langsung dengan HTML menyebabkan `ParseError: unexpected token ">"` pada detail pemilihan di PHP produksi. Seluruh assignment kandidat pada panel admin dan halaman pemilih telah diubah menjadi blok `@php ... @endphp`. Directive kondisi tersembunyi pada form pengaturan juga dipisahkan per baris. Lima compiled view terkait OSIS sudah diperiksa dengan `php -l` dan seluruhnya valid.
+
 ### Paket kandidat dinamis, jeda pemilihan, dan peringkat Live Poll
 
 Pemilihan OSIS kini mendukung susunan pengurus dan jumlah paket yang lebih fleksibel:

@@ -28,9 +28,18 @@
 <div class="candidate-heading"><div><span>KENALI PILIHANMU</span><h2>Paket Kandidat</h2><p>Baca visi, misi, dan program unggulan sebelum menentukan pilihan.</p></div><strong>{{ $election->packages->count() }} Paket</strong></div>
 <div class="row vote-packages">
 @foreach($election->packages as $package)
-@php($ownPackage=$ownPackageIds->contains($package->id))
+@php
+    $ownPackage = $ownPackageIds->contains($package->id);
+@endphp
 <div class="col-12 mb-4"><article class="vote-package {{ $ownPackage ? 'is-own' : '' }}"><div class="vote-package-banner"><div class="package-number">{{ $package->number }}</div><div><small>PAKET KANDIDAT {{ $package->number }}</small><h2>{{ $package->name ?: 'Paket '.$package->number }}</h2><p>{{ $package->slogan ?: 'Bergerak bersama untuk OSIS yang lebih baik.' }}</p></div></div>
-<div class="people-grid" style="--people-columns:{{ count($package->candidateAssignments()) }}">@foreach($package->candidateAssignments() as $assignment)@php($candidate=$assignment['student'])<div class="person"><div class="person-photo"><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span></div><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>@endforeach</div>
+<div class="people-grid" style="--people-columns:{{ count($package->candidateAssignments()) }}">
+@foreach($package->candidateAssignments() as $assignment)
+@php
+    $candidate = $assignment['student'];
+@endphp
+<div class="person"><div class="person-photo"><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span></div><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>
+@endforeach
+</div>
 <div class="platform-tabs"><details open><summary><i class="fas fa-eye"></i> Visi</summary><p>{!! nl2br(e($package->vision)) !!}</p></details><details><summary><i class="fas fa-list-ul"></i> Misi</summary><p>{!! nl2br(e($package->mission)) !!}</p></details>@if($package->programs)<details><summary><i class="fas fa-lightbulb"></i> Program Unggulan</summary><p>{!! nl2br(e($package->programs)) !!}</p></details>@endif @if($package->message)<blockquote>“{{ $package->message }}”</blockquote>@endif</div>
 <div class="vote-package-footer">@if($ownPackage)<span><i class="fas fa-user-tag mr-1"></i>Ini paket Anda</span>@endif @if($voter && !$voter->has_voted && $election->is_open)<button class="btn btn-choose" data-package="{{ $package->id }}" data-number="{{ $package->number }}" data-name="{{ $package->name ?: 'Paket '.$package->number }}" @disabled($ownPackage)><i class="fas fa-check-circle mr-1"></i>{{ $ownPackage ? 'Tidak dapat memilih sendiri' : 'Pilih Paket '.$package->number }}</button>@endif</div>
 </article></div>
@@ -38,7 +47,10 @@
 </div>
 
 @if($election->results_visible)
-<section class="public-results mb-4"><div class="results-title"><div><span>HASIL RESMI</span><h2>Rekapitulasi Pemilihan</h2><p>Hasil telah diumumkan panitia.</p></div><i class="fas fa-trophy"></i></div>@php($max=max(1,$results->max('votes')??1))@foreach($results->sortByDesc('votes') as $i=>$result)<div class="public-result {{ $i===0?'winner':'' }}"><span>Paket {{ $result['package']->number }}</span><div><b style="width:{{ ($result['votes']/$max)*100 }}%"></b></div><strong>{{ number_format($result['votes']) }} suara</strong></div>@endforeach</section>
+@php
+    $max = max(1, $results->max('votes') ?? 1);
+@endphp
+<section class="public-results mb-4"><div class="results-title"><div><span>HASIL RESMI</span><h2>Rekapitulasi Pemilihan</h2><p>Hasil telah diumumkan panitia.</p></div><i class="fas fa-trophy"></i></div>@foreach($results->sortByDesc('votes') as $i=>$result)<div class="public-result {{ $i===0?'winner':'' }}"><span>Paket {{ $result['package']->number }}</span><div><b style="width:{{ ($result['votes']/$max)*100 }}%"></b></div><strong>{{ number_format($result['votes']) }} suara</strong></div>@endforeach</section>
 @endif
 
 <div class="modal fade" id="voteModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form method="POST" action="{{ $voteRoute }}" class="modal-content" id="voteForm">@csrf<input type="hidden" name="package_id" id="votePackageId"><div class="modal-header"><div><small>KONFIRMASI PILIHAN</small><h5>Pastikan pilihan sudah benar</h5></div><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><div class="chosen-package"><span id="chosenNumber">1</span><div><small>ANDA MEMILIH</small><strong id="chosenName">Paket</strong></div></div><div class="vote-warning"><i class="fas fa-exclamation-circle"></i><span>Setelah dikirim, pilihan tidak dapat dilihat kembali atau diubah.</span></div><div class="form-group mb-0"><label>Password akun SIMANSA</label><div class="password-field"><i class="fas fa-lock"></i><input type="password" name="password" class="form-control" autocomplete="current-password" required placeholder="Masukkan password sebagai konfirmasi"></div><small>Password hanya dipakai untuk memverifikasi bahwa Anda sendiri yang memilih.</small></div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Periksa Lagi</button><button class="btn btn-primary" id="submitVote"><i class="fas fa-paper-plane mr-1"></i>Kirim Suara</button></div></form></div></div>

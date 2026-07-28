@@ -23,7 +23,11 @@
     </section>
     <section class="form-panel mb-4"><div class="form-panel-title"><i class="fas fa-user-tie"></i><div><h2>Susunan Kandidat per Paket</h2><p>Pilih minimal dua posisi. Ketua wajib dipilih.</p></div></div>
         <div class="candidate-role-options">@foreach(\App\Models\OsisElection::CANDIDATE_ROLE_DEFINITIONS as $key=>$role)<label><input type="checkbox" name="candidate_roles[]" value="{{ $key }}" @checked(in_array($key,$selectedRoles,true)) @disabled($isPaused)><span><i class="fas {{ $role['icon'] }}"></i><b>{{ $role['label'] }}</b><small>{{ $key === 'chairman' ? 'Wajib' : 'Opsional' }}</small></span></label>@endforeach</div>
-        @if($isPaused)@foreach($selectedRoles as $role)<input type="hidden" name="candidate_roles[]" value="{{ $role }}">@endforeach@endif
+        @if($isPaused)
+            @foreach($selectedRoles as $role)
+                <input type="hidden" name="candidate_roles[]" value="{{ $role }}">
+            @endforeach
+        @endif
         @error('candidate_roles')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
     </section>
 </div>

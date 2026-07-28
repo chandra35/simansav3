@@ -39,7 +39,14 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 <div class="row">
 @forelse($election->packages as $package)
 <div class="col-xl-6 mb-4"><article class="package-card"><div class="package-banner"><strong>{{ $package->number }}</strong><div><span>PAKET {{ $package->number }}</span><h3>{{ $package->name ?: 'Paket '.$package->number }}</h3><p>{{ $package->slogan ?: 'Bersama membangun OSIS yang lebih baik.' }}</p></div></div>
-<div class="candidate-grid" style="--candidate-columns:{{ count($package->candidateAssignments()) }}">@foreach($package->candidateAssignments() as $assignment)@php($candidate=$assignment['student'])<div><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>@endforeach</div>
+<div class="candidate-grid" style="--candidate-columns:{{ count($package->candidateAssignments()) }}">
+@foreach($package->candidateAssignments() as $assignment)
+@php
+    $candidate = $assignment['student'];
+@endphp
+<div><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>
+@endforeach
+</div>
 @if(in_array($election->status,['published','paused'],true))
 @php
     $packageResult = $resultsByPackage->get($package->id);
@@ -55,7 +62,12 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 @endforelse
 </div></section>
 
-@if($election->phase==='closed')<section class="results-panel mb-4"><div class="section-head"><div><h2>Rekap Hasil</h2><p>Identitas pemilih tidak tersimpan pada surat suara.</p></div><span class="badge badge-{{ $election->results_visible?'success':'warning' }}">{{ $election->results_visible?'Sudah diumumkan':'Belum diumumkan' }}</span></div>@php($max=max(1,$results->max('votes')??1))@foreach($results->sortByDesc('votes') as $result)<div class="result-row"><strong>Paket {{ $result['package']->number }}</strong><div><span style="width:{{ ($result['votes']/$max)*100 }}%"></span></div><b>{{ number_format($result['votes']) }} suara</b></div>@endforeach</section>@endif
+@if($election->phase==='closed')
+@php
+    $max = max(1, $results->max('votes') ?? 1);
+@endphp
+<section class="results-panel mb-4"><div class="section-head"><div><h2>Rekap Hasil</h2><p>Identitas pemilih tidak tersimpan pada surat suara.</p></div><span class="badge badge-{{ $election->results_visible?'success':'warning' }}">{{ $election->results_visible?'Sudah diumumkan':'Belum diumumkan' }}</span></div>@foreach($results->sortByDesc('votes') as $result)<div class="result-row"><strong>Paket {{ $result['package']->number }}</strong><div><span style="width:{{ ($result['votes']/$max)*100 }}%"></span></div><b>{{ number_format($result['votes']) }} suara</b></div>@endforeach</section>
+@endif
 
 @if(in_array($election->status,['draft','paused'],true))
 <div class="modal fade" id="packageModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-scrollable"><form method="POST" action="{{ route('admin.osis-election.packages.store',$election) }}" id="packageForm" class="modal-content">@csrf
