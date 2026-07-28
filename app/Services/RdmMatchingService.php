@@ -377,7 +377,7 @@ class RdmMatchingService
             if ($nisn !== '') {
                 $byNisn[$nisn] = $s;
             }
-            $nis = trim((string) ($s->user->username ?? ''));
+            $nis = trim((string) ($s->nis_lokal ?: ($s->user->username ?? '')));
             if ($nis !== '') {
                 $byNis[$nis] = $s;
             }

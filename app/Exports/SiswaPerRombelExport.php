@@ -37,27 +37,10 @@ class SiswaPerRombelExport implements WithMultipleSheets
 
     private function allRows(): Collection
     {
-        if ((int) $this->tingkat === 10) {
-            return $this->rows
-                ->sort(fn ($a, $b) => $this->testNumberKey($a) <=> $this->testNumberKey($b)
-                    ?: strnatcasecmp($a->nama_lengkap ?? '', $b->nama_lengkap ?? ''))
-                ->values();
-        }
-
         return $this->rows
             ->sort(fn ($a, $b) => strnatcasecmp($this->classSortKey($this->className($a)), $this->classSortKey($this->className($b)))
                 ?: strnatcasecmp($a->nama_lengkap ?? '', $b->nama_lengkap ?? ''))
             ->values();
-    }
-
-    private function testNumberKey($siswa): int
-    {
-        $digits = preg_replace('/\D+/', '', (string) $siswa->nomor_tes);
-        if ($digits === '') {
-            return PHP_INT_MAX;
-        }
-
-        return (int) substr($digits, -4);
     }
 
     private function className($siswa): string

@@ -365,17 +365,53 @@
                             @enderror
                         </div>
                         
-                        <div class="form-group">
-                            <label for="npsn">NPSN <span class="text-danger">*</span></label>
-                            <input type="text" name="npsn" id="npsn" 
-                                   class="form-control @error('npsn') is-invalid @enderror" 
-                                   value="{{ old('npsn', $setting->npsn) }}" 
-                                   placeholder="8 digit angka"
-                                   maxlength="8" required>
-                            <small class="text-muted"><i class="fas fa-info-circle"></i> Nomor Pokok Sekolah Nasional (8 digit)</small>
-                            @error('npsn')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="npsn">NPSN <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" name="npsn" id="npsn"
+                                               class="form-control @error('npsn') is-invalid @enderror"
+                                               value="{{ old('npsn', $setting->npsn) }}"
+                                               inputmode="numeric" placeholder="8 digit angka"
+                                               maxlength="8" required>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-primary" id="btnFetchSchoolData">
+                                                <i class="fas fa-cloud-download-alt"></i> Ambil Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Mengambil identitas resmi dari Referensi Kemendikdasmen dan EMIS.</small>
+                                    @error('npsn')
+                                        <span class="invalid-feedback d-block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="nsm">NSM <span class="text-danger">*</span></label>
+                                    <input type="text" name="nsm" id="nsm"
+                                           class="form-control @error('nsm') is-invalid @enderror"
+                                           value="{{ old('nsm', $setting->nsm) }}"
+                                           inputmode="numeric" placeholder="12 digit NSM"
+                                           maxlength="12" required>
+                                    <small class="text-muted">Digunakan sebagai awalan NIS Lokal.</small>
+                                    @error('nsm')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Sumber Data</label>
+                                    <p class="form-control-plaintext">
+                                        {{ $setting->school_data_source ?: 'Input manual' }}
+                                        @if($setting->school_data_fetched_at)
+                                            <small class="d-block text-muted">{{ $setting->school_data_fetched_at->format('d/m/Y H:i') }}</small>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1228,6 +1264,62 @@
                 theme: 'bootstrap4',
                 width: '100%',
                 dropdownAutoWidth: true
+            });
+
+            $('#btnFetchSchoolData').on('click', async function() {
+                const npsn = $('#npsn').val().replace(/\D/g, '');
+                if (npsn.length !== 8) {
+                    Swal.fire('NPSN belum valid', 'Masukkan tepat 8 digit NPSN.', 'warning');
+                    return;
+                }
+
+                const confirmation = await Swal.fire({
+                    title: 'Ambil data sekolah resmi?',
+                    text: 'Field identitas dan wilayah akan diisi dari Referensi Kemendikdasmen dan EMIS bila tersedia.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, ambil data',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                });
+                if (!confirmation.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Mengambil data sekolah',
+                    text: 'Menghubungi layanan referensi pemerintah...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.post(@json(route('admin.settings.fetch-school-data')), {
+                    _token: @json(csrf_token()),
+                    npsn: npsn
+                }).done(function(response) {
+                    const data = response.data || {};
+                    ['npsn', 'nsm', 'nama_sekolah', 'alamat', 'rt', 'rw', 'kode_pos', 'telepon', 'email', 'website']
+                        .forEach(key => {
+                            if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
+                                $('#' + key).val(data[key]);
+                            }
+                        });
+
+                    if (data.provinsi_code) {
+                        $('#provinsi_code').val(data.provinsi_code).trigger('change');
+                        loadCities(data.provinsi_code, data.kota_code);
+                        setTimeout(() => {
+                            loadDistricts(data.kota_code, data.kecamatan_code);
+                            setTimeout(() => loadVillages(data.kecamatan_code, data.kelurahan_code), 450);
+                        }, 450);
+                    }
+
+                    Swal.fire({
+                        title: 'Data sekolah ditemukan',
+                        html: `${response.message || 'Identitas sekolah berhasil diisi.'}<br><small>Data referensi sudah disimpan dan tetap dapat Anda koreksi.</small>`,
+                        icon: response.partial ? 'warning' : 'success'
+                    });
+                }).fail(function(xhr) {
+                    Swal.fire('Data belum ditemukan', xhr.responseJSON?.message || 'Layanan referensi belum dapat diakses.', 'error');
+                });
             });
 
             // =============================================

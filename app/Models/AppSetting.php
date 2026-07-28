@@ -16,6 +16,9 @@ class AppSetting extends Model
     protected $fillable = [
         'nama_sekolah',
         'npsn',
+        'nsm',
+        'school_data_source',
+        'school_data_fetched_at',
         'logo_kemenag_path',
         'logo_kemenag_height',
         'logo_sekolah_path',
@@ -69,6 +72,7 @@ class AppSetting extends Model
         'activity_log_require_location' => 'boolean',
         'graduation_announcement_enabled' => 'boolean',
         'graduation_announcement_starts_at' => 'datetime',
+        'school_data_fetched_at' => 'datetime',
     ];
 
     protected $hidden = [

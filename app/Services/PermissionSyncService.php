@@ -69,6 +69,7 @@ class PermissionSyncService
                     'delete-siswa',
                     'reset-password-siswa',
                     'view-dokumen-siswa',
+                    'manage-nis-lokal',
                 ],
             ],
             'gtk' => [

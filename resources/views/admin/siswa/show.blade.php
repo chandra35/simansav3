@@ -321,8 +321,8 @@
                         <a class="float-right">{{ $siswa->nisn ?? '-' }}</a>
                     </li>
                     <li class="list-group-item">
-                        <b><i class="fas fa-id-badge text-info"></i> NIS</b>
-                        <a class="float-right">{{ $siswa->nis ?? '-' }}</a>
+                        <b><i class="fas fa-id-badge text-info"></i> NIS Lokal</b>
+                        <a class="float-right">{{ $siswa->nis_lokal ?? '-' }}</a>
                     </li>
                     <li class="list-group-item">
                         <b><i class="fas fa-envelope text-secondary"></i> Email</b>

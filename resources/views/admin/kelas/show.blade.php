@@ -227,6 +227,10 @@
                                            style="text-decoration: none; cursor: pointer;">
                                             <strong>{{ $siswa->nama_lengkap }}</strong>
                                         </a>
+                                        <small class="d-block text-info mt-1">
+                                            <i class="fas fa-id-badge mr-1"></i>NIS Lokal:
+                                            <strong>{{ $siswa->nis_lokal ?: 'Belum diterbitkan' }}</strong>
+                                        </small>
                                         @if((int) $kelas->tingkat > 10)
                                             <small class="d-block text-muted mt-1">
                                                 <i class="fas fa-history mr-1"></i>

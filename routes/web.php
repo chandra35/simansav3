@@ -142,6 +142,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
     Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
 
+    Route::middleware('permission:manage-nis-lokal')->prefix('nis-lokal')->name('nis-lokal.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\NisLokalController::class, 'index'])->name('index');
+        Route::post('/generator/preview', [App\Http\Controllers\Admin\NisLokalController::class, 'generatorPreview'])->name('generator.preview');
+        Route::post('/generator/confirm', [App\Http\Controllers\Admin\NisLokalController::class, 'confirmGenerator'])->name('generator.confirm');
+        Route::get('/template', [App\Http\Controllers\Admin\NisLokalController::class, 'template'])->name('template');
+        Route::post('/import/preview', [App\Http\Controllers\Admin\NisLokalController::class, 'importPreview'])->name('import.preview');
+        Route::post('/import/confirm', [App\Http\Controllers\Admin\NisLokalController::class, 'confirmImport'])->name('import.confirm');
+    });
+
     // Pembanding data siswa SIMANSA dengan snapshot EMIS Lembaga (admin only)
     Route::middleware('permission:view-emis-comparison')->prefix('cek-data-emis')->name('emis-comparison.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\EmisStudentComparisonController::class, 'index'])->name('index');
@@ -515,6 +524,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('settings.update');
+        Route::post('/settings/fetch-school-data', [App\Http\Controllers\Admin\AppSettingController::class, 'fetchSchoolData'])->name('settings.fetch-school-data');
         Route::get('/settings/academic-health', [App\Http\Controllers\Admin\AcademicHealthController::class, 'index'])->name('settings.academic-health');
         Route::get('/settings/server-info', [App\Http\Controllers\Admin\ServerInfoController::class, 'index'])->name('settings.server-info');
         Route::post('/settings/upload-logo-kemenag', [App\Http\Controllers\Admin\AppSettingController::class, 'uploadLogoKemenag'])->name('settings.upload-logo-kemenag');

@@ -77,6 +77,9 @@ class Siswa extends Model
         'emis_registered' => 'boolean',
         'emis_registered_at' => 'datetime',
         'tahun_masuk' => 'integer',
+        'nis_lokal_tahun' => 'integer',
+        'nis_lokal_urutan' => 'integer',
+        'nis_lokal_generated_at' => 'datetime',
         'ppdb_imported_at' => 'datetime',
     ];
 
@@ -84,6 +87,19 @@ class Siswa extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function nisLokalGenerator()
+    {
+        return $this->belongsTo(User::class, 'nis_lokal_generated_by');
+    }
+
+    /**
+     * Alias kompatibilitas untuk modul lama yang masih membaca atribut "nis".
+     */
+    public function getNisAttribute(): ?string
+    {
+        return $this->nis_lokal;
     }
 
     public function ortu()

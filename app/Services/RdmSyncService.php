@@ -336,13 +336,13 @@ class RdmSyncService
             });
 
         Siswa::query()
-            ->select('id')
+            ->select('id', 'nis_lokal')
             ->with(['user:id,username'])
             ->chunk(1000, function ($rows) use (&$map) {
                 foreach ($rows as $row) {
-                    $username = trim((string) ($row->user->username ?? ''));
-                    if ($username !== '') {
-                        $map['NIS:' . $username] = $row->id;
+                    $nis = trim((string) ($row->nis_lokal ?: ($row->user->username ?? '')));
+                    if ($nis !== '') {
+                        $map['NIS:' . $nis] = $row->id;
                     }
                 }
             });

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\AppSettingSchoolEnrichmentService;
 
 class AppSettingController extends Controller
 {
@@ -48,7 +49,8 @@ class AppSettingController extends Controller
         
         $validator = Validator::make($request->all(), [
             'nama_sekolah' => 'required|string|max:255',
-            'npsn' => 'required|string|size:8',
+            'npsn' => 'required|digits:8',
+            'nsm' => 'required|digits:12',
             'alamat' => 'required|string',
             'rt' => 'nullable|string|max:10',
             'rw' => 'nullable|string|max:10',
@@ -86,6 +88,7 @@ class AppSettingController extends Controller
             $setting->update($request->only([
                 'nama_sekolah',
                 'npsn',
+                'nsm',
                 'alamat',
                 'rt',
                 'rw',
@@ -138,6 +141,28 @@ class AppSettingController extends Controller
             return redirect()->back()
                 ->with('error', 'Gagal memperbarui pengaturan: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    public function fetchSchoolData(Request $request, AppSettingSchoolEnrichmentService $service)
+    {
+        $this->authorize('manage-settings');
+
+        $validated = $request->validate([
+            'npsn' => ['required', 'digits:8'],
+        ]);
+
+        try {
+            $result = $service->fetch(AppSetting::getInstance(), $validated['npsn']);
+
+            return response()->json($result, ($result['success'] ?? false) ? 200 : 422);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Data sekolah belum berhasil diambil: '.$exception->getMessage(),
+            ], 422);
         }
     }
 

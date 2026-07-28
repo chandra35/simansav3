@@ -4,6 +4,36 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### NIS Lokal siswa dan autofill identitas sekolah
+
+SIMANSA kini memiliki modul `Manajemen Data > NIS Lokal` dengan ketentuan:
+
+1. Format NIS Lokal adalah `NSM 12 digit + tahun masuk 2 digit + nomor urut 4 digit`.
+2. Nomor urut dimulai kembali dari `0001` setiap tahun masuk.
+3. Generator hanya berlaku untuk siswa aktif tingkat 10 pada tahun pelajaran aktif.
+4. Urutan generator bersifat deterministik: rombel X-1 sampai X-13, lalu nama siswa A-Z di setiap rombel.
+5. Saat generator disimpan, `nomor_urut_absen` setiap rombel tingkat 10 ikut disinkronkan berdasarkan urutan nama.
+6. Preview generator disimpan sebagai token privat selama 30 menit dan harus dikonfirmasi sebelum perubahan database.
+7. Sequence dikunci dalam transaksi agar operator yang bekerja bersamaan tidak menerbitkan nomor ganda.
+8. NIS yang sudah diterbitkan tidak dibuat ulang; perubahan dan penerbitan dicatat dalam activity log.
+9. Tingkat 11/12 diperbarui melalui Excel dengan kolom `nislokal`, `nisn`, `namalengkap`.
+10. Impor Excel menyediakan upload progress, live preview, validasi format/duplikasi, pencocokan utama NISN, dan smart name matching untuk nama mirip atau disingkat.
+11. Baris Excel yang bermasalah ditandai dan tidak ikut disimpan; hanya baris berstatus siap yang diproses setelah konfirmasi.
+12. NIS Lokal ditampilkan pada data siswa, detail siswa, detail rombel, ekspor Excel, dan digunakan sebagai identitas NIS utama pada pencocokan RDM dengan fallback username lama.
+13. Permission baru `manage-nis-lokal` diberikan awal kepada Super Admin, Admin, dan Operator.
+
+Pengaturan Aplikasi sudah memiliki NPSN. Pada perubahan ini ditambahkan NSM dan tombol `Ambil Data` yang memakai layanan Referensi Kemendikdasmen serta pelengkapan EMIS yang sebelumnya digunakan Statistik Siswa. Hasil resmi mengisi nama sekolah, NPSN, NSM, alamat, wilayah, kode pos, telepon, email, dan website bila tersedia.
+
+File utama:
+
+- `app/Services/NisLokalService.php`
+- `app/Http/Controllers/Admin/NisLokalController.php`
+- `resources/views/admin/nis-lokal/index.blade.php`
+- `app/Services/AppSettingSchoolEnrichmentService.php`
+- `resources/views/admin/settings/edit.blade.php`
+- `database/migrations/2026_07_28_030000_add_nis_lokal_support.php`
+- `tests/Unit/NisLokalArchitectureTest.php`
+
 ### Modal penugasan wali kelas
 
 Modal `Tugaskan Wali Kelas` pada detail rombel telah diperbarui:
@@ -48,22 +78,16 @@ Perubahan yang dilakukan:
 6. Jika histori tidak ditemukan, sistem menampilkan `Belum tercatat`.
 7. Perubahan sebelumnya pada commit `e21fa22` membuat nama kelas di tabel data siswa menjadi link menuju detail rombel hanya bagi user dengan permission `view-detail-kelas`.
 
-## File aplikasi yang terakhir diubah
-
-- `app/Http/Controllers/Admin/KelasController.php`
-- `config/adminlte.php`
-- `resources/views/admin/kelas/show.blade.php`
-- `tests/Unit/ClassDetailStudentMetadataTest.php`
-- `app/Http/Controllers/Admin/SiswaController.php`
-- `tests/Unit/StudentClassLinkAccessTest.php`
-
 ## Validasi terakhir
 
-- Unit test SIMANSA: 60 lulus, 315 assertions.
+- Seluruh unit test SIMANSA: 64 lulus, 336 assertions; 3 peringatan deprecation lama.
+- Unit test khusus NIS Lokal: 4 lulus, 18 assertions.
+- Preview generator telah diuji read-only terhadap database lokal: 13 rombel terurut X-1 sampai X-13, siswa terurut nama, serta NIS awal/akhir konsisten.
+- Simulasi transaksi penuh berhasil menerbitkan 439 NIS dan mengisi seluruh nomor absen tingkat 10; transaksi kemudian di-rollback dan diverifikasi tidak meninggalkan NIS/sequence.
+- Workbook Excel nyata tingkat 11 berhasil dipreview: pencocokan NISN tepat, skor nama 100%, satu baris siap, tanpa penyimpanan data.
+- Autofill NPSN `10648374` berhasil diuji langsung terhadap Referensi Kemendikdasmen dan memetakan nama MAN 1 Metro, alamat, RT/RW, seluruh kode wilayah, kode pos, telepon, email, serta website; transaksi pengujian di-rollback.
 - Blade template berhasil dikompilasi.
-- GitHub dan VM telah sinkron pada commit aplikasi `9c283eb28b1ef24b95751a8c3be563f50f1829db`.
-- Maintenance mode produksi: OFF.
-- Halaman login produksi: HTTP 200.
+- Validasi seluruh unit test, sinkronisasi GitHub/VM, maintenance mode, dan HTTP produksi dilakukan pada tahap publikasi perubahan.
 
 ## Dokumentasi sesi baru
 

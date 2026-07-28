@@ -144,7 +144,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
         
         $siswa = Siswa::with(['user', 'ortu', 'kelasTahunAktif'])
-            ->select(['id', 'nisn', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
+            ->select(['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
 
         $this->applyRoleScope($siswa);
         $population = $this->resolvePopulation($request);
@@ -157,6 +157,7 @@ class SiswaController extends Controller
             $search = $request->search['value'];
             $siswa->where(function($q) use ($search) {
                 $q->where('nisn', 'like', "%{$search}%")
+                  ->orWhere('nis_lokal', 'like', "%{$search}%")
                   ->orWhere('nomor_tes', 'like', "%{$search}%")
                   ->orWhere('nama_lengkap', 'like', "%{$search}%");
             });
@@ -250,6 +251,7 @@ class SiswaController extends Controller
             $namaNisn = '<div class="font-weight-600 text-dark" style="font-size:.88rem;line-height:1.3;">'
                 . e($item->nama_lengkap)
                 . '</div><small class="text-muted" style="font-size:.78rem;">NISN ' . e($item->nisn) . '</small>'
+                . ($item->nis_lokal ? '<br><small class="text-info" style="font-size:.75rem;">NIS Lokal ' . e($item->nis_lokal) . '</small>' : '')
                 . ($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes ' . e($item->nomor_tes) . '</small>' : '');
 
             return [

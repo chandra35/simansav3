@@ -10,11 +10,13 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithTitle
+class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithTitle, WithColumnFormatting
 {
     protected Collection $rows;
     protected int $counter = 0;
@@ -42,6 +44,7 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'No',
             'Nama Lengkap',
             'NISN',
+            'NIS Lokal',
             'Nomor Tes PPDB',
             'Username',
             'Password (Default = NISN)',
@@ -86,6 +89,7 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $this->counter,
             $siswa->nama_lengkap,
             $siswa->nisn,
+            $siswa->nis_lokal ?? '',
             $siswa->nomor_tes ?? '',
             $user?->username ?? '',
             $siswa->nisn, // default password = NISN
@@ -166,6 +170,14 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'AE' => 18, // Status EMIS
             'AF' => 18, // Tgl EMIS
             'AG' => 14, // Tgl Daftar
+        ];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'C' => NumberFormat::FORMAT_TEXT,
+            'D' => NumberFormat::FORMAT_TEXT,
         ];
     }
 }

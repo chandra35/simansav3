@@ -355,6 +355,13 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
+                    'text' => 'NIS Lokal',
+                    'route' => 'admin.nis-lokal.index',
+                    'icon' => 'fas fa-fw fa-id-card',
+                    'can' => 'manage-nis-lokal',
+                    'active' => ['admin/nis-lokal*'],
+                ],
+                [
                     'text' => 'Data Siswa KIP/SKTM/PKH',
                     'route' => 'admin.kip-sktm.index',
                     'icon' => 'fas fa-fw fa-hand-holding-heart',
