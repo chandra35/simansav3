@@ -24,7 +24,7 @@ class OsisElectionMenuFilter implements FilterInterface
             ->whereHas('voters', fn ($voter) => $voter->where('user_id', $user->id))
             ->where(function ($election) {
                 $election->where(function ($open) {
-                    $open->where('status', 'published')
+                    $open->whereIn('status', ['published', 'paused'])
                         ->where('starts_at', '<=', now())
                         ->where('ends_at', '>=', now());
                 })->orWhere(function ($results) {

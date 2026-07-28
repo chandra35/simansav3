@@ -5,7 +5,7 @@
 <div class="osis-hero">
     <div><span><i class="fas fa-vote-yea mr-2"></i>Kesiswaan Digital</span><h1>Pemilihan OSIS</h1><p>Kelola paket kandidat, hak pilih, jadwal, dan hasil pemilihan dalam satu alur yang transparan.</p></div>
     <div class="osis-hero-actions">
-    @if($ongoingElection?->status === 'published')
+    @if(in_array($ongoingElection?->status, ['published', 'paused'], true))
         <a href="{{ route('public.osis-polling.index') }}" target="_blank" rel="noopener" class="btn btn-outline-light"><i class="fas fa-broadcast-tower mr-1"></i> Layar Publik</a>
     @endif
     @can('manage-osis-election')
@@ -22,7 +22,7 @@
 @section('content')
 @php
     $all = collect($elections->items());
-    $phaseLabels = ['draft'=>['Draft','secondary'],'scheduled'=>['Terjadwal','info'],'open'=>['Sedang Dibuka','success'],'closed'=>['Ditutup','dark']];
+    $phaseLabels = ['draft'=>['Draft','secondary'],'scheduled'=>['Terjadwal','info'],'open'=>['Sedang Dibuka','success'],'paused'=>['Dijeda','warning'],'closed'=>['Ditutup','dark']];
 @endphp
 <div class="row osis-summary">
     @foreach([['Total',$elections->total(),'primary'],['Sedang Dibuka',$all->where('phase','open')->count(),'success'],['Terjadwal',$all->where('phase','scheduled')->count(),'info'],['Draft',$all->where('phase','draft')->count(),'secondary']] as $item)

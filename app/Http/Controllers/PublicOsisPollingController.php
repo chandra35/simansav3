@@ -54,8 +54,13 @@ class PublicOsisPollingController extends Controller
 
         return OsisElection::query()
             ->where('tahun_pelajaran_id', $activeYearId)
-            ->where('status', 'published')
-            ->where('ends_at', '>=', now())
+            ->where(function ($query) {
+                $query->where('status', 'paused')
+                    ->orWhere(function ($published) {
+                        $published->where('status', 'published')
+                            ->where('ends_at', '>=', now());
+                    });
+            })
             ->latest('published_at')
             ->first();
     }
@@ -68,7 +73,7 @@ class PublicOsisPollingController extends Controller
             ->groupBy('package_id')->pluck('total', 'package_id');
 
         $packages = $election->packages()
-            ->with(['chairman.kelasSaatIni', 'secretary.kelasSaatIni', 'treasurer.kelasSaatIni'])
+            ->with(['election', 'chairman.kelasSaatIni', 'viceChairman.kelasSaatIni', 'secretary.kelasSaatIni', 'treasurer.kelasSaatIni'])
             ->get()
             ->map(fn (OsisPackage $package) => [
                 'id' => $package->id,
@@ -77,16 +82,16 @@ class PublicOsisPollingController extends Controller
                 'slogan' => $package->slogan,
                 'votes' => (int) ($votes[$package->id] ?? 0),
                 'percentage' => $voted ? round(((int) ($votes[$package->id] ?? 0) / $voted) * 100, 1) : 0,
-                'candidates' => collect([
-                    ['role' => 'Ketua', 'student' => $package->chairman],
-                    ['role' => 'Sekretaris', 'student' => $package->secretary],
-                    ['role' => 'Bendahara', 'student' => $package->treasurer],
-                ])->map(fn (array $candidate) => [
-                    'role' => $candidate['role'],
+                'candidates' => collect($package->candidateAssignments())->map(fn (array $candidate) => [
+                    'role' => $candidate['label'],
                     'name' => $candidate['student']?->nama_lengkap ?: 'Belum ditentukan',
                     'class' => $candidate['student']?->kelasSaatIni?->nama_kelas ?: '-',
                     'photo' => $candidate['student']?->foto_profile_url,
                 ])->values(),
+            ])
+            ->sortBy([
+                ['votes', 'desc'],
+                ['number', 'asc'],
             ])->values();
 
         return [

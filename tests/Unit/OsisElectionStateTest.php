@@ -27,10 +27,10 @@ class OsisElectionStateTest extends TestCase
         $this->assertTrue($election->is_open);
     }
 
-    public function test_draft_and_closed_elections_cannot_accept_votes(): void
+    public function test_draft_paused_and_closed_elections_cannot_accept_votes(): void
     {
         Carbon::setTestNow('2026-08-17 09:00:00');
-        foreach (['draft', 'closed'] as $status) {
+        foreach (['draft', 'paused', 'closed'] as $status) {
             $election = new OsisElection([
                 'status' => $status,
                 'starts_at' => '2026-08-17 08:00:00',
@@ -38,7 +38,24 @@ class OsisElectionStateTest extends TestCase
             ]);
 
             $this->assertFalse($election->is_open);
+            if ($status === 'paused') {
+                $this->assertSame('paused', $election->phase);
+            }
         }
+    }
+
+    public function test_new_and_existing_candidate_role_defaults_remain_compatible(): void
+    {
+        $newElection = new OsisElection;
+        $existingElection = new OsisElection([
+            'candidate_roles' => ['chairman', 'secretary', 'treasurer'],
+        ]);
+
+        $this->assertSame(['chairman', 'vice_chairman'], $newElection->candidateRoleKeys());
+        $this->assertSame(
+            ['chairman', 'secretary', 'treasurer'],
+            $existingElection->candidateRoleKeys()
+        );
     }
 
     public function test_results_are_hidden_until_admin_publishes_them(): void

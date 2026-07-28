@@ -21,9 +21,9 @@ class OsisElectionController extends Controller
         $siswa = $request->user()->siswa; abort_unless($siswa, 403);
         $year = TahunPelajaran::query()->where('is_active', true)->first();
         $election = $year ? OsisElection::query()->where('tahun_pelajaran_id', $year->id)
-            ->whereIn('status', ['published', 'closed'])->latest('starts_at')->first() : null;
+            ->whereIn('status', ['published', 'paused', 'closed'])->latest('starts_at')->first() : null;
         $voter = $election?->voters()->where('user_id', $request->user()->id)->first();
-        if ($election) $election->load(['packages.chairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
+        if ($election) $election->load(['packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
         $ownPackageIds = $election && $voter?->is_candidate ? $election->packages->filter(fn ($p) => in_array($siswa->id, $p->candidateIds(), true))->pluck('id') : collect();
         $results = $election?->results_visible
             ? $election->packages->map(fn ($p) => ['package' => $p, 'votes' => $p->ballots()->count()])->sortByDesc('votes')->values()

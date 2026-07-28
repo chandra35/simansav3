@@ -23,12 +23,12 @@ class GtkOsisElectionController extends Controller
         $year = TahunPelajaran::query()->active()->first();
         $election = $year ? OsisElection::query()
             ->where('tahun_pelajaran_id', $year->id)
-            ->whereIn('status', ['published', 'closed'])
+            ->whereIn('status', ['published', 'paused', 'closed'])
             ->where('include_gtk', true)
             ->latest('starts_at')->first() : null;
         $voter = $election?->voters()->where('user_id', $user->id)->first();
         if ($election) {
-            $election->load(['packages.chairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
+            $election->load(['packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
         }
         $results = $election?->results_visible
             ? $election->packages->map(fn ($package) => ['package' => $package, 'votes' => $package->ballots()->count()])->sortByDesc('votes')->values()

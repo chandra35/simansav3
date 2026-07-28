@@ -19,8 +19,8 @@ return new class extends Migration
             $table->json('eligible_levels')->nullable();
             $table->string('candidate_voting_policy', 30)->default('except_own');
             $table->string('status', 20)->default('draft')->index();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->dateTime('starts_at');
+            $table->dateTime('ends_at');
             $table->timestamp('published_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamp('result_published_at')->nullable();

@@ -4,6 +4,38 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Paket kandidat dinamis, jeda pemilihan, dan peringkat Live Poll
+
+Pemilihan OSIS kini mendukung susunan pengurus dan jumlah paket yang lebih fleksibel:
+
+1. Saat membuat pemilihan, admin memilih posisi kandidat melalui checklist Ketua, Wakil Ketua, Sekretaris, dan Bendahara.
+2. Ketua wajib dipilih dan setiap paket minimal memiliki dua posisi. Pemilihan baru memakai default Ketua dan Wakil Ketua.
+3. Pemilihan lama tetap memakai susunan Ketua, Sekretaris, dan Bendahara agar paket yang sudah tersimpan tidak berubah.
+4. Modal tambah/edit paket membentuk slot kandidat secara otomatis sesuai checklist dan tetap mencegah satu siswa dipakai pada dua posisi atau paket.
+5. Pemilihan berstatus publik dapat dijeda. Saat dijeda, voting berhenti tanpa menghapus DPT, suara, paket, atau kandidat.
+6. Dalam mode jeda admin dapat mengubah informasi pemilihan, petunjuk, jadwal, serta profil paket seperti nomor, nama, slogan, visi, misi, program, dan pesan.
+7. Tahun pelajaran, DPT, kebijakan hak pilih kandidat, susunan posisi, dan identitas siswa kandidat tetap terkunci.
+8. Admin dapat melanjutkan kembali pemilihan setelah jadwal selesai diperpanjang bila diperlukan.
+9. Halaman pemilih dan Live Poll menampilkan status `Dijeda` secara tegas selama voting dihentikan.
+10. Live Poll menyesuaikan satu sampai enam paket dalam satu baris desktop dan memakai mode lebih padat untuk lima atau enam paket; layar kecil tetap tersusun vertikal.
+11. Paket otomatis diurutkan dari suara tertinggi. Perpindahan peringkat memakai animasi FLIP sehingga perubahan posisi terlihat halus tanpa reload.
+12. Warna paket melekat pada nomor paket, sehingga identitas visual tidak bertukar saat urutan peringkat berubah.
+
+File terkait:
+
+- `database/migrations/2026_07_28_130000_add_dynamic_roles_and_pause_to_osis_elections.php`
+- `app/Models/OsisElection.php`
+- `app/Models/OsisPackage.php`
+- `app/Services/OsisElectionService.php`
+- `app/Http/Controllers/Admin/OsisElectionController.php`
+- `app/Http/Controllers/PublicOsisPollingController.php`
+- `resources/views/admin/osis-election/form.blade.php`
+- `resources/views/admin/osis-election/show.blade.php`
+- `resources/views/public/osis-polling.blade.php`
+- `resources/views/siswa/osis-election/index.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+- `tests/Unit/OsisElectionStateTest.php`
+
 ### Live Polling OSIS satu layar
 
 Layar publik `live-polling-osis` disempurnakan sebagai dashboard monitoring satu viewport:
@@ -155,7 +187,10 @@ Perubahan yang dilakukan:
 
 ## Validasi terakhir
 
-- Seluruh unit test SIMANSA: 64 lulus, 336 assertions; 3 peringatan deprecation lama.
+- Seluruh unit test SIMANSA: 70 lulus, 431 assertions; 4 peringatan deprecation PDO lama.
+- Migrasi OSIS baru berhasil dijalankan nyata pada database lokal; migrasi awal juga dinormalisasi dari `timestamp` wajib ke `dateTime` agar kompatibel dengan MySQL lama pada instalasi baru.
+- Blade template dan sintaks JavaScript Live Poll berhasil dikompilasi/divalidasi.
+- Feature test contoh bawaan masih gagal pada ekspektasi lama HTTP 200 untuk `/`, karena aplikasi memang mengalihkan root dengan HTTP 302; kegagalan ini tidak terkait fitur OSIS.
 - Unit test khusus NIS Lokal: 4 lulus, 18 assertions.
 - Preview generator telah diuji read-only terhadap database lokal: 13 rombel terurut X-1 sampai X-13, siswa terurut nama, serta NIS awal/akhir konsisten.
 - Simulasi transaksi penuh berhasil menerbitkan 439 NIS dan mengisi seluruh nomor absen tingkat 10; transaksi kemudian di-rollback dan diverifikasi tidak meninggalkan NIS/sequence.

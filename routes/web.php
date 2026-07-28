@@ -183,6 +183,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'updatePackage'])->middleware('permission:manage-osis-election')->name('packages.update');
         Route::delete('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'destroyPackage'])->middleware('permission:manage-osis-election')->name('packages.destroy');
         Route::post('/{election}/publish', [App\Http\Controllers\Admin\OsisElectionController::class, 'publish'])->middleware('permission:manage-osis-election')->name('publish');
+        Route::post('/{election}/pause', [App\Http\Controllers\Admin\OsisElectionController::class, 'pause'])->middleware('permission:manage-osis-election')->name('pause');
+        Route::post('/{election}/resume', [App\Http\Controllers\Admin\OsisElectionController::class, 'resume'])->middleware('permission:manage-osis-election')->name('resume');
         Route::post('/{election}/close', [App\Http\Controllers\Admin\OsisElectionController::class, 'close'])->middleware('permission:manage-osis-election')->name('close');
         Route::post('/{election}/publish-results', [App\Http\Controllers\Admin\OsisElectionController::class, 'publishResults'])->middleware('permission:manage-osis-election')->name('publish-results');
     });

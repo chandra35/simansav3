@@ -11,7 +11,7 @@ class OsisElectionExperienceTest extends TestCase
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
         $index = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/index.blade.php');
 
-        $this->assertStringContainsString("whereIn('status', ['draft', 'published'])", $controller);
+        $this->assertStringContainsString("whereIn('status', ['draft', 'published', 'paused'])", $controller);
         $this->assertStringContainsString("Cache::lock('osis-election-single-ongoing'", $controller);
         $this->assertStringContainsString('Hanya satu pemilihan yang boleh dikelola', $controller);
         $this->assertStringContainsString('$ongoingElection', $index);
@@ -71,7 +71,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("Route::get('/live-polling-osis'", $routes);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("TahunPelajaran::active()", $controller);
-        $this->assertStringContainsString("->where('status', 'published')", $controller);
+        $this->assertStringContainsString("->where('status', 'paused')", $controller);
+        $this->assertStringContainsString("\$published->where('status', 'published')", $controller);
         $this->assertStringNotContainsString("->where('starts_at', '<=', now())", $controller);
         $this->assertStringContainsString("'phase' => \$election->phase", $controller);
         $this->assertStringContainsString("'starts_at' => \$election->starts_at->toIso8601String()", $controller);
@@ -83,7 +84,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('#emptyState[hidden]{display:none}', $view);
         $this->assertStringContainsString('@media(max-height:760px) and (min-width:901px)', $view);
         $this->assertStringContainsString('body{overflow-x:hidden;overflow-y:auto}', $view);
-        $this->assertStringContainsString("Math.min(Math.max(packages.length,1),4)", $view);
+        $this->assertStringContainsString("Math.min(Math.max(packages.length,1),6)", $view);
         $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
         $this->assertStringContainsString('function renderPackages(packages)', $view);
         $this->assertStringContainsString('Logo MAN 1 Metro', $view);
@@ -91,5 +92,29 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("phase==='scheduled'", $view);
         $this->assertStringContainsString('Pemungutan suara dimulai dalam', $view);
         $this->assertStringContainsString("requestFullscreen?.()", $view);
+    }
+
+    public function test_candidate_roles_pause_and_animated_ranking_are_configurable(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/OsisElection.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $form = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/form.blade.php');
+        $show = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
+        $public = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
+
+        foreach (['chairman', 'vice_chairman', 'secretary', 'treasurer'] as $role) {
+            $this->assertStringContainsString("'{$role}' =>", $model);
+        }
+        $this->assertStringContainsString("'candidate_roles' => ['required', 'array', 'min:2', 'max:4']", $controller);
+        $this->assertStringContainsString('candidate-role-options', $form);
+        $this->assertStringContainsString('$roleDefinitions=$election->candidateRoleDefinitions()', $show);
+        $this->assertStringContainsString("name('pause')", $routes);
+        $this->assertStringContainsString("name('resume')", $routes);
+        $this->assertStringContainsString('function reorderPackages(packages)', $public);
+        $this->assertStringContainsString("card.animate?.([{transform:", $public);
+        $this->assertStringContainsString("phase==='paused'?'DIJEDA'", $public);
+        $this->assertStringContainsString('private function validatedPausedPackage', $controller);
+        $this->assertStringContainsString('Edit Profil Paket', $show);
     }
 }

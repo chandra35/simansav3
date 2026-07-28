@@ -19,9 +19,13 @@ class OsisElectionService
         if ($election->status !== 'draft') throw new RuntimeException('Pemilihan ini sudah dipublikasikan.');
         $election->load('packages');
         if ($election->packages->count() < 2) throw new RuntimeException('Minimal dua paket kandidat diperlukan sebelum publikasi.');
+        $requiredFields = collect($election->candidateRoleDefinitions())->pluck('field');
+        if ($election->packages->contains(fn (OsisPackage $package) => $requiredFields->contains(fn (string $field) => blank($package->{$field})))) {
+            throw new RuntimeException('Setiap paket harus memiliki siswa untuk seluruh posisi kandidat yang dipilih.');
+        }
         if ($election->ends_at->lte($election->starts_at)) throw new RuntimeException('Waktu selesai harus setelah waktu mulai.');
         if (OsisElection::query()->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
-            ->where('id', '<>', $election->id)->where('status', 'published')->exists()) {
+            ->where('id', '<>', $election->id)->whereIn('status', ['published', 'paused'])->exists()) {
             throw new RuntimeException('Masih ada pemilihan lain yang aktif atau terjadwal pada tahun pelajaran ini. Tutup pemilihan tersebut terlebih dahulu.');
         }
 
@@ -105,8 +109,25 @@ class OsisElectionService
 
     public function close(OsisElection $election): OsisElection
     {
-        if ($election->status !== 'published') throw new RuntimeException('Hanya pemilihan yang telah dipublikasikan yang dapat ditutup.');
+        if (! in_array($election->status, ['published', 'paused'], true)) throw new RuntimeException('Hanya pemilihan yang telah dipublikasikan yang dapat ditutup.');
         $election->update(['status' => 'closed', 'closed_at' => now()]);
+        return $election->fresh();
+    }
+
+    public function pause(OsisElection $election): OsisElection
+    {
+        if ($election->status !== 'published') throw new RuntimeException('Hanya pemilihan yang sedang dipublikasikan yang dapat dijeda.');
+        $election->update(['status' => 'paused', 'paused_at' => now()]);
+
+        return $election->fresh();
+    }
+
+    public function resume(OsisElection $election): OsisElection
+    {
+        if ($election->status !== 'paused') throw new RuntimeException('Pemilihan ini tidak sedang dijeda.');
+        if ($election->ends_at->lte(now())) throw new RuntimeException('Perpanjang waktu selesai sebelum melanjutkan pemilihan.');
+        $election->update(['status' => 'published', 'paused_at' => null]);
+
         return $election->fresh();
     }
 
