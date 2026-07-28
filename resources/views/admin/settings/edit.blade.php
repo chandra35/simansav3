@@ -302,6 +302,171 @@
             flex-direction: column;
         }
 
+        .settings-main-panel {
+            display: flex;
+            flex-direction: column;
+            order: 10;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 0;
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
+        }
+
+        .settings-panel-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 1.2rem 1.35rem;
+            background: linear-gradient(135deg, #3157c7 0%, #3182b5 62%, #3f9fa6 100%);
+            color: #fff;
+        }
+
+        .settings-panel-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.055em;
+            text-transform: uppercase;
+            opacity: 0.82;
+        }
+
+        .settings-panel-hero h2 {
+            margin: 0 0 0.3rem;
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .settings-panel-hero p {
+            max-width: 720px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
+        .settings-panel-hero__meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.55rem;
+        }
+
+        .settings-panel-chip {
+            min-width: 125px;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+        }
+
+        .settings-panel-chip span {
+            display: block;
+            margin-bottom: 0.18rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .settings-panel-chip strong {
+            display: block;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .settings-section-nav {
+            display: flex;
+            gap: 0.35rem;
+            overflow-x: auto;
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid #e8edf3;
+            background: #f8fafc;
+            scrollbar-width: thin;
+        }
+
+        .settings-section-nav a {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.42rem 0.68rem;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            color: #526173;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .settings-section-nav a:hover,
+        .settings-section-nav a:focus {
+            border-color: #c9d8ef;
+            background: #fff;
+            color: #3157c7;
+            text-decoration: none;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card {
+            overflow: visible;
+            margin: 0;
+            border: 0;
+            border-top: 1px solid #e8edf3;
+            border-radius: 0;
+            background: #fff;
+            box-shadow: none;
+            scroll-margin-top: 76px;
+        }
+
+        #settingsForm .settings-main-panel > #identitySchoolCard {
+            border-top: 0;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header {
+            padding: 0.9rem 1.25rem 0.25rem;
+            border: 0;
+            border-radius: 0 !important;
+            background: #fff;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header .card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header .card-title i {
+            display: inline-flex;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #eef4ff;
+            color: #3157c7;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-body {
+            padding: 0.6rem 1.25rem 1rem;
+        }
+
+        #settingsForm .settings-main-panel > #schoolLogoCard {
+            border-top-color: #e8edf3;
+        }
+
         #settingsForm .settings-card {
             overflow: hidden;
             border: 1px solid #dde3ea;
@@ -504,11 +669,10 @@
         }
 
         .settings-actions-card {
-            position: sticky;
-            bottom: 0.75rem;
-            z-index: 20;
-            border: 1px solid #d9e2ec;
-            box-shadow: 0 6px 18px rgba(31, 45, 61, 0.12);
+            position: static;
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
         }
 
         .settings-actions-card .card-body {
@@ -527,7 +691,24 @@
             min-width: 640px;
         }
 
+        #letterheadCard,
+        #locationAuditCard {
+            border: 0;
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+        }
+
         @media (max-width: 991.98px) {
+            .settings-panel-hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .settings-panel-hero__meta {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
             .upload-area {
                 min-height: 260px;
                 margin-bottom: 1rem;
@@ -539,6 +720,36 @@
         }
 
         @media (max-width: 767.98px) {
+            .settings-main-panel {
+                border-radius: 18px;
+            }
+
+            .settings-panel-hero {
+                padding: 1rem;
+            }
+
+            .settings-panel-hero h2 {
+                font-size: 1.15rem;
+            }
+
+            .settings-panel-chip {
+                min-width: 0;
+                flex: 1 1 120px;
+            }
+
+            .settings-section-nav {
+                padding-right: 0.75rem;
+                padding-left: 0.75rem;
+            }
+
+            #settingsForm .settings-main-panel > .settings-card > .card-header {
+                padding: 0.8rem 1rem 0.2rem;
+            }
+
+            #settingsForm .settings-main-panel > .settings-card > .card-body {
+                padding: 0.55rem 1rem 0.85rem;
+            }
+
             .content-header h1 {
                 font-size: 1.4rem;
             }
@@ -662,7 +873,6 @@
             }
 
             .settings-actions-card {
-                bottom: 0.25rem;
                 margin-bottom: 0.5rem;
             }
 
@@ -725,10 +935,41 @@
         @csrf
         @method('PUT')
 
+        <div class="settings-main-panel">
+            <div class="settings-panel-hero">
+                <div>
+                    <div class="settings-panel-hero__eyebrow">
+                        <i class="fas fa-sliders-h"></i>
+                        Profil dan identitas instansi
+                    </div>
+                    <h2>Data Sekolah</h2>
+                    <p>Kelola identitas resmi, wilayah, kontak, penanggung jawab, dan aset visual sekolah dalam satu panel.</p>
+                </div>
+                <div class="settings-panel-hero__meta" aria-label="Ringkasan identitas sekolah">
+                    <div class="settings-panel-chip">
+                        <span>NPSN</span>
+                        <strong>{{ $setting->npsn ?: 'Belum diisi' }}</strong>
+                    </div>
+                    <div class="settings-panel-chip">
+                        <span>NSM</span>
+                        <strong>{{ $setting->nsm ?: 'Belum diisi' }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="settings-section-nav" aria-label="Navigasi bagian pengaturan sekolah">
+                <a href="#identitySchoolCard"><i class="fas fa-school"></i> Identitas</a>
+                <a href="#addressSchoolCard"><i class="fas fa-map-marker-alt"></i> Alamat</a>
+                <a href="#contactSchoolCard"><i class="fas fa-phone"></i> Kontak</a>
+                <a href="#principalSchoolCard"><i class="fas fa-user-tie"></i> Kepala Sekolah</a>
+                <a href="#socialSchoolCard"><i class="fas fa-share-alt"></i> Media Sosial</a>
+                <a href="#schoolLogoCard"><i class="fas fa-images"></i> Logo &amp; PDF</a>
+            </nav>
+
         {{-- Card 1: Identitas Sekolah --}}
         <div class="card settings-card school-data-card" id="identitySchoolCard">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah &amp; Logo</h3>
+                <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah</h3>
             </div>
             <div class="card-body">
                 {{-- Section: Identitas --}}
@@ -1299,6 +1540,7 @@
                     </div>
                 @endif
             </div>
+        </div>
         </div>
 
         {{-- Card 6: Kop Surat Builder --}}

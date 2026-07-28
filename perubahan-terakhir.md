@@ -21,6 +21,10 @@ Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan res
 11. Telepon, email, dan website ditampilkan dalam satu baris desktop, demikian pula empat kanal media sosial.
 12. Panel petunjuk wilayah diringkas menjadi satu callout, metadata sumber data memakai panel status ringan, dan informasi kepala sekolah memakai foto serta tabel yang lebih compact.
 13. Seluruh susunan kembali bertumpuk secara responsif pada layar tablet/ponsel agar field tetap nyaman disentuh dan dibaca.
+14. Penyempurnaan berikutnya menyatukan Identitas, Alamat/Wilayah, Kontak, Kepala Sekolah, Media Sosial, dan Logo/PDF ke dalam satu panel utama seperti pola visual Detail Siswa.
+15. Panel utama memiliki contextual hero, ringkasan NPSN/NSM, serta navigasi anchor horizontal agar bagian panjang tetap mudah dijangkau.
+16. Setiap kelompok kini tampil sebagai section dengan garis pemisah tipis, bukan kartu-kartu terpisah; Kop Surat dan Audit tetap menjadi alat lanjutan di bawah panel utama.
+17. Footer Simpan tidak lagi sticky/mengambang sehingga tidak menutupi field saat pengguna menggulir halaman.
 
 File terkait:
 
