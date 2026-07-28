@@ -11,7 +11,7 @@ Layar publik `live-polling-osis` disempurnakan sebagai dashboard monitoring satu
 1. Desktop dan layar presentasi memakai tinggi tepat `100dvh` serta grid adaptif sehingga header, judul, countdown, metrik, paket kandidat, hasil, dan footer muat tanpa scroll.
 2. Ukuran logo, judul, statistik, kartu paket, foto kandidat, dan area hasil dipadatkan secara proporsional tanpa mengurangi keterbacaan.
 3. Tersedia mode ekstra-compact otomatis untuk layar desktop dengan tinggi maksimal 760px.
-4. Foto kandidat mempertahankan rasio portrait tetapi memiliki batas ukuran agar tidak membesar berlebihan ketika paket hanya berjumlah dua.
+4. Foto kandidat mempertahankan rasio portrait dengan ukuran seimbang agar wajah tetap mudah dikenali tanpa membuat halaman melampaui viewport.
 5. Setiap paket memperoleh aksen warna tersendiri pada nomor, garis cahaya, panel, dan progress hasil sehingga mudah dibedakan dari jarak jauh.
 6. Hingga empat paket dapat berjajar dalam satu baris desktop.
 7. Tablet dan ponsel tetap memakai alur vertikal dengan scroll normal agar tidak memaksa konten menjadi terlalu kecil.
