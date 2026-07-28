@@ -195,7 +195,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($kelas->siswaAktif->sortBy('pivot.nomor_urut_absen') as $index => $siswa)
+                            @foreach($students as $index => $siswa)
                                 @php
                                     $tanggalMasuk = $siswa->pivot->tanggal_masuk
                                         ? \Carbon\Carbon::parse($siswa->pivot->tanggal_masuk)
@@ -226,6 +226,13 @@
                                            style="text-decoration: none; cursor: pointer;">
                                             <strong>{{ $siswa->nama_lengkap }}</strong>
                                         </a>
+                                        @if((int) $kelas->tingkat > 10)
+                                            <small class="d-block text-muted mt-1">
+                                                <i class="fas fa-history mr-1"></i>
+                                                Asal kelas:
+                                                <strong>{{ $kelasAsalBySiswa->get($siswa->id) ?: 'Belum tercatat' }}</strong>
+                                            </small>
+                                        @endif
                                     </td>
                                     <td data-order="{{ $asalSekolah?->nama ?: 'ZZZZ' }}">
                                         <div class="origin-school" data-npsn="{{ $siswa->npsn_asal_sekolah }}">
@@ -1055,7 +1062,7 @@
                     searching: false,
                     info: false,
                     autoWidth: false,
-                    order: [[2, 'asc']],
+                    order: [[4, 'asc']],
                     columnDefs: [
                         {
                             targets: @json($nonSortableStudentColumns),

@@ -395,13 +395,39 @@ class KelasController extends Controller
             'siswaAktif.sekolahAsal'
         ]);
 
+        $students = $kelas->siswaAktif
+            ->sortBy('nama_lengkap', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        $kelasAsalBySiswa = collect();
+        if ((int) $kelas->tingkat > 10 && $kelas->tahunPelajaran) {
+            $previousYearId = TahunPelajaran::query()
+                ->where('tahun_mulai', $kelas->tahunPelajaran->tahun_mulai - 1)
+                ->latest('tanggal_mulai')
+                ->value('id');
+
+            if ($previousYearId) {
+                $kelasAsalBySiswa = SiswaKelas::query()
+                    ->with('kelas.jurusan')
+                    ->whereIn('siswa_id', $students->pluck('id'))
+                    ->where('tahun_pelajaran_id', $previousYearId)
+                    ->where('tingkat', (int) $kelas->tingkat - 1)
+                    ->latest('created_at')
+                    ->get()
+                    ->unique('siswa_id')
+                    ->mapWithKeys(fn (SiswaKelas $record) => [
+                        $record->siswa_id => $record->kelas?->nama_lengkap,
+                    ]);
+            }
+        }
+
         // Statistics
         $stats = [
-            'total_siswa' => $kelas->siswaAktif->count(),
+            'total_siswa' => $students->count(),
             'sisa_tempat' => $kelas->sisa_tempat,
             'percentage_filled' => $kelas->percentage_filled,
-            'laki_laki' => $kelas->siswaAktif->where('jenis_kelamin', 'L')->count(),
-            'perempuan' => $kelas->siswaAktif->where('jenis_kelamin', 'P')->count(),
+            'laki_laki' => $students->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => $students->where('jenis_kelamin', 'P')->count(),
         ];
 
         $transferClasses = Auth::user()->can('transfer-siswa-kelas')
@@ -415,7 +441,13 @@ class KelasController extends Controller
                 ->get()
             : collect();
 
-        return view('admin.kelas.show', compact('kelas', 'stats', 'transferClasses'));
+        return view('admin.kelas.show', compact(
+            'kelas',
+            'students',
+            'kelasAsalBySiswa',
+            'stats',
+            'transferClasses'
+        ));
     }
 
     /**
