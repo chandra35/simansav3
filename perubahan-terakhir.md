@@ -15,7 +15,9 @@ Modal `Tugaskan Wali Kelas` pada detail rombel telah diperbarui:
 5. Guru yang sudah menjadi wali kelas lain tetap tersedia.
 6. Di samping nama guru ditampilkan jenis guru dan metadata rombel aktif, misalnya `Wali: XII-A6`.
 7. Guru yang belum memiliki rombel diberi metadata `Belum menjadi wali kelas`.
-8. Tampilan modal dibuat lebih lebar, responsif, dan dilengkapi konteks rombel tujuan.
+8. Modal dan dropdown dinormalisasi menggunakan tampilan default Bootstrap/AdminLTE dan Select2.
+9. Gradient, renderer opsi khusus, badge warna, serta override tinggi/border/focus Select2 telah dihapus untuk mencegah bentrok dengan custom CSS global.
+10. Metadata tetap tampil dalam satu baris teks opsi: `Nama | Jenis Guru | Status Rombel`.
 
 File terkait:
 

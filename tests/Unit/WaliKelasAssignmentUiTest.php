@@ -30,9 +30,15 @@ class WaliKelasAssignmentUiTest extends TestCase
         $this->assertStringContainsString("@section('plugins.Select2', true)", $view);
         $this->assertStringContainsString("dropdownParent: \$('#modalWaliKelas')", $view);
         $this->assertStringContainsString('minimumResultsForSearch: 0', $view);
-        $this->assertStringContainsString('data-assignment=', $view);
+        $this->assertStringContainsString(
+            '{{ $displayName }} | {{ $teacherType }} | {{ $assignmentText }}',
+            $view
+        );
         $this->assertStringContainsString('Belum menjadi wali kelas', $view);
-        $this->assertStringContainsString('wali-option__assignment', $view);
+        $this->assertStringNotContainsString('templateResult:', $view);
+        $this->assertStringNotContainsString('templateSelection:', $view);
+        $this->assertStringNotContainsString('.wali-kelas-modal__header', $view);
+        $this->assertStringNotContainsString('.wali-option__assignment', $view);
         $this->assertStringNotContainsString('Debug modal Wali Kelas', $view);
     }
 }

@@ -631,23 +631,22 @@
     @can('assign-wali-kelas')
     <div class="modal fade" id="modalWaliKelas" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content wali-kelas-modal">
+            <div class="modal-content">
                 <form id="formWaliKelas">
                     @csrf
-                    <div class="modal-header wali-kelas-modal__header">
-                        <div>
-                            <small>PENUGASAN ROMBEL</small>
-                            <h5 class="modal-title"><i class="fas fa-user-tie mr-2"></i>Tugaskan Wali Kelas</h5>
-                        </div>
-                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-tie mr-2"></i>Tugaskan Wali Kelas
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="wali-kelas-context">
-                            <span class="wali-kelas-context__icon"><i class="fas fa-school"></i></span>
+                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                            <i class="fas fa-school text-primary mr-3"></i>
                             <div>
-                                <small>ROMBEL YANG AKAN DITUGASKAN</small>
-                                <strong>{{ $kelas->nama_lengkap }}</strong>
-                                <span>{{ $kelas->tahunPelajaran->nama ?? 'Tahun pelajaran tidak tersedia' }}</span>
+                                <small class="text-muted d-block">Rombel yang akan ditugaskan</small>
+                                <strong class="d-block">{{ $kelas->nama_lengkap }}</strong>
+                                <span class="text-muted small">{{ $kelas->tahunPelajaran->nama ?? 'Tahun pelajaran tidak tersedia' }}</span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -669,23 +668,19 @@
                                                 : 'Belum menjadi wali kelas';
                                         @endphp
                                         <option value="{{ $gtk->id }}"
-                                                data-name="{{ $displayName }}"
-                                                data-type="{{ $teacherType }}"
-                                                data-assignment="{{ $assignmentText }}"
-                                                data-assigned="{{ $assignedRombels->isNotEmpty() ? 1 : 0 }}"
                                                 {{ $kelas->wali_kelas_id == $gtk->id ? 'selected' : '' }}>
-                                            {{ $displayName }} · {{ $teacherType }} · {{ $assignmentText }}
+                                            {{ $displayName }} | {{ $teacherType }} | {{ $assignmentText }}
                                         </option>
                                     @endforeach
                                 @endif
                             </select>
-                            <div class="wali-kelas-help">
+                            <small class="form-text text-muted d-flex justify-content-between flex-wrap">
                                 <span><i class="fas fa-search mr-1"></i>Ketik nama atau rombel untuk mencari.</span>
                                 <span><i class="fas fa-chalkboard-teacher mr-1"></i>{{ $availableGtk->count() }} guru aktif tersedia.</span>
-                            </div>
+                            </small>
                         </div>
-                        <div class="wali-kelas-note">
-                            <i class="fas fa-info-circle"></i>
+                        <div class="alert alert-info py-2 mb-0 small">
+                            <i class="fas fa-info-circle mr-1"></i>
                             Guru yang sudah menjadi wali kelas tetap dapat dipilih. Rombel aktifnya ditampilkan sebagai metadata untuk mencegah salah penugasan.
                         </div>
                     </div>
@@ -1059,148 +1054,10 @@
             color: #166534;
             font-size: .75rem;
         }
-        .wali-kelas-modal {
-            overflow: visible;
-            border: 0;
-            border-radius: 15px;
-            box-shadow: 0 24px 65px rgba(15, 23, 42, .24);
-        }
-        .wali-kelas-modal__header {
-            align-items: center;
-            border: 0;
-            border-radius: 15px 15px 0 0;
-            background: linear-gradient(135deg, #2563eb, #4338ca);
-            color: #fff;
-        }
-        .wali-kelas-modal__header small {
-            display: block;
-            font-size: .64rem;
-            font-weight: 800;
-            letter-spacing: .1em;
-            opacity: .78;
-        }
-        .wali-kelas-modal__header h5 {
-            margin-top: .15rem;
-            color: #fff;
-            font-weight: 800;
-        }
-        .wali-kelas-context {
-            display: flex;
-            align-items: center;
-            gap: .8rem;
-            margin-bottom: 1rem;
-            padding: .8rem .9rem;
-            border: 1px solid #dbeafe;
-            border-radius: 12px;
-            background: #f8fbff;
-        }
-        .wali-kelas-context__icon {
-            display: grid;
-            width: 42px;
-            height: 42px;
-            flex: 0 0 42px;
-            place-items: center;
-            border-radius: 11px;
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-        .wali-kelas-context small,
-        .wali-kelas-context strong,
-        .wali-kelas-context div>span {
-            display: block;
-        }
-        .wali-kelas-context small {
-            color: #64748b;
-            font-size: .62rem;
-            font-weight: 800;
-            letter-spacing: .07em;
-        }
-        .wali-kelas-context strong {
-            color: #0f172a;
-            font-size: .92rem;
-        }
-        .wali-kelas-context div>span {
-            color: #64748b;
-            font-size: .72rem;
-        }
-        #modalWaliKelas .select2-container {
-            width: 100% !important;
-        }
-        #modalWaliKelas .select2-selection--single {
-            min-height: 48px;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-        }
-        #modalWaliKelas .select2-selection--single .select2-selection__rendered {
-            min-height: 46px;
-            padding: .5rem 2.2rem .45rem .75rem;
-            line-height: 1.25;
-        }
-        #modalWaliKelas .select2-selection--single .select2-selection__arrow {
-            height: 46px;
-            right: .45rem;
-        }
-        #modalWaliKelas .select2-container--focus .select2-selection--single,
-        #modalWaliKelas .select2-container--open .select2-selection--single {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 .2rem rgba(99, 102, 241, .16);
-        }
-        .wali-option {
-            padding: .22rem .1rem;
-            line-height: 1.25;
-        }
-        .wali-option__main {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .75rem;
-        }
-        .wali-option__name {
-            color: #0f172a;
-            font-weight: 700;
-        }
-        .wali-option__type {
-            flex: 0 0 auto;
-            padding: .15rem .45rem;
-            border-radius: 999px;
-            background: #e0e7ff;
-            color: #4338ca;
-            font-size: .65rem;
-            font-weight: 700;
-        }
-        .wali-option__assignment {
-            display: block;
-            margin-top: .22rem;
-            color: #64748b;
-            font-size: .72rem;
-        }
-        .wali-option__assignment.is-assigned {
-            color: #b45309;
-            font-weight: 700;
-        }
-        .wali-kelas-help {
-            display: flex;
-            justify-content: space-between;
-            gap: .75rem;
-            margin-top: .45rem;
-            color: #64748b;
-            font-size: .7rem;
-        }
-        .wali-kelas-note {
-            display: flex;
-            align-items: flex-start;
-            gap: .55rem;
-            padding: .65rem .75rem;
-            border-radius: 9px;
-            background: #fffbeb;
-            color: #92400e;
-            font-size: .72rem;
-        }
         @media(max-width:575.98px) {
             .transfer-student { grid-template-columns: 52px 1fr; }
             .transfer-student img { width: 52px; height: 62px; }
             .transfer-origin { grid-column: 1 / -1; max-width: none; text-align: left; }
-            .wali-kelas-help { flex-direction: column; gap: .2rem; }
         }
     </style>
 @stop
@@ -1708,32 +1565,13 @@
             });
 
             const waliKelasSelect = $('#wali_kelas_id');
-            const renderWaliKelasOption = function(option) {
-                if (!option.id) return option.text;
-
-                const element = $(option.element);
-                const wrapper = $('<div class="wali-option"></div>');
-                const main = $('<div class="wali-option__main"></div>');
-                main.append($('<span class="wali-option__name"></span>').text(element.data('name')));
-                main.append($('<span class="wali-option__type"></span>').text(element.data('type')));
-                wrapper.append(main);
-                wrapper.append(
-                    $('<span class="wali-option__assignment"></span>')
-                        .toggleClass('is-assigned', Number(element.data('assigned')) === 1)
-                        .text(element.data('assignment'))
-                );
-                return wrapper;
-            };
-
             if ($.fn.select2) {
                 waliKelasSelect.select2({
                     dropdownParent: $('#modalWaliKelas'),
                     width: '100%',
                     placeholder: 'Cari nama, jenis guru, atau rombel...',
                     allowClear: true,
-                    minimumResultsForSearch: 0,
-                    templateResult: renderWaliKelasOption,
-                    templateSelection: renderWaliKelasOption
+                    minimumResultsForSearch: 0
                 });
             }
 
