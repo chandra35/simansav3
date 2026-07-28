@@ -78,7 +78,11 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Cache::remember(', $controller);
         $this->assertStringNotContainsString('participant_id', $controller);
         $this->assertStringNotContainsString('<form', $view);
-        $this->assertStringContainsString('min-height:100vh', $view);
+        $this->assertStringContainsString('height:100dvh', $view);
+        $this->assertStringContainsString('grid-template-rows:auto auto minmax(0,1fr) auto', $view);
+        $this->assertStringContainsString('@media(max-height:760px) and (min-width:901px)', $view);
+        $this->assertStringContainsString('body{overflow-x:hidden;overflow-y:auto}', $view);
+        $this->assertStringContainsString("Math.min(Math.max(packages.length,1),4)", $view);
         $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
         $this->assertStringContainsString('function renderPackages(packages)', $view);
         $this->assertStringContainsString('Logo MAN 1 Metro', $view);

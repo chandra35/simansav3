@@ -4,6 +4,24 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Live Polling OSIS satu layar
+
+Layar publik `live-polling-osis` disempurnakan sebagai dashboard monitoring satu viewport:
+
+1. Desktop dan layar presentasi memakai tinggi tepat `100dvh` serta grid adaptif sehingga header, judul, countdown, metrik, paket kandidat, hasil, dan footer muat tanpa scroll.
+2. Ukuran logo, judul, statistik, kartu paket, foto kandidat, dan area hasil dipadatkan secara proporsional tanpa mengurangi keterbacaan.
+3. Tersedia mode ekstra-compact otomatis untuk layar desktop dengan tinggi maksimal 760px.
+4. Foto kandidat mempertahankan rasio portrait tetapi memiliki batas ukuran agar tidak membesar berlebihan ketika paket hanya berjumlah dua.
+5. Setiap paket memperoleh aksen warna tersendiri pada nomor, garis cahaya, panel, dan progress hasil sehingga mudah dibedakan dari jarak jauh.
+6. Hingga empat paket dapat berjajar dalam satu baris desktop.
+7. Tablet dan ponsel tetap memakai alur vertikal dengan scroll normal agar tidak memaksa konten menjadi terlalu kecil.
+8. Live refresh, countdown, mode readonly, anonimitas pemilih, dan tombol fullscreen tetap dipertahankan.
+
+File terkait:
+
+- `resources/views/public/osis-polling.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Pengaturan sekolah vertikal dan monitoring Pemilihan OSIS
 
 Penyempurnaan terbaru:
