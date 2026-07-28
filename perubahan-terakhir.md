@@ -4,6 +4,24 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penataan ulang UI/UX Pengaturan Aplikasi
+
+Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan responsif:
+
+1. Urutan informasi sekolah menjadi Identitas Sekolah & Logo, Alamat Sekolah/Wilayah Administratif, Informasi Kontak, Kepala Sekolah, lalu Media Sosial.
+2. Area branding ditempatkan setelah informasi sekolah: Logo Sekolah, Pengaturan Ukuran Logo untuk Cetak PDF, lalu Kop Surat.
+3. Identitas dan unggah logo dipisahkan menjadi kartu mandiri agar halaman lebih mudah dipindai.
+4. Tampilan kartu dinormalisasi dengan header putih, garis aksen, jarak konsisten, dan bayangan ringan.
+5. Area unggah logo, tombol Ambil Data NPSN, pilihan mode kop, unggah kop, informasi kepala sekolah, serta tombol simpan menyesuaikan layar tablet dan ponsel.
+6. Preview kop surat dapat digeser horizontal di layar sempit sehingga komposisi dokumen tidak rusak.
+7. Tombol Simpan Pengaturan dibuat tetap mudah dijangkau dan berubah menjadi tombol selebar layar pada ponsel.
+8. Ditambahkan `SettingsUiArchitectureTest` untuk menjaga urutan bagian dan aturan responsif.
+
+File terkait:
+
+- `resources/views/admin/settings/edit.blade.php`
+- `tests/Unit/SettingsUiArchitectureTest.php`
+
 ### NIS Lokal siswa dan autofill identitas sekolah
 
 SIMANSA kini memiliki modul `Manajemen Data > NIS Lokal` dengan ketentuan:

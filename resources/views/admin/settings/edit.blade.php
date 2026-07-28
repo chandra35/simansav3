@@ -295,6 +295,270 @@
         .custom-file-label::after {
             content: "Browse";
         }
+
+        /* Settings page layout */
+        #settingsForm {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #settingsForm .settings-card {
+            overflow: hidden;
+            border: 1px solid #dde3ea;
+            border-top: 3px solid #3c8dbc;
+            box-shadow: 0 2px 8px rgba(31, 45, 61, 0.06);
+        }
+
+        #settingsForm .settings-card > .card-header {
+            background: #fff;
+            color: #263238;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        #settingsForm .settings-card > .card-header .card-title i {
+            width: 1.4rem;
+            color: #3c8dbc;
+            text-align: center;
+        }
+
+        #settingsForm .settings-card > .card-body {
+            padding: 1.25rem;
+        }
+
+        #identitySchoolCard { order: 10; }
+        #addressSchoolCard { order: 20; }
+        #contactSchoolCard { order: 30; }
+        #principalSchoolCard { order: 40; }
+        #socialSchoolCard { order: 50; }
+        #schoolLogoCard { order: 60; }
+        #letterheadCard { order: 70; }
+        #locationAuditCard { order: 80; }
+        #settingsActions { order: 90; }
+
+        #schoolLogoCard {
+            border-top-color: #28a745;
+        }
+
+        #schoolLogoCard > .card-header .card-title i {
+            color: #28a745;
+        }
+
+        #letterheadCard {
+            border-top-color: #dc3545;
+        }
+
+        #letterheadCard > .card-header .card-title i {
+            color: #dc3545;
+        }
+
+        #locationAuditCard {
+            border-top-color: #ffc107;
+        }
+
+        #locationAuditCard > .card-header .card-title i {
+            color: #b88600;
+        }
+
+        .settings-section-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            margin: 0 0 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #edf0f2;
+        }
+
+        .settings-section-heading > i {
+            margin-top: 0.15rem;
+            color: #3c8dbc;
+        }
+
+        .settings-section-heading h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .settings-section-heading small {
+            display: block;
+            margin-top: 0.2rem;
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        .settings-actions-card {
+            position: sticky;
+            bottom: 0.75rem;
+            z-index: 20;
+            border: 1px solid #d9e2ec;
+            box-shadow: 0 6px 18px rgba(31, 45, 61, 0.12);
+        }
+
+        .settings-actions-card .card-body {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding: 0.85rem 1rem;
+        }
+
+        .kop-preview-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .kop-preview-scroll > table {
+            min-width: 640px;
+        }
+
+        @media (max-width: 991.98px) {
+            .upload-area {
+                min-height: 260px;
+                margin-bottom: 1rem;
+            }
+
+            #settingsForm .settings-card > .card-body {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .content-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .content-header .breadcrumb {
+                float: none !important;
+                margin-top: 0.5rem;
+                padding-left: 0;
+            }
+
+            #settingsForm .settings-card {
+                margin-bottom: 1rem;
+                border-radius: 6px;
+            }
+
+            #settingsForm .settings-card > .card-header {
+                padding: 0.85rem 1rem;
+            }
+
+            #settingsForm .settings-card > .card-header .card-title {
+                float: none;
+                font-size: 1rem;
+            }
+
+            #settingsForm .settings-card > .card-header .card-tools {
+                float: none;
+                margin-top: 0.75rem;
+            }
+
+            #settingsForm .settings-card > .card-header .card-tools .btn {
+                width: 100%;
+            }
+
+            #principalSchoolCard > .card-header .badge {
+                float: none !important;
+                display: inline-block;
+                margin-top: 0.5rem;
+                white-space: normal;
+            }
+
+            .school-fetch-group,
+            .kop-custom-upload {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            .school-fetch-group > .form-control,
+            .kop-custom-upload > .custom-file {
+                flex: 0 0 100%;
+                width: 100%;
+            }
+
+            .school-fetch-group > .input-group-append,
+            .kop-custom-upload > .input-group-append {
+                width: 100%;
+                margin: 0.5rem 0 0;
+            }
+
+            .school-fetch-group > .input-group-append .btn,
+            .kop-custom-upload > .input-group-append .btn {
+                width: 100%;
+                border-radius: 0.25rem;
+            }
+
+            .upload-area {
+                min-height: 230px;
+                padding: 1.25rem 0.75rem;
+            }
+
+            .preview-container {
+                min-height: 120px;
+            }
+
+            .preview-container img {
+                max-width: 120px !important;
+                max-height: 120px !important;
+            }
+
+            .upload-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .upload-actions .btn {
+                width: 100%;
+                margin: 0;
+            }
+
+            .btn-group-toggle {
+                display: flex !important;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .btn-group-toggle > .btn {
+                width: 100%;
+                margin-left: 0 !important;
+                border-radius: 0.25rem !important;
+            }
+
+            .kepala-info-card,
+            .kop-preview-container,
+            .preview-area {
+                padding: 1rem !important;
+            }
+
+            #principalSchoolCard .table {
+                margin-top: 1rem;
+            }
+
+            #principalSchoolCard .table th,
+            #principalSchoolCard .table td {
+                display: block;
+                width: 100% !important;
+                padding: 0.25rem 0;
+            }
+
+            #principalSchoolCard .table td {
+                padding-bottom: 0.75rem;
+            }
+
+            .settings-actions-card {
+                bottom: 0.25rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .settings-actions-card .card-body {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .settings-actions-card .btn {
+                width: 100%;
+                margin: 0;
+            }
+        }
     </style>
 @stop
 
@@ -344,10 +608,10 @@
         @csrf
         @method('PUT')
 
-        {{-- Card 1: Identitas Sekolah & Logo --}}
-        <div class="card card-primary">
+        {{-- Card 1: Identitas Sekolah --}}
+        <div class="card settings-card" id="identitySchoolCard">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah & Logo</h3>
+                <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah &amp; Logo</h3>
             </div>
             <div class="card-body">
                 {{-- Section: Identitas --}}
@@ -369,7 +633,7 @@
                             <div class="col-md-5">
                                 <div class="form-group">
                                     <label for="npsn">NPSN <span class="text-danger">*</span></label>
-                                    <div class="input-group">
+                                    <div class="input-group school-fetch-group">
                                         <input type="text" name="npsn" id="npsn"
                                                class="form-control @error('npsn') is-invalid @enderror"
                                                value="{{ old('npsn', $setting->npsn) }}"
@@ -416,13 +680,22 @@
                     </div>
                 </div>
                 
-                <hr class="my-4">
-                
-                {{-- Section: Logo Upload --}}
-                <h5 class="mb-3">
-                    <i class="fas fa-image text-primary"></i> Logo Sekolah
-                    <small class="text-muted font-weight-normal"> - Drag & Drop atau Klik untuk Upload</small>
-                </h5>
+            </div>
+        </div>
+
+        {{-- Card: Logo dan ukuran cetak --}}
+        <div class="card settings-card" id="schoolLogoCard">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-images"></i> Logo Sekolah</h3>
+            </div>
+            <div class="card-body">
+                <div class="settings-section-heading">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div>
+                        <h5>Logo Sekolah</h5>
+                        <small>Unggah logo dengan drag &amp; drop atau pilih berkas dari perangkat.</small>
+                    </div>
+                </div>
                 
                 <div class="row form-row">
                     {{-- Logo Kemenag --}}
@@ -501,12 +774,11 @@
                 </div>
                 
                 {{-- Pengaturan Ukuran Logo untuk PDF --}}
-                <div class="row mt-3">
-                    <div class="col-lg-12">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-cog"></i> Pengaturan Ukuran Logo untuk Cetak PDF</h6>
-                            <small>Atur ukuran logo yang akan ditampilkan di dokumen cetak (absensi, rapor, dll)</small>
-                        </div>
+                <div class="settings-section-heading mt-4">
+                    <i class="fas fa-sliders-h"></i>
+                    <div>
+                        <h5>Pengaturan Ukuran Logo untuk Cetak PDF</h5>
+                        <small>Atur ukuran logo pada dokumen cetak seperti absensi dan rapor.</small>
                     </div>
                 </div>
 
@@ -591,7 +863,7 @@
         </div>
 
         {{-- Card 2: Alamat (Laravolt Indonesia) --}}
-        <div class="card card-info">
+        <div class="card settings-card" id="addressSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Alamat Sekolah</h3>
             </div>
@@ -641,10 +913,13 @@
                 <hr class="my-4">
                 
                 {{-- Section: Wilayah --}}
-                <h5 class="mb-3">
-                    <i class="fas fa-globe-asia text-info"></i> Wilayah Administratif
-                    <small class="text-muted font-weight-normal"> - Cascading Dropdown</small>
-                </h5>
+                <div class="settings-section-heading">
+                    <i class="fas fa-globe-asia"></i>
+                    <div>
+                        <h5>Wilayah Administratif</h5>
+                        <small>Pilih wilayah secara berurutan dari provinsi sampai kelurahan.</small>
+                    </div>
+                </div>
                 
                 <div class="row form-row">
                     <div class="col-lg-6">
@@ -753,7 +1028,7 @@
         </div>
 
         {{-- Card 3: Kontak --}}
-        <div class="card card-success">
+        <div class="card settings-card" id="contactSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-phone"></i> Informasi Kontak</h3>
             </div>
@@ -802,7 +1077,7 @@
         </div>
 
         {{-- Card 4: Sosial Media --}}
-        <div class="card card-warning">
+        <div class="card settings-card" id="socialSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-share-alt"></i> Media Sosial</h3>
             </div>
@@ -866,7 +1141,7 @@
         </div>
 
         {{-- Card 5: Kepala Sekolah (READ ONLY) --}}
-        <div class="card card-info">
+        <div class="card settings-card" id="principalSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-user-tie"></i> Kepala Sekolah</h3>
                 <span class="badge badge-light float-right">Otomatis dari Tugas Tambahan</span>
@@ -923,7 +1198,7 @@
         </div>
 
         {{-- Card 6: Kop Surat Builder --}}
-        <div class="card card-danger">
+        <div class="card settings-card" id="letterheadCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-file-alt"></i> Kop Surat</h3>
                 <div class="card-tools">
@@ -953,7 +1228,7 @@
                 {{-- Builder Mode Section --}}
                 <div id="builderModeSection" style="display: {{ $setting->kop_mode === 'builder' ? 'block' : 'none' }}">
                     {{-- Preview Area --}}
-                    <div class="preview-area mb-3" style="border: 2px solid #ddd; padding: 20px; background: #fff; min-height: 200px;">
+                    <div class="preview-area kop-preview-scroll mb-3" style="border: 2px solid #ddd; padding: 20px; background: #fff; min-height: 200px;">
                         <table width="100%" id="kopPreviewTable">
                             <tr>
                                 <td width="15%" align="center" valign="top">
@@ -999,7 +1274,7 @@
                 <div id="customModeSection" style="display: {{ $setting->kop_mode === 'custom' ? 'block' : 'none' }}">
                     <div class="form-group">
                         <label>Upload Header Kop Surat</label>
-                        <div class="input-group">
+                        <div class="input-group kop-custom-upload">
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="kopSuratCustom" accept="image/*">
                                 <label class="custom-file-label" for="kopSuratCustom">Pilih file...</label>
@@ -1042,7 +1317,7 @@
             </div>
         </div>
 
-        <div class="card card-warning">
+        <div class="card settings-card" id="locationAuditCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Audit Log Lokasi</h3>
             </div>
@@ -1065,7 +1340,7 @@
         </div>
 
         {{-- Submit Button --}}
-        <div class="card">
+        <div class="card settings-actions-card" id="settingsActions">
             <div class="card-body">
                 <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-save"></i> Simpan Pengaturan

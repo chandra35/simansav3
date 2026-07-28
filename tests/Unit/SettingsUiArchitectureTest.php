@@ -1,0 +1,52 @@
+<?php
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+
+class SettingsUiArchitectureTest extends TestCase
+{
+    private function settingsView(): string
+    {
+        return file_get_contents(__DIR__.'/../../resources/views/admin/settings/edit.blade.php');
+    }
+
+    public function test_school_information_is_shown_before_branding_and_letterhead(): void
+    {
+        $view = $this->settingsView();
+
+        $expectedOrder = [
+            '#identitySchoolCard { order: 10; }',
+            '#addressSchoolCard { order: 20; }',
+            '#contactSchoolCard { order: 30; }',
+            '#principalSchoolCard { order: 40; }',
+            '#socialSchoolCard { order: 50; }',
+            '#schoolLogoCard { order: 60; }',
+            '#letterheadCard { order: 70; }',
+        ];
+
+        $previousPosition = -1;
+
+        foreach ($expectedOrder as $rule) {
+            $position = strpos($view, $rule);
+
+            $this->assertNotFalse($position, "Missing settings order rule: {$rule}");
+            $this->assertGreaterThan($previousPosition, $position);
+            $previousPosition = $position;
+        }
+
+        $this->assertStringContainsString('Wilayah Administratif', $view);
+        $this->assertStringContainsString('Pengaturan Ukuran Logo untuk Cetak PDF', $view);
+    }
+
+    public function test_settings_controls_adapt_to_mobile_widths(): void
+    {
+        $view = $this->settingsView();
+
+        $this->assertStringContainsString('@media (max-width: 767.98px)', $view);
+        $this->assertStringContainsString('class="input-group school-fetch-group"', $view);
+        $this->assertStringContainsString('class="input-group kop-custom-upload"', $view);
+        $this->assertStringContainsString('grid-template-columns: 1fr;', $view);
+        $this->assertStringContainsString('kop-preview-scroll', $view);
+    }
+}
