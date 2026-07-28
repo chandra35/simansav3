@@ -55,7 +55,6 @@ class PublicOsisPollingController extends Controller
         return OsisElection::query()
             ->where('tahun_pelajaran_id', $activeYearId)
             ->where('status', 'published')
-            ->where('starts_at', '<=', now())
             ->where('ends_at', '>=', now())
             ->latest('published_at')
             ->first();
@@ -92,8 +91,10 @@ class PublicOsisPollingController extends Controller
 
         return [
             'active' => true,
+            'phase' => $election->phase,
             'title' => $election->title,
             'theme' => $election->theme,
+            'starts_at' => $election->starts_at->toIso8601String(),
             'ends_at' => $election->ends_at->toIso8601String(),
             'voters' => $voters,
             'voted' => $voted,

@@ -53,14 +53,37 @@ class SettingsUiArchitectureTest extends TestCase
     public function test_school_data_uses_compact_professional_layout(): void
     {
         $view = $this->settingsView();
+        $controller = file_get_contents(__DIR__.'/../../app/Http/Controllers/Admin/AppSettingController.php');
 
         $this->assertStringContainsString('school-data-card', $view);
         $this->assertStringContainsString('margin-bottom: 0.85rem;', $view);
         $this->assertStringContainsString('min-height: 36px;', $view);
         $this->assertStringContainsString('school-source-meta', $view);
         $this->assertStringContainsString('school-region-note', $view);
-        $this->assertStringContainsString('col-lg-3 col-md-6', $view);
+        $this->assertStringContainsString('max-width: 620px;', $view);
+        $this->assertStringContainsString('id="nsm"', $view);
+        $this->assertStringContainsString('maxlength="12" readonly', $view);
+        $this->assertStringContainsString('Otomatis dari referensi', $view);
+        $this->assertStringNotContainsString("'nsm' => 'required|digits:12'", $controller);
         $this->assertStringContainsString('principal-photo', $view);
+    }
+
+    public function test_address_fields_follow_a_single_vertical_sequence(): void
+    {
+        $view = $this->settingsView();
+
+        $fields = ['id="alamat"', 'id="rt"', 'id="rw"', 'id="kode_pos"', 'id="provinsi_code"', 'id="kota_code"', 'id="kecamatan_code"', 'id="kelurahan_code"'];
+        $previousPosition = -1;
+
+        foreach ($fields as $field) {
+            $position = strpos($view, $field);
+            $this->assertNotFalse($position, "Missing address field: {$field}");
+            $this->assertGreaterThan($previousPosition, $position);
+            $previousPosition = $position;
+        }
+
+        $addressSection = substr($view, strpos($view, 'id="addressSchoolCard"'), strpos($view, 'id="contactSchoolCard"') - strpos($view, 'id="addressSchoolCard"'));
+        $this->assertSame(8, substr_count($addressSection, '<div class="col-12">'));
     }
 
     public function test_school_settings_are_presented_as_one_continuous_panel(): void

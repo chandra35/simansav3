@@ -468,6 +468,37 @@
             font-weight: 600;
         }
 
+        #identitySchoolCard > .card-body,
+        #addressSchoolCard > .card-body,
+        #contactSchoolCard > .card-body,
+        #principalSchoolCard > .card-body,
+        #socialSchoolCard > .card-body {
+            width: 100%;
+            max-width: 620px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        #nsm[readonly] {
+            border-color: #d8e2ee;
+            background: #f4f7fb;
+            color: #334155;
+            cursor: default;
+        }
+
+        .reference-field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .reference-field-label .badge {
+            padding: 0.3rem 0.45rem;
+            font-size: 0.62rem;
+            font-weight: 700;
+        }
+
         #settingsForm .settings-card {
             overflow: hidden;
             border: 1px solid #dde3ea;
@@ -961,7 +992,7 @@
             <div class="card-body">
                 {{-- Section: Identitas --}}
                 <div class="row form-row">
-                    <div class="col-lg-4">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="nama_sekolah">Nama Sekolah <span class="text-danger">*</span></label>
                             <input type="text" name="nama_sekolah" id="nama_sekolah"
@@ -974,7 +1005,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="npsn">NPSN <span class="text-danger">*</span></label>
                             <div class="input-group school-fetch-group">
@@ -995,21 +1026,24 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
-                            <label for="nsm">NSM <span class="text-danger">*</span></label>
+                            <label for="nsm" class="reference-field-label">
+                                <span>NSM</span>
+                                <span class="badge badge-light border"><i class="fas fa-lock mr-1"></i>Otomatis dari referensi</span>
+                            </label>
                             <input type="text" name="nsm" id="nsm"
                                    class="form-control @error('nsm') is-invalid @enderror"
                                    value="{{ old('nsm', $setting->nsm) }}"
-                                   inputmode="numeric" placeholder="12 digit NSM"
-                                   maxlength="12" required>
-                            <small class="text-muted">Awalan NIS Lokal.</small>
+                                   inputmode="numeric" placeholder="Klik Ambil Data untuk memperoleh NSM"
+                                   maxlength="12" readonly>
+                            <small class="text-muted">Diisi dari Referensi Kemendikdasmen dan EMIS berdasarkan NPSN.</small>
                             @error('nsm')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label>Sumber Data</label>
                             <p class="school-source-meta">
@@ -1212,7 +1246,7 @@
             <div class="card-body">
                 {{-- Section: Alamat Detail --}}
                 <div class="row form-row">
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="alamat"><i class="fas fa-road"></i> Alamat Lengkap (Jalan) <span class="text-danger">*</span></label>
                             <textarea name="alamat" id="alamat" rows="2"
@@ -1225,7 +1259,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="rt">RT</label>
                             <input type="text" name="rt" id="rt" 
@@ -1238,7 +1272,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="rw">RW</label>
                             <input type="text" name="rw" id="rw" 
@@ -1251,7 +1285,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="kode_pos">Kode Pos <span class="text-danger">*</span></label>
                             <input type="text" name="kode_pos" id="kode_pos"
@@ -1278,7 +1312,7 @@
                 </div>
                 
                 <div class="row form-row">
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="provinsi_code"><i class="fas fa-map"></i> Provinsi <span class="text-danger">*</span></label>
                             <select name="provinsi_code" id="provinsi_code" 
@@ -1298,7 +1332,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="kota_code"><i class="fas fa-city"></i> Kota/Kabupaten <span class="text-danger">*</span></label>
                             <select name="kota_code" id="kota_code" 
@@ -1314,7 +1348,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="kecamatan_code"><i class="fas fa-building"></i> Kecamatan <span class="text-danger">*</span></label>
                             <select name="kecamatan_code" id="kecamatan_code" 
@@ -1331,7 +1365,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="kelurahan_code"><i class="fas fa-home"></i> Kelurahan/Desa <span class="text-danger">*</span></label>
                             <select name="kelurahan_code" id="kelurahan_code" 
@@ -1363,7 +1397,7 @@
             </div>
             <div class="card-body">
                 <div class="row form-row">
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="telepon"><i class="fas fa-phone-alt"></i> Telepon <span class="text-danger">*</span></label>
                             <input type="text" name="telepon" id="telepon" 
@@ -1377,7 +1411,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="email"><i class="fas fa-envelope"></i> Email <span class="text-danger">*</span></label>
                             <input type="email" name="email" id="email" 
@@ -1390,7 +1424,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="website"><i class="fas fa-globe"></i> Website</label>
                             <input type="url" name="website" id="website"
@@ -1413,7 +1447,7 @@
             </div>
             <div class="card-body">
                 <div class="row form-row">
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="facebook_url"><i class="fab fa-facebook text-primary"></i> Facebook</label>
                             <input type="url" name="facebook_url" id="facebook_url" 
@@ -1426,7 +1460,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="instagram_url"><i class="fab fa-instagram text-danger"></i> Instagram</label>
                             <input type="url" name="instagram_url" id="instagram_url" 
@@ -1438,7 +1472,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="youtube_url"><i class="fab fa-youtube text-danger"></i> YouTube</label>
                             <input type="url" name="youtube_url" id="youtube_url" 
@@ -1451,7 +1485,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-12">
                         <div class="form-group">
                             <label for="twitter_url"><i class="fab fa-twitter text-info"></i> Twitter / X</label>
                             <input type="url" name="twitter_url" id="twitter_url" 
@@ -1922,7 +1956,7 @@
 
                     Swal.fire({
                         title: 'Data sekolah ditemukan',
-                        html: `${response.message || 'Identitas sekolah berhasil diisi.'}<br><small>Data referensi sudah disimpan dan tetap dapat Anda koreksi.</small>`,
+                        html: `${response.message || 'Identitas sekolah berhasil diisi.'}<br><small>NSM dikunci dari referensi; field sekolah lainnya tetap dapat Anda koreksi.</small>`,
                         icon: response.partial ? 'warning' : 'success'
                     });
                 }).fail(function(xhr) {

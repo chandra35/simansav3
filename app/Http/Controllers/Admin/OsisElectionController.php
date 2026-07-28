@@ -90,6 +90,7 @@ class OsisElectionController extends Controller
             'exclude_ids.*' => ['uuid'],
             'selected_ids' => ['nullable', 'array', 'max:3'],
             'selected_ids.*' => ['uuid'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
         $currentPackageId = $data['current_package_id'] ?? null;
@@ -105,7 +106,18 @@ class OsisElectionController extends Controller
                 ->where('tingkat', 11));
 
         if (! empty($data['selected_ids'])) {
-            $query->whereIn('id', $data['selected_ids']);
+            $students = $query->whereIn('id', $data['selected_ids'])
+                ->orderBy('nama_lengkap')
+                ->get(['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile']);
+
+            return response()->json([
+                'students' => $students->map(fn (Siswa $student) => $this->candidatePayload($student))->values(),
+                'pagination' => [
+                    'page' => 1,
+                    'has_more' => false,
+                    'total' => $students->count(),
+                ],
+            ]);
         } else {
             $usedIds = $election->packages()
                 ->when($currentPackageId, fn ($packages) => $packages->where('id', '<>', $currentPackageId))
@@ -123,14 +135,24 @@ class OsisElectionController extends Controller
                             ->orWhere('nisn', 'like', "%{$term}%")
                             ->orWhereHas('kelasSaatIni', fn ($class) => $class->where('nama_kelas', 'like', "%{$term}%"));
                     });
-                })
-                ->orderBy('nama_lengkap')
-                ->limit(24);
+                });
         }
 
+        $paginator = $query->orderBy('nama_lengkap')->paginate(
+            perPage: 12,
+            columns: ['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile'],
+            pageName: 'page',
+            page: (int) ($data['page'] ?? 1),
+        );
+
         return response()->json([
-            'students' => $query->get(['id', 'nama_lengkap', 'nisn', 'kelas_saat_ini_id', 'foto_profile'])
+            'students' => $paginator->getCollection()
                 ->map(fn (Siswa $student) => $this->candidatePayload($student))->values(),
+            'pagination' => [
+                'page' => $paginator->currentPage(),
+                'has_more' => $paginator->hasMorePages(),
+                'total' => $paginator->total(),
+            ],
         ]);
     }
 

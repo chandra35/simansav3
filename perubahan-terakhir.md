@@ -4,6 +4,32 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pengaturan sekolah vertikal dan monitoring Pemilihan OSIS
+
+Penyempurnaan terbaru:
+
+1. Form Data Sekolah memakai lebar baca maksimum 620px agar tidak melebar berlebihan pada monitor desktop.
+2. Nama sekolah, NPSN, NSM, sumber data, alamat, RT, RW, kode pos, provinsi, kota/kabupaten, kecamatan, dan kelurahan/desa ditampilkan berurutan secara vertikal.
+3. NSM menjadi field readonly dan hanya diperbarui oleh tombol `Ambil Data` melalui Referensi Kemendikdasmen serta pelengkapan EMIS berdasarkan NPSN.
+4. Penyimpanan Pengaturan tidak lagi menerima perubahan NSM dari input form biasa sehingga awalan NIS Lokal tetap bersumber dari referensi.
+5. Foto pada browser kandidat di modal tambah/edit Paket OSIS diperkecil menjadi thumbnail 58x72px dengan susunan kartu horizontal yang lebih ringkas.
+6. API kandidat memakai pagination 12 siswa per halaman. Daftar berikutnya dimuat otomatis ketika pengguna menggulir mendekati bagian bawah browser kandidat.
+7. Tombol `Live Poll Fullscreen` tersedia dari detail Pemilihan OSIS yang telah dipublikasikan dan membuka layar monitoring readonly di tab/jendela baru.
+8. Layar Live Poll memiliki tombol untuk masuk/keluar mode fullscreen.
+9. Pemilihan yang sudah dipublikasikan tetapi belum mencapai waktu mulai tetap dapat ditampilkan sebagai layar monitoring dengan status `MENUNGGU` dan countdown menuju waktu mulai.
+10. Setelah waktu mulai, countdown otomatis berubah menjadi sisa waktu pemungutan suara dan hasil tetap diperbarui berkala tanpa reload.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/AppSettingController.php`
+- `app/Http/Controllers/Admin/OsisElectionController.php`
+- `app/Http/Controllers/PublicOsisPollingController.php`
+- `resources/views/admin/settings/edit.blade.php`
+- `resources/views/admin/osis-election/show.blade.php`
+- `resources/views/public/osis-polling.blade.php`
+- `tests/Unit/SettingsUiArchitectureTest.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Penataan ulang UI/UX Pengaturan Aplikasi
 
 Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan responsif:
@@ -17,8 +43,8 @@ Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan res
 7. Tombol Simpan Pengaturan dibuat tetap mudah dijangkau dan berubah menjadi tombol selebar layar pada ponsel.
 8. Ditambahkan `SettingsUiArchitectureTest` untuk menjaga urutan bagian dan aturan responsif.
 9. Area data sekolah dipadatkan dengan header dan body kartu yang lebih ringkas, kontrol setinggi 36px, serta jarak field yang konsisten.
-10. Alamat, RT, RW, dan kode pos kini sejajar dalam satu baris desktop; empat tingkat wilayah administratif juga sejajar dalam satu baris.
-11. Telepon, email, dan website ditampilkan dalam satu baris desktop, demikian pula empat kanal media sosial.
+10. Alamat, RT, RW, kode pos, dan empat tingkat wilayah administratif kini disusun vertikal dalam satu kolom terpusat.
+11. Telepon, email, website, serta kanal media sosial juga disusun vertikal agar konsisten dan mudah dipindai.
 12. Panel petunjuk wilayah diringkas menjadi satu callout, metadata sumber data memakai panel status ringan, dan informasi kepala sekolah memakai foto serta tabel yang lebih compact.
 13. Seluruh susunan kembali bertumpuk secara responsif pada layar tablet/ponsel agar field tetap nyaman disentuh dan dibaca.
 14. Penyempurnaan berikutnya menyatukan Identitas, Alamat/Wilayah, Kontak, Kepala Sekolah, Media Sosial, dan Logo/PDF ke dalam satu panel utama seperti pola visual Detail Siswa.
@@ -26,7 +52,7 @@ Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan res
 16. Seluruh kelompok data tampil sebagai satu form kontinu, bukan kartu-kartu terpisah; Kop Surat dan Audit tetap menjadi alat lanjutan di bawah panel utama.
 17. Footer Simpan tidak lagi sticky/mengambang sehingga tidak menutupi field saat pengguna menggulir halaman.
 18. Penyempurnaan terbaru menggabungkan seluruh field identitas, alamat/wilayah, kontak, kepala sekolah, dan media sosial menjadi satu form kontinu tanpa header section berulang.
-19. Nama Sekolah, NPSN/Ambil Data, NSM, dan Sumber Data disejajarkan dalam satu baris desktop agar urutan pengisian lebih natural.
+19. Nama Sekolah, NPSN/Ambil Data, NSM readonly, dan Sumber Data disusun vertikal agar urutan pengisian lebih tegas.
 20. Navigasi anchor dihapus karena tidak lagi diperlukan; pemisah tegas baru digunakan ketika masuk ke area Logo/PDF.
 
 File terkait:

@@ -35,6 +35,13 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("params.append('exclude_ids[]',id)", $view);
         $this->assertStringContainsString("->where('tingkat', 11)", $controller);
         $this->assertStringContainsString('KHUSUS KELAS XI', $view);
+        $this->assertStringContainsString('perPage: 12', $controller);
+        $this->assertStringContainsString("'has_more' => \$paginator->hasMorePages()", $controller);
+        $this->assertStringContainsString("$('#candidateBrowserGrid').on('scroll'", $view);
+        $this->assertStringContainsString('candidate-option__body', $view);
+        $this->assertStringContainsString('width:58px;height:72px', $view);
+        $this->assertStringContainsString('Live Poll Fullscreen', $view);
+        $this->assertStringContainsString('target="_blank" rel="noopener"', $view);
     }
 
     public function test_voter_is_still_limited_to_one_irreversible_vote(): void
@@ -65,6 +72,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString("TahunPelajaran::active()", $controller);
         $this->assertStringContainsString("->where('status', 'published')", $controller);
+        $this->assertStringNotContainsString("->where('starts_at', '<=', now())", $controller);
+        $this->assertStringContainsString("'phase' => \$election->phase", $controller);
+        $this->assertStringContainsString("'starts_at' => \$election->starts_at->toIso8601String()", $controller);
         $this->assertStringContainsString('Cache::remember(', $controller);
         $this->assertStringNotContainsString('participant_id', $controller);
         $this->assertStringNotContainsString('<form', $view);
@@ -73,5 +83,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('function renderPackages(packages)', $view);
         $this->assertStringContainsString('Logo MAN 1 Metro', $view);
         $this->assertStringContainsString('AppSetting::first()?->logo_sekolah_url', $controller);
+        $this->assertStringContainsString("phase==='scheduled'", $view);
+        $this->assertStringContainsString('Pemungutan suara dimulai dalam', $view);
+        $this->assertStringContainsString("requestFullscreen?.()", $view);
     }
 }
