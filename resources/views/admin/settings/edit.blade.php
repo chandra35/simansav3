@@ -325,6 +325,123 @@
             padding: 1.25rem;
         }
 
+        #settingsForm .school-data-card {
+            margin-bottom: 0.85rem;
+            border-top-width: 2px;
+        }
+
+        #settingsForm .school-data-card > .card-header {
+            padding: 0.7rem 1rem;
+        }
+
+        #settingsForm .school-data-card > .card-header .card-title {
+            font-size: 1rem;
+            line-height: 1.35;
+        }
+
+        #settingsForm .school-data-card > .card-body {
+            padding: 0.9rem 1rem 0.2rem;
+        }
+
+        #settingsForm .school-data-card .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        #settingsForm .school-data-card .form-group label {
+            margin-bottom: 0.3rem;
+            font-size: 0.875rem;
+            line-height: 1.25;
+        }
+
+        #settingsForm .school-data-card .form-control:not(textarea),
+        #settingsForm .school-data-card .input-group-text,
+        #settingsForm .school-data-card .input-group .btn {
+            min-height: 36px;
+            height: 36px;
+            padding-top: 0.35rem;
+            padding-bottom: 0.35rem;
+        }
+
+        #settingsForm .school-data-card textarea.form-control {
+            min-height: 70px;
+            resize: vertical;
+        }
+
+        #settingsForm .school-data-card small {
+            line-height: 1.25;
+        }
+
+        #settingsForm .school-data-card .settings-section-heading {
+            margin-bottom: 0.7rem;
+            padding-bottom: 0.55rem;
+        }
+
+        #settingsForm .school-data-card .select2-container--bootstrap4 .select2-selection--single {
+            height: 36px !important;
+        }
+
+        #settingsForm .school-data-card .select2-container--bootstrap4 .select2-selection__rendered {
+            line-height: 34px !important;
+        }
+
+        #settingsForm .school-data-card .select2-container--bootstrap4 .select2-selection__arrow {
+            height: 34px !important;
+        }
+
+        .school-source-meta {
+            min-height: 36px;
+            margin: 0;
+            padding: 0.45rem 0.65rem;
+            border: 1px solid #e2e8ef;
+            border-radius: 6px;
+            background: #f8fafc;
+            line-height: 1.2;
+        }
+
+        .school-region-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+            margin-bottom: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            background: #f4fbfc;
+            color: #365b63;
+            font-size: 0.85rem;
+            line-height: 1.35;
+        }
+
+        .school-region-note i {
+            margin-top: 0.15rem;
+            color: #17a2b8;
+        }
+
+        #principalSchoolCard .principal-photo {
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
+            border: 2px solid #e3e9ef !important;
+        }
+
+        #principalSchoolCard .table {
+            margin-bottom: 0;
+            font-size: 0.875rem;
+        }
+
+        #principalSchoolCard .table th,
+        #principalSchoolCard .table td {
+            padding-top: 0.2rem;
+            padding-bottom: 0.2rem;
+        }
+
+        #principalSchoolCard .principal-note {
+            margin-top: 0.7rem !important;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.35;
+        }
+
         #identitySchoolCard { order: 10; }
         #addressSchoolCard { order: 20; }
         #contactSchoolCard { order: 30; }
@@ -609,7 +726,7 @@
         @method('PUT')
 
         {{-- Card 1: Identitas Sekolah --}}
-        <div class="card settings-card" id="identitySchoolCard">
+        <div class="card settings-card school-data-card" id="identitySchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah &amp; Logo</h3>
             </div>
@@ -668,7 +785,8 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Sumber Data</label>
-                                    <p class="form-control-plaintext">
+                                    <p class="school-source-meta">
+                                        <i class="fas fa-database text-muted mr-1"></i>
                                         {{ $setting->school_data_source ?: 'Input manual' }}
                                         @if($setting->school_data_fetched_at)
                                             <small class="d-block text-muted">{{ $setting->school_data_fetched_at->format('d/m/Y H:i') }}</small>
@@ -863,25 +981,26 @@
         </div>
 
         {{-- Card 2: Alamat (Laravolt Indonesia) --}}
-        <div class="card settings-card" id="addressSchoolCard">
+        <div class="card settings-card school-data-card" id="addressSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> Alamat Sekolah</h3>
             </div>
             <div class="card-body">
                 {{-- Section: Alamat Detail --}}
-                <div class="form-group">
-                    <label for="alamat"><i class="fas fa-road"></i> Alamat Lengkap (Jalan) <span class="text-danger">*</span></label>
-                    <textarea name="alamat" id="alamat" rows="3" 
-                              class="form-control @error('alamat') is-invalid @enderror" 
-                              placeholder="Contoh: Jl. Timor Raya No. 81"
-                              required>{{ old('alamat', $setting->alamat) }}</textarea>
-                    <small class="text-muted"><i class="fas fa-info-circle"></i> Tuliskan alamat lengkap termasuk nomor rumah/gedung</small>
-                    @error('alamat')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-                
                 <div class="row form-row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="alamat"><i class="fas fa-road"></i> Alamat Lengkap (Jalan) <span class="text-danger">*</span></label>
+                            <textarea name="alamat" id="alamat" rows="2"
+                                      class="form-control @error('alamat') is-invalid @enderror"
+                                      placeholder="Contoh: Jl. Timor Raya No. 81"
+                                      required>{{ old('alamat', $setting->alamat) }}</textarea>
+                            <small class="text-muted">Tuliskan alamat beserta nomor gedung.</small>
+                            @error('alamat')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                     <div class="col-md-2">
                         <div class="form-group">
                             <label for="rt">RT</label>
@@ -908,9 +1027,22 @@
                             @enderror
                         </div>
                     </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="kode_pos">Kode Pos <span class="text-danger">*</span></label>
+                            <input type="text" name="kode_pos" id="kode_pos"
+                                   class="form-control @error('kode_pos') is-invalid @enderror"
+                                   value="{{ old('kode_pos', $setting->kode_pos) }}"
+                                   placeholder="85111"
+                                   maxlength="5" required>
+                            @error('kode_pos')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
                 
-                <hr class="my-4">
+                <hr class="my-2">
                 
                 {{-- Section: Wilayah --}}
                 <div class="settings-section-heading">
@@ -922,7 +1054,7 @@
                 </div>
                 
                 <div class="row form-row">
-                    <div class="col-lg-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="provinsi_code"><i class="fas fa-map"></i> Provinsi <span class="text-danger">*</span></label>
                             <select name="provinsi_code" id="provinsi_code" 
@@ -942,7 +1074,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="kota_code"><i class="fas fa-city"></i> Kota/Kabupaten <span class="text-danger">*</span></label>
                             <select name="kota_code" id="kota_code" 
@@ -958,10 +1090,7 @@
                             @enderror
                         </div>
                     </div>
-                </div>
-                
-                <div class="row form-row">
-                    <div class="col-lg-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="kecamatan_code"><i class="fas fa-building"></i> Kecamatan <span class="text-danger">*</span></label>
                             <select name="kecamatan_code" id="kecamatan_code" 
@@ -978,7 +1107,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-lg-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="kelurahan_code"><i class="fas fa-home"></i> Kelurahan/Desa <span class="text-danger">*</span></label>
                             <select name="kelurahan_code" id="kelurahan_code" 
@@ -996,45 +1125,21 @@
                     </div>
                 </div>
                 
-                <div class="row form-row">
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label for="kode_pos">Kode Pos <span class="text-danger">*</span></label>
-                            <input type="text" name="kode_pos" id="kode_pos" 
-                                   class="form-control @error('kode_pos') is-invalid @enderror" 
-                                   value="{{ old('kode_pos', $setting->kode_pos) }}" 
-                                   placeholder="85111"
-                                   maxlength="5" required>
-                            <small class="text-muted"><i class="fas fa-info-circle text-info"></i> Isi kode pos sesuai wilayah</small>
-                            @error('kode_pos')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-                
-                {{-- Info Box --}}
-                <div class="alert alert-info alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <h5><i class="icon fas fa-info-circle"></i> Informasi</h5>
-                    <ul class="mb-0 pl-3">
-                        <li>Dropdown wilayah akan otomatis terisi sesuai pilihan sebelumnya</li>
-                        <li>Pilih <strong>Provinsi</strong> terlebih dahulu untuk memunculkan pilihan Kota/Kabupaten</li>
-                        <li><strong>Kode Pos</strong> akan otomatis terisi setelah memilih Kecamatan</li>
-                        <li>Data wilayah menggunakan database resmi dari Kemendagri</li>
-                    </ul>
+                <div class="school-region-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Pilih wilayah berurutan mulai dari provinsi. Pilihan berikutnya dan kode pos akan terisi otomatis menggunakan referensi resmi Kemendagri.</span>
                 </div>
             </div>
         </div>
 
         {{-- Card 3: Kontak --}}
-        <div class="card settings-card" id="contactSchoolCard">
+        <div class="card settings-card school-data-card" id="contactSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-phone"></i> Informasi Kontak</h3>
             </div>
             <div class="card-body">
                 <div class="row form-row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="telepon"><i class="fas fa-phone-alt"></i> Telepon <span class="text-danger">*</span></label>
                             <input type="text" name="telepon" id="telepon" 
@@ -1048,7 +1153,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label for="email"><i class="fas fa-envelope"></i> Email <span class="text-danger">*</span></label>
                             <input type="email" name="email" id="email" 
@@ -1061,29 +1166,30 @@
                             @enderror
                         </div>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="website"><i class="fas fa-globe"></i> Website</label>
-                    <input type="url" name="website" id="website" 
-                           class="form-control @error('website') is-invalid @enderror" 
-                           value="{{ old('website', $setting->website) }}" 
-                           placeholder="https://sekolah.sch.id">
-                    @error('website')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="website"><i class="fas fa-globe"></i> Website</label>
+                            <input type="url" name="website" id="website"
+                                   class="form-control @error('website') is-invalid @enderror"
+                                   value="{{ old('website', $setting->website) }}"
+                                   placeholder="https://sekolah.sch.id">
+                            @error('website')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- Card 4: Sosial Media --}}
-        <div class="card settings-card" id="socialSchoolCard">
+        <div class="card settings-card school-data-card" id="socialSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-share-alt"></i> Media Sosial</h3>
             </div>
             <div class="card-body">
                 <div class="row form-row">
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="facebook_url"><i class="fab fa-facebook text-primary"></i> Facebook</label>
                             <input type="url" name="facebook_url" id="facebook_url" 
@@ -1096,7 +1202,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="instagram_url"><i class="fab fa-instagram text-danger"></i> Instagram</label>
                             <input type="url" name="instagram_url" id="instagram_url" 
@@ -1108,10 +1214,7 @@
                             @enderror
                         </div>
                     </div>
-                </div>
-                
-                <div class="row form-row">
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="youtube_url"><i class="fab fa-youtube text-danger"></i> YouTube</label>
                             <input type="url" name="youtube_url" id="youtube_url" 
@@ -1124,7 +1227,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label for="twitter_url"><i class="fab fa-twitter text-info"></i> Twitter / X</label>
                             <input type="url" name="twitter_url" id="twitter_url" 
@@ -1141,7 +1244,7 @@
         </div>
 
         {{-- Card 5: Kepala Sekolah (READ ONLY) --}}
-        <div class="card settings-card" id="principalSchoolCard">
+        <div class="card settings-card school-data-card" id="principalSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-user-tie"></i> Kepala Sekolah</h3>
                 <span class="badge badge-light float-right">Otomatis dari Tugas Tambahan</span>
@@ -1150,8 +1253,9 @@
                 @if($kepalaSekolah)
                     <div class="row">
                         <div class="col-md-3 text-center">
-                            <img src="{{ $kepalaSekolah->foto_url ?? asset('vendor/adminlte/dist/img/avatar.png') }}" 
-                                 class="img-circle img-fluid" style="max-width: 150px; border: 3px solid #007bff;">
+                            <img src="{{ $kepalaSekolah->foto_url ?? asset('vendor/adminlte/dist/img/avatar.png') }}"
+                                 class="img-circle img-fluid principal-photo"
+                                 alt="Foto {{ $kepalaSekolah->name }}">
                         </div>
                         <div class="col-md-9">
                             <table class="table table-sm table-borderless">
@@ -1183,7 +1287,7 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-info mt-3 mb-0">
+                    <div class="alert alert-info principal-note mb-0">
                         <i class="fas fa-info-circle"></i> 
                         Data Kepala Sekolah diambil otomatis dari <strong>Tugas Tambahan</strong> yang aktif.
                         Untuk mengubah, silakan kelola di menu <a href="{{ route('admin.users.index') }}" class="alert-link font-weight-bold">User Management → Tugas Tambahan</a>.

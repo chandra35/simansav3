@@ -16,6 +16,11 @@ Halaman Pengaturan Aplikasi ditata ulang agar alur pengisian lebih jelas dan res
 6. Preview kop surat dapat digeser horizontal di layar sempit sehingga komposisi dokumen tidak rusak.
 7. Tombol Simpan Pengaturan dibuat tetap mudah dijangkau dan berubah menjadi tombol selebar layar pada ponsel.
 8. Ditambahkan `SettingsUiArchitectureTest` untuk menjaga urutan bagian dan aturan responsif.
+9. Area data sekolah dipadatkan dengan header dan body kartu yang lebih ringkas, kontrol setinggi 36px, serta jarak field yang konsisten.
+10. Alamat, RT, RW, dan kode pos kini sejajar dalam satu baris desktop; empat tingkat wilayah administratif juga sejajar dalam satu baris.
+11. Telepon, email, dan website ditampilkan dalam satu baris desktop, demikian pula empat kanal media sosial.
+12. Panel petunjuk wilayah diringkas menjadi satu callout, metadata sumber data memakai panel status ringan, dan informasi kepala sekolah memakai foto serta tabel yang lebih compact.
+13. Seluruh susunan kembali bertumpuk secara responsif pada layar tablet/ponsel agar field tetap nyaman disentuh dan dibaca.
 
 File terkait:
 

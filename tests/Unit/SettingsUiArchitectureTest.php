@@ -49,4 +49,17 @@ class SettingsUiArchitectureTest extends TestCase
         $this->assertStringContainsString('grid-template-columns: 1fr;', $view);
         $this->assertStringContainsString('kop-preview-scroll', $view);
     }
+
+    public function test_school_data_uses_compact_professional_layout(): void
+    {
+        $view = $this->settingsView();
+
+        $this->assertStringContainsString('school-data-card', $view);
+        $this->assertStringContainsString('margin-bottom: 0.85rem;', $view);
+        $this->assertStringContainsString('min-height: 36px;', $view);
+        $this->assertStringContainsString('school-source-meta', $view);
+        $this->assertStringContainsString('school-region-note', $view);
+        $this->assertStringContainsString('col-lg-3 col-md-6', $view);
+        $this->assertStringContainsString('principal-photo', $view);
+    }
 }
