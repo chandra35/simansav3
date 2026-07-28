@@ -4,14 +4,22 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+Koreksi terbaru menempatkan tiga menu operasional sebagai item pertama tepat di bawah menu Akademik dengan urutan:
+
+1. Manajemen Kelas
+2. Cetak Dokumen
+3. Mutasi Siswa
+
+Setelah tiga item tersebut, menu dilanjutkan dengan Tahun Pelajaran, Kurikulum, Mata Pelajaran, dan menu akademik lainnya. Koreksi mencakup `config/adminlte.php` dan penguatan tes urutan pada `tests/Unit/ClassDetailStudentMetadataTest.php`.
+
 Perubahan aplikasi terakhir sebelum pembuatan dokumentasi ini berada pada commit SIMANSA `9c283eb` (`feat: rapikan menu dan metadata asal kelas`) dan telah di-push serta di-deploy ke produksi.
 
 Perubahan yang dilakukan:
 
 1. Sidebar Akademik dirapikan menjadi urutan:
    - Manajemen Kelas
-   - Mutasi Siswa
    - Cetak Dokumen
+   - Mutasi Siswa
 2. Daftar siswa pada detail rombel diurutkan alfabetis berdasarkan nama.
 3. Detail rombel tingkat XI dan XII menampilkan metadata `Asal kelas` di bawah nama siswa.
 4. Metadata asal kelas mengambil rombel tingkat sebelumnya pada tahun pelajaran sebelumnya.

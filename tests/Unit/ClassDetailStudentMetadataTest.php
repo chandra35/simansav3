@@ -6,21 +6,25 @@ use PHPUnit\Framework\TestCase;
 
 class ClassDetailStudentMetadataTest extends TestCase
 {
-    public function test_academic_menu_groups_class_mutation_and_print_entries_in_that_order(): void
+    public function test_academic_menu_starts_with_class_print_and_mutation_entries(): void
     {
         $menu = file_get_contents(dirname(__DIR__, 2).'/config/adminlte.php');
 
+        $academicPosition = strpos($menu, "'text' => 'Akademik'");
         $classPosition = strpos($menu, "'text' => 'Manajemen Kelas'");
-        $mutationPosition = strpos($menu, "'text' => 'Mutasi Siswa'");
         $printPosition = strpos($menu, "'text' => 'Cetak Dokumen'");
-        $matriculationPosition = strpos($menu, "'text' => 'Matrikulasi PPDB'");
+        $mutationPosition = strpos($menu, "'text' => 'Mutasi Siswa'");
+        $academicYearPosition = strpos($menu, "'text' => 'Tahun Pelajaran'");
 
+        $this->assertNotFalse($academicPosition);
         $this->assertNotFalse($classPosition);
-        $this->assertNotFalse($mutationPosition);
         $this->assertNotFalse($printPosition);
-        $this->assertLessThan($mutationPosition, $classPosition);
-        $this->assertLessThan($printPosition, $mutationPosition);
-        $this->assertLessThan($matriculationPosition, $printPosition);
+        $this->assertNotFalse($mutationPosition);
+        $this->assertNotFalse($academicYearPosition);
+        $this->assertLessThan($classPosition, $academicPosition);
+        $this->assertLessThan($printPosition, $classPosition);
+        $this->assertLessThan($mutationPosition, $printPosition);
+        $this->assertLessThan($academicYearPosition, $mutationPosition);
     }
 
     public function test_class_detail_sorts_students_by_name_and_shows_previous_class_above_grade_ten(): void
