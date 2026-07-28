@@ -384,39 +384,6 @@
             font-weight: 800;
         }
 
-        .settings-section-nav {
-            display: flex;
-            gap: 0.35rem;
-            overflow-x: auto;
-            padding: 0.7rem 1rem;
-            border-bottom: 1px solid #e8edf3;
-            background: #f8fafc;
-            scrollbar-width: thin;
-        }
-
-        .settings-section-nav a {
-            display: inline-flex;
-            flex: 0 0 auto;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.42rem 0.68rem;
-            border: 1px solid transparent;
-            border-radius: 999px;
-            color: #526173;
-            font-size: 0.78rem;
-            font-weight: 700;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-        }
-
-        .settings-section-nav a:hover,
-        .settings-section-nav a:focus {
-            border-color: #c9d8ef;
-            background: #fff;
-            color: #3157c7;
-            text-decoration: none;
-        }
-
         #settingsForm .settings-main-panel > .settings-card {
             overflow: visible;
             margin: 0;
@@ -465,6 +432,40 @@
 
         #settingsForm .settings-main-panel > #schoolLogoCard {
             border-top-color: #e8edf3;
+        }
+
+        #settingsForm .settings-main-panel > .school-data-card {
+            border-top: 0;
+        }
+
+        #settingsForm .settings-main-panel > .school-data-card:not(#identitySchoolCard) > .card-header {
+            display: none;
+        }
+
+        #settingsForm .settings-main-panel > .school-data-card:not(#identitySchoolCard) > .card-body {
+            padding-top: 0;
+        }
+
+        #settingsForm .settings-main-panel > #identitySchoolCard > .card-header {
+            padding-bottom: 0.55rem;
+        }
+
+        .principal-inline-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin: 0.15rem 0 0.65rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e8edf3;
+            color: #0f172a;
+            font-size: 0.875rem;
+            font-weight: 800;
+        }
+
+        .principal-inline-label small {
+            color: #64748b;
+            font-weight: 600;
         }
 
         #settingsForm .settings-card {
@@ -737,11 +738,6 @@
                 flex: 1 1 120px;
             }
 
-            .settings-section-nav {
-                padding-right: 0.75rem;
-                padding-left: 0.75rem;
-            }
-
             #settingsForm .settings-main-panel > .settings-card > .card-header {
                 padding: 0.8rem 1rem 0.2rem;
             }
@@ -957,88 +953,75 @@
                 </div>
             </div>
 
-            <nav class="settings-section-nav" aria-label="Navigasi bagian pengaturan sekolah">
-                <a href="#identitySchoolCard"><i class="fas fa-school"></i> Identitas</a>
-                <a href="#addressSchoolCard"><i class="fas fa-map-marker-alt"></i> Alamat</a>
-                <a href="#contactSchoolCard"><i class="fas fa-phone"></i> Kontak</a>
-                <a href="#principalSchoolCard"><i class="fas fa-user-tie"></i> Kepala Sekolah</a>
-                <a href="#socialSchoolCard"><i class="fas fa-share-alt"></i> Media Sosial</a>
-                <a href="#schoolLogoCard"><i class="fas fa-images"></i> Logo &amp; PDF</a>
-            </nav>
-
         {{-- Card 1: Identitas Sekolah --}}
         <div class="card settings-card school-data-card" id="identitySchoolCard">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-school"></i> Identitas Sekolah</h3>
+                <h3 class="card-title"><i class="fas fa-school"></i> Identitas &amp; Informasi Sekolah</h3>
             </div>
             <div class="card-body">
                 {{-- Section: Identitas --}}
-                <div class="row">
-                    <div class="col-lg-12">
+                <div class="row form-row">
+                    <div class="col-lg-4">
                         <div class="form-group">
                             <label for="nama_sekolah">Nama Sekolah <span class="text-danger">*</span></label>
-                            <input type="text" name="nama_sekolah" id="nama_sekolah" 
-                                   class="form-control @error('nama_sekolah') is-invalid @enderror" 
-                                   value="{{ old('nama_sekolah', $setting->nama_sekolah) }}" 
+                            <input type="text" name="nama_sekolah" id="nama_sekolah"
+                                   class="form-control @error('nama_sekolah') is-invalid @enderror"
+                                   value="{{ old('nama_sekolah', $setting->nama_sekolah) }}"
                                    placeholder="Contoh: MTs NEGERI 1 KOTA KUPANG"
                                    required>
                             @error('nama_sekolah')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-5">
-                                <div class="form-group">
-                                    <label for="npsn">NPSN <span class="text-danger">*</span></label>
-                                    <div class="input-group school-fetch-group">
-                                        <input type="text" name="npsn" id="npsn"
-                                               class="form-control @error('npsn') is-invalid @enderror"
-                                               value="{{ old('npsn', $setting->npsn) }}"
-                                               inputmode="numeric" placeholder="8 digit angka"
-                                               maxlength="8" required>
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-primary" id="btnFetchSchoolData">
-                                                <i class="fas fa-cloud-download-alt"></i> Ambil Data
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <small class="text-muted">Mengambil identitas resmi dari Referensi Kemendikdasmen dan EMIS.</small>
-                                    @error('npsn')
-                                        <span class="invalid-feedback d-block">{{ $message }}</span>
-                                    @enderror
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label for="npsn">NPSN <span class="text-danger">*</span></label>
+                            <div class="input-group school-fetch-group">
+                                <input type="text" name="npsn" id="npsn"
+                                       class="form-control @error('npsn') is-invalid @enderror"
+                                       value="{{ old('npsn', $setting->npsn) }}"
+                                       inputmode="numeric" placeholder="8 digit angka"
+                                       maxlength="8" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary" id="btnFetchSchoolData">
+                                        <i class="fas fa-cloud-download-alt"></i> Ambil Data
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="nsm">NSM <span class="text-danger">*</span></label>
-                                    <input type="text" name="nsm" id="nsm"
-                                           class="form-control @error('nsm') is-invalid @enderror"
-                                           value="{{ old('nsm', $setting->nsm) }}"
-                                           inputmode="numeric" placeholder="12 digit NSM"
-                                           maxlength="12" required>
-                                    <small class="text-muted">Digunakan sebagai awalan NIS Lokal.</small>
-                                    @error('nsm')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Sumber Data</label>
-                                    <p class="school-source-meta">
-                                        <i class="fas fa-database text-muted mr-1"></i>
-                                        {{ $setting->school_data_source ?: 'Input manual' }}
-                                        @if($setting->school_data_fetched_at)
-                                            <small class="d-block text-muted">{{ $setting->school_data_fetched_at->format('d/m/Y H:i') }}</small>
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
+                            <small class="text-muted">Ambil identitas resmi Kemendikdasmen dan EMIS.</small>
+                            @error('npsn')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <div class="form-group">
+                            <label for="nsm">NSM <span class="text-danger">*</span></label>
+                            <input type="text" name="nsm" id="nsm"
+                                   class="form-control @error('nsm') is-invalid @enderror"
+                                   value="{{ old('nsm', $setting->nsm) }}"
+                                   inputmode="numeric" placeholder="12 digit NSM"
+                                   maxlength="12" required>
+                            <small class="text-muted">Awalan NIS Lokal.</small>
+                            @error('nsm')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <div class="form-group">
+                            <label>Sumber Data</label>
+                            <p class="school-source-meta">
+                                <i class="fas fa-database text-muted mr-1"></i>
+                                {{ $setting->school_data_source ?: 'Input manual' }}
+                                @if($setting->school_data_fetched_at)
+                                    <small class="d-block text-muted">{{ $setting->school_data_fetched_at->format('d/m/Y H:i') }}</small>
+                                @endif
+                            </p>
                         </div>
                     </div>
                 </div>
-                
             </div>
         </div>
 
@@ -1491,6 +1474,10 @@
                 <span class="badge badge-light float-right">Otomatis dari Tugas Tambahan</span>
             </div>
             <div class="card-body">
+                <div class="principal-inline-label">
+                    <span><i class="fas fa-user-tie text-primary mr-1"></i> Kepala Sekolah</span>
+                    <small>Otomatis dari Tugas Tambahan</small>
+                </div>
                 @if($kepalaSekolah)
                     <div class="row">
                         <div class="col-md-3 text-center">

@@ -63,16 +63,17 @@ class SettingsUiArchitectureTest extends TestCase
         $this->assertStringContainsString('principal-photo', $view);
     }
 
-    public function test_school_settings_are_presented_as_one_navigable_panel(): void
+    public function test_school_settings_are_presented_as_one_continuous_panel(): void
     {
         $view = $this->settingsView();
 
         $this->assertStringContainsString('class="settings-main-panel"', $view);
         $this->assertStringContainsString('class="settings-panel-hero"', $view);
-        $this->assertStringContainsString('class="settings-section-nav"', $view);
         $this->assertStringContainsString('Data Sekolah', $view);
-        $this->assertStringContainsString('href="#identitySchoolCard"', $view);
-        $this->assertStringContainsString('href="#schoolLogoCard"', $view);
+        $this->assertStringContainsString('Identitas &amp; Informasi Sekolah', $view);
+        $this->assertStringContainsString('school-data-card:not(#identitySchoolCard)', $view);
+        $this->assertStringContainsString('principal-inline-label', $view);
+        $this->assertStringNotContainsString('class="settings-section-nav"', $view);
         $this->assertStringContainsString('box-shadow: 0 22px 48px', $view);
         $this->assertStringContainsString('#settingsForm .settings-main-panel > .settings-card', $view);
     }
