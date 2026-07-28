@@ -216,7 +216,8 @@ class SiswaController extends Controller
         }
 
         $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
-        $data = $siswa->get()->map(function($item) use ($activeYearId) {
+        $canViewDetailKelas = $request->user()->can('view-detail-kelas');
+        $data = $siswa->get()->map(function($item) use ($activeYearId, $canViewDetailKelas) {
             // Get kelas aktif
             $kelasAktif = $item->kelasTahunAktif->first();
             $aktifRecord = $kelasAktif ? null : $item->siswaKelasRecords()
@@ -224,9 +225,22 @@ class SiswaController extends Controller
                 ->where('tahun_pelajaran_id', $activeYearId)
                 ->latest('created_at')
                 ->first();
-            $kelasNama = $kelasAktif
-                ? $kelasAktif->nama_kelas
-                : '<span class="text-muted small">' . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '') . 'Tanpa Rombel</span>';
+            if ($kelasAktif && $canViewDetailKelas) {
+                $kelasNama = '<a href="' . e(route('admin.kelas.show', $kelasAktif)) . '"'
+                    . ' class="font-weight-600 text-primary"'
+                    . ' title="Lihat rombel ' . e($kelasAktif->nama_kelas) . '">'
+                    . e($kelasAktif->nama_kelas)
+                    . '</a>';
+            } elseif ($kelasAktif) {
+                $kelasNama = '<span class="text-muted" aria-disabled="true"'
+                    . ' title="Anda tidak memiliki akses detail rombel">'
+                    . e($kelasAktif->nama_kelas)
+                    . '</span>';
+            } else {
+                $kelasNama = '<span class="text-muted small">'
+                    . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '')
+                    . 'Tanpa Rombel</span>';
+            }
 
             $jk = $item->jenis_kelamin;
             $jkBadge = $jk === 'L'
