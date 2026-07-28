@@ -861,6 +861,8 @@ class KelasController extends Controller
                         'tingkat' => $kelas->tingkat,
                         'nomor_urut_absen' => $lastAbsen + 1,
                         'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                        'keberadaan_diverifikasi_at' => null,
+                        'keberadaan_diverifikasi_by' => null,
                     ]);
                 } else {
                     $kelas->siswas()->attach($siswaId, [
@@ -1032,6 +1034,8 @@ class KelasController extends Controller
                         'tingkat' => $kelas->tingkat,
                         'nomor_urut_absen' => $nextAbsen,
                         'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                        'keberadaan_diverifikasi_at' => null,
+                        'keberadaan_diverifikasi_by' => null,
                     ]);
                 } else {
                     $insertRows[] = [
@@ -1234,6 +1238,8 @@ class KelasController extends Controller
                     'status' => 'aktif',
                     'nomor_urut_absen' => $nextAttendanceNumber,
                     'catatan_perpindahan' => "Pindah rombel dari {$sourceClass->nama_lengkap}.{$reasonText}",
+                    'keberadaan_diverifikasi_at' => null,
+                    'keberadaan_diverifikasi_by' => null,
                 ];
 
                 if ($targetEnrollment) {
@@ -1287,6 +1293,57 @@ class KelasController extends Controller
                 'message' => 'Gagal memindahkan siswa. Silakan coba lagi.',
             ], 500);
         }
+    }
+
+    /**
+     * Toggle hasil verifikasi keberadaan fisik siswa pada rombel aktif.
+     */
+    public function toggleKeberadaanSiswa(Kelas $kelas, Siswa $siswa)
+    {
+        $this->authorize('edit-kelas');
+
+        $enrollment = SiswaKelas::query()
+            ->where('siswa_id', $siswa->id)
+            ->where('kelas_id', $kelas->id)
+            ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+            ->where('status', 'aktif')
+            ->first();
+
+        if (! $enrollment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa tidak lagi tercatat aktif pada rombel ini. Muat ulang halaman.',
+            ], 422);
+        }
+
+        $wasVerified = $enrollment->keberadaan_diverifikasi_at !== null;
+        $enrollment->update([
+            'keberadaan_diverifikasi_at' => $wasVerified ? null : now(),
+            'keberadaan_diverifikasi_by' => $wasVerified ? null : Auth::id(),
+        ]);
+
+        activity()
+            ->performedOn($siswa)
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'kelas_id' => $kelas->id,
+                'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                'keberadaan_terverifikasi' => ! $wasVerified,
+            ])
+            ->log(
+                $wasVerified
+                    ? "Membatalkan verifikasi keberadaan {$siswa->nama_lengkap} di {$kelas->nama_lengkap}"
+                    : "Memverifikasi keberadaan {$siswa->nama_lengkap} di {$kelas->nama_lengkap}"
+            );
+
+        return response()->json([
+            'success' => true,
+            'keberadaan_terverifikasi' => ! $wasVerified,
+            'verified_at' => $enrollment->keberadaan_diverifikasi_at?->format('d/m/Y H:i'),
+            'message' => $wasVerified
+                ? 'Verifikasi keberadaan dibatalkan.'
+                : "{$siswa->nama_lengkap} ditandai ada di rombel.",
+        ]);
     }
 
     /**

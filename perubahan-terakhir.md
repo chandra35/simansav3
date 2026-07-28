@@ -1,8 +1,16 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Verifikasi keberadaan siswa di rombel
+
+Detail rombel sekarang memiliki kolom `Keberadaan` untuk pengguna yang memiliki izin edit kelas. Tombol `Ada / Belum dicek` menyimpan hasil verifikasi fisik siswa pada keanggotaan rombel aktif, lengkap dengan waktu dan akun pemeriksa. Status verifikasi otomatis direset ketika siswa ditempatkan atau dipindahkan ke rombel lain.
+
+Setelah pindah rombel berhasil, dialog menampilkan tombol `Selesai` dan memuat ulang halaman rombel asal; halaman tidak lagi berpindah otomatis ke rombel tujuan.
+
+Perubahan database menggunakan migration `2026_07_29_090000_add_keberadaan_verification_to_siswa_kelas.php`.
 
 ### Login As siswa dan GTK tanpa menghapus sesi admin
 

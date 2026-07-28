@@ -23,11 +23,14 @@ class SiswaKelas extends Model
         'status',
         'nomor_urut_absen',
         'catatan_perpindahan',
+        'keberadaan_diverifikasi_at',
+        'keberadaan_diverifikasi_by',
     ];
 
     protected $casts = [
         'tanggal_masuk' => 'date',
         'tanggal_keluar' => 'date',
+        'keberadaan_diverifikasi_at' => 'datetime',
         'tingkat' => 'integer',
     ];
 

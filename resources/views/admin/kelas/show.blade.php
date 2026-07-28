@@ -186,6 +186,9 @@
                                 <th>Nama Lengkap</th>
                                 <th>Asal Sekolah</th>
                                 <th>JK</th>
+                                @can('edit-kelas')
+                                <th class="text-center">Keberadaan</th>
+                                @endcan
                                 @if(auth()->user()->hasRole('Super Admin'))
                                 <th class="text-center">EMIS</th>
                                 @endif
@@ -286,6 +289,21 @@
                                             <span class="badge badge-danger"><i class="fas fa-female"></i> P</span>
                                         @endif
                                     </td>
+                                    @can('edit-kelas')
+                                    @php($keberadaanTerverifikasi = $siswa->pivot->keberadaan_diverifikasi_at !== null)
+                                    <td class="text-center class-presence-cell">
+                                        <button type="button"
+                                                class="btn btn-xs class-presence-toggle {{ $keberadaanTerverifikasi ? 'is-verified' : 'is-pending' }}"
+                                                data-url="{{ route('admin.kelas.siswa.toggle-keberadaan', ['kelas' => $kelas, 'siswa' => $siswa]) }}"
+                                                data-student="{{ $siswa->nama_lengkap }}"
+                                                data-verified="{{ $keberadaanTerverifikasi ? 1 : 0 }}"
+                                                data-toggle="tooltip"
+                                                title="{{ $keberadaanTerverifikasi ? 'Batalkan verifikasi keberadaan' : 'Tandai siswa ada di rombel ini' }}">
+                                            <i class="fas {{ $keberadaanTerverifikasi ? 'fa-user-check' : 'fa-user-clock' }} mr-1"></i>
+                                            <span>{{ $keberadaanTerverifikasi ? 'Ada' : 'Belum dicek' }}</span>
+                                        </button>
+                                    </td>
+                                    @endcan
                                     @if(auth()->user()->hasRole('Super Admin'))
                                     <td class="text-center class-emis-cell">
                                         <button type="button"
@@ -845,6 +863,35 @@
             filter: brightness(.97);
             transform: translateY(-1px);
         }
+        .class-students-table .class-presence-cell {
+            width: 108px;
+        }
+        .class-students-table .class-presence-toggle {
+            min-width: 94px;
+            padding: .2rem .5rem;
+            border: 1px solid;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1.25;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+        .class-students-table .class-presence-toggle.is-verified {
+            color: #15803d;
+            border-color: #86efac;
+            background: #dcfce7;
+        }
+        .class-students-table .class-presence-toggle.is-pending {
+            color: #92400e;
+            border-color: #fcd34d;
+            background: #fffbeb;
+        }
+        .class-students-table .class-presence-toggle:hover,
+        .class-students-table .class-presence-toggle:focus {
+            filter: brightness(.97);
+            transform: translateY(-1px);
+        }
 
         /* Dual Listbox Styling */
         #modalTambahSiswa .list-group-item {
@@ -1068,13 +1115,17 @@
 
 @section('js')
     @php
+        $hasClassPresenceColumn = auth()->user()->can('edit-kelas');
         $hasClassEmisColumn = auth()->user()->hasRole('Super Admin');
         $nonSortableStudentColumns = [0, 1];
-        if ($hasClassEmisColumn) {
+        if ($hasClassPresenceColumn) {
             $nonSortableStudentColumns[] = 7;
         }
+        if ($hasClassEmisColumn) {
+            $nonSortableStudentColumns[] = $hasClassPresenceColumn ? 8 : 7;
+        }
         if (auth()->user()->canAny(['transfer-siswa-kelas', 'remove-siswa-kelas'])) {
-            $nonSortableStudentColumns[] = $hasClassEmisColumn ? 9 : 8;
+            $nonSortableStudentColumns[] = 8 + (int) $hasClassPresenceColumn + (int) $hasClassEmisColumn;
         }
     @endphp
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1110,6 +1161,46 @@
             }
 
             $('[data-toggle="tooltip"]').tooltip();
+
+            @can('edit-kelas')
+            $(document).on('click', '.class-presence-toggle', function() {
+                const button = $(this);
+                if (button.prop('disabled')) return;
+
+                const originalHtml = button.html();
+                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.post(button.data('url'), {_token: '{{ csrf_token() }}'})
+                .done(function(response) {
+                    if (!response.success) {
+                        button.html(originalHtml);
+                        toastr.error('Status keberadaan belum berhasil diperbarui.');
+                        return;
+                    }
+
+                    const verified = Boolean(response.keberadaan_terverifikasi);
+                    const tooltipText = verified
+                        ? 'Batalkan verifikasi keberadaan'
+                        : 'Tandai siswa ada di rombel ini';
+                    button
+                        .data('verified', verified ? 1 : 0)
+                        .toggleClass('is-verified', verified)
+                        .toggleClass('is-pending', !verified)
+                        .html(verified
+                            ? '<i class="fas fa-user-check mr-1"></i><span>Ada</span>'
+                            : '<i class="fas fa-user-clock mr-1"></i><span>Belum dicek</span>');
+                    button.tooltip('dispose').attr('title', tooltipText).tooltip();
+                    toastr.success(response.message);
+                })
+                .fail(function(xhr) {
+                    button.html(originalHtml);
+                    toastr.error(xhr.responseJSON?.message || 'Gagal mengubah status keberadaan');
+                })
+                .always(function() {
+                    button.prop('disabled', false);
+                });
+            });
+            @endcan
 
             @if(auth()->user()->hasRole('Super Admin'))
             $(document).on('click', '.class-emis-toggle', function() {
@@ -1754,8 +1845,14 @@
                     data: $(this).serialize(),
                     success: function(response) {
                         $('#modalTransferSiswa').modal('hide');
-                        Swal.fire({icon:'success', title:'Rombel berhasil dipindahkan', text:response.message, confirmButtonText:'Lihat rombel tujuan'})
-                            .then(() => window.location.href = response.redirect || window.location.href);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Rombel berhasil dipindahkan',
+                            text: response.message,
+                            confirmButtonText: 'Selesai',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => window.location.reload());
                     },
                     error: function(xhr) {
                         Swal.fire({icon:'error', title:'Perpindahan gagal', text:xhr.responseJSON?.message || 'Terjadi kesalahan saat memindahkan siswa.'});

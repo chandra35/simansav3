@@ -394,6 +394,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/siswa/nisn', [KelasController::class, 'storeSiswaNISN'])->name('kelas.siswa.store-nisn')->middleware('permission:assign-siswa-kelas');
     Route::delete('/kelas/{kelas}/siswa/{siswa}', [KelasController::class, 'removeSiswa'])->name('kelas.siswa.remove')->middleware('permission:remove-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa/{siswa}/pindah-rombel', [KelasController::class, 'transferSiswa'])->name('kelas.siswa.transfer')->middleware('permission:transfer-siswa-kelas');
+    Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
     Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi');
