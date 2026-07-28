@@ -4,20 +4,40 @@ namespace App\Exports;
 
 use App\Models\Siswa;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\DefaultValueBinder;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithTitle, WithColumnFormatting
+class SiswaExport extends DefaultValueBinder implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithTitle, WithColumnFormatting, WithCustomValueBinder
 {
+    private const TEXT_COLUMNS = [
+        'C',  // NISN
+        'D',  // NIS Lokal
+        'E',  // Nomor Tes PPDB
+        'F',  // Username
+        'G',  // Password default
+        'H',  // NIK siswa
+        'M',  // No. HP siswa
+        'P',  // NPSN sekolah asal
+        'S',  // NIK ayah
+        'V',  // No. HP ayah
+        'X',  // NIK ibu
+        'AA', // No. HP ibu
+        'AB', // No. KK
+    ];
+
     protected Collection $rows;
     protected int $counter = 0;
     protected string $sheetTitle;
@@ -36,6 +56,17 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function collection(): Collection
     {
         return $this->rows;
+    }
+
+    public function bindValue(Cell $cell, $value): bool
+    {
+        if (in_array($cell->getColumn(), self::TEXT_COLUMNS, true)) {
+            $cell->setValueExplicit((string) ($value ?? ''), DataType::TYPE_STRING);
+
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
     }
 
     public function headings(): array
@@ -140,44 +171,42 @@ class SiswaExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'A' => 5,   // No
             'B' => 30,  // Nama
             'C' => 16,  // NISN
-            'D' => 18,  // Nomor Tes
-            'E' => 18,  // Username
-            'F' => 26,  // Password
-            'G' => 20,  // NIK
-            'H' => 14,  // JK
-            'I' => 18,  // Tempat Lahir
-            'J' => 14,  // Tgl Lahir
-            'K' => 12,  // Agama
-            'L' => 16,  // HP
-            'M' => 12,  // Kelas
-            'N' => 12,  // Tahun Masuk
-            'O' => 16,  // NPSN
-            'P' => 28,  // Email
-            'Q' => 26,  // Nama Ayah
-            'R' => 20,  // NIK Ayah
-            'S' => 22,  // Pekerjaan Ayah
-            'T' => 20,  // Penghasilan Ayah
-            'U' => 16,  // HP Ayah
-            'V' => 26,  // Nama Ibu
-            'W' => 20,  // NIK Ibu
-            'X' => 22,  // Pekerjaan Ibu
-            'Y' => 20,  // Penghasilan Ibu
-            'Z' => 16,  // HP Ibu
-            'AA' => 20, // No KK
-            'AB' => 16, // Status Diri
-            'AC' => 16, // Status Ortu
-            'AD' => 14, // Verval
-            'AE' => 18, // Status EMIS
-            'AF' => 18, // Tgl EMIS
-            'AG' => 14, // Tgl Daftar
+            'D' => 22,  // NIS Lokal
+            'E' => 18,  // Nomor Tes
+            'F' => 18,  // Username
+            'G' => 26,  // Password
+            'H' => 20,  // NIK
+            'I' => 14,  // JK
+            'J' => 18,  // Tempat Lahir
+            'K' => 14,  // Tgl Lahir
+            'L' => 12,  // Agama
+            'M' => 16,  // HP
+            'N' => 12,  // Kelas
+            'O' => 12,  // Tahun Masuk
+            'P' => 16,  // NPSN
+            'Q' => 28,  // Email
+            'R' => 26,  // Nama Ayah
+            'S' => 20,  // NIK Ayah
+            'T' => 22,  // Pekerjaan Ayah
+            'U' => 20,  // Penghasilan Ayah
+            'V' => 16,  // HP Ayah
+            'W' => 26,  // Nama Ibu
+            'X' => 20,  // NIK Ibu
+            'Y' => 22,  // Pekerjaan Ibu
+            'Z' => 20,  // Penghasilan Ibu
+            'AA' => 16, // HP Ibu
+            'AB' => 20, // No KK
+            'AC' => 16, // Status Diri
+            'AD' => 16, // Status Ortu
+            'AE' => 14, // Verval
+            'AF' => 18, // Status EMIS
+            'AG' => 18, // Tgl EMIS
+            'AH' => 14, // Tgl Daftar
         ];
     }
 
     public function columnFormats(): array
     {
-        return [
-            'C' => NumberFormat::FORMAT_TEXT,
-            'D' => NumberFormat::FORMAT_TEXT,
-        ];
+        return array_fill_keys(self::TEXT_COLUMNS, NumberFormat::FORMAT_TEXT);
     }
 }
