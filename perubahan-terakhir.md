@@ -12,6 +12,8 @@ Setelah pindah rombel berhasil, dialog menampilkan tombol `Selesai` dan memuat u
 
 Perubahan database menggunakan migration `2026_07_29_090000_add_keberadaan_verification_to_siswa_kelas.php`.
 
+Hotfix pada tanggal yang sama mengganti directive PHP singkat di tabel detail rombel menjadi blok Blade yang kompatibel dengan compiler produksi, sehingga halaman detail rombel tidak lagi menghasilkan `ParseError`.
+
 ### Login As siswa dan GTK tanpa menghapus sesi admin
 
 Data Siswa dan Data GTK kini mempunyai tombol `Login As` khusus akun dengan role `Super Admin` atau `Admin`. Tombol bekerja langsung tanpa modal konfirmasi dan tanpa alasan, lalu membuka akun tujuan pada tab baru.

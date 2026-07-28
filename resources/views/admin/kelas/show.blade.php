@@ -290,7 +290,9 @@
                                         @endif
                                     </td>
                                     @can('edit-kelas')
-                                    @php($keberadaanTerverifikasi = $siswa->pivot->keberadaan_diverifikasi_at !== null)
+                                    @php
+                                        $keberadaanTerverifikasi = $siswa->pivot->keberadaan_diverifikasi_at !== null;
+                                    @endphp
                                     <td class="text-center class-presence-cell">
                                         <button type="button"
                                                 class="btn btn-xs class-presence-toggle {{ $keberadaanTerverifikasi ? 'is-verified' : 'is-pending' }}"

@@ -27,6 +27,7 @@ class ClassStudentPresenceVerificationTest extends TestCase
         $this->assertStringContainsString("name('kelas.siswa.toggle-keberadaan')->middleware('permission:edit-kelas')", $routes);
         $this->assertStringContainsString('class-presence-toggle', $view);
         $this->assertStringContainsString('Belum dicek', $view);
+        $this->assertStringNotContainsString('@php($keberadaanTerverifikasi', $view);
         $this->assertStringContainsString("confirmButtonText: 'Selesai'", $view);
         $this->assertStringContainsString('window.location.reload()', $view);
         $this->assertStringNotContainsString("confirmButtonText:'Lihat rombel tujuan'", $view);
