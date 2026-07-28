@@ -466,6 +466,16 @@ class SiswaController extends Controller
                     <i class="fas fa-key"></i>
                 </button>';
         }
+
+        if ($user->can('impersonate-users') && $item->user_id) {
+            $buttons .= '
+                <form method="POST" action="'.route('admin.impersonation.siswa.start', $item->id).'" target="_blank" class="d-inline">
+                    <input type="hidden" name="_token" value="'.csrf_token().'">
+                    <button type="submit" class="btn btn-primary btn-sm" title="Login As siswa">
+                        <i class="fas fa-user-secret"></i>
+                    </button>
+                </form>';
+        }
         
         // Delete button
         if ($user->can('delete-siswa')) {

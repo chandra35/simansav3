@@ -4,6 +4,38 @@ Tanggal pembaruan: 28 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Login As siswa dan GTK tanpa menghapus sesi admin
+
+Data Siswa dan Data GTK kini mempunyai tombol `Login As` khusus akun dengan role `Super Admin` atau `Admin`. Tombol bekerja langsung tanpa modal konfirmasi dan tanpa alasan, lalu membuka akun tujuan pada tab baru.
+
+Sesi admin utama tidak diganti. Sistem memakai token acak yang hanya disimpan dalam bentuk hash dan dua cookie `HttpOnly` terpisah dengan masa aktif 60 menit:
+
+- cookie siswa hanya berlaku pada path `/siswa`;
+- cookie GTK hanya berlaku pada path `/admin/gtk`.
+
+Halaman impersonasi menampilkan banner identitas dan tombol `Kembali ke Admin`. Tombol logout pada menu pengguna juga diarahkan untuk hanya mengakhiri mode Login As. Perubahan password siswa/GTK diblokir selama impersonasi. Admin tidak dapat Login As ke dirinya sendiri, akun tidak aktif, serta akun Admin/Super Admin/Operator lain.
+
+Setiap mulai dan mengakhiri Login As dicatat ke activity log. Tabel `user_impersonations` juga menyimpan admin pelaksana, akun tujuan, tipe akun, IP, user-agent, waktu kedaluwarsa, pemakaian terakhir, dan status penghentian. Permission baru `impersonate-users` diberikan hanya kepada role `Super Admin` dan `Admin`.
+
+File utama:
+
+- `app/Http/Controllers/Admin/UserImpersonationController.php`
+- `app/Http/Middleware/ApplyUserImpersonation.php`
+- `app/Models/UserImpersonation.php`
+- `database/migrations/2026_07_28_170000_create_user_impersonations_table.php`
+- `resources/views/partials/impersonation-banner.blade.php`
+- `tests/Feature/UserImpersonationFlowTest.php`
+- `tests/Unit/UserImpersonationArchitectureTest.php`
+
+Validasi lokal:
+
+- migrasi nyata berhasil;
+- permission terverifikasi aktif pada Super Admin/Admin dan tidak aktif pada Operator;
+- alur riil siswa dan GTK membuktikan cookie path terpisah, halaman target tampil sebagai akun tujuan, penghentian impersonasi berhasil, dan sesi admin tetap aktif;
+- 77 pengujian lulus dengan 514 assertions;
+- pengujian alur riil turut merender dashboard siswa dalam mode Login As dan memverifikasi banner identitas;
+- hanya muncul enam deprecation PDO lama yang sudah dikenal.
+
 ### Export Excel siswa menjaga digit NIK
 
 Export siswa kini memakai custom value binder untuk menyimpan NIK dan identifier numerik panjang sebagai string eksplisit di XLSX. Kolom NISN, NIS Lokal, nomor tes, username, password default, NIK siswa, nomor HP, NPSN, NIK/HP orang tua, dan No. KK tidak lagi diproses sebagai angka Excel sehingga digit terakhir maupun nol di depan tetap utuh. Posisi format dan lebar 34 kolom juga diselaraskan kembali sampai kolom `AH`.

@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'force.password' => \App\Http\Middleware\ForcePasswordChange::class,
             'activity.location.required' => \App\Http\Middleware\EnsureDeviceLocationForActivity::class,
+            'impersonation' => \App\Http\Middleware\ApplyUserImpersonation::class,
         ]);
         
         // Exclude ExaManmet API routes from CSRF verification

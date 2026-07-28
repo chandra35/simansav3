@@ -141,6 +141,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');
     Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
     Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
+    Route::middleware('permission:impersonate-users')->prefix('impersonation')->name('impersonation.')->group(function () {
+        Route::post('/siswa/{siswa}', [App\Http\Controllers\Admin\UserImpersonationController::class, 'startSiswa'])
+            ->name('siswa.start');
+        Route::post('/gtk/{gtk}', [App\Http\Controllers\Admin\UserImpersonationController::class, 'startGtk'])
+            ->name('gtk.start');
+    });
 
     Route::middleware('permission:manage-nis-lokal')->prefix('nis-lokal')->name('nis-lokal.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\NisLokalController::class, 'index'])->name('index');
@@ -393,19 +399,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi');
     
     // GTK Personal (Dashboard & Profile for GTK users)
-    Route::middleware(['permission:view-gtk-dashboard'])->group(function () {
+    Route::post('/gtk/impersonation/stop', [App\Http\Controllers\Admin\UserImpersonationController::class, 'stopGtk'])
+        ->middleware('impersonation:gtk')
+        ->name('gtk.impersonation.stop');
+
+    Route::middleware(['impersonation:gtk', 'permission:view-gtk-dashboard'])->group(function () {
         Route::get('/gtk/dashboard', [App\Http\Controllers\Admin\GtkDashboardController::class, 'index'])->name('gtk.dashboard');
         Route::get('/gtk/pemilihan-osis', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'index'])->name('gtk.osis-election.index');
         Route::post('/gtk/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'vote'])
             ->middleware('throttle:5,1')->name('gtk.osis-election.vote');
     });
     
-    Route::middleware(['permission:change-password-gtk'])->group(function () {
+    Route::middleware(['impersonation:gtk', 'permission:change-password-gtk'])->group(function () {
         Route::get('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'password'])->name('gtk.profile.password');
         Route::put('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'updatePassword'])->name('gtk.profile.password.update');
     });
     
-    Route::middleware(['permission:edit-gtk-profile'])->group(function () {
+    Route::middleware(['impersonation:gtk', 'permission:edit-gtk-profile'])->group(function () {
         Route::get('/gtk/profile', [App\Http\Controllers\Admin\GtkProfileController::class, 'index'])->name('gtk.profile');
         Route::put('/gtk/profile/diri', [App\Http\Controllers\Admin\GtkProfileController::class, 'updateDiri'])->name('gtk.profile.diri.update');
         Route::put('/gtk/profile/kepeg', [App\Http\Controllers\Admin\GtkProfileController::class, 'updateKepeg'])->name('gtk.profile.kepeg.update');
@@ -954,7 +964,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 // Siswa Routes
-Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () {
+Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
+    Route::post('/impersonation/stop', [App\Http\Controllers\Admin\UserImpersonationController::class, 'stopSiswa'])
+        ->name('impersonation.stop');
+
     // Force setup (password + email) - no middleware restriction
     Route::get('/force-setup', [SiswaProfileController::class, 'forceSetup'])->name('force-setup');
     Route::post('/force-setup', [SiswaProfileController::class, 'updateForceSetup'])->name('force-setup.update');

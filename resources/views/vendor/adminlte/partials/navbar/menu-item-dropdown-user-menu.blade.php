@@ -1,5 +1,6 @@
 @php( $logout_url = View::getSection('logout_url') ?? config('adminlte.logout_url', 'logout') )
 @php( $profile_url = View::getSection('profile_url') ?? config('adminlte.profile_url', 'logout') )
+@php( $impersonation = request()->attributes->get('impersonation') )
 
 @if (config('adminlte.usermenu_profile_url', false))
     @php( $profile_url = Auth::user()->adminlte_profile_url() )
@@ -11,6 +12,11 @@
 @else
     @php( $profile_url = $profile_url ? url($profile_url) : '' )
     @php( $logout_url = $logout_url ? url($logout_url) : '' )
+@endif
+
+@if($impersonation)
+    @php( $logout_url = route($impersonation->target_type === 'siswa' ? 'siswa.impersonation.stop' : 'admin.gtk.impersonation.stop') )
+    @php( $profile_url = '' )
 @endif
 
 <li class="nav-item dropdown user-menu">
@@ -71,7 +77,7 @@
             <a class="btn btn-default btn-flat float-right @if(!$profile_url) btn-block @endif"
                href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="fa fa-fw fa-power-off text-red"></i>
-                {{ __('adminlte::adminlte.log_out') }}
+                {{ $impersonation ? 'Kembali ke Admin' : __('adminlte::adminlte.log_out') }}
             </a>
             <form id="logout-form" action="{{ $logout_url }}" method="POST" style="display: none;">
                 @if(config('adminlte.logout_method'))
