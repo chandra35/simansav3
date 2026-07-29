@@ -118,7 +118,10 @@ class UserImpersonationFlowTest extends TestCase
             ->withCookie(ApplyUserImpersonation::COOKIE_NAMES['siswa'], $plainToken)
             ->post(route('siswa.impersonation.stop'));
 
-        $stop->assertRedirect(route('admin.siswa.index'));
+        $stop->assertOk();
+        $stop->assertViewIs('admin.impersonation.closed');
+        $stop->assertViewHas('adminUrl', route('admin.siswa.index'));
+        $stop->assertSee('Mode Login As telah ditutup');
         $stop->assertCookieExpired(ApplyUserImpersonation::COOKIE_NAMES['siswa']);
         $this->assertAuthenticatedAs($admin);
         $this->assertNotNull($record->fresh()->ended_at);
@@ -183,7 +186,9 @@ class UserImpersonationFlowTest extends TestCase
             ->withCookie(ApplyUserImpersonation::COOKIE_NAMES['gtk'], $plainToken)
             ->post(route('admin.gtk.impersonation.stop'));
 
-        $stop->assertRedirect(route('admin.gtk.index'));
+        $stop->assertOk();
+        $stop->assertViewIs('admin.impersonation.closed');
+        $stop->assertViewHas('adminUrl', route('admin.gtk.index'));
         $stop->assertCookieExpired(ApplyUserImpersonation::COOKIE_NAMES['gtk']);
         $this->assertAuthenticatedAs($admin);
         $this->assertDatabaseHas('user_impersonations', [

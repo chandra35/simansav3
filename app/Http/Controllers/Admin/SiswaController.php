@@ -480,7 +480,7 @@ class SiswaController extends Controller
 
         if ($user->can('impersonate-users') && $item->user_id) {
             $buttons .= '
-                <form method="POST" action="'.route('admin.impersonation.siswa.start', $item->id).'" target="_blank" class="d-inline">
+                <form method="POST" action="'.route('admin.impersonation.siswa.start', $item->id).'" target="_blank" data-no-overlay class="d-inline">
                     <input type="hidden" name="_token" value="'.csrf_token().'">
                     <button type="submit" class="btn btn-primary btn-sm" title="Login As siswa">
                         <i class="fas fa-user-secret"></i>

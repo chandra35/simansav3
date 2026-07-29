@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserImpersonation;
 use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -34,17 +35,17 @@ class UserImpersonationController extends Controller
         return $this->start($request, $target, 'gtk', route('admin.gtk.dashboard'));
     }
 
-    public function stopSiswa(Request $request): RedirectResponse
+    public function stopSiswa(Request $request): Response
     {
         return $this->stop($request, 'siswa');
     }
 
-    public function stopGtk(Request $request): RedirectResponse
+    public function stopGtk(Request $request): Response
     {
         return $this->stop($request, 'gtk');
     }
 
-    private function stop(Request $request, string $targetType): RedirectResponse
+    private function stop(Request $request, string $targetType): Response
     {
         abort_unless(isset(ApplyUserImpersonation::COOKIE_NAMES[$targetType]), 404);
 
@@ -71,9 +72,11 @@ class UserImpersonationController extends Controller
 
         $redirectRoute = $targetType === 'siswa' ? 'admin.siswa.index' : 'admin.gtk.index';
 
-        return redirect()
-            ->route($redirectRoute)
-            ->with('success', 'Mode Login As telah ditutup. Sesi admin tetap aktif.')
+        return response()
+            ->view('admin.impersonation.closed', [
+                'targetType' => $targetType,
+                'adminUrl' => route($redirectRoute),
+            ])
             ->withoutCookie(
                 ApplyUserImpersonation::COOKIE_NAMES[$targetType],
                 ApplyUserImpersonation::COOKIE_PATHS[$targetType]

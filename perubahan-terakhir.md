@@ -4,6 +4,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Overlay dan penutupan tab Login As
+
+- Form `Login As` yang membuka tab baru tidak lagi mengaktifkan overlay pada tab admin asal.
+- Tombol `Kembali ke Admin` mengakhiri impersonasi, menghapus cookie scoped, memfokuskan tab admin asal, lalu menutup tab Login As.
+- Jika browser menolak penutupan tab otomatis, halaman konfirmasi menyediakan tautan kembali ke halaman admin.
+
 ### Login As melewati force setup
 
 - Admin yang memakai `Login As` ke akun siswa/GTK dengan password awal langsung dapat membuka dashboard target.

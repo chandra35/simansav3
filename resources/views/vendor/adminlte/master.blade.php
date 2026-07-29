@@ -1077,8 +1077,29 @@
                     }
 
                     appendDeviceLocationToForm(form);
+
+                    if ((form.getAttribute('target') || '').toLowerCase() === '_blank') {
+                        formSubmitting = false;
+                        appHideGlobalOverlay();
+                        return;
+                    }
+
                     formSubmitting = true;
                     appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan');
+                });
+
+                window.addEventListener('message', function (event) {
+                    if (event.origin !== window.location.origin
+                        || event.data?.type !== 'simansa:impersonation-ended') {
+                        return;
+                    }
+
+                    appHideGlobalOverlay();
+                    window.focus();
+
+                    if (window.toastr) {
+                        window.toastr.success('Mode Login As telah ditutup. Anda kembali ke tab admin.');
+                    }
                 });
 
                 window.addEventListener('beforeunload', function () {

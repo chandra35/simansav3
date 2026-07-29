@@ -112,4 +112,23 @@ class UserImpersonationArchitectureTest extends TestCase
             $middleware
         );
     }
+
+    public function test_new_tab_login_as_never_locks_the_admin_tab_and_closes_cleanly(): void
+    {
+        $master = file_get_contents($this->root.'/resources/views/vendor/adminlte/master.blade.php');
+        $studentController = file_get_contents($this->root.'/app/Http/Controllers/Admin/SiswaController.php');
+        $gtkController = file_get_contents($this->root.'/app/Http/Controllers/Admin/GtkController.php');
+        $closedView = file_get_contents($this->root.'/resources/views/admin/impersonation/closed.blade.php');
+
+        $this->assertStringContainsString(
+            "(form.getAttribute('target') || '').toLowerCase() === '_blank'",
+            $master
+        );
+        $this->assertStringContainsString('simansa:impersonation-ended', $master);
+        $this->assertStringContainsString('target="_blank" data-no-overlay', $studentController);
+        $this->assertStringContainsString('target="_blank" data-no-overlay', $gtkController);
+        $this->assertStringContainsString("window.opener.postMessage(message, window.location.origin)", $closedView);
+        $this->assertStringContainsString('window.opener.focus()', $closedView);
+        $this->assertStringContainsString('window.close()', $closedView);
+    }
 }

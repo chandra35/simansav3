@@ -12,7 +12,9 @@
                 <small>Admin {{ $impersonator?->name }} tetap aktif di tab utama. Perubahan password diblokir.</small>
             </div>
         </div>
-        <form method="POST" action="{{ route($impersonation->target_type === 'siswa' ? 'siswa.impersonation.stop' : 'admin.gtk.impersonation.stop') }}">
+        <form method="POST"
+              action="{{ route($impersonation->target_type === 'siswa' ? 'siswa.impersonation.stop' : 'admin.gtk.impersonation.stop') }}"
+              data-no-overlay>
             @csrf
             <button type="submit" class="btn btn-light btn-sm">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Admin
