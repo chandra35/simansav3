@@ -96,7 +96,7 @@
         <div class="simansa-kelas-panel__header">
             <div>
                 <h3><i class="fas fa-filter"></i> Filter Kelas</h3>
-                <p>Persempit daftar berdasarkan tahun pelajaran, tingkat, kurikulum, dan jurusan.</p>
+                <p>Pilih tahun pelajaran, tingkat, kurikulum, atau jurusan; daftar akan diperbarui otomatis.</p>
             </div>
         </div>
         <div class="simansa-kelas-panel__body">
@@ -151,9 +151,6 @@
                     <div class="form-group">
                         <label>&nbsp;</label>
                         <div class="simansa-kelas-actions">
-                            <button type="button" class="btn btn-primary" id="btn-filter">
-                                <i class="fas fa-search"></i> Terapkan
-                            </button>
                             <button type="button" class="btn btn-outline-secondary" id="btn-reset-filter">
                                 <i class="fas fa-undo"></i> Reset
                             </button>
@@ -265,9 +262,10 @@
                 }
             });
 
-            $('#btn-filter').on('click', function(){ table.ajax.reload(); });
             $('#btn-reset-filter').on('click', function(){ $('#filter_tahun_pelajaran').val(''); $('#filter_tingkat').val(''); $('#filter_kurikulum').val(''); $('#filter_jurusan').val(''); table.ajax.reload(); });
-            $('#filter_tahun_pelajaran').on('change', function(){ table.ajax.reload(); });
+            $('#filter_tahun_pelajaran, #filter_tingkat, #filter_kurikulum, #filter_jurusan').on('change', function(){
+                table.ajax.reload();
+            });
 
             $(document).on('click', '.btn-delete', function() {
                 let kelasId=$(this).data('id'); let namaKelas=$(this).data('nama');
