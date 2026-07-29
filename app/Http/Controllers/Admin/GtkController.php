@@ -93,7 +93,11 @@ class GtkController extends Controller
                   ->orWhere('nik', 'like', "%{$search}%")
                   ->orWhere('nuptk', 'like', "%{$search}%")
                   ->orWhere('nip', 'like', "%{$search}%")
-                  ->orWhere('kode_gtk', 'like', "%{$search}%");
+                  ->orWhere('kode_gtk', 'like', "%{$search}%")
+                  ->orWhere('kategori_ptk', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('username', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -110,7 +114,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = [null, 'nama_lengkap', 'nik', 'kode_gtk', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', null, null, null, null];
+            $columns = [null, 'nama_lengkap', 'jenis_ptk', 'status_kepegawaian', 'jabatan', null, null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -119,22 +123,30 @@ class GtkController extends Controller
         }
 
         $data = $gtk->get()->map(function($item, $index) use ($request) {
-            // Badge color for kategori PTK
-            $kategoriColor = $item->kategori_ptk == 'Pendidik' ? 'primary' : 'info';
-            
+            $kategoriClass = $item->kategori_ptk === 'Pendidik'
+                ? 'simansa-gtk-meta-badge--primary'
+                : 'simansa-gtk-meta-badge--info';
+            $nama = e($item->nama_lengkap);
+            $nik = e($item->nik ?: '-');
+            $kodeGtk = e($item->kode_gtk ?: '-');
+            $kategoriPtk = e($item->kategori_ptk ?: '-');
+            $username = e($item->user?->username ?: '-');
+
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
-                'nama_lengkap' => $item->nama_lengkap,
-                'nik' => $item->nik,
-                'kode_gtk' => $item->kode_gtk
-                    ? '<span class="badge badge-primary px-2 py-1">'.$item->kode_gtk.'</span>'
-                    : '<span class="text-muted">-</span>',
+                'identity' => '
+                    <div class="simansa-gtk-identity">
+                        <div class="simansa-gtk-identity__name">'.$nama.'</div>
+                        <div class="simansa-gtk-identity__meta">
+                            <span><strong>NIK</strong> '.$nik.'</span>
+                            <span><strong>Kode</strong> '.$kodeGtk.'</span>
+                            <span><strong>Username</strong> '.$username.'</span>
+                            <span class="simansa-gtk-meta-badge '.$kategoriClass.'">'.$kategoriPtk.'</span>
+                        </div>
+                    </div>',
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
-                'kategori_ptk' => $item->kategori_ptk ? 
-                    '<span class="badge badge-'.$kategoriColor.'">'.$item->kategori_ptk.'</span>' : 
-                    '<span class="badge badge-secondary">-</span>',
                 'jenis_ptk' => $item->jenis_ptk ?? '-',
                 'status_kepegawaian' => $item->status_kepegawaian ?? '-',
                 'jabatan' => $item->jabatan ?? '-',

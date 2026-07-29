@@ -4,82 +4,93 @@
 
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow">
-                <i class="fas fa-chalkboard-teacher"></i>
-                Master GTK
-            </div>
-            <h1 class="simansa-hero__title">Data GTK</h1>
-            <p class="simansa-hero__subtitle">
-                Kelola guru dan tenaga kependidikan, pantau kelengkapan data, dan jalankan sinkronisasi Kemenag dari satu halaman operasional.
-            </p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-chalkboard-teacher text-primary"></i> Data GTK</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total GTK</span>
-                <span class="simansa-hero-chip__value">{{ number_format($stats['total_gtk']) }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Siap Sinkron</span>
-                <span class="simansa-hero-chip__value">{{ number_format($stats['gtk_with_nip']) }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Data GTK</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-md-3 col-sm-6">
-        <div class="simansa-stat-card simansa-stat-card--blue">
-            <div class="simansa-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Total GTK</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['total_gtk']) }}</div>
-                <div class="simansa-stat-card__desc">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+<div class="simansa-gtk-management">
+<div class="card bg-gradient-primary text-white mb-4 simansa-gtk-hero">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-1"><i class="fas fa-address-card mr-1"></i> Manajemen Guru & Tenaga Kependidikan</h3>
+                <p class="mb-0 text-white-75">
+                    Kelola identitas GTK, pantau kelengkapan data, dan jalankan sinkronisasi Kemenag dari satu halaman operasional.
+                </p>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="simansa-stat-card simansa-stat-card--cyan">
-            <div class="simansa-stat-card__icon"><i class="fas fa-male"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Laki-Laki</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['laki_laki']) }}</div>
-                <div class="simansa-stat-card__desc">Jumlah GTK laki-laki untuk kebutuhan monitoring personalia.</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="simansa-stat-card simansa-stat-card--rose">
-            <div class="simansa-stat-card__icon"><i class="fas fa-female"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Perempuan</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['perempuan']) }}</div>
-                <div class="simansa-stat-card__desc">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-sm-6">
-        <div class="simansa-stat-card simansa-stat-card--green">
-            <div class="simansa-stat-card__icon"><i class="fas fa-check-circle"></i></div>
-            <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Data Lengkap</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['data_lengkap']) }}</div>
-                <div class="simansa-stat-card__desc">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="text-white-75 small text-uppercase font-weight-bold">Total GTK</div>
+                        <h3 class="mb-0 text-white">{{ number_format($stats['total_gtk']) }}</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-white-75 small text-uppercase font-weight-bold">Siap Sinkron</div>
+                        <h3 class="mb-0 text-white">{{ number_format($stats['gtk_with_nip']) }}</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card simansa-management-card">
+<div class="row mb-4">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card card-outline card-primary h-100 simansa-gtk-stat">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Total GTK</div>
+                <h3 class="text-primary mb-1">{{ number_format($stats['total_gtk']) }}</h3>
+                <div class="text-muted">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card card-outline card-info h-100 simansa-gtk-stat">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Laki-Laki</div>
+                <h3 class="text-info mb-1">{{ number_format($stats['laki_laki']) }}</h3>
+                <div class="text-muted">Jumlah GTK laki-laki untuk monitoring personalia.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card card-outline card-danger h-100 simansa-gtk-stat">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Perempuan</div>
+                <h3 class="text-danger mb-1">{{ number_format($stats['perempuan']) }}</h3>
+                <div class="text-muted">Jumlah GTK perempuan sesuai data aktif yang tersimpan.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card card-outline card-success h-100 simansa-gtk-stat">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Data Lengkap</div>
+                <h3 class="text-success mb-1">{{ number_format($stats['data_lengkap']) }}</h3>
+                <div class="text-muted">GTK dengan data pribadi dan kepegawaian yang sudah lengkap.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-outline card-primary simansa-gtk-card">
     <div class="card-header">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
         <h3 class="card-title mb-3 mb-lg-0">
             <i class="fas fa-list mr-2"></i>
             Daftar GTK
         </h3>
-        <div class="card-tools ml-0">
+        <div class="card-tools ml-0 simansa-gtk-actions">
             @can('edit-gtk')
                 <button type="button" class="btn btn-warning btn-sm mr-1" id="btnBulkSyncKemenag">
                     <i class="fas fa-sync-alt"></i> Sinkron Semua GTK Ber-NIP
@@ -99,9 +110,9 @@
     </div>
     <div class="card-body">
         {{-- Filter Section --}}
-        <div class="simansa-filter-panel">
-                        <form id="filterForm">
-                        <div class="row">
+        <div class="simansa-filter-panel simansa-gtk-filter">
+            <form id="filterForm">
+                <div class="row">
                             <div class="col-md-6 col-xl-3 mb-3">
                                 <label for="filterKategoriPtk" class="simansa-filter-label">
                                     <i class="fas fa-users mr-1"></i> Kategori PTK
@@ -161,32 +172,31 @@
                                     <option value="belum">Belum Lengkap</option>
                                 </select>
                             </div>
-                            </div>
-                            <div class="d-flex justify-content-end">
-                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary mb-2">
-                                <i class="fas fa-redo"></i> Reset
-                            </button>
-                            </div>
-                        </form>
+                </div>
+                <div class="simansa-gtk-filter-footer">
+                    <span id="gtkFilterStatus" class="simansa-gtk-filter-status" aria-live="polite">
+                        <i class="fas fa-bolt mr-1"></i> Filter memuat data secara otomatis
+                    </span>
+                    <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-redo"></i> Reset Filter
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <p class="text-muted mb-3">
+        <p class="simansa-gtk-table-note">
             Gunakan filter untuk memantau komposisi GTK, kelengkapan data, dan kesiapan sinkronisasi Kemenag tanpa meninggalkan halaman ini.
         </p>
 
-        <div class="table-responsive">
-            <table id="gtk-table" class="table table-bordered table-striped table-hover">
-                <thead class="bg-light">
+        <div class="table-responsive simansa-gtk-table-wrap">
+            <table id="gtk-table" class="table table-hover table-sm simansa-gtk-table">
+                <thead>
                     <tr>
                         <th style="width: 40px;">No</th>
-                        <th>Nama Lengkap</th>
-                        <th>NIK</th>
-                        <th>Kode Guru</th>
-                        <th>Kategori PTK</th>
+                        <th>Nama / Identitas GTK</th>
                         <th>Jenis PTK</th>
                         <th>Status Kepeg</th>
                         <th>Jabatan</th>
-                        <th>Username</th>
                         <th>Status Diri</th>
                         <th>Status Kepeg</th>
                         <th style="width: 150px;" class="text-center">Aksi</th>
@@ -355,6 +365,7 @@
     </div>
 </div>
 
+</div>
 @stop
 
 
@@ -367,10 +378,36 @@
 const BULK_SYNC_DELAY_MS = 350;
 
 $(document).ready(function() {
-    // Initialize DataTable
+    const $gtkTableElement = $('#gtk-table');
+    const $gtkTableWrap = $('.simansa-gtk-table-wrap');
+    const $gtkFilterStatus = $('#gtkFilterStatus');
+    let filterReloadTimer = null;
+
+    $gtkTableElement
+        .on('preXhr.dt', function() {
+            $gtkTableWrap.addClass('is-loading');
+            $gtkFilterStatus
+                .addClass('is-loading')
+                .html('<i class="fas fa-circle-notch fa-spin mr-1"></i> Memuat data GTK...');
+        })
+        .on('xhr.dt', function() {
+            $gtkTableWrap.removeClass('is-loading');
+            $gtkFilterStatus
+                .removeClass('is-loading')
+                .html('<i class="fas fa-check-circle mr-1"></i> Data GTK sudah diperbarui');
+        })
+        .on('error.dt', function() {
+            $gtkTableWrap.removeClass('is-loading');
+            $gtkFilterStatus
+                .removeClass('is-loading')
+                .html('<i class="fas fa-exclamation-circle mr-1"></i> Data gagal dimuat');
+        });
+
     let gtkTable = $('#gtk-table').DataTable({
         processing: true,
         serverSide: true,
+        deferRender: true,
+        searchDelay: 350,
         ajax: {
             url: '{{ route('admin.gtk.data') }}',
             data: function(d) {
@@ -385,14 +422,10 @@ $(document).ready(function() {
         pageLength: 10,
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'nama_lengkap', name: 'nama_lengkap' },
-            { data: 'nik', name: 'nik' },
-            { data: 'kode_gtk', name: 'kode_gtk' },
-            { data: 'kategori_ptk', name: 'kategori_ptk' },
+            { data: 'identity', name: 'nama_lengkap' },
             { data: 'jenis_ptk', name: 'jenis_ptk' },
             { data: 'status_kepegawaian', name: 'status_kepegawaian' },
             { data: 'jabatan', name: 'jabatan' },
-            { data: 'username', name: 'username' },
             { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
             { data: 'status_kepeg', name: 'status_kepeg', orderable: false, searchable: false },
             { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
@@ -412,6 +445,17 @@ $(document).ready(function() {
             }
         }
     });
+
+    const reloadGtkTable = function(resetPaging = true) {
+        window.clearTimeout(filterReloadTimer);
+        $gtkFilterStatus
+            .addClass('is-loading')
+            .html('<i class="fas fa-circle-notch fa-spin mr-1"></i> Menyiapkan filter...');
+
+        filterReloadTimer = window.setTimeout(function() {
+            gtkTable.ajax.reload(null, resetPaging);
+        }, 140);
+    };
 
     // Filter functionality - Cascading Kategori PTK -> Jenis PTK
     const filterJenisPtkOptions = {
@@ -434,8 +478,6 @@ $(document).ready(function() {
     $('#filterKategoriPtk').on('change', function() {
         const kategori = $(this).val();
         const filterJenisPtk = $('#filterJenisPtk');
-        const currentValue = filterJenisPtk.val();
-        
         // Reset jenis_ptk filter
         filterJenisPtk.empty();
         filterJenisPtk.append('<option value="">Semua</option>');
@@ -451,12 +493,11 @@ $(document).ready(function() {
             });
         }
         
-        // Reload table
-        gtkTable.ajax.reload();
+        reloadGtkTable();
     });
 
     $('#filterJenisPtk, #filterJenisKelamin, #filterStatusKepegawaian, #filterStatus').on('change', function() {
-        gtkTable.ajax.reload();
+        reloadGtkTable();
     });
 
     $('#btnResetFilter').on('click', function() {
@@ -469,7 +510,7 @@ $(document).ready(function() {
         $('#filterJenisKelamin').val('');
         $('#filterStatusKepegawaian').val('');
         $('#filterStatus').val('');
-        gtkTable.ajax.reload();
+        reloadGtkTable();
     });
 
     $('#btnBulkSyncKemenag').on('click', async function() {
@@ -939,5 +980,3 @@ function deleteGtk(id) {
 }
 </script>
 @stop
-
-

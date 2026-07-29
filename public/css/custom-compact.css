@@ -2121,6 +2121,261 @@ a {
 }
 
 /* ===============================================
+   DATA GTK — scoped operational UI
+   All selectors stay below .simansa-gtk-management so this page does not
+   inherit conflicting hero, card, filter, and table presentation rules.
+   =============================================== */
+.simansa-gtk-management {
+    color: #0f172a;
+}
+
+.simansa-gtk-management .simansa-gtk-hero {
+    overflow: hidden;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%) !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, .1);
+}
+
+.simansa-gtk-management .simansa-gtk-hero .card-body {
+    padding: 1.15rem 1.25rem;
+}
+
+.simansa-gtk-management .simansa-gtk-hero h3,
+.simansa-gtk-management .simansa-gtk-hero p {
+    color: #fff !important;
+}
+
+.simansa-gtk-management .text-white-75 {
+    color: rgba(255, 255, 255, .78) !important;
+}
+
+.simansa-gtk-management .simansa-gtk-stat {
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .06);
+}
+
+.simansa-gtk-management .simansa-gtk-stat .card-body {
+    padding: 1rem;
+}
+
+.simansa-gtk-management .simansa-gtk-stat h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.simansa-gtk-management .simansa-gtk-card {
+    overflow: hidden;
+    border-radius: 14px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .08);
+}
+
+.simansa-gtk-management .simansa-gtk-card > .card-header {
+    padding: .9rem 1rem;
+    background: #fff;
+    border-bottom: 1px solid #dbe3ef;
+}
+
+.simansa-gtk-management .simansa-gtk-card > .card-header .card-title {
+    color: #0f172a !important;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.simansa-gtk-management .simansa-gtk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.simansa-gtk-management .simansa-gtk-actions .btn {
+    margin: 0 !important;
+    border-radius: 7px;
+    font-weight: 700;
+    box-shadow: none !important;
+}
+
+.simansa-gtk-management .simansa-gtk-filter {
+    padding: 1rem;
+    border: 1px solid #d8e2f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    box-shadow: none;
+}
+
+.simansa-gtk-management .simansa-gtk-filter .form-control {
+    min-height: 36px;
+    border-color: #cbd5e1 !important;
+    border-radius: 7px;
+    background: #fff;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.simansa-gtk-management .simansa-gtk-filter .form-control:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .13) !important;
+}
+
+.simansa-gtk-management .simansa-gtk-filter-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding-top: .15rem;
+}
+
+.simansa-gtk-management .simansa-gtk-filter-status {
+    color: #047857;
+    font-size: .78rem;
+    font-weight: 700;
+    transition: color .18s ease;
+}
+
+.simansa-gtk-management .simansa-gtk-filter-status.is-loading {
+    color: #1d4ed8;
+}
+
+.simansa-gtk-management .simansa-gtk-table-note {
+    margin: 0 0 1rem;
+    padding: .65rem .8rem;
+    border-left: 3px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+    background: #eff6ff;
+    color: #475569;
+    font-size: .82rem;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap {
+    position: relative;
+    min-height: 210px;
+    transition: opacity .18s ease;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap.is-loading table {
+    opacity: .58;
+}
+
+.simansa-gtk-management .simansa-gtk-table {
+    min-width: 940px;
+    margin-bottom: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    transition: opacity .18s ease;
+}
+
+.simansa-gtk-management .simansa-gtk-table thead th {
+    padding: .7rem .65rem !important;
+    border-top: 1px solid #dbe3ef;
+    border-bottom: 1px solid #dbe3ef;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.simansa-gtk-management .simansa-gtk-table tbody td {
+    padding: .7rem .65rem !important;
+    border-top: 0;
+    border-bottom: 1px solid #e8edf4;
+    color: #334155;
+    font-size: .8rem;
+    vertical-align: middle;
+}
+
+.simansa-gtk-management .simansa-gtk-identity {
+    min-width: 300px;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__name {
+    margin-bottom: .34rem;
+    color: #0f172a;
+    font-size: .86rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem .55rem;
+    color: #64748b;
+    font-size: .68rem;
+    line-height: 1.4;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__meta strong {
+    color: #475569;
+    font-weight: 800;
+}
+
+.simansa-gtk-management .simansa-gtk-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .12rem .42rem;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+.simansa-gtk-management .simansa-gtk-meta-badge--primary {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.simansa-gtk-management .simansa-gtk-meta-badge--info {
+    background: #cffafe;
+    color: #0e7490;
+}
+
+.simansa-gtk-management .simansa-gtk-table .btn-group {
+    flex-wrap: nowrap;
+}
+
+.simansa-gtk-management .simansa-gtk-table .btn-group .btn {
+    box-shadow: none !important;
+}
+
+.simansa-gtk-management .dataTables_processing {
+    top: 86px !important;
+    width: auto !important;
+    min-width: 170px;
+    height: auto !important;
+    margin: 0 !important;
+    padding: .65rem .9rem !important;
+    transform: translateX(-50%);
+    border: 1px solid #bfdbfe;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .96) !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .1);
+    color: #1d4ed8;
+}
+
+@media (max-width: 767.98px) {
+    .simansa-gtk-management .simansa-gtk-hero .card-body {
+        padding: 1rem;
+    }
+
+    .simansa-gtk-management .simansa-gtk-actions,
+    .simansa-gtk-management .simansa-gtk-actions .btn {
+        width: 100%;
+    }
+
+    .simansa-gtk-management .simansa-gtk-filter-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .simansa-gtk-management .simansa-gtk-filter-footer .btn {
+        width: 100%;
+    }
+}
+
+/* ===============================================
    SIMANSA UI POLISH - siswa operational dashboard
    =============================================== */
 .simansa-siswa-management .simansa-hero {

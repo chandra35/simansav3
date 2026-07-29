@@ -4,6 +4,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyelarasan UI Data GTK
+
+- Halaman Data GTK memakai struktur visual operasional terbaru dengan hero ringkas, kartu statistik standar, panel filter, dan tabel yang seluruh gayanya dibatasi pada scope GTK agar tidak berbenturan dengan style halaman lain.
+- Kolom NIK, Kode Guru, Kategori PTK, dan Username dihapus sebagai kolom terpisah lalu digabung sebagai metadata ringkas di bawah nama GTK.
+- Perubahan filter langsung memuat ulang DataTable melalui AJAX dengan transisi halus, indikator status nonblocking, jeda singkat untuk mencegah request bertumpuk, serta tetap mempertahankan pencarian berdasarkan metadata identitas.
+
 ### Overlay download template NIS Lokal
 
 - Tombol `Unduh Template` pada menu NIS Lokal ditandai sebagai download non-navigasi sehingga tidak mengaktifkan overlay perpindahan halaman.
