@@ -2257,7 +2257,7 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table {
-    min-width: 940px;
+    min-width: 840px;
     margin-bottom: 0 !important;
     border-collapse: separate;
     border-spacing: 0;
@@ -2301,12 +2301,24 @@ a {
 
 .simansa-gtk-management .simansa-gtk-identity__meta {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .25rem .55rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .16rem;
     color: #64748b;
     font-size: .68rem;
     line-height: 1.4;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__meta-row {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr);
+    align-items: start;
+    gap: .4rem;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__meta-row > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .simansa-gtk-management .simansa-gtk-identity__meta strong {

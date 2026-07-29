@@ -19,13 +19,17 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<th>Kode Guru</th>', $table);
         $this->assertStringNotContainsString('<th>Kategori PTK</th>', $table);
         $this->assertStringNotContainsString('<th>Username</th>', $table);
+        $this->assertStringNotContainsString('<th>Jenis PTK</th>', $table);
         $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap' }", $view);
 
         $this->assertStringContainsString("'identity' => '", $controller);
         $this->assertStringContainsString('simansa-gtk-identity__meta', $controller);
+        $this->assertSame(4, substr_count($controller, 'simansa-gtk-identity__meta-row'));
         $this->assertStringContainsString('<strong>NIK</strong>', $controller);
-        $this->assertStringContainsString('<strong>Kode</strong>', $controller);
+        $this->assertStringContainsString('<strong>Kode GTK</strong>', $controller);
         $this->assertStringContainsString('<strong>Username</strong>', $controller);
+        $this->assertStringContainsString('<strong>Jenis PTK</strong>', $controller);
+        $this->assertStringNotContainsString('<strong>Kategori PTK</strong>', $controller);
         $this->assertStringContainsString('simansa-gtk-meta-badge', $controller);
     }
 
@@ -42,6 +46,8 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('Filter memuat data secara otomatis', $view);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-filter', $css);
+        $this->assertStringContainsString('flex-direction: column;', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-identity__meta-row', $css);
         $this->assertStringContainsString('.simansa-gtk-management .dataTables_processing', $css);
     }
 }

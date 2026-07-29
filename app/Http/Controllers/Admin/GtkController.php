@@ -114,7 +114,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = [null, 'nama_lengkap', 'jenis_ptk', 'status_kepegawaian', 'jabatan', null, null, null];
+            $columns = [null, 'nama_lengkap', 'status_kepegawaian', 'jabatan', null, null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -123,13 +123,13 @@ class GtkController extends Controller
         }
 
         $data = $gtk->get()->map(function($item, $index) use ($request) {
-            $kategoriClass = $item->kategori_ptk === 'Pendidik'
+            $jenisPtkClass = $item->kategori_ptk === 'Pendidik'
                 ? 'simansa-gtk-meta-badge--primary'
                 : 'simansa-gtk-meta-badge--info';
             $nama = e($item->nama_lengkap);
             $nik = e($item->nik ?: '-');
             $kodeGtk = e($item->kode_gtk ?: '-');
-            $kategoriPtk = e($item->kategori_ptk ?: '-');
+            $jenisPtk = e($item->jenis_ptk ?: '-');
             $username = e($item->user?->username ?: '-');
 
             return [
@@ -138,10 +138,13 @@ class GtkController extends Controller
                     <div class="simansa-gtk-identity">
                         <div class="simansa-gtk-identity__name">'.$nama.'</div>
                         <div class="simansa-gtk-identity__meta">
-                            <span><strong>NIK</strong> '.$nik.'</span>
-                            <span><strong>Kode</strong> '.$kodeGtk.'</span>
-                            <span><strong>Username</strong> '.$username.'</span>
-                            <span class="simansa-gtk-meta-badge '.$kategoriClass.'">'.$kategoriPtk.'</span>
+                            <div class="simansa-gtk-identity__meta-row"><strong>NIK</strong><span>'.$nik.'</span></div>
+                            <div class="simansa-gtk-identity__meta-row"><strong>Kode GTK</strong><span>'.$kodeGtk.'</span></div>
+                            <div class="simansa-gtk-identity__meta-row"><strong>Username</strong><span>'.$username.'</span></div>
+                            <div class="simansa-gtk-identity__meta-row">
+                                <strong>Jenis PTK</strong>
+                                <span><span class="simansa-gtk-meta-badge '.$jenisPtkClass.'">'.$jenisPtk.'</span></span>
+                            </div>
                         </div>
                     </div>',
                 'nuptk' => $item->nuptk ?? '-',

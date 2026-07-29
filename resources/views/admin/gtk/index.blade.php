@@ -194,7 +194,6 @@
                     <tr>
                         <th style="width: 40px;">No</th>
                         <th>Nama / Identitas GTK</th>
-                        <th>Jenis PTK</th>
                         <th>Status Kepeg</th>
                         <th>Jabatan</th>
                         <th>Status Diri</th>
@@ -423,7 +422,6 @@ $(document).ready(function() {
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'identity', name: 'nama_lengkap' },
-            { data: 'jenis_ptk', name: 'jenis_ptk' },
             { data: 'status_kepegawaian', name: 'status_kepegawaian' },
             { data: 'jabatan', name: 'jabatan' },
             { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
