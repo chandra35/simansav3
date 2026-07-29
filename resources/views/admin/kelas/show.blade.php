@@ -164,7 +164,7 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-users"></i> Daftar Siswa</h3>
             <div class="card-tools">
-                @can('edit-kelas')
+                @if(auth()->user()->hasRole('Super Admin'))
                     @php
                         $jumlahBelumDicek = $students
                             ->filter(fn ($siswa) => $siswa->pivot->keberadaan_diverifikasi_at === null)
@@ -181,7 +181,7 @@
                             {{ $jumlahBelumDicek > 0 ? 'Cek Keberadaan Semua' : 'Semua Sudah Dicek' }}
                         </button>
                     @endif
-                @endcan
+                @endif
                 @can('assign-siswa-kelas')
                     @if($kelas && $kelas->id && !$kelas->isFull())
                         <button type="button" class="btn btn-sm btn-success mr-1" data-toggle="modal" data-target="#modalTambahSiswa">
@@ -217,12 +217,8 @@
                                 <th>Nama Lengkap</th>
                                 <th>Asal Sekolah</th>
                                 <th>JK</th>
-                                @can('edit-kelas')
                                 <th class="text-center">Keberadaan</th>
-                                @endcan
-                                @if(auth()->user()->hasRole('Super Admin'))
                                 <th class="text-center">EMIS</th>
-                                @endif
                                 <th>Tanggal Masuk</th>
                                 @canany(['transfer-siswa-kelas', 'remove-siswa-kelas'])
                                 <th>Aksi</th>
@@ -325,11 +321,11 @@
                                             <span class="badge badge-danger"><i class="fas fa-female"></i> P</span>
                                         @endif
                                     </td>
-                                    @can('edit-kelas')
                                     @php
                                         $keberadaanTerverifikasi = $siswa->pivot->keberadaan_diverifikasi_at !== null;
                                     @endphp
                                     <td class="text-center class-presence-cell">
+                                        @if(auth()->user()->hasRole('Super Admin'))
                                         <button type="button"
                                                 class="btn btn-xs class-presence-toggle {{ $keberadaanTerverifikasi ? 'is-verified' : 'is-pending' }}"
                                                 data-url="{{ route('admin.kelas.siswa.toggle-keberadaan', ['kelas' => $kelas, 'siswa' => $siswa]) }}"
@@ -340,10 +336,16 @@
                                             <i class="fas {{ $keberadaanTerverifikasi ? 'fa-user-check' : 'fa-user-clock' }} mr-1"></i>
                                             <span>{{ $keberadaanTerverifikasi ? 'Ada' : 'Belum dicek' }}</span>
                                         </button>
+                                        @else
+                                            <span class="badge {{ $keberadaanTerverifikasi ? 'badge-success' : 'badge-warning' }}"
+                                                  title="{{ $keberadaanTerverifikasi ? 'Diverifikasi ' . \Carbon\Carbon::parse($siswa->pivot->keberadaan_diverifikasi_at)->format('d/m/Y H:i') : 'Belum diverifikasi' }}">
+                                                <i class="fas {{ $keberadaanTerverifikasi ? 'fa-user-check' : 'fa-user-clock' }} mr-1"></i>
+                                                {{ $keberadaanTerverifikasi ? 'Ada' : 'Belum dicek' }}
+                                            </span>
+                                        @endif
                                     </td>
-                                    @endcan
-                                    @if(auth()->user()->hasRole('Super Admin'))
                                     <td class="text-center class-emis-cell">
+                                        @if(auth()->user()->hasRole('Super Admin'))
                                         <button type="button"
                                                 class="btn btn-xs class-emis-toggle {{ $siswa->emis_registered ? 'is-registered' : 'is-pending' }}"
                                                 data-url="{{ route('admin.siswa.toggle-emis-registered', $siswa) }}"
@@ -354,8 +356,13 @@
                                             <i class="fas {{ $siswa->emis_registered ? 'fa-check-circle' : 'fa-circle' }} mr-1"></i>
                                             <span>{{ $siswa->emis_registered ? 'Sudah' : 'Belum' }}</span>
                                         </button>
+                                        @else
+                                            <span class="badge {{ $siswa->emis_registered ? 'badge-success' : 'badge-secondary' }}">
+                                                <i class="fas {{ $siswa->emis_registered ? 'fa-check-circle' : 'fa-circle' }} mr-1"></i>
+                                                {{ $siswa->emis_registered ? 'Sudah' : 'Belum' }}
+                                            </span>
+                                        @endif
                                     </td>
-                                    @endif
                                     <td data-order="{{ $tanggalMasuk?->format('Y-m-d') }}">
                                         {{ $tanggalMasuk?->format('d/m/Y') ?: '-' }}
                                     </td>

@@ -232,7 +232,8 @@
 
                 <div class="simansa-table-note">
                     <p class="mb-0">
-                        Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, rombel, dan status input EMIS. Klik tombol EMIS setelah siswa berhasil dimasukkan ke EMIS.
+                        Gunakan filter untuk memantau siswa per tingkat, kelengkapan biodata, rombel, status EMIS, dan keberadaan fisik.
+                        Status EMIS dan Keberadaan hanya dapat diubah oleh Super Admin; pengguna lain melihatnya dalam mode baca saja.
                     </p>
                 </div>
 
@@ -248,6 +249,7 @@
                                 <th class="text-center">Diri</th>
                                 <th class="text-center">Verval</th>
                                 <th class="text-center">EMIS</th>
+                                <th class="text-center">Keberadaan</th>
                                 <th class="text-center">Tgl Masuk</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -1035,8 +1037,9 @@ $(document).ready(function() {
             { targets: 5, width: '68px'  },   // status diri
             { targets: 6, width: '82px'  },   // verval
             { targets: 7, width: '82px'  },   // emis
-            { targets: 8, width: '82px'  },   // tgl masuk
-            { targets: 9, width: '110px' },   // aksi
+            { targets: 8, width: '100px' },   // keberadaan
+            { targets: 9, width: '82px'  },   // tgl masuk
+            { targets: 10, width: '110px' },  // aksi
         ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle' },
@@ -1047,13 +1050,14 @@ $(document).ready(function() {
             { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle' },
+            { data: 'keberadaan',     name: 'keberadaan', orderable: false, searchable: false, className: 'text-center align-middle' },
             { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle' },
             { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle' }
         ],
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
         pagingType: 'simple_numbers',
-        order: [[8, 'desc']],
+        order: [[9, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",
@@ -1157,6 +1161,24 @@ $(document).ready(function() {
             })
             .fail(function() {
                 toastr.error('Gagal mengubah status EMIS');
+                btn.prop('disabled', false);
+            });
+    });
+
+    // Toggle keberadaan siswa pada rombel aktif (tombol hanya dikirim untuk Super Admin).
+    $(document).on('click', '.btn-toggle-keberadaan', function() {
+        const btn = $(this);
+        const url = btn.data('url');
+        btn.prop('disabled', true);
+        $.post(url, { _token: '{{ csrf_token() }}' })
+            .done(function(res) {
+                if (res.success) {
+                    toastr.success(res.message || 'Status keberadaan berhasil diperbarui');
+                    siswaTable.ajax.reload(null, false);
+                }
+            })
+            .fail(function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Gagal mengubah status keberadaan');
                 btn.prop('disabled', false);
             });
     });

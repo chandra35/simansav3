@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\Siswa;
+use App\Models\Kelas;
 use App\Models\Ortu;
 use App\Models\DokumenSiswa;
 use App\Models\Sekolah;
@@ -180,11 +181,11 @@ class SiswaController extends Controller
             $orderDirection = $request->order[0]['dir'];
             
             // Map column index to actual column names
-            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=emis, 8=created_at, 9=actions
+            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=emis, 8=keberadaan, 9=created_at, 10=actions
             $columns = [
                 1 => 'nama_lengkap',
                 2 => 'jenis_kelamin',
-                8 => 'siswa.created_at',
+                9 => 'siswa.created_at',
             ];
 
             // Handle Kelas ordering (index 3, needs join)
@@ -277,6 +278,7 @@ class SiswaController extends Controller
                     : '<span class="badge badge-danger">Belum</span>',
                 'verval_ijazah' => $this->getVervalIjazahBadge($item),
                 'emis_registered' => $this->getEmisRegisteredBadge($item),
+                'keberadaan' => $this->getKeberadaanBadge($kelasAktif),
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item)
             ];
@@ -352,6 +354,38 @@ class SiswaController extends Controller
             data-url="' . e($toggleUrl) . '"
             title="Klik jika siswa sudah diinput/masuk ke EMIS">'
             . '<i class="far fa-circle"></i> Belum</button>';
+    }
+
+    private function getKeberadaanBadge(?Kelas $kelas): string
+    {
+        if (! $kelas) {
+            return '<span class="badge badge-light border text-muted">'
+                . '<i class="fas fa-minus-circle mr-1"></i>Tanpa Rombel</span>';
+        }
+
+        $verifiedAt = $kelas->pivot?->keberadaan_diverifikasi_at;
+        $isVerified = filled($verifiedAt);
+        $label = $isVerified ? 'Ada' : 'Belum dicek';
+        $icon = $isVerified ? 'fa-user-check' : 'fa-user-clock';
+        $badgeClass = $isVerified ? 'badge-success' : 'badge-warning';
+        $dateLabel = $isVerified
+            ? \Carbon\Carbon::parse($verifiedAt)->format('d/m/Y H:i')
+            : null;
+
+        if (! Auth::user()?->hasRole('Super Admin')) {
+            return '<span class="badge ' . $badgeClass . '"'
+                . ' title="' . e($dateLabel ? "Diverifikasi {$dateLabel}" : 'Belum diverifikasi') . '">'
+                . '<i class="fas ' . $icon . ' mr-1"></i>' . $label . '</span>';
+        }
+
+        return '<button type="button" class="btn btn-xs btn-toggle-keberadaan '
+            . ($isVerified ? 'btn-success' : 'btn-outline-warning') . '"'
+            . ' data-url="' . e(route('admin.kelas.siswa.toggle-keberadaan', [
+                'kelas' => $kelas,
+                'siswa' => $kelas->pivot->siswa_id,
+            ])) . '"'
+            . ' title="' . e($isVerified ? 'Batalkan verifikasi keberadaan' : 'Tandai siswa ada di rombel') . '">'
+            . '<i class="fas ' . $icon . ' mr-1"></i>' . $label . '</button>';
     }
 
     public function toggleEmisRegistered(Siswa $siswa)

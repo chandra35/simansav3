@@ -1324,6 +1324,7 @@ class KelasController extends Controller
      */
     public function toggleKeberadaanSiswa(Kelas $kelas, Siswa $siswa)
     {
+        abort_unless(Auth::user()?->hasRole('Super Admin'), 403);
         $this->authorize('edit-kelas');
 
         $enrollment = SiswaKelas::query()
@@ -1375,6 +1376,7 @@ class KelasController extends Controller
      */
     public function verifikasiKeberadaanSemua(Kelas $kelas)
     {
+        abort_unless(Auth::user()?->hasRole('Super Admin'), 403);
         $this->authorize('edit-kelas');
 
         $verifiedAt = now();

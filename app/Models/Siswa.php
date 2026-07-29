@@ -193,7 +193,7 @@ class Siswa extends Model
     public function kelas()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps();
     }
@@ -201,7 +201,7 @@ class Siswa extends Model
     public function kelasHistory()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps()
                     ->orderByDesc('siswa_kelas.created_at');
@@ -210,7 +210,7 @@ class Siswa extends Model
     public function kelasAktif()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->where('siswa_kelas.status', 'aktif')
                     ->withTimestamps()
@@ -224,7 +224,7 @@ class Siswa extends Model
     public function kelasTahunAktif()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->where('siswa_kelas.status', 'aktif')
                     ->where('kelas.is_active', true)

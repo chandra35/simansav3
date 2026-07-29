@@ -393,10 +393,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/kelas/{kelas}/siswa/available', [KelasController::class, 'getAvailableSiswa'])->name('kelas.siswa.available')->middleware('permission:assign-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa', [KelasController::class, 'storeSiswa'])->name('kelas.siswa.store')->middleware('permission:assign-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa/nisn', [KelasController::class, 'storeSiswaNISN'])->name('kelas.siswa.store-nisn')->middleware('permission:assign-siswa-kelas');
-    Route::post('/kelas/{kelas}/siswa/verifikasi-keberadaan-semua', [KelasController::class, 'verifikasiKeberadaanSemua'])->name('kelas.siswa.verifikasi-keberadaan-semua')->middleware('permission:edit-kelas');
+    Route::post('/kelas/{kelas}/siswa/verifikasi-keberadaan-semua', [KelasController::class, 'verifikasiKeberadaanSemua'])->name('kelas.siswa.verifikasi-keberadaan-semua')->middleware('can:super-admin-access');
     Route::delete('/kelas/{kelas}/siswa/{siswa}', [KelasController::class, 'removeSiswa'])->name('kelas.siswa.remove')->middleware('permission:remove-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa/{siswa}/pindah-rombel', [KelasController::class, 'transferSiswa'])->name('kelas.siswa.transfer')->middleware('permission:transfer-siswa-kelas');
-    Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('permission:edit-kelas');
+    Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('can:super-admin-access');
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/ketua-kelas', [KelasController::class, 'assignKetuaKelas'])->name('kelas.ketua-kelas')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');

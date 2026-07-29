@@ -4,6 +4,13 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Status EMIS dan Keberadaan read-only
+
+- Daftar `Data Siswa` memiliki kolom `Keberadaan` yang mengambil verifikasi dari rombel aktif pada tahun pelajaran aktif.
+- Status `EMIS` dan `Keberadaan` selalu terlihat bagi pengguna yang dapat membuka Data Siswa atau detail rombel, tetapi hanya Super Admin yang memperoleh tombol perubahan.
+- Endpoint perubahan tunggal maupun bulk Keberadaan diperketat dengan gate Super Admin; kepemilikan permission `edit-kelas` saja tidak lagi cukup.
+- Siswa tanpa rombel aktif ditampilkan sebagai `Tanpa Rombel`, sedangkan status yang belum diverifikasi ditampilkan sebagai `Belum dicek`.
+
 ### Identitas Wali Kelas dan Ketua Kelas
 
 - Dashboard siswa menampilkan nama Wali Kelas dan Ketua Kelas rombel aktif, termasuk kartu identitas masing-masing serta penanda jika siswa tersebut sendiri adalah Ketua Kelas.

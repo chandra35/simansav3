@@ -11,6 +11,7 @@ class ClassStudentPresenceVerificationTest extends TestCase
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/KelasController.php');
 
         $this->assertStringContainsString('function toggleKeberadaanSiswa(Kelas $kelas, Siswa $siswa)', $controller);
+        $this->assertStringContainsString("abort_unless(Auth::user()?->hasRole('Super Admin'), 403)", $controller);
         $this->assertStringContainsString("authorize('edit-kelas')", $controller);
         $this->assertStringContainsString("->where('kelas_id', \$kelas->id)", $controller);
         $this->assertStringContainsString("->where('tahun_pelajaran_id', \$kelas->tahun_pelajaran_id)", $controller);
@@ -24,8 +25,8 @@ class ClassStudentPresenceVerificationTest extends TestCase
         $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/kelas/show.blade.php');
 
-        $this->assertStringContainsString("name('kelas.siswa.toggle-keberadaan')->middleware('permission:edit-kelas')", $routes);
-        $this->assertStringContainsString("name('kelas.siswa.verifikasi-keberadaan-semua')->middleware('permission:edit-kelas')", $routes);
+        $this->assertStringContainsString("name('kelas.siswa.toggle-keberadaan')->middleware('can:super-admin-access')", $routes);
+        $this->assertStringContainsString("name('kelas.siswa.verifikasi-keberadaan-semua')->middleware('can:super-admin-access')", $routes);
         $this->assertStringContainsString('class-presence-toggle', $view);
         $this->assertStringContainsString('id="btnVerifyAllPresence"', $view);
         $this->assertStringContainsString('Cek Keberadaan Semua', $view);
