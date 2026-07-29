@@ -18,6 +18,8 @@ Filter tahun pelajaran, tingkat, kurikulum, dan jurusan pada daftar kelas sekara
 
 Tombol `Setujui Mutasi` pada detail mutasi kembali merespons setelah plugin SweetAlert2 diaktifkan pada halaman tersebut. Alur persetujuan juga memiliki fallback konfirmasi native dan submit POST biasa apabila plugin eksternal gagal dimuat.
 
+Detail rombel sekarang memiliki aksi bulk `Cek Keberadaan Semua`. Setelah konfirmasi, seluruh siswa aktif yang masih berstatus `Belum dicek` ditandai `Ada` sekaligus, dengan waktu dan akun pemeriksa tetap tercatat.
+
 ### Login As siswa dan GTK tanpa menghapus sesi admin
 
 Data Siswa dan Data GTK kini mempunyai tombol `Login As` khusus akun dengan role `Super Admin` atau `Admin`. Tombol bekerja langsung tanpa modal konfirmasi dan tanpa alasan, lalu membuka akun tujuan pada tab baru.

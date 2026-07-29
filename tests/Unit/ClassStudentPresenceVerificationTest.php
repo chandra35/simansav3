@@ -25,7 +25,10 @@ class ClassStudentPresenceVerificationTest extends TestCase
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/kelas/show.blade.php');
 
         $this->assertStringContainsString("name('kelas.siswa.toggle-keberadaan')->middleware('permission:edit-kelas')", $routes);
+        $this->assertStringContainsString("name('kelas.siswa.verifikasi-keberadaan-semua')->middleware('permission:edit-kelas')", $routes);
         $this->assertStringContainsString('class-presence-toggle', $view);
+        $this->assertStringContainsString('id="btnVerifyAllPresence"', $view);
+        $this->assertStringContainsString('Cek Keberadaan Semua', $view);
         $this->assertStringContainsString('Belum dicek', $view);
         $this->assertStringNotContainsString('@php($keberadaanTerverifikasi', $view);
         $this->assertStringContainsString("confirmButtonText: 'Selesai'", $view);
@@ -45,5 +48,18 @@ class ClassStudentPresenceVerificationTest extends TestCase
             3,
             substr_count($controller, "'keberadaan_diverifikasi_by' => null")
         );
+    }
+
+    public function test_bulk_presence_verification_only_updates_pending_active_enrollments(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/KelasController.php');
+
+        $this->assertStringContainsString('function verifikasiKeberadaanSemua(Kelas $kelas)', $controller);
+        $this->assertStringContainsString("->where('kelas_id', \$kelas->id)", $controller);
+        $this->assertStringContainsString("->where('tahun_pelajaran_id', \$kelas->tahun_pelajaran_id)", $controller);
+        $this->assertStringContainsString("->where('status', 'aktif')", $controller);
+        $this->assertStringContainsString("->whereNull('keberadaan_diverifikasi_at')", $controller);
+        $this->assertStringContainsString("'keberadaan_diverifikasi_by' => Auth::id()", $controller);
+        $this->assertStringContainsString("'verified_count' => \$verifiedCount", $controller);
     }
 }

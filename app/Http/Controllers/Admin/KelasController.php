@@ -1347,6 +1347,45 @@ class KelasController extends Controller
     }
 
     /**
+     * Mark all active students in the class as physically verified.
+     */
+    public function verifikasiKeberadaanSemua(Kelas $kelas)
+    {
+        $this->authorize('edit-kelas');
+
+        $verifiedAt = now();
+        $verifiedCount = DB::transaction(function () use ($kelas, $verifiedAt): int {
+            return SiswaKelas::query()
+                ->where('kelas_id', $kelas->id)
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('status', 'aktif')
+                ->whereNull('keberadaan_diverifikasi_at')
+                ->update([
+                    'keberadaan_diverifikasi_at' => $verifiedAt,
+                    'keberadaan_diverifikasi_by' => Auth::id(),
+                ]);
+        });
+
+        activity()
+            ->performedOn($kelas)
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                'jumlah_diverifikasi' => $verifiedCount,
+                'diverifikasi_at' => $verifiedAt->toDateTimeString(),
+            ])
+            ->log("Memverifikasi keberadaan {$verifiedCount} siswa di {$kelas->nama_lengkap}");
+
+        return response()->json([
+            'success' => true,
+            'verified_count' => $verifiedCount,
+            'message' => $verifiedCount > 0
+                ? "{$verifiedCount} siswa berhasil ditandai ada di rombel."
+                : 'Semua siswa aktif sudah diverifikasi keberadaannya.',
+        ]);
+    }
+
+    /**
      * Assign wali kelas
      */
     public function assignWaliKelas(Request $request, Kelas $kelas)

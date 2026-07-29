@@ -151,6 +151,24 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-users"></i> Daftar Siswa</h3>
             <div class="card-tools">
+                @can('edit-kelas')
+                    @php
+                        $jumlahBelumDicek = $students
+                            ->filter(fn ($siswa) => $siswa->pivot->keberadaan_diverifikasi_at === null)
+                            ->count();
+                    @endphp
+                    @if($students->isNotEmpty())
+                        <button type="button"
+                                class="btn btn-sm {{ $jumlahBelumDicek > 0 ? 'btn-warning' : 'btn-success' }} mr-1"
+                                id="btnVerifyAllPresence"
+                                data-url="{{ route('admin.kelas.siswa.verifikasi-keberadaan-semua', $kelas) }}"
+                                data-pending="{{ $jumlahBelumDicek }}"
+                                @disabled($jumlahBelumDicek === 0)>
+                            <i class="fas {{ $jumlahBelumDicek > 0 ? 'fa-user-check' : 'fa-check-circle' }} mr-1"></i>
+                            {{ $jumlahBelumDicek > 0 ? 'Cek Keberadaan Semua' : 'Semua Sudah Dicek' }}
+                        </button>
+                    @endif
+                @endcan
                 @can('assign-siswa-kelas')
                     @if($kelas && $kelas->id && !$kelas->isFull())
                         <button type="button" class="btn btn-sm btn-success mr-1" data-toggle="modal" data-target="#modalTambahSiswa">
@@ -1165,6 +1183,37 @@
             $('[data-toggle="tooltip"]').tooltip();
 
             @can('edit-kelas')
+            $('#btnVerifyAllPresence').on('click', function() {
+                const button = $(this);
+                const pendingCount = Number(button.data('pending')) || 0;
+                if (button.prop('disabled') || pendingCount === 0) return;
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Cek keberadaan semua siswa?',
+                    html: `<strong>${pendingCount} siswa</strong> yang masih belum dicek akan ditandai <strong>Ada</strong> di rombel ini.`,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-user-check mr-1"></i>Ya, Tandai Semua Ada',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#f59e0b',
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: () => $.post(button.data('url'), {_token: '{{ csrf_token() }}'})
+                        .catch(xhr => {
+                            Swal.showValidationMessage(xhr.responseJSON?.message || 'Gagal memverifikasi keberadaan siswa.');
+                        })
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Keberadaan diperbarui',
+                        text: result.value.message,
+                        confirmButtonText: 'Selesai'
+                    }).then(() => window.location.reload());
+                });
+            });
+
             $(document).on('click', '.class-presence-toggle', function() {
                 const button = $(this);
                 if (button.prop('disabled')) return;
