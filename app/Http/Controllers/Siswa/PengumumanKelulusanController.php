@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\PengumumanKelulusan;
-use App\Models\SiswaKelas;
-use App\Models\TahunPelajaran;
+use App\Services\StudentGraduationAccessService;
 use App\Support\ClientRequest;
 use Illuminate\Http\Request;
 
 class PengumumanKelulusanController extends Controller
 {
-    public function index()
+    public function index(StudentGraduationAccessService $accessService)
     {
         $user = auth()->user();
         $siswa = $user?->siswa;
@@ -22,37 +21,16 @@ class PengumumanKelulusanController extends Controller
                 ->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $setting = AppSetting::getInstance();
-        if (!$setting->graduation_announcement_enabled) {
-            return redirect()->route('siswa.dashboard')
-                ->with('warning', 'Pengumuman kelulusan belum dibuka oleh admin.');
-        }
-        $startsAt = $setting->graduation_announcement_starts_at;
-        $isScheduledOpen = !$startsAt || now()->greaterThanOrEqualTo($startsAt);
-
-        $tahunAktif = TahunPelajaran::query()->where('is_active', true)->first();
-        if (!$tahunAktif) {
-            return redirect()->route('siswa.dashboard')
-                ->with('warning', 'Tahun ajaran aktif belum tersedia.');
-        }
-
-        $kelasAktif = SiswaKelas::query()
-            ->with(['kelas', 'tahunPelajaran'])
-            ->where('siswa_id', $siswa->id)
-            ->where('tahun_pelajaran_id', $tahunAktif->id)
-            ->where('status', 'aktif')
-            ->whereNull('deleted_at')
-            ->whereHas('kelas', function ($query) {
-                $query->where('tingkat', 12);
-            })
-            ->latest('created_at')
-            ->first();
+        $kelasAktif = $accessService->resolveAnnouncementEnrollment($siswa);
 
         if (!$kelasAktif) {
             return redirect()->route('siswa.dashboard')
-                ->with('warning', 'Menu pengumuman kelulusan hanya tersedia untuk siswa kelas 12 pada tahun ajaran aktif.');
+                ->with('warning', 'Pengumuman kelulusan belum tersedia untuk akun atau periode ini.');
         }
 
+        $setting = AppSetting::getInstance();
+        $tahunAktif = $kelasAktif->tahunPelajaran;
+        $startsAt = $setting->graduation_announcement_starts_at;
         $announcement = PengumumanKelulusan::query()
             ->where('tahun_pelajaran_id', $tahunAktif->id)
             ->where('siswa_id', $siswa->id)
@@ -65,11 +43,11 @@ class PengumumanKelulusanController extends Controller
             'announcement' => $announcement,
             'setting' => $setting,
             'startsAt' => $startsAt,
-            'isScheduledOpen' => $isScheduledOpen,
+            'isScheduledOpen' => true,
         ]);
     }
 
-    public function openEnvelope(Request $request)
+    public function openEnvelope(Request $request, StudentGraduationAccessService $accessService)
     {
         $user = auth()->user();
         $siswa = $user?->siswa;
@@ -81,33 +59,16 @@ class PengumumanKelulusanController extends Controller
             ], 403);
         }
 
-        $setting = AppSetting::getInstance();
-        if (!$setting->graduation_announcement_enabled) {
+        $kelasAktif = $accessService->resolveAnnouncementEnrollment($siswa);
+        if (!$kelasAktif) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pengumuman kelulusan belum dibuka oleh admin.',
+                'message' => 'Pengumuman kelulusan belum tersedia untuk akun atau periode ini.',
             ], 403);
-        }
-
-        $startsAt = $setting->graduation_announcement_starts_at;
-        if ($startsAt && now()->lessThan($startsAt)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Amplop pengumuman belum dapat dibuka. Silakan tunggu sampai jadwal tayang.',
-                'starts_at' => $startsAt->format('d M Y H:i'),
-            ], 403);
-        }
-
-        $tahunAktif = TahunPelajaran::query()->where('is_active', true)->first();
-        if (!$tahunAktif) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tahun ajaran aktif belum tersedia.',
-            ], 404);
         }
 
         $announcement = PengumumanKelulusan::query()
-            ->where('tahun_pelajaran_id', $tahunAktif->id)
+            ->where('tahun_pelajaran_id', $kelasAktif->tahun_pelajaran_id)
             ->where('siswa_id', $siswa->id)
             ->first();
 

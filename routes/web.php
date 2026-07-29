@@ -206,6 +206,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/lulusan/stats', [App\Http\Controllers\Admin\LulusanController::class, 'stats'])->name('lulusan.stats');
         Route::get('/lulusan/export/excel', [App\Http\Controllers\Admin\LulusanController::class, 'exportExcel'])->name('lulusan.export-excel');
         Route::get('/lulusan/export/pdf', [App\Http\Controllers\Admin\LulusanController::class, 'exportPdf'])->name('lulusan.export-pdf');
+        Route::post('/lulusan/student-access', [App\Http\Controllers\Admin\LulusanController::class, 'updateStudentAccess'])->name('lulusan.student-access');
         Route::post('/lulusan/send-graduation-emails', [App\Http\Controllers\Admin\LulusanController::class, 'sendGraduationEmails'])->name('lulusan.send-graduation-emails');
             Route::get('/kelulusan-pengumuman', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'index'])->name('kelulusan-pengumuman.index');
             Route::post('/kelulusan-pengumuman/publish', [App\Http\Controllers\Admin\PengumumanKelulusanController::class, 'publish'])->name('kelulusan-pengumuman.publish');

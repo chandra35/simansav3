@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\EmailTemplate;
 use App\Models\SnbpMenu;
 use App\Models\SiswaLulusan;
@@ -41,9 +42,44 @@ class LulusanController extends Controller
         return view('admin.lulusan.index', [
             'tahunPelajaranList' => $tahunPelajaranList,
             'selectedTahun' => $selectedTahun,
+            'setting' => AppSetting::getInstance(),
             'jalurMasukOptions' => SiswaLulusan::JALUR_MASUK,
             'checkerLinksByTahun' => $this->buildCheckerLinksByTahun($tahunPelajaranList),
         ]);
+    }
+
+    public function updateStudentAccess(Request $request)
+    {
+        $validated = $request->validate([
+            'lulusan_data_enabled' => ['required', 'boolean'],
+            'lulusan_data_tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
+            'lulusan_data_starts_at' => ['nullable', 'required_with:lulusan_data_ends_at', 'date'],
+            'lulusan_data_ends_at' => ['nullable', 'date', 'after:lulusan_data_starts_at'],
+        ], [
+            'lulusan_data_ends_at.after' => 'Waktu penutupan harus sesudah waktu pembukaan.',
+        ]);
+
+        $setting = AppSetting::getInstance();
+        $wasEnabled = (bool) $setting->lulusan_data_enabled;
+        $willBeEnabled = (bool) $validated['lulusan_data_enabled'];
+
+        $setting->update([
+            'lulusan_data_enabled' => $willBeEnabled,
+            'lulusan_data_tahun_pelajaran_id' => $validated['lulusan_data_tahun_pelajaran_id'],
+            'lulusan_data_starts_at' => $validated['lulusan_data_starts_at'] ?? null,
+            'lulusan_data_ends_at' => $validated['lulusan_data_ends_at'] ?? null,
+        ]);
+
+        $message = 'Periode pengisian Data Lulusan berhasil diperbarui.';
+        if ($wasEnabled !== $willBeEnabled) {
+            $message = $willBeEnabled
+                ? 'Pengisian Data Lulusan sudah dibuka untuk angkatan terpilih.'
+                : 'Pengisian Data Lulusan sudah ditutup untuk siswa aktif.';
+        }
+
+        return redirect()->route('admin.lulusan.index', [
+            'tahun_pelajaran_id' => $validated['lulusan_data_tahun_pelajaran_id'],
+        ])->with('success', $message);
     }
 
     public function data(Request $request)

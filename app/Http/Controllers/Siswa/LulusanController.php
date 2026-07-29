@@ -6,17 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\ReferensiPerguruanTinggi;
 use App\Models\ReferensiProgramStudi;
 use App\Models\SnbpRegistration;
-use App\Models\SiswaKelas;
 use App\Models\SiswaLulusan;
 use App\Models\SpanPtkinRegistration;
-use App\Models\TahunPelajaran;
+use App\Services\StudentGraduationAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class LulusanController extends Controller
 {
-    public function index()
+    public function index(StudentGraduationAccessService $accessService)
     {
         $user = Auth::user();
         $siswa = $user->siswa;
@@ -26,7 +25,7 @@ class LulusanController extends Controller
                 ->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $targetSiswaKelas = $this->resolveTargetSiswaKelas($siswa->id);
+        $targetSiswaKelas = $accessService->resolveLulusanEnrollment($siswa);
 
         if (!$targetSiswaKelas || !$targetSiswaKelas->tahunPelajaran) {
             return view('siswa.lulusan.not-applicable', [
@@ -64,8 +63,10 @@ class LulusanController extends Controller
         ]);
     }
 
-    public function searchReferences(Request $request)
+    public function searchReferences(Request $request, StudentGraduationAccessService $accessService)
     {
+        abort_unless($request->user()?->siswa && $accessService->canAccessLulusanData($request->user()->siswa), 403);
+
         $query = trim((string) $request->get('q', ''));
 
         if (mb_strlen($query) < 2) {
@@ -82,8 +83,10 @@ class LulusanController extends Controller
         return response()->json($results);
     }
 
-    public function searchStudyPrograms(Request $request)
+    public function searchStudyPrograms(Request $request, StudentGraduationAccessService $accessService)
     {
+        abort_unless($request->user()?->siswa && $accessService->canAccessLulusanData($request->user()->siswa), 403);
+
         $query = trim((string) $request->get('q', ''));
         $campusId = $request->get('referensi_perguruan_tinggi_id');
 
@@ -103,7 +106,7 @@ class LulusanController extends Controller
         return response()->json($results);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, StudentGraduationAccessService $accessService)
     {
         $user = Auth::user();
         $siswa = $user->siswa;
@@ -113,7 +116,7 @@ class LulusanController extends Controller
                 ->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $targetSiswaKelas = $this->resolveTargetSiswaKelas($siswa->id);
+        $targetSiswaKelas = $accessService->resolveLulusanEnrollment($siswa);
 
         if (!$targetSiswaKelas || !$targetSiswaKelas->tahunPelajaran) {
             return redirect()->route('siswa.dashboard')
@@ -213,36 +216,4 @@ class LulusanController extends Controller
             ->with('success', 'Data lulusan berhasil disimpan.');
     }
 
-    private function resolveTargetSiswaKelas(string $siswaId): ?SiswaKelas
-    {
-        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
-
-        if ($tahunAktif) {
-            $aktif = SiswaKelas::with(['kelas.jurusan', 'tahunPelajaran'])
-                ->where('siswa_id', $siswaId)
-                ->where('tahun_pelajaran_id', $tahunAktif->id)
-                ->whereNull('deleted_at')
-                ->whereHas('kelas', function ($query) {
-                    $query->where('tingkat', 12);
-                })
-                ->latest('created_at')
-                ->first();
-
-            if ($aktif) {
-                return $aktif;
-            }
-        }
-
-        return SiswaKelas::with(['kelas.jurusan', 'tahunPelajaran'])
-            ->where('siswa_id', $siswaId)
-            ->whereNull('deleted_at')
-            ->whereHas('kelas', function ($query) {
-                $query->where('tingkat', 12);
-            })
-            ->get()
-            ->sortByDesc(function (SiswaKelas $siswaKelas) {
-                return $siswaKelas->tahunPelajaran->tahun_mulai ?? 0;
-            })
-            ->first();
-    }
 }

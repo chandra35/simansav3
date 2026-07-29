@@ -91,6 +91,8 @@ class PengumumanKelulusanController extends Controller
 
     public function publish(Request $request)
     {
+        $tahunAktif = TahunPelajaran::query()->where('is_active', true)->firstOrFail();
+
         $validated = $request->validate([
             'graduation_announcement_enabled' => ['required', 'boolean'],
             'graduation_announcement_starts_at' => ['nullable', 'date'],
@@ -102,6 +104,7 @@ class PengumumanKelulusanController extends Controller
         $setting->update([
             'graduation_announcement_enabled' => $willBeEnabled,
             'graduation_announcement_starts_at' => $validated['graduation_announcement_starts_at'] ?? null,
+            'graduation_announcement_tahun_pelajaran_id' => $tahunAktif->id,
         ]);
 
         $message = 'Jadwal pengumuman kelulusan berhasil diperbarui.';

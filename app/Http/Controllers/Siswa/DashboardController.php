@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
-use App\Models\AppSetting;
 use App\Models\PengumumanKelulusan;
 use App\Models\Siswa;
 use App\Models\SnbpMenu;
 use App\Models\SnbpRegistration;
 use App\Models\TahunPelajaran;
+use App\Services\StudentGraduationAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, StudentGraduationAccessService $accessService)
     {
         $user = Auth::user();
         $siswa = $user->siswa;
@@ -81,25 +81,21 @@ class DashboardController extends Controller
         $tahunPelajaranAktif = TahunPelajaran::where('is_active', true)->first();
         $graduationAnnouncementInfo = null;
 
-        if ($tahunPelajaranAktif && $kelasAktif && (int) ($kelasAktif->tingkat ?? 0) === 12) {
-            $setting = AppSetting::getInstance();
+        $graduationEnrollment = $accessService->resolveAnnouncementEnrollment($siswa);
+        if ($graduationEnrollment) {
+            $announcement = PengumumanKelulusan::query()
+                ->where('tahun_pelajaran_id', $graduationEnrollment->tahun_pelajaran_id)
+                ->where('siswa_id', $siswa->id)
+                ->first();
 
-            if ($setting->graduation_announcement_enabled) {
-                $startsAt = $setting->graduation_announcement_starts_at;
-                $announcement = PengumumanKelulusan::query()
-                    ->where('tahun_pelajaran_id', $tahunPelajaranAktif->id)
-                    ->where('siswa_id', $siswa->id)
-                    ->first();
-
-                $graduationAnnouncementInfo = [
-                    'starts_at' => $startsAt,
-                    'is_available' => !$startsAt || now()->greaterThanOrEqualTo($startsAt),
-                    'has_result' => (bool) $announcement,
-                    'opened_at' => $announcement?->opened_at,
-                    'status_label' => $announcement?->status_label,
-                    'route' => route('siswa.kelulusan-pengumuman.index'),
-                ];
-            }
+            $graduationAnnouncementInfo = [
+                'starts_at' => null,
+                'is_available' => true,
+                'has_result' => true,
+                'opened_at' => $announcement?->opened_at,
+                'status_label' => $announcement?->status_label,
+                'route' => route('siswa.kelulusan-pengumuman.index'),
+            ];
         }
 
         $snbpReminder = null;

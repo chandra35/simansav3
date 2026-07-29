@@ -57,6 +57,11 @@ class AppSetting extends Model
         'activity_log_require_location',
         'graduation_announcement_enabled',
         'graduation_announcement_starts_at',
+        'graduation_announcement_tahun_pelajaran_id',
+        'lulusan_data_enabled',
+        'lulusan_data_starts_at',
+        'lulusan_data_ends_at',
+        'lulusan_data_tahun_pelajaran_id',
     ];
 
     protected $casts = [
@@ -72,6 +77,9 @@ class AppSetting extends Model
         'activity_log_require_location' => 'boolean',
         'graduation_announcement_enabled' => 'boolean',
         'graduation_announcement_starts_at' => 'datetime',
+        'lulusan_data_enabled' => 'boolean',
+        'lulusan_data_starts_at' => 'datetime',
+        'lulusan_data_ends_at' => 'datetime',
         'school_data_fetched_at' => 'datetime',
     ];
 
@@ -126,6 +134,11 @@ class AppSetting extends Model
                 'activity_log_require_location' => false,
                 'graduation_announcement_enabled' => false,
                 'graduation_announcement_starts_at' => null,
+                'graduation_announcement_tahun_pelajaran_id' => null,
+                'lulusan_data_enabled' => false,
+                'lulusan_data_starts_at' => null,
+                'lulusan_data_ends_at' => null,
+                'lulusan_data_tahun_pelajaran_id' => null,
             ]);
         }
         

@@ -4,6 +4,13 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Periode Pengumuman Kelulusan dan Data Lulusan/PTN
+
+- `Pengumuman Kelulusan` kini terikat pada angkatan tahun pelajaran saat admin menyimpan publikasi. Menu, kartu dashboard, halaman, dan aksi buka amplop baru tersedia setelah jadwal tayang serta hanya untuk siswa kelas 12 yang hasil individualnya sudah ditetapkan.
+- `Data Lulusan` ditegaskan sebagai pendataan studi lanjut/PTN. Admin dapat memilih angkatan kelas 12, waktu mulai, waktu tutup, serta membuka atau menutup akses siswa aktif.
+- Menu, form, penyimpanan, serta pencarian referensi kampus/prodi memakai aturan akses yang sama sehingga URL langsung tidak dapat melewati periode.
+- Siswa berstatus lulus/alumni tetap dapat memperbarui data studi lanjut berdasarkan riwayat kelas 12 walaupun periode siswa aktif sudah ditutup.
+
 ### Overlay dan penutupan tab Login As
 
 - Form `Login As` yang membuka tab baru tidak lagi mengaktifkan overlay pada tab admin asal.

@@ -358,7 +358,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="text-uppercase text-muted small font-weight-bold mb-2">Publikasi Kelulusan</div>
                             <h3 class="mb-2">Kontrol Akses Siswa Kelas 12</h3>
                             <p class="text-muted mb-0">
-                                Saat fitur dibuka, menu pengumuman hanya muncul untuk siswa kelas 12 pada tahun ajaran aktif.
+                                Target angkatan <strong>{{ $tahunAktif->nama }}</strong>. Menu baru muncul setelah jadwal tayang
+                                dan hanya kepada siswa yang hasil kelulusannya sudah ditetapkan.
                             </p>
                         </div>
                         <form action="{{ route('admin.kelulusan-pengumuman.publish') }}" method="POST" class="d-flex flex-wrap align-items-end gap-2">
@@ -397,7 +398,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         Custom Menu cocok untuk surat pengantar, video sambutan, atau pesan tambahan yang ditugaskan ke siswa tertentu.
                     </p>
                     <p class="text-muted mb-0">
-                        Untuk hasil kelulusan, sistem ini sengaja dibuat khusus agar aksesnya otomatis mengikuti kelas 12, tahun ajaran aktif, dan toggle publish dari admin.
+                        Untuk hasil kelulusan, akses mengikuti angkatan saat admin menyimpan publikasi, jadwal tayang,
+                        status publish, dan ketersediaan hasil masing-masing siswa.
                     </p>
                 </div>
             </div>

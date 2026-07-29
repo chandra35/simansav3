@@ -23,9 +23,9 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-lg-8">
-                    <h3 class="mb-1"><i class="fas fa-graduation-cap mr-1"></i> Rekap Kelulusan Kelas 12</h3>
+                    <h3 class="mb-1"><i class="fas fa-university mr-1"></i> Rekap Studi Lanjut / PTN Kelas 12</h3>
                     <p class="mb-2 text-white-50">
-                        Pantau pengisian data lulusan, hasil checker jalur PTN, serta kampus tujuan dalam satu laporan.
+                        Pantau pendataan siswa ke perguruan tinggi, hasil checker jalur PTN, serta kampus tujuan dalam satu laporan.
                     </p>
                     <p class="mb-0">Seluruh ringkasan, tabel, matriks, dan file export mengikuti tahun pelajaran yang dipilih.</p>
                 </div>
@@ -43,6 +43,70 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="card card-outline {{ $setting->lulusan_data_enabled ? 'card-success' : 'card-secondary' }}">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-clock mr-2"></i> Akses Pengisian Data PTN oleh Siswa
+            </h3>
+            <div class="card-tools">
+                <span class="badge {{ $setting->lulusan_data_enabled ? 'badge-success' : 'badge-secondary' }} p-2">
+                    {{ $setting->lulusan_data_enabled ? 'Dibuka' : 'Ditutup' }}
+                </span>
+            </div>
+        </div>
+        <form action="{{ route('admin.lulusan.student-access') }}" method="POST">
+            @csrf
+            <div class="card-body">
+                <div class="alert alert-light border mb-3">
+                    <i class="fas fa-info-circle text-primary mr-1"></i>
+                    Menu <strong>Data Lulusan</strong> adalah pendataan kampus dan program studi. Menu hanya tampil untuk
+                    siswa kelas 12 pada angkatan dan periode di bawah. Siswa berstatus lulus/alumni tetap dapat memperbarui
+                    riwayatnya setelah periode siswa aktif ditutup.
+                </div>
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="lulusan_data_tahun_pelajaran_id">Angkatan / Tahun Kelas 12</label>
+                            <select id="lulusan_data_tahun_pelajaran_id" name="lulusan_data_tahun_pelajaran_id" class="form-control" required>
+                                @foreach($tahunPelajaranList as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ old('lulusan_data_tahun_pelajaran_id', $setting->lulusan_data_tahun_pelajaran_id ?: optional($selectedTahun)->id) === $tahun->id ? 'selected' : '' }}>
+                                        {{ $tahun->nama }}{{ $tahun->is_active ? ' (Aktif)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="lulusan_data_starts_at">Mulai Tampil</label>
+                            <input type="datetime-local" id="lulusan_data_starts_at" name="lulusan_data_starts_at"
+                                class="form-control" value="{{ old('lulusan_data_starts_at', optional($setting->lulusan_data_starts_at)->format('Y-m-d\TH:i')) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="lulusan_data_ends_at">Tutup untuk Siswa Aktif</label>
+                            <input type="datetime-local" id="lulusan_data_ends_at" name="lulusan_data_ends_at"
+                                class="form-control" value="{{ old('lulusan_data_ends_at', optional($setting->lulusan_data_ends_at)->format('Y-m-d\TH:i')) }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group d-flex flex-column">
+                            <button type="submit" name="lulusan_data_enabled" value="{{ $setting->lulusan_data_enabled ? 1 : 0 }}" class="btn btn-outline-primary mb-2">
+                                <i class="fas fa-save mr-1"></i> Simpan Periode
+                            </button>
+                            <button type="submit" name="lulusan_data_enabled" value="{{ $setting->lulusan_data_enabled ? 0 : 1 }}"
+                                class="btn {{ $setting->lulusan_data_enabled ? 'btn-outline-secondary' : 'btn-success' }}">
+                                <i class="fas {{ $setting->lulusan_data_enabled ? 'fa-eye-slash' : 'fa-eye' }} mr-1"></i>
+                                {{ $setting->lulusan_data_enabled ? 'Tutup Akses' : 'Buka Akses' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 
     <div class="card card-outline card-primary">
