@@ -24,6 +24,7 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 - Konfirmasi impor NIS Lokal tidak lagi mengunci, memeriksa duplikasi, menyimpan model, dan membuat activity log terpisah untuk setiap siswa.
 - Kelayakan rombel dan kepemilikan NIS divalidasi secara massal dalam transaksi, lalu baris yang berubah disimpan dalam batch maksimal 500 siswa dengan satu log aktivitas ringkasan.
 - Metadata tahun masuk NIS, nomor urut, waktu pencatatan, serta admin pencatat tetap disimpan; optimasi hanya menghilangkan query dan event model berulang.
+- Pemilih file memakai dropzone responsif yang mendukung klik dan drag-and-drop, menampilkan nama serta ukuran file, memvalidasi ekstensi/ukuran sebelum upload, menyediakan aksi hapus/ganti file, dan memperjelas status saat preview diproses.
 
 ### Overlay download template NIS Lokal
 

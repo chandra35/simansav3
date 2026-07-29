@@ -93,31 +93,57 @@
                     </p>
                 </div>
                 <div class="col-lg-5 mt-3 mt-lg-0">
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="nisImportFile" accept=".xlsx,.xls">
-                        <label class="custom-file-label" for="nisImportFile">Pilih file Excel</label>
+                    <div class="nis-upload-panel">
+                        <label class="nis-upload-zone" id="nisUploadZone" for="nisImportFile">
+                            <input type="file" class="sr-only" id="nisImportFile" accept=".xlsx,.xls">
+                            <span class="nis-upload-zone__icon" aria-hidden="true">
+                                <i class="fas fa-file-excel"></i>
+                            </span>
+                            <span class="nis-upload-zone__content">
+                                <span class="nis-upload-zone__eyebrow">FILE EXCEL NIS LOKAL</span>
+                                <strong id="nisUploadTitle">Tarik file ke area ini</strong>
+                                <small id="nisUploadHint">atau klik untuk memilih file .xlsx/.xls, maksimal 5 MB</small>
+                            </span>
+                            <span class="nis-upload-zone__browse">
+                                <i class="fas fa-folder-open mr-1"></i>Pilih File
+                            </span>
+                        </label>
+
+                        <div class="nis-upload-selected d-none" id="nisUploadSelected" aria-live="polite">
+                            <span class="nis-upload-selected__icon"><i class="fas fa-check"></i></span>
+                            <span class="nis-upload-selected__data">
+                                <strong id="nisUploadFileName"></strong>
+                                <small id="nisUploadFileMeta"></small>
+                            </span>
+                            <button type="button" class="nis-upload-selected__remove" id="btnClearImportFile"
+                                    aria-label="Hapus file terpilih" title="Hapus file">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="nis-upload-actions">
+                            <a href="{{ route('admin.nis-lokal.template') }}"
+                               class="btn btn-outline-success"
+                               data-no-overlay
+                               download="template-update-nis-lokal.xlsx">
+                                <i class="fas fa-download mr-1"></i>Unduh Template
+                            </a>
+                            <button type="button" class="btn btn-info" id="btnImportPreview" disabled>
+                                <i class="fas fa-cloud-upload-alt mr-1"></i>Upload & Preview
+                            </button>
+                        </div>
+
+                        <div id="uploadProgressWrap" class="nis-upload-progress d-none">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span id="uploadProgressText"><i class="fas fa-spinner fa-spin mr-1"></i>Mengunggah file...</span>
+                                <strong id="uploadProgressPercent">0%</strong>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgress"
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <a href="{{ route('admin.nis-lokal.template') }}"
-                           class="btn btn-outline-success btn-sm"
-                           data-no-overlay
-                           download="template-update-nis-lokal.xlsx">
-                            <i class="fas fa-download mr-1"></i>Unduh Template
-                        </a>
-                        <button type="button" class="btn btn-info btn-sm" id="btnImportPreview" disabled>
-                            <i class="fas fa-cloud-upload-alt mr-1"></i>Upload & Preview
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="uploadProgressWrap" class="mt-3 d-none">
-                <div class="d-flex justify-content-between small mb-1">
-                    <span id="uploadProgressText">Mengunggah file...</span>
-                    <span id="uploadProgressPercent">0%</span>
-                </div>
-                <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgress"
-                         role="progressbar" style="width: 0%"></div>
                 </div>
             </div>
         </div>
@@ -202,6 +228,158 @@
         .student-meta { line-height: 1.2; }
         .student-meta small { display: block; color: #6c757d; }
         code { color: #0056b3; }
+        .nis-upload-panel {
+            padding: .85rem;
+            border: 1px solid #dbe5f1;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #fbfdff 0%, #f5f9ff 100%);
+            box-shadow: 0 10px 28px rgba(30, 64, 175, .06);
+        }
+        .nis-upload-zone {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            min-height: 108px;
+            margin: 0;
+            padding: .9rem;
+            border: 2px dashed #9bb9de;
+            border-radius: 11px;
+            background: rgba(255, 255, 255, .86);
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+        .nis-upload-zone:hover,
+        .nis-upload-zone:focus-within,
+        .nis-upload-zone.is-dragging {
+            border-color: #17a2b8;
+            background: #f0fbfd;
+            box-shadow: 0 0 0 4px rgba(23, 162, 184, .1);
+            transform: translateY(-1px);
+        }
+        .nis-upload-zone.is-busy {
+            pointer-events: none;
+            opacity: .68;
+        }
+        .nis-upload-zone__icon {
+            display: inline-flex;
+            flex: 0 0 46px;
+            width: 46px;
+            height: 46px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            color: #178447;
+            background: #e8f8ef;
+            font-size: 1.45rem;
+        }
+        .nis-upload-zone__content {
+            display: flex;
+            min-width: 0;
+            flex: 1;
+            flex-direction: column;
+        }
+        .nis-upload-zone__eyebrow {
+            margin-bottom: .15rem;
+            color: #64748b;
+            font-size: .65rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+        }
+        .nis-upload-zone__content strong {
+            color: #17345f;
+            font-size: .93rem;
+        }
+        .nis-upload-zone__content small {
+            margin-top: .18rem;
+            color: #718096;
+            line-height: 1.35;
+        }
+        .nis-upload-zone__browse {
+            flex: 0 0 auto;
+            padding: .48rem .68rem;
+            border-radius: 8px;
+            color: #fff;
+            background: #17a2b8;
+            font-size: .78rem;
+            font-weight: 700;
+            box-shadow: 0 5px 12px rgba(23, 162, 184, .2);
+        }
+        .nis-upload-selected {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            margin-top: .65rem;
+            padding: .65rem .75rem;
+            border: 1px solid #bde6cc;
+            border-radius: 10px;
+            background: #f0fbf4;
+        }
+        .nis-upload-selected__icon {
+            display: inline-flex;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #fff;
+            background: #28a745;
+        }
+        .nis-upload-selected__data {
+            display: flex;
+            min-width: 0;
+            flex: 1;
+            flex-direction: column;
+        }
+        .nis-upload-selected__data strong {
+            overflow: hidden;
+            color: #195b32;
+            font-size: .84rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .nis-upload-selected__data small { color: #5f7868; }
+        .nis-upload-selected__remove {
+            width: 30px;
+            height: 30px;
+            border: 0;
+            border-radius: 8px;
+            color: #8c3a45;
+            background: #fff;
+            transition: background .15s ease, color .15s ease;
+        }
+        .nis-upload-selected__remove:hover { color: #fff; background: #dc3545; }
+        .nis-upload-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: .65rem;
+            margin-top: .75rem;
+        }
+        .nis-upload-actions .btn {
+            flex: 1;
+            border-radius: 9px;
+            font-size: .82rem;
+            font-weight: 700;
+        }
+        .nis-upload-progress {
+            margin-top: .75rem;
+            padding: .7rem .8rem;
+            border-radius: 10px;
+            color: #28527d;
+            background: #eaf4ff;
+        }
+        .nis-upload-progress .progress {
+            height: 7px;
+            border-radius: 999px;
+            background: #d5e5f7;
+        }
+        .nis-upload-progress .progress-bar { border-radius: 999px; }
+        @media (max-width: 575.98px) {
+            .nis-upload-zone { align-items: flex-start; flex-wrap: wrap; }
+            .nis-upload-zone__content { flex-basis: calc(100% - 60px); }
+            .nis-upload-zone__browse { width: 100%; text-align: center; }
+            .nis-upload-actions { flex-direction: column-reverse; }
+        }
     </style>
 @stop
 
@@ -270,22 +448,97 @@
                     .fail(xhr => Swal.fire('Gagal', errorMessage(xhr), 'error'));
             });
 
+            const importInput = document.getElementById('nisImportFile');
+            const uploadZone = document.getElementById('nisUploadZone');
+            const maxImportSize = 5 * 1024 * 1024;
+
+            function formatFileSize(bytes) {
+                if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+                return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+            }
+
+            function resetImportFile() {
+                importInput.value = '';
+                importToken = null;
+                importReady = 0;
+                $('#nisUploadSelected').addClass('d-none');
+                $('#nisUploadTitle').text('Tarik file ke area ini');
+                $('#nisUploadHint').text('atau klik untuk memilih file .xlsx/.xls, maksimal 5 MB');
+                $('#btnImportPreview').prop('disabled', true);
+                $('#uploadProgressWrap').addClass('d-none');
+            }
+
+            function showImportFile(file) {
+                const extensionValid = /\.(xlsx|xls)$/i.test(file.name);
+                if (!extensionValid || file.size > maxImportSize) {
+                    resetImportFile();
+                    Swal.fire(
+                        'File tidak sesuai',
+                        !extensionValid
+                            ? 'Gunakan file Excel dengan ekstensi .xlsx atau .xls.'
+                            : 'Ukuran file maksimal 5 MB.',
+                        'warning'
+                    );
+                    return false;
+                }
+
+                $('#nisUploadFileName').text(file.name);
+                $('#nisUploadFileMeta').text(`${formatFileSize(file.size)} · siap dipreview`);
+                $('#nisUploadSelected').removeClass('d-none');
+                $('#nisUploadTitle').text('File Excel siap');
+                $('#nisUploadHint').text('Klik kembali untuk mengganti file');
+                $('#btnImportPreview').prop('disabled', false);
+                return true;
+            }
+
             $('#nisImportFile').on('change', function () {
                 const file = this.files[0];
-                $(this).next('.custom-file-label').text(file?.name || 'Pilih file Excel');
-                $('#btnImportPreview').prop('disabled', !file);
+                if (file) showImportFile(file);
+                else resetImportFile();
+            });
+
+            $('#btnClearImportFile').on('click', function () {
+                resetImportFile();
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    uploadZone.classList.add('is-dragging');
+                });
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    uploadZone.classList.remove('is-dragging');
+                });
+            });
+            uploadZone.addEventListener('drop', event => {
+                const file = event.dataTransfer.files[0];
+                if (!file) return;
+
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                importInput.files = transfer.files;
+                if (!showImportFile(file)) importInput.value = '';
             });
 
             $('#btnImportPreview').on('click', function () {
                 const file = $('#nisImportFile')[0].files[0];
                 if (!file) return;
 
+                const button = $(this).prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin mr-1"></i>Memproses...');
+                $('#nisUploadZone').addClass('is-busy');
                 const formData = new FormData();
                 formData.append('_token', csrf);
                 formData.append('file', file);
                 $('#uploadProgressWrap').removeClass('d-none');
                 $('#uploadProgress').css('width', '0%');
                 $('#uploadProgressPercent').text('0%');
+                $('#uploadProgressText').html('<i class="fas fa-spinner fa-spin mr-1"></i>Mengunggah file...');
 
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', @json(route('admin.nis-lokal.import.preview')));
@@ -307,6 +560,9 @@
                     if (xhr.status < 200 || xhr.status >= 300) {
                         $('#uploadProgressWrap').addClass('d-none');
                         Swal.fire('Preview gagal', response.message || 'File tidak dapat diproses.', 'error');
+                        button.prop('disabled', false)
+                            .html('<i class="fas fa-cloud-upload-alt mr-1"></i>Upload & Preview');
+                        $('#nisUploadZone').removeClass('is-busy');
                         return;
                     }
 
@@ -315,10 +571,16 @@
                     $('#uploadProgressText').text('Preview siap.');
                     renderImportPreview(response.data);
                     setTimeout(() => $('#uploadProgressWrap').addClass('d-none'), 800);
+                    button.prop('disabled', false)
+                        .html('<i class="fas fa-cloud-upload-alt mr-1"></i>Upload & Preview');
+                    $('#nisUploadZone').removeClass('is-busy');
                 };
                 xhr.onerror = () => {
                     $('#uploadProgressWrap').addClass('d-none');
                     Swal.fire('Koneksi gagal', 'Upload terputus. Silakan coba lagi.', 'error');
+                    button.prop('disabled', false)
+                        .html('<i class="fas fa-cloud-upload-alt mr-1"></i>Upload & Preview');
+                    $('#nisUploadZone').removeClass('is-busy');
                 };
                 xhr.send(formData);
             });

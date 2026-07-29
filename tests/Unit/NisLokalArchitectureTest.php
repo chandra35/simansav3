@@ -79,4 +79,19 @@ class NisLokalArchitectureTest extends TestCase
         $this->assertStringNotContainsString("Siswa::query()->lockForUpdate()->findOrFail(\$row['student_id'])", $confirmImport);
         $this->assertStringNotContainsString("if (\$student->nis_lokal !== \$row['input_nis']) {\n                    \$student->forceFill", $confirmImport);
     }
+
+    public function test_import_picker_has_clear_drag_drop_and_file_feedback(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/nis-lokal/index.blade.php');
+
+        $this->assertStringContainsString('class="nis-upload-zone"', $view);
+        $this->assertStringContainsString('id="nisUploadSelected"', $view);
+        $this->assertStringContainsString('id="btnClearImportFile"', $view);
+        $this->assertStringContainsString("uploadZone.addEventListener('drop'", $view);
+        $this->assertStringContainsString('const maxImportSize = 5 * 1024 * 1024;', $view);
+        $this->assertStringContainsString('function formatFileSize(bytes)', $view);
+        $this->assertStringContainsString("$('#nisUploadFileName').text(file.name)", $view);
+        $this->assertStringContainsString("$('#nisUploadZone').addClass('is-busy')", $view);
+        $this->assertStringNotContainsString('class="custom-file-input" id="nisImportFile"', $view);
+    }
 }
