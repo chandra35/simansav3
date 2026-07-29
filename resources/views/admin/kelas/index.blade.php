@@ -42,7 +42,7 @@
                     <i class="fas fa-layer-group"></i> Struktur Akademik SIMANSA
                 </div>
                 <h2>Daftar Kelas</h2>
-                <p>Kelola rombongan belajar, wali kelas, kapasitas, dan distribusi siswa dari satu halaman yang lebih mudah dipantau.</p>
+                <p>Kelola rombongan belajar, wali kelas, ketua kelas, kapasitas, dan distribusi siswa dari satu halaman yang lebih mudah dipantau.</p>
             </div>
             <div class="simansa-kelas-hero__meta">
                 <div class="simansa-kelas-chip">
@@ -165,7 +165,7 @@
         <div class="simansa-kelas-panel__header">
             <div>
                 <h3><i class="fas fa-list"></i> Daftar Kelas</h3>
-                <p>Pantau kode kelas, wali kelas, kapasitas, dan status pemakaian tanpa pindah-pindah halaman.</p>
+                <p>Pantau kode kelas, wali kelas, ketua kelas, kapasitas, dan status pemakaian tanpa pindah-pindah halaman.</p>
             </div>
             @can('create-kelas')
                 <a href="{{ route('admin.kelas.create') }}" class="btn btn-primary">
@@ -185,6 +185,7 @@
                             <th>Jurusan</th>
                             <th>Tahun Pelajaran</th>
                             <th>Wali Kelas</th>
+                            <th>Ketua Kelas</th>
                             <th>Kapasitas</th>
                             <th>Status</th>
                             <th width="12%">Aksi</th>
@@ -248,6 +249,7 @@
                     { data: 'jurusan_nama', name: 'jurusan.singkatan' },
                     { data: 'tahun_pelajaran', name: 'tahunPelajaran.nama' },
                     { data: 'wali_kelas', name: 'waliKelas.name' },
+                    { data: 'ketua_kelas', name: 'ketua_kelas', orderable: false, searchable: false },
                     { data: 'kapasitas_info', name: 'kapasitas', orderable: false },
                     { data: 'status_badge', name: 'is_active' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }

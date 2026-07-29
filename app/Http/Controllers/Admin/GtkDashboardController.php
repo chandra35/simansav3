@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
+use App\Models\Kelas;
+use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,7 +48,32 @@ class GtkDashboardController extends Controller
             'completion_percentage' => $this->calculateCompletionPercentage($gtk),
         ];
 
-        return view('admin.gtk.dashboard', compact('gtk', 'stats', 'needsCompletion'));
+        $tahunAktif = TahunPelajaran::query()->active()->first();
+        $waliKelasRombels = $tahunAktif
+            ? Kelas::query()
+                ->where('tahun_pelajaran_id', $tahunAktif->id)
+                ->where('wali_kelas_id', $user->id)
+                ->where('is_active', true)
+                ->with([
+                    'jurusan',
+                    'waliKelas.gtk',
+                    'ketuaKelasRecord.siswa',
+                ])
+                ->withCount('siswaAktif')
+                ->orderBy('tingkat')
+                ->orderBy('nama_kelas')
+                ->get()
+            : collect();
+        $isWaliKelas = $user->hasRole('Wali Kelas') || $waliKelasRombels->isNotEmpty();
+
+        return view('admin.gtk.dashboard', compact(
+            'gtk',
+            'stats',
+            'needsCompletion',
+            'tahunAktif',
+            'waliKelasRombels',
+            'isWaliKelas'
+        ));
     }
 
     /**

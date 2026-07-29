@@ -25,7 +25,7 @@ class JadwalPelajaranController extends Controller
 
         $kelasList = $tahunId
             ? Kelas::where('tahun_pelajaran_id', $tahunId)
-                ->with(['jurusan', 'waliKelas'])
+                ->with(['jurusan', 'waliKelas', 'ketuaKelasRecord.siswa'])
                 ->orderBy('tingkat')
                 ->orderBy('nama_kelas')
                 ->get()

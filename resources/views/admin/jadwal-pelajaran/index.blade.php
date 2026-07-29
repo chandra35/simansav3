@@ -182,6 +182,10 @@
                 @else
                 <div class="simansa-jadwal-kelas-card__wali text-muted"><i class="fas fa-user-slash"></i> Belum ada wali kelas</div>
                 @endif
+                <div class="simansa-jadwal-kelas-card__wali {{ $k->ketuaKelasRecord?->siswa ? '' : 'text-muted' }}">
+                    <i class="fas fa-crown text-warning"></i>
+                    {{ $k->ketuaKelasRecord?->siswa?->nama_lengkap ?? 'Belum ada ketua kelas' }}
+                </div>
                 <div class="simansa-jadwal-kelas-card__actions">
                     <a href="{{ route('admin.jadwal-pelajaran.timetable', ['kelas_id' => $k->id, 'tahun_pelajaran_id' => $tahunId, 'semester' => 1]) }}"
                        class="btn btn-sm btn-primary flex-grow-1">

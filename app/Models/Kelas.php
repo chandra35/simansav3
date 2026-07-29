@@ -110,7 +110,6 @@ class Kelas extends Model
     public function ketuaKelasRecord(): HasOne
     {
         return $this->hasOne(SiswaKelas::class, 'kelas_id')
-            ->where('tahun_pelajaran_id', $this->tahun_pelajaran_id)
             ->where('status', 'aktif')
             ->where('is_ketua_kelas', true)
             ->whereNull('ketua_kelas_selesai_at');

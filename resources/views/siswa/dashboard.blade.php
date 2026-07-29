@@ -29,6 +29,12 @@
         ?? ($waliKelasNama
             ? 'https://ui-avatars.com/api/?name=' . urlencode($waliKelasNama) . '&size=160&background=2563eb&color=ffffff'
             : null);
+    $ketuaKelasSiswa = $kelasAktif?->ketuaKelasRecord?->siswa;
+    $ketuaKelasNama = $ketuaKelasSiswa?->nama_lengkap;
+    $ketuaKelasFoto = $ketuaKelasSiswa?->foto_profile_url
+        ?? ($ketuaKelasNama
+            ? 'https://ui-avatars.com/api/?name=' . urlencode($ketuaKelasNama) . '&size=160&background=f59e0b&color=ffffff'
+            : null);
     $waliKelasStatusMessage = null;
 
     if (!$kelasAktif) {
@@ -339,6 +345,12 @@
                         </span>
                     </li>
                     @endif
+                    <li class="list-group-item">
+                        <b><i class="fas fa-crown text-warning mr-1"></i> Ketua Kelas</b>
+                        <span class="float-right {{ $ketuaKelasNama ? 'text-dark' : 'text-muted' }}">
+                            {{ $ketuaKelasNama ?? 'Belum ditetapkan' }}
+                        </span>
+                    </li>
                     @endif
                     @if($siswa->agama)
                     <li class="list-group-item">
@@ -393,6 +405,49 @@
                     <i class="fas fa-phone-alt text-info mr-2"></i>
                     <span>{{ $waliKelasNomorHp }}</span>
                 </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        @if($kelasAktif)
+        <div class="card card-warning card-outline wali-kelas-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-crown text-warning mr-1"></i>
+                    Ketua Kelas Saya
+                </h3>
+            </div>
+            <div class="card-body">
+                @if($ketuaKelasNama)
+                    <div class="d-flex align-items-center">
+                        <div class="wali-kelas-photo mr-3">
+                            <img src="{{ $ketuaKelasFoto }}"
+                                 alt="Foto {{ $ketuaKelasNama }}"
+                                 class="img-circle"
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($ketuaKelasNama) }}&size=160&background=f59e0b&color=ffffff';">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1 font-weight-bold text-dark">{{ $ketuaKelasNama }}</h5>
+                            <div class="text-muted small mb-2">Ketua Kelas {{ $kelasAktif->nama_lengkap }}</div>
+                            <span class="badge badge-warning px-2 py-1">
+                                <i class="fas fa-crown mr-1"></i>Ketua Kelas
+                            </span>
+                            @if($ketuaKelasSiswa->id === $siswa->id)
+                                <span class="badge badge-success px-2 py-1 ml-1">Anda</span>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="d-flex align-items-start">
+                        <div class="mr-3 mt-1 text-warning" style="font-size: 1.6rem;">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold text-dark mb-1">Ketua kelas belum ditetapkan</div>
+                            <div class="text-muted">Admin atau wali kelas belum menetapkan Ketua Kelas {{ $kelasAktif->nama_lengkap }}.</div>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>

@@ -59,6 +59,7 @@ class DashboardController extends Controller
 
         $siswa->load([
             'kelasAktif.waliKelas.gtk',
+            'kelasAktif.ketuaKelasRecord.siswa',
         ]);
 
         $kelasAktif = $siswa->kelasAktif->first();

@@ -32,7 +32,8 @@ class KelasController extends Controller
                 'tahunPelajaran',
                 'kurikulum',
                 'jurusan',
-                'waliKelas'
+                'waliKelas',
+                'ketuaKelasRecord.siswa',
             ])->withCount('siswaAktif');
 
             // Apply filters
@@ -71,6 +72,13 @@ class KelasController extends Controller
                 })
                 ->addColumn('wali_kelas', function ($row) {
                     return $row->waliKelas ? $row->waliKelas->name : '<span class="text-muted">Belum ditugaskan</span>';
+                })
+                ->addColumn('ketua_kelas', function ($row) {
+                    $nama = $row->ketuaKelasRecord?->siswa?->nama_lengkap;
+
+                    return $nama
+                        ? '<span class="font-weight-semibold"><i class="fas fa-crown text-warning mr-1"></i>' . e($nama) . '</span>'
+                        : '<span class="text-muted">Belum ditetapkan</span>';
                 })
                 ->addColumn('kapasitas_info', function ($row) {
                     $siswa = $row->siswa_aktif_count;
@@ -149,7 +157,7 @@ class KelasController extends Controller
                     $actions .= '</div>';
                     return $actions;
                 })
-                ->rawColumns(['jurusan_nama', 'wali_kelas', 'kapasitas_info', 'status_badge', 'action'])
+                ->rawColumns(['jurusan_nama', 'wali_kelas', 'ketua_kelas', 'kapasitas_info', 'status_badge', 'action'])
                 ->make(true);
         }
 

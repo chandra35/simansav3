@@ -4,6 +4,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Identitas Wali Kelas dan Ketua Kelas
+
+- Dashboard siswa menampilkan nama Wali Kelas dan Ketua Kelas rombel aktif, termasuk kartu identitas masing-masing serta penanda jika siswa tersebut sendiri adalah Ketua Kelas.
+- Dashboard GTK dengan peran Wali Kelas memiliki ringkasan seluruh rombel perwaliannya pada tahun aktif, lengkap dengan jumlah siswa, nama Wali Kelas, dan Ketua Kelas.
+- Daftar Kelas utama dan kartu kelas pada menu Jadwal Pelajaran kini sama-sama menampilkan Wali Kelas serta Ketua Kelas. Detail rombel tetap menjadi tempat penetapan keduanya.
+
 ### Periode Pengumuman Kelulusan dan Data Lulusan/PTN
 
 - `Pengumuman Kelulusan` kini terikat pada angkatan tahun pelajaran saat admin menyimpan publikasi. Menu, kartu dashboard, halaman, dan aksi buka amplop baru tersedia setelah jadwal tayang serta hanya untuk siswa kelas 12 yang hasil individualnya sudah ditetapkan.
