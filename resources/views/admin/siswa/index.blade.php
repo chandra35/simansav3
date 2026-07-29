@@ -545,6 +545,11 @@
         }
 
         /* Compact professional table */
+        .simansa-siswa-table {
+            width: 100% !important;
+            min-width: 1050px;
+            table-layout: fixed;
+        }
         .simansa-siswa-table thead th {
             background: #f1f5f9;
             color: #1e293b;
@@ -554,7 +559,8 @@
             text-transform: uppercase;
             border-bottom: 1px solid #cbd5e1;
             padding: .64rem .65rem;
-            white-space: nowrap;
+            line-height: 1.2;
+            white-space: normal;
         }
         .simansa-siswa-table tbody td {
             font-size: .84rem;
@@ -564,8 +570,43 @@
             border-bottom: 1px solid #f1f5f9;
             border-top: none;
         }
+        .simansa-siswa-table .siswa-col-foto {
+            width: 4% !important;
+        }
+        .simansa-siswa-table .siswa-col-nama {
+            width: 19% !important;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+        .simansa-siswa-table .siswa-col-jk {
+            width: 4% !important;
+            white-space: nowrap;
+        }
+        .simansa-siswa-table .siswa-col-kelas {
+            width: 7% !important;
+            overflow-wrap: anywhere;
+        }
+        .simansa-siswa-table .siswa-col-status {
+            width: 8% !important;
+        }
+        .simansa-siswa-table .siswa-col-keberadaan {
+            width: 10% !important;
+        }
+        .simansa-siswa-table .siswa-col-tanggal {
+            width: 9% !important;
+            white-space: nowrap;
+        }
+        .simansa-siswa-table .siswa-col-aksi {
+            width: 15% !important;
+            white-space: normal;
+        }
         .simansa-siswa-table tbody tr:hover td {
             background: #f0f7ff;
+        }
+        .simansa-siswa-table .siswa-col-aksi .btn-group {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            white-space: nowrap;
         }
         .simansa-siswa-table .btn-group .btn {
             padding: .2rem .45rem;
@@ -581,10 +622,22 @@
         .simansa-table-scroll {
             width: 100%;
             overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scrollbar-width: thin;
             -webkit-overflow-scrolling: touch;
         }
         .simansa-table-scroll > table {
-            min-width: 720px;
+            margin-bottom: 0;
+        }
+        @media (max-width: 1199.98px) {
+            .simansa-siswa-table {
+                min-width: 1000px;
+            }
+            .simansa-siswa-table thead th,
+            .simansa-siswa-table tbody td {
+                padding-left: .5rem;
+                padding-right: .5rem;
+            }
         }
 
         .simansa-btn-strong {
@@ -1029,30 +1082,27 @@ $(document).ready(function() {
         },
         autoWidth: false,
         columnDefs: [
-            { targets: 0, width: '46px'  },   // foto
-            { targets: 1, width: '28%'   },   // nama/nisn
-            { targets: 2, width: '44px'  },   // jk
-            { targets: 3, width: '13%'   },   // kelas
-            { targets: 4, width: '76px'  },   // status ortu
-            { targets: 5, width: '68px'  },   // status diri
-            { targets: 6, width: '82px'  },   // verval
-            { targets: 7, width: '82px'  },   // emis
-            { targets: 8, width: '100px' },   // keberadaan
-            { targets: 9, width: '82px'  },   // tgl masuk
-            { targets: 10, width: '110px' },  // aksi
+            { targets: 0, width: '4%'  },   // foto
+            { targets: 1, width: '19%' },   // nama/nisn
+            { targets: 2, width: '4%'  },   // jk
+            { targets: 3, width: '7%'  },   // kelas
+            { targets: [4, 5, 6, 7], width: '8%' }, // status
+            { targets: 8, width: '10%' },   // keberadaan
+            { targets: 9, width: '9%'  },   // tgl masuk
+            { targets: 10, width: '15%' },  // aksi
         ],
         columns: [
-            { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'nama_nisn',     name: 'nama_lengkap',  className: 'align-middle' },
-            { data: 'jenis_kelamin', name: 'jenis_kelamin', className: 'text-center align-middle' },
-            { data: 'kelas',         name: 'kelas',         className: 'align-middle' },
-            { data: 'status_ortu',   name: 'status_ortu',   orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'keberadaan',     name: 'keberadaan', orderable: false, searchable: false, className: 'text-center align-middle' },
-            { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle' },
-            { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle' }
+            { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle siswa-col-foto' },
+            { data: 'nama_nisn',     name: 'nama_lengkap',  className: 'align-middle siswa-col-nama' },
+            { data: 'jenis_kelamin', name: 'jenis_kelamin', className: 'text-center align-middle siswa-col-jk' },
+            { data: 'kelas',         name: 'kelas',         className: 'align-middle siswa-col-kelas' },
+            { data: 'status_ortu',   name: 'status_ortu',   orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            { data: 'keberadaan',     name: 'keberadaan', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-keberadaan' },
+            { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle siswa-col-tanggal' },
+            { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle siswa-col-aksi' }
         ],
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,

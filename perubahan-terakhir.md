@@ -4,6 +4,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Tabel Data Siswa responsif dan seimbang
+
+- Lebar kolom tabel Data Siswa memakai proporsi tetap yang berjumlah satu layout penuh; Nama/NISN diperkecil dari 28% menjadi 19%, JK menjadi 4%, dan Kelas menjadi 7%.
+- Kolom status, keberadaan, tanggal masuk, dan aksi memperoleh ruang terukur sehingga tabel desktop tampil utuh dan seimbang tanpa celah kolom berlebihan.
+- Pada layar lebih sempit tabel mempertahankan keterbacaan dengan lebar minimum, wrapping terkontrol, dan horizontal scroll sentuh yang halus.
+
 ### Penyelarasan UI Data GTK
 
 - Halaman Data GTK memakai struktur visual operasional terbaru dengan hero ringkas, kartu statistik standar, panel filter, dan tabel yang seluruh gayanya dibatasi pada scope GTK agar tidak berbenturan dengan style halaman lain.
