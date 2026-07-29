@@ -47,4 +47,54 @@ class StudentAttendanceArchitectureTest extends TestCase
             $this->assertStringContainsString($required, $migration);
         }
     }
+
+    public function test_admin_monitoring_lists_the_complete_active_roster_for_today(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $menu = file_get_contents($root.'/config/adminlte.php');
+        $permissionSync = file_get_contents($root.'/app/Services/PermissionSyncService.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/monitoring.blade.php');
+        $permission = file_get_contents($root.'/database/migrations/2026_07_29_160500_add_student_attendance_monitoring_permission.php');
+
+        $this->assertStringContainsString('public function monitoring(Request $request)', $controller);
+        $this->assertStringContainsString("->where('sk.tahun_pelajaran_id', \$tahunPelajaran->id)", $controller);
+        $this->assertStringContainsString("->where('attendance_sessions.mode', '=', 'harian')", $controller);
+        $this->assertStringContainsString('attendance_records.id IS NOT NULL', $controller);
+        $this->assertStringContainsString("'unrecorded' => max(0", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.monitoring')", $routes);
+        $this->assertStringContainsString("'can' => 'monitor-all-student-attendance'", $menu);
+        $this->assertStringContainsString("'monitor-all-student-attendance'", $permissionSync);
+        $this->assertStringContainsString('Absensi Seluruh Siswa', $view);
+        $this->assertStringContainsString('Belum Direkam', $view);
+        $this->assertStringContainsString("'monitor-all-student-attendance'", $permission);
+    }
+
+    public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+
+        $this->assertStringContainsString("'notes.*' => ['nullable', 'string', 'max:500']", $controller);
+        $this->assertStringContainsString('id="studentNoteModal"', $view);
+        $this->assertStringContainsString('class="student-note-trigger', $view);
+        $this->assertStringContainsString('id="studentNoteEditor"', $view);
+        $this->assertStringContainsString("$('#btnApplyStudentNote').on('click'", $view);
+        $this->assertStringContainsString('Tersimpan bersama draft atau finalisasi absensi.', $view);
+    }
+
+    public function test_student_dashboard_uses_a_compact_neutral_heading(): void
+    {
+        $dashboard = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/dashboard.blade.php');
+
+        $this->assertStringContainsString('class="student-dashboard-header"', $dashboard);
+        $this->assertStringContainsString('Ringkasan profil, kelas, dan kelengkapan data Anda', $dashboard);
+        $this->assertStringContainsString('background: #fff;', $dashboard);
+        $this->assertStringNotContainsString('class="callout callout-info student-welcome-hero"', $dashboard);
+        $this->assertStringNotContainsString('background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)', $dashboard);
+        $this->assertStringNotContainsString('id="pageLoader"', $dashboard);
+        $this->assertStringNotContainsString('lottie.loadAnimation', $dashboard);
+    }
 }

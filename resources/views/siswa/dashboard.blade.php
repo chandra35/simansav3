@@ -43,15 +43,6 @@
         $waliKelasStatusMessage = 'Wali kelas untuk kelas Anda belum ditetapkan. Silakan cek kembali nanti atau hubungi admin madrasah.';
     }
 @endphp
-<!-- Page Loading Overlay with Lottie Animation -->
-<div class="page-loader" id="pageLoader">
-    <div class="loader-content">
-        <div class="lottie-container" id="lottieLoader"></div>
-        <div class="loading-text">Memuat Dashboard...</div>
-        <div class="loading-subtext">Mohon tunggu sebentar</div>
-    </div>
-</div>
-
 @if($snbpReminder)
 <div class="modal fade" id="modalSnbpReminder" tabindex="-1" role="dialog" aria-labelledby="modalSnbpReminderLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -92,23 +83,30 @@
 </div>
 @endif
 
-<!-- Welcome Banner -->
-<div class="row mb-2">
+<!-- Compact dashboard heading -->
+<div class="row mb-3">
     <div class="col-12">
-        <div class="callout callout-info student-welcome-hero" style="margin-bottom: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-left: 5px solid #fff; color: white;">
-            <div class="d-flex align-items-center">
-                <div class="mr-3">
-                    <i class="fas fa-hand-peace" style="font-size: 3rem; opacity: 0.9;"></i>
-                </div>
+        <div class="student-dashboard-header">
+            <div class="student-dashboard-header__main">
+                <span class="student-dashboard-header__icon"><i class="fas fa-home"></i></span>
                 <div>
-                    <h4 style="margin: 0; color: white;"><i class="fas fa-home"></i> Selamat Datang, {{ $siswa->nama_lengkap }}!</h4>
-                    <p style="margin: 5px 0 0 0; opacity: 0.95;">
-                        Dashboard pribadi Anda di <strong>SIMANSA</strong> - Sistem Informasi MAN 1 Metro
-                        @if($tahunPelajaranAktif)
-                        <br><small><i class="fas fa-calendar-check"></i> Tahun Pelajaran: <strong>{{ $tahunPelajaranAktif->nama }}</strong> (Semester {{ $tahunPelajaranAktif->semester_aktif }})</small>
-                        @endif
-                    </p>
+                    <span class="student-dashboard-header__eyebrow">DASHBOARD SISWA</span>
+                    <h1>Selamat datang, {{ $siswa->nama_lengkap }}</h1>
+                    <p>Ringkasan profil, kelas, dan kelengkapan data Anda di SIMANSA.</p>
                 </div>
+            </div>
+            <div class="student-dashboard-header__meta">
+                @if($kelasAktif)
+                    <span><small>Kelas</small><strong>{{ $kelasAktif->nama_lengkap }}</strong></span>
+                @endif
+                <span>
+                    <small>Tahun Pelajaran</small>
+                    <strong>{{ $tahunPelajaranAktif?->nama ?? 'Belum tersedia' }}</strong>
+                </span>
+                <span>
+                    <small>Semester</small>
+                    <strong>{{ $tahunPelajaranAktif?->semester_aktif ?? '-' }}</strong>
+                </span>
             </div>
         </div>
     </div>
@@ -842,24 +840,90 @@
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
-    .student-welcome-hero {
-        position: relative;
-        overflow: hidden;
-        border-left: 0 !important;
-        border-radius: 16px;
-        padding: 1.2rem 1.3rem;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+    .student-dashboard-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        border: 1px solid #dfe6ef;
+        border-left: 4px solid #4f6fd8;
+        border-radius: 13px;
+        color: #26344c;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .055);
     }
 
-    .student-welcome-hero::after {
-        content: "";
-        position: absolute;
-        right: -70px;
-        bottom: -110px;
-        width: 180px;
-        height: 180px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.05);
+    .student-dashboard-header__main {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        min-width: 0;
+    }
+
+    .student-dashboard-header__icon {
+        display: inline-flex;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        color: #4667c5;
+        background: #edf2ff;
+    }
+
+    .student-dashboard-header__eyebrow {
+        color: #6b7a91;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+    }
+
+    .student-dashboard-header h1 {
+        margin: .1rem 0;
+        color: #1f2b40;
+        font-size: 1.18rem;
+        font-weight: 800;
+    }
+
+    .student-dashboard-header p {
+        margin: 0;
+        color: #738096;
+        font-size: .8rem;
+    }
+
+    .student-dashboard-header__meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .student-dashboard-header__meta > span {
+        min-width: 105px;
+        padding: .45rem .65rem;
+        border: 1px solid #e3e9f1;
+        border-radius: 9px;
+        background: #f8fafc;
+    }
+
+    .student-dashboard-header__meta small,
+    .student-dashboard-header__meta strong {
+        display: block;
+    }
+
+    .student-dashboard-header__meta small {
+        color: #8390a3;
+        font-size: .6rem;
+        text-transform: uppercase;
+    }
+
+    .student-dashboard-header__meta strong {
+        overflow: hidden;
+        color: #34435c;
+        font-size: .72rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .graduation-dashboard-alert {
@@ -963,58 +1027,7 @@
         background: #e8f0fb;
     }
 
-    /* Page Loading Overlay */
-    .page-loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    .page-loader.fade-out {
-        opacity: 0;
-        visibility: hidden;
-    }
-
-    .page-loader .loader-content {
-        text-align: center;
-        color: white;
-    }
-
-    .page-loader .lottie-container {
-        width: 200px;
-        height: 200px;
-        margin: 0 auto;
-    }
-
-    .page-loader .loading-text {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-top: 15px;
-        opacity: 0.9;
-        animation: pulse-text 1.5s ease-in-out infinite;
-    }
-
-    .page-loader .loading-subtext {
-        font-size: 0.9rem;
-        opacity: 0.7;
-        margin-top: 5px;
-    }
-
-    @keyframes pulse-text {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-    }
-
-    /* Welcome Banner Gradient */
+    /* Subtle entry for contextual callouts */
     .callout {
         animation: fadeIn 0.5s ease-in-out;
     }
@@ -1369,6 +1382,21 @@
 
     /* Responsive Adjustments */
     @media (max-width: 768px) {
+        .student-dashboard-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .student-dashboard-header__meta {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .student-dashboard-header__meta > span {
+            min-width: 0;
+            flex: 1 1 95px;
+        }
+
         .graduation-dashboard-alert {
             align-items: flex-start;
             flex-direction: column;
@@ -1429,33 +1457,9 @@
 @stop
 
 @section('js')
-<!-- Lottie Animation Library -->
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 <!-- Cropper.js for foto crop -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
-    // Initialize Lottie animation for page loader
-    var loaderAnimation = lottie.loadAnimation({
-        container: document.getElementById('lottieLoader'),
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path: 'https://lottie.host/2fa0b14e-88bc-4f36-8e63-0b24b8d0c1d2/x6kISxXhXW.json' // Cute student/study loading animation
-    });
-
-    // Hide loader when page is fully loaded
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            var loader = document.getElementById('pageLoader');
-            loader.classList.add('fade-out');
-            // Remove from DOM after animation
-            setTimeout(function() {
-                loader.style.display = 'none';
-            }, 500);
-        }, 800); // Show for at least 800ms for smooth UX
-    });
-
     $(document).ready(function() {
         console.log("Dashboard siswa loaded!");
         

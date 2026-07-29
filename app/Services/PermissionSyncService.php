@@ -200,6 +200,7 @@ class PermissionSyncService
                     'edit-absensi',
                     'rekap-absensi',
                     'view-student-attendance',
+                    'monitor-all-student-attendance',
                     'input-daily-attendance',
                     'input-subject-attendance',
                     'finalize-student-attendance',

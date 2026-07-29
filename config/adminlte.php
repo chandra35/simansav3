@@ -701,6 +701,13 @@ return [
                     'active' => ['admin/absensi-siswa'],
                 ],
                 [
+                    'text' => 'Pemantauan Siswa',
+                    'route' => 'admin.absensi-siswa.monitoring',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                    'can' => 'monitor-all-student-attendance',
+                    'active' => ['admin/absensi-siswa/pemantauan'],
+                ],
+                [
                     'text' => 'Analitik Kehadiran',
                     'route' => 'admin.absensi-siswa.analytics',
                     'icon' => 'fas fa-fw fa-chart-line',

@@ -4,6 +4,13 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pemantauan absensi siswa dan dashboard siswa
+
+- Absensi siswa telah tersedia untuk guru mapel berdasarkan jadwal aktif pada hari yang dipilih dan untuk wali kelas dalam mode harian pada rombel tahun aktif; tanggal default tetap hari ini dan tanggal masa depan ditolak.
+- Admin, operator, WAKA, kepala madrasah, dan Super Admin memperoleh menu `Pemantauan Siswa` yang menampilkan seluruh roster tahun aktif, termasuk siswa yang belum direkam, lengkap dengan ringkasan status, filter kelas/status/tanggal, pencarian, catatan, pencatat, serta pintasan ke sesi dan riwayat.
+- Catatan per siswa pada input absensi guru/wali kelas dipindahkan dari input kecil di tabel ke modal responsif dengan penghitung karakter, ringkasan catatan, serta aksi tambah, ubah, atau hapus. Catatan tetap tersimpan bersama draft/finalisasi dan masuk jejak audit perubahan record.
+- Dashboard siswa menggunakan header putih ringkas berisi identitas, kelas, tahun pelajaran, dan semester; hero ungu serta overlay Lottie yang menahan tampilan awal dihapus tanpa mengubah modul profil, kelengkapan, pengumuman, maupun fungsi dashboard lainnya.
+
 ### Tabel Data Siswa responsif dan seimbang
 
 - Lebar kolom tabel Data Siswa memakai proporsi tetap yang berjumlah satu layout penuh; Nama/NISN diperkecil dari 28% menjadi 19%, JK menjadi 4%, dan Kelas menjadi 7%.

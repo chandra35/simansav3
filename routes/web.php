@@ -571,6 +571,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
         Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
     });
+    Route::get('/absensi-siswa/pemantauan', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'monitoring'])
+        ->middleware('permission:monitor-all-student-attendance')
+        ->name('absensi-siswa.monitoring');
     Route::middleware(['permission:view-attendance-analytics'])->group(function () {
         Route::get('/absensi-siswa/analitik', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'index'])->name('absensi-siswa.analytics');
         Route::get('/absensi-siswa/analitik/siswa/{siswa}', [App\Http\Controllers\Admin\StudentAttendanceAnalyticsController::class, 'student'])->name('absensi-siswa.analytics.student');

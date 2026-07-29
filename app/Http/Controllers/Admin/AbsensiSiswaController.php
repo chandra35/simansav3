@@ -79,6 +79,128 @@ class AbsensiSiswaController extends Controller
         ));
     }
 
+    public function monitoring(Request $request)
+    {
+        $this->authorize('monitor-all-student-attendance');
+
+        $tanggal = $this->normalizeDate($request->get('tanggal'));
+        $tahunPelajaran = TahunPelajaran::query()->active()->first();
+        $kelasOptions = collect();
+        $students = collect();
+        $stats = [
+            'total' => 0,
+            'recorded' => 0,
+            'present' => 0,
+            'exceptions' => 0,
+            'unrecorded' => 0,
+        ];
+
+        if ($tahunPelajaran) {
+            $kelasOptions = Kelas::query()
+                ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+                ->where('is_active', true)
+                ->orderBy('tingkat')
+                ->orderBy('nama_kelas')
+                ->get(['id', 'tingkat', 'nama_kelas']);
+
+            $baseQuery = DB::table('siswa')
+                ->join('siswa_kelas as sk', 'sk.siswa_id', '=', 'siswa.id')
+                ->join('kelas as k', 'k.id', '=', 'sk.kelas_id')
+                ->leftJoin('absensi_siswa_sessions as attendance_sessions', function ($join) use ($tanggal, $tahunPelajaran) {
+                    $join->on('attendance_sessions.kelas_id', '=', 'k.id')
+                        ->where('attendance_sessions.tahun_pelajaran_id', '=', $tahunPelajaran->id)
+                        ->where('attendance_sessions.tanggal', '=', $tanggal)
+                        ->where('attendance_sessions.mode', '=', 'harian')
+                        ->whereNull('attendance_sessions.deleted_at');
+                })
+                ->leftJoin('absensi_siswa_records as attendance_records', function ($join) {
+                    $join->on('attendance_records.session_id', '=', 'attendance_sessions.id')
+                        ->on('attendance_records.siswa_id', '=', 'siswa.id')
+                        ->whereNull('attendance_records.deleted_at');
+                })
+                ->leftJoin('users as checked_by_users', 'checked_by_users.id', '=', 'attendance_records.checked_by')
+                ->where('sk.tahun_pelajaran_id', $tahunPelajaran->id)
+                ->where('k.tahun_pelajaran_id', $tahunPelajaran->id)
+                ->where('k.is_active', true)
+                ->whereNull('sk.deleted_at')
+                ->whereNull('siswa.deleted_at')
+                ->whereDate('sk.tanggal_masuk', '<=', $tanggal)
+                ->where(function ($query) use ($tanggal) {
+                    $query->whereNull('sk.tanggal_keluar')
+                        ->orWhereDate('sk.tanggal_keluar', '>=', $tanggal);
+                });
+
+            $aggregate = (clone $baseQuery)
+                ->selectRaw('COUNT(DISTINCT siswa.id) as total')
+                ->selectRaw('COUNT(DISTINCT CASE WHEN attendance_records.id IS NOT NULL THEN siswa.id END) as recorded')
+                ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('hadir', 'terlambat', 'keluar_awal') THEN siswa.id END) as present")
+                ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('izin', 'sakit', 'alpa', 'dispen') THEN siswa.id END) as exceptions")
+                ->first();
+
+            $stats = [
+                'total' => (int) ($aggregate->total ?? 0),
+                'recorded' => (int) ($aggregate->recorded ?? 0),
+                'present' => (int) ($aggregate->present ?? 0),
+                'exceptions' => (int) ($aggregate->exceptions ?? 0),
+                'unrecorded' => max(0, (int) ($aggregate->total ?? 0) - (int) ($aggregate->recorded ?? 0)),
+            ];
+
+            $query = (clone $baseQuery)
+                ->select([
+                    'siswa.id',
+                    'siswa.nama_lengkap',
+                    'siswa.nisn',
+                    'siswa.jenis_kelamin',
+                    'siswa.foto_profile',
+                    'k.id as kelas_id',
+                    'k.tingkat',
+                    'k.nama_kelas',
+                    'attendance_sessions.id as session_id',
+                    'attendance_sessions.status as session_status',
+                    'attendance_sessions.updated_at as session_updated_at',
+                    'attendance_records.status as attendance_status',
+                    'attendance_records.notes as attendance_notes',
+                    'attendance_records.checked_at',
+                    'checked_by_users.name as checked_by_name',
+                ]);
+
+            if ($request->filled('kelas_id')) {
+                $query->where('k.id', $request->string('kelas_id')->toString());
+            }
+            if ($request->filled('status')) {
+                $status = $request->string('status')->toString();
+                if ($status === 'belum_direkam') {
+                    $query->whereNull('attendance_records.id');
+                } elseif (in_array($status, ['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'], true)) {
+                    $query->where('attendance_records.status', $status);
+                }
+            }
+            if ($request->filled('q')) {
+                $search = trim($request->string('q')->toString());
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('siswa.nama_lengkap', 'like', "%{$search}%")
+                        ->orWhere('siswa.nisn', 'like', "%{$search}%");
+                });
+            }
+
+            $students = $query
+                ->orderBy('k.tingkat')
+                ->orderBy('k.nama_kelas')
+                ->orderByRaw('COALESCE(sk.nomor_urut_absen, 9999)')
+                ->orderBy('siswa.nama_lengkap')
+                ->paginate(25)
+                ->withQueryString();
+        }
+
+        return view('admin.absensi.monitoring', compact(
+            'tanggal',
+            'tahunPelajaran',
+            'kelasOptions',
+            'students',
+            'stats'
+        ));
+    }
+
     public function store(Request $request)
     {
         $this->authorize('view-student-attendance');
@@ -94,6 +216,7 @@ class AbsensiSiswaController extends Controller
             'statuses' => ['required', 'array', 'min:1'],
             'statuses.*' => ['required', 'in:hadir,terlambat,izin,sakit,alpa,dispen,keluar_awal'],
             'notes' => ['nullable', 'array'],
+            'notes.*' => ['nullable', 'string', 'max:500'],
             'late_minutes' => ['nullable', 'array'],
             'late_minutes.*' => ['nullable', 'integer', 'min:1', 'max:600'],
             'left_early_minutes' => ['nullable', 'array'],
