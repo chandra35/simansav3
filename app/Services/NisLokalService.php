@@ -379,34 +379,80 @@ class NisLokalService
 
         $readyRows = collect($preview['rows'])->where('status', 'ready')->values();
         $updated = DB::transaction(function () use ($readyRows, $preview) {
-            $eligibleIds = $this->eligibleImportStudents()->pluck('id')->all();
-            $updated = 0;
+            $targetIds = $readyRows
+                ->pluck('student_id')
+                ->map(fn ($id) => (string) $id)
+                ->unique()
+                ->sort()
+                ->values();
+            $inputNis = $readyRows
+                ->pluck('input_nis')
+                ->map(fn ($nis) => (string) $nis)
+                ->unique()
+                ->values();
+
+            $activeYear = TahunPelajaran::query()->active()->firstOrFail();
+            $eligibleIds = SiswaKelas::query()
+                ->where('tahun_pelajaran_id', $activeYear->id)
+                ->where('status', 'aktif')
+                ->whereNull('deleted_at')
+                ->whereIn('tingkat', [11, 12])
+                ->whereIn('siswa_id', $targetIds)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->pluck('siswa_id')
+                ->map(fn ($id) => (string) $id)
+                ->flip();
+
+            $lockedStudents = Siswa::query()
+                ->select(['id', 'nama_lengkap', 'nis_lokal'])
+                ->where(function ($query) use ($targetIds, $inputNis) {
+                    $query->whereIn('id', $targetIds)
+                        ->orWhereIn('nis_lokal', $inputNis);
+                })
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            $students = $lockedStudents->keyBy(fn (Siswa $student) => (string) $student->id);
+            $nisOwners = $lockedStudents
+                ->filter(fn (Siswa $student) => filled($student->nis_lokal))
+                ->keyBy(fn (Siswa $student) => (string) $student->nis_lokal);
+            $changedRows = collect();
+            $timestamp = now()->format('Y-m-d H:i:s');
+            $actorId = (string) auth()->id();
 
             foreach ($readyRows as $row) {
-                if (! in_array($row['student_id'], $eligibleIds, true)) {
+                $studentId = (string) $row['student_id'];
+                if (! $eligibleIds->has($studentId)) {
                     throw new RuntimeException("{$row['matched_name']} tidak lagi aktif di tingkat 11/12.");
                 }
 
-                $student = Siswa::query()->lockForUpdate()->findOrFail($row['student_id']);
-                $conflict = Siswa::query()
-                    ->where('nis_lokal', $row['input_nis'])
-                    ->where('id', '!=', $student->id)
-                    ->exists();
-                if ($conflict) {
+                $student = $students->get($studentId);
+                if (! $student) {
+                    throw new RuntimeException("{$row['matched_name']} tidak lagi tersedia.");
+                }
+
+                $owner = $nisOwners->get((string) $row['input_nis']);
+                if ($owner && (string) $owner->id !== $studentId) {
                     throw new RuntimeException("NIS Lokal {$row['input_nis']} sudah digunakan siswa lain.");
                 }
 
                 if ($student->nis_lokal !== $row['input_nis']) {
-                    $student->forceFill([
+                    $changedRows->push([
+                        'id' => $studentId,
                         'nis_lokal' => $row['input_nis'],
                         'nis_lokal_tahun' => 2000 + (int) substr($row['input_nis'], 12, 2),
                         'nis_lokal_urutan' => (int) substr($row['input_nis'], -4),
-                        'nis_lokal_generated_at' => now(),
-                        'nis_lokal_generated_by' => auth()->id(),
-                    ])->save();
-                    $updated++;
+                        'nis_lokal_generated_at' => $timestamp,
+                        'nis_lokal_generated_by' => $actorId,
+                        'updated_by' => $actorId,
+                        'updated_at' => $timestamp,
+                    ]);
                 }
             }
+
+            $this->bulkUpdateImportedStudents($changedRows);
+            $updated = $changedRows->count();
 
             activity()
                 ->causedBy(auth()->user())
@@ -423,6 +469,50 @@ class NisLokalService
         Cache::forget($this->cacheKey('import', $token));
 
         return ['updated' => $updated, 'ready' => $readyRows->count()];
+    }
+
+    /**
+     * Persist the confirmed import in compact batches so a large spreadsheet
+     * does not trigger model events and multiple queries for every student.
+     */
+    private function bulkUpdateImportedStudents(Collection $rows): void
+    {
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        $columns = [
+            'nis_lokal',
+            'nis_lokal_tahun',
+            'nis_lokal_urutan',
+            'nis_lokal_generated_at',
+            'nis_lokal_generated_by',
+            'updated_by',
+            'updated_at',
+        ];
+        foreach ($rows->chunk(500) as $chunk) {
+            $assignments = [];
+            $bindings = [];
+
+            foreach ($columns as $column) {
+                $case = "CASE `id`";
+                foreach ($chunk as $row) {
+                    $case .= ' WHEN ? THEN ?';
+                    $bindings[] = $row['id'];
+                    $bindings[] = $row[$column];
+                }
+                $assignments[] = "`{$column}` = {$case} ELSE `{$column}` END";
+            }
+
+            $ids = $chunk->pluck('id')->values();
+            $bindings = array_merge($bindings, $ids->all());
+            $placeholders = implode(', ', array_fill(0, $ids->count(), '?'));
+
+            DB::update(
+                'UPDATE `siswa` SET '.implode(', ', $assignments)." WHERE `id` IN ({$placeholders})",
+                $bindings
+            );
+        }
     }
 
     public function formatNis(string $nsm, int $year, int $sequence): string

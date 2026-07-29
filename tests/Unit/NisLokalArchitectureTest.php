@@ -59,4 +59,24 @@ class NisLokalArchitectureTest extends TestCase
         $this->assertStringContainsString('siswa_nis_lokal_tahun_urutan_unique', $migration);
         $this->assertStringContainsString('manage-nis-lokal', $migration);
     }
+
+    public function test_import_confirmation_uses_bulk_validation_and_one_update_statement(): void
+    {
+        $service = file_get_contents(dirname(__DIR__, 2).'/app/Services/NisLokalService.php');
+        preg_match(
+            '/public function confirmImport\(string \$token\): array.*?public function formatNis/s',
+            $service,
+            $methodMatch
+        );
+        $confirmImport = $methodMatch[0] ?? '';
+
+        $this->assertNotSame('', $confirmImport);
+        $this->assertStringContainsString('private function bulkUpdateImportedStudents(Collection $rows): void', $service);
+        $this->assertStringContainsString("'UPDATE `siswa` SET '", $service);
+        $this->assertStringContainsString("->whereIn('siswa_id', \$targetIds)", $confirmImport);
+        $this->assertStringContainsString("->orWhereIn('nis_lokal', \$inputNis)", $confirmImport);
+        $this->assertStringContainsString('$this->bulkUpdateImportedStudents($changedRows);', $confirmImport);
+        $this->assertStringNotContainsString("Siswa::query()->lockForUpdate()->findOrFail(\$row['student_id'])", $confirmImport);
+        $this->assertStringNotContainsString("if (\$student->nis_lokal !== \$row['input_nis']) {\n                    \$student->forceFill", $confirmImport);
+    }
 }

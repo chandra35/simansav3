@@ -19,6 +19,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 - Tabel GTK memakai layout tetap dengan proporsi profesional: nomor 4%, identitas 40%, masing-masing status 19%, dan aksi 18%. Header serta isi kolom disejajarkan, badge status dibuat konsisten, baris memperoleh zebra/hover halus, dan tombol aksi diberi jarak serta radius seragam.
 - Perubahan filter langsung memuat ulang DataTable melalui AJAX dengan transisi halus, indikator status nonblocking, jeda singkat untuk mencegah request bertumpuk, serta tetap mempertahankan pencarian berdasarkan metadata identitas.
 
+### Performa penyimpanan impor NIS Lokal
+
+- Konfirmasi impor NIS Lokal tidak lagi mengunci, memeriksa duplikasi, menyimpan model, dan membuat activity log terpisah untuk setiap siswa.
+- Kelayakan rombel dan kepemilikan NIS divalidasi secara massal dalam transaksi, lalu baris yang berubah disimpan dalam batch maksimal 500 siswa dengan satu log aktivitas ringkasan.
+- Metadata tahun masuk NIS, nomor urut, waktu pencatatan, serta admin pencatat tetap disimpan; optimasi hanya menghilangkan query dan event model berulang.
+
 ### Overlay download template NIS Lokal
 
 - Tombol `Unduh Template` pada menu NIS Lokal ditandai sebagai download non-navigasi sehingga tidak mengaktifkan overlay perpindahan halaman.
