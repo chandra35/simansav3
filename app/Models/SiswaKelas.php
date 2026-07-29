@@ -22,6 +22,10 @@ class SiswaKelas extends Model
         'tanggal_keluar',
         'status',
         'nomor_urut_absen',
+        'is_ketua_kelas',
+        'ketua_kelas_mulai_at',
+        'ketua_kelas_selesai_at',
+        'ketua_kelas_ditetapkan_by',
         'catatan_perpindahan',
         'keberadaan_diverifikasi_at',
         'keberadaan_diverifikasi_by',
@@ -30,6 +34,9 @@ class SiswaKelas extends Model
     protected $casts = [
         'tanggal_masuk' => 'date',
         'tanggal_keluar' => 'date',
+        'is_ketua_kelas' => 'boolean',
+        'ketua_kelas_mulai_at' => 'datetime',
+        'ketua_kelas_selesai_at' => 'datetime',
         'keberadaan_diverifikasi_at' => 'datetime',
         'tingkat' => 'integer',
     ];
@@ -56,6 +63,42 @@ class SiswaKelas extends Model
     public function tahunPelajaran()
     {
         return $this->belongsTo(TahunPelajaran::class, 'tahun_pelajaran_id');
+    }
+
+    public function penetapKetuaKelas()
+    {
+        return $this->belongsTo(User::class, 'ketua_kelas_ditetapkan_by');
+    }
+
+    public function sedangMenjabatKetuaKelas(): bool
+    {
+        return $this->status === 'aktif'
+            && $this->is_ketua_kelas
+            && $this->ketua_kelas_selesai_at === null;
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (SiswaKelas $record): void {
+            if (
+                $record->isDirty('status')
+                && $record->status !== 'aktif'
+                && $record->is_ketua_kelas
+                && $record->ketua_kelas_selesai_at === null
+            ) {
+                $record->ketua_kelas_selesai_at = now();
+            }
+        });
+
+        static::deleting(function (SiswaKelas $record): void {
+            if (
+                ! $record->isForceDeleting()
+                && $record->is_ketua_kelas
+                && $record->ketua_kelas_selesai_at === null
+            ) {
+                $record->forceFill(['ketua_kelas_selesai_at' => now()])->saveQuietly();
+            }
+        });
     }
 
     /**

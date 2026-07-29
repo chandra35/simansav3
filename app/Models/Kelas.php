@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Kelas extends Model
 {
@@ -81,7 +82,7 @@ class Kelas extends Model
     public function siswas(): BelongsToMany
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps();
     }
@@ -92,7 +93,7 @@ class Kelas extends Model
     public function siswaAktif(): BelongsToMany
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->where('siswa_kelas.status', 'aktif')
                     ->withTimestamps();
@@ -104,6 +105,15 @@ class Kelas extends Model
     public function siswaKelas()
     {
         return $this->hasMany(SiswaKelas::class, 'kelas_id');
+    }
+
+    public function ketuaKelasRecord(): HasOne
+    {
+        return $this->hasOne(SiswaKelas::class, 'kelas_id')
+            ->where('tahun_pelajaran_id', $this->tahun_pelajaran_id)
+            ->where('status', 'aktif')
+            ->where('is_ketua_kelas', true)
+            ->whereNull('ketua_kelas_selesai_at');
     }
 
     /**

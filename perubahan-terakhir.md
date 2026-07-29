@@ -4,6 +4,14 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Ketua Kelas pada rombel dan rekam didik siswa
+
+- Detail rombel kini dapat menetapkan atau mengosongkan Ketua Kelas dari daftar siswa aktif.
+- Siswa yang sedang menjabat mendapat badge `Ketua Kelas` pada detail rombel, daftar siswa, dan profil siswa.
+- Masa jabatan menyimpan waktu mulai, selesai, dan admin yang menetapkan pada riwayat `siswa_kelas`.
+- Pergantian ketua, pindah rombel, keluar rombel, atau mutasi menutup masa jabatan aktif tanpa menghapus rekam didiknya.
+- Detail siswa memiliki tabel `Rekam Didik & Jabatan Kelas` lintas tahun pelajaran serta activity log penetapan dan akhir jabatan.
+
 ### Verifikasi keberadaan siswa di rombel
 
 Detail rombel sekarang memiliki kolom `Keberadaan` untuk pengguna yang memiliki izin edit kelas. Tombol `Ada / Belum dicek` menyimpan hasil verifikasi fisik siswa pada keanggotaan rombel aktif, lengkap dengan waktu dan akun pemeriksa. Status verifikasi otomatis direset ketika siswa ditempatkan atau dipindahkan ke rombel lain.

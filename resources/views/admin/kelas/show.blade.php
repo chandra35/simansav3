@@ -88,6 +88,19 @@
                                     </small>
                                 </div>
                             </div>
+                            <div class="row mt-1">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-crown text-warning"></i> <strong>Ketua Kelas:</strong>
+                                        {{ $kelas->ketuaKelasRecord?->siswa?->nama_lengkap ?? 'Belum ditetapkan' }}
+                                        @can('edit-kelas')
+                                            <button type="button" class="btn btn-xs btn-outline-warning ml-1" data-toggle="modal" data-target="#modalKetuaKelas">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        @endcan
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -248,6 +261,11 @@
                                            style="text-decoration: none; cursor: pointer;">
                                             <strong>{{ $siswa->nama_lengkap }}</strong>
                                         </a>
+                                        @if($siswa->pivot->is_ketua_kelas && $siswa->pivot->ketua_kelas_selesai_at === null)
+                                            <span class="badge badge-warning ml-1">
+                                                <i class="fas fa-crown mr-1"></i>Ketua Kelas
+                                            </span>
+                                        @endif
                                         <small class="d-block text-info mt-1">
                                             <i class="fas fa-id-badge mr-1"></i>NIS Lokal:
                                             <strong>{{ $siswa->nis_lokal ?: 'Belum diterbitkan' }}</strong>
@@ -736,8 +754,57 @@
             </div>
         </div>
     </div>
+    @endcan
+
+    {{-- Modal Assign Ketua Kelas --}}
+    @can('edit-kelas')
+    <div class="modal fade" id="modalKetuaKelas" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formKetuaKelas">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-crown text-warning mr-2"></i>Tetapkan Ketua Kelas
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-light border mb-3">
+                            <small class="text-muted d-block">Rombel dan tahun pelajaran</small>
+                            <strong>{{ $kelas->nama_lengkap }}</strong>
+                            <span class="text-muted">— {{ $kelas->tahunPelajaran->nama ?? '-' }}</span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="ketua_kelas_id" class="font-weight-bold">Pilih Siswa Aktif</label>
+                            <select class="form-control" id="ketua_kelas_id" name="ketua_kelas_id" style="width:100%;">
+                                <option value="">Belum ada / kosongkan penugasan</option>
+                                @foreach($students as $studentOption)
+                                    <option value="{{ $studentOption->id }}"
+                                        @selected($studentOption->pivot->is_ketua_kelas && $studentOption->pivot->ketua_kelas_selesai_at === null)>
+                                        {{ $studentOption->nama_lengkap }} | NISN {{ $studentOption->nisn ?: '-' }} | Absen {{ $studentOption->pivot->nomor_urut_absen ?: '-' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">
+                                Hanya siswa aktif pada rombel ini yang dapat dipilih. Pergantian akan tersimpan pada rekam didik kedua siswa.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save mr-1"></i>Simpan Ketua Kelas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endcan
 
     {{-- Modal Remove Siswa --}}
+    @can('remove-siswa-kelas')
     <div class="modal fade" id="modalRemoveSiswa" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1719,6 +1786,14 @@
                     allowClear: true,
                     minimumResultsForSearch: 0
                 });
+
+                $('#ketua_kelas_id').select2({
+                    dropdownParent: $('#modalKetuaKelas'),
+                    width: '100%',
+                    placeholder: 'Cari nama, NISN, atau nomor absen...',
+                    allowClear: true,
+                    minimumResultsForSearch: 0
+                });
             }
 
             // Assign Wali Kelas
@@ -1764,6 +1839,38 @@
                 });
             });
 
+            // Assign Ketua Kelas
+            $('#formKetuaKelas').on('submit', function(e) {
+                e.preventDefault();
+
+                const submitButton = $(this).find('button[type="submit"]');
+                submitButton.prop('disabled', true);
+
+                $.ajax({
+                    url: "{{ route('admin.kelas.ketua-kelas', $kelas) }}",
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#modalKetuaKelas').modal('hide');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                        }).then(() => location.reload());
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: xhr.responseJSON?.message || 'Ketua Kelas gagal ditetapkan.'
+                        });
+                    },
+                    complete: function() {
+                        submitButton.prop('disabled', false);
+                    }
+                });
+            });
+
             // Show Detail Siswa - Click Handler
             $('.btn-show-siswa').on('click', function() {
                 let siswaId = $(this).data('siswa-id');
@@ -1793,6 +1900,9 @@
                             let jkBadge = siswa.jenis_kelamin === 'L' 
                                 ? '<span class="badge badge-primary"><i class="fas fa-male"></i> Laki-laki</span>' 
                                 : '<span class="badge badge-danger"><i class="fas fa-female"></i> Perempuan</span>';
+                            let jabatanBadge = siswa.is_ketua_kelas
+                                ? '<span class="badge badge-warning ml-1"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>'
+                                : '';
                             
                             let html = `
                                 <div class="row">
@@ -1801,7 +1911,7 @@
                                              class="img-thumbnail mb-3" style="width: 180px; height: 180px; object-fit: cover;">
                                         <h5 class="font-weight-bold">${siswa.nama_lengkap}</h5>
                                         <p class="text-muted">${siswa.nisn || '-'}</p>
-                                        ${jkBadge}
+                                        ${jkBadge} ${jabatanBadge}
                                     </div>
                                     <div class="col-md-8">
                                         <table class="table table-sm table-borderless">
@@ -1836,6 +1946,10 @@
                                             <tr>
                                                 <th><i class="fas fa-school text-primary"></i> Asal Sekolah</th>
                                                 <td>${siswa.nama_sekolah_asal || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <th><i class="fas fa-crown text-warning"></i> Jabatan Rombel</th>
+                                                <td>${siswa.jabatan_rombel || 'Siswa'}${siswa.kelas_aktif ? ' — ' + siswa.kelas_aktif : ''}</td>
                                             </tr>
                                         </table>
                                     </div>

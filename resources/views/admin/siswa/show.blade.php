@@ -288,6 +288,11 @@
 
 @php
     $displayLogs = $riwayatPerubahan->take(6);
+    $ketuaKelasAktif = $siswa->kelasAktif->first(
+        fn ($kelas) => $kelas->pivot->status === 'aktif'
+            && $kelas->pivot->is_ketua_kelas
+            && $kelas->pivot->ketua_kelas_selesai_at === null
+    );
 @endphp
 
 <div class="row">
@@ -312,6 +317,11 @@
                     @endif
                     @if($siswa->getKelasSekarang())
                         <span class="badge badge-success">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Aktif' }}</span>
+                    @endif
+                    @if($ketuaKelasAktif)
+                        <span class="badge badge-warning">
+                            <i class="fas fa-crown mr-1"></i>Ketua Kelas
+                        </span>
                     @endif
                 </p>
 
@@ -698,6 +708,79 @@
                             <i class="fas fa-calendar"></i> {{ $siswa->updated_at ? $siswa->updated_at->format('d M Y H:i') : '-' }}
                         </small>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card student-show-card">
+            <div class="card-header bg-warning">
+                <h3 class="card-title"><i class="fas fa-graduation-cap"></i> Rekam Didik & Jabatan Kelas</h3>
+            </div>
+            <div class="card-body">
+                <div class="student-show-section-title">
+                    <div>
+                        <h4>Riwayat Rombel</h4>
+                        <p>Keanggotaan rombel dan masa jabatan Ketua Kelas tersimpan lintas tahun pelajaran.</p>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Tahun Pelajaran</th>
+                                <th>Rombel</th>
+                                <th>Status</th>
+                                <th>Jabatan</th>
+                                <th>Masa Jabatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($riwayatRombel as $record)
+                                <tr>
+                                    <td>{{ $record->tahunPelajaran?->nama ?? '-' }}</td>
+                                    <td>
+                                        <strong>{{ $record->kelas?->nama_lengkap ?? '-' }}</strong>
+                                        <small class="d-block text-muted">Tingkat {{ $record->tingkat ?? '-' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ $record->status === 'aktif' ? 'success' : 'secondary' }}">
+                                            {{ \Illuminate\Support\Str::headline($record->status) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($record->is_ketua_kelas)
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-crown mr-1"></i>Ketua Kelas
+                                            </span>
+                                            <small class="d-block {{ $record->sedangMenjabatKetuaKelas() ? 'text-success' : 'text-muted' }} mt-1">
+                                                {{ $record->sedangMenjabatKetuaKelas() ? 'Sedang menjabat' : 'Riwayat jabatan' }}
+                                            </small>
+                                        @else
+                                            <span class="text-muted">Siswa</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($record->is_ketua_kelas)
+                                            {{ $record->ketua_kelas_mulai_at?->format('d/m/Y H:i') ?? '-' }}
+                                            <span class="text-muted">s.d.</span>
+                                            {{ $record->ketua_kelas_selesai_at?->format('d/m/Y H:i') ?? 'sekarang' }}
+                                            @if($record->penetapKetuaKelas)
+                                                <small class="d-block text-muted">
+                                                    Ditetapkan oleh {{ $record->penetapKetuaKelas->name }}
+                                                </small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">Belum ada riwayat rombel.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

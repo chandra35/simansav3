@@ -10,6 +10,7 @@ use App\Models\Kurikulum;
 use App\Models\Jurusan;
 use App\Models\SiswaKelas;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -392,6 +393,7 @@ class KelasController extends Controller
             'kurikulum.jurusans',
             'jurusan',
             'waliKelas',
+            'ketuaKelasRecord.siswa',
             'siswaAktif.sekolahAsal'
         ]);
 
@@ -1111,9 +1113,20 @@ class KelasController extends Controller
 
             // Langsung keluarkan dari kelas (tanpa pilihan status/tanggal)
             // Siswa bisa langsung di-assign ke kelas lain setelah ini
-            $kelas->siswas()->updateExistingPivot($siswa->id, [
+            $enrollment = SiswaKelas::query()
+                ->where('siswa_id', $siswa->id)
+                ->where('kelas_id', $kelas->id)
+                ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                ->where('status', 'aktif')
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $enrollment->update([
                 'tanggal_keluar' => now()->toDateString(),
                 'status' => 'keluar',
+                'ketua_kelas_selesai_at' => $enrollment->sedangMenjabatKetuaKelas()
+                    ? now()
+                    : $enrollment->ketua_kelas_selesai_at,
                 'catatan_perpindahan' => 'Dikeluarkan dari kelas',
             ]);
 
@@ -1221,6 +1234,9 @@ class KelasController extends Controller
                 $sourceEnrollment->update([
                     'status' => 'keluar',
                     'tanggal_keluar' => $transferDate,
+                    'ketua_kelas_selesai_at' => $sourceEnrollment->sedangMenjabatKetuaKelas()
+                        ? now()
+                        : $sourceEnrollment->ketua_kelas_selesai_at,
                     'catatan_perpindahan' => trim(($sourceEnrollment->catatan_perpindahan ? $sourceEnrollment->catatan_perpindahan.' ' : '')."Pindah rombel ke {$targetClass->nama_lengkap}.{$reasonText}"),
                 ]);
 
@@ -1493,6 +1509,126 @@ class KelasController extends Controller
     }
 
     /**
+     * Tetapkan atau kosongkan ketua kelas dari siswa aktif pada rombel ini.
+     */
+    public function assignKetuaKelas(Request $request, Kelas $kelas)
+    {
+        $this->authorize('edit-kelas');
+
+        $validated = $request->validate([
+            'ketua_kelas_id' => 'nullable|uuid|exists:siswa,id',
+        ]);
+
+        try {
+            $result = DB::transaction(function () use ($validated, $kelas) {
+                $records = SiswaKelas::query()
+                    ->with('siswa')
+                    ->where('kelas_id', $kelas->id)
+                    ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->lockForUpdate()
+                    ->get();
+
+                $current = $records->first(
+                    fn (SiswaKelas $record) => $record->sedangMenjabatKetuaKelas()
+                );
+                $selectedId = $validated['ketua_kelas_id'] ?? null;
+                $selected = filled($selectedId)
+                    ? $records->firstWhere('siswa_id', $selectedId)
+                    : null;
+
+                if (filled($selectedId) && ! $selected) {
+                    throw new \DomainException('Ketua kelas harus dipilih dari siswa yang aktif pada rombel ini.');
+                }
+
+                if ($current && $selected && $current->is($selected)) {
+                    return [
+                        'message' => "{$selected->siswa->nama_lengkap} sudah menjadi Ketua Kelas {$kelas->nama_lengkap}.",
+                        'name' => $selected->siswa->nama_lengkap,
+                    ];
+                }
+
+                if ($current) {
+                    $current->update(['ketua_kelas_selesai_at' => now()]);
+
+                    ActivityLogService::log([
+                        'activity_type' => 'selesai_jabatan_ketua_kelas',
+                        'model_type' => Siswa::class,
+                        'model_id' => $current->siswa_id,
+                        'description' => "Mengakhiri jabatan Ketua Kelas {$kelas->nama_lengkap}",
+                        'properties' => [
+                            'kelas_id' => $kelas->id,
+                            'kelas' => $kelas->nama_lengkap,
+                            'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                            'mulai_at' => $current->ketua_kelas_mulai_at?->toIso8601String(),
+                            'selesai_at' => $current->ketua_kelas_selesai_at?->toIso8601String(),
+                        ],
+                    ]);
+                }
+
+                if (! $selected) {
+                    return [
+                        'message' => "Penugasan Ketua Kelas {$kelas->nama_lengkap} berhasil dikosongkan.",
+                        'name' => null,
+                    ];
+                }
+
+                $selected->update([
+                    'is_ketua_kelas' => true,
+                    'ketua_kelas_mulai_at' => now(),
+                    'ketua_kelas_selesai_at' => null,
+                    'ketua_kelas_ditetapkan_by' => Auth::id(),
+                ]);
+
+                ActivityLogService::log([
+                    'activity_type' => 'penetapan_ketua_kelas',
+                    'model_type' => Siswa::class,
+                    'model_id' => $selected->siswa_id,
+                    'description' => "Ditetapkan sebagai Ketua Kelas {$kelas->nama_lengkap}",
+                    'properties' => [
+                        'kelas_id' => $kelas->id,
+                        'kelas' => $kelas->nama_lengkap,
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'mulai_at' => $selected->ketua_kelas_mulai_at?->toIso8601String(),
+                        'ditetapkan_by' => Auth::id(),
+                    ],
+                ]);
+
+                activity()
+                    ->performedOn($kelas)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'ketua_kelas_lama' => $current?->siswa?->nama_lengkap,
+                        'ketua_kelas_baru' => $selected->siswa->nama_lengkap,
+                        'siswa_id' => $selected->siswa_id,
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                    ])
+                    ->log("Menetapkan {$selected->siswa->nama_lengkap} sebagai Ketua Kelas {$kelas->nama_lengkap}");
+
+                return [
+                    'message' => "{$selected->siswa->nama_lengkap} berhasil ditetapkan sebagai Ketua Kelas.",
+                    'name' => $selected->siswa->nama_lengkap,
+                ];
+            });
+
+            return response()->json(['success' => true] + $result);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            Log::error('Gagal menetapkan ketua kelas', [
+                'kelas_id' => $kelas->id,
+                'siswa_id' => $validated['ketua_kelas_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menetapkan Ketua Kelas. Silakan coba lagi.',
+            ], 500);
+        }
+    }
+
+    /**
      * Kosongkan kelas - keluarkan semua siswa
      */
     public function kosongkanKelas(Request $request, Kelas $kelas)
@@ -1537,6 +1673,9 @@ class KelasController extends Controller
                 $kelas->siswas()->updateExistingPivot($siswa->id, [
                     'status' => 'keluar',
                     'tanggal_keluar' => $tanggalKeluar,
+                    'ketua_kelas_selesai_at' => $siswa->pivot->is_ketua_kelas
+                        ? now()
+                        : $siswa->pivot->ketua_kelas_selesai_at,
                     'catatan_perpindahan' => 'Pengosongan Kelas: ' . $alasan,
                 ]);
 

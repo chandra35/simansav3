@@ -243,6 +243,14 @@ class SiswaController extends Controller
                     . 'Tanpa Rombel</span>';
             }
 
+            $isKetuaKelas = $kelasAktif
+                && $kelasAktif->pivot->is_ketua_kelas
+                && $kelasAktif->pivot->ketua_kelas_selesai_at === null;
+            if ($isKetuaKelas) {
+                $kelasNama .= '<br><span class="badge badge-warning mt-1">'
+                    . '<i class="fas fa-crown mr-1"></i>Ketua Kelas</span>';
+            }
+
             $jk = $item->jenis_kelamin;
             $jkBadge = $jk === 'L'
                 ? '<span class="badge" style="background:#dbeafe;color:#1e40af;font-size:.78rem;"><i class="fas fa-mars"></i></span>'
@@ -252,7 +260,10 @@ class SiswaController extends Controller
                 . e($item->nama_lengkap)
                 . '</div><small class="text-muted" style="font-size:.78rem;">NISN ' . e($item->nisn) . '</small>'
                 . ($item->nis_lokal ? '<br><small class="text-info" style="font-size:.75rem;">NIS Lokal ' . e($item->nis_lokal) . '</small>' : '')
-                . ($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes ' . e($item->nomor_tes) . '</small>' : '');
+                . ($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes ' . e($item->nomor_tes) . '</small>' : '')
+                . ($isKetuaKelas
+                    ? '<br><span class="badge badge-warning mt-1"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>'
+                    : '');
 
             return [
                 'id' => $item->id,
@@ -614,10 +625,14 @@ class SiswaController extends Controller
             'updater', 
             'sekolahAsal',
             'kelasAktif',
+            'siswaKelasRecords' => fn ($query) => $query
+                ->with(['kelas.jurusan', 'tahunPelajaran', 'penetapKetuaKelas'])
+                ->latest('tanggal_masuk'),
             'dokumen' => fn($query) => $query->latest(),
         ]);
 
         $riwayatPerubahan = $this->getStudentActivityLogs($siswa);
+        $riwayatRombel = $siswa->siswaKelasRecords;
         
         // Check if request wants JSON (AJAX) or HTML (direct access)
         if (request()->wantsJson() || request()->ajax()) {
@@ -649,7 +664,7 @@ class SiswaController extends Controller
         }
         
         // Return HTML view for direct browser access
-        return view('admin.siswa.show', compact('siswa', 'riwayatPerubahan'));
+        return view('admin.siswa.show', compact('siswa', 'riwayatPerubahan', 'riwayatRombel'));
     }
 
     /**
@@ -658,6 +673,12 @@ class SiswaController extends Controller
     public function quickDetail(Siswa $siswa)
     {
         $this->authorize('view-siswa');
+
+        $siswa->load('kelasTahunAktif');
+        $kelasAktif = $siswa->kelasTahunAktif->first();
+        $isKetuaKelas = $kelasAktif
+            && $kelasAktif->pivot->is_ketua_kelas
+            && $kelasAktif->pivot->ketua_kelas_selesai_at === null;
 
         return response()->json([
             'success' => true,
@@ -675,6 +696,9 @@ class SiswaController extends Controller
                 'alamat_siswa' => $siswa->alamat_siswa,
                 'nama_sekolah_asal' => $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal,
                 'foto_profile_url' => $siswa->foto_profile_url,
+                'kelas_aktif' => $kelasAktif?->nama_lengkap,
+                'is_ketua_kelas' => (bool) $isKetuaKelas,
+                'jabatan_rombel' => $isKetuaKelas ? 'Ketua Kelas' : 'Siswa',
             ]
         ]);
     }
