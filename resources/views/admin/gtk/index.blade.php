@@ -192,11 +192,11 @@
             <table id="gtk-table" class="table table-hover table-sm simansa-gtk-table">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">No</th>
-                        <th>Nama / Identitas GTK</th>
-                        <th>Status Diri</th>
-                        <th>Data Kepeg</th>
-                        <th style="width: 150px;" class="text-center">Aksi</th>
+                        <th class="gtk-col-number">No</th>
+                        <th class="gtk-col-identity">Nama / Identitas GTK</th>
+                        <th class="gtk-col-status">Status Diri</th>
+                        <th class="gtk-col-status">Data Kepeg</th>
+                        <th class="gtk-col-actions">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -415,14 +415,21 @@ $(document).ready(function() {
                 d.status = $('#filterStatus').val();
             }
         },
+        autoWidth: false,
+        columnDefs: [
+            { targets: 0, width: '4%' },
+            { targets: 1, width: '40%' },
+            { targets: [2, 3], width: '19%' },
+            { targets: 4, width: '18%' }
+        ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'identity', name: 'nama_lengkap' },
-            { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false },
-            { data: 'status_kepeg', name: 'status_kepeg', orderable: false, searchable: false },
-            { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'gtk-col-number' },
+            { data: 'identity', name: 'nama_lengkap', className: 'gtk-col-identity' },
+            { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false, className: 'gtk-col-status' },
+            { data: 'status_kepeg', name: 'status_kepeg', orderable: false, searchable: false, className: 'gtk-col-status' },
+            { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'gtk-col-actions' }
         ],
         language: {
             processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',

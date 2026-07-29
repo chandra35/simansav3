@@ -14,7 +14,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $table = $tableMatch[0] ?? '';
 
         $this->assertNotSame('', $table);
-        $this->assertStringContainsString('<th>Nama / Identitas GTK</th>', $table);
+        $this->assertStringContainsString('>Nama / Identitas GTK</th>', $table);
         $this->assertStringNotContainsString('<th>NIK</th>', $table);
         $this->assertStringNotContainsString('<th>Kode Guru</th>', $table);
         $this->assertStringNotContainsString('<th>Kategori PTK</th>', $table);
@@ -22,8 +22,8 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<th>Jenis PTK</th>', $table);
         $this->assertStringNotContainsString('<th>Status Kepeg</th>', $table);
         $this->assertStringNotContainsString('<th>Jabatan</th>', $table);
-        $this->assertStringContainsString('<th>Data Kepeg</th>', $table);
-        $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap' }", $view);
+        $this->assertStringContainsString('>Data Kepeg</th>', $table);
+        $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap'", $view);
 
         $this->assertStringContainsString("'identity' => '", $controller);
         $this->assertStringContainsString('simansa-gtk-identity__meta', $controller);
@@ -73,5 +73,25 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString("hasMany(Kelas::class, 'wali_kelas_id', 'user_id')", $model);
         $this->assertStringContainsString('@keyframes simansa-gtk-avatar-breathe', $css);
         $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $css);
+    }
+
+    public function test_table_columns_use_balanced_professional_proportions(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/index.blade.php');
+        $css = file_get_contents(dirname(__DIR__, 2).'/public/css/custom-compact.css');
+
+        $this->assertStringContainsString('autoWidth: false', $view);
+        $this->assertStringContainsString("{ targets: 0, width: '4%' }", $view);
+        $this->assertStringContainsString("{ targets: 1, width: '40%' }", $view);
+        $this->assertStringContainsString("{ targets: [2, 3], width: '19%' }", $view);
+        $this->assertStringContainsString("{ targets: 4, width: '18%' }", $view);
+        $this->assertStringContainsString("className: 'gtk-col-identity'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-status'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-actions'", $view);
+
+        $this->assertStringContainsString('table-layout: fixed;', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-status', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-actions', $css);
+        $this->assertStringContainsString('border-radius: 7px !important;', $css);
     }
 }

@@ -2257,10 +2257,12 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table {
-    min-width: 760px;
+    width: 100% !important;
+    min-width: 980px;
     margin-bottom: 0 !important;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
     transition: opacity .18s ease;
 }
 
@@ -2278,13 +2280,56 @@ a {
     white-space: nowrap;
 }
 
+.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-number,
+.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-status,
+.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-actions {
+    text-align: center;
+}
+
 .simansa-gtk-management .simansa-gtk-table tbody td {
-    padding: .7rem .65rem !important;
+    padding: .85rem .75rem !important;
     border-top: 0;
     border-bottom: 1px solid #e8edf4;
     color: #334155;
     font-size: .8rem;
     vertical-align: middle;
+}
+
+.simansa-gtk-management .simansa-gtk-table tbody tr:nth-child(even) td {
+    background: #fbfdff;
+}
+
+.simansa-gtk-management .simansa-gtk-table tbody tr:hover td {
+    background: #f5f9ff;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-number {
+    width: 4% !important;
+    text-align: center;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-identity {
+    width: 40% !important;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-status {
+    width: 19% !important;
+    text-align: center;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-actions {
+    width: 18% !important;
+    text-align: center;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-status .badge {
+    min-width: 96px;
+    padding: .32rem .6rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
 }
 
 .simansa-gtk-management .simansa-gtk-identity {
@@ -2410,10 +2455,17 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table .btn-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-wrap: nowrap;
+    gap: .18rem;
+    white-space: nowrap;
 }
 
 .simansa-gtk-management .simansa-gtk-table .btn-group .btn {
+    min-width: 32px;
+    border-radius: 7px !important;
     box-shadow: none !important;
 }
 
