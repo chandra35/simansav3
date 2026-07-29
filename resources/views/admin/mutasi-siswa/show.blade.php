@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Detail Mutasi Siswa')
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
     <div class="row mb-2">
@@ -325,6 +326,23 @@ $(function () {
     // Persetujuan memakai form POST biasa sebagai fallback, lalu dikonfirmasi melalui modal.
     $('#formApproveMutation').on('submit', function (event) {
         if ($(this).data('confirmed')) return;
+
+        if (typeof window.Swal === 'undefined') {
+            const approved = window.confirm(
+                'Setujui mutasi ini? Riwayat kelas aktif akan ditutup, status siswa menjadi mutasi keluar, dan akun siswa dinonaktifkan.'
+            );
+
+            if (!approved) {
+                event.preventDefault();
+                return;
+            }
+
+            $('#btnApprove')
+                .prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin mr-1"></i>Memproses mutasi...');
+            $(this).data('confirmed', true);
+            return;
+        }
 
         event.preventDefault();
         const form = this;

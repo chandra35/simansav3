@@ -54,6 +54,9 @@ class OutgoingStudentMutationTest extends TestCase
         $this->assertSame(1, substr_count($view, "@section('js')"));
         $this->assertSame(1, substr_count($view, 'id="btnApprove"'));
         $this->assertStringContainsString('id="formApproveMutation"', $view);
+        $this->assertStringContainsString("@section('plugins.Sweetalert2', true)", $view);
+        $this->assertStringContainsString("typeof window.Swal === 'undefined'", $view);
+        $this->assertStringContainsString('window.confirm(', $view);
         $this->assertStringContainsString('fetch(form.action, {', $view);
         $this->assertStringContainsString("'Accept': 'application/json'", $view);
     }
