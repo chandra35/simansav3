@@ -14,6 +14,8 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 - Halaman Data GTK memakai struktur visual operasional terbaru dengan hero ringkas, kartu statistik standar, panel filter, dan tabel yang seluruh gayanya dibatasi pada scope GTK agar tidak berbenturan dengan style halaman lain.
 - Kolom NIK, Kode Guru, Kategori PTK, dan Username dihapus sebagai kolom terpisah. Metadata NIK, Kode GTK, Username, dan Jenis PTK kini disusun vertikal per baris di bawah nama GTK; kolom Jenis PTK terpisah juga dihapus agar tidak duplikat.
+- Identitas GTK menampilkan foto profil asli bila tersedia. Tanpa foto, sistem memakai avatar SVG lokal bergaya Muslim/Muslimah sesuai jenis kelamin dengan animasi ringan yang menghormati preferensi reduced motion.
+- Kolom Status Kepegawaian dan Jabatan dihapus dari daftar. Metadata menampilkan nama rombel jika GTK menjadi Wali Kelas pada tahun pelajaran aktif; status kelengkapan kepegawaian tetap tersedia sebagai `Data Kepeg`.
 - Perubahan filter langsung memuat ulang DataTable melalui AJAX dengan transisi halus, indikator status nonblocking, jeda singkat untuk mencegah request bertumpuk, serta tetap mempertahankan pencarian berdasarkan metadata identitas.
 
 ### Overlay download template NIS Lokal

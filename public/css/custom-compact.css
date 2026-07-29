@@ -2257,7 +2257,7 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table {
-    min-width: 840px;
+    min-width: 760px;
     margin-bottom: 0 !important;
     border-collapse: separate;
     border-spacing: 0;
@@ -2288,7 +2288,56 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
     min-width: 300px;
+}
+
+.simansa-gtk-management .simansa-gtk-identity__content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.simansa-gtk-management .simansa-gtk-avatar {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    overflow: hidden;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #f8fafc;
+    box-shadow: 0 0 0 2px #dbeafe, 0 6px 16px rgba(15, 23, 42, .12);
+}
+
+.simansa-gtk-management .simansa-gtk-avatar.is-female {
+    box-shadow: 0 0 0 2px #fbcfe8, 0 6px 16px rgba(131, 24, 67, .12);
+}
+
+.simansa-gtk-management .simansa-gtk-avatar svg,
+.simansa-gtk-management .simansa-gtk-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.simansa-gtk-management .simansa-gtk-avatar img {
+    z-index: 2;
+    background: #fff;
+}
+
+.simansa-gtk-management .simansa-gtk-avatar.is-placeholder svg {
+    transform-origin: 50% 75%;
+    animation: simansa-gtk-avatar-breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes simansa-gtk-avatar-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.035) translateY(-.5px); }
 }
 
 .simansa-gtk-management .simansa-gtk-identity__name {
@@ -2319,6 +2368,22 @@ a {
 .simansa-gtk-management .simansa-gtk-identity__meta-row > span {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+.simansa-gtk-management .simansa-gtk-wali-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
+.simansa-gtk-management .simansa-gtk-wali-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .1rem .4rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 800;
 }
 
 .simansa-gtk-management .simansa-gtk-identity__meta strong {
@@ -2384,6 +2449,12 @@ a {
 
     .simansa-gtk-management .simansa-gtk-filter-footer .btn {
         width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .simansa-gtk-management .simansa-gtk-avatar.is-placeholder svg {
+        animation: none;
     }
 }
 

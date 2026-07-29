@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
+use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\GtkKemenagSyncService;
 use Illuminate\Http\Request;
@@ -49,8 +50,21 @@ class GtkController extends Controller
      */
     public function data(Request $request)
     {
-        $gtk = Gtk::with('user')
-            ->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'kode_gtk', 'jenis_kelamin', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $gtk = Gtk::with([
+            'user',
+            'kelasWali' => function ($query) use ($activeYearId) {
+                $query->select(['id', 'wali_kelas_id', 'tahun_pelajaran_id', 'nama_kelas', 'tingkat'])
+                    ->where('is_active', true)
+                    ->when(
+                        $activeYearId,
+                        fn ($classQuery) => $classQuery->where('tahun_pelajaran_id', $activeYearId),
+                        fn ($classQuery) => $classQuery->whereRaw('1 = 0')
+                    )
+                    ->orderBy('tingkat')
+                    ->orderBy('nama_kelas');
+            },
+        ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
 
         // Filter by Kategori PTK
         if ($request->filled('kategori_ptk')) {
@@ -114,7 +128,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = [null, 'nama_lengkap', 'status_kepegawaian', 'jabatan', null, null, null];
+            $columns = [null, 'nama_lengkap', null, null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -131,19 +145,39 @@ class GtkController extends Controller
             $kodeGtk = e($item->kode_gtk ?: '-');
             $jenisPtk = e($item->jenis_ptk ?: '-');
             $username = e($item->user?->username ?: '-');
+            $avatar = $this->getGtkListAvatar($item);
+            $waliKelasNames = $item->kelasWali
+                ->pluck('nama_kelas')
+                ->filter()
+                ->unique()
+                ->values();
+            $waliKelasMeta = $waliKelasNames->isEmpty()
+                ? ''
+                : '<div class="simansa-gtk-identity__meta-row">
+                        <strong>Wali Kelas</strong>
+                        <span class="simansa-gtk-wali-list">'
+                            .$waliKelasNames
+                                ->map(fn ($className) => '<span class="simansa-gtk-wali-badge">'.e($className).'</span>')
+                                ->implode('')
+                        .'</span>
+                    </div>';
 
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
                 'identity' => '
                     <div class="simansa-gtk-identity">
-                        <div class="simansa-gtk-identity__name">'.$nama.'</div>
-                        <div class="simansa-gtk-identity__meta">
-                            <div class="simansa-gtk-identity__meta-row"><strong>NIK</strong><span>'.$nik.'</span></div>
-                            <div class="simansa-gtk-identity__meta-row"><strong>Kode GTK</strong><span>'.$kodeGtk.'</span></div>
-                            <div class="simansa-gtk-identity__meta-row"><strong>Username</strong><span>'.$username.'</span></div>
-                            <div class="simansa-gtk-identity__meta-row">
-                                <strong>Jenis PTK</strong>
-                                <span><span class="simansa-gtk-meta-badge '.$jenisPtkClass.'">'.$jenisPtk.'</span></span>
+                        '.$avatar.'
+                        <div class="simansa-gtk-identity__content">
+                            <div class="simansa-gtk-identity__name">'.$nama.'</div>
+                            <div class="simansa-gtk-identity__meta">
+                                <div class="simansa-gtk-identity__meta-row"><strong>NIK</strong><span>'.$nik.'</span></div>
+                                <div class="simansa-gtk-identity__meta-row"><strong>Kode GTK</strong><span>'.$kodeGtk.'</span></div>
+                                <div class="simansa-gtk-identity__meta-row"><strong>Username</strong><span>'.$username.'</span></div>
+                                <div class="simansa-gtk-identity__meta-row">
+                                    <strong>Jenis PTK</strong>
+                                    <span><span class="simansa-gtk-meta-badge '.$jenisPtkClass.'">'.$jenisPtk.'</span></span>
+                                </div>
+                                '.$waliKelasMeta.'
                             </div>
                         </div>
                     </div>',
@@ -170,6 +204,44 @@ class GtkController extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
+    }
+
+    private function getGtkListAvatar(Gtk $gtk): string
+    {
+        $isFemale = $gtk->jenis_kelamin === 'P';
+        $toneClass = $isFemale ? 'is-female' : 'is-male';
+        $label = 'Avatar '.($isFemale ? 'muslimah' : 'muslim').' '.e($gtk->nama_lengkap);
+
+        $svg = $isFemale
+            ? '<svg viewBox="0 0 64 64" aria-hidden="true">
+                    <circle cx="32" cy="32" r="31" fill="#fdf2f8"/>
+                    <path d="M14 56c1-15 7-25 18-27 11 2 17 12 18 27H14z" fill="#be185d"/>
+                    <path d="M20 28c1-12 6-19 12-19s11 7 12 19l-4 18H24l-4-18z" fill="#ec4899"/>
+                    <ellipse cx="32" cy="28" rx="9" ry="11" fill="#f6c7a5"/>
+                    <path d="M23 25c2-10 6-14 9-14 4 0 8 4 10 14-6-3-13-3-19 0z" fill="#db2777"/>
+                    <circle cx="29" cy="28" r="1" fill="#334155"/><circle cx="35" cy="28" r="1" fill="#334155"/>
+                    <path d="M29 33c2 1 4 1 6 0" fill="none" stroke="#9f1239" stroke-width="1.2" stroke-linecap="round"/>
+                    <path d="M22 43c6 5 14 5 20 0" fill="none" stroke="#fbcfe8" stroke-width="2" stroke-linecap="round"/>
+                </svg>'
+            : '<svg viewBox="0 0 64 64" aria-hidden="true">
+                    <circle cx="32" cy="32" r="31" fill="#eff6ff"/>
+                    <path d="M13 57c2-14 9-22 19-22s17 8 19 22H13z" fill="#1d4ed8"/>
+                    <ellipse cx="32" cy="29" rx="10" ry="12" fill="#d9a679"/>
+                    <path d="M21 20h22l-3-10H24l-3 10z" fill="#172554"/>
+                    <path d="M23 18c5-2 13-2 18 0v5H23v-5z" fill="#1e3a8a"/>
+                    <circle cx="29" cy="29" r="1" fill="#1e293b"/><circle cx="35" cy="29" r="1" fill="#1e293b"/>
+                    <path d="M29 34c2 1 4 1 6 0" fill="none" stroke="#7c2d12" stroke-width="1.2" stroke-linecap="round"/>
+                    <path d="M25 43l7 5 7-5" fill="none" stroke="#dbeafe" stroke-width="2" stroke-linecap="round"/>
+                </svg>';
+
+        $photo = filled($gtk->foto_profile)
+            ? '<img src="'.e($gtk->foto_profile_url).'" alt="Foto '.e($gtk->nama_lengkap).'" loading="lazy" onerror="this.remove()">'
+            : '';
+        $photoClass = $photo !== '' ? ' has-photo' : ' is-placeholder';
+
+        return '<div class="simansa-gtk-avatar '.$toneClass.$photoClass.'" role="img" aria-label="'.$label.'">'
+            .$svg.$photo
+            .'</div>';
     }
 
     /**

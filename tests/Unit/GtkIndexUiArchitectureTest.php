@@ -20,11 +20,14 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<th>Kategori PTK</th>', $table);
         $this->assertStringNotContainsString('<th>Username</th>', $table);
         $this->assertStringNotContainsString('<th>Jenis PTK</th>', $table);
+        $this->assertStringNotContainsString('<th>Status Kepeg</th>', $table);
+        $this->assertStringNotContainsString('<th>Jabatan</th>', $table);
+        $this->assertStringContainsString('<th>Data Kepeg</th>', $table);
         $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap' }", $view);
 
         $this->assertStringContainsString("'identity' => '", $controller);
         $this->assertStringContainsString('simansa-gtk-identity__meta', $controller);
-        $this->assertSame(4, substr_count($controller, 'simansa-gtk-identity__meta-row'));
+        $this->assertGreaterThanOrEqual(5, substr_count($controller, 'simansa-gtk-identity__meta-row'));
         $this->assertStringContainsString('<strong>NIK</strong>', $controller);
         $this->assertStringContainsString('<strong>Kode GTK</strong>', $controller);
         $this->assertStringContainsString('<strong>Username</strong>', $controller);
@@ -49,5 +52,26 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('flex-direction: column;', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-identity__meta-row', $css);
         $this->assertStringContainsString('.simansa-gtk-management .dataTables_processing', $css);
+    }
+
+    public function test_photo_gender_avatar_and_active_homeroom_metadata_are_available(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/GtkController.php');
+        $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/Gtk.php');
+        $css = file_get_contents(dirname(__DIR__, 2).'/public/css/custom-compact.css');
+
+        $this->assertStringContainsString("'foto_profile'", $controller);
+        $this->assertStringContainsString('private function getGtkListAvatar(Gtk $gtk): string', $controller);
+        $this->assertStringContainsString("jenis_kelamin === 'P'", $controller);
+        $this->assertStringContainsString("? 'muslimah' : 'muslim'", $controller);
+        $this->assertStringContainsString("'is-female' : 'is-male'", $controller);
+        $this->assertStringContainsString('onerror="this.remove()"', $controller);
+        $this->assertStringContainsString("'kelasWali' => function", $controller);
+        $this->assertStringContainsString('tahun_pelajaran_id', $controller);
+        $this->assertStringContainsString('<strong>Wali Kelas</strong>', $controller);
+        $this->assertStringContainsString('public function kelasWali()', $model);
+        $this->assertStringContainsString("hasMany(Kelas::class, 'wali_kelas_id', 'user_id')", $model);
+        $this->assertStringContainsString('@keyframes simansa-gtk-avatar-breathe', $css);
+        $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $css);
     }
 }

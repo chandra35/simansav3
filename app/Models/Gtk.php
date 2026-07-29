@@ -208,4 +208,13 @@ class Gtk extends Model
     {
         return $this->hasOne(Kelas::class, 'wali_kelas_id', 'user_id');
     }
+
+    /**
+     * Seluruh rombel yang pernah diampu GTK sebagai wali kelas.
+     * Filter tahun aktif diterapkan oleh pemanggil sesuai konteks halaman.
+     */
+    public function kelasWali()
+    {
+        return $this->hasMany(Kelas::class, 'wali_kelas_id', 'user_id');
+    }
 }
