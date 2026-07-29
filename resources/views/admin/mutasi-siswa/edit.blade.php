@@ -166,8 +166,16 @@
                         <textarea name="alamat_sekolah_tujuan" class="form-control" rows="2">{{ old('alamat_sekolah_tujuan', $mutasiSiswa->alamat_sekolah_tujuan) }}</textarea>
                     </div>
                     <div class="form-group mb-0">
-                        <label>Alasan Mutasi Keluar</label>
-                        <textarea name="alasan_mutasi_keluar" class="form-control" rows="3">{{ old('alasan_mutasi_keluar', $mutasiSiswa->alasan_mutasi_keluar) }}</textarea>
+                        <label>Alasan Pindah</label>
+                        <select name="alasan_mutasi_keluar" class="form-control">
+                            <option value="">-- Pilih alasan pindah --</option>
+                            @foreach($alasanMutasiKeluarOptions as $alasan)
+                                <option value="{{ $alasan }}"
+                                    @selected(old('alasan_mutasi_keluar', $mutasiSiswa->alasan_mutasi_keluar) === $alasan)>
+                                    {{ $alasan }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
@@ -376,8 +384,16 @@ $(function () {
                         <textarea name="alamat_sekolah_tujuan" class="form-control" rows="2">{{ old('alamat_sekolah_tujuan', $mutasiSiswa->alamat_sekolah_tujuan) }}</textarea>
                     </div>
                     <div class="form-group">
-                        <label>Alasan Mutasi Keluar</label>
-                        <textarea name="alasan_mutasi_keluar" class="form-control" rows="3">{{ old('alasan_mutasi_keluar', $mutasiSiswa->alasan_mutasi_keluar) }}</textarea>
+                        <label>Alasan Pindah</label>
+                        <select name="alasan_mutasi_keluar" class="form-control">
+                            <option value="">-- Pilih alasan pindah --</option>
+                            @foreach($alasanMutasiKeluarOptions as $alasan)
+                                <option value="{{ $alasan }}"
+                                    @selected(old('alasan_mutasi_keluar', $mutasiSiswa->alasan_mutasi_keluar) === $alasan)>
+                                    {{ $alasan }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>

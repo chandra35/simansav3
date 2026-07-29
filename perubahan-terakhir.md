@@ -20,6 +20,8 @@ Tombol `Setujui Mutasi` pada detail mutasi kembali merespons setelah plugin Swee
 
 Detail rombel sekarang memiliki aksi bulk `Cek Keberadaan Semua`. Setelah konfirmasi, seluruh siswa aktif yang masih berstatus `Belum dicek` ditandai `Ada` sekaligus, dengan waktu dan akun pemeriksa tetap tercatat.
 
+Form mutasi siswa diperjelas: hasil pencarian siswa pada dropdown memakai warna, border, dan tipografi yang lebih tegas; alasan mutasi keluar menjadi dropdown pilihan baku; serta tanggal mutasi dapat ditentukan langsung pada langkah detail mutasi dan ditampilkan kembali pada ringkasan. Form edit memakai pilihan alasan yang sama dan tetap mendukung nilai lama.
+
 ### Login As siswa dan GTK tanpa menghapus sesi admin
 
 Data Siswa dan Data GTK kini mempunyai tombol `Login As` khusus akun dengan role `Super Admin` atau `Admin`. Tombol bekerja langsung tanpa modal konfirmasi dan tanpa alasan, lalu membuka akun tujuan pada tab baru.

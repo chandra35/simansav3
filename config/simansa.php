@@ -3,6 +3,20 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Pilihan Alasan Mutasi Keluar
+    |--------------------------------------------------------------------------
+    */
+    'alasan_mutasi_keluar' => [
+        'Ikut pindah orang tua',
+        'Pelanggaran disiplin',
+        'Kurang perhatian orang tua',
+        'Pengaruh teman/lingkungan',
+        'Hilang/Tidak ada kabar',
+        'Lainnya',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Pilihan Pekerjaan Orang Tua
     |--------------------------------------------------------------------------
     |

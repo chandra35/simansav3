@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class MutasiSiswaController extends Controller
 {
@@ -133,6 +134,7 @@ class MutasiSiswaController extends Controller
         // Siswa dicari via AJAX (searchSiswa), tidak load semua
         $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        $alasanMutasiKeluarOptions = config('simansa.alasan_mutasi_keluar', []);
 
         // Jika ada siswa_id di query string (dari halaman siswa)
         $selectedSiswa = null;
@@ -140,7 +142,12 @@ class MutasiSiswaController extends Controller
             $selectedSiswa = Siswa::select('id', 'nama_lengkap', 'nisn', 'status_siswa')->find($request->siswa_id);
         }
 
-        return view('admin.mutasi-siswa.create', compact('tahunPelajarans', 'tahunAktif', 'selectedSiswa'));
+        return view('admin.mutasi-siswa.create', compact(
+            'tahunPelajarans',
+            'tahunAktif',
+            'selectedSiswa',
+            'alasanMutasiKeluarOptions'
+        ));
     }
 
     /**
@@ -175,7 +182,10 @@ class MutasiSiswaController extends Controller
             $rules['sekolah_tujuan'] = 'nullable|string|max:200';
             $rules['npsn_sekolah_tujuan'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
-            $rules['alasan_mutasi_keluar'] = 'nullable|string';
+            $rules['alasan_mutasi_keluar'] = [
+                'nullable',
+                Rule::in(config('simansa.alasan_mutasi_keluar', [])),
+            ];
         }
 
         $validated = $request->validate($rules);
@@ -261,8 +271,21 @@ class MutasiSiswaController extends Controller
 
         $siswaList = Siswa::orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'status_siswa']);
         $tahunPelajarans = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+        $alasanMutasiKeluarOptions = collect(config('simansa.alasan_mutasi_keluar', []))
+            ->when(
+                filled($mutasiSiswa->alasan_mutasi_keluar)
+                    && ! in_array($mutasiSiswa->alasan_mutasi_keluar, config('simansa.alasan_mutasi_keluar', []), true),
+                fn ($options) => $options->push($mutasiSiswa->alasan_mutasi_keluar)
+            )
+            ->values()
+            ->all();
 
-        return view('admin.mutasi-siswa.edit', compact('mutasiSiswa', 'siswaList', 'tahunPelajarans'));
+        return view('admin.mutasi-siswa.edit', compact(
+            'mutasiSiswa',
+            'siswaList',
+            'tahunPelajarans',
+            'alasanMutasiKeluarOptions'
+        ));
     }
 
     /**
@@ -296,7 +319,13 @@ class MutasiSiswaController extends Controller
             $rules['sekolah_tujuan'] = 'nullable|string|max:200';
             $rules['npsn_sekolah_tujuan'] = 'nullable|string|max:20';
             $rules['alamat_sekolah_tujuan'] = 'nullable|string';
-            $rules['alasan_mutasi_keluar'] = 'nullable|string';
+            $rules['alasan_mutasi_keluar'] = [
+                'nullable',
+                Rule::in(array_merge(
+                    config('simansa.alasan_mutasi_keluar', []),
+                    array_filter([$mutasiSiswa->alasan_mutasi_keluar])
+                )),
+            ];
         }
 
         $validated = $request->validate($rules);

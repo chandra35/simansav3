@@ -31,6 +31,8 @@
     @csrf
     <input type="hidden" name="jenis_mutasi" id="final_jenis">
     <input type="hidden" name="siswa_id"     id="final_siswa_id">
+    <input type="hidden" name="tanggal_mutasi" id="final_tanggal_mutasi"
+        value="{{ old('tanggal_mutasi', date('Y-m-d')) }}">
 
     {{-- ── Progress Bar ──────────────────────────────────────────────────── --}}
     <div id="wizard-header" class="d-none mb-4">
@@ -221,6 +223,13 @@
                     </select>
                     <div class="invalid-feedback">Jenis kelamin wajib dipilih</div>
                 </div>
+                <div class="form-group">
+                    <label class="wz-label" for="tanggal_mutasi_masuk">Tanggal Mutasi <span class="text-danger">*</span></label>
+                    <input type="date" id="tanggal_mutasi_masuk" class="form-control mutation-date-input"
+                        value="{{ old('tanggal_mutasi', date('Y-m-d')) }}">
+                    <small class="text-muted">Tanggal efektif siswa mulai tercatat sebagai mutasi masuk.</small>
+                    <div class="invalid-feedback">Tanggal mutasi wajib ditentukan</div>
+                </div>
                 <div class="wz-info-box">
                     <i class="fas fa-info-circle"></i>
                     <div class="small">
@@ -282,10 +291,29 @@
                     <input type="text" id="alamat_sekolah_tujuan" name="alamat_sekolah_tujuan" class="form-control"
                         placeholder="Kota/Kabupaten" value="{{ old('alamat_sekolah_tujuan') }}">
                 </div>
-                <div class="form-group mb-0">
-                    <label class="wz-label">Alasan Mutasi Keluar <small class="text-muted font-weight-normal">(opsional)</small></label>
-                    <textarea name="alasan_mutasi_keluar" class="form-control" rows="2"
-                        placeholder="Alasan pindah...">{{ old('alasan_mutasi_keluar') }}</textarea>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="wz-label" for="alasan_mutasi_keluar">Alasan Pindah</label>
+                            <select name="alasan_mutasi_keluar" id="alasan_mutasi_keluar" class="form-control">
+                                <option value="">-- Pilih alasan pindah --</option>
+                                @foreach($alasanMutasiKeluarOptions as $alasan)
+                                    <option value="{{ $alasan }}" @selected(old('alasan_mutasi_keluar') === $alasan)>
+                                        {{ $alasan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="wz-label" for="tanggal_mutasi_keluar">Tanggal Mutasi <span class="text-danger">*</span></label>
+                            <input type="date" id="tanggal_mutasi_keluar" class="form-control mutation-date-input"
+                                value="{{ old('tanggal_mutasi', date('Y-m-d')) }}">
+                            <small class="text-muted">Tanggal efektif siswa keluar dari madrasah.</small>
+                            <div class="invalid-feedback">Tanggal mutasi wajib ditentukan</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -313,6 +341,10 @@
                         <span class="wz-summary-key" id="sum-sekolah-lbl">Sekolah</span>
                         <span id="sum-sekolah">—</span>
                     </div>
+                    <div class="wz-summary-row">
+                        <span class="wz-summary-key">Tanggal Mutasi</span>
+                        <span id="sum-tanggal">—</span>
+                    </div>
                 </div>
 
                 <div class="wz-divider"></div>
@@ -320,10 +352,10 @@
                 {{-- Waktu & Dokumen --}}
                 <div class="wz-section-title" style="color:#28a745;">
                     <i class="fas fa-calendar-check"></i>
-                    <div><strong>Waktu &amp; Dokumen</strong><span>Lengkapi data waktu dan upload surat</span></div>
+                    <div><strong>Periode &amp; Dokumen</strong><span>Pilih tahun pelajaran dan lengkapi surat jika tersedia</span></div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="form-group">
                             <label class="wz-label">Tahun Pelajaran <span class="text-danger">*</span></label>
                             <select name="tahun_pelajaran_id" id="tahun_pelajaran_id" class="form-control">
@@ -336,13 +368,6 @@
                                 </option>
                                 @endforeach
                             </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="wz-label">Tanggal Mutasi <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_mutasi" id="tanggal_mutasi"
-                                class="form-control" value="{{ old('tanggal_mutasi', date('Y-m-d')) }}">
                         </div>
                     </div>
                 </div>
@@ -520,14 +545,24 @@
 
 /* ── Select2 overrides ─────────────────────────── */
 .select2-container--default .select2-selection--single {
-    height: 38px; border: 1px solid #ced4da; border-radius: .25rem;
-    padding: 5px 12px; font-size: .875rem;
+    height: 42px; border: 2px solid #94a3b8; border-radius: 7px;
+    padding: 5px 12px; font-size: .875rem; background: #fff;
 }
-.select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 26px; color: #495057; }
-.select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
-.select2-container--default.select2-container--open .select2-selection--single { border-color: #80bdff; box-shadow: 0 0 0 .2rem rgba(0,123,255,.25); }
-.select2-results__option { padding: 8px 12px; }
-.select2-container--default .select2-results__option--highlighted[aria-selected] { background: #007bff; }
+.select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 28px; color: #0f172a; font-weight: 700; }
+.select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+.select2-container--default.select2-container--open .select2-selection--single { border-color: #2563eb; box-shadow: 0 0 0 .2rem rgba(37,99,235,.18); }
+.select2-dropdown { border: 2px solid #2563eb; border-radius: 7px; overflow: hidden; box-shadow: 0 14px 32px rgba(15,23,42,.22); }
+.select2-search--dropdown { padding: 8px; background: #f8fafc; border-bottom: 1px solid #cbd5e1; }
+.select2-search--dropdown .select2-search__field { border: 2px solid #94a3b8 !important; border-radius: 6px; padding: 7px 9px; color: #0f172a; font-weight: 600; }
+.select2-results__option { padding: 10px 12px; color: #172033; background: #fff; border-bottom: 1px solid #e2e8f0; }
+.select2-container--default .select2-results__option[aria-selected=true] { color: #172033; background: #dbeafe; }
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option--highlighted[aria-selected=true] { color: #fff; background: #1d4ed8; }
+.select2-results__option--highlighted .s2-student-name,
+.select2-results__option--highlighted .s2-student-meta,
+.select2-results__option--highlighted .s2-student-meta i { color: #fff !important; }
+.s2-student-name { display: block; color: #0f172a; font-size: .9rem; font-weight: 800; letter-spacing: .01em; }
+.s2-student-meta { margin-top: 3px; color: #475569; font-size: .78rem; font-weight: 600; }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 @endsection
@@ -542,8 +577,8 @@
     var STEPS     = 3;
     var s2Inited  = {};
     var stepLabels = {
-        masuk:  ['Sekolah Asal', 'Data Siswa',     'Dokumen'],
-        keluar: ['Cari Siswa',   'Sekolah Tujuan (Opsional)', 'Dokumen'],
+        masuk:  ['Sekolah Asal', 'Data & Tanggal', 'Dokumen'],
+        keluar: ['Cari Siswa',   'Detail Mutasi',  'Dokumen'],
     };
 
     function paneId(s) {
@@ -670,6 +705,16 @@
             } else { jk.classList.remove('is-invalid'); }
             if (!valid) return false;
         }
+        if (s === 2) {
+            var tanggal = document.getElementById('tanggal_mutasi_' + jenis);
+            if (!tanggal.value) {
+                tanggal.classList.add('is-invalid');
+                tanggal.focus();
+                return false;
+            }
+            tanggal.classList.remove('is-invalid');
+            document.getElementById('final_tanggal_mutasi').value = tanggal.value;
+        }
         return true;
     }
 
@@ -720,11 +765,12 @@
             },
             templateResult: function (s) {
                 if (s.loading) { return $('<span><i class="fas fa-spinner fa-spin mr-2 text-muted"></i>' + s.text + '</span>'); }
-                return $('<div style="padding:6px 2px">'
-                    + '<strong style="font-size:.875rem">' + s.text + '</strong>'
-                    + '<div style="font-size:.78rem;color:#6c757d;margin-top:2px">'
-                    + '<i class="fas fa-id-card mr-1"></i>NISN: ' + s.nisn
-                    + '&nbsp;&bull;&nbsp;' + s.status + '</div></div>');
+                var result = $('<div class="s2-student-option"></div>');
+                $('<strong class="s2-student-name"></strong>').text(s.text).appendTo(result);
+                $('<div class="s2-student-meta"><i class="fas fa-id-card mr-1"></i></div>')
+                    .append(document.createTextNode('NISN: ' + s.nisn + ' • ' + s.status))
+                    .appendTo(result);
+                return result;
             },
             templateSelection: function (s) { return s.text || s.id; },
         });
@@ -772,7 +818,19 @@
             document.getElementById('sum-sekolah-lbl').textContent = 'Sekolah Tujuan';
             document.getElementById('sum-sekolah').textContent = (document.querySelector('[name=sekolah_tujuan]') || {}).value || 'Belum ditentukan';
         }
+        var tanggalValue = document.getElementById('final_tanggal_mutasi').value;
+        document.getElementById('sum-tanggal').textContent = tanggalValue
+            ? tanggalValue.split('-').reverse().join('/')
+            : '—';
     }
+
+    document.querySelectorAll('.mutation-date-input').forEach(function (input) {
+        input.addEventListener('change', function () {
+            if (this.id === 'tanggal_mutasi_' + jenis) {
+                document.getElementById('final_tanggal_mutasi').value = this.value;
+            }
+        });
+    });
 
     // ── File preview ──────────────────────────────────────────────────────
     document.getElementById('file_surat_mutasi').addEventListener('change', function () {

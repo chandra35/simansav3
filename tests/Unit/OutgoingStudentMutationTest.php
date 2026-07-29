@@ -60,4 +60,32 @@ class OutgoingStudentMutationTest extends TestCase
         $this->assertStringContainsString('fetch(form.action, {', $view);
         $this->assertStringContainsString("'Accept': 'application/json'", $view);
     }
+
+    public function test_outgoing_mutation_uses_clear_student_results_reason_options_and_editable_date(): void
+    {
+        $config = file_get_contents(dirname(__DIR__, 2).'/config/simansa.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/MutasiSiswaController.php');
+        $createView = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/mutasi-siswa/create.blade.php');
+        $editView = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/mutasi-siswa/edit.blade.php');
+
+        foreach ([
+            'Ikut pindah orang tua',
+            'Pelanggaran disiplin',
+            'Kurang perhatian orang tua',
+            'Pengaruh teman/lingkungan',
+            'Hilang/Tidak ada kabar',
+            'Lainnya',
+        ] as $reason) {
+            $this->assertStringContainsString("'{$reason}'", $config);
+        }
+        $this->assertStringContainsString("Rule::in(config('simansa.alasan_mutasi_keluar', []))", $controller);
+        $this->assertStringContainsString('name="alasan_mutasi_keluar"', $createView);
+        $this->assertStringNotContainsString('<textarea name="alasan_mutasi_keluar"', $createView);
+        $this->assertStringNotContainsString('<textarea name="alasan_mutasi_keluar"', $editView);
+        $this->assertStringContainsString('id="tanggal_mutasi_keluar"', $createView);
+        $this->assertStringContainsString('id="tanggal_mutasi_masuk"', $createView);
+        $this->assertStringContainsString('name="tanggal_mutasi" id="final_tanggal_mutasi"', $createView);
+        $this->assertStringContainsString('class="s2-student-name"', $createView);
+        $this->assertStringContainsString('.select2-results__option--highlighted .s2-student-meta', $createView);
+    }
 }
