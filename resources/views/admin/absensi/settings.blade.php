@@ -2,6 +2,8 @@
 
 @section('title', 'Pengaturan Absensi')
 
+@section('plugins.Sweetalert2', true)
+
 @section('content_header')
     <h1><i class="fas fa-cog"></i> Pengaturan Absensi</h1>
 @stop
@@ -115,9 +117,14 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form method="POST" action="{{ route('admin.absensi.location.destroy', $loc) }}" class="d-inline">
+                                    <form method="POST"
+                                          action="{{ route('admin.absensi.location.destroy', $loc) }}"
+                                          class="d-inline js-confirm-form"
+                                          data-confirm-title="Hapus lokasi absensi?"
+                                          data-confirm-text="Lokasi {{ $loc->nama }} akan dihapus dari daftar lokasi absensi."
+                                          data-confirm-button="Ya, hapus lokasi">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-xs btn-danger" onclick="return confirm('Hapus lokasi ini?')">
+                                        <button type="submit" class="btn btn-xs btn-danger" title="Hapus lokasi">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -136,9 +143,14 @@
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-calendar-times"></i> Hari Libur / Tanggal Merah</h3>
                 <div class="card-tools">
-                    <form method="POST" action="{{ route('admin.absensi.hari-libur.seed') }}" class="d-inline">
+                    <form method="POST"
+                          action="{{ route('admin.absensi.hari-libur.seed') }}"
+                          class="d-inline js-confirm-form"
+                          data-confirm-title="Tambahkan hari libur nasional 2026?"
+                          data-confirm-text="Sistem akan menambahkan daftar hari libur nasional 2026 yang belum tersedia."
+                          data-confirm-button="Ya, tambahkan">
                         @csrf
-                        <button class="btn btn-xs btn-outline-danger" onclick="return confirm('Tambah hari libur nasional 2026?')">
+                        <button type="submit" class="btn btn-xs btn-outline-danger">
                             <i class="fas fa-magic"></i> Seed 2026
                         </button>
                     </form>
@@ -164,9 +176,16 @@
                                 <td>{{ $hl->nama }}</td>
                                 <td><span class="badge badge-danger">{{ ucfirst(str_replace('_', ' ', $hl->jenis)) }}</span></td>
                                 <td>
-                                    <form method="POST" action="{{ route('admin.absensi.hari-libur.destroy', $hl) }}" class="d-inline">
+                                    <form method="POST"
+                                          action="{{ route('admin.absensi.hari-libur.destroy', $hl) }}"
+                                          class="d-inline js-confirm-form"
+                                          data-confirm-title="Hapus hari libur?"
+                                          data-confirm-text="{{ $hl->nama }} ({{ $hl->tanggal->format('d/m/Y') }}) akan dihapus dari kalender absensi."
+                                          data-confirm-button="Ya, hapus">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-xs btn-danger" onclick="return confirm('Hapus?')"><i class="fas fa-trash"></i></button>
+                                        <button type="submit" class="btn btn-xs btn-danger" title="Hapus hari libur">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -257,4 +276,34 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.js-confirm-form').forEach(function (form) {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: form.dataset.confirmTitle || 'Lanjutkan tindakan?',
+                text: form.dataset.confirmText || 'Pastikan data yang dipilih sudah benar.',
+                showCancelButton: true,
+                reverseButtons: true,
+                focusCancel: true,
+                confirmButtonText: form.dataset.confirmButton || 'Ya, lanjutkan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                allowOutsideClick: false,
+            });
+
+            if (result.isConfirmed) {
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        });
+    });
+});
+</script>
 @stop

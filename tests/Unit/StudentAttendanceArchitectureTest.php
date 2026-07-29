@@ -97,4 +97,16 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringNotContainsString('id="pageLoader"', $dashboard);
         $this->assertStringNotContainsString('lottie.loadAnimation', $dashboard);
     }
+
+    public function test_attendance_settings_use_sweetalert_confirmations(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/absensi/settings.blade.php');
+
+        $this->assertStringContainsString("@section('plugins.Sweetalert2', true)", $view);
+        $this->assertSame(3, substr_count($view, 'class="d-inline js-confirm-form"'));
+        $this->assertStringContainsString("document.querySelectorAll('.js-confirm-form')", $view);
+        $this->assertStringContainsString('await Swal.fire({', $view);
+        $this->assertStringContainsString('HTMLFormElement.prototype.submit.call(form)', $view);
+        $this->assertStringNotContainsString('onclick="return confirm(', $view);
+    }
 }

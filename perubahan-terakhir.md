@@ -4,6 +4,11 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Konfirmasi SweetAlert2 pada Pengaturan Presensi
+
+- Konfirmasi seed hari libur nasional 2026, penghapusan lokasi absensi, dan penghapusan hari libur tidak lagi memakai dialog bawaan browser.
+- Ketiga aksi sekarang memakai modal SweetAlert2 yang konsisten, memiliki penjelasan tindakan, tombol batal yang menjadi fokus awal, dan hanya mengirim form setelah admin mengonfirmasi.
+
 ### Pemantauan absensi siswa dan dashboard siswa
 
 - Absensi siswa telah tersedia untuk guru mapel berdasarkan jadwal aktif pada hari yang dipilih dan untuk wali kelas dalam mode harian pada rombel tahun aktif; tanggal default tetap hari ini dan tanggal masa depan ditolak.
