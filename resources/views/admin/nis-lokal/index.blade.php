@@ -98,7 +98,10 @@
                         <label class="custom-file-label" for="nisImportFile">Pilih file Excel</label>
                     </div>
                     <div class="d-flex justify-content-between mt-2">
-                        <a href="{{ route('admin.nis-lokal.template') }}" class="btn btn-outline-success btn-sm">
+                        <a href="{{ route('admin.nis-lokal.template') }}"
+                           class="btn btn-outline-success btn-sm"
+                           data-no-overlay
+                           download="template-update-nis-lokal.xlsx">
                             <i class="fas fa-download mr-1"></i>Unduh Template
                         </a>
                         <button type="button" class="btn btn-info btn-sm" id="btnImportPreview" disabled>

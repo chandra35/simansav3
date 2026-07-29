@@ -4,6 +4,11 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Overlay download template NIS Lokal
+
+- Tombol `Unduh Template` pada menu NIS Lokal ditandai sebagai download non-navigasi sehingga tidak mengaktifkan overlay perpindahan halaman.
+- Overlay global kini menekan event `beforeunload` untuk tautan download, target tab baru, atau `data-no-overlay`, lalu memastikan overlay kembali tersembunyi jika halaman tetap aktif setelah file diterima browser.
+
 ### Status EMIS dan Keberadaan read-only
 
 - Daftar `Data Siswa` memiliki kolom `Keberadaan` yang mengambil verifikasi dari rombel aktif pada tahun pelajaran aktif.

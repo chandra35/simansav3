@@ -1035,6 +1035,17 @@
                 initUserHeartbeat();
 
                 let formSubmitting = false;
+                let suppressUnloadOverlay = false;
+
+                const suppressOverlayForNonNavigation = function () {
+                    suppressUnloadOverlay = true;
+                    appHideGlobalOverlay();
+
+                    window.setTimeout(function () {
+                        suppressUnloadOverlay = false;
+                        appHideGlobalOverlay();
+                    }, 1500);
+                };
 
                 document.addEventListener('click', function (event) {
                     const link = event.target.closest('a[href]');
@@ -1042,7 +1053,12 @@
                         return;
                     }
 
-                    if (event.defaultPrevented || link.hasAttribute('data-no-overlay')) {
+                    if (event.defaultPrevented) {
+                        return;
+                    }
+
+                    if (link.hasAttribute('data-no-overlay')) {
+                        suppressOverlayForNonNavigation();
                         return;
                     }
 
@@ -1060,6 +1076,7 @@
                     }
 
                     if (link.target === '_blank' || link.hasAttribute('download')) {
+                        suppressOverlayForNonNavigation();
                         return;
                     }
 
@@ -1103,6 +1120,11 @@
                 });
 
                 window.addEventListener('beforeunload', function () {
+                    if (suppressUnloadOverlay) {
+                        appHideGlobalOverlay();
+                        return;
+                    }
+
                     appShowGlobalOverlay(
                         formSubmitting ? 'Menyelesaikan proses...' : 'Memuat ulang halaman...',
                         'Mohon tunggu sebentar'
