@@ -88,4 +88,28 @@ class UserImpersonationArchitectureTest extends TestCase
         $this->assertStringContainsString("@include('partials.impersonation-banner')", $layout);
         $this->assertStringContainsString('Perubahan password dinonaktifkan selama mode Login As.', $middleware);
     }
+
+    public function test_first_login_setup_is_bypassed_without_mutating_student_account(): void
+    {
+        $dashboard = file_get_contents($this->root.'/app/Http/Controllers/Siswa/DashboardController.php');
+        $profile = file_get_contents($this->root.'/app/Http/Controllers/Siswa/ProfileController.php');
+        $middleware = file_get_contents($this->root.'/app/Http/Middleware/ApplyUserImpersonation.php');
+
+        $this->assertStringContainsString(
+            "\$user->is_first_login && ! \$isImpersonating",
+            $dashboard
+        );
+        $this->assertStringContainsString(
+            "\$request->attributes->has('impersonation')",
+            $profile
+        );
+        $this->assertStringContainsString(
+            "\$routeName === 'siswa.force-setup' && \$request->isMethodSafe()",
+            $middleware
+        );
+        $this->assertStringContainsString(
+            "str_starts_with(\$routeName, 'siswa.force-setup')",
+            $middleware
+        );
+    }
 }

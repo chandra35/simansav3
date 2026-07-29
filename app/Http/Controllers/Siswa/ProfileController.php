@@ -94,8 +94,12 @@ class ProfileController extends Controller
     /**
      * Show force setup form (password + email)
      */
-    public function forceSetup()
+    public function forceSetup(Request $request)
     {
+        if ($request->attributes->has('impersonation')) {
+            return redirect()->route('siswa.dashboard');
+        }
+
         $user = Auth::user();
         
         if (!$user->is_first_login) {

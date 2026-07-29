@@ -12,7 +12,7 @@ class GtkDashboardController extends Controller
     /**
      * Display GTK dashboard
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('view-gtk-dashboard');
 
@@ -31,7 +31,7 @@ class GtkDashboardController extends Controller
         }
 
         // Check if user needs to change password (first login)
-        if ($user->is_first_login) {
+        if ($user->is_first_login && ! $request->attributes->has('impersonation')) {
             return redirect()->route('admin.gtk.profile.password')
                 ->with('info', 'Silakan ganti password Anda terlebih dahulu untuk keamanan akun.');
         }

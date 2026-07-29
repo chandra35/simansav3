@@ -94,6 +94,10 @@ class ApplyUserImpersonation
         $routeName = (string) $request->route()?->getName();
 
         if ($targetType === 'siswa') {
+            if ($routeName === 'siswa.force-setup' && $request->isMethodSafe()) {
+                return false;
+            }
+
             return str_starts_with($routeName, 'siswa.force-setup')
                 || str_starts_with($routeName, 'siswa.profile.password')
                 || str_starts_with($routeName, 'siswa.profile.change-password');

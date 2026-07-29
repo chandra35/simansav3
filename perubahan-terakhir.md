@@ -4,6 +4,12 @@ Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Login As melewati force setup
+
+- Admin yang memakai `Login As` ke akun siswa/GTK dengan password awal langsung dapat membuka dashboard target.
+- Status `is_first_login`, password, dan data keamanan akun target tidak diubah oleh Login As.
+- Jika URL force setup siswa dibuka saat Login As, sistem kembali ke dashboard siswa; request perubahan password tetap ditolak.
+
 ### Ketua Kelas pada rombel dan rekam didik siswa
 
 - Detail rombel kini dapat menetapkan atau mengosongkan Ketua Kelas dari daftar siswa aktif.

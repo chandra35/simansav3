@@ -50,7 +50,7 @@ class UserImpersonationFlowTest extends TestCase
             'password' => Hash::make('secret'),
             'role' => 'siswa',
             'is_active' => true,
-            'is_first_login' => false,
+            'is_first_login' => true,
         ]);
         $student->assignRole($siswaRole);
 
@@ -94,6 +94,25 @@ class UserImpersonationFlowTest extends TestCase
         $dashboard->assertSee('Mode Login As:');
         $dashboard->assertSee($student->name);
         $this->assertAuthenticatedAs($admin);
+        $this->assertTrue($student->fresh()->is_first_login);
+
+        $forceSetup = $this
+            ->withCookie(ApplyUserImpersonation::COOKIE_NAMES['siswa'], $plainToken)
+            ->get(route('siswa.force-setup'));
+
+        $forceSetup->assertRedirect(route('siswa.dashboard'));
+        $this->assertTrue($student->fresh()->is_first_login);
+
+        $blockedPasswordChange = $this
+            ->withCookie(ApplyUserImpersonation::COOKIE_NAMES['siswa'], $plainToken)
+            ->post(route('siswa.force-setup.update'), [
+                'email' => 'changed@example.test',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+        $blockedPasswordChange->assertForbidden();
+        $this->assertTrue($student->fresh()->is_first_login);
 
         $stop = $this
             ->withCookie(ApplyUserImpersonation::COOKIE_NAMES['siswa'], $plainToken)

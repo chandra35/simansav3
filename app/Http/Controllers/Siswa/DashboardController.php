@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $siswa = $user->siswa;
+        $isImpersonating = $request->attributes->has('impersonation');
 
         if (!$siswa) {
             // SECURITY: Don't auto-create siswa if user is not actually a siswa
@@ -44,7 +45,7 @@ class DashboardController extends Controller
         }
 
         // Check if user needs to change password (handled by ForcePasswordChange middleware)
-        if ($user->is_first_login) {
+        if ($user->is_first_login && ! $isImpersonating) {
             return redirect()->route('siswa.force-setup');
         }
 
