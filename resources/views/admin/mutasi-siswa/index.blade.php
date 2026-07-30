@@ -171,6 +171,8 @@
                                 <strong>{{ $mutasi->siswa?->nama_lengkap ?? '-' }}</strong>
                                 <br>
                                 <small class="text-muted">NISN: {{ $mutasi->siswa?->nisn ?? '-' }}</small>
+                                <br>
+                                <small class="text-muted">Asal kelas: {{ $mutasi->asalKelas }}</small>
                             </td>
                             <td class="align-middle">
                                 @if($mutasi->isMutasiMasuk())
@@ -468,7 +470,8 @@ $(function () {
                             <td>{{ $mutasiList->firstItem() + $i }}</td>
                             <td>
                                 <strong>{{ $mutasi->siswa->nama_lengkap ?? '-' }}</strong><br>
-                                <small class="text-muted">{{ $mutasi->siswa->nisn ?? '-' }}</small>
+                                <small class="text-muted">NISN: {{ $mutasi->siswa->nisn ?? '-' }}</small><br>
+                                <small class="text-muted">Asal kelas: {{ $mutasi->asalKelas }}</small>
                             </td>
                             <td>
                                 @if($mutasi->isMutasiMasuk())

@@ -1,8 +1,16 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 29 Juli 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Metadata kelas asal pada daftar mutasi siswa
+
+- Daftar mutasi siswa menampilkan metadata `Asal kelas` tepat di bawah NISN.
+- Mutasi keluar baru menyimpan snapshot kelas aktif siswa sebelum kelas dilepas saat persetujuan.
+- Mutasi keluar lama yang belum memiliki snapshot tetap menampilkan kelas asal dari riwayat kelas pada tahun pelajaran mutasi.
+- Query daftar memuat riwayat dan kelas terkait sekaligus agar fallback tidak menimbulkan query per baris.
+- Validasi lokal `OutgoingStudentMutationTest` lulus 5 pengujian dengan 44 assertions.
 
 ### Konfirmasi SweetAlert2 pada Pengaturan Presensi
 

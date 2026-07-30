@@ -41,6 +41,18 @@ class OutgoingStudentMutationTest extends TestCase
         $this->assertStringContainsString("->update(['is_online' => false])", $model);
     }
 
+    public function test_mutation_list_displays_class_origin_and_new_outgoing_mutations_snapshot_it(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/MutasiSiswaController.php');
+        $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/MutasiSiswa.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/mutasi-siswa/index.blade.php');
+
+        $this->assertStringContainsString("'siswa.siswaKelasRecords.kelas'", $controller);
+        $this->assertStringContainsString("\$validated['kelas_asal'] = \$siswa->kelasSaatIni?->nama_lengkap", $controller);
+        $this->assertStringContainsString('function getAsalKelasAttribute()', $model);
+        $this->assertStringContainsString('Asal kelas: {{ $mutasi->asalKelas }}', $view);
+    }
+
     public function test_approval_is_locked_audited_and_has_a_native_post_fallback(): void
     {
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/MutasiSiswaController.php');

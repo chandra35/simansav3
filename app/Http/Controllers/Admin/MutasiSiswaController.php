@@ -24,7 +24,11 @@ class MutasiSiswaController extends Controller
     {
         $this->authorize('view-mutasi');
 
-        $query = MutasiSiswa::with(['siswa', 'tahunPelajaran', 'verifikator'])
+        $query = MutasiSiswa::with([
+            'siswa.siswaKelasRecords.kelas',
+            'tahunPelajaran',
+            'verifikator',
+        ])
             ->orderByDesc('created_at');
 
         if ($request->filled('jenis')) {
@@ -217,6 +221,11 @@ class MutasiSiswaController extends Controller
                 // Ganti field siswa-baru dengan siswa_id yang baru dibuat
                 unset($validated['nisn_siswa_baru'], $validated['nama_lengkap_baru'], $validated['jenis_kelamin_baru']);
                 $validated['siswa_id'] = $siswa->id;
+            } else {
+                // Simpan snapshot kelas sebelum kelas aktif dilepas saat mutasi disetujui.
+                $siswa = Siswa::with('kelasSaatIni')->findOrFail($validated['siswa_id']);
+                $validated['kelas_asal'] = $siswa->kelasSaatIni?->nama_lengkap
+                    ?? $siswa->kelasSaatIni?->nama_kelas;
             }
 
             $filePath = null;

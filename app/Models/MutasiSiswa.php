@@ -280,4 +280,32 @@ class MutasiSiswa extends Model
             ? $this->npsn_sekolah_asal ?? 'N/A'
             : $this->npsn_sekolah_tujuan ?? 'N/A';
     }
+
+    /**
+     * Kelas asal yang tersimpan pada mutasi, dengan fallback ke riwayat kelas
+     * untuk data mutasi keluar lama yang dibuat sebelum snapshot kelas disimpan.
+     */
+    public function getAsalKelasAttribute(): string
+    {
+        if (filled($this->kelas_asal)) {
+            return $this->kelas_asal;
+        }
+
+        if (! $this->isMutasiKeluar() || ! $this->siswa) {
+            return '-';
+        }
+
+        $riwayatKelas = $this->siswa->siswaKelasRecords
+            ->filter(fn (SiswaKelas $record) => $record->tahun_pelajaran_id === $this->tahun_pelajaran_id)
+            ->sortByDesc(fn (SiswaKelas $record) => sprintf(
+                '%s-%s',
+                $record->tanggal_keluar?->format('Y-m-d') ?? '0000-00-00',
+                $record->created_at?->format('Y-m-d H:i:s.u') ?? ''
+            ))
+            ->first();
+
+        return $riwayatKelas?->kelas?->nama_lengkap
+            ?? $riwayatKelas?->kelas?->nama_kelas
+            ?? '-';
+    }
 }
