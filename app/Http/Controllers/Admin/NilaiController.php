@@ -107,6 +107,47 @@ class NilaiController extends Controller
     }
 
     /**
+     * Build a compact score lookup without retaining thousands of Eloquent
+     * models and nested Collections during a multi-semester Excel export.
+     *
+     * @param  Collection<int, string>  $siswaIds
+     * @param  array<int, string>  $periods semester => tahun_pelajaran_id
+     * @return array<string, float|string>
+     */
+    private function getLeggerNilaiLookup(Collection $siswaIds, array $periods): array
+    {
+        if ($siswaIds->isEmpty() || !$periods) {
+            return [];
+        }
+
+        $lookup = [];
+
+        DB::table('nilai_siswa')
+            ->select(['id', 'siswa_id', 'semester', 'mata_pelajaran_id', 'nilai'])
+            ->whereIn('siswa_id', $siswaIds)
+            ->where(function ($query) use ($periods) {
+                foreach ($periods as $semester => $tahunPelajaranId) {
+                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
+                        $periodQuery->where('semester', (int) $semester)
+                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
+                    });
+                }
+            })
+            ->lazyById(1000)
+            ->each(function ($row) use (&$lookup) {
+                $key = $this->leggerNilaiKey($row->siswa_id, (int) $row->semester, $row->mata_pelajaran_id);
+                $lookup[$key] ??= $row->nilai;
+            });
+
+        return $lookup;
+    }
+
+    private function leggerNilaiKey(string $siswaId, int $semester, string $mapelId): string
+    {
+        return $siswaId.'|'.$semester.'|'.$mapelId;
+    }
+
+    /**
      * Get urutan mapel berdasarkan semester
      */
     private function getMapelBySemester($semester)
@@ -1056,18 +1097,7 @@ class NilaiController extends Controller
         
         $siswaIds = $siswaList->pluck('id');
         
-        // Get all nilai for these siswa
-        $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
-            ->where(function ($query) use ($tahunIds) {
-                foreach ($tahunIds as $semester => $tahunPelajaranId) {
-                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
-                        $periodQuery->where('semester', (int) $semester)
-                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
-                    });
-                }
-            })
-            ->get()
-            ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
+        $nilaiLookup = $this->getLeggerNilaiLookup($siswaIds, $tahunIds);
         
         // Create Excel
         $spreadsheet = new Spreadsheet();
@@ -1158,10 +1188,9 @@ class NilaiController extends Controller
                 $mapelNilai = [];
                 
                 foreach (array_keys($semesterConfig) as $sem) {
-                    $nilai = null;
-                    if ($mapel && isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
-                        $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
-                    }
+                    $nilai = $mapel
+                        ? ($nilaiLookup[$this->leggerNilaiKey($siswa->id, $sem, $mapel->id)] ?? null)
+                        : null;
                     $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
                     if ($nilai !== null) {
                         $mapelNilai[] = $nilai;
@@ -1291,18 +1320,7 @@ class NilaiController extends Controller
         
         $siswaIds = $siswaList->pluck('id');
         
-        // Get all nilai for these siswa
-        $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
-            ->where(function ($query) use ($tahunIds) {
-                foreach ($tahunIds as $semester => $tahunPelajaranId) {
-                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
-                        $periodQuery->where('semester', (int) $semester)
-                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
-                    });
-                }
-            })
-            ->get()
-            ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
+        $nilaiLookup = $this->getLeggerNilaiLookup($siswaIds, $tahunIds);
         
         // Create Excel
         $spreadsheet = new Spreadsheet();
@@ -1411,10 +1429,9 @@ class NilaiController extends Controller
                 $semesterMapels = $mapelsBySemester->get($sem, collect());
                 
                 foreach ($semesterMapels as $mapel) {
-                    $nilai = null;
-                    if (isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
-                        $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
-                    }
+                    $nilai = $nilaiLookup[
+                        $this->leggerNilaiKey($siswa->id, $sem, $mapel->id)
+                    ] ?? null;
                     
                     $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
                     

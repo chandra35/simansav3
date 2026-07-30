@@ -120,7 +120,7 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString("->distinct()\n            ->pluck('mata_pelajaran_id')", $controller);
         $this->assertStringContainsString('$mapelsBySemester', $controller);
         $this->assertStringContainsString('$availableMapels = $this->getActualMapelList($tahunIds)', $controller);
-        $this->assertStringContainsString('where(function ($query) use ($tahunIds)', $controller);
+        $this->assertStringContainsString('where(function ($query) use ($periods)', $controller);
         $this->assertStringContainsString('mapel terdeteksi', $semester);
         $this->assertStringContainsString('nilai yang benar-benar tersimpan', $semester);
     }
@@ -131,10 +131,15 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $cache = file_get_contents($this->projectPath('config/cache.php'));
 
         $this->assertStringContainsString("'excel.cache.driver' => 'batch'", $provider);
-        $this->assertStringContainsString("'excel.cache.batch.memory_limit' => 10000", $provider);
+        $this->assertStringContainsString("'excel.cache.batch.memory_limit' => 1000", $provider);
         $this->assertStringContainsString("'excel.cache.illuminate.store' => 'excel'", $provider);
         $this->assertStringContainsString("'cache.stores.excel' => [", $provider);
         $this->assertStringContainsString("'excel' => [", $cache);
         $this->assertStringContainsString("storage_path('framework/cache/excel')", $cache);
+
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/NilaiController.php'));
+        $this->assertStringContainsString('getLeggerNilaiLookup', $controller);
+        $this->assertStringContainsString('->lazyById(1000)', $controller);
+        $this->assertStringNotContainsString("->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id'])", $controller);
     }
 }

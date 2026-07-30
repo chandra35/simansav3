@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
                 'lock_path' => storage_path('framework/cache/excel'),
             ],
             'excel.cache.driver' => 'batch',
-            'excel.cache.batch.memory_limit' => 10000,
+            'excel.cache.batch.memory_limit' => 1000,
             'excel.cache.illuminate.store' => 'excel',
         ]);
     }
