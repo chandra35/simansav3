@@ -110,4 +110,18 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString("'tahun_pelajaran_id' => \$data['tahun_pelajaran_id']", $index);
         $this->assertStringContainsString('d.tingkat =', $semester);
     }
+
+    public function test_score_recap_and_exports_use_actual_period_subjects(): void
+    {
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/NilaiController.php'));
+        $semester = file_get_contents($this->projectPath('resources/views/admin/nilai/semester.blade.php'));
+
+        $this->assertStringContainsString('getActualMapelList', $controller);
+        $this->assertStringContainsString("->distinct()\n            ->pluck('mata_pelajaran_id')", $controller);
+        $this->assertStringContainsString('$mapelsBySemester', $controller);
+        $this->assertStringContainsString('$availableMapels = $this->getActualMapelList($tahunIds)', $controller);
+        $this->assertStringContainsString('where(function ($query) use ($tahunIds)', $controller);
+        $this->assertStringContainsString('mapel terdeteksi', $semester);
+        $this->assertStringContainsString('nilai yang benar-benar tersimpan', $semester);
+    }
 }

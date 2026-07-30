@@ -10,6 +10,7 @@ use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Yajra\DataTables\Facades\DataTables;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -17,6 +18,94 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class NilaiController extends Controller
 {
+    /**
+     * Daftar mapel yang benar-benar mempunyai nilai pada pasangan semester/tahun.
+     * Ini menjaga rekap dan export tetap cocok dengan ID mapel K13 maupun Merdeka.
+     *
+     * @param  array<int, string>  $periods semester => tahun_pelajaran_id
+     */
+    private function getActualMapelList(array $periods, bool $useLegacyFallback = true): Collection
+    {
+        $periods = array_filter($periods);
+        if (!$periods) {
+            return collect();
+        }
+
+        $mapelIds = NilaiSiswa::query()
+            ->where(function ($query) use ($periods) {
+                foreach ($periods as $semester => $tahunPelajaranId) {
+                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
+                        $periodQuery->where('semester', (int) $semester)
+                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
+                    });
+                }
+            })
+            ->distinct()
+            ->pluck('mata_pelajaran_id');
+
+        if ($mapelIds->isEmpty()) {
+            if (!$useLegacyFallback) {
+                return collect();
+            }
+
+            $semester = (int) array_key_first($periods);
+            $legacyOrder = $this->getMapelBySemester($semester);
+
+            return MataPelajaran::query()
+                ->with('kurikulum:id,kode')
+                ->whereIn('kode_mapel', $legacyOrder)
+                ->where('is_active', true)
+                ->get()
+                ->sortBy(fn ($mapel) => array_search($mapel->kode_mapel, $legacyOrder, true))
+                ->values();
+        }
+
+        return MataPelajaran::withTrashed()
+            ->with('kurikulum:id,kode')
+            ->whereIn('id', $mapelIds)
+            ->get()
+            ->sortBy(fn ($mapel) => $this->mapelAcademicSortKey($mapel))
+            ->values();
+    }
+
+    private function mapelAcademicSortKey(MataPelajaran $mapel): string
+    {
+        $name = mb_strtolower($mapel->nama_mapel);
+        $priorities = [
+            'qur' => 10,
+            'akidah' => 20,
+            'fikih' => 30,
+            'kebudayaan islam' => 40,
+            'bahasa arab' => 50,
+            'pancasila' => 60,
+            'bahasa indonesia' => 70,
+            'matematika' => 80,
+            'fisika' => 90,
+            'kimia' => 100,
+            'biologi' => 110,
+            'sosiologi' => 120,
+            'ekonomi' => 130,
+            'geografi' => 140,
+            'bahasa inggris' => 150,
+            'jasmani' => 160,
+            'sejarah' => 170,
+            'informatika' => 180,
+            'seni' => 190,
+            'prakarya' => 200,
+            'lampung' => 210,
+            'keterampilan agama' => 220,
+            'tahf' => 230,
+        ];
+
+        foreach ($priorities as $needle => $priority) {
+            if (str_contains($name, $needle)) {
+                return sprintf('%03d:%s:%s', $priority, $name, $mapel->kode_mapel);
+            }
+        }
+
+        return sprintf('900:%s:%s', $name, $mapel->kode_mapel);
+    }
+
     /**
      * Get urutan mapel berdasarkan semester
      */
@@ -205,15 +294,12 @@ class NilaiController extends Controller
         
         $semesterLabel = NilaiSiswa::SEMESTER_LABELS[$semester] ?? "Semester {$semester}";
         
-        // Get mapel sesuai urutan di config berdasarkan semester - tampilkan semua meskipun kosong
-        $urutanMapel = $this->getMapelBySemester($semester);
-        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-            ->where('is_active', true)
-            ->get()
-            ->sortBy(function($mapel) use ($urutanMapel) {
-                return array_search($mapel->kode_mapel, $urutanMapel);
-            })
-            ->values();
+        // Gunakan mapel yang benar-benar tersimpan agar kode Merdeka (M-*) tidak
+        // dipaksa cocok dengan daftar kode lama. Config hanya menjadi fallback saat kosong.
+        $mapelList = $selectedTahun
+            ? $this->getActualMapelList([$semester => $selectedTahun->id])
+            : collect();
+        $urutanMapel = $mapelList->pluck('kode_mapel')->all();
         
         if ($request->ajax()) {
             return $this->getSemesterData($request, $semester, $selectedTahun, $urutanMapel);
@@ -875,16 +961,15 @@ class NilaiController extends Controller
         }
         
         $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
-        $urutanMapel = config('nilai.urutan_mapel');
-        
-        // Get all mapel
-        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-            ->where('is_active', true)
-            ->get()
-            ->sortBy(function($mapel) use ($urutanMapel) {
-                return array_search($mapel->kode_mapel, $urutanMapel);
-            })
-            ->values();
+        $periods = [];
+        foreach ($semesterConfig as $semester => $config) {
+            $tahunPelajaran = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+            if ($tahunPelajaran) {
+                $periods[$semester] = $tahunPelajaran->id;
+            }
+        }
+        $mapelList = $this->getActualMapelList($periods);
+        $urutanMapel = $mapelList->pluck('kode_mapel')->all();
         
         // Get kelas tingkat 12 dengan count siswa
         $kelasList = \App\Models\Kelas::where('tingkat', $tingkat)
@@ -929,20 +1014,8 @@ class NilaiController extends Controller
             $request->boolean('include_semester_6')
         );
         
-        // Get mapel yang dipilih atau semua
-        $selectedMapel = $request->mapel ?? config('nilai.urutan_mapel');
-        if (!is_array($selectedMapel)) {
-            $selectedMapel = config('nilai.urutan_mapel');
-        }
-        
         // Get selected kelas atau semua
         $selectedKelas = $request->kelas ?? [];
-        
-        // Get all mapel
-        $mapels = MataPelajaran::whereIn('kode_mapel', $selectedMapel)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('kode_mapel');
         
         // Collect tahun pelajaran IDs for all semesters
         $tahunIds = [];
@@ -952,6 +1025,14 @@ class NilaiController extends Controller
                 $tahunIds[$sem] = $tahunPelajaran->id;
             }
         }
+
+        $availableMapels = $this->getActualMapelList($tahunIds);
+        $availableMapelsByCode = $availableMapels->keyBy('kode_mapel');
+        $requestedMapels = is_array($request->mapel) ? $request->mapel : [];
+        $selectedMapel = $requestedMapels
+            ? collect($requestedMapels)->filter(fn ($kode) => $availableMapelsByCode->has($kode))->values()->all()
+            : $availableMapels->pluck('kode_mapel')->all();
+        $mapels = $availableMapelsByCode->only($selectedMapel);
         
         // Get siswa kelas 12 (dari kelas, bukan dari nilai)
         $siswaQuery = Siswa::whereHas('kelasAktif', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
@@ -977,7 +1058,14 @@ class NilaiController extends Controller
         
         // Get all nilai for these siswa
         $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
-            ->whereIn('tahun_pelajaran_id', array_values($tahunIds))
+            ->where(function ($query) use ($tahunIds) {
+                foreach ($tahunIds as $semester => $tahunPelajaranId) {
+                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
+                        $periodQuery->where('semester', (int) $semester)
+                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
+                    });
+                }
+            })
             ->get()
             ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
         
@@ -1165,19 +1253,6 @@ class NilaiController extends Controller
         }
         
         $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
-        $urutanMapel = config('nilai.urutan_mapel');
-        
-        // Get all mapel sesuai urutan
-        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('kode_mapel');
-        
-        // Sort mapel sesuai urutan
-        $sortedMapels = collect($urutanMapel)
-            ->filter(fn($kode) => isset($mapels[$kode]))
-            ->map(fn($kode) => $mapels[$kode])
-            ->values();
         
         // Collect tahun pelajaran IDs for all semesters
         $tahunIds = [];
@@ -1186,6 +1261,16 @@ class NilaiController extends Controller
             if ($tahunPelajaran) {
                 $tahunIds[$sem] = $tahunPelajaran->id;
             }
+        }
+
+        // Setiap semester dapat mempunyai struktur mapel berbeda. Gunakan mapel
+        // aktual per periode agar export tidak membuat kolom kosong dari kode lama.
+        $mapelsBySemester = collect();
+        foreach ($tahunIds as $sem => $tahunPelajaranId) {
+            $mapelsBySemester[$sem] = $this->getActualMapelList(
+                [$sem => $tahunPelajaranId],
+                false
+            );
         }
         
         // Get siswa kelas 12
@@ -1208,7 +1293,14 @@ class NilaiController extends Controller
         
         // Get all nilai for these siswa
         $nilaiData = NilaiSiswa::whereIn('siswa_id', $siswaIds)
-            ->whereIn('tahun_pelajaran_id', array_values($tahunIds))
+            ->where(function ($query) use ($tahunIds) {
+                foreach ($tahunIds as $semester => $tahunPelajaranId) {
+                    $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
+                        $periodQuery->where('semester', (int) $semester)
+                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
+                    });
+                }
+            })
             ->get()
             ->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id']);
         
@@ -1229,8 +1321,6 @@ class NilaiController extends Controller
         // Static columns
         $staticCols = ['No', 'NISN', 'Nama Lengkap'];
         $staticColCount = count($staticCols);
-        $mapelCount = $sortedMapels->count();
-        $colsPerSemester = $mapelCount + 2; // mapels + Jumlah + Total
         
         // Row 1: Static headers (merged 1-2) + Semester headers (merged across mapel columns)
         // Row 2: Static headers (merged) + Mapel names + Jumlah + Total
@@ -1251,6 +1341,8 @@ class NilaiController extends Controller
         
         foreach ($semesterConfig as $sem => $config) {
             $semLabel = $semesterKelas[$sem] ?? "Semester {$sem}";
+            $semesterMapels = $mapelsBySemester->get($sem, collect());
+            $colsPerSemester = $semesterMapels->count() + 2;
             
             // Calculate start and end columns for this semester
             $startCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
@@ -1265,7 +1357,7 @@ class NilaiController extends Controller
             
             // Row 2: Mapel names
             $mapelColIndex = $colIndex;
-            foreach ($sortedMapels as $mapel) {
+            foreach ($semesterMapels as $mapel) {
                 $mapelCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($mapelColIndex);
                 $sheet->setCellValue($mapelCol . '2', $mapel->nama_mapel);
                 $mapelColIndex++;
@@ -1316,8 +1408,9 @@ class NilaiController extends Controller
             foreach ($semesterConfig as $sem => $config) {
                 $nilaiCount = 0;
                 $nilaiTotal = 0;
+                $semesterMapels = $mapelsBySemester->get($sem, collect());
                 
-                foreach ($sortedMapels as $mapel) {
+                foreach ($semesterMapels as $mapel) {
                     $nilai = null;
                     if (isset($nilaiData[$siswa->id][$sem][$mapel->id])) {
                         $nilai = $nilaiData[$siswa->id][$sem][$mapel->id]->first()->nilai ?? null;
@@ -1354,7 +1447,8 @@ class NilaiController extends Controller
         // Set width for mapel columns (narrower)
         $colIndex = 4;
         foreach ($semesterConfig as $sem => $config) {
-            for ($i = 0; $i < $mapelCount; $i++) {
+            $semesterMapelCount = $mapelsBySemester->get($sem, collect())->count();
+            for ($i = 0; $i < $semesterMapelCount; $i++) {
                 $colStr = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
                 $sheet->getColumnDimension($colStr)->setWidth(8);
                 $colIndex++;

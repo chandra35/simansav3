@@ -112,8 +112,14 @@
         <div class="simansa-semester-panel__header">
             <div>
                 <h3><i class="fas fa-table"></i> Data Nilai</h3>
-                <p>Nilai disusun menurut urutan mapel semester agar konsisten dengan template upload dan export.</p>
+                <p>Kolom mapel mengikuti nilai yang benar-benar tersimpan pada semester dan tahun terpilih.</p>
             </div>
+            @if($mapelList->isNotEmpty())
+                <div class="simansa-mapel-detection">
+                    <strong>{{ $mapelList->count() }} mapel terdeteksi</strong>
+                    <span>{{ $mapelList->pluck('kurikulum.kode')->filter()->unique()->implode(' + ') ?: 'Kurikulum historis' }}</span>
+                </div>
+            @endif
         </div>
         <div class="simansa-semester-panel__body">
             @if($mapelList->count() > 0)
@@ -239,7 +245,8 @@
         .simansa-semester-chip{padding:1rem 1.1rem;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);min-width:220px}
         .simansa-semester-chip__label{display:block;margin-bottom:.35rem;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
         .simansa-semester-panel{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);margin-bottom:1.5rem;overflow:hidden}
-        .simansa-semester-panel__header{padding:1.35rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
+        .simansa-mapel-detection{display:flex;flex-direction:column;align-items:flex-end;padding:.55rem .8rem;border-radius:12px;background:#eef8f4;color:#147451}.simansa-mapel-detection strong{font-size:.8rem}.simansa-mapel-detection span{font-size:.68rem}
+        .simansa-semester-panel__header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.35rem 1.5rem;border-bottom:1px solid rgba(148,163,184,.18)}
         .simansa-semester-panel__header h3{margin:0 0 .25rem;font-size:1.1rem;font-weight:700;color:#1f2a44}
         .simansa-semester-panel__header p{margin:0;color:#60708b;font-size:.92rem}
         .simansa-semester-panel__body{padding:1.5rem}
@@ -268,6 +275,7 @@
             min-height: 200px;
         }
         @media (max-width:992px){.simansa-semester-hero__content{flex-direction:column;align-items:stretch}.simansa-semester-chip{min-width:0}}
+        @media (max-width:767px){.simansa-semester-panel__header{align-items:flex-start;flex-direction:column}.simansa-mapel-detection{align-items:flex-start}}
     </style>
 @stop
 

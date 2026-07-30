@@ -14,6 +14,9 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 - Nilai lama tetap aman: record sama dilewati, konflik ditahan, dan hanya nilai baru yang dapat ditambahkan.
 - Apply nilai puluhan ribu record diproses per batch 500 baris dan ditulis dengan bulk insert dalam satu transaksi, sehingga tidak lagi memuat seluruh staging sebagai model sekaligus dan tidak melewati batas memori PHP 128 MB.
 - Transaksi Apply memiliki retry deadlock; kegagalan tak terduga dikembalikan sebagai pesan halaman yang aman serta dicatat bersama ID run, tanpa meninggalkan nilai yang tersimpan sebagian.
+- Rekap nilai semester tidak lagi mencocokkan nilai Merdeka `M-*` dengan daftar kode lama secara ketat. Kolom dibentuk dari ID mapel yang benar-benar mempunyai nilai pada pasangan semester/tahun terpilih.
+- Export semester, export leger lintas semester, dan export SPAN-PTKIN memakai sumber mapel aktual yang sama. Export lintas semester menggunakan gabungan mapel, sedangkan SPAN membentuk daftar mapel khusus untuk setiap semester.
+- Query export dibatasi pada pasangan semester dan tahun pelajaran yang tepat agar nilai dari periode lain tidak ikut tercampur.
 
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 
