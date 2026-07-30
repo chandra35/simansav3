@@ -4,6 +4,13 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Arsip analisis Sync EMIS RDM
+
+- Alur tombol Sync EMIS RDM telah dipetakan secara read-only dari bundle frontend, access log, struktur database, dan agregat data VM tanpa menjalankan proses sinkronisasi.
+- Browser memanggil endpoint lokal RDM secara berurutan untuk verifikasi tahun ajaran, mengambil rombel per halaman, menyinkronkan siswa per halaman, dan memetakan siswa baru ke kelas.
+- RDM menyimpan relasi EMIS terenkripsi pada `siswa_emis`, tetapi seluruh `siswa_nis` yang terisi hanya berformat 6 digit; field tersebut bukan `local_nis` EMIS lengkap 18 digit.
+- Temuan, endpoint, batas investigasi backend ionCube, serta implikasinya untuk pembandingan NIS Lokal SIMANSA disimpan di `docs/rdm-research/`.
+
 ### Edit nama siswa dan normalisasi input huruf kapital
 
 - Akun siswa dapat mengubah Nama Lengkap melalui menu Data Diri; perubahan disimpan serentak pada profil siswa dan nama akun login.
