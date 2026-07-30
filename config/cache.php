@@ -52,6 +52,14 @@ return [
             'lock_path' => storage_path('framework/cache/data'),
         ],
 
+        // Dedicated PhpSpreadsheet cell cache. Laravel Excel clears its cache
+        // after an export, so this must not share the application's file store.
+        'excel' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/excel'),
+            'lock_path' => storage_path('framework/cache/excel'),
+        ],
+
         'memcached' => [
             'driver' => 'memcached',
             'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),

@@ -17,6 +17,7 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 - Rekap nilai semester tidak lagi mencocokkan nilai Merdeka `M-*` dengan daftar kode lama secara ketat. Kolom dibentuk dari ID mapel yang benar-benar mempunyai nilai pada pasangan semester/tahun terpilih.
 - Export semester, export leger lintas semester, dan export SPAN-PTKIN memakai sumber mapel aktual yang sama. Export lintas semester menggunakan gabungan mapel, sedangkan SPAN membentuk daftar mapel khusus untuk setiap semester.
 - Query export dibatasi pada pasangan semester dan tahun pelajaran yang tepat agar nilai dari periode lain tidak ikut tercampur.
+- Export Excel besar memakai cache sel batch pada penyimpanan file khusus, sehingga leger Semester 1–5 tidak menghabiskan batas memori PHP 128 MB dan pembersihannya tidak mengganggu cache aplikasi.
 
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 

@@ -124,4 +124,17 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString('mapel terdeteksi', $semester);
         $this->assertStringContainsString('nilai yang benar-benar tersimpan', $semester);
     }
+
+    public function test_large_excel_exports_use_dedicated_batched_cell_cache(): void
+    {
+        $provider = file_get_contents($this->projectPath('app/Providers/AppServiceProvider.php'));
+        $cache = file_get_contents($this->projectPath('config/cache.php'));
+
+        $this->assertStringContainsString("'excel.cache.driver' => 'batch'", $provider);
+        $this->assertStringContainsString("'excel.cache.batch.memory_limit' => 10000", $provider);
+        $this->assertStringContainsString("'excel.cache.illuminate.store' => 'excel'", $provider);
+        $this->assertStringContainsString("'cache.stores.excel' => [", $provider);
+        $this->assertStringContainsString("'excel' => [", $cache);
+        $this->assertStringContainsString("storage_path('framework/cache/excel')", $cache);
+    }
 }

@@ -23,7 +23,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Cross-semester leggers contain tens of thousands of cells. Spill cells
+        // to a dedicated cache in batches so exports fit PHP's 128 MB limit.
+        config([
+            'cache.stores.excel' => [
+                'driver' => 'file',
+                'path' => storage_path('framework/cache/excel'),
+                'lock_path' => storage_path('framework/cache/excel'),
+            ],
+            'excel.cache.driver' => 'batch',
+            'excel.cache.batch.memory_limit' => 10000,
+            'excel.cache.illuminate.store' => 'excel',
+        ]);
     }
 
     /**
