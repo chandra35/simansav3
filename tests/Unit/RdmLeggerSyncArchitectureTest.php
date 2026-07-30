@@ -17,6 +17,7 @@ class RdmLeggerSyncArchitectureTest extends TestCase
 
         $this->assertStringContainsString("whereHas('kelasAktif'", $service);
         $this->assertStringContainsString("select('siswa.id', 'siswa.nisn'", $service);
+        $this->assertStringContainsString("(int) \$filters['simansa_tingkat']", $service);
         $this->assertStringContainsString('decryptValues(', $service);
         $this->assertStringContainsString('targetByNisn', $service);
         $this->assertStringNotContainsString("'NIS:'", $service);

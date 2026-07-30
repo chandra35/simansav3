@@ -7,6 +7,7 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 
 - Preview Integrasi RDM sekarang memakai roster SIMANSA sebagai acuan: hanya siswa berstatus aktif pada tahun pelajaran, tingkat, dan kelas SIMANSA yang dipilih yang dapat masuk staging.
+- Tingkat sumber RDM dipilih terpisah dari tingkat aktif SIMANSA, sehingga siswa kelas XII saat ini dapat mengambil histori nilai ketika masih berada di tingkat X atau XI.
 - Identitas siswa RDM didekripsi secara batch lalu dicocokkan ketat menggunakan NISN; NIS RDM enam digit tidak lagi dipakai sebagai fallback otomatis.
 - Nilai K13 Pengetahuan dan Keterampilan dipasangkan dalam satu record, sedangkan nilai Kurikulum Merdeka tetap memakai nilai utama. Predikat dan deskripsi rapor ikut disimpan.
 - Proses apply hanya memasukkan nilai yang benar-benar baru. Nilai yang sudah sama dilewati dan nilai berbeda ditandai konflik tanpa menimpa data SIMANSA.

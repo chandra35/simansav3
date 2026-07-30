@@ -201,6 +201,7 @@ class RdmSyncService
             'notes' => 'Preview aman selesai. Hanya siswa aktif SIMANSA; konflik tidak akan ditimpa.',
             'meta' => [
                 'active_students' => $target->count(),
+                'simansa_tingkat' => (int) $filters['simansa_tingkat'],
                 'rdm_students_matched' => count($seenStudents),
                 'active_students_without_rdm' => max(0, $target->count() - count($seenStudents)),
                 'duplicate_simansa_nisn' => $duplicateSimansaNisn->count(),
@@ -256,7 +257,7 @@ class RdmSyncService
             ->whereHas('kelasAktif', function ($query) use ($filters) {
                 $query->where('kelas.tahun_pelajaran_id', $filters['simansa_tahun_pelajaran_id'])
                     ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
-                    ->where('kelas.tingkat', $this->simansaTingkat((int) $filters['rdm_tingkat_id']));
+                    ->where('kelas.tingkat', (int) $filters['simansa_tingkat']);
                 if (!empty($filters['simansa_kelas_id'])) {
                     $query->where('kelas.id', $filters['simansa_kelas_id']);
                 }
@@ -341,11 +342,6 @@ class RdmSyncService
             14 => $semester + 4,
             default => null,
         };
-    }
-
-    private function simansaTingkat(int $rdmTingkat): int
-    {
-        return [12 => 10, 13 => 11, 14 => 12][$rdmTingkat] ?? 0;
     }
 
     private function numeric(mixed $value): ?float

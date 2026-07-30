@@ -86,6 +86,18 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Tingkat Aktif SIMANSA</label>
+                            <select name="simansa_tingkat" class="form-control" required>
+                                @foreach([12, 11, 10] as $tingkat)
+                                    <option value="{{ $tingkat }}" {{ (int) old('simansa_tingkat', 12) === $tingkat ? 'selected' : '' }}>
+                                        Kelas {{ $tingkat }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Untuk leger SNBP pilih Kelas 12, walaupun sumber RDM berasal dari tingkat X atau XI.</small>
+                        </div>
+
+                        <div class="form-group">
                             <label>Tahun Ajaran RDM</label>
                             <select name="rdm_tahunajaran_id" class="form-control" required>
                                 @foreach($rdmReference['tahun'] as $item)
@@ -207,6 +219,7 @@
                                     <tr><th>Tingkat RDM</th><td>{{ $selectedRun->rdm_tingkat_id ?? '-' }}</td></tr>
                                     <tr><th>Kelas RDM</th><td>{{ $selectedRun->rdm_kelas_nama ?? '-' }}</td></tr>
                                     <tr><th>Siswa Aktif SIMANSA</th><td>{{ data_get($selectedRun->meta, 'active_students', '-') }}</td></tr>
+                                    <tr><th>Tingkat Aktif SIMANSA</th><td>{{ data_get($selectedRun->meta, 'simansa_tingkat', '-') }}</td></tr>
                                     <tr><th>Siswa Cocok RDM</th><td>{{ data_get($selectedRun->meta, 'rdm_students_matched', '-') }}</td></tr>
                                     <tr><th>Nilai Baru</th><td>{{ data_get($selectedRun->meta, 'insert', '-') }}</td></tr>
                                     <tr><th>Nilai Sama</th><td>{{ data_get($selectedRun->meta, 'unchanged', '-') }}</td></tr>

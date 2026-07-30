@@ -68,6 +68,7 @@ class RdmSyncController extends Controller
             'rdm_kelas_nama' => ['nullable', 'string', 'max:120'],
             'simansa_tahun_pelajaran_id' => ['required', 'uuid', 'exists:tahun_pelajaran,id'],
             'simansa_kelas_id' => ['nullable', 'uuid', 'exists:kelas,id'],
+            'simansa_tingkat' => ['required', 'integer', 'in:10,11,12'],
         ]);
 
         if (empty($data['rdm_tingkat_id'])) {
