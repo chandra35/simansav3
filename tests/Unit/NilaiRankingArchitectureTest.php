@@ -18,6 +18,7 @@ class NilaiRankingArchitectureTest extends TestCase
 
         $this->assertStringContainsString('getTemplateMapelList', $controller);
         $this->assertStringContainsString('array_slice($header, $kolomNilaiMulai)', $controller);
+        $this->assertStringContainsString('$lastColIndex = count($headers);', $controller);
         $this->assertStringContainsString('Header mapel tidak ditemukan mulai kolom F', $controller);
         $this->assertStringContainsString('Download Template Sesuai Pilihan', $upload);
         $this->assertStringContainsString('tahun_pelajaran_id=${tahunFound.id}', $upload);

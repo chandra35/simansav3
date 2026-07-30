@@ -842,7 +842,7 @@ class NilaiController extends Controller
         $sheet->setCellValue('E2', 'L');
         
         // Auto width - use column index for multi-letter columns (AA, AB, etc)
-        $lastColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($col);
+        $lastColIndex = count($headers);
         for ($i = 1; $i <= $lastColIndex; $i++) {
             $columnID = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
