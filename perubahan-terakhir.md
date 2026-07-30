@@ -6,6 +6,10 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ### Preview leger RDM otomatis berdasarkan kohor
 
+- Proses sync tetap idempotent untuk Semester 5 dan periode lain: satu siswa-mapel-tahun-semester hanya boleh mempunyai satu record. Nilai sama dilewati, nilai berbeda ditahan sebagai konflik, dan periode baru dibuat tanpa menggandakan Semester 1–4.
+- Template upload nilai kini dibentuk dari mapel aktual semester/tahun yang dipilih dengan fallback periode kohor dan mapping RDM. Parser upload membaca kode mapel dari header Excel mulai kolom F, sehingga tidak lagi bergantung pada posisi tetap mapel K13.
+- Menu Nilai memiliki halaman Perangkingan untuk satu semester atau akumulasi seluruh semester kohor, baik per rombel maupun seluruh rombel. Nilai kumulatif merata-ratakan rata-rata semester agar bobot setiap semester sama; siswa yang mapelnya belum lengkap ditandai dan tidak diberi ranking.
+- Perangkingan menampilkan rank rombel dan rank tingkat secara berdampingan, jumlah mapel setiap semester, status kelengkapan, serta export Excel sesuai filter.
 - Form Integrasi RDM hanya meminta tahun roster, tingkat aktif, dan rombel SIMANSA; pilihan tahun, semester, tingkat, serta kelas sumber RDM dihapus.
 - Sistem membentuk perjalanan akademik siswa secara otomatis: Kelas 10 mengambil Semester 1–2, Kelas 11 Semester 1–4, dan Kelas 12 Semester 1–5.
 - Tahun ajaran, tingkat X/XI/XII, dan semester ganjil/genap RDM diturunkan dari tahun masuk kohor. Pencocokan siswa tetap ketat berdasarkan NISN siswa yang aktif pada roster terpilih.

@@ -99,8 +99,11 @@
             <a href="{{ route('admin.nilai.upload-form') }}?tingkat={{ request('tingkat') }}" class="btn btn-success">
                 <i class="fas fa-file-excel"></i> Upload Nilai Legger
             </a>
-            <a href="{{ route('admin.nilai.template') }}" class="btn btn-info">
-                <i class="fas fa-download"></i> Download Template Excel
+            <a href="{{ route('admin.nilai.upload-form', ['tingkat' => request('tingkat')]) }}" class="btn btn-info">
+                <i class="fas fa-download"></i> Template Excel Dinamis
+            </a>
+            <a href="{{ route('admin.nilai.ranking', ['tingkat' => request('tingkat')]) }}" class="btn btn-primary">
+                <i class="fas fa-trophy"></i> Perangkingan Nilai
             </a>
             @if(request('tingkat') == 12)
             <a href="{{ route('admin.nilai.export-legger-form') }}?tingkat=12" class="btn btn-warning">

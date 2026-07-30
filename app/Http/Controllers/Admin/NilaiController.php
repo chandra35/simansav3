@@ -7,6 +7,7 @@ use App\Models\NilaiSiswa;
 use App\Models\Siswa;
 use App\Models\MataPelajaran;
 use App\Models\TahunPelajaran;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,14 +50,26 @@ class NilaiController extends Controller
             }
 
             $semester = (int) array_key_first($periods);
-            $legacyOrder = $this->getMapelBySemester($semester);
+            $tahunPelajaranId = $periods[$semester] ?? null;
+            $sourceGrade = 10 + intdiv(max(1, $semester) - 1, 2);
+            $curriculumIds = Kelas::query()
+                ->where('tahun_pelajaran_id', $tahunPelajaranId)
+                ->where('tingkat', $sourceGrade)
+                ->whereNotNull('kurikulum_id')
+                ->distinct()
+                ->pluck('kurikulum_id');
 
             return MataPelajaran::query()
                 ->with('kurikulum:id,kode')
-                ->whereIn('kode_mapel', $legacyOrder)
                 ->where('is_active', true)
+                ->whereJsonContains('tingkat', $sourceGrade)
+                ->when(
+                    $curriculumIds->isNotEmpty(),
+                    fn ($query) => $query->whereIn('kurikulum_id', $curriculumIds),
+                    fn ($query) => $query->whereHas('rdmMappings')
+                )
                 ->get()
-                ->sortBy(fn ($mapel) => array_search($mapel->kode_mapel, $legacyOrder, true))
+                ->sortBy(fn ($mapel) => $this->mapelAcademicSortKey($mapel))
                 ->values();
         }
 
@@ -148,25 +161,6 @@ class NilaiController extends Controller
     }
 
     /**
-     * Get urutan mapel berdasarkan semester
-     */
-    private function getMapelBySemester($semester)
-    {
-        $semester = (int) $semester;
-        
-        if (in_array($semester, [5, 6], true)) {
-            return config('nilai.urutan_mapel_sem_5');
-        } elseif ($semester === 4) {
-            return config('nilai.urutan_mapel_sem_4');
-        } elseif ($semester === 3) {
-            return config('nilai.urutan_mapel_sem_3');
-        } else {
-            // Semester 1-2
-            return config('nilai.urutan_mapel_sem_1_2', config('nilai.urutan_mapel'));
-        }
-    }
-
-    /**
      * Semester config per tingkat kelas
      */
     private function getSemesterConfig($tingkat, $tahunAktif, bool $includeSemester6 = false)
@@ -212,6 +206,46 @@ class NilaiController extends Controller
     }
 
     /**
+     * Mapel template mengikuti data aktual. Jika periode belum memiliki nilai,
+     * gunakan periode akademik terdekat dari kohor yang sama, lalu mapping RDM.
+     */
+    private function getTemplateMapelList(int $semester, TahunPelajaran $tahunPelajaran): Collection
+    {
+        $actual = $this->getActualMapelList([$semester => $tahunPelajaran->id], false);
+        if ($actual->isNotEmpty()) {
+            return $actual;
+        }
+
+        $fallbackPeriods = [];
+        if ($semester % 2 === 0) {
+            $fallbackPeriods[$semester - 1] = $tahunPelajaran->id;
+        } elseif ($semester > 1) {
+            $previousYear = TahunPelajaran::where('tahun_mulai', $tahunPelajaran->tahun_mulai - 1)->first();
+            if ($previousYear) {
+                $fallbackPeriods[$semester - 1] = $previousYear->id;
+            }
+        } else {
+            $fallbackPeriods[2] = $tahunPelajaran->id;
+        }
+
+        $fallback = $this->getActualMapelList($fallbackPeriods, false);
+        if ($fallback->isNotEmpty()) {
+            return $fallback;
+        }
+
+        $sourceGrade = 10 + intdiv(max(1, $semester) - 1, 2);
+
+        return MataPelajaran::query()
+            ->with('kurikulum:id,kode')
+            ->where('is_active', true)
+            ->whereJsonContains('tingkat', $sourceGrade)
+            ->whereHas('rdmMappings')
+            ->get()
+            ->sortBy(fn ($mapel) => $this->mapelAcademicSortKey($mapel))
+            ->values();
+    }
+
+    /**
      * ID siswa yang benar-benar aktif pada roster tingkat dan tahun berjalan.
      * Nilai alumni tetap tersimpan, tetapi tidak masuk tampilan leger aktif.
      */
@@ -228,6 +262,320 @@ class NilaiController extends Controller
                     ->where('kelas.tingkat', $tingkat);
             })
             ->pluck('siswa.id');
+    }
+
+    /**
+     * Data ranking memakai roster aktif sebagai populasi dan pasangan periode
+     * kohor yang sama dengan leger. Nilai kumulatif adalah rata-rata dari
+     * rata-rata semester agar perbedaan jumlah mapel tidak mengubah bobot semester.
+     */
+    private function buildRankingData(TahunPelajaran $tahunAktif, int $tingkat, string $mode, int $semester): array
+    {
+        $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+        $periods = [];
+        foreach ($semesterConfig as $sem => $config) {
+            $tahun = $this->getTahunPelajaranByOffset($tahunAktif, $config['offset']);
+            if ($tahun) {
+                $periods[$sem] = $tahun->id;
+            }
+        }
+
+        $requestedPeriods = $mode === 'semester'
+            ? array_intersect_key($periods, [$semester => true])
+            : $periods;
+
+        $roster = DB::table('siswa_kelas as sk')
+            ->join('siswa as s', 's.id', '=', 'sk.siswa_id')
+            ->join('kelas as k', 'k.id', '=', 'sk.kelas_id')
+            ->where('sk.tahun_pelajaran_id', $tahunAktif->id)
+            ->where('k.tahun_pelajaran_id', $tahunAktif->id)
+            ->where('k.tingkat', $tingkat)
+            ->where('sk.status', 'aktif')
+            ->whereNull('sk.deleted_at')
+            ->whereNull('s.deleted_at')
+            ->whereNull('k.deleted_at')
+            ->select([
+                's.id as siswa_id',
+                's.nisn',
+                's.nis',
+                's.nama_lengkap',
+                's.jenis_kelamin',
+                'k.id as kelas_id',
+                'k.nama_kelas',
+            ])
+            ->orderBy('k.nama_kelas')
+            ->orderBy('s.nama_lengkap')
+            ->get()
+            ->unique('siswa_id')
+            ->values();
+
+        $aggregates = collect();
+        if ($roster->isNotEmpty() && $requestedPeriods) {
+            $aggregates = DB::table('nilai_siswa')
+                ->whereNull('deleted_at')
+                ->whereIn('siswa_id', $roster->pluck('siswa_id'))
+                ->where(function ($query) use ($requestedPeriods) {
+                    foreach ($requestedPeriods as $sem => $tahunId) {
+                        $query->orWhere(function ($periodQuery) use ($sem, $tahunId) {
+                            $periodQuery->where('semester', (int) $sem)
+                                ->where('tahun_pelajaran_id', $tahunId);
+                        });
+                    }
+                })
+                ->selectRaw('siswa_id, semester, AVG(nilai) as rata_rata, SUM(nilai) as total_nilai, COUNT(DISTINCT mata_pelajaran_id) as jumlah_mapel')
+                ->groupBy('siswa_id', 'semester')
+                ->get();
+        }
+
+        $byStudent = $aggregates->groupBy('siswa_id');
+        $availableSemesters = collect(array_keys($requestedPeriods))
+            ->filter(fn ($sem) => $aggregates->contains(fn ($row) => (int) $row->semester === (int) $sem))
+            ->values()
+            ->all();
+        $expectedMapelCounts = collect($availableSemesters)->mapWithKeys(function ($sem) use ($aggregates) {
+            $frequency = $aggregates
+                ->filter(fn ($row) => (int) $row->semester === (int) $sem)
+                ->countBy(fn ($row) => (int) $row->jumlah_mapel);
+            $highestFrequency = $frequency->max();
+            $expected = $frequency
+                ->filter(fn ($count) => $count === $highestFrequency)
+                ->keys()
+                ->map(fn ($count) => (int) $count)
+                ->max();
+
+            return [(int) $sem => (int) $expected];
+        })->all();
+
+        $rows = $roster->map(function ($student) use (
+            $byStudent,
+            $requestedPeriods,
+            $availableSemesters,
+            $expectedMapelCounts
+        ) {
+            $semesterRows = $byStudent->get($student->siswa_id, collect())->keyBy(
+                fn ($row) => (int) $row->semester
+            );
+            $semesterValues = [];
+            $semesterMapelCounts = [];
+
+            foreach (array_keys($requestedPeriods) as $sem) {
+                $aggregate = $semesterRows->get((int) $sem);
+                $semesterValues[$sem] = $aggregate ? round((float) $aggregate->rata_rata, 4) : null;
+                $semesterMapelCounts[$sem] = $aggregate ? (int) $aggregate->jumlah_mapel : 0;
+            }
+
+            $valuesForRanking = collect($availableSemesters)
+                ->map(fn ($sem) => $semesterValues[$sem] ?? null)
+                ->filter(fn ($value) => $value !== null);
+            $isComplete = count($availableSemesters) > 0
+                && $valuesForRanking->count() === count($availableSemesters)
+                && collect($availableSemesters)->every(
+                    fn ($sem) => ($semesterMapelCounts[$sem] ?? 0) >= ($expectedMapelCounts[$sem] ?? 1)
+                );
+
+            return [
+                'siswa_id' => $student->siswa_id,
+                'nisn' => $student->nisn,
+                'nis' => $student->nis,
+                'nama' => $student->nama_lengkap,
+                'jenis_kelamin' => $student->jenis_kelamin,
+                'kelas_id' => $student->kelas_id,
+                'kelas' => $student->nama_kelas,
+                'semester_values' => $semesterValues,
+                'semester_mapel_counts' => $semesterMapelCounts,
+                'score' => $valuesForRanking->isNotEmpty() ? round($valuesForRanking->avg(), 4) : null,
+                'semester_complete' => $valuesForRanking->count(),
+                'semester_expected' => count($availableSemesters),
+                'is_complete' => $isComplete,
+                'rank_grade' => null,
+                'rank_class' => null,
+            ];
+        })->keyBy('siswa_id');
+
+        $eligible = $rows->filter(fn ($row) => $row['is_complete'] && $row['score'] !== null);
+        $gradeRanks = $this->competitionRanks($eligible);
+        $classRanks = [];
+        foreach ($eligible->groupBy('kelas_id') as $classRows) {
+            $classRanks += $this->competitionRanks($classRows);
+        }
+
+        $rows = $rows->map(function ($row) use ($gradeRanks, $classRanks) {
+            $row['rank_grade'] = $gradeRanks[$row['siswa_id']] ?? null;
+            $row['rank_class'] = $classRanks[$row['siswa_id']] ?? null;
+            return $row;
+        })->values();
+
+        return [
+            'rows' => $rows,
+            'periods' => $periods,
+            'requested_periods' => $requestedPeriods,
+            'available_semesters' => $availableSemesters,
+            'expected_mapel_counts' => $expectedMapelCounts,
+            'missing_semesters' => array_values(array_diff(array_keys($requestedPeriods), $availableSemesters)),
+            'eligible_count' => $eligible->count(),
+        ];
+    }
+
+    /**
+     * Competition ranking: nilai sama mendapat peringkat sama (1, 1, 3).
+     */
+    private function competitionRanks(Collection $rows): array
+    {
+        $sorted = $rows->sort(function ($left, $right) {
+            $scoreCompare = $right['score'] <=> $left['score'];
+            return $scoreCompare !== 0 ? $scoreCompare : strcmp($left['nama'], $right['nama']);
+        })->values();
+
+        $ranks = [];
+        $previousScore = null;
+        $previousRank = 0;
+        foreach ($sorted as $index => $row) {
+            $scoreKey = number_format((float) $row['score'], 4, '.', '');
+            $rank = $previousScore === $scoreKey ? $previousRank : $index + 1;
+            $ranks[$row['siswa_id']] = $rank;
+            $previousScore = $scoreKey;
+            $previousRank = $rank;
+        }
+
+        return $ranks;
+    }
+
+    public function ranking(Request $request)
+    {
+        $tahunAktif = TahunPelajaran::where('is_active', true)->firstOrFail();
+        $tingkat = in_array($request->integer('tingkat', 12), [10, 11, 12], true)
+            ? $request->integer('tingkat', 12)
+            : 12;
+        $mode = $request->input('mode') === 'semester' ? 'semester' : 'cumulative';
+        $semesterMax = count($this->getSemesterConfig($tingkat, $tahunAktif));
+        $semester = min(max($request->integer('semester', $semesterMax), 1), $semesterMax);
+        $kelasId = $request->input('kelas_id');
+
+        $kelasList = Kelas::query()
+            ->where('tahun_pelajaran_id', $tahunAktif->id)
+            ->where('tingkat', $tingkat)
+            ->where('is_active', true)
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas']);
+
+        if ($kelasId && !$kelasList->contains('id', $kelasId)) {
+            $kelasId = null;
+        }
+
+        $ranking = $this->buildRankingData($tahunAktif, $tingkat, $mode, $semester);
+        $rows = $ranking['rows']
+            ->when($kelasId, fn ($items) => $items->where('kelas_id', $kelasId))
+            ->sortBy(function ($row) use ($kelasId) {
+                $rank = $kelasId ? $row['rank_class'] : $row['rank_grade'];
+                return sprintf('%08d|%s', $rank ?? PHP_INT_MAX, $row['nama']);
+            })
+            ->values();
+
+        return view('admin.nilai.ranking', compact(
+            'tahunAktif',
+            'tingkat',
+            'mode',
+            'semester',
+            'kelasId',
+            'kelasList',
+            'ranking',
+            'rows'
+        ));
+    }
+
+    public function exportRanking(Request $request)
+    {
+        $tahunAktif = TahunPelajaran::where('is_active', true)->firstOrFail();
+        $tingkat = in_array($request->integer('tingkat', 12), [10, 11, 12], true)
+            ? $request->integer('tingkat', 12)
+            : 12;
+        $mode = $request->input('mode') === 'semester' ? 'semester' : 'cumulative';
+        $semesterMax = count($this->getSemesterConfig($tingkat, $tahunAktif));
+        $semester = min(max($request->integer('semester', $semesterMax), 1), $semesterMax);
+        $kelasId = $request->input('kelas_id');
+
+        $kelas = $kelasId
+            ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)->where('tingkat', $tingkat)->find($kelasId)
+            : null;
+        $ranking = $this->buildRankingData($tahunAktif, $tingkat, $mode, $semester);
+        $rows = $ranking['rows']
+            ->when($kelas, fn ($items) => $items->where('kelas_id', $kelas->id))
+            ->sortBy(function ($row) use ($kelas) {
+                $rank = $kelas ? $row['rank_class'] : $row['rank_grade'];
+                return sprintf('%08d|%s', $rank ?? PHP_INT_MAX, $row['nama']);
+            })
+            ->values();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Peringkat Nilai');
+        $semesterColumns = $mode === 'semester' ? [$semester] : array_keys($ranking['requested_periods']);
+        $headers = ['Peringkat', 'Peringkat Rombel', 'Peringkat Tingkat', 'NISN', 'NIS', 'Nama', 'L/P', 'Rombel'];
+        foreach ($semesterColumns as $sem) {
+            $headers[] = "Rata-rata S{$sem}";
+            $headers[] = "Mapel S{$sem}";
+        }
+        $headers[] = $mode === 'semester' ? "Nilai Ranking S{$semester}" : 'Rata-rata S1-'.$semesterMax;
+        $headers[] = 'Kelengkapan';
+
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValue([$index + 1, 1], $header);
+        }
+
+        foreach ($rows as $index => $row) {
+            $data = [
+                $kelas ? $row['rank_class'] : $row['rank_grade'],
+                $row['rank_class'],
+                $row['rank_grade'],
+                "'".$row['nisn'],
+                $row['nis'],
+                $row['nama'],
+                $row['jenis_kelamin'],
+                $row['kelas'],
+            ];
+            foreach ($semesterColumns as $sem) {
+                $data[] = $row['semester_values'][$sem] !== null ? round($row['semester_values'][$sem], 2) : '';
+                $data[] = $row['semester_mapel_counts'][$sem] ?? 0;
+            }
+            $data[] = $row['score'] !== null ? round($row['score'], 4) : '';
+            $data[] = "{$row['semester_complete']}/{$row['semester_expected']}";
+
+            foreach ($data as $colIndex => $value) {
+                $sheet->setCellValue([$colIndex + 1, $index + 2], $value);
+            }
+        }
+
+        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle("A1:{$lastColumn}1")->getFont()->setBold(true);
+        $sheet->getStyle("A1:{$lastColumn}1")->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('D9EAD3');
+        $sheet->freezePane('I2');
+        foreach (range(1, count($headers)) as $column) {
+            $dimension = $sheet->getColumnDimension(
+                \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($column)
+            );
+            if ($column <= 8) {
+                $dimension->setAutoSize(true);
+            } else {
+                $dimension->setWidth(14);
+            }
+        }
+
+        $scope = $kelas ? str_replace(' ', '-', $kelas->nama_kelas) : "kelas-{$tingkat}";
+        $modeName = $mode === 'semester' ? "semester-{$semester}" : 'semester-1-'.$semesterMax;
+        $filename = "peringkat-{$scope}-{$modeName}.xlsx";
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer, $spreadsheet) {
+            try {
+                $writer->save('php://output');
+            } finally {
+                $spreadsheet->disconnectWorksheets();
+            }
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     /**
@@ -363,8 +711,10 @@ class NilaiController extends Controller
     {
         $semester = (int) $semester;
         
-        if (!$urutanMapel) {
-            $urutanMapel = $this->getMapelBySemester($semester);
+        if ($urutanMapel === null) {
+            $urutanMapel = $selectedTahun
+                ? $this->getActualMapelList([$semester => $selectedTahun->id], false)->pluck('kode_mapel')->all()
+                : [];
         }
         
         // Get siswa yang punya nilai di semester ini
@@ -431,25 +781,15 @@ class NilaiController extends Controller
     /**
      * Show form upload excel
      */
-    public function uploadForm()
+    public function uploadForm(Request $request)
     {
         $tahunPelajarans = TahunPelajaran::orderBy('is_active', 'desc')
             ->orderBy('tahun_mulai', 'desc')
             ->get();
         
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
-        
-        // Get mapel sesuai urutan di config untuk referensi
-        $urutanMapel = config('nilai.urutan_mapel');
-        $mapelList = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-            ->where('is_active', true)
-            ->get()
-            ->sortBy(function($mapel) use ($urutanMapel) {
-                return array_search($mapel->kode_mapel, $urutanMapel);
-            })
-            ->values();
-        
-        return view('admin.nilai.upload', compact('tahunPelajarans', 'tahunAktif', 'mapelList', 'urutanMapel'));
+
+        return view('admin.nilai.upload', compact('tahunPelajarans', 'tahunAktif'));
     }
 
     /**
@@ -457,16 +797,21 @@ class NilaiController extends Controller
      */
     public function downloadTemplate(Request $request)
     {
-        $semester = (int) $request->input('semester', 1);
-        
-        // Pilih config berdasarkan semester
-        $urutanMapel = $this->getMapelBySemester($semester);
-        
-        // Get mapel dari database sesuai urutan
-        $mapels = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('kode_mapel');
+        $request->validate([
+            'semester' => 'required|integer|min:1|max:6',
+            'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+        ]);
+
+        $semester = (int) $request->semester;
+        $tahunPelajaran = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
+        $mapelList = $this->getTemplateMapelList($semester, $tahunPelajaran);
+
+        if ($mapelList->isEmpty()) {
+            return back()->with('error', 'Mapel untuk periode ini belum dapat dideteksi. Pastikan mapping RDM sudah tersedia.');
+        }
+
+        $urutanMapel = $mapelList->pluck('kode_mapel')->all();
+        $mapels = $mapelList->keyBy('kode_mapel');
         
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -509,7 +854,8 @@ class NilaiController extends Controller
         $refSheet->setCellValue('A1', 'No');
         $refSheet->setCellValue('B1', 'Kode');
         $refSheet->setCellValue('C1', 'Nama Mapel');
-        $refSheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $refSheet->setCellValue('D1', 'Kurikulum');
+        $refSheet->getStyle('A1:D1')->getFont()->setBold(true);
         
         $row = 2;
         foreach ($urutanMapel as $index => $kode) {
@@ -517,17 +863,25 @@ class NilaiController extends Controller
             $refSheet->setCellValue('A' . $row, $index + 1);
             $refSheet->setCellValue('B' . $row, $kode);
             $refSheet->setCellValue('C' . $row, $mapel ? $mapel->nama_mapel : '-');
+            $refSheet->setCellValue('D' . $row, $mapel?->kurikulum?->kode ?? '-');
             $row++;
         }
         
         $refSheet->getColumnDimension('A')->setAutoSize(true);
         $refSheet->getColumnDimension('B')->setAutoSize(true);
         $refSheet->getColumnDimension('C')->setAutoSize(true);
+        $refSheet->getColumnDimension('D')->setAutoSize(true);
+
+        $refSheet->setCellValue('F1', 'Semester');
+        $refSheet->setCellValue('G1', $semester);
+        $refSheet->setCellValue('F2', 'Tahun Pelajaran');
+        $refSheet->setCellValue('G2', $tahunPelajaran->nama);
         
         // Set active sheet back to template
         $spreadsheet->setActiveSheetIndex(0);
         
-        $filename = 'template_nilai_semester_' . $semester . '.xlsx';
+        $tahunSafe = str_replace('/', '-', $tahunPelajaran->nama);
+        $filename = "template_nilai_semester_{$semester}_{$tahunSafe}.xlsx";
         $writer = new Xlsx($spreadsheet);
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -550,6 +904,8 @@ class NilaiController extends Controller
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
         ]);
 
+        $spreadsheet = null;
+
         try {
             $file = $request->file('file');
             $spreadsheet = IOFactory::load($file->getPathname());
@@ -562,15 +918,24 @@ class NilaiController extends Controller
 
             $semester = (int) $request->semester;
             
-            // Pilih config berdasarkan semester
-            $urutanMapel = $this->getMapelBySemester($semester);
-            
             $kolomNisn = config('nilai.kolom_nisn', 2);
             $kolomNilaiMulai = config('nilai.kolom_nilai_mulai', 5);
-            
-            // Get semua mapel dengan kode sesuai urutan
-            $mapelByKode = MataPelajaran::whereIn('kode_mapel', $urutanMapel)
-                ->where('is_active', true)
+
+            // Kolom mapel dibaca dari header, bukan posisi config K13 lama.
+            $header = $rows[0] ?? [];
+            $urutanMapel = collect(array_slice($header, $kolomNilaiMulai))
+                ->map(fn ($kode) => mb_strtoupper(trim((string) $kode)))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!$urutanMapel) {
+                return back()->with('error', 'Header mapel tidak ditemukan mulai kolom F. Gunakan template sesuai semester dan tahun pelajaran.');
+            }
+
+            $mapelByKode = MataPelajaran::withTrashed()
+                ->whereIn('kode_mapel', $urutanMapel)
                 ->get()
                 ->keyBy('kode_mapel');
             
@@ -583,7 +948,7 @@ class NilaiController extends Controller
             }
             
             if (!empty($missingMapel)) {
-                return back()->with('error', 'Kode mapel tidak ditemukan di database: ' . implode(', ', $missingMapel) . '. Silakan tambahkan mapel tersebut terlebih dahulu.');
+                return back()->with('error', 'Kode mapel pada header Excel tidak ditemukan: ' . implode(', ', $missingMapel) . '. Download ulang template untuk periode yang dipilih.');
             }
 
             // Baris data dimulai dari config
@@ -661,6 +1026,8 @@ class NilaiController extends Controller
         } catch (\Exception $e) {
             Log::error('Error parsing nilai: ' . $e->getMessage());
             return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        } finally {
+            $spreadsheet?->disconnectWorksheets();
         }
     }
 

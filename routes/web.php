@@ -320,6 +320,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/nilai/export-legger', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLeggerForm'])->name('nilai.export-legger-form');
     Route::get('/nilai/export-legger/download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLegger'])->name('nilai.export-legger');
     Route::get('/nilai/export-span', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSpan'])->name('nilai.export-span');
+    Route::get('/nilai/perangkingan', [\App\Http\Controllers\Admin\NilaiController::class, 'ranking'])->name('nilai.ranking');
+    Route::get('/nilai/perangkingan/export', [\App\Http\Controllers\Admin\NilaiController::class, 'exportRanking'])->name('nilai.ranking-export');
     Route::get('/nilai/siswa/{siswa}', [\App\Http\Controllers\Admin\NilaiController::class, 'siswa'])->name('nilai.siswa');
     Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester');
     Route::post('/nilai/semester/{semester}/export-preview', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterPreview'])->name('nilai.export-semester-preview');

@@ -58,9 +58,9 @@
                             <label for="tingkat_kelas">1. Pilih Tingkat Kelas <span class="text-danger">*</span></label>
                             <select name="tingkat_kelas" id="tingkat_kelas" class="form-control form-control-lg" required>
                                 <option value="">-- Pilih Tingkat Kelas --</option>
-                                <option value="12">Kelas 12 (Legger untuk SPAN-PTKIN/SNBP/UTBK)</option>
-                                <option value="11">Kelas 11</option>
-                                <option value="10">Kelas 10</option>
+                                <option value="12" @selected(request('tingkat') == 12)>Kelas 12 (Legger untuk SPAN-PTKIN/SNBP/UTBK)</option>
+                                <option value="11" @selected(request('tingkat') == 11)>Kelas 11</option>
+                                <option value="10" @selected(request('tingkat') == 10)>Kelas 10</option>
                             </select>
                             <small class="text-muted">Pilih tingkat kelas siswa saat ini</small>
                         </div>
@@ -117,32 +117,9 @@
                         <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit" disabled>
                             <i class="fas fa-upload"></i> Upload & Preview
                         </button>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-download"></i> Download Template
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Semester 1-2 (18 Mapel)</h6>
-                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 1]) }}">
-                                    <i class="fas fa-file-excel text-success"></i> Template Semester 1-2
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <h6 class="dropdown-header">Semester 3 (18 Mapel)</h6>
-                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 3]) }}">
-                                    <i class="fas fa-file-excel text-primary"></i> Template Semester 3
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <h6 class="dropdown-header">Semester 4 (20 Mapel)</h6>
-                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 4]) }}">
-                                    <i class="fas fa-file-excel text-info"></i> Template Semester 4
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <h6 class="dropdown-header">Semester 5 (20 Mapel)</h6>
-                                <a class="dropdown-item" href="{{ route('admin.nilai.template', ['semester' => 5]) }}">
-                                    <i class="fas fa-file-excel text-warning"></i> Template Semester 5
-                                </a>
-                            </div>
-                        </div>
+                        <a href="#" id="dynamicTemplateLink" class="btn btn-success disabled" aria-disabled="true">
+                            <i class="fas fa-download"></i> Download Template Sesuai Pilihan
+                        </a>
                         <a href="{{ route('admin.nilai.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
@@ -168,27 +145,27 @@
                             <tr>
                                 <td><span class="badge badge-primary">Semester 1</span></td>
                                 <td>Kelas X - Semester 1</td>
-                                <td>Tahun Pelajaran 2023/2024</td>
+                                <td>Tahun Pelajaran {{ ($tahunAktif->tahun_mulai ?? now()->year) - 2 }}/{{ ($tahunAktif->tahun_mulai ?? now()->year) - 1 }}</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-primary">Semester 2</span></td>
                                 <td>Kelas X - Semester 2</td>
-                                <td>Tahun Pelajaran 2023/2024</td>
+                                <td>Tahun Pelajaran {{ ($tahunAktif->tahun_mulai ?? now()->year) - 2 }}/{{ ($tahunAktif->tahun_mulai ?? now()->year) - 1 }}</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-success">Semester 3</span></td>
                                 <td>Kelas XI - Semester 1</td>
-                                <td>Tahun Pelajaran 2024/2025</td>
+                                <td>Tahun Pelajaran {{ ($tahunAktif->tahun_mulai ?? now()->year) - 1 }}/{{ $tahunAktif->tahun_mulai ?? now()->year }}</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-success">Semester 4</span></td>
                                 <td>Kelas XI - Semester 2</td>
-                                <td>Tahun Pelajaran 2024/2025</td>
+                                <td>Tahun Pelajaran {{ ($tahunAktif->tahun_mulai ?? now()->year) - 1 }}/{{ $tahunAktif->tahun_mulai ?? now()->year }}</td>
                             </tr>
                             <tr>
                                 <td><span class="badge badge-warning">Semester 5</span></td>
                                 <td>Kelas XII - Semester 1</td>
-                                <td>Tahun Pelajaran 2025/2026 (Aktif)</td>
+                                <td>Tahun Pelajaran {{ $tahunAktif->nama ?? '-' }} (Aktif)</td>
                             </tr>
                         </tbody>
                     </table>
@@ -197,72 +174,23 @@
         </div>
 
         <div class="col-md-4">
-            {{-- Urutan Mapel --}}
+            {{-- Struktur Template --}}
             <div class="card card-success card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-sort-numeric-down"></i> Urutan Kolom Mapel</h3>
+                    <h3 class="card-title"><i class="fas fa-table"></i> Struktur Template Dinamis</h3>
                 </div>
-                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0">
-                        <thead class="bg-light sticky-top">
-                            <tr>
-                                <th width="40">Kol</th>
-                                <th>Kode</th>
-                                <th>Nama Mapel</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="text-muted">
-                                <td>A</td>
-                                <td>No</td>
-                                <td><small>Nomor urut</small></td>
-                            </tr>
-                            <tr class="text-muted">
-                                <td>B</td>
-                                <td>NIS</td>
-                                <td><small>Nomor Induk Siswa</small></td>
-                            </tr>
-                            <tr class="table-primary">
-                                <td><strong>C</strong></td>
-                                <td><strong>NISN</strong></td>
-                                <td><small><strong>Kunci matching</strong></small></td>
-                            </tr>
-                            <tr class="text-muted">
-                                <td>D</td>
-                                <td>Nama</td>
-                                <td><small>Nama siswa</small></td>
-                            </tr>
-                            <tr class="text-muted">
-                                <td>E</td>
-                                <td>JK</td>
-                                <td><small>Jenis Kelamin</small></td>
-                            </tr>
-                            @php $col = 'F'; @endphp
-                            @foreach($mapelList as $mapel)
-                            <tr>
-                                <td><code>{{ $col }}</code></td>
-                                <td><code>{{ $mapel->kode_mapel }}</code></td>
-                                <td><small>{{ $mapel->nama_mapel }}</small></td>
-                            </tr>
-                            @php $col++; @endphp
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="card-footer text-center">
-                    <div class="btn-group-vertical w-100">
-                        <a href="{{ route('admin.nilai.template', ['semester' => 1]) }}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Template Semester 1-2 (18 Mapel)
-                        </a>
-                        <a href="{{ route('admin.nilai.template', ['semester' => 3]) }}" class="btn btn-primary">
-                            <i class="fas fa-download"></i> Template Semester 3 (18 Mapel)
-                        </a>
-                        <a href="{{ route('admin.nilai.template', ['semester' => 4]) }}" class="btn btn-info">
-                            <i class="fas fa-download"></i> Template Semester 4 (20 Mapel)
-                        </a>
-                        <a href="{{ route('admin.nilai.template', ['semester' => 5]) }}" class="btn btn-warning">
-                            <i class="fas fa-download"></i> Template Semester 5 (20 Mapel)
-                        </a>
+                <div class="card-body">
+                    <p>Kolom identitas selalu tetap:</p>
+                    <ol class="pl-3">
+                        <li><strong>A:</strong> No</li>
+                        <li><strong>B:</strong> NIS</li>
+                        <li><strong>C:</strong> NISN sebagai kunci pencocokan</li>
+                        <li><strong>D:</strong> Nama</li>
+                        <li><strong>E:</strong> Jenis kelamin</li>
+                    </ol>
+                    <div class="alert alert-success mb-0">
+                        <i class="fas fa-magic"></i>
+                        Kolom F dan seterusnya dibuat otomatis dari mapel aktual pada semester/tahun yang dipilih, termasuk kode Kurikulum Merdeka <code>M-*</code>.
                     </div>
                 </div>
             </div>
@@ -288,6 +216,8 @@
             // Data tahun pelajaran dari server
             const tahunPelajarans = @json($tahunPelajarans);
             const tahunAktif = @json($tahunAktif);
+            const templateBaseUrl = @json(route('admin.nilai.template'));
+            const initialSemester = @json((int) request('semester'));
             
             // Semester mapping untuk setiap tingkat kelas
             const semesterOptions = {
@@ -321,6 +251,7 @@
                     $('#tahunInfo').hide();
                     $('#fileGroup').hide();
                     $semester.prop('disabled', true);
+                    $('#dynamicTemplateLink').addClass('disabled').attr({'href': '#', 'aria-disabled': 'true'});
                     return;
                 }
                 
@@ -347,6 +278,7 @@
                 if (!semester) {
                     $tahunInfo.hide();
                     $fileGroup.hide();
+                    $('#dynamicTemplateLink').addClass('disabled').attr({'href': '#', 'aria-disabled': 'true'});
                     updateSubmitButton();
                     return;
                 }
@@ -372,12 +304,19 @@
                     $('#tahun_pelajaran_id').val(tahunFound.id);
                     $('#tahunNotFound').hide();
                     $('#file').prop('disabled', false);
+                    $('#dynamicTemplateLink')
+                        .removeClass('disabled')
+                        .attr({
+                            href: `${templateBaseUrl}?semester=${semester}&tahun_pelajaran_id=${tahunFound.id}`,
+                            'aria-disabled': 'false'
+                        });
                 } else {
                     const tahunNama = `${tahunTarget}/${tahunTarget + 1}`;
                     $('#tahunPelajaranLabel').html(`<span class="text-danger">${tahunNama}</span>`);
                     $('#tahun_pelajaran_id').val('');
                     $('#tahunNotFound').show();
                     $('#file').prop('disabled', true);
+                    $('#dynamicTemplateLink').addClass('disabled').attr({'href': '#', 'aria-disabled': 'true'});
                 }
                 
                 $tahunInfo.show();
@@ -399,6 +338,13 @@
             $('#file').change(function() {
                 updateSubmitButton();
             });
+
+            if ($('#tingkat_kelas').val()) {
+                $('#tingkat_kelas').trigger('change');
+                if (initialSemester) {
+                    $('#semester').val(String(initialSemester)).trigger('change');
+                }
+            }
         });
     </script>
 @stop
