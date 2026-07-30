@@ -18,6 +18,8 @@ hanya tersimpan di `C:\RDMMadrasah` dan riwayat terminal tidak hilang.
   penyimpanan relasi EMIS, dan batas hasil investigasi.
 - `send-nilai-analysis.md` — alur penyiapan paket nilai lokal, pengiriman JSON
   langsung dari browser ke pusat RDM, autentikasi, status lokal, dan risiko.
+- `academic-data-integration-analysis.md` — inventaris siswa, rombel, riwayat
+  kelas, nilai Semester 1–6, data rapor lain, gap SIMANSA, dan desain integrasi.
 
 ## Temuan paling penting
 

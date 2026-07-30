@@ -4,6 +4,13 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Rancangan integrasi histori akademik RDM ke SIMANSA
+
+- Struktur 2.792 siswa RDM, 6.313 riwayat kelas, 358.964 nilai akhir, 1.505.333 nilai komponen, absensi rapor, ekstra, prestasi, serta P5RA telah dianalisis secara read-only.
+- Histori nilai tersedia dari 2021/2022 sampai 2025/2026; 1.015 siswa mempunyai enam periode nilai lengkap. Rombel RDM bersifat tahunan sedangkan periode semester harus diturunkan dari transaksi nilai.
+- Ditemukan kelas historis yang hilang, identifier duplikat, dan kelemahan pipeline sinkron saat ini yang dapat mencampur nilai Pengetahuan/Keterampilan K13 serta belum mendukung histori Semester 6 secara utuh.
+- Desain mapping siswa/kelas, snapshot periode akademik, transformasi K13–Merdeka, staging idempotent, serta tahapan implementasi disimpan di `docs/rdm-research/academic-data-integration-analysis.md`.
+
 ### Arsip analisis pengiriman nilai RDM ke pusat
 
 - Alur pengiriman nilai telah dipetakan secara read-only tanpa mengirim nilai: backend RDM lokal menyiapkan paket JSON per kelas, browser mengirimnya langsung ke `rdm.hdmadrasah.id` memakai Bearer token, lalu backend lokal menandai kelas selesai.
