@@ -82,6 +82,25 @@ class NilaiController extends Controller
     }
 
     /**
+     * ID siswa yang benar-benar aktif pada roster tingkat dan tahun berjalan.
+     * Nilai alumni tetap tersimpan, tetapi tidak masuk tampilan leger aktif.
+     */
+    private function getActiveRosterStudentIds(?TahunPelajaran $tahunAktif, int $tingkat)
+    {
+        if (!$tahunAktif || !in_array($tingkat, [10, 11, 12], true)) {
+            return collect();
+        }
+
+        return Siswa::query()
+            ->whereHas('kelasAktif', function ($query) use ($tahunAktif, $tingkat) {
+                $query->where('kelas.tahun_pelajaran_id', $tahunAktif->id)
+                    ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
+                    ->where('kelas.tingkat', $tingkat);
+            })
+            ->pluck('siswa.id');
+    }
+
+    /**
      * Display nilai index with tingkat filter
      */
     public function index(Request $request)
@@ -97,6 +116,8 @@ class NilaiController extends Controller
         $overviewStats = [];
         
         if ($tingkat) {
+            $tingkat = (int) $tingkat;
+            $activeRosterIds = $this->getActiveRosterStudentIds($tahunAktif, $tingkat);
             // Get semester config for selected tingkat
             $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
             
@@ -107,6 +128,7 @@ class NilaiController extends Controller
                 if ($tahunPelajaran) {
                     $jumlahSiswa = NilaiSiswa::where('semester', $sem)
                         ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+                        ->whereIn('siswa_id', $activeRosterIds)
                         ->distinct('siswa_id')
                         ->count('siswa_id');
                 }
@@ -119,11 +141,14 @@ class NilaiController extends Controller
                 ];
             }
         } else {
-            // Overview stats
+            // Overview hanya roster aktif; nilai alumni tersedia melalui detail arsip.
             $overviewStats = [
-                'kelas_12' => NilaiSiswa::whereIn('semester', [1,2,3,4,5])->distinct('siswa_id')->count('siswa_id'),
-                'kelas_11' => NilaiSiswa::whereIn('semester', [1,2,3,4])->distinct('siswa_id')->count('siswa_id'),
-                'kelas_10' => NilaiSiswa::whereIn('semester', [1,2])->distinct('siswa_id')->count('siswa_id'),
+                'kelas_12' => NilaiSiswa::whereIn('siswa_id', $this->getActiveRosterStudentIds($tahunAktif, 12))
+                    ->whereIn('semester', [1,2,3,4,5])->distinct('siswa_id')->count('siswa_id'),
+                'kelas_11' => NilaiSiswa::whereIn('siswa_id', $this->getActiveRosterStudentIds($tahunAktif, 11))
+                    ->whereIn('semester', [1,2,3,4])->distinct('siswa_id')->count('siswa_id'),
+                'kelas_10' => NilaiSiswa::whereIn('siswa_id', $this->getActiveRosterStudentIds($tahunAktif, 10))
+                    ->whereIn('semester', [1,2])->distinct('siswa_id')->count('siswa_id'),
             ];
         }
         
@@ -142,30 +167,39 @@ class NilaiController extends Controller
             ->get();
         
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+        $tingkat = $request->integer('tingkat');
         
         // Jika ada request tahun_pelajaran_id, gunakan itu
         $selectedTahun = null;
         if ($request->tahun_pelajaran_id) {
             $selectedTahun = TahunPelajaran::find($request->tahun_pelajaran_id);
         } else {
-            // Cari tahun pelajaran yang ada nilainya untuk semester ini
-            $tahunIdWithNilai = NilaiSiswa::where('semester', $semester)
-                ->distinct()
-                ->first(['tahun_pelajaran_id']);
-            
-            if ($tahunIdWithNilai) {
-                $selectedTahun = TahunPelajaran::find($tahunIdWithNilai->tahun_pelajaran_id);
-                
-                // Redirect dengan parameter tahun_pelajaran_id agar URL konsisten
-                if (!$request->ajax()) {
-                    return redirect()->route('admin.nilai.semester', [
-                        'semester' => $semester,
-                        'tahun_pelajaran_id' => $selectedTahun->id
-                    ]);
-                }
-            } elseif ($tahunAktif) {
-                // Jika tidak ada nilai, gunakan tahun aktif
-                $selectedTahun = $tahunAktif;
+            // Dari halaman leger aktif, tahun ditentukan oleh tingkat + posisi semester.
+            // Contoh kelas XII semester 1 selalu dua tahun sebelum tahun aktif.
+            $semesterConfig = $tingkat ? $this->getSemesterConfig($tingkat, $tahunAktif, true) : [];
+            if (isset($semesterConfig[$semester])) {
+                $selectedTahun = $this->getTahunPelajaranByOffset(
+                    $tahunAktif,
+                    $semesterConfig[$semester]['offset']
+                );
+            }
+
+            // Mode arsip tanpa konteks tingkat: pilih tahun terbaru yang memiliki nilai.
+            if (!$selectedTahun) {
+                $selectedTahun = TahunPelajaran::query()
+                    ->whereIn('id', NilaiSiswa::query()
+                        ->where('semester', $semester)
+                        ->select('tahun_pelajaran_id'))
+                    ->orderByDesc('tahun_mulai')
+                    ->first() ?: $tahunAktif;
+            }
+
+            if ($selectedTahun && !$request->ajax()) {
+                return redirect()->route('admin.nilai.semester', array_filter([
+                    'semester' => $semester,
+                    'tahun_pelajaran_id' => $selectedTahun->id,
+                    'tingkat' => $tingkat ?: null,
+                ]));
             }
         }
         
@@ -223,6 +257,14 @@ class NilaiController extends Controller
                     ->with('mataPelajaran');
             }])
             ->orderBy('nama_lengkap');
+
+        $tingkat = $request->integer('tingkat');
+        if ($tingkat) {
+            $query->whereIn('id', $this->getActiveRosterStudentIds(
+                TahunPelajaran::where('is_active', true)->first(),
+                $tingkat
+            ));
+        }
         
         return DataTables::of($query)
             ->addIndexColumn()
@@ -852,9 +894,10 @@ class NilaiController extends Controller
             ->get();
         
         // Count siswa kelas 12
-        $totalSiswa = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif) {
+        $totalSiswa = Siswa::whereHas('kelasAktif', function($q) use ($tingkat, $tahunAktif) {
             $q->where('kelas.tingkat', $tingkat)
-              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id)
+              ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id');
         })->count();
         
         return view('admin.nilai.export-legger', compact(
@@ -911,9 +954,10 @@ class NilaiController extends Controller
         }
         
         // Get siswa kelas 12 (dari kelas, bukan dari nilai)
-        $siswaQuery = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
+        $siswaQuery = Siswa::whereHas('kelasAktif', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
             $q->where('kelas.tingkat', $tingkat)
-              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id)
+              ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id');
             if (!empty($selectedKelas)) {
                 $q->whereIn('kelas.id', $selectedKelas);
             }
@@ -1145,9 +1189,10 @@ class NilaiController extends Controller
         }
         
         // Get siswa kelas 12
-        $siswaList = Siswa::whereHas('kelas', function($q) use ($tingkat, $tahunAktif) {
+        $siswaList = Siswa::whereHas('kelasAktif', function($q) use ($tingkat, $tahunAktif) {
             $q->where('kelas.tingkat', $tingkat)
-              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id);
+              ->where('kelas.tahun_pelajaran_id', $tahunAktif->id)
+              ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id');
         })
         ->with(['kelas' => function($q) use ($tahunAktif) {
             $q->where('kelas.tahun_pelajaran_id', $tahunAktif->id);

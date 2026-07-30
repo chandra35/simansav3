@@ -134,7 +134,11 @@
                             <span class="info-box-text" style="font-size: 11px;">{{ $data['label'] }}</span>
                             <span class="info-box-number">{{ $data['jumlah_siswa'] }} Siswa</span>
                             <span class="info-box-text" style="font-size: 10px;">TA: {{ $data['tahun_pelajaran'] ?? '-' }}</span>
-                            <a href="{{ route('admin.nilai.semester', $sem) }}?tingkat={{ request('tingkat') }}" class="text-white small">
+                            <a href="{{ route('admin.nilai.semester', [
+                                'semester' => $sem,
+                                'tingkat' => request('tingkat'),
+                                'tahun_pelajaran_id' => $data['tahun_pelajaran_id'],
+                            ]) }}" class="text-white small">
                                 <i class="fas fa-arrow-right"></i> Lihat Detail
                             </a>
                         </div>

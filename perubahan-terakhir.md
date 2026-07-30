@@ -15,6 +15,9 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 - Ringkasan preview menampilkan jumlah siswa aktif, siswa yang cocok di RDM, nilai baru, nilai sama, serta konflik yang ditahan.
 - UI preview dibagi menjadi alur sumber RDM, Semester Leger tujuan, dan roster aktif agar admin tidak tertukar antara jumlah siswa dan jumlah record nilai.
 - Dampak Apply dijelaskan per kategori: ditambahkan, dilewati karena sama, konflik ditahan, dan mapping bermasalah. Preview juga menyediakan sampel nilai K13/Merdeka, daftar siswa yang belum ditemukan, detail audit, dan tombol Apply dengan jumlah nilai yang benar-benar akan ditulis.
+- Kurikulum kini dideteksi otomatis dari metadata kurikulum setiap mapel RDM dengan fallback struktur jenis nilai. Kurikulum Merdeka hanya mengisi nilai utama; kolom Pengetahuan/Keterampilan hanya digunakan untuk K13.
+- Preview lama tanpa metadata kurikulum tidak dapat di-Apply dan harus dibuat ulang, sehingga data Merdeka tidak mungkin masuk sebagai nilai K13.
+- Halaman Nilai Leger aktif memakai roster aktif dan otomatis membuka tahun pelajaran sesuai tingkat serta posisi semester. Nilai alumni tetap tersimpan sebagai arsip, tetapi tidak tercampur dalam statistik atau tabel operasional siswa aktif.
 
 ### Rancangan integrasi histori akademik RDM ke SIMANSA
 

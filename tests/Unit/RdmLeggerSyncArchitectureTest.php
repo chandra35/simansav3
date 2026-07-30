@@ -56,4 +56,27 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString('active_students_without_rdm_sample', $view);
         $this->assertStringContainsString("'sampleRows' => \$sampleRows", $controller);
     }
+
+    public function test_curriculum_is_detected_per_rdm_record_and_merdeka_does_not_fill_k13_columns(): void
+    {
+        $service = file_get_contents($this->projectPath('app/Services/RdmSyncService.php'));
+
+        $this->assertStringContainsString('detectCurriculum($rows)', $service);
+        $this->assertStringContainsString("str_contains(\$name, 'MERDEKA')", $service);
+        $this->assertStringContainsString("\$row->rdm_kurikulum_kode === 'MERDEKA'", $service);
+        $this->assertStringContainsString("'nilai_pengetahuan' => \$isMerdeka ? null", $service);
+        $this->assertStringContainsString('Preview lama tidak memiliki metadata kurikulum', $service);
+    }
+
+    public function test_active_legger_uses_expected_year_and_excludes_graduated_roster(): void
+    {
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/NilaiController.php'));
+        $index = file_get_contents($this->projectPath('resources/views/admin/nilai/index.blade.php'));
+        $semester = file_get_contents($this->projectPath('resources/views/admin/nilai/semester.blade.php'));
+
+        $this->assertStringContainsString('getActiveRosterStudentIds', $controller);
+        $this->assertStringContainsString('$semesterConfig[$semester]', $controller);
+        $this->assertStringContainsString("'tahun_pelajaran_id' => \$data['tahun_pelajaran_id']", $index);
+        $this->assertStringContainsString('d.tingkat =', $semester);
+    }
 }

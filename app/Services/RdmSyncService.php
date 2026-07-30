@@ -115,7 +115,10 @@ class RdmSyncService
         $mapelMap = $this->buildMapelMap();
         $existing = $this->existingValues($eligibleIds, $simansaTahun?->id);
         $seenStudents = [];
-        $stats = ['matched' => 0, 'mapel' => 0, 'tahun' => 0, 'conflict' => 0, 'insert' => 0, 'unchanged' => 0];
+        $stats = [
+            'matched' => 0, 'mapel' => 0, 'tahun' => 0, 'conflict' => 0,
+            'insert' => 0, 'unchanged' => 0, 'curriculum' => ['MERDEKA' => 0, 'K13' => 0, 'UNKNOWN' => 0],
+        ];
         $insertRows = [];
         $now = now();
 
@@ -132,11 +135,13 @@ class RdmSyncService
             $simansaMapelId = $this->resolveMapel($row, $mapelMap);
             $simansaSemester = $this->mapSemester((int) $row->rdm_tingkat_id, (int) $row->rdm_semester_id);
 
-            $pengetahuan = $rows->firstWhere('rdm_jenisnilai_id', 1);
-            $keterampilan = $rows->firstWhere('rdm_jenisnilai_id', 2);
-            $isMerdeka = (int) $row->rdm_kurikulum_id === 2;
-            $nilaiUtama = $isMerdeka
-                ? $this->numeric($pengetahuan?->rdm_nilai ?? $row->rdm_nilai)
+            $curriculum = $this->detectCurriculum($rows);
+            $stats['curriculum'][$curriculum]++;
+            $merdekaNilai = $curriculum === 'MERDEKA' ? $rows->firstWhere('rdm_jenisnilai_id', 1) : null;
+            $pengetahuan = $curriculum === 'K13' ? $rows->firstWhere('rdm_jenisnilai_id', 1) : null;
+            $keterampilan = $curriculum === 'K13' ? $rows->firstWhere('rdm_jenisnilai_id', 2) : null;
+            $nilaiUtama = $curriculum === 'MERDEKA'
+                ? $this->numeric($merdekaNilai?->rdm_nilai ?? $row->rdm_nilai)
                 : $this->average([$pengetahuan?->rdm_nilai, $keterampilan?->rdm_nilai]);
 
             $status = 'matched';
@@ -145,7 +150,12 @@ class RdmSyncService
             $naturalKey = implode(':', [$simansaSiswaId, $simansaMapelId, $simansaTahun?->id, $simansaSemester]);
             $old = $existing[$naturalKey] ?? null;
 
-            if (!$simansaMapelId) {
+            if ($curriculum === 'UNKNOWN') {
+                $status = 'mismatch_kurikulum';
+                $note = 'Kurikulum RDM tidak dapat dikenali otomatis.';
+                $action = 'skip';
+                $stats['mapel']++;
+            } elseif (!$simansaMapelId) {
                 $status = 'mismatch_mapel';
                 $note = 'Mapel RDM belum dipetakan ke mata pelajaran SIMANSA.';
                 $action = 'skip';
@@ -176,10 +186,15 @@ class RdmSyncService
                 'rdm_nis' => $row->rdm_nis, 'rdm_nama' => $student['nama'],
                 'rdm_kelas_nama' => $row->rdm_kelas_nama, 'rdm_tingkat_id' => $row->rdm_tingkat_id,
                 'rdm_mapel_id' => $row->rdm_mapel_id, 'rdm_mapel_nama' => $row->rdm_mapel_nama,
+                'rdm_kurikulum_id' => $row->rdm_kurikulum_id,
+                'rdm_kurikulum_kode' => $curriculum,
+                'rdm_kurikulum_nama' => $row->rdm_kurikulum_nama,
                 'rdm_nilai' => $nilaiUtama,
                 'rdm_nilai_pengetahuan' => $this->numeric($pengetahuan?->rdm_nilai),
                 'rdm_nilai_keterampilan' => $this->numeric($keterampilan?->rdm_nilai),
-                'rdm_predikat' => $pengetahuan?->rdm_predikat ?? $row->rdm_predikat,
+                'rdm_predikat' => $curriculum === 'MERDEKA'
+                    ? ($merdekaNilai?->rdm_predikat ?? $row->rdm_predikat)
+                    : ($pengetahuan?->rdm_predikat ?? $row->rdm_predikat),
                 'rdm_deskripsi_pengetahuan' => $pengetahuan?->rdm_deskripsi,
                 'rdm_deskripsi_keterampilan' => $keterampilan?->rdm_deskripsi,
                 'rdm_tahunajaran_id' => $row->rdm_tahunajaran_id,
@@ -221,6 +236,7 @@ class RdmSyncService
                     (int) $filters['rdm_tingkat_id'],
                     (int) $filters['rdm_semester_id']
                 ),
+                'curriculum_counts' => $stats['curriculum'],
             ],
         ]);
 
@@ -231,6 +247,14 @@ class RdmSyncService
     {
         $rows = RdmSyncStaging::where('run_id', $run->id)
             ->where('match_status', 'matched')->where('apply_action', 'insert')->get();
+        if ($rows->contains(fn ($row) => empty($row->rdm_kurikulum_kode))) {
+            $run->update([
+                'status' => 'failed',
+                'finished_at' => now(),
+                'notes' => 'Preview lama tidak memiliki metadata kurikulum. Jalankan preview ulang sebelum Apply.',
+            ]);
+            return $run->fresh();
+        }
         if ($rows->isEmpty()) {
             $run->update(['status' => 'applied', 'applied_count' => 0, 'finished_at' => now(),
                 'notes' => 'Tidak ada nilai baru. Data sama atau konflik ditahan.']);
@@ -240,6 +264,7 @@ class RdmSyncService
         $applied = 0;
         DB::transaction(function () use ($rows, &$applied) {
             foreach ($rows as $row) {
+                $isMerdeka = $row->rdm_kurikulum_kode === 'MERDEKA';
                 $created = NilaiSiswa::firstOrCreate([
                     'siswa_id' => $row->simansa_siswa_id,
                     'mata_pelajaran_id' => $row->simansa_mata_pelajaran_id,
@@ -247,11 +272,11 @@ class RdmSyncService
                     'semester' => $row->simansa_semester,
                 ], [
                     'nilai' => $row->rdm_nilai,
-                    'nilai_pengetahuan' => $row->rdm_nilai_pengetahuan,
-                    'nilai_keterampilan' => $row->rdm_nilai_keterampilan,
+                    'nilai_pengetahuan' => $isMerdeka ? null : $row->rdm_nilai_pengetahuan,
+                    'nilai_keterampilan' => $isMerdeka ? null : $row->rdm_nilai_keterampilan,
                     'predikat' => $row->rdm_predikat ?: NilaiSiswa::hitungPredikat($row->rdm_nilai),
-                    'deskripsi_pengetahuan' => $row->rdm_deskripsi_pengetahuan,
-                    'deskripsi_keterampilan' => $row->rdm_deskripsi_keterampilan,
+                    'deskripsi_pengetahuan' => $isMerdeka ? null : $row->rdm_deskripsi_pengetahuan,
+                    'deskripsi_keterampilan' => $isMerdeka ? null : $row->rdm_deskripsi_keterampilan,
                     'sumber_data' => 'rdm_sync', 'imported_at' => now(),
                 ]);
                 if ($created->wasRecentlyCreated) {
@@ -284,12 +309,15 @@ class RdmSyncService
             ->join('e_siswa as s', 's.siswa_id', '=', 'r.siswa_id')
             ->leftJoin('e_kelas as k', 'k.kelas_id', '=', 'r.kelas_id')
             ->leftJoin('e_mapel as m', 'm.mapel_id', '=', 'r.mapel_id')
+            ->leftJoin('e_kurikulum as c', 'c.kurikulum_id', '=', 'm.kurikulum_id')
             ->select([
                 'r.siswa_id as rdm_siswa_id', 's.siswa_nisn as rdm_nisn_encrypted',
                 's.siswa_nis as rdm_nis', 's.siswa_nama as rdm_nama_encrypted',
                 'k.kelas_nama as rdm_kelas_nama', 'r.tingkat_id as rdm_tingkat_id',
                 'r.mapel_id as rdm_mapel_id', 'm.mapel_nama as rdm_mapel_nama',
                 'm.kurikulum_id as rdm_kurikulum_id', 'r.jenisnilai_id as rdm_jenisnilai_id',
+                'c.kurikulum_nama as rdm_kurikulum_nama',
+                'c.kurikulum_alias as rdm_kurikulum_alias',
                 'r.rapor_nilai as rdm_nilai', 'r.rapor_predikat as rdm_predikat',
                 'r.rapor_deskripsi as rdm_deskripsi', 'r.rapor_deskmin as rdm_deskmin',
                 'r.tahunajaran_id as rdm_tahunajaran_id', 'r.semester_id as rdm_semester_id',
@@ -361,6 +389,30 @@ class RdmSyncService
     private function numeric(mixed $value): ?float
     {
         return is_numeric($value) ? (float) $value : null;
+    }
+
+    private function detectCurriculum(Collection $rows): string
+    {
+        $row = $rows->first();
+        $name = mb_strtoupper(trim(implode(' ', array_filter([
+            $row->rdm_kurikulum_nama ?? null,
+            $row->rdm_kurikulum_alias ?? null,
+        ]))), 'UTF-8');
+
+        if (str_contains($name, 'MERDEKA')) {
+            return 'MERDEKA';
+        }
+        if (str_contains($name, 'K13') || str_contains($name, '2013')) {
+            return 'K13';
+        }
+        if ($rows->contains(fn ($item) => (int) $item->rdm_jenisnilai_id === 2)) {
+            return 'K13';
+        }
+        if ((int) ($row->rdm_kurikulum_id ?? 0) === 2) {
+            return 'MERDEKA';
+        }
+
+        return 'UNKNOWN';
     }
 
     private function average(array $values): ?float

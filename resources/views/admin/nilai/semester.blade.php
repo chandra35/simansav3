@@ -58,6 +58,9 @@
         </div>
         <div class="simansa-semester-panel__body">
             <form method="GET" action="{{ route('admin.nilai.semester', $semester) }}" class="form-inline">
+                @if(request('tingkat'))
+                    <input type="hidden" name="tingkat" value="{{ request('tingkat') }}">
+                @endif
                 <div class="form-group mr-3">
                     <label class="mr-2">Tahun Pelajaran:</label>
                     <select name="tahun_pelajaran_id" class="form-control" onchange="this.form.submit()">
@@ -306,6 +309,7 @@
                     url: '{{ route('admin.nilai.semester', $semester) }}',
                     data: function(d) {
                         d.tahun_pelajaran_id = '{{ $selectedTahun ? $selectedTahun->id : '' }}';
+                        d.tingkat = '{{ request('tingkat') }}';
                     }
                 },
                 columns: columns,

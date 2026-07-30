@@ -208,6 +208,9 @@
                     $rdmLevel = [12 => 'X', 13 => 'XI', 14 => 'XII'][(int) $selectedRun->rdm_tingkat_id] ?? $selectedRun->rdm_tingkat_id;
                     $rdmSemesterName = (int) $selectedRun->rdm_semester_id === 1 ? 'Ganjil' : 'Genap';
                     $missingSamples = collect(data_get($meta, 'active_students_without_rdm_sample', []));
+                    $curriculumCounts = collect(data_get($meta, 'curriculum_counts', []));
+                    $curriculumDetected = data_get($meta, 'curriculum_counts') !== null;
+                    $curriculumLabel = $curriculumCounts->filter()->keys()->implode(' + ') ?: 'Belum dideteksi';
                 @endphp
 
                 <div class="card rdm-result-card">
@@ -222,7 +225,7 @@
                         @else
                             <form method="POST" action="{{ route('admin.rdm-sync.apply', $selectedRun) }}" id="applySyncForm">
                                 @csrf
-                                <button type="button" class="btn btn-success" id="btnApplySync" {{ $insertCount === 0 ? 'disabled' : '' }}
+                                <button type="button" class="btn btn-success" id="btnApplySync" {{ $insertCount === 0 || !$curriculumDetected ? 'disabled' : '' }}
                                         data-count="{{ $insertCount }}" data-conflicts="{{ $conflictCount }}">
                                     <i class="fas fa-check mr-1"></i> Apply {{ number_format($insertCount) }} Nilai Baru
                                 </button>
@@ -231,10 +234,13 @@
                     </div>
 
                     <div class="card-body">
-                        <div class="rdm-decision-banner {{ $conflictCount > 0 || $blockedCount > 0 ? 'is-warning' : ($selectedRun->status === 'applied' ? 'is-applied' : 'is-ready') }}">
+                        <div class="rdm-decision-banner {{ !$curriculumDetected || $conflictCount > 0 || $blockedCount > 0 ? 'is-warning' : ($selectedRun->status === 'applied' ? 'is-applied' : 'is-ready') }}">
                             <i class="fas fa-{{ $conflictCount > 0 || $blockedCount > 0 ? 'exclamation-triangle' : 'shield-check' }}"></i>
                             <div>
-                                @if($selectedRun->status === 'applied')
+                                @if(!$curriculumDetected && $selectedRun->status !== 'applied')
+                                    <strong>Preview lama—jalankan ulang sebelum Apply.</strong>
+                                    <span>Metadata kurikulum belum tersedia, sehingga sistem sengaja menonaktifkan Apply.</span>
+                                @elseif($selectedRun->status === 'applied')
                                     <strong>Run ini sudah diterapkan.</strong>
                                     <span>{{ number_format($selectedRun->applied_count) }} nilai baru ditulis; data lama tidak diubah.</span>
                                 @elseif($conflictCount > 0 || $blockedCount > 0)
@@ -248,7 +254,7 @@
                         </div>
 
                         <div class="rdm-flow">
-                            <div><span>Sumber RDM</span><strong>{{ data_get($meta, 'simansa_tahun', $selectedRun->rdm_tahunajaran_id) }} · Kelas {{ $rdmLevel }} · {{ $rdmSemesterName }}</strong></div>
+                            <div><span>Sumber RDM</span><strong>{{ data_get($meta, 'simansa_tahun', $selectedRun->rdm_tahunajaran_id) }} · Kelas {{ $rdmLevel }} · {{ $rdmSemesterName }} · {{ $curriculumLabel }}</strong></div>
                             <i class="fas fa-arrow-right"></i>
                             <div class="is-primary"><span>Tujuan nilai</span><strong>Semester Leger {{ $globalSemester ?? '-' }}</strong></div>
                             <i class="fas fa-arrow-right"></i>
@@ -297,7 +303,13 @@
                                                 <tr>
                                                     <td><span class="badge badge-{{ $actionStyle }}">{{ $actionText }}</span></td>
                                                     <td><strong>{{ $row->siswa?->nama_lengkap ?? $row->rdm_nama }}</strong><small>NISN {{ $row->rdm_nisn ?: '-' }}</small></td>
-                                                    <td><strong>{{ $row->mataPelajaran?->kode_mapel ?: $row->rdm_mapel_nama }}</strong><small>{{ $row->mataPelajaran?->nama_mapel }}</small></td>
+                                                    <td>
+                                                        <strong>{{ $row->mataPelajaran?->kode_mapel ?: $row->rdm_mapel_nama }}</strong>
+                                                        <small>{{ $row->mataPelajaran?->nama_mapel }}</small>
+                                                        @if($row->rdm_kurikulum_kode)
+                                                            <span class="badge badge-{{ $row->rdm_kurikulum_kode === 'MERDEKA' ? 'primary' : 'info' }}">{{ $row->rdm_kurikulum_kode }}</span>
+                                                        @endif
+                                                    </td>
                                                     <td class="text-center">
                                                         <strong>{{ $row->rdm_nilai !== null ? number_format((float) $row->rdm_nilai, 2) : '-' }}</strong>
                                                         @if($row->rdm_nilai_pengetahuan !== null || $row->rdm_nilai_keterampilan !== null)
@@ -366,6 +378,7 @@
                                             <div><dt>Semester RDM</dt><dd>{{ $rdmSemesterName }} ({{ $selectedRun->rdm_semester_id }})</dd></div>
                                             <div><dt>Tingkat RDM</dt><dd>Kelas {{ $rdmLevel }}</dd></div>
                                             <div><dt>Kelas RDM</dt><dd>{{ $selectedRun->rdm_kelas_nama ?: 'Semua kelas' }}</dd></div>
+                                            <div><dt>Kurikulum terdeteksi</dt><dd>{{ $curriculumLabel }}</dd></div>
                                         </dl>
                                     </div>
                                     <div class="col-md-6">
