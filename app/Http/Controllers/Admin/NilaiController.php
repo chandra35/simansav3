@@ -297,7 +297,7 @@ class NilaiController extends Controller
             ->select([
                 's.id as siswa_id',
                 's.nisn',
-                's.nis',
+                's.nis_lokal as nis',
                 's.nama_lengkap',
                 's.jenis_kelamin',
                 'k.id as kelas_id',

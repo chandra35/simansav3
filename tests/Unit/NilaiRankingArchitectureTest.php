@@ -36,6 +36,7 @@ class NilaiRankingArchitectureTest extends TestCase
         $this->assertStringContainsString('AVG(nilai) as rata_rata', $controller);
         $this->assertStringContainsString('$valuesForRanking->avg()', $controller);
         $this->assertStringContainsString('expectedMapelCounts', $controller);
+        $this->assertStringContainsString("'s.nis_lokal as nis'", $controller);
         $this->assertStringContainsString('public function exportRanking', $controller);
         $this->assertStringContainsString("name('nilai.ranking')", $routes);
         $this->assertStringContainsString("name('nilai.ranking-export')", $routes);
