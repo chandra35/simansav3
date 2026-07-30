@@ -141,5 +141,6 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString('getLeggerNilaiLookup', $controller);
         $this->assertStringContainsString('->lazyById(1000)', $controller);
         $this->assertStringNotContainsString("->groupBy(['siswa_id', 'semester', 'mata_pelajaran_id'])", $controller);
+        $this->assertGreaterThanOrEqual(3, substr_count($controller, '$spreadsheet->disconnectWorksheets()'));
     }
 }

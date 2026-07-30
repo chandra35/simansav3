@@ -18,6 +18,7 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 - Export semester, export leger lintas semester, dan export SPAN-PTKIN memakai sumber mapel aktual yang sama. Export lintas semester menggunakan gabungan mapel, sedangkan SPAN membentuk daftar mapel khusus untuk setiap semester.
 - Query export dibatasi pada pasangan semester dan tahun pelajaran yang tepat agar nilai dari periode lain tidak ikut tercampur.
 - Export Excel besar membaca nilai bertahap ke lookup ringan dan memakai cache sel batch pada penyimpanan file khusus, sehingga leger Semester 1–5 tidak menahan puluhan ribu model Eloquent maupun seluruh sel di memori PHP 128 MB; pembersihannya juga tidak mengganggu cache aplikasi.
+- Workbook melepaskan seluruh cache sel miliknya setelah stream download selesai agar file cache sementara tidak menumpuk di server.
 
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 

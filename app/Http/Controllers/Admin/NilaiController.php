@@ -535,6 +535,7 @@ class NilaiController extends Controller
         header('Cache-Control: max-age=0');
         
         $writer->save('php://output');
+        $spreadsheet->disconnectWorksheets();
         exit;
     }
 
@@ -1261,8 +1262,12 @@ class NilaiController extends Controller
         
         $writer = new Xlsx($spreadsheet);
         
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
+        return response()->streamDownload(function () use ($writer, $spreadsheet) {
+            try {
+                $writer->save('php://output');
+            } finally {
+                $spreadsheet->disconnectWorksheets();
+            }
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
@@ -1486,8 +1491,12 @@ class NilaiController extends Controller
         
         $writer = new Xlsx($spreadsheet);
         
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
+        return response()->streamDownload(function () use ($writer, $spreadsheet) {
+            try {
+                $writer->save('php://output');
+            } finally {
+                $spreadsheet->disconnectWorksheets();
+            }
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
