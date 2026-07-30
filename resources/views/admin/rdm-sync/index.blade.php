@@ -57,6 +57,34 @@
                             <div>Semester: {{ $rdmPeriod['semester']->semester_nama ?? '-' }}</div>
                         </div>
 
+                        <div class="alert alert-success py-2 small">
+                            <strong>Mode aman SIMANSA-first</strong><br>
+                            Hanya nilai siswa yang aktif pada tahun/kelas SIMANSA di bawah yang diproses.
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tahun Aktif/Roster SIMANSA</label>
+                            <select name="simansa_tahun_pelajaran_id" class="form-control" required>
+                                @foreach($simansaTahunList as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ old('simansa_tahun_pelajaran_id', $simansaTahunList->firstWhere('is_active', true)?->id) == $tahun->id ? 'selected' : '' }}>
+                                        {{ $tahun->nama }} {{ $tahun->is_active ? '(aktif)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kelas SIMANSA (opsional)</label>
+                            <select name="simansa_kelas_id" class="form-control">
+                                <option value="">Semua kelas pada tingkat terpilih</option>
+                                @foreach($simansaKelasList as $kelas)
+                                    <option value="{{ $kelas->id }}" {{ old('simansa_kelas_id') == $kelas->id ? 'selected' : '' }}>
+                                        {{ $kelas->nama_kelas }} · {{ $kelas->tahunPelajaran?->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label>Tahun Ajaran RDM</label>
                             <select name="rdm_tahunajaran_id" class="form-control" required>
@@ -80,9 +108,9 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Tingkat (opsional)</label>
-                            <select name="rdm_tingkat_id" class="form-control">
-                                <option value="">Semua Tingkat</option>
+                            <label>Tingkat RDM</label>
+                            <select name="rdm_tingkat_id" class="form-control" required>
+                                <option value="">Pilih tingkat</option>
                                 @foreach($rdmReference['tingkat'] as $item)
                                     <option value="{{ $item->tingkat_id }}" {{ old('rdm_tingkat_id') == $item->tingkat_id ? 'selected' : '' }}>
                                         {{ $item->tingkat_nama }}
@@ -178,6 +206,11 @@
                                     <tr><th>Semester RDM</th><td>{{ $selectedRun->rdm_semester_id }}</td></tr>
                                     <tr><th>Tingkat RDM</th><td>{{ $selectedRun->rdm_tingkat_id ?? '-' }}</td></tr>
                                     <tr><th>Kelas RDM</th><td>{{ $selectedRun->rdm_kelas_nama ?? '-' }}</td></tr>
+                                    <tr><th>Siswa Aktif SIMANSA</th><td>{{ data_get($selectedRun->meta, 'active_students', '-') }}</td></tr>
+                                    <tr><th>Siswa Cocok RDM</th><td>{{ data_get($selectedRun->meta, 'rdm_students_matched', '-') }}</td></tr>
+                                    <tr><th>Nilai Baru</th><td>{{ data_get($selectedRun->meta, 'insert', '-') }}</td></tr>
+                                    <tr><th>Nilai Sama</th><td>{{ data_get($selectedRun->meta, 'unchanged', '-') }}</td></tr>
+                                    <tr><th>Konflik Ditahan</th><td class="text-danger">{{ data_get($selectedRun->meta, 'conflict', '-') }}</td></tr>
                                     <tr><th>Status</th><td><strong>{{ strtoupper($selectedRun->status) }}</strong></td></tr>
                                 </table>
                             </div>
@@ -245,7 +278,7 @@ $(function() {
         Swal.fire({
             title: 'Apply Sync ke Nilai Siswa?',
             html: '<p>Data matched akan ditulis ke tabel <strong>nilai_siswa</strong>.</p>' +
-                  '<p class="text-danger small mb-0"><i class="fas fa-exclamation-triangle"></i> Pastikan hasil preview dan mismatch sudah diperiksa sebelum apply.</p>',
+                  '<p class="text-info small mb-0"><i class="fas fa-shield-alt"></i> Hanya nilai baru yang ditulis. Nilai lama, nilai sama, dan konflik tidak diubah.</p>',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#28a745',

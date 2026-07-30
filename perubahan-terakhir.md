@@ -4,6 +4,15 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan sync nilai RDM dan leger siswa aktif
+
+- Preview Integrasi RDM sekarang memakai roster SIMANSA sebagai acuan: hanya siswa berstatus aktif pada tahun pelajaran, tingkat, dan kelas SIMANSA yang dipilih yang dapat masuk staging.
+- Identitas siswa RDM didekripsi secara batch lalu dicocokkan ketat menggunakan NISN; NIS RDM enam digit tidak lagi dipakai sebagai fallback otomatis.
+- Nilai K13 Pengetahuan dan Keterampilan dipasangkan dalam satu record, sedangkan nilai Kurikulum Merdeka tetap memakai nilai utama. Predikat dan deskripsi rapor ikut disimpan.
+- Proses apply hanya memasukkan nilai yang benar-benar baru. Nilai yang sudah sama dilewati dan nilai berbeda ditandai konflik tanpa menimpa data SIMANSA.
+- Pemetaan semester mencakup Semester 1–6. Export leger kelas XII tetap Semester 1–5 untuk SNBP dan menyediakan opsi Semester 6 untuk arsip lengkap kelulusan.
+- Ringkasan preview menampilkan jumlah siswa aktif, siswa yang cocok di RDM, nilai baru, nilai sama, serta konflik yang ditahan.
+
 ### Rancangan integrasi histori akademik RDM ke SIMANSA
 
 - Struktur 2.792 siswa RDM, 6.313 riwayat kelas, 358.964 nilai akhir, 1.505.333 nilai komponen, absensi rapor, ekstra, prestasi, serta P5RA telah dianalisis secara read-only.

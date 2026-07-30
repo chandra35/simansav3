@@ -24,7 +24,7 @@ class NilaiController extends Controller
     {
         $semester = (int) $semester;
         
-        if ($semester === 5) {
+        if (in_array($semester, [5, 6], true)) {
             return config('nilai.urutan_mapel_sem_5');
         } elseif ($semester === 4) {
             return config('nilai.urutan_mapel_sem_4');
@@ -39,7 +39,7 @@ class NilaiController extends Controller
     /**
      * Semester config per tingkat kelas
      */
-    private function getSemesterConfig($tingkat, $tahunAktif)
+    private function getSemesterConfig($tingkat, $tahunAktif, bool $includeSemester6 = false)
     {
         $tahunAktifMulai = $tahunAktif ? $tahunAktif->tahun_mulai : date('Y');
         
@@ -63,7 +63,11 @@ class NilaiController extends Controller
             ],
         ];
         
-        return $configs[$tingkat] ?? $configs[12];
+        $config = $configs[$tingkat] ?? $configs[12];
+        if ((int) $tingkat === 12 && $includeSemester6) {
+            $config[6] = ['label' => 'Sem 6 (XII-2)', 'offset' => 0];
+        }
+        return $config;
     }
 
     /**
@@ -876,7 +880,11 @@ class NilaiController extends Controller
             return back()->with('error', 'Tahun pelajaran aktif tidak ditemukan.');
         }
         
-        $semesterConfig = $this->getSemesterConfig($tingkat, $tahunAktif);
+        $semesterConfig = $this->getSemesterConfig(
+            $tingkat,
+            $tahunAktif,
+            $request->boolean('include_semester_6')
+        );
         
         // Get mapel yang dipilih atau semua
         $selectedMapel = $request->mapel ?? config('nilai.urutan_mapel');

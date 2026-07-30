@@ -253,6 +253,15 @@ class RdmMatchingService
     }
 
     /**
+     * API bersama untuk modul integrasi lain. Nilai tetap dibaca dari cache
+     * lokal dan didekripsi secara batch; koneksi RDM tidak pernah ditulis.
+     */
+    public function decryptValues(array $encryptedValues): array
+    {
+        return $this->batchDecrypt($encryptedValues);
+    }
+
+    /**
      * Kirim beberapa chunk ke cipher endpoint secara paralel menggunakan curl_multi.
      * Jauh lebih cepat daripada sequential — semua chunk selesai dalam waktu satu timeout.
      *

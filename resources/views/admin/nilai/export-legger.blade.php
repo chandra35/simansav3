@@ -135,6 +135,17 @@
                         <h3 class="card-title"><i class="fas fa-calendar-alt"></i> Semester yang Akan Di-export</h3>
                     </div>
                     <div class="card-body p-0">
+                        @if((int) $tingkat === 12)
+                            <div class="p-3 border-bottom">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="includeSemester6" name="include_semester_6" value="1">
+                                    <label class="custom-control-label" for="includeSemester6">
+                                        Sertakan Semester 6 untuk arsip kelulusan
+                                    </label>
+                                </div>
+                                <small class="text-muted">Untuk seleksi SNBP tetap gunakan Semester 1–5. Aktifkan ini hanya bila leger lengkap sampai akhir kelas XII diperlukan.</small>
+                            </div>
+                        @endif
                         <table class="table table-bordered mb-0">
                             <thead class="bg-light">
                                 <tr>

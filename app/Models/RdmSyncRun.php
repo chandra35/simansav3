@@ -18,6 +18,8 @@ class RdmSyncRun extends Model
         'rdm_semester_id',
         'rdm_tingkat_id',
         'rdm_kelas_nama',
+        'simansa_tahun_pelajaran_id',
+        'simansa_kelas_id',
         'status',
         'total_records',
         'matched_records',

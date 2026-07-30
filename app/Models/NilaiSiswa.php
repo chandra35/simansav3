@@ -45,6 +45,7 @@ class NilaiSiswa extends Model
         3 => 'Semester 3 - Kelas XI',
         4 => 'Semester 4 - Kelas XI',
         5 => 'Semester 5 - Kelas XII',
+        6 => 'Semester 6 - Kelas XII',
     ];
 
     /**

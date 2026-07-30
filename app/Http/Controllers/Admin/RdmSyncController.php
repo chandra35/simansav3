@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\RdmSyncRun;
 use App\Models\RdmSyncStaging;
+use App\Models\Kelas;
+use App\Models\TahunPelajaran;
 use App\Services\RdmSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +53,9 @@ class RdmSyncController extends Controller
             'latestRuns' => $latestRuns,
             'selectedRun' => $selectedRun,
             'mismatchRows' => $mismatchRows,
+            'simansaTahunList' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
+            'simansaKelasList' => Kelas::with('tahunPelajaran')
+                ->whereIn('tingkat', [10, 11, 12])->orderBy('nama_kelas')->get(),
         ]);
     }
 
@@ -61,7 +66,15 @@ class RdmSyncController extends Controller
             'rdm_semester_id' => ['required', 'integer'],
             'rdm_tingkat_id' => ['nullable', 'integer'],
             'rdm_kelas_nama' => ['nullable', 'string', 'max:120'],
+            'simansa_tahun_pelajaran_id' => ['required', 'uuid', 'exists:tahun_pelajaran,id'],
+            'simansa_kelas_id' => ['nullable', 'uuid', 'exists:kelas,id'],
         ]);
+
+        if (empty($data['rdm_tingkat_id'])) {
+            return back()->withInput()->withErrors([
+                'rdm_tingkat_id' => 'Tingkat wajib dipilih agar semester leger dapat dipetakan dengan benar.',
+            ]);
+        }
 
         $run = $this->rdmSyncService->previewSync($data, Auth::id());
 
