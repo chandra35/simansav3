@@ -252,7 +252,7 @@ class RdmSyncService
 
     private function targetStudents(array $filters): Collection
     {
-        return Siswa::query()->select('siswas.id', 'siswas.nisn', 'siswas.nama_lengkap')
+        return Siswa::query()->select('siswa.id', 'siswa.nisn', 'siswa.nama_lengkap')
             ->whereHas('kelasAktif', function ($query) use ($filters) {
                 $query->where('kelas.tahun_pelajaran_id', $filters['simansa_tahun_pelajaran_id'])
                     ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
