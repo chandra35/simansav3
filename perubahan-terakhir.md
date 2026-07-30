@@ -12,6 +12,8 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 - Seluruh semester digabung dalam satu preview dan satu aksi Apply. Periode RDM yang belum tersedia ditandai serta dilewati tanpa dianggap sebagai kegagalan.
 - Hasil preview menampilkan kartu cakupan per semester, jumlah siswa yang memiliki histori, kelengkapan pada seluruh periode yang tersedia, total nilai, dan dampak Apply.
 - Nilai lama tetap aman: record sama dilewati, konflik ditahan, dan hanya nilai baru yang dapat ditambahkan.
+- Apply nilai puluhan ribu record diproses per batch 500 baris dan ditulis dengan bulk insert dalam satu transaksi, sehingga tidak lagi memuat seluruh staging sebagai model sekaligus dan tidak melewati batas memori PHP 128 MB.
+- Transaksi Apply memiliki retry deadlock; kegagalan tak terduga dikembalikan sebagai pesan halaman yang aman serta dicatat bersama ID run, tanpa meninggalkan nilai yang tersimpan sebagian.
 
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 

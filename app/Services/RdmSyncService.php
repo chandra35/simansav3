@@ -406,9 +406,12 @@ class RdmSyncService
 
     public function applySync(RdmSyncRun $run): RdmSyncRun
     {
-        $rows = RdmSyncStaging::where('run_id', $run->id)
-            ->where('match_status', 'matched')->where('apply_action', 'insert')->get();
-        if ($rows->contains(fn ($row) => empty($row->rdm_kurikulum_kode))) {
+        $insertQuery = RdmSyncStaging::query()
+            ->where('run_id', $run->id)
+            ->where('match_status', 'matched')
+            ->where('apply_action', 'insert');
+
+        if ((clone $insertQuery)->whereNull('rdm_kurikulum_kode')->exists()) {
             $run->update([
                 'status' => 'failed',
                 'finished_at' => now(),
@@ -416,35 +419,56 @@ class RdmSyncService
             ]);
             return $run->fresh();
         }
-        if ($rows->isEmpty()) {
+        if (!(clone $insertQuery)->exists()) {
             $run->update(['status' => 'applied', 'applied_count' => 0, 'finished_at' => now(),
                 'notes' => 'Tidak ada nilai baru. Data sama atau konflik ditahan.']);
             return $run->fresh();
         }
 
         $applied = 0;
-        DB::transaction(function () use ($rows, &$applied) {
-            foreach ($rows as $row) {
-                $isMerdeka = $row->rdm_kurikulum_kode === 'MERDEKA';
-                $created = NilaiSiswa::firstOrCreate([
-                    'siswa_id' => $row->simansa_siswa_id,
-                    'mata_pelajaran_id' => $row->simansa_mata_pelajaran_id,
-                    'tahun_pelajaran_id' => $row->simansa_tahun_pelajaran_id,
-                    'semester' => $row->simansa_semester,
-                ], [
-                    'nilai' => $row->rdm_nilai,
-                    'nilai_pengetahuan' => $isMerdeka ? null : $row->rdm_nilai_pengetahuan,
-                    'nilai_keterampilan' => $isMerdeka ? null : $row->rdm_nilai_keterampilan,
-                    'predikat' => $row->rdm_predikat ?: NilaiSiswa::hitungPredikat($row->rdm_nilai),
-                    'deskripsi_pengetahuan' => $isMerdeka ? null : $row->rdm_deskripsi_pengetahuan,
-                    'deskripsi_keterampilan' => $isMerdeka ? null : $row->rdm_deskripsi_keterampilan,
-                    'sumber_data' => 'rdm_sync', 'imported_at' => now(),
-                ]);
-                if ($created->wasRecentlyCreated) {
-                    $applied++;
-                }
-            }
-        });
+        DB::transaction(function () use ($insertQuery, &$applied) {
+            // Closure dapat diulang Laravel saat deadlock; hitung ulang dari nol pada setiap attempt.
+            $applied = 0;
+            $insertQuery->select([
+                'id',
+                'simansa_siswa_id',
+                'simansa_mata_pelajaran_id',
+                'simansa_tahun_pelajaran_id',
+                'simansa_semester',
+                'rdm_kurikulum_kode',
+                'rdm_nilai',
+                'rdm_nilai_pengetahuan',
+                'rdm_nilai_keterampilan',
+                'rdm_predikat',
+                'rdm_deskripsi_pengetahuan',
+                'rdm_deskripsi_keterampilan',
+            ])->chunkById(500, function (Collection $rows) use (&$applied) {
+                $now = now();
+                $values = $rows->map(function ($row) use ($now) {
+                    $isMerdeka = $row->rdm_kurikulum_kode === 'MERDEKA';
+
+                    return [
+                        'id' => (string) Str::uuid(),
+                        'siswa_id' => $row->simansa_siswa_id,
+                        'mata_pelajaran_id' => $row->simansa_mata_pelajaran_id,
+                        'tahun_pelajaran_id' => $row->simansa_tahun_pelajaran_id,
+                        'semester' => $row->simansa_semester,
+                        'nilai' => $row->rdm_nilai,
+                        'nilai_pengetahuan' => $isMerdeka ? null : $row->rdm_nilai_pengetahuan,
+                        'nilai_keterampilan' => $isMerdeka ? null : $row->rdm_nilai_keterampilan,
+                        'predikat' => $row->rdm_predikat ?: NilaiSiswa::hitungPredikat($row->rdm_nilai),
+                        'deskripsi_pengetahuan' => $isMerdeka ? null : $row->rdm_deskripsi_pengetahuan,
+                        'deskripsi_keterampilan' => $isMerdeka ? null : $row->rdm_deskripsi_keterampilan,
+                        'sumber_data' => 'rdm_sync',
+                        'imported_at' => $now,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                })->all();
+
+                $applied += DB::table('nilai_siswa')->insertOrIgnore($values);
+            }, 'id');
+        }, 3);
 
         $run->update(['status' => 'applied', 'applied_count' => $applied, 'finished_at' => now(),
             'notes' => "Apply selesai: {$applied} nilai baru. Nilai lama dan konflik tidak diubah."]);

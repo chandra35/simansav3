@@ -33,6 +33,19 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString("where('apply_action', 'insert')", $service);
     }
 
+    public function test_apply_streams_staging_and_bulk_inserts_without_loading_all_models(): void
+    {
+        $service = file_get_contents($this->projectPath('app/Services/RdmSyncService.php'));
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/RdmSyncController.php'));
+
+        $this->assertStringContainsString('chunkById(500', $service);
+        $this->assertStringContainsString("DB::table('nilai_siswa')->insertOrIgnore", $service);
+        $this->assertStringContainsString('}, 3);', $service);
+        $this->assertStringNotContainsString("\$rows = RdmSyncStaging::where('run_id'", $service);
+        $this->assertStringContainsString("Log::error('Apply nilai RDM gagal'", $controller);
+        $this->assertStringContainsString('tidak ada nilai yang disimpan sebagian', $controller);
+    }
+
     public function test_legger_supports_optional_semester_six(): void
     {
         $model = file_get_contents($this->projectPath('app/Models/NilaiSiswa.php'));

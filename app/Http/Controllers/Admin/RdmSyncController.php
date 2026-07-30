@@ -11,6 +11,7 @@ use App\Services\RdmSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class RdmSyncController extends Controller
@@ -101,7 +102,19 @@ class RdmSyncController extends Controller
                 ->with('error', 'Run ini sudah pernah di-apply.');
         }
 
-        $updatedRun = $this->rdmSyncService->applySync($run);
+        try {
+            $updatedRun = $this->rdmSyncService->applySync($run);
+        } catch (\Throwable $exception) {
+            Log::error('Apply nilai RDM gagal', [
+                'run_id' => $run->id,
+                'user_id' => Auth::id(),
+                'exception' => $exception,
+            ]);
+
+            return redirect()
+                ->route('admin.rdm-sync.index', ['run' => $run->id])
+                ->with('error', 'Apply belum berhasil dan tidak ada nilai yang disimpan sebagian. Silakan coba kembali atau periksa log server.');
+        }
         $message = $updatedRun->status === 'applied'
             ? "Apply sync berhasil: {$updatedRun->applied_count} baris nilai terproses."
             : 'Apply sync gagal. Periksa catatan run.';
