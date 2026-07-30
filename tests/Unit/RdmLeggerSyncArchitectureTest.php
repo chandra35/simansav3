@@ -43,4 +43,17 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString("'Sem 6 (XII-2)'", $controller);
         $this->assertStringContainsString('include_semester_6', $view);
     }
+
+    public function test_preview_ui_explains_scope_impact_and_problem_details(): void
+    {
+        $view = file_get_contents($this->projectPath('resources/views/admin/rdm-sync/index.blade.php'));
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/RdmSyncController.php'));
+
+        $this->assertStringContainsString('Dampak jika Apply ditekan', $view);
+        $this->assertStringContainsString('Semester Leger', $view);
+        $this->assertStringContainsString('Sampel Nilai', $view);
+        $this->assertStringContainsString('Siswa aktif belum ditemukan', $view);
+        $this->assertStringContainsString('active_students_without_rdm_sample', $view);
+        $this->assertStringContainsString("'sampleRows' => \$sampleRows", $controller);
+    }
 }

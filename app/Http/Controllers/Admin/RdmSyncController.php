@@ -37,6 +37,8 @@ class RdmSyncController extends Controller
         }
 
         $mismatchRows = collect();
+        $sampleRows = collect();
+        $actionCounts = collect();
         if ($selectedRun) {
             $mismatchRows = RdmSyncStaging::query()
                 ->where('run_id', $selectedRun->id)
@@ -45,6 +47,20 @@ class RdmSyncController extends Controller
                 ->orderBy('rdm_nama')
                 ->limit(150)
                 ->get();
+
+            $sampleRows = RdmSyncStaging::query()
+                ->with(['siswa:id,nama_lengkap,nisn', 'mataPelajaran:id,nama_mapel,kode_mapel'])
+                ->where('run_id', $selectedRun->id)
+                ->orderByRaw("FIELD(apply_action, 'conflict', 'insert', 'unchanged', 'skip')")
+                ->orderBy('rdm_nama')
+                ->limit(80)
+                ->get();
+
+            $actionCounts = RdmSyncStaging::query()
+                ->where('run_id', $selectedRun->id)
+                ->selectRaw('apply_action, COUNT(*) as total')
+                ->groupBy('apply_action')
+                ->pluck('total', 'apply_action');
         }
 
         return view('admin.rdm-sync.index', [
@@ -53,6 +69,8 @@ class RdmSyncController extends Controller
             'latestRuns' => $latestRuns,
             'selectedRun' => $selectedRun,
             'mismatchRows' => $mismatchRows,
+            'sampleRows' => $sampleRows,
+            'actionCounts' => $actionCounts,
             'simansaTahunList' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'simansaKelasList' => Kelas::with('tahunPelajaran')
                 ->whereIn('tingkat', [10, 11, 12])->orderBy('nama_kelas')->get(),

@@ -13,6 +13,8 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 - Proses apply hanya memasukkan nilai yang benar-benar baru. Nilai yang sudah sama dilewati dan nilai berbeda ditandai konflik tanpa menimpa data SIMANSA.
 - Pemetaan semester mencakup Semester 1–6. Export leger kelas XII tetap Semester 1–5 untuk SNBP dan menyediakan opsi Semester 6 untuk arsip lengkap kelulusan.
 - Ringkasan preview menampilkan jumlah siswa aktif, siswa yang cocok di RDM, nilai baru, nilai sama, serta konflik yang ditahan.
+- UI preview dibagi menjadi alur sumber RDM, Semester Leger tujuan, dan roster aktif agar admin tidak tertukar antara jumlah siswa dan jumlah record nilai.
+- Dampak Apply dijelaskan per kategori: ditambahkan, dilewati karena sama, konflik ditahan, dan mapping bermasalah. Preview juga menyediakan sampel nilai K13/Merdeka, daftar siswa yang belum ditemukan, detail audit, dan tombol Apply dengan jumlah nilai yang benar-benar akan ditulis.
 
 ### Rancangan integrasi histori akademik RDM ke SIMANSA
 

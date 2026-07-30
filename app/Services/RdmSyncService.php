@@ -100,6 +100,15 @@ class RdmSyncService
                 $eligibleIds[$rdmId] = $targetByNisn[$item['nisn']]->id;
             }
         }
+        $eligibleSimansaIds = array_flip(array_values($eligibleIds));
+        $missingStudents = $target
+            ->reject(fn ($student) => isset($eligibleSimansaIds[$student->id]))
+            ->take(50)
+            ->map(fn ($student) => [
+                'id' => $student->id,
+                'nisn' => $student->nisn,
+                'nama' => $student->nama_lengkap,
+            ])->values()->all();
         $eligibleRows = $rawRows->filter(fn ($row) => isset($eligibleIds[$row->rdm_siswa_id]));
 
         $simansaTahun = $this->resolveTahunPelajaran((int) $filters['rdm_tahunajaran_id']);
@@ -204,9 +213,14 @@ class RdmSyncService
                 'simansa_tingkat' => (int) $filters['simansa_tingkat'],
                 'rdm_students_matched' => count($seenStudents),
                 'active_students_without_rdm' => max(0, $target->count() - count($seenStudents)),
+                'active_students_without_rdm_sample' => $missingStudents,
                 'duplicate_simansa_nisn' => $duplicateSimansaNisn->count(),
                 'insert' => $stats['insert'], 'unchanged' => $stats['unchanged'],
                 'conflict' => $stats['conflict'], 'simansa_tahun' => $simansaTahun?->nama,
+                'simansa_semester' => $this->mapSemester(
+                    (int) $filters['rdm_tingkat_id'],
+                    (int) $filters['rdm_semester_id']
+                ),
             ],
         ]);
 
