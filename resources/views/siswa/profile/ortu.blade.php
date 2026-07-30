@@ -20,7 +20,7 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route('siswa.profile.ortu.update') }}">
+<form method="POST" action="{{ route('siswa.profile.ortu.update') }}" id="formDataOrtu" class="uppercase-input-form">
     @csrf
     @method('PUT')
     
@@ -475,6 +475,12 @@
 
 @section('css')
     <style>
+        .uppercase-input-form input[type="text"]:not([data-preserve-case]),
+        .uppercase-input-form textarea:not([data-preserve-case]),
+        .uppercase-input-form select.form-control {
+            text-transform: uppercase;
+        }
+
         .student-form-hero {
             border-left: 0 !important;
             border-radius: 16px;
@@ -587,6 +593,16 @@
 @section('js')
 <script>
 $(document).ready(function() {
+    $('.uppercase-input-form').on('input', 'input[type="text"]:not([data-preserve-case]), textarea:not([data-preserve-case])', function() {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.toLocaleUpperCase('id-ID');
+
+        if (typeof this.setSelectionRange === 'function' && start !== null && end !== null) {
+            this.setSelectionRange(start, end);
+        }
+    });
+
     // Initialize conditional forms
     toggleAyahForm();
     toggleIbuForm();

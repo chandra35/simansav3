@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ortu;
 use App\Services\ActivityLogService;
+use App\Support\UppercaseInputNormalizer;
 use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
@@ -29,7 +30,7 @@ class OrtuController extends Controller
 
     public function update(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'no_kk' => 'nullable|string|max:20',
             'status_ayah' => 'nullable|in:masih_hidup,meninggal',
             'nama_ayah' => 'nullable|string|max:255',
@@ -53,35 +54,41 @@ class OrtuController extends Controller
             'kelurahan_id' => 'nullable|string|exists:indonesia_villages,code',
         ]);
 
+        $validated = UppercaseInputNormalizer::normalize($validated, [
+            'nama_ayah',
+            'nama_ibu',
+            'alamat_ortu',
+        ]);
+
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($validated) {
                 $user = Auth::user();
                 $siswa = $user->siswa;
 
                 // Prepare data untuk update/create ortu
                 $ortuData = [
-                    'no_kk' => $request->no_kk,
-                    'status_ayah' => $request->status_ayah,
-                    'nama_ayah' => $request->nama_ayah,
-                    'status_ibu' => $request->status_ibu,
-                    'nama_ibu' => $request->nama_ibu,
-                    'alamat_ortu' => $request->alamat_ortu,
-                    'rt_ortu' => $request->rt_ortu,
-                    'rw_ortu' => $request->rw_ortu,
-                    'kodepos' => $request->kodepos,
-                    'provinsi_id' => $request->provinsi_id,
-                    'kabupaten_id' => $request->kabupaten_id,
-                    'kecamatan_id' => $request->kecamatan_id,
-                    'kelurahan_id' => $request->kelurahan_id,
+                    'no_kk' => $validated['no_kk'] ?? null,
+                    'status_ayah' => $validated['status_ayah'] ?? null,
+                    'nama_ayah' => $validated['nama_ayah'] ?? null,
+                    'status_ibu' => $validated['status_ibu'] ?? null,
+                    'nama_ibu' => $validated['nama_ibu'] ?? null,
+                    'alamat_ortu' => $validated['alamat_ortu'] ?? null,
+                    'rt_ortu' => $validated['rt_ortu'] ?? null,
+                    'rw_ortu' => $validated['rw_ortu'] ?? null,
+                    'kodepos' => $validated['kodepos'] ?? null,
+                    'provinsi_id' => $validated['provinsi_id'] ?? null,
+                    'kabupaten_id' => $validated['kabupaten_id'] ?? null,
+                    'kecamatan_id' => $validated['kecamatan_id'] ?? null,
+                    'kelurahan_id' => $validated['kelurahan_id'] ?? null,
                 ];
 
                 // Tambahkan data ayah jika masih hidup
-                if ($request->status_ayah === 'masih_hidup') {
+                if (($validated['status_ayah'] ?? null) === 'masih_hidup') {
                     $ortuData = array_merge($ortuData, [
-                        'nik_ayah' => $request->nik_ayah,
-                        'hp_ayah' => $request->hp_ayah,
-                        'pekerjaan_ayah' => $request->pekerjaan_ayah,
-                        'penghasilan_ayah' => $request->penghasilan_ayah,
+                        'nik_ayah' => $validated['nik_ayah'] ?? null,
+                        'hp_ayah' => $validated['hp_ayah'] ?? null,
+                        'pekerjaan_ayah' => $validated['pekerjaan_ayah'] ?? null,
+                        'penghasilan_ayah' => $validated['penghasilan_ayah'] ?? null,
                     ]);
                 } else {
                     // Clear data ayah jika meninggal
@@ -94,12 +101,12 @@ class OrtuController extends Controller
                 }
 
                 // Tambahkan data ibu jika masih hidup
-                if ($request->status_ibu === 'masih_hidup') {
+                if (($validated['status_ibu'] ?? null) === 'masih_hidup') {
                     $ortuData = array_merge($ortuData, [
-                        'nik_ibu' => $request->nik_ibu,
-                        'hp_ibu' => $request->hp_ibu,
-                        'pekerjaan_ibu' => $request->pekerjaan_ibu,
-                        'penghasilan_ibu' => $request->penghasilan_ibu,
+                        'nik_ibu' => $validated['nik_ibu'] ?? null,
+                        'hp_ibu' => $validated['hp_ibu'] ?? null,
+                        'pekerjaan_ibu' => $validated['pekerjaan_ibu'] ?? null,
+                        'penghasilan_ibu' => $validated['penghasilan_ibu'] ?? null,
                     ]);
                 } else {
                     // Clear data ibu jika meninggal

@@ -15,6 +15,12 @@
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
 <style>
+    .uppercase-input-form input[type="text"]:not([data-preserve-case]),
+    .uppercase-input-form textarea:not([data-preserve-case]),
+    .uppercase-input-form select.form-control {
+        text-transform: uppercase;
+    }
+
     /* Flatpickr Custom Styling */
     .flatpickr-calendar {
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -800,7 +806,7 @@
     </div>
 </div>
 
-<form action="{{ route('siswa.profile.diri.update') }}" method="POST" enctype="multipart/form-data" id="formDataDiri">
+<form action="{{ route('siswa.profile.diri.update') }}" method="POST" enctype="multipart/form-data" id="formDataDiri" class="uppercase-input-form">
     @csrf
     @method('PUT')
     
@@ -992,6 +998,31 @@
                     </h3>
                 </div>
                 <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="nama_lengkap">
+                                    Nama Lengkap <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="nama_lengkap" id="nama_lengkap"
+                                       class="form-control @error('nama_lengkap') is-invalid @enderror"
+                                       value="{{ old('nama_lengkap', $siswa->nama_lengkap ?? '') }}"
+                                       placeholder="Nama lengkap sesuai dokumen resmi"
+                                       maxlength="255"
+                                       autocomplete="name"
+                                       required>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-font"></i> Nama dan input teks akan disimpan dalam huruf kapital.
+                                </small>
+                                @error('nama_lengkap')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-12 col-lg-6">
                             <div class="form-group">
@@ -1882,6 +1913,16 @@ var cropper = null;
 var cameraStream = null;
 
 $(document).ready(function() {
+    $('.uppercase-input-form').on('input', 'input[type="text"]:not([data-preserve-case]), textarea:not([data-preserve-case])', function() {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.toLocaleUpperCase('id-ID');
+
+        if (typeof this.setSelectionRange === 'function' && start !== null && end !== null) {
+            this.setSelectionRange(start, end);
+        }
+    });
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
     

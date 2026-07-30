@@ -11,11 +11,14 @@ use App\Models\ActivityLog;
 use App\Services\KemendikbudApiService;
 use App\Services\ActivityLogService;
 use App\Services\EmailService;
+use App\Support\UppercaseInputNormalizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
@@ -246,7 +249,7 @@ class ProfileController extends Controller
 
     public function updateOrtu(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'no_kk' => 'nullable|string|max:20',
             'status_ayah' => 'required|in:masih_hidup,meninggal',
             'nama_ayah' => 'required|string|max:255',
@@ -270,12 +273,18 @@ class ProfileController extends Controller
             'kodepos' => 'required|string|max:10',
         ]);
 
+        $validated = UppercaseInputNormalizer::normalize($validated, [
+            'nama_ayah',
+            'nama_ibu',
+            'alamat_ortu',
+        ]);
+
         $user = Auth::user();
         $siswa = $user->siswa;
 
         $ortu = Ortu::updateOrCreate(
             ['siswa_id' => $siswa->id],
-            $request->all()
+            $validated
         );
 
         $siswa->update(['data_ortu_completed' => true]);
@@ -473,7 +482,8 @@ class ProfileController extends Controller
     public function updateDiri(Request $request)
     {
         // Foto profile is handled separately via uploadFoto() method
-        $request->validate([
+        $validated = $request->validate([
+            'nama_lengkap' => 'required|string|max:255',
             'npsn_asal_sekolah' => ['required', 'size:8', 'regex:/^[A-Za-z0-9]+$/', 'exists:sekolah,npsn'],
             'nik' => 'required|string|max:20',
             'tempat_lahir' => 'required|string|max:255',
@@ -495,7 +505,14 @@ class ProfileController extends Controller
             'kecamatan_id_siswa' => 'nullable|exists:indonesia_districts,code',
             'kelurahan_id_siswa' => 'nullable|exists:indonesia_villages,code',
             'kodepos_siswa' => 'nullable|string|max:10',
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->ignore(Auth::id()),
+            ],
         ], [
+            'nama_lengkap.required' => 'Nama lengkap wajib diisi',
+            'nama_lengkap.max' => 'Nama lengkap maksimal 255 karakter',
             'npsn_asal_sekolah.required' => 'NPSN Asal Sekolah wajib diisi',
             'npsn_asal_sekolah.size' => 'NPSN harus 8 karakter',
             'npsn_asal_sekolah.regex' => 'NPSN hanya boleh berisi huruf dan angka',
@@ -512,6 +529,8 @@ class ProfileController extends Controller
             'anak_ke.required' => 'Anak ke berapa wajib diisi',
             'alamat_sama_ortu.required' => 'Pilihan alamat wajib dipilih',
             'jenis_tempat_tinggal.required_if' => 'Jenis tempat tinggal wajib dipilih untuk alamat berbeda',
+            'email.email' => 'Format email tidak valid',
+            'email.unique' => 'Email sudah digunakan oleh akun lain',
         ]);
 
         $user = Auth::user();
@@ -539,9 +558,6 @@ class ProfileController extends Controller
                 'kodepos_siswa.required' => 'Kode pos wajib diisi',
             ]);
         }
-
-        // Foto profile is handled separately, exclude from this update
-        $validated = $request->except(['foto_profile', '_token', '_method']);
 
         // Convert tanggal_lahir to proper format if needed
         if (!empty($validated['tanggal_lahir'])) {
@@ -588,28 +604,41 @@ class ProfileController extends Controller
             }
         }
 
+        $validated = UppercaseInputNormalizer::normalize($validated, [
+            'nama_lengkap',
+            'npsn_asal_sekolah',
+            'tempat_lahir',
+            'hobi',
+            'cita_cita',
+            'alamat_siswa',
+        ]);
+
+        $email = $validated['email'] ?? null;
+        unset($validated['email']);
+
         try {
             // Get old data before update
             $oldData = $siswa->toArray();
             
-            // Update siswa data
             $validated['data_diri_completed'] = true;
-            $siswa->update($validated);
 
-            // Update user email if provided
-            if ($request->filled('email')) {
-                $user->email = $request->email;
-                $user->save();
-            }
+            DB::transaction(function () use ($siswa, $user, $validated, $email, $oldData): void {
+                $siswa->update($validated);
 
-            // Enhanced activity log with change tracking
-            ActivityLogService::logChanges(
-                'update_data_diri',
-                $siswa,
-                $oldData,
-                $validated,
-                'Memperbarui data diri siswa'
-            );
+                $userData = ['name' => $validated['nama_lengkap']];
+                if ($email !== null && $email !== '') {
+                    $userData['email'] = $email;
+                }
+                $user->update($userData);
+
+                ActivityLogService::logChanges(
+                    'update_data_diri',
+                    $siswa,
+                    $oldData,
+                    $validated,
+                    'Memperbarui data diri siswa'
+                );
+            });
 
             return redirect()->route('siswa.dashboard')->with('success', '✅ Data diri berhasil disimpan! Profil Anda sudah lengkap.');
         } catch (\Exception $e) {

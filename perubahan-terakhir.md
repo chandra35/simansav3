@@ -4,6 +4,15 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Edit nama siswa dan normalisasi input huruf kapital
+
+- Akun siswa dapat mengubah Nama Lengkap melalui menu Data Diri; perubahan disimpan serentak pada profil siswa dan nama akun login.
+- Input teks bebas pada Data Diri dan Data Orangtua otomatis tampil sebagai huruf kapital saat diketik dan dinormalisasi kembali di server sebelum disimpan.
+- Normalisasi mencakup nama siswa, NPSN alfanumerik, tempat lahir, hobi, cita-cita, alamat siswa, nama ayah/ibu, dan alamat orangtua.
+- Email, password, identifier numerik, kode wilayah, serta nilai internal pilihan/status dipertahankan formatnya agar validasi dan relasi aplikasi tidak rusak.
+- Endpoint penyimpanan profil tidak lagi memakai seluruh payload request; hanya field tervalidasi yang dapat diteruskan ke model.
+- Perubahan nama siswa, nama akun, email opsional, serta data diri disimpan dalam satu transaksi database.
+
 ### Metadata kelas asal pada daftar mutasi siswa
 
 - Daftar mutasi siswa menampilkan metadata `Asal kelas` tepat di bawah NISN.
