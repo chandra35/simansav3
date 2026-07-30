@@ -39,7 +39,7 @@
                 <div class="card-header">
                     <div>
                         <span class="rdm-step">Buat preview baru</span>
-                        <h3 class="card-title">Tentukan roster dan sumber nilai</h3>
+                        <h3 class="card-title">Pilih siswa aktif yang akan dicek</h3>
                     </div>
                 </div>
                 <form method="POST" action="{{ route('admin.rdm-sync.preview') }}">
@@ -60,7 +60,7 @@
                                 <label for="simansaYear">Tahun roster</label>
                                 <select id="simansaYear" name="simansa_tahun_pelajaran_id" class="form-control" required>
                                     @foreach($simansaTahunList as $tahun)
-                                        <option value="{{ $tahun->id }}" {{ old('simansa_tahun_pelajaran_id', $simansaTahunList->firstWhere('is_active', true)?->id) == $tahun->id ? 'selected' : '' }}>
+                                        <option value="{{ $tahun->id }}" data-start="{{ $tahun->tahun_mulai }}" {{ old('simansa_tahun_pelajaran_id', $simansaTahunList->firstWhere('is_active', true)?->id) == $tahun->id ? 'selected' : '' }}>
                                             {{ $tahun->nama }} {{ $tahun->is_active ? '· Aktif' : '' }}
                                         </option>
                                     @endforeach
@@ -92,55 +92,15 @@
                             </div>
                         </div>
 
-                        <div class="rdm-form-section">
+                        <div class="rdm-form-section rdm-auto-scope">
                             <div class="rdm-form-section__title">
                                 <span>2</span>
-                                <div><strong>Sumber historis RDM</strong><small>Periode saat siswa berada di tingkat lama</small></div>
+                                <div><strong>Cakupan nilai otomatis</strong><small>SIMANSA menentukan periode RDM dari tingkat siswa</small></div>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Tahun RDM</label>
-                                        <select name="rdm_tahunajaran_id" class="form-control" required>
-                                            @foreach($rdmReference['tahun'] as $item)
-                                                <option value="{{ $item->tahunajaran_id }}" {{ old('rdm_tahunajaran_id', $rdmPeriod['tahunajaran']->tahunajaran_id ?? null) == $item->tahunajaran_id ? 'selected' : '' }}>
-                                                    {{ $item->tahunajaran_nama }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Semester RDM</label>
-                                        <select name="rdm_semester_id" class="form-control" required>
-                                            @foreach($rdmReference['semester'] as $item)
-                                                <option value="{{ $item->semester_id }}" {{ old('rdm_semester_id', $rdmPeriod['semester']->semester_id ?? null) == $item->semester_id ? 'selected' : '' }}>
-                                                    {{ $item->semester_nama }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Tingkat saat di RDM</label>
-                                <select name="rdm_tingkat_id" class="form-control" required>
-                                    <option value="">Pilih tingkat sumber</option>
-                                    @foreach($rdmReference['tingkat'] as $item)
-                                        <option value="{{ $item->tingkat_id }}" {{ old('rdm_tingkat_id') == $item->tingkat_id ? 'selected' : '' }}>
-                                            {{ [12 => 'X', 13 => 'XI', 14 => 'XII'][$item->tingkat_id] ?? $item->tingkat_nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <small class="form-text text-muted">Contoh: siswa aktif kelas XII, sumber 2025/2026 tingkat XI menghasilkan Semester Leger 3 atau 4.</small>
-                            </div>
-
-                            <div class="form-group mb-0">
-                                <label>Kelas RDM <span class="text-muted font-weight-normal">(opsional)</span></label>
-                                <input type="text" name="rdm_kelas_nama" class="form-control" value="{{ old('rdm_kelas_nama') }}" placeholder="Kosongkan untuk semua kelas RDM">
+                            <div id="automaticPeriodPlan" class="rdm-period-plan"></div>
+                            <div class="rdm-auto-note">
+                                <i class="fas fa-magic"></i>
+                                <span>Tidak perlu memilih tingkat atau kelas RDM. Siswa dicocokkan otomatis memakai NISN pada seluruh periode yang seharusnya.</span>
                             </div>
                         </div>
 
@@ -151,7 +111,7 @@
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            <i class="fas fa-search mr-1"></i> Jalankan Preview Aman
+                            <i class="fas fa-search mr-1"></i> <span id="previewButtonLabel">Preview Semester 1-5</span>
                         </button>
                     </div>
                 </form>
@@ -163,12 +123,13 @@
                     @forelse($latestRuns as $run)
                         @php
                             $runSemester = data_get($run->meta, 'simansa_semester');
+                            $runSemesterTo = data_get($run->meta, 'semester_to');
                             $runInsert = data_get($run->meta, 'insert', 0);
                         @endphp
                         <a href="{{ route('admin.rdm-sync.index', ['run' => $run->id]) }}"
                            class="list-group-item list-group-item-action {{ $selectedRun?->id === $run->id ? 'active' : '' }}">
                             <div>
-                                <strong>{{ $runSemester ? "Semester Leger {$runSemester}" : "RDM {$run->rdm_tahunajaran_id}/{$run->rdm_semester_id}" }}</strong>
+                                <strong>{{ $runSemesterTo ? "Leger Semester 1-{$runSemesterTo}" : ($runSemester ? "Semester Leger {$runSemester}" : "RDM {$run->rdm_tahunajaran_id}/{$run->rdm_semester_id}") }}</strong>
                                 <small>{{ $run->created_at?->format('d/m/Y H:i') }} · {{ number_format($run->total_records) }} nilai</small>
                             </div>
                             <span class="badge badge-{{ $run->status === 'applied' ? 'success' : 'light' }}">
@@ -188,7 +149,7 @@
                     <div class="card-body">
                         <i class="fas fa-clipboard-check"></i>
                         <h3>Belum ada hasil preview</h3>
-                        <p>Pilih roster SIMANSA dan periode historis RDM di sebelah kiri.</p>
+                        <p>Pilih tahun roster, tingkat aktif, dan rombel. Periode historis RDM ditentukan otomatis.</p>
                     </div>
                 </div>
             @else
@@ -211,13 +172,18 @@
                     $curriculumCounts = collect(data_get($meta, 'curriculum_counts', []));
                     $curriculumDetected = data_get($meta, 'curriculum_counts') !== null;
                     $curriculumLabel = $curriculumCounts->filter()->keys()->implode(' + ') ?: 'Belum dideteksi';
+                    $isCohort = data_get($meta, 'scope') === 'cohort_legger';
+                    $semesterTo = (int) data_get($meta, 'semester_to', $globalSemester ?: 1);
+                    $periods = collect(data_get($meta, 'periods', []));
+                    $studentsWithHistory = (int) data_get($meta, 'students_with_history', data_get($meta, 'rdm_students_matched', 0));
+                    $studentsComplete = (int) data_get($meta, 'students_complete_available_periods', $studentsWithHistory);
                 @endphp
 
                 <div class="card rdm-result-card">
                     <div class="card-header rdm-result-header">
                         <div>
                             <span class="rdm-step">Hasil preview</span>
-                            <h3 class="card-title">Semester Leger {{ $globalSemester ?? '-' }}</h3>
+                            <h3 class="card-title">{{ $isCohort ? "Leger Semester 1-{$semesterTo}" : "Semester Leger " . ($globalSemester ?? '-') }}</h3>
                             <small>Run {{ Str::limit($selectedRun->id, 13, '') }} · {{ $selectedRun->created_at?->format('d M Y, H:i') }}</small>
                         </div>
                         @if($selectedRun->status === 'applied')
@@ -254,17 +220,53 @@
                         </div>
 
                         <div class="rdm-flow">
-                            <div><span>Sumber RDM</span><strong>{{ data_get($meta, 'simansa_tahun', $selectedRun->rdm_tahunajaran_id) }} · Kelas {{ $rdmLevel }} · {{ $rdmSemesterName }} · {{ $curriculumLabel }}</strong></div>
+                            <div><span>Sumber RDM</span><strong>{{ $isCohort ? "Histori otomatis S1-S{$semesterTo}" : data_get($meta, 'simansa_tahun', $selectedRun->rdm_tahunajaran_id) . " · Kelas {$rdmLevel} · {$rdmSemesterName} · {$curriculumLabel}" }}</strong></div>
                             <i class="fas fa-arrow-right"></i>
-                            <div class="is-primary"><span>Tujuan nilai</span><strong>Semester Leger {{ $globalSemester ?? '-' }}</strong></div>
+                            <div class="is-primary"><span>Tujuan nilai</span><strong>{{ $isCohort ? "Leger Semester 1-{$semesterTo}" : "Semester Leger " . ($globalSemester ?? '-') }}</strong></div>
                             <i class="fas fa-arrow-right"></i>
                             <div><span>Roster aktif</span><strong>Kelas {{ data_get($meta, 'simansa_tingkat', '-') }} · {{ number_format(data_get($meta, 'active_students', 0)) }} siswa</strong></div>
                         </div>
 
+                        @if($isCohort)
+                            <div class="rdm-coverage">
+                                <div class="rdm-coverage__heading">
+                                    <div><strong>Cakupan per semester</strong><span>Setiap periode dicari otomatis berdasarkan perjalanan tingkat kohor.</span></div>
+                                    <span>{{ $periods->where('status', 'available')->count() }}/{{ $semesterTo }} periode tersedia</span>
+                                </div>
+                                <div class="rdm-coverage-grid">
+                                    @foreach($periods as $period)
+                                        @php
+                                            $periodStatus = data_get($period, 'status');
+                                            $available = $periodStatus === 'available';
+                                            $statusText = match($periodStatus) {
+                                                'available' => 'Ditemukan',
+                                                'no_values' => 'Belum ada nilai',
+                                                'period_unavailable' => 'Periode belum tersedia',
+                                                default => 'Belum diperiksa',
+                                            };
+                                        @endphp
+                                        <div class="rdm-period-result {{ $available ? 'is-available' : 'is-unavailable' }}">
+                                            <div><strong>S{{ data_get($period, 'semester') }}</strong><span>{{ data_get($period, 'source_grade_label') }} · {{ data_get($period, 'rdm_semester_label') }}</span></div>
+                                            <small>{{ data_get($period, 'source_year_name') }}</small>
+                                            <b>{{ $statusText }}</b>
+                                            @if($available)
+                                                <em>{{ number_format(data_get($period, 'matched_students', 0)) }} siswa · {{ number_format(data_get($period, 'total_records', 0)) }} nilai</em>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <p class="rdm-coverage-help"><i class="fas fa-info-circle"></i> Periode yang belum tersedia tidak dianggap gagal dan otomatis dilewati saat Apply.</p>
+                            </div>
+                        @endif
+
                         <div class="rdm-metric-grid">
                             <div class="rdm-metric is-blue"><i class="fas fa-users"></i><div><strong>{{ number_format(data_get($meta, 'active_students', 0)) }}</strong><span>Siswa aktif target</span></div></div>
-                            <div class="rdm-metric is-green"><i class="fas fa-user-check"></i><div><strong>{{ number_format(data_get($meta, 'rdm_students_matched', 0)) }}</strong><span>Siswa cocok di RDM</span></div></div>
-                            <div class="rdm-metric {{ $missingCount ? 'is-red' : 'is-green' }}"><i class="fas fa-user-times"></i><div><strong>{{ number_format($missingCount) }}</strong><span>Siswa belum ditemukan</span></div></div>
+                            <div class="rdm-metric is-green"><i class="fas fa-user-check"></i><div><strong>{{ number_format($studentsWithHistory) }}</strong><span>Siswa punya histori nilai</span></div></div>
+                            @if($isCohort)
+                                <div class="rdm-metric is-purple"><i class="fas fa-layer-group"></i><div><strong>{{ number_format($studentsComplete) }}</strong><span>Lengkap di periode tersedia</span></div></div>
+                            @else
+                                <div class="rdm-metric {{ $missingCount ? 'is-red' : 'is-green' }}"><i class="fas fa-user-times"></i><div><strong>{{ number_format($missingCount) }}</strong><span>Siswa belum ditemukan</span></div></div>
+                            @endif
                             <div class="rdm-metric is-purple"><i class="fas fa-list-ol"></i><div><strong>{{ number_format($selectedRun->total_records) }}</strong><span>Total record nilai</span></div></div>
                         </div>
 
@@ -329,7 +331,7 @@
 
                             <div class="tab-pane fade" id="masalahPreview">
                                 <div class="rdm-issue-section">
-                                    <h5>Siswa aktif belum ditemukan di periode RDM <span>{{ $missingCount }}</span></h5>
+                                    <h5>{{ $isCohort ? 'Siswa tanpa histori pada semua periode tersedia' : 'Siswa aktif belum ditemukan di periode RDM' }} <span>{{ $missingCount }}</span></h5>
                                     @if($missingSamples->isNotEmpty())
                                         <div class="row">
                                             @foreach($missingSamples as $student)
@@ -341,7 +343,7 @@
                                     @elseif($missingCount > 0)
                                         <div class="alert alert-light border mb-0">Run lama belum menyimpan rincian siswa. Jalankan preview ulang untuk melihat nama dan NISN yang belum ditemukan.</div>
                                     @else
-                                        <div class="rdm-all-clear"><i class="fas fa-check-circle"></i> Semua siswa aktif ditemukan pada periode RDM ini.</div>
+                                        <div class="rdm-all-clear"><i class="fas fa-check-circle"></i> {{ $isCohort ? 'Semua siswa aktif mempunyai histori nilai RDM.' : 'Semua siswa aktif ditemukan pada periode RDM ini.' }}</div>
                                     @endif
                                 </div>
 
@@ -374,10 +376,17 @@
                                     <div class="col-md-6">
                                         <dl class="rdm-audit-list">
                                             <div><dt>Status</dt><dd>{{ strtoupper($selectedRun->status) }}</dd></div>
-                                            <div><dt>Tahun RDM</dt><dd>{{ $selectedRun->rdm_tahunajaran_id }}</dd></div>
-                                            <div><dt>Semester RDM</dt><dd>{{ $rdmSemesterName }} ({{ $selectedRun->rdm_semester_id }})</dd></div>
-                                            <div><dt>Tingkat RDM</dt><dd>Kelas {{ $rdmLevel }}</dd></div>
-                                            <div><dt>Kelas RDM</dt><dd>{{ $selectedRun->rdm_kelas_nama ?: 'Semua kelas' }}</dd></div>
+                                            @if($isCohort)
+                                                <div><dt>Mode</dt><dd>Histori kohor otomatis</dd></div>
+                                                <div><dt>Cakupan</dt><dd>Semester 1-{{ $semesterTo }}</dd></div>
+                                                <div><dt>Tahun roster</dt><dd>{{ data_get($meta, 'simansa_roster_year', '-') }}</dd></div>
+                                                <div><dt>Periode tersedia</dt><dd>{{ data_get($meta, 'available_period_count', 0) }} dari {{ $semesterTo }}</dd></div>
+                                            @else
+                                                <div><dt>Tahun RDM</dt><dd>{{ $selectedRun->rdm_tahunajaran_id }}</dd></div>
+                                                <div><dt>Semester RDM</dt><dd>{{ $rdmSemesterName }} ({{ $selectedRun->rdm_semester_id }})</dd></div>
+                                                <div><dt>Tingkat RDM</dt><dd>Kelas {{ $rdmLevel }}</dd></div>
+                                                <div><dt>Kelas RDM</dt><dd>{{ $selectedRun->rdm_kelas_nama ?: 'Semua kelas' }}</dd></div>
+                                            @endif
                                             <div><dt>Kurikulum terdeteksi</dt><dd>{{ $curriculumLabel }}</dd></div>
                                         </dl>
                                     </div>
@@ -413,19 +422,21 @@
     .rdm-current-period{display:flex;justify-content:space-between;align-items:center;background:#f3f5ff;color:#33416a;border-radius:12px;padding:.75rem .9rem;margin-bottom:1rem}.rdm-current-period span{font-size:.8rem}.rdm-current-period strong{font-size:.84rem}
     .rdm-form-section{border:1px solid #e6eaf2;border-radius:15px;padding:1rem;margin-bottom:1rem}.rdm-form-section__title{display:flex;align-items:center;gap:.7rem;margin-bottom:.9rem}.rdm-form-section__title>span{display:grid;place-items:center;width:28px;height:28px;background:#5b4cf0;color:#fff;border-radius:9px;font-weight:800}.rdm-form-section__title div{display:flex;flex-direction:column}.rdm-form-section__title small{color:#8691a7}
     .rdm-form-section label{font-size:.79rem;color:#39445c;margin-bottom:.32rem}.rdm-form-section .form-control{border-color:#dfe4ee;border-radius:10px;height:40px;font-size:.88rem}
+    .rdm-auto-scope{background:#fafaff}.rdm-period-plan{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem}.rdm-plan-item{display:flex;align-items:center;gap:.55rem;border:1px solid #e1e4f5;background:#fff;border-radius:10px;padding:.55rem}.rdm-plan-item strong{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:9px;background:#eeeaff;color:#5745e7;font-size:.78rem}.rdm-plan-item div{display:flex;flex-direction:column}.rdm-plan-item span{font-size:.73rem;font-weight:750;color:#33405b}.rdm-plan-item small{font-size:.65rem;color:#8792a7}.rdm-auto-note{display:flex;gap:.5rem;margin-top:.7rem;color:#615b83;font-size:.72rem;line-height:1.45}.rdm-auto-note i{margin-top:.15rem;color:#6855eb}
     .rdm-safety-note{display:flex;gap:.7rem;padding:.8rem;background:#eef9f4;border-radius:12px;color:#177651}.rdm-safety-note i{font-size:1.25rem}.rdm-safety-note div{display:flex;flex-direction:column;font-size:.78rem}.rdm-filter-card .card-footer{background:#fff;border:0;padding:0 1.2rem 1.2rem}.rdm-filter-card .btn-lg{border-radius:12px;font-size:.92rem}
     .rdm-history-card .card-header{background:#fff}.rdm-history-list{max-height:330px;overflow:auto}.rdm-history-list .list-group-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border-color:#f0f2f7;padding:.8rem 1rem}.rdm-history-list .list-group-item div{display:flex;flex-direction:column}.rdm-history-list small{font-size:.72rem;color:#8490a7}.rdm-history-list .active{background:#5b4cf0;border-color:#5b4cf0}.rdm-history-list .active small{color:#e1ddff}
     .rdm-result-header{display:flex;align-items:center;justify-content:space-between}.rdm-result-header>div{display:flex;flex-direction:column}.rdm-result-header small{color:#7a879d}.rdm-result-header .btn{border-radius:11px;font-weight:700}.rdm-applied-label{color:#16845b;font-weight:750}
     .rdm-decision-banner{display:flex;gap:.85rem;padding:1rem 1.1rem;border-radius:14px;margin-bottom:1rem}.rdm-decision-banner>i{font-size:1.35rem;margin-top:.1rem}.rdm-decision-banner div{display:flex;flex-direction:column}.rdm-decision-banner span{font-size:.82rem}.rdm-decision-banner.is-ready,.rdm-decision-banner.is-applied{background:#eaf8f2;color:#147451}.rdm-decision-banner.is-warning{background:#fff7df;color:#8d6410}
     .rdm-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:.7rem;background:#f7f8fc;border:1px solid #e9edf5;border-radius:14px;padding:.9rem 1rem;margin-bottom:1rem}.rdm-flow div{display:flex;flex-direction:column;text-align:center}.rdm-flow span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#8994a8}.rdm-flow strong{font-size:.83rem;color:#2d3850}.rdm-flow>i{color:#a8b0c1}.rdm-flow .is-primary strong{color:#5141df}
+    .rdm-coverage{border:1px solid #e5e9f2;border-radius:15px;padding:1rem;margin-bottom:1rem}.rdm-coverage__heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.8rem}.rdm-coverage__heading>div{display:flex;flex-direction:column}.rdm-coverage__heading div span{font-size:.72rem;color:#7f8a9f}.rdm-coverage__heading>span{background:#f0edff;color:#5d49e6;border-radius:20px;padding:.25rem .65rem;font-size:.7rem;font-weight:750}.rdm-coverage-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem}.rdm-period-result{display:flex;flex-direction:column;border:1px solid #e4e8f0;border-radius:12px;padding:.7rem;background:#fafbfe}.rdm-period-result>div{display:flex;align-items:center;justify-content:space-between}.rdm-period-result div strong{font-size:1rem;color:#33415d}.rdm-period-result div span,.rdm-period-result small,.rdm-period-result em{font-size:.64rem;color:#7d899e;font-style:normal}.rdm-period-result b{font-size:.68rem;margin-top:.45rem}.rdm-period-result.is-available{background:#effaf5;border-color:#bfe8d5}.rdm-period-result.is-available b{color:#17835b}.rdm-period-result.is-unavailable{background:#fff9eb;border-color:#f0dfaa}.rdm-period-result.is-unavailable b{color:#a27009}.rdm-coverage-help{font-size:.69rem;color:#778399;margin:.7rem 0 0}
     .rdm-metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1rem}.rdm-metric{display:flex;align-items:center;gap:.7rem;border:1px solid #e9edf4;border-radius:14px;padding:.85rem;background:#fff}.rdm-metric>i{display:grid;place-items:center;width:38px;height:38px;border-radius:11px}.rdm-metric div{display:flex;flex-direction:column}.rdm-metric strong{font-size:1.2rem;line-height:1.1}.rdm-metric span{font-size:.7rem;color:#7d889c}.rdm-metric.is-blue i{background:#eaf1ff;color:#3678ea}.rdm-metric.is-green i{background:#e7f8f0;color:#19a36d}.rdm-metric.is-red i{background:#ffeded;color:#e15353}.rdm-metric.is-purple i{background:#f0edff;color:#6950e8}
     .rdm-impact{border:1px solid #e7ebf3;border-radius:15px;overflow:hidden;margin-bottom:1.2rem}.rdm-impact__heading{padding:.8rem 1rem;background:#fafbfe}.rdm-impact__heading div{display:flex;flex-direction:column}.rdm-impact__heading span{font-size:.75rem;color:#7e899d}.rdm-impact-grid{display:grid;grid-template-columns:repeat(4,1fr)}.rdm-impact-grid>div{display:flex;flex-direction:column;padding:1rem;border-right:1px solid #edf0f5}.rdm-impact-grid>div:last-child{border:0}.rdm-impact-grid strong{font-size:1.3rem}.rdm-impact-grid span{font-size:.76rem;font-weight:700}.rdm-impact-grid small{font-size:.68rem;color:#8993a6}.rdm-impact-grid .is-insert strong,.rdm-impact-grid .is-insert span{color:#159266}.rdm-impact-grid .is-conflict strong,.rdm-impact-grid .is-conflict span{color:#d44d4d}.rdm-impact-grid .is-blocked strong,.rdm-impact-grid .is-blocked span{color:#bf850d}
     .rdm-tabs{border-bottom-color:#e5e9f1}.rdm-tabs .nav-link{border:0;color:#6d7890;font-size:.82rem;font-weight:700;padding:.75rem 1rem}.rdm-tabs .nav-link.active{color:#5544e7;border-bottom:3px solid #5b4cf0}.rdm-tab-content{padding-top:.9rem}.rdm-table-caption{font-size:.75rem;color:#7d889c;margin-bottom:.7rem}
     .rdm-preview-table{font-size:.78rem}.rdm-preview-table th{border-top:0;background:#f7f8fb;color:#68758d;font-size:.69rem;text-transform:uppercase;letter-spacing:.04em}.rdm-preview-table td{vertical-align:middle}.rdm-preview-table td>strong,.rdm-preview-table td>small{display:block}.rdm-preview-table td>small{color:#8994a8}.rdm-preview-table .badge{min-width:58px;padding:.42rem}
     .rdm-issue-section{border:1px solid #e7ebf3;border-radius:14px;padding:1rem;margin-bottom:1rem}.rdm-issue-section h5{display:flex;justify-content:space-between;font-size:.9rem;font-weight:750}.rdm-issue-section h5 span{background:#ffeded;color:#d84d4d;border-radius:20px;padding:.18rem .55rem}.rdm-missing-student{display:flex;align-items:center;gap:.6rem;padding:.65rem;background:#fafbfe;border-radius:10px;margin-bottom:.5rem}.rdm-missing-student>i{color:#e15a5a}.rdm-missing-student div{display:flex;flex-direction:column}.rdm-missing-student strong{font-size:.78rem}.rdm-missing-student span{font-size:.69rem;color:#8490a5}.rdm-all-clear{color:#19875f}
     .rdm-audit-list{margin:0}.rdm-audit-list div{display:flex;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid #edf0f5}.rdm-audit-list dt{font-size:.76rem;color:#7a869b}.rdm-audit-list dd{font-size:.78rem;text-align:right;margin:0;color:#27334b}.rdm-empty-state .card-body{text-align:center;padding:5rem 1rem}.rdm-empty-state i{font-size:3rem;color:#b5bdd0}.rdm-empty-state h3{font-size:1.15rem;margin:1rem 0 .35rem}.rdm-empty-state p{color:#7d889d}
-    @media(max-width:1199px){.rdm-metric-grid,.rdm-impact-grid{grid-template-columns:repeat(2,1fr)}.rdm-impact-grid>div:nth-child(2){border-right:0}.rdm-history-card{margin-bottom:1rem}}
-    @media(max-width:767px){.rdm-page-heading,.rdm-result-header{align-items:flex-start;flex-direction:column}.rdm-page-heading .btn,.rdm-result-header form,.rdm-result-header .btn{width:100%}.rdm-flow{grid-template-columns:1fr}.rdm-flow>i{transform:rotate(90deg);justify-self:center}.rdm-metric-grid,.rdm-impact-grid{grid-template-columns:1fr}.rdm-impact-grid>div{border-right:0;border-bottom:1px solid #edf0f5}.rdm-result-card .card-body{padding:.85rem}.rdm-tabs{flex-wrap:nowrap;overflow-x:auto}.rdm-tabs .nav-link{white-space:nowrap}}
+    @media(max-width:1199px){.rdm-metric-grid,.rdm-impact-grid{grid-template-columns:repeat(2,1fr)}.rdm-coverage-grid{grid-template-columns:repeat(3,1fr)}.rdm-impact-grid>div:nth-child(2){border-right:0}.rdm-history-card{margin-bottom:1rem}}
+    @media(max-width:767px){.rdm-page-heading,.rdm-result-header,.rdm-coverage__heading{align-items:flex-start;flex-direction:column}.rdm-page-heading .btn,.rdm-result-header form,.rdm-result-header .btn{width:100%}.rdm-flow{grid-template-columns:1fr}.rdm-flow>i{transform:rotate(90deg);justify-self:center}.rdm-metric-grid,.rdm-impact-grid,.rdm-coverage-grid{grid-template-columns:1fr}.rdm-impact-grid>div{border-right:0;border-bottom:1px solid #edf0f5}.rdm-result-card .card-body{padding:.85rem}.rdm-tabs{flex-wrap:nowrap;overflow-x:auto}.rdm-tabs .nav-link{white-space:nowrap}}
 </style>
 @stop
 
@@ -433,6 +444,27 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
+    function updateAutomaticPlan() {
+        var level = Number($('#simansaLevel').val() || 12);
+        var yearStart = Number($('#simansaYear option:selected').data('start'));
+        var semesterTo = level === 10 ? 2 : (level === 11 ? 4 : 5);
+        var gradeLabels = {10: 'X', 11: 'XI', 12: 'XII'};
+        var html = '';
+
+        for (var semester = 1; semester <= semesterTo; semester++) {
+            var sourceGrade = 10 + Math.floor((semester - 1) / 2);
+            var sourceYear = yearStart - (level - sourceGrade);
+            var semesterName = semester % 2 === 1 ? 'Ganjil' : 'Genap';
+            html += '<div class="rdm-plan-item">' +
+                '<strong>S' + semester + '</strong>' +
+                '<div><span>Kelas ' + gradeLabels[sourceGrade] + ' · ' + semesterName + '</span>' +
+                '<small>' + sourceYear + '/' + (sourceYear + 1) + '</small></div></div>';
+        }
+
+        $('#automaticPeriodPlan').html(html);
+        $('#previewButtonLabel').text('Preview Semester 1-' + semesterTo);
+    }
+
     function filterClasses() {
         var year = $('#simansaYear').val();
         var level = $('#simansaLevel').val();
@@ -448,8 +480,12 @@ $(function() {
         if (!currentVisible) $class.val('');
     }
 
-    $('#simansaYear, #simansaLevel').on('change', filterClasses);
+    $('#simansaYear, #simansaLevel').on('change', function() {
+        filterClasses();
+        updateAutomaticPlan();
+    });
     filterClasses();
+    updateAutomaticPlan();
 
     $('#btnApplySync').on('click', function() {
         var $btn = $(this);

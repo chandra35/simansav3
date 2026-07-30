@@ -57,6 +57,24 @@ class RdmLeggerSyncArchitectureTest extends TestCase
         $this->assertStringContainsString("'sampleRows' => \$sampleRows", $controller);
     }
 
+    public function test_preview_automatically_builds_cohort_semesters_without_rdm_source_inputs(): void
+    {
+        $service = file_get_contents($this->projectPath('app/Services/RdmSyncService.php'));
+        $view = file_get_contents($this->projectPath('resources/views/admin/rdm-sync/index.blade.php'));
+        $controller = file_get_contents($this->projectPath('app/Http/Controllers/Admin/RdmSyncController.php'));
+
+        $this->assertStringContainsString('previewCohortSync', $service);
+        $this->assertStringContainsString('buildCohortPeriodPlan', $service);
+        $this->assertStringContainsString('12 => 5', $service);
+        $this->assertStringContainsString("'scope' => 'cohort_legger'", $service);
+        $this->assertStringContainsString('Cakupan nilai otomatis', $view);
+        $this->assertStringContainsString('Preview Semester 1-', $view);
+        $this->assertStringNotContainsString('name="rdm_tingkat_id"', $view);
+        $this->assertStringNotContainsString('name="rdm_tahunajaran_id"', $view);
+        $this->assertStringContainsString('previewCohortSync($data', $controller);
+        $this->assertStringNotContainsString("'rdm_tingkat_id' => ['nullable'", $controller);
+    }
+
     public function test_curriculum_is_detected_per_rdm_record_and_merdeka_does_not_fill_k13_columns(): void
     {
         $service = file_get_contents($this->projectPath('app/Services/RdmSyncService.php'));

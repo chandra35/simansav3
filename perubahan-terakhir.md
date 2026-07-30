@@ -1,8 +1,17 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Preview leger RDM otomatis berdasarkan kohor
+
+- Form Integrasi RDM hanya meminta tahun roster, tingkat aktif, dan rombel SIMANSA; pilihan tahun, semester, tingkat, serta kelas sumber RDM dihapus.
+- Sistem membentuk perjalanan akademik siswa secara otomatis: Kelas 10 mengambil Semester 1–2, Kelas 11 Semester 1–4, dan Kelas 12 Semester 1–5.
+- Tahun ajaran, tingkat X/XI/XII, dan semester ganjil/genap RDM diturunkan dari tahun masuk kohor. Pencocokan siswa tetap ketat berdasarkan NISN siswa yang aktif pada roster terpilih.
+- Seluruh semester digabung dalam satu preview dan satu aksi Apply. Periode RDM yang belum tersedia ditandai serta dilewati tanpa dianggap sebagai kegagalan.
+- Hasil preview menampilkan kartu cakupan per semester, jumlah siswa yang memiliki histori, kelengkapan pada seluruh periode yang tersedia, total nilai, dan dampak Apply.
+- Nilai lama tetap aman: record sama dilewati, konflik ditahan, dan hanya nilai baru yang dapat ditambahkan.
 
 ### Perbaikan sync nilai RDM dan leger siswa aktif
 

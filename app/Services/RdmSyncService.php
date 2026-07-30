@@ -46,6 +46,167 @@ class RdmSyncService
         ];
     }
 
+    public function previewCohortSync(array $filters, ?string $initiatedBy): RdmSyncRun
+    {
+        $tahunRoster = TahunPelajaran::findOrFail($filters['simansa_tahun_pelajaran_id']);
+        $tingkatAktif = (int) $filters['simansa_tingkat'];
+        $semesterTerakhir = match ($tingkatAktif) {
+            10 => 2,
+            11 => 4,
+            12 => 5,
+        };
+        $target = $this->targetStudents($filters);
+        $plans = $this->buildCohortPeriodPlan($tahunRoster, $tingkatAktif, $semesterTerakhir);
+        $firstPlan = $plans->first();
+
+        $run = RdmSyncRun::create([
+            'rdm_tahunajaran_id' => (int) ($firstPlan['rdm_tahunajaran_id'] ?? $firstPlan['source_year_start']),
+            'rdm_semester_id' => (int) $firstPlan['rdm_semester_id'],
+            'rdm_tingkat_id' => (int) $firstPlan['rdm_tingkat_id'],
+            'simansa_tahun_pelajaran_id' => $tahunRoster->id,
+            'simansa_kelas_id' => $filters['simansa_kelas_id'] ?? null,
+            'status' => 'preview',
+            'started_at' => now(),
+            'initiated_by' => $initiatedBy,
+        ]);
+
+        if ($target->isEmpty()) {
+            $run->update([
+                'finished_at' => now(),
+                'notes' => 'Tidak ada siswa aktif SIMANSA pada roster yang dipilih.',
+                'meta' => [
+                    'scope' => 'cohort_legger',
+                    'semester_from' => 1,
+                    'semester_to' => $semesterTerakhir,
+                    'active_students' => 0,
+                    'simansa_tingkat' => $tingkatAktif,
+                    'periods' => $plans->values()->all(),
+                ],
+            ]);
+
+            return $run->fresh();
+        }
+
+        $periods = [];
+        $aggregate = [
+            'total' => 0, 'matched' => 0, 'mapel' => 0, 'tahun' => 0,
+            'insert' => 0, 'unchanged' => 0, 'conflict' => 0,
+            'curriculum' => ['MERDEKA' => 0, 'K13' => 0, 'UNKNOWN' => 0],
+        ];
+
+        foreach ($plans as $plan) {
+            if (!$plan['rdm_tahunajaran_id']) {
+                $periods[] = array_merge($plan, [
+                    'status' => 'period_unavailable',
+                    'total_records' => 0,
+                    'matched_students' => 0,
+                    'missing_students' => $target->count(),
+                ]);
+                continue;
+            }
+
+            $child = $this->previewSync([
+                'rdm_tahunajaran_id' => $plan['rdm_tahunajaran_id'],
+                'rdm_semester_id' => $plan['rdm_semester_id'],
+                'rdm_tingkat_id' => $plan['rdm_tingkat_id'],
+                'rdm_kelas_nama' => null,
+                'simansa_tahun_pelajaran_id' => $tahunRoster->id,
+                'simansa_kelas_id' => $filters['simansa_kelas_id'] ?? null,
+                'simansa_tingkat' => $tingkatAktif,
+            ], $initiatedBy);
+            $childMeta = $child->meta ?? [];
+
+            DB::transaction(function () use ($child, $run) {
+                DB::table('rdm_sync_staging')
+                    ->where('run_id', $child->id)
+                    ->update(['run_id' => $run->id]);
+                $child->delete();
+            });
+
+            $period = array_merge($plan, [
+                'status' => $child->total_records > 0 ? 'available' : 'no_values',
+                'total_records' => (int) $child->total_records,
+                'matched_students' => (int) data_get($childMeta, 'rdm_students_matched', 0),
+                'missing_students' => (int) data_get($childMeta, 'active_students_without_rdm', $target->count()),
+                'missing_students_sample' => data_get($childMeta, 'active_students_without_rdm_sample', []),
+                'insert' => (int) data_get($childMeta, 'insert', 0),
+                'unchanged' => (int) data_get($childMeta, 'unchanged', 0),
+                'conflict' => (int) data_get($childMeta, 'conflict', 0),
+                'curriculum_counts' => data_get($childMeta, 'curriculum_counts', []),
+            ]);
+            $periods[] = $period;
+
+            $aggregate['total'] += (int) $child->total_records;
+            $aggregate['matched'] += (int) $child->matched_records;
+            $aggregate['mapel'] += (int) $child->mismatch_mapel_count;
+            $aggregate['tahun'] += (int) $child->mismatch_tahun_count;
+            foreach (['insert', 'unchanged', 'conflict'] as $key) {
+                $aggregate[$key] += (int) data_get($childMeta, $key, 0);
+            }
+            foreach (array_keys($aggregate['curriculum']) as $curriculum) {
+                $aggregate['curriculum'][$curriculum] += (int) data_get($childMeta, "curriculum_counts.{$curriculum}", 0);
+            }
+        }
+
+        $availableSemesters = collect($periods)
+            ->where('status', 'available')
+            ->pluck('semester')
+            ->values();
+        $studentIdsWithHistory = RdmSyncStaging::query()
+            ->where('run_id', $run->id)
+            ->whereNotNull('simansa_siswa_id')
+            ->distinct()
+            ->pluck('simansa_siswa_id');
+        $studentsComplete = 0;
+        if ($availableSemesters->isNotEmpty()) {
+            $studentsComplete = DB::query()->fromSub(
+                RdmSyncStaging::query()
+                    ->select('simansa_siswa_id')
+                    ->where('run_id', $run->id)
+                    ->whereIn('simansa_semester', $availableSemesters)
+                    ->groupBy('simansa_siswa_id')
+                    ->havingRaw('COUNT(DISTINCT simansa_semester) = ?', [$availableSemesters->count()]),
+                'complete_students'
+            )->count();
+        }
+        $missingAny = $target->whereNotIn('id', $studentIdsWithHistory)->values();
+
+        $run->update([
+            'total_records' => $aggregate['total'],
+            'matched_records' => $aggregate['matched'],
+            'mismatch_siswa_count' => $missingAny->count(),
+            'mismatch_mapel_count' => $aggregate['mapel'],
+            'mismatch_tahun_count' => $aggregate['tahun'],
+            'finished_at' => now(),
+            'notes' => "Preview leger Semester 1-{$semesterTerakhir} selesai. Periode RDM yang tersedia diproses otomatis.",
+            'meta' => [
+                'scope' => 'cohort_legger',
+                'semester_from' => 1,
+                'semester_to' => $semesterTerakhir,
+                'active_students' => $target->count(),
+                'simansa_tingkat' => $tingkatAktif,
+                'simansa_roster_year' => $tahunRoster->nama,
+                'rdm_students_matched' => $studentIdsWithHistory->count(),
+                'students_with_history' => $studentIdsWithHistory->count(),
+                'students_complete_available_periods' => $studentsComplete,
+                'available_period_count' => $availableSemesters->count(),
+                'active_students_without_rdm' => $missingAny->count(),
+                'active_students_without_rdm_sample' => $missingAny->take(50)->map(fn ($student) => [
+                    'id' => $student->id,
+                    'nisn' => $student->nisn,
+                    'nama' => $student->nama_lengkap,
+                ])->all(),
+                'insert' => $aggregate['insert'],
+                'unchanged' => $aggregate['unchanged'],
+                'conflict' => $aggregate['conflict'],
+                'curriculum_counts' => $aggregate['curriculum'],
+                'periods' => $periods,
+            ],
+        ]);
+
+        return $run->fresh();
+    }
+
     public function previewSync(array $filters, ?string $initiatedBy): RdmSyncRun
     {
         $run = RdmSyncRun::create([
@@ -341,6 +502,44 @@ class RdmSyncService
     {
         $rdm = DB::connection(self::CONNECTION)->table('e_tahunajaran')->where('tahunajaran_id', $id)->first();
         return $rdm ? TahunPelajaran::where('nama', trim((string) $rdm->tahunajaran_nama))->first() : null;
+    }
+
+    private function buildCohortPeriodPlan(
+        TahunPelajaran $tahunRoster,
+        int $tingkatAktif,
+        int $semesterTerakhir
+    ): Collection {
+        $yearRows = DB::connection(self::CONNECTION)->table('e_tahunajaran')
+            ->select('tahunajaran_id', 'tahunajaran_nama')
+            ->get();
+
+        return collect(range(1, $semesterTerakhir))->map(function (int $semester) use (
+            $tahunRoster,
+            $tingkatAktif,
+            $yearRows
+        ) {
+            $gradeOffset = intdiv($semester - 1, 2);
+            $sourceGrade = 10 + $gradeOffset;
+            $sourceYearStart = (int) $tahunRoster->tahun_mulai - ($tingkatAktif - $sourceGrade);
+            $sourceYearName = $sourceYearStart . '/' . ($sourceYearStart + 1);
+            $rdmYear = $yearRows->first(fn ($row) =>
+                trim((string) $row->tahunajaran_nama) === $sourceYearName
+                || (int) $row->tahunajaran_id === $sourceYearStart
+            );
+
+            return [
+                'semester' => $semester,
+                'source_year_start' => $sourceYearStart,
+                'source_year_name' => $sourceYearName,
+                'source_grade' => $sourceGrade,
+                'source_grade_label' => [10 => 'X', 11 => 'XI', 12 => 'XII'][$sourceGrade],
+                'rdm_tahunajaran_id' => $rdmYear ? (int) $rdmYear->tahunajaran_id : null,
+                'rdm_semester_id' => $semester % 2 === 1 ? 1 : 2,
+                'rdm_semester_label' => $semester % 2 === 1 ? 'Ganjil' : 'Genap',
+                'rdm_tingkat_id' => 12 + $gradeOffset,
+                'status' => 'planned',
+            ];
+        });
     }
 
     private function buildMapelMap(): array

@@ -51,6 +51,7 @@ class RdmSyncController extends Controller
             $sampleRows = RdmSyncStaging::query()
                 ->with(['siswa:id,nama_lengkap,nisn', 'mataPelajaran:id,nama_mapel,kode_mapel'])
                 ->where('run_id', $selectedRun->id)
+                ->orderBy('simansa_semester')
                 ->orderByRaw("FIELD(apply_action, 'conflict', 'insert', 'unchanged', 'skip')")
                 ->orderBy('rdm_nama')
                 ->limit(80)
@@ -65,7 +66,6 @@ class RdmSyncController extends Controller
 
         return view('admin.rdm-sync.index', [
             'rdmPeriod' => $this->rdmSyncService->getRdmActivePeriod(),
-            'rdmReference' => $this->rdmSyncService->getRdmReference(),
             'latestRuns' => $latestRuns,
             'selectedRun' => $selectedRun,
             'mismatchRows' => $mismatchRows,
@@ -80,26 +80,17 @@ class RdmSyncController extends Controller
     public function preview(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'rdm_tahunajaran_id' => ['required', 'integer'],
-            'rdm_semester_id' => ['required', 'integer'],
-            'rdm_tingkat_id' => ['nullable', 'integer'],
-            'rdm_kelas_nama' => ['nullable', 'string', 'max:120'],
             'simansa_tahun_pelajaran_id' => ['required', 'uuid', 'exists:tahun_pelajaran,id'],
             'simansa_kelas_id' => ['nullable', 'uuid', 'exists:kelas,id'],
             'simansa_tingkat' => ['required', 'integer', 'in:10,11,12'],
         ]);
 
-        if (empty($data['rdm_tingkat_id'])) {
-            return back()->withInput()->withErrors([
-                'rdm_tingkat_id' => 'Tingkat wajib dipilih agar semester leger dapat dipetakan dengan benar.',
-            ]);
-        }
-
-        $run = $this->rdmSyncService->previewSync($data, Auth::id());
+        $run = $this->rdmSyncService->previewCohortSync($data, Auth::id());
+        $semesterTo = data_get($run->meta, 'semester_to', 1);
 
         return redirect()
             ->route('admin.rdm-sync.index', ['run' => $run->id])
-            ->with('success', 'Preview sync selesai. Periksa ringkasan dan mismatch sebelum apply.');
+            ->with('success', "Preview Semester 1-{$semesterTo} selesai. Periksa cakupan tiap semester sebelum Apply.");
     }
 
     public function apply(Request $request, RdmSyncRun $run): RedirectResponse
