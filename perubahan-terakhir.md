@@ -4,6 +4,13 @@ Tanggal pembaruan: 30 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Arsip analisis pengiriman nilai RDM ke pusat
+
+- Alur pengiriman nilai telah dipetakan secara read-only tanpa mengirim nilai: backend RDM lokal menyiapkan paket JSON per kelas, browser mengirimnya langsung ke `rdm.hdmadrasah.id` memakai Bearer token, lalu backend lokal menandai kelas selesai.
+- Pengiriman satu kelas berjalan per siswa melalui `newkirimnilai`, sedangkan Kirim Semua berjalan bulk per kelas melalui `newkirimnilaibulk`.
+- Status selesai dikonfirmasi pada `e_kelaslock.kelaslock_status = 3`; timestamp database cocok dengan request `proktor/kirimnilai/done` pada access log.
+- Analisis autentikasi, endpoint lama, kelemahan retry, batas controller ionCube, dan risiko perbedaan status pusat-lokal disimpan di `docs/rdm-research/send-nilai-analysis.md`.
+
 ### Arsip analisis Sync EMIS RDM
 
 - Alur tombol Sync EMIS RDM telah dipetakan secara read-only dari bundle frontend, access log, struktur database, dan agregat data VM tanpa menjalankan proses sinkronisasi.

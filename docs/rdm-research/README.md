@@ -16,6 +16,8 @@ hanya tersimpan di `C:\RDMMadrasah` dan riwayat terminal tidak hilang.
 
 - `sync-emis-analysis.md` — alur tombol Sync EMIS RDM, endpoint lokal,
   penyimpanan relasi EMIS, dan batas hasil investigasi.
+- `send-nilai-analysis.md` — alur penyiapan paket nilai lokal, pengiriman JSON
+  langsung dari browser ke pusat RDM, autentikasi, status lokal, dan risiko.
 
 ## Temuan paling penting
 
