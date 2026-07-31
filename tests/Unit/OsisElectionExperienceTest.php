@@ -82,6 +82,20 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('HTMLFormElement.prototype.submit.call(form)', $view);
     }
 
+    public function test_entire_candidate_card_can_be_used_to_choose_a_package(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
+
+        $this->assertStringContainsString('$canChoosePackage', $view);
+        $this->assertStringContainsString("'is-selectable'", $view);
+        $this->assertStringContainsString('class="card-choice-surface"', $view);
+        $this->assertStringContainsString('aria-pressed="false"', $view);
+        $this->assertStringContainsString('KLIK UNTUK COBLOS', $view);
+        $this->assertStringContainsString("$('.card-choice-surface').on('click'", $view);
+        $this->assertStringContainsString('.platform-tabs{cursor:default;position:relative;z-index:6}', $view);
+        $this->assertStringContainsString('.vote-package.is-selected', $view);
+    }
+
     public function test_all_student_pages_receive_election_overlay_and_countdown(): void
     {
         $provider = file_get_contents(dirname(__DIR__, 2).'/app/Providers/AppServiceProvider.php');

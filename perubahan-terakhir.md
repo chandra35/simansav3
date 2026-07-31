@@ -4,6 +4,21 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Seluruh kartu paket dapat dicoblos
+
+- Pada halaman Pemilihan OSIS siswa, seluruh area kartu paket kini dapat diklik atau disentuh untuk memilih kandidat, tidak terbatas pada tombol di bagian bawah.
+- Kartu yang dapat dipilih memiliki penanda `Klik untuk coblos`, efek sorot saat hover/fokus, dan status terpilih sebelum modal konfirmasi dibuka.
+- Interaksi menggunakan tombol transparan native sehingga tetap dapat digunakan melalui keyboard dan memiliki label aksesibilitas.
+- Tab Visi dan Misi tetap bisa dibuka tanpa memicu pemilihan paket.
+- Tombol `Coblos Paket` tetap tersedia sebagai aksi yang eksplisit. Klik kartu maupun tombol mengarah ke modal konfirmasi password yang sama, sehingga suara tidak langsung tersimpan akibat salah sentuh.
+- Perilaku otomatis menyesuaikan status pemilih: kartu hanya interaktif ketika voting sedang dibuka, siswa belum memilih, dan paket tersebut bukan paket siswa sendiri.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 138 pengujian, 886 assertions.
+
+File utama:
+
+- `resources/views/siswa/osis-election/index.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Perbaikan voting siswa dan pengumuman Pemilihan OSIS
 
 - Endpoint coblos siswa tidak lagi memakai throttle route generik yang dapat menampilkan halaman mentah `429 Too Many Requests`.
