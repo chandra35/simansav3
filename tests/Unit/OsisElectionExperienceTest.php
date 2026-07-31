@@ -190,13 +190,14 @@ class OsisElectionExperienceTest extends TestCase
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
 
-        $this->assertStringContainsString('class="school-watermark" aria-hidden="true"', $view);
-        $this->assertStringContainsString('<img src="{{ $schoolLogo }}" alt="">', $view);
-        $this->assertStringContainsString('opacity:.105', $view);
+        $this->assertStringContainsString('style="--school-watermark:url(\'{{ $schoolLogo }}\')"', $view);
+        $this->assertStringContainsString('class="package-watermark" aria-hidden="true"', $view);
+        $this->assertStringContainsString('opacity:.072', $view);
         $this->assertStringContainsString('mix-blend-mode:screen', $view);
-        $this->assertStringContainsString('perspective:1100px', $view);
+        $this->assertStringContainsString('perspective(950px)', $view);
         $this->assertStringContainsString('@keyframes watermarkFloat', $view);
-        $this->assertStringContainsString('.school-watermark img,.result-value', $view);
+        $this->assertStringContainsString('.package-watermark,.result-value', $view);
+        $this->assertStringContainsString('<span class="package-watermark" aria-hidden="true"></span>', $view);
     }
 
     public function test_candidate_roles_pause_and_animated_ranking_are_configurable(): void

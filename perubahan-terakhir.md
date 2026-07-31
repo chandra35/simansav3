@@ -6,10 +6,10 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ### Watermark logo sekolah 3D pada live polling
 
-- Background live polling menggunakan logo sekolah aktual sebagai watermark besar di tengah layar.
+- Background setiap kartu paket live polling menggunakan logo sekolah aktual sebagai watermark besar dan utuh di belakang kandidat.
 - Logo mempunyai opacity rendah, warna teredam, mode blend, perspektif 3D ringan, dua cincin kedalaman, dan bayangan lembut agar menyatu dengan dark mode.
 - Watermark bergerak sangat lambat untuk memberikan kesan ruang yang hidup tanpa bersaing dengan foto kandidat maupun statistik.
-- Transparansi panel paket dikurangi sedikit agar watermark dapat terlihat samar di area kosong, sementara kontras teks, foto, dan meter tetap dipertahankan.
+- Watermark ditempatkan pada lapisan tersendiri di bawah header, foto, teks, dan meter sehingga tetap terlihat samar di area kosong tanpa terpotong oleh celah antarpaket.
 - Ukuran watermark menyesuaikan desktop dan perangkat kecil, tidak menerima interaksi, serta disembunyikan dari pembaca layar.
 - Animasi watermark dinonaktifkan otomatis untuk preferensi `prefers-reduced-motion`.
 - Blade berhasil dikompilasi dan seluruh unit test lulus: 141 pengujian, 914 assertions.
