@@ -67,6 +67,7 @@ $(function () {
         initialized = true;
 
         $('#selectKelas').select2({
+            theme: 'bootstrap4',
             width: '100%',
             placeholder: 'Pilih satu atau beberapa rombel',
             dropdownParent: $modal,
@@ -74,6 +75,7 @@ $(function () {
         }).on('change', renderKelasPreview);
 
         $('#selectSiswa').select2({
+            theme: 'bootstrap4',
             width: '100%',
             placeholder: 'Cari nama atau NIS siswa…',
             dropdownParent: $modal,
