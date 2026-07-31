@@ -29,6 +29,7 @@
         <div class="{{ config('adminlte.classes_content') ?: $def_container_class }}">
             @include('adminlte::partials.common.flash-messages')
             @include('partials.impersonation-banner')
+            @include('partials.student-election-overlay')
             @stack('content')
             @yield('content')
         </div>

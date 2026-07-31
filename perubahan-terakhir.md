@@ -4,6 +4,33 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan voting siswa dan pengumuman Pemilihan OSIS
+
+- Endpoint coblos siswa tidak lagi memakai throttle route generik yang dapat menampilkan halaman mentah `429 Too Many Requests`.
+- Pembatasan kini khusus untuk percobaan password yang salah, menggunakan kunci per siswa dan per pemilihan. Maksimal lima kesalahan dalam 60 detik tetap melindungi akun, tetapi respons selalu kembali ke halaman pemilihan dengan pesan dan hitung mundur yang ramah.
+- Batas percobaan langsung dibersihkan setelah password benar. Koreksi password mempertahankan paket yang dipilih dan membuka kembali modal setelah pesan dibaca.
+- Submit ganda ditahan pada browser. Jaminan satu suara tetap menggunakan transaksi, row lock pemilih, dan pemeriksaan `has_voted` pada server.
+- Setelah konfirmasi, tampil animasi surat suara dicoblos, diberi stempel, lalu masuk ke kotak suara digital sebelum request dikirim. Animasi menghormati preferensi `prefers-reduced-motion`.
+- Seluruh halaman akun siswa kini menerima overlay pengumuman untuk pemilihan yang dipublikasikan pada tahun aktif:
+  - sebelum mulai, overlay menampilkan countdown hari, jam, menit, dan detik serta tombol mengenali kandidat;
+  - saat voting terbuka, pesan berubah otomatis menjadi ajakan mencoblos dan countdown menuju penutupan;
+  - saat dijeda, pengingat menjelaskan status panitia;
+  - setelah overlay ditutup, pengingat kecil tetap berada di sudut layar;
+  - overlay hanya muncul sekali per tab untuk setiap fase, lalu muncul kembali ketika fase berubah dari terjadwal menjadi terbuka;
+  - siswa yang sudah memilih dan halaman Pemilihan OSIS sendiri tidak ditutupi overlay.
+- Route cache dibersihkan dan dibangun ulang; route voting terverifikasi hanya memakai middleware `web`, `auth`, dan `impersonation:siswa`, tanpa `throttle:5,1`.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 137 pengujian, 878 assertions.
+
+File utama:
+
+- `app/Exceptions/InvalidVotePasswordException.php`
+- `app/Http/Controllers/Siswa/OsisElectionController.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Services/OsisElectionService.php`
+- `resources/views/partials/student-election-overlay.blade.php`
+- `resources/views/siswa/osis-election/index.blade.php`
+- `routes/web.php`
+
 ### Preview leger RDM otomatis berdasarkan kohor
 
 - Proses sync tetap idempotent untuk Semester 5 dan periode lain: satu siswa-mapel-tahun-semester hanya boleh mempunyai satu record. Nilai sama dilewati, nilai berbeda ditahan sebagai konflik, dan periode baru dibuat tanpa menggandakan Semester 1–4.

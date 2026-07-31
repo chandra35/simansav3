@@ -2,8 +2,13 @@
 
 namespace Tests\Unit;
 
+use App\Exceptions\InvalidVotePasswordException;
 use App\Models\OsisElection;
+use App\Models\OsisPackage;
+use App\Models\User;
+use App\Services\OsisElectionService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class OsisElectionStateTest extends TestCase
@@ -65,5 +70,34 @@ class OsisElectionStateTest extends TestCase
 
         $election->result_published_at = now();
         $this->assertTrue($election->results_visible);
+    }
+
+    public function test_wrong_vote_password_uses_specific_exception_before_ballot_is_processed(): void
+    {
+        Carbon::setTestNow('2026-08-17 09:00:00');
+
+        $election = new OsisElection([
+            'status' => 'published',
+            'starts_at' => '2026-08-17 08:00:00',
+            'ends_at' => '2026-08-17 12:00:00',
+        ]);
+        $election->id = '00000000-0000-0000-0000-000000000001';
+
+        $package = new OsisPackage;
+        $package->id = '00000000-0000-0000-0000-000000000002';
+        $package->election_id = $election->id;
+
+        $user = new User([
+            'name' => 'Pemilih',
+            'username' => 'pemilih-test',
+            'email' => 'pemilih@example.test',
+            'password' => Hash::make('password-benar'),
+            'role' => 'siswa',
+        ]);
+
+        $this->expectException(InvalidVotePasswordException::class);
+        $this->expectExceptionMessage('Password akun tidak sesuai.');
+
+        app(OsisElectionService::class)->vote($election, $user, $package, 'password-salah');
     }
 }

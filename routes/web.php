@@ -983,7 +983,7 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
     Route::get('/pemilihan-osis', [App\Http\Controllers\Siswa\OsisElectionController::class, 'index'])->name('osis-election.index');
-    Route::post('/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Siswa\OsisElectionController::class, 'vote'])->middleware('throttle:5,1')->name('osis-election.vote');
+    Route::post('/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Siswa\OsisElectionController::class, 'vote'])->name('osis-election.vote');
     
     // Profile Management for Siswa
     Route::get('/profile/password', [SiswaProfileController::class, 'password'])->name('profile.password');

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\InvalidVotePasswordException;
 use App\Models\OsisBallot;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
@@ -83,7 +84,7 @@ class OsisElectionService
         if (! $election->is_open) throw new RuntimeException('Pemilihan belum dibuka atau sudah berakhir.');
         if ($package->election_id !== $election->id) throw new RuntimeException('Paket kandidat tidak valid.');
         if (! Hash::check($password, $user->password)) {
-            throw new RuntimeException('Password akun tidak sesuai. Suara belum disimpan.');
+            throw new InvalidVotePasswordException('Password akun tidak sesuai. Suara belum disimpan.');
         }
 
         return DB::transaction(function () use ($election, $user, $package) {

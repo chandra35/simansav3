@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\CustomMenu;
+use App\Models\OsisElection;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Observers\UserObserver;
@@ -89,6 +90,39 @@ class AppServiceProvider extends ServiceProvider
                 ->active()
                 ->select(['id', 'nama', 'semester_aktif'])
                 ->first());
+        });
+
+        View::composer('partials.student-election-overlay', function ($view) {
+            $user = Auth::user();
+            $notice = null;
+
+            if ($user?->isSiswa() && ! $user->is_first_login) {
+                $election = OsisElection::query()
+                    ->whereHas('tahunPelajaran', fn ($query) => $query->active())
+                    ->whereIn('status', ['published', 'paused'])
+                    ->where('ends_at', '>', now())
+                    ->orderBy('starts_at')
+                    ->first();
+
+                if ($election) {
+                    $voter = $election->voters()
+                        ->where('user_id', $user->id)
+                        ->first(['has_voted']);
+
+                    $notice = [
+                        'id' => $election->id,
+                        'title' => $election->title,
+                        'theme' => $election->theme,
+                        'phase' => $election->phase,
+                        'starts_at' => $election->starts_at->toIso8601String(),
+                        'ends_at' => $election->ends_at->toIso8601String(),
+                        'has_voted' => (bool) $voter?->has_voted,
+                        'url' => route('siswa.osis-election.index'),
+                    ];
+                }
+            }
+
+            $view->with('studentElectionNotice', $notice);
         });
 
         // Menu items are now configured in config/adminlte.php
