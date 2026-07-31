@@ -48,46 +48,52 @@
 <script>
 $(function () {
     var $modal = $('#assignSantri');
+    var initialized = false;
 
-    $('#selectKelas').select2({
-        theme: 'bootstrap4',
-        width: '100%',
-        placeholder: 'Pilih satu atau beberapa rombel',
-        dropdownParent: $modal,
-        closeOnSelect: false,
-        templateResult: function (state) {
-            if (!state.id) return state.text;
-            var count = $(state.element).data('count');
-            var name  = $(state.element).data('name');
-            return $('<div class="d-flex justify-content-between align-items-center"><strong>' + name + '</strong><span class="badge badge-info badge-pill ml-2">' + count + ' siswa</span></div>');
-        },
-        templateSelection: function (state) {
-            if (!state.id) return state.text;
-            return $(state.element).data('name');
-        }
-    }).on('change', renderKelasPreview);
+    $modal.on('shown.bs.modal', function () {
+        if (initialized) return;
+        initialized = true;
 
-    $('#selectSiswa').select2({
-        theme: 'bootstrap4',
-        width: '100%',
-        placeholder: 'Cari nama atau NIS siswa…',
-        dropdownParent: $modal,
-        closeOnSelect: false,
-        matcher: function (params, data) {
-            if ($.trim(params.term) === '') return data;
-            if (!data.id) return null;
-            var term = params.term.toLowerCase();
-            var nis  = String($(data.element).data('nis') || '').toLowerCase();
-            if (data.text.toLowerCase().indexOf(term) > -1 || nis.indexOf(term) > -1) return data;
-            return null;
-        },
-        templateResult: function (state) {
-            if (!state.id) return state.text;
-            var nis = $(state.element).data('nis') || '-';
-            return $('<div><strong>' + state.text + '</strong><small class="d-block text-muted" style="font-size:.8em">NIS: ' + nis + '</small></div>');
-        },
-        templateSelection: function (state) { return state.text; }
-    }).on('change', renderSiswaPreview);
+        $('#selectKelas').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Pilih satu atau beberapa rombel',
+            dropdownParent: $modal,
+            closeOnSelect: false,
+            templateResult: function (state) {
+                if (!state.id) return state.text;
+                var count = $(state.element).data('count');
+                var name  = $(state.element).data('name');
+                return $('<div class="d-flex justify-content-between align-items-center"><strong>' + name + '</strong><span class="badge badge-info badge-pill ml-2">' + count + ' siswa</span></div>');
+            },
+            templateSelection: function (state) {
+                if (!state.id) return state.text;
+                return $(state.element).data('name');
+            }
+        }).on('change', renderKelasPreview);
+
+        $('#selectSiswa').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Cari nama atau NIS siswa…',
+            dropdownParent: $modal,
+            closeOnSelect: false,
+            matcher: function (params, data) {
+                if ($.trim(params.term) === '') return data;
+                if (!data.id) return null;
+                var term = params.term.toLowerCase();
+                var nis  = String($(data.element).data('nis') || '').toLowerCase();
+                if (data.text.toLowerCase().indexOf(term) > -1 || nis.indexOf(term) > -1) return data;
+                return null;
+            },
+            templateResult: function (state) {
+                if (!state.id) return state.text;
+                var nis = $(state.element).data('nis') || '-';
+                return $('<div><strong>' + state.text + '</strong><small class="d-block text-muted" style="font-size:.8em">NIS: ' + nis + '</small></div>');
+            },
+            templateSelection: function (state) { return state.text; }
+        }).on('change', renderSiswaPreview);
+    });
 
     function renderKelasPreview() {
         var $body = $('#kelasPreviewBody').empty();
