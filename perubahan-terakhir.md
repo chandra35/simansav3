@@ -4,6 +4,22 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Statistik perolehan live polling lebih jelas dan hidup
+
+- Bar statistik per paket diperbesar secara adaptif dari ukuran lama 7 px menjadi 12–18 px, dengan batas 11 px pada layar desktop yang sangat pendek agar seluruh paket tetap muat.
+- Label `Statistik perolehan`, jumlah suara, dan persentase diperbesar. Pengecilan label ekstrem saat terdapat 5–6 paket dihapus.
+- Track bar memiliki penanda interval, kontras lebih kuat, dan bayangan dalam agar panjang perolehan mudah dibandingkan dari layar monitoring.
+- Isi bar memakai animasi aliran warna dan kilau bergerak, disertai titik energi pada ujung perolehan yang telah memiliki suara.
+- Ketika jumlah suara berubah, panel statistik memberi pulse singkat dan angka baru muncul dengan animasi pop. Animasi tidak terus mengganggu ketika data tidak berubah.
+- Paket teratas mendapatkan cahaya bar yang lebih kuat dan perpindahan posisi tetap memakai animasi ranking yang sudah ada.
+- Seluruh animasi dinonaktifkan bagi perangkat dengan preferensi `prefers-reduced-motion`.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 140 pengujian, 902 assertions.
+
+File utama:
+
+- `resources/views/public/osis-polling.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Halaman voting siswa lebih ringkas dan fokus pada kandidat
 
 - Hero judul, status jadwal, informasi kerahasiaan, dan pesan keberhasilan dipadatkan agar tidak menghabiskan layar sebelum daftar kandidat.

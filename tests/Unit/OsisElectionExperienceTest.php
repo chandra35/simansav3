@@ -165,6 +165,22 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('requestFullscreen?.()', $view);
     }
 
+    public function test_live_polling_result_bars_are_clear_and_animated_when_votes_change(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
+
+        $this->assertStringContainsString('Statistik perolehan', $view);
+        $this->assertStringContainsString('height:clamp(12px,1.35vh,18px)', $view);
+        $this->assertStringContainsString('@keyframes barFlow', $view);
+        $this->assertStringContainsString('@keyframes barShimmer', $view);
+        $this->assertStringContainsString('@keyframes barBeacon', $view);
+        $this->assertStringContainsString('@keyframes voteCountPop', $view);
+        $this->assertStringContainsString("bar.classList.toggle('has-value',nextVotes>0)", $view);
+        $this->assertStringContainsString("card.classList.add('vote-updated')", $view);
+        $this->assertStringContainsString('@media(prefers-reduced-motion:reduce)', $view);
+        $this->assertStringNotContainsString('.package-grid[data-count="5"] .result-value span', $view);
+    }
+
     public function test_candidate_roles_pause_and_animated_ranking_are_configurable(): void
     {
         $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
