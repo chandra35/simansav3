@@ -13,7 +13,7 @@ class AsramaKelas extends Model
     protected $table = 'asrama_kelas';
 
     protected $fillable = [
-        'asrama_id', 'tahun_pelajaran_id', 'nama_kelas', 'nama_arab', 'tingkat',
+        'asrama_id', 'tahun_pelajaran_id', 'kelas_id', 'nama_kelas', 'nama_arab', 'tingkat',
         'jenis', 'wali_asatidz_id', 'kapasitas', 'ruang', 'is_active',
         'deskripsi', 'created_by', 'updated_by',
     ];
@@ -28,6 +28,11 @@ class AsramaKelas extends Model
     public function tahunPelajaran()
     {
         return $this->belongsTo(TahunPelajaran::class);
+    }
+
+    public function kelasReguler()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
     public function wali()
@@ -53,5 +58,10 @@ class AsramaKelas extends Model
     public function ketua()
     {
         return $this->hasOne(AsramaKelasSantri::class)->where('is_ketua_kelas', true)->where('status', 'aktif');
+    }
+
+    public function pengasuhRombel()
+    {
+        return $this->hasMany(AsramaRombelPengasuh::class)->where('is_active', true);
     }
 }

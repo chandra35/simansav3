@@ -4,6 +4,27 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Refaktor final Asrama: satu asrama, rombel SIMANSA, pengasuh, dan kamar
+
+- Konsep Unit Asrama dan kelas Asrama terpisah dihapus dari UI. Modul memakai satu Asrama, sedangkan rombel menunjuk langsung ke master kelas SIMANSA.
+- Role khusus `Operator Asrama` ditambahkan. Hanya Admin/Super Admin yang dapat menetapkan operator; operator memperoleh seluruh kewenangan Asrama tanpa akses administrasi umum SIMANSA.
+- GTK Asrama kini dapat diberi kombinasi kewenangan sebagai pengasuh rombel, pengasuh kamar, dan pengampu mapel.
+- Satu rombel mendukung beberapa pengasuh. Santri dapat dibagi per orang atau satu rombel penuh, dengan satu pengasuh utama per santri.
+- Manajemen kamar ditambahkan untuk gedung putra/putri, meliputi kode/nama kamar, lantai, kapasitas, satu pengasuh utama, penempatan santri, validasi jenis kelamin, dan riwayat perpindahan. Satu pengasuh dapat menangani beberapa kamar.
+- Assignment santri dapat dilakukan per rombel SIMANSA atau per siswa. Identitas siswa/GTK tetap bersumber dari master SIMANSA.
+- Otorisasi input nilai dan rapor telah disesuaikan untuk banyak pengasuh per rombel.
+- Rapor memakai teks Unicode Arab asli dan penandatangan `Pengasuh Rombel / مشرف الفصل`.
+- Seluruh halaman Asrama memakai modal baru, dropdown Select2 yang dapat dicari, desain responsif, konfirmasi aksi, dan overlay loading/progres.
+- Migrasi menjaga data lama: rombel lama dipetakan ke kelas SIMANSA berdasarkan tahun/nama dan wali lama dimigrasikan menjadi pengasuh utama.
+
+File utama:
+
+- `database/migrations/2026_07_31_110000_refactor_asrama_to_single_boarding_school.php`
+- `database/migrations/2026_07_31_111000_migrate_legacy_asrama_caregivers.php`
+- `app/Http/Controllers/Asrama/`
+- `resources/views/asrama/`
+- `MODUL_ASRAMA.md`
+
 ### Modul mandiri Asrama dan Rapor Arab
 
 - Menu utama `ASRAMA` ditambahkan ke sidebar dengan submenu Dashboard, Unit, Santri, Asatidz, Kelas, Mapel, Input Nilai, dan Rapor.

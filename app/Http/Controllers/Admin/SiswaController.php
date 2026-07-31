@@ -660,7 +660,8 @@ class SiswaController extends Controller
             'sekolahAsal',
             'kelasAktif',
             'asramaSantriAktif.asrama',
-            'asramaSantriAktif.kelasAktif.kelas',
+            'asramaSantriAktif.kelasAktif.kelas.kelasReguler',
+            'asramaSantriAktif.kamarAktif.kamar',
             'siswaKelasRecords' => fn ($query) => $query
                 ->with(['kelas.jurusan', 'tahunPelajaran', 'penetapKetuaKelas'])
                 ->latest('tanggal_masuk'),

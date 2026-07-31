@@ -122,8 +122,9 @@ class AsramaWorkflowTest extends TestCase
         }
 
         $this->actingAs($admin)->get(route('asrama.dashboard'))->assertOk();
-        $this->actingAs($admin)->get(route('asrama.units'))->assertOk();
+        $this->actingAs($admin)->get(route('asrama.operator.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.kelas.index'))->assertOk();
+        $this->actingAs($admin)->get(route('asrama.kamar.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.nilai.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.rapor.index'))->assertOk();
     }

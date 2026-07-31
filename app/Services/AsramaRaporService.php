@@ -33,23 +33,13 @@ class AsramaRaporService
         $fraction = round($value - $whole, 2);
         $wholeText = self::ARABIC_UNITS[$whole] ?? $this->digitsToArabic($whole);
 
-        if ($fraction === 0.0) {
-            return $wholeText;
-        }
-
-        if ($fraction === 0.5) {
-            return $wholeText.' ونصف';
-        }
-
-        if ($fraction === 0.25) {
-            return $wholeText.' وربع';
-        }
-
-        if ($fraction === 0.75) {
-            return $wholeText.' وثلاثة أرباع';
-        }
-
-        return $wholeText.' فاصلة '.$this->digitsToArabic((int) round($fraction * 100));
+        return match ($fraction) {
+            0.0 => $wholeText,
+            0.5 => $wholeText.' ونصف',
+            0.25 => $wholeText.' وربع',
+            0.75 => $wholeText.' وثلاثة أرباع',
+            default => $wholeText.' فاصلة '.$this->digitsToArabic((int) round($fraction * 100)),
+        };
     }
 
     public function descriptor(float|int|string|null $score): string
@@ -57,21 +47,14 @@ class AsramaRaporService
         if ($score === null || $score === '') {
             return '-';
         }
-        $score = (float) $score;
-        if ($score >= 9) {
-            return 'ممتاز';
-        }
-        if ($score >= 8) {
-            return 'جيد جدا';
-        }
-        if ($score >= 7) {
-            return 'جيد';
-        }
-        if ($score >= 6) {
-            return 'مقبول';
-        }
 
-        return 'ناقص';
+        return match (true) {
+            (float) $score >= 9 => 'ممتاز',
+            (float) $score >= 8 => 'جيد جدا',
+            (float) $score >= 7 => 'جيد',
+            (float) $score >= 6 => 'مقبول',
+            default => 'ناقص',
+        };
     }
 
     public function build(AsramaKelasSantri $membership, string $semester): array
@@ -80,7 +63,8 @@ class AsramaRaporService
             'santri.siswa',
             'santri.asrama.kepala',
             'kelas.tahunPelajaran',
-            'kelas.wali.gtk',
+            'kelas.pengasuhRombel.pengasuh.gtk',
+            'pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
             'nilai.pengampu.mapel',
         ]);
 
@@ -101,6 +85,10 @@ class AsramaRaporService
 
         $numeric = $scores->pluck('nilai')->filter(fn ($value) => $value !== null);
         $setting = AppSetting::getInstance();
+        $assignedCaregiver = $membership->pengasuhAssignment?->rombelPengasuh?->pengasuh;
+        $primaryCaregiver = $membership->kelas->pengasuhRombel->firstWhere('is_primary', true)?->pengasuh
+            ?? $membership->kelas->pengasuhRombel->first()?->pengasuh;
+        $caregiver = $assignedCaregiver ?? $primaryCaregiver;
 
         return [
             'identity' => [
@@ -123,8 +111,8 @@ class AsramaRaporService
                 'nama_asrama' => $membership->santri->asrama->nama,
                 'kepala_asrama' => $membership->santri->asrama->kepala?->nama_lengkap,
                 'nip_kepala_asrama' => $membership->santri->asrama->kepala?->nip,
-                'wali_kelas' => $membership->kelas->wali?->gtk?->nama_lengkap,
-                'nip_wali_kelas' => $membership->kelas->wali?->gtk?->nip,
+                'pengasuh' => $caregiver?->gtk?->nama_lengkap,
+                'nip_pengasuh' => $caregiver?->gtk?->nip,
             ],
             'scores' => $scores->all(),
             'summary' => [

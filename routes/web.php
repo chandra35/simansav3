@@ -71,11 +71,10 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         ->middleware('permission:view-asrama|view-asrama-portal')
         ->name('dashboard');
 
-    Route::middleware('permission:manage-asrama')->group(function () {
-        Route::get('/unit', [App\Http\Controllers\Asrama\MasterController::class, 'units'])->name('units');
-        Route::post('/unit', [App\Http\Controllers\Asrama\MasterController::class, 'storeUnit'])->name('units.store');
-        Route::put('/unit/{asrama}', [App\Http\Controllers\Asrama\MasterController::class, 'updateUnit'])->name('units.update');
-        Route::delete('/unit/{asrama}', [App\Http\Controllers\Asrama\MasterController::class, 'destroyUnit'])->name('units.destroy');
+    Route::middleware('permission:manage-asrama-operator')->group(function () {
+        Route::get('/operator', [App\Http\Controllers\Asrama\OperatorController::class, 'index'])->name('operator.index');
+        Route::post('/operator', [App\Http\Controllers\Asrama\OperatorController::class, 'store'])->name('operator.store');
+        Route::delete('/operator/{user}', [App\Http\Controllers\Asrama\OperatorController::class, 'destroy'])->name('operator.destroy');
     });
 
     Route::middleware('permission:manage-asrama-santri')->group(function () {
@@ -105,9 +104,19 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::post('/kelas/{kelas}/santri', [App\Http\Controllers\Asrama\KelasController::class, 'assignStudents'])->name('kelas.santri.store');
         Route::delete('/kelas/{kelas}/santri/{anggota}', [App\Http\Controllers\Asrama\KelasController::class, 'removeStudent'])->name('kelas.santri.destroy');
         Route::post('/kelas/{kelas}/ketua', [App\Http\Controllers\Asrama\KelasController::class, 'setChair'])->name('kelas.ketua');
-        Route::post('/kelas/{kelas}/wali', [App\Http\Controllers\Asrama\KelasController::class, 'setWali'])->name('kelas.wali');
+        Route::post('/kelas/{kelas}/pengasuh', [App\Http\Controllers\Asrama\KelasController::class, 'storeCaregiver'])->name('kelas.pengasuh.store');
+        Route::delete('/kelas/{kelas}/pengasuh/{pengasuh}', [App\Http\Controllers\Asrama\KelasController::class, 'destroyCaregiver'])->name('kelas.pengasuh.destroy');
+        Route::post('/kelas/{kelas}/pengasuh/{pengasuh}/santri', [App\Http\Controllers\Asrama\KelasController::class, 'assignCaregiverStudents'])->name('kelas.pengasuh.santri');
         Route::post('/kelas/{kelas}/pengampu', [App\Http\Controllers\Asrama\KelasController::class, 'storePengampu'])->name('kelas.pengampu.store');
         Route::delete('/kelas/{kelas}/pengampu/{pengampu}', [App\Http\Controllers\Asrama\KelasController::class, 'destroyPengampu'])->name('kelas.pengampu.destroy');
+    });
+
+    Route::middleware('permission:manage-asrama-kamar')->group(function () {
+        Route::get('/kamar', [App\Http\Controllers\Asrama\KamarController::class, 'index'])->name('kamar.index');
+        Route::post('/kamar', [App\Http\Controllers\Asrama\KamarController::class, 'store'])->name('kamar.store');
+        Route::put('/kamar/{kamar}', [App\Http\Controllers\Asrama\KamarController::class, 'update'])->name('kamar.update');
+        Route::post('/kamar/{kamar}/santri', [App\Http\Controllers\Asrama\KamarController::class, 'assign'])->name('kamar.santri.store');
+        Route::delete('/kamar/{kamar}/santri/{penghuni}', [App\Http\Controllers\Asrama\KamarController::class, 'remove'])->name('kamar.santri.destroy');
     });
 
     Route::middleware('permission:input-nilai-asrama|manage-asrama-pengampu')->group(function () {

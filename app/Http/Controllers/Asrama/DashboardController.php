@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Asrama;
 use App\Models\AsramaAsatidz;
 use App\Models\AsramaKelas;
+use App\Models\AsramaKamar;
 use App\Models\AsramaPengampu;
 use App\Models\AsramaRapor;
 use App\Models\AsramaSantri;
@@ -23,14 +24,14 @@ class DashboardController extends Controller
             ? AsramaAsatidz::with('asrama')->where('gtk_id', $user->gtk->id)->where('is_active', true)->first()
             : null;
         $santri = $user->siswa
-            ? AsramaSantri::with(['asrama', 'kelasAktif.kelas.tahunPelajaran'])
+            ? AsramaSantri::with(['asrama', 'kelasAktif.kelas.tahunPelajaran', 'kamarAktif.kamar'])
                 ->where('siswa_id', $user->siswa->id)->where('status', 'aktif')->first()
             : null;
 
         abort_unless($isManager || $asatidz || $santri, 403);
 
         $stats = [
-            'asrama' => $isManager ? Asrama::where('is_active', true)->count() : 1,
+            'kamar' => $isManager ? AsramaKamar::where('is_active', true)->count() : 0,
             'santri' => $isManager
                 ? AsramaSantri::where('status', 'aktif')->count()
                 : ($santri ? 1 : 0),
@@ -39,7 +40,8 @@ class DashboardController extends Controller
                     ->when($tahunAktif, fn ($query) => $query->where('tahun_pelajaran_id', $tahunAktif->id))
                     ->count()
                 : ($asatidz
-                    ? AsramaKelas::where('wali_asatidz_id', $asatidz->id)->where('is_active', true)->count()
+                    ? AsramaKelas::whereHas('pengasuhRombel', fn ($query) => $query->where('asrama_asatidz_id', $asatidz->id))
+                        ->where('is_active', true)->count()
                     : ($santri?->kelasAktif ? 1 : 0)),
             'pengampu' => $asatidz
                 ? AsramaPengampu::where('asrama_asatidz_id', $asatidz->id)->where('is_active', true)->count()

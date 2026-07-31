@@ -19,7 +19,7 @@ class RaporController extends Controller
         if (! $request->user()->can('manage-rapor-asrama') && ! $request->user()->can('manage-asrama')) {
             $asatidzIds = AsramaAsatidz::where('gtk_id', $request->user()->gtk?->id)
                 ->where('is_active', true)->pluck('id');
-            $classQuery->whereIn('wali_asatidz_id', $asatidzIds);
+            $classQuery->whereHas('pengasuhRombel', fn ($query) => $query->whereIn('asrama_asatidz_id', $asatidzIds));
         }
         $classes = $classQuery->latest()->get();
         $kelasId = $request->input('kelas_id') ?: $classes->first()?->id;
@@ -133,7 +133,7 @@ class RaporController extends Controller
         }
         if ($user->gtk) {
             $ids = AsramaAsatidz::where('gtk_id', $user->gtk->id)->where('is_active', true)->pluck('id');
-            if ($ids->contains($membership->kelas->wali_asatidz_id)) {
+            if ($membership->kelas->pengasuhRombel()->whereIn('asrama_asatidz_id', $ids)->exists()) {
                 return;
             }
         }

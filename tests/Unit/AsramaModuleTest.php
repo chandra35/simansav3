@@ -31,10 +31,15 @@ class AsramaModuleTest extends TestCase
         $migration = file_get_contents($root.'/database/migrations/2026_07_31_100000_create_asrama_module_tables.php');
         $routes = file_get_contents($root.'/routes/web.php');
         $menu = file_get_contents($root.'/config/adminlte.php');
+        $refactor = file_get_contents($root.'/database/migrations/2026_07_31_110000_refactor_asrama_to_single_boarding_school.php');
 
         $this->assertStringContainsString("Schema::create('asrama_nilai'", $migration);
         $this->assertStringContainsString("Schema::create('asrama_rapor'", $migration);
         $this->assertStringContainsString("prefix('asrama')", $routes);
         $this->assertStringContainsString("'text' => 'ASRAMA'", $menu);
+        $this->assertStringNotContainsString("'text' => 'Unit Asrama'", $menu);
+        $this->assertStringContainsString("foreignUuid('kelas_id')", $refactor);
+        $this->assertStringContainsString("Schema::create('asrama_kamar'", $refactor);
+        $this->assertStringContainsString("'Operator Asrama'", $refactor);
     }
 }

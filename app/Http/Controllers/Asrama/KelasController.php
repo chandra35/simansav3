@@ -9,6 +9,8 @@ use App\Models\AsramaKelas;
 use App\Models\AsramaKelasSantri;
 use App\Models\AsramaMapel;
 use App\Models\AsramaPengampu;
+use App\Models\AsramaPengasuhSantri;
+use App\Models\AsramaRombelPengasuh;
 use App\Models\AsramaSantri;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -23,193 +25,209 @@ class KelasController extends Controller
     public function index(Request $request)
     {
         $tahunId = $request->input('tahun_pelajaran_id') ?: TahunPelajaran::active()->value('id');
+        $used = AsramaKelas::whereNotNull('kelas_id')->pluck('kelas_id');
 
         return view('asrama.kelas.index', [
-            'records' => AsramaKelas::with(['asrama', 'tahunPelajaran', 'wali.gtk', 'ketua.santri.siswa'])
-                ->withCount(['anggotaAktif'])
-                ->when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
+            'records' => AsramaKelas::with([
+                'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa', 'pengasuhRombel.pengasuh.gtk',
+            ])->withCount('anggotaAktif')->when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
                 ->orderBy('nama_kelas')->get(),
-            'units' => Asrama::where('is_active', true)->orderBy('nama')->get(),
+            'regularClasses' => Kelas::withCount('siswaAktif')->where('tahun_pelajaran_id', $tahunId)
+                ->where('is_active', true)->whereNotIn('id', $used)->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AsramaAccessService $access)
     {
         $data = $request->validate([
-            'asrama_id' => ['required', 'exists:asrama_units,id'],
-            'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
-            'nama_kelas' => ['required', 'string', 'max:100'],
+            'kelas_id' => ['required', 'exists:kelas,id', 'unique:asrama_kelas,kelas_id'],
             'nama_arab' => ['nullable', 'string', 'max:255'],
-            'tingkat' => ['nullable', 'integer', 'min:1', 'max:12'],
             'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
-            'kapasitas' => ['required', 'integer', 'min:1', 'max:500'],
-            'ruang' => ['nullable', 'string', 'max:100'],
             'deskripsi' => ['nullable', 'string'],
         ]);
-        $exists = AsramaKelas::where([
-            'asrama_id' => $data['asrama_id'],
-            'tahun_pelajaran_id' => $data['tahun_pelajaran_id'],
-            'nama_kelas' => $data['nama_kelas'],
-        ])->exists();
-        abort_if($exists, 422, 'Nama kelas sudah digunakan pada asrama dan tahun tersebut.');
-        AsramaKelas::create($data + [
-            'is_active' => true, 'created_by' => $request->user()->id, 'updated_by' => $request->user()->id,
+        $regular = Kelas::with(['siswaAktif.user', 'tahunPelajaran'])->findOrFail($data['kelas_id']);
+        $unit = Asrama::where('is_active', true)->first() ?: Asrama::firstOrCreate(
+            ['kode' => 'ASRAMA'],
+            ['nama' => 'Asrama MAN 1 Metro', 'jenis' => 'campuran', 'is_active' => true]
+        );
+        $rombel = AsramaKelas::create([
+            'asrama_id' => $unit->id,
+            'tahun_pelajaran_id' => $regular->tahun_pelajaran_id,
+            'kelas_id' => $regular->id,
+            'nama_kelas' => $regular->nama_kelas,
+            'nama_arab' => $data['nama_arab'] ?? null,
+            'tingkat' => $regular->tingkat,
+            'jenis' => $data['jenis'],
+            'kapasitas' => max($regular->kapasitas ?? 0, $regular->siswaAktif->count(), 1),
+            'ruang' => $regular->ruang_kelas,
+            'deskripsi' => $data['deskripsi'] ?? null,
+            'is_active' => true,
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
         ]);
 
-        return back()->with('success', 'Kelas asrama berhasil dibuat.');
+        if ($request->boolean('sync_students', true)) {
+            $this->placeStudents($regular->siswaAktif, $rombel, $request, $access);
+        }
+
+        return redirect()->route('asrama.kelas.show', $rombel)
+            ->with('success', 'Rombel '.$regular->nama_kelas.' diaktifkan untuk Asrama.');
     }
 
     public function show(AsramaKelas $kelas)
     {
         $kelas->load([
-            'asrama', 'tahunPelajaran', 'wali.gtk', 'ketua.santri.siswa',
-            'anggotaAktif.santri.siswa.kelasTahunAktif',
+            'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa',
+            'anggotaAktif.santri.siswa', 'anggotaAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
+            'pengasuhRombel.pengasuh.gtk', 'pengasuhRombel.santriAssignments',
             'pengampu.mapel', 'pengampu.asatidz.gtk',
         ]);
+        $classStudentIds = $kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect();
 
         return view('asrama.kelas.show', [
             'kelas' => $kelas,
-            'asatidz' => AsramaAsatidz::with('gtk')->where('asrama_id', $kelas->asrama_id)
-                ->where('is_active', true)->get()->sortBy('gtk.nama_lengkap'),
-            'mapels' => AsramaMapel::where('is_active', true)
-                ->where(fn ($q) => $q->whereNull('asrama_id')->orWhere('asrama_id', $kelas->asrama_id))
-                ->orderBy('urutan')->get(),
-            'regularClasses' => Kelas::where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                ->where('is_active', true)->orderBy('nama_kelas')->get(),
-            'availableStudents' => Siswa::where('status_siswa', 'aktif')
-                ->where(function ($query) use ($kelas) {
-                    $query->whereDoesntHave('asramaSantriAktif')
-                        ->orWhereHas('asramaSantriAktif', function ($santriQuery) use ($kelas) {
-                            $santriQuery->where('asrama_id', $kelas->asrama_id)
-                                ->whereDoesntHave('kelasAktif');
-                        });
-                })
-                ->orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
+            'caregivers' => AsramaAsatidz::with('gtk')->where('is_active', true)
+                ->where('dapat_mengasuh_rombel', true)->get()->sortBy('gtk.nama_lengkap'),
+            'teachers' => AsramaAsatidz::with('gtk')->where('is_active', true)
+                ->where('dapat_mengampu_mapel', true)->get()->sortBy('gtk.nama_lengkap'),
+            'mapels' => AsramaMapel::where('is_active', true)->orderBy('urutan')->get(),
+            'availableStudents' => Siswa::whereIn('id', $classStudentIds)->orderBy('nama_lengkap')
+                ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
         ]);
     }
 
     public function update(Request $request, AsramaKelas $kelas)
     {
         $data = $request->validate([
-            'nama_kelas' => ['required', 'string', 'max:100'],
             'nama_arab' => ['nullable', 'string', 'max:255'],
-            'tingkat' => ['nullable', 'integer', 'min:1', 'max:12'],
             'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
-            'kapasitas' => ['required', 'integer', 'min:1', 'max:500'],
-            'ruang' => ['nullable', 'string', 'max:100'],
             'deskripsi' => ['nullable', 'string'],
         ]);
-        $data['is_active'] = $request->boolean('is_active');
-        $data['updated_by'] = $request->user()->id;
-        $kelas->update($data);
+        $kelas->update($data + [
+            'is_active' => $request->boolean('is_active'), 'updated_by' => $request->user()->id,
+        ]);
 
-        return back()->with('success', 'Kelas asrama diperbarui.');
+        return back()->with('success', 'Konfigurasi rombel Asrama diperbarui.');
     }
 
     public function assignStudents(Request $request, AsramaKelas $kelas, AsramaAccessService $access)
     {
         $data = $request->validate([
-            'sumber_kelas_id' => ['nullable', 'exists:kelas,id'],
+            'ambil_semua_rombel' => ['nullable', 'boolean'],
             'siswa_ids' => ['nullable', 'array'],
             'siswa_ids.*' => ['exists:siswa,id'],
         ]);
-        $studentIds = collect($data['siswa_ids'] ?? []);
-        if (! empty($data['sumber_kelas_id'])) {
-            $source = Kelas::where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)->findOrFail($data['sumber_kelas_id']);
-            $studentIds = $studentIds->merge($source->siswaAktif()->pluck('siswa.id'));
-        }
-        $studentIds = $studentIds->unique()->values();
-        abort_if($studentIds->isEmpty(), 422, 'Pilih rombel sumber atau siswa.');
+        $allowedIds = $kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect();
+        $ids = $request->boolean('ambil_semua_rombel') ? $allowedIds : collect($data['siswa_ids'] ?? []);
+        $ids = $ids->intersect($allowedIds)->unique()->values();
+        abort_if($ids->isEmpty(), 422, 'Pilih minimal satu siswa dari rombel '.$kelas->nama_kelas.'.');
+        $students = Siswa::with('user')->whereIn('id', $ids)->get();
+        $this->placeStudents($students, $kelas, $request, $access);
 
-        $students = Siswa::with('user')->whereIn('id', $studentIds)->get();
-        DB::transaction(function () use ($students, $kelas, $request, $access) {
-            foreach ($students as $student) {
-                $otherMemberships = AsramaSantri::where('siswa_id', $student->id)
-                    ->where('asrama_id', '!=', $kelas->asrama_id)
-                    ->where('status', 'aktif')
-                    ->get();
-                foreach ($otherMemberships as $other) {
-                    $other->kelasRecords()->where('status', 'aktif')->update([
-                        'status' => 'keluar',
-                        'tanggal_keluar' => now()->toDateString(),
-                        'is_ketua_kelas' => false,
-                    ]);
-                    $other->update([
-                        'status' => 'nonaktif',
-                        'tanggal_keluar' => now()->toDateString(),
-                        'updated_by' => $request->user()->id,
-                    ]);
-                }
-                $santri = AsramaSantri::withTrashed()->firstOrNew([
-                    'asrama_id' => $kelas->asrama_id, 'siswa_id' => $student->id,
-                ]);
-                if ($santri->trashed()) {
-                    $santri->restore();
-                }
-                if (! $santri->exists || ! $santri->nomor_induk_asrama) {
-                    $santri->nomor_induk_asrama = $this->generateNumber($kelas, $student);
-                }
-                $santri->fill([
-                    'status' => 'aktif', 'tanggal_masuk' => $santri->tanggal_masuk ?: now()->toDateString(),
-                    'tanggal_keluar' => null, 'created_by' => $santri->created_by ?: $request->user()->id,
-                    'updated_by' => $request->user()->id,
-                ])->save();
-
-                AsramaKelasSantri::where('asrama_santri_id', $santri->id)
-                    ->where('status', 'aktif')->where('asrama_kelas_id', '!=', $kelas->id)
-                    ->update(['status' => 'keluar', 'tanggal_keluar' => now()->toDateString(), 'is_ketua_kelas' => false]);
-                $membership = AsramaKelasSantri::withTrashed()->firstOrNew([
-                    'asrama_kelas_id' => $kelas->id, 'asrama_santri_id' => $santri->id,
-                ]);
-                if ($membership->trashed()) {
-                    $membership->restore();
-                }
-                $membership->fill([
-                    'status' => 'aktif', 'tanggal_masuk' => now()->toDateString(), 'tanggal_keluar' => null,
-                    'ditetapkan_by' => $request->user()->id,
-                ])->save();
-                $access->syncStudent($student->user);
-            }
-        });
-
-        return back()->with('success', $students->count().' santri berhasil ditempatkan ke kelas asrama.');
+        return back()->with('success', $students->count().' santri disinkronkan ke rombel Asrama.');
     }
 
-    public function removeStudent(Request $request, AsramaKelas $kelas, AsramaKelasSantri $anggota)
+    public function removeStudent(AsramaKelas $kelas, AsramaKelasSantri $anggota)
     {
         abort_unless($anggota->asrama_kelas_id === $kelas->id, 404);
+        $anggota->pengasuhAssignment()->update([
+            'is_active' => false, 'tanggal_selesai' => now()->toDateString(),
+        ]);
         $anggota->update([
             'status' => 'keluar', 'tanggal_keluar' => now()->toDateString(), 'is_ketua_kelas' => false,
         ]);
 
-        return back()->with('success', 'Santri dikeluarkan dari kelas asrama.');
+        return back()->with('success', 'Santri dilepas dari rombel Asrama.');
     }
 
     public function setChair(Request $request, AsramaKelas $kelas)
     {
         $data = $request->validate(['anggota_id' => ['nullable', 'exists:asrama_kelas_santri,id']]);
-        DB::transaction(function () use ($kelas, $data) {
+        DB::transaction(function () use ($kelas, $data): void {
             $kelas->anggota()->update(['is_ketua_kelas' => false]);
             if (! empty($data['anggota_id'])) {
-                $kelas->anggotaAktif()->whereKey($data['anggota_id'])->firstOrFail()
-                    ->update(['is_ketua_kelas' => true]);
+                $kelas->anggotaAktif()->findOrFail($data['anggota_id'])->update(['is_ketua_kelas' => true]);
             }
         });
 
-        return back()->with('success', 'Ketua kelas asrama diperbarui.');
+        return back()->with('success', 'Ketua rombel Asrama diperbarui.');
     }
 
-    public function setWali(Request $request, AsramaKelas $kelas)
+    public function storeCaregiver(Request $request, AsramaKelas $kelas)
     {
-        $data = $request->validate(['wali_asatidz_id' => ['nullable', 'exists:asrama_asatidz,id']]);
-        if (! empty($data['wali_asatidz_id'])) {
-            AsramaAsatidz::where('asrama_id', $kelas->asrama_id)->findOrFail($data['wali_asatidz_id']);
+        $data = $request->validate([
+            'asrama_asatidz_id' => ['required', 'exists:asrama_asatidz,id'],
+            'is_primary' => ['nullable', 'boolean'],
+        ]);
+        $caregiver = AsramaAsatidz::where('is_active', true)->where('dapat_mengasuh_rombel', true)
+            ->findOrFail($data['asrama_asatidz_id']);
+        $assignment = AsramaRombelPengasuh::withTrashed()->firstOrNew([
+            'asrama_kelas_id' => $kelas->id, 'asrama_asatidz_id' => $caregiver->id,
+        ]);
+        if ($assignment->trashed()) {
+            $assignment->restore();
         }
-        $kelas->update(['wali_asatidz_id' => $data['wali_asatidz_id'], 'updated_by' => $request->user()->id]);
+        if ($request->boolean('is_primary')) {
+            $kelas->pengasuhRombel()->update(['is_primary' => false]);
+        }
+        $assignment->fill([
+            'is_primary' => $request->boolean('is_primary'),
+            'tanggal_mulai' => $assignment->tanggal_mulai ?: now()->toDateString(),
+            'tanggal_selesai' => null, 'is_active' => true, 'created_by' => $request->user()->id,
+        ])->save();
+        if (! $kelas->wali_asatidz_id || $assignment->is_primary) {
+            $kelas->update(['wali_asatidz_id' => $caregiver->id]);
+        }
 
-        return back()->with('success', 'Wali kelas asrama diperbarui.');
+        return back()->with('success', $caregiver->gtk->nama_lengkap.' ditambahkan sebagai pengasuh rombel.');
+    }
+
+    public function destroyCaregiver(AsramaKelas $kelas, AsramaRombelPengasuh $pengasuh)
+    {
+        abort_unless($pengasuh->asrama_kelas_id === $kelas->id, 404);
+        $pengasuh->santriAssignments()->update([
+            'is_active' => false, 'tanggal_selesai' => now()->toDateString(),
+        ]);
+        $pengasuh->update(['is_active' => false, 'tanggal_selesai' => now()->toDateString()]);
+        if ($kelas->wali_asatidz_id === $pengasuh->asrama_asatidz_id) {
+            $kelas->update(['wali_asatidz_id' => $kelas->pengasuhRombel()->first()?->asrama_asatidz_id]);
+        }
+
+        return back()->with('success', 'Pengasuh dilepas dari rombel.');
+    }
+
+    public function assignCaregiverStudents(Request $request, AsramaKelas $kelas, AsramaRombelPengasuh $pengasuh)
+    {
+        abort_unless($pengasuh->asrama_kelas_id === $kelas->id && $pengasuh->is_active, 404);
+        $data = $request->validate([
+            'semua_santri' => ['nullable', 'boolean'],
+            'anggota_ids' => ['nullable', 'array'],
+            'anggota_ids.*' => ['exists:asrama_kelas_santri,id'],
+        ]);
+        $validIds = $kelas->anggotaAktif()->pluck('id');
+        $ids = $request->boolean('semua_santri') ? $validIds : collect($data['anggota_ids'] ?? [])->intersect($validIds);
+        abort_if($ids->isEmpty(), 422, 'Pilih minimal satu santri.');
+
+        DB::transaction(function () use ($ids, $pengasuh, $request): void {
+            foreach ($ids as $memberId) {
+                $existing = AsramaPengasuhSantri::withTrashed()->where('asrama_kelas_santri_id', $memberId)->first();
+                if ($existing?->trashed()) {
+                    $existing->restore();
+                }
+                ($existing ?: new AsramaPengasuhSantri)->fill([
+                    'asrama_rombel_pengasuh_id' => $pengasuh->id,
+                    'asrama_kelas_santri_id' => $memberId,
+                    'tanggal_mulai' => now()->toDateString(),
+                    'tanggal_selesai' => null,
+                    'is_active' => true,
+                    'created_by' => $request->user()->id,
+                ])->save();
+            }
+        });
+
+        return back()->with('success', $ids->count().' santri ditetapkan kepada pengasuh.');
     }
 
     public function storePengampu(Request $request, AsramaKelas $kelas)
@@ -219,18 +237,13 @@ class KelasController extends Controller
             'asrama_asatidz_id' => ['required', 'exists:asrama_asatidz,id'],
             'semester' => ['required', Rule::in(['Ganjil', 'Genap'])],
         ]);
-        AsramaMapel::where('is_active', true)
-            ->where(fn ($query) => $query->whereNull('asrama_id')->orWhere('asrama_id', $kelas->asrama_id))
-            ->findOrFail($data['asrama_mapel_id']);
-        AsramaAsatidz::where('asrama_id', $kelas->asrama_id)
-            ->where('is_active', true)
+        AsramaAsatidz::where('is_active', true)->where('dapat_mengampu_mapel', true)
             ->findOrFail($data['asrama_asatidz_id']);
-        $exists = AsramaPengampu::where([
+        abort_if(AsramaPengampu::where([
             'asrama_kelas_id' => $kelas->id,
             'asrama_mapel_id' => $data['asrama_mapel_id'],
             'semester' => $data['semester'],
-        ])->exists();
-        abort_if($exists, 422, 'Mapel tersebut sudah memiliki pengampu pada semester yang dipilih.');
+        ])->exists(), 422, 'Mapel sudah memiliki pengampu pada semester tersebut.');
         AsramaPengampu::create($data + [
             'asrama_kelas_id' => $kelas->id, 'is_active' => true,
             'created_by' => $request->user()->id, 'updated_by' => $request->user()->id,
@@ -248,17 +261,51 @@ class KelasController extends Controller
         return back()->with('success', 'Penugasan pengampu dihapus.');
     }
 
-    private function generateNumber(AsramaKelas $kelas, Siswa $student): string
+    private function placeStudents($students, AsramaKelas $kelas, Request $request, AsramaAccessService $access): void
+    {
+        DB::transaction(function () use ($students, $kelas, $request, $access): void {
+            foreach ($students as $student) {
+                $santri = AsramaSantri::withTrashed()->where('siswa_id', $student->id)->first()
+                    ?: new AsramaSantri(['asrama_id' => $kelas->asrama_id, 'siswa_id' => $student->id]);
+                if ($santri->trashed()) {
+                    $santri->restore();
+                }
+                $santri->fill([
+                    'asrama_id' => $kelas->asrama_id,
+                    'nomor_induk_asrama' => $santri->nomor_induk_asrama ?: $this->generateNumber($student),
+                    'status' => 'aktif', 'tanggal_masuk' => $santri->tanggal_masuk ?: now()->toDateString(),
+                    'tanggal_keluar' => null, 'created_by' => $santri->created_by ?: $request->user()->id,
+                    'updated_by' => $request->user()->id,
+                ])->save();
+                AsramaKelasSantri::where('asrama_santri_id', $santri->id)->where('status', 'aktif')
+                    ->where('asrama_kelas_id', '!=', $kelas->id)->update([
+                        'status' => 'keluar', 'tanggal_keluar' => now()->toDateString(), 'is_ketua_kelas' => false,
+                    ]);
+                $member = AsramaKelasSantri::withTrashed()->firstOrNew([
+                    'asrama_kelas_id' => $kelas->id, 'asrama_santri_id' => $santri->id,
+                ]);
+                if ($member->trashed()) {
+                    $member->restore();
+                }
+                $member->fill([
+                    'status' => 'aktif', 'tanggal_masuk' => $member->tanggal_masuk ?: now()->toDateString(),
+                    'tanggal_keluar' => null, 'ditetapkan_by' => $request->user()->id,
+                ])->save();
+                $access->syncStudent($student->user);
+            }
+        });
+    }
+
+    private function generateNumber(Siswa $student): string
     {
         foreach (array_filter([$student->nis_lokal, $student->nisn]) as $candidate) {
             if (! AsramaSantri::withTrashed()->where('nomor_induk_asrama', $candidate)->exists()) {
                 return $candidate;
             }
         }
-        $prefix = strtoupper($kelas->asrama->kode).'-'.substr((string) $kelas->tahunPelajaran->tahun_mulai, -2).'-';
-        $sequence = AsramaSantri::withTrashed()->where('nomor_induk_asrama', 'like', $prefix.'%')->count() + 1;
+        $sequence = AsramaSantri::withTrashed()->count() + 1;
         do {
-            $candidate = $prefix.str_pad((string) $sequence++, 4, '0', STR_PAD_LEFT);
+            $candidate = 'AST-'.now()->format('y').'-'.str_pad((string) $sequence++, 4, '0', STR_PAD_LEFT);
         } while (AsramaSantri::withTrashed()->where('nomor_induk_asrama', $candidate)->exists());
 
         return $candidate;

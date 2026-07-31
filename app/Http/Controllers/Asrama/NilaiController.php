@@ -21,7 +21,7 @@ class NilaiController extends Controller
             $asatidzIds = AsramaAsatidz::where('gtk_id', $gtkId)->where('is_active', true)->pluck('id');
             $query->where(function ($scope) use ($asatidzIds) {
                 $scope->whereIn('asrama_asatidz_id', $asatidzIds)
-                    ->orWhereHas('kelas', fn ($q) => $q->whereIn('wali_asatidz_id', $asatidzIds));
+                    ->orWhereHas('kelas.pengasuhRombel', fn ($q) => $q->whereIn('asrama_asatidz_id', $asatidzIds));
             });
         }
 
@@ -97,7 +97,7 @@ class NilaiController extends Controller
         $asatidzIds = AsramaAsatidz::where('gtk_id', $gtkId)->where('is_active', true)->pluck('id');
         abort_unless(
             $asatidzIds->contains($pengampu->asrama_asatidz_id)
-            || $asatidzIds->contains($pengampu->kelas->wali_asatidz_id),
+            || $pengampu->kelas->pengasuhRombel()->whereIn('asrama_asatidz_id', $asatidzIds)->exists(),
             403
         );
     }

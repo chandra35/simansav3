@@ -55,7 +55,7 @@ table{width:100%;border-collapse:collapse}.identity td{padding:4px 6px;border:1p
 </table>
 <table class="meta"><tr><td><strong>Sakit / مرض:</strong> {{ $rapor->sakit }}</td><td><strong>Izin / استئذان:</strong> {{ $rapor->izin }}</td><td><strong>Lain-lain / آخر:</strong> {{ $rapor->lain_lain }}</td></tr></table>
 <div class="decision"><strong>Keputusan / <span class="rtl">التقرير</span>:</strong> {{ $rapor->keputusan??'-' }} &nbsp; | &nbsp; <strong>Tanggal:</strong> {{ $rapor->tanggal_rapor?->translatedFormat('d F Y')??'-' }} <span class="rtl" lang="ar">{{ $rapor->tanggal_hijriah }}</span></div>
-@if($rapor->catatan_wali)<div class="notes"><strong>Catatan wali:</strong> {{ $rapor->catatan_wali }}</div>@endif
-<div class="signatures"><div><span>Mengetahui,<br>Kepala Asrama</span><div class="sign-name">{{ $report['institution']['kepala_asrama']??'................................' }}</div><div>NIP. {{ $report['institution']['nip_kepala_asrama']??'-' }}</div></div><div><span>Wali Kelas<br><span class="rtl" lang="ar">ولي الفصل</span></span><div class="sign-name">{{ $report['institution']['wali_kelas']??'................................' }}</div><div>NIP. {{ $report['institution']['nip_wali_kelas']??'-' }}</div></div></div>
+@if($rapor->catatan_wali)<div class="notes"><strong>Catatan pengasuh:</strong> {{ $rapor->catatan_wali }}</div>@endif
+<div class="signatures"><div><span>Mengetahui,<br>Kepala Asrama</span><div class="sign-name">{{ $report['institution']['kepala_asrama']??'................................' }}</div><div>NIP. {{ $report['institution']['nip_kepala_asrama']??'-' }}</div></div><div><span>Pengasuh Rombel<br><span class="rtl" lang="ar">مشرف الفصل</span></span><div class="sign-name">{{ $report['institution']['pengasuh']??'................................' }}</div><div>NIP. {{ $report['institution']['nip_pengasuh']??'-' }}</div></div></div>
 </div></main>
 </body></html>

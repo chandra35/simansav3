@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 @section('title', 'Rapor Asrama')
+@section('plugins.Select2', true)
 @section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
@@ -10,5 +11,6 @@
 @forelse($members as $index=>$member)@php($rapor=$member->rapor->first())<tr><td>{{ $member->nomor_urut??$index+1 }}</td><td><strong>{{ $member->santri->siswa->nama_lengkap }}</strong><br><small>NISN {{ $member->santri->siswa->nisn }}</small></td><td><code>{{ $member->santri->nomor_induk_asrama }}</code></td><td>@if($rapor?->status==='terbit')<span class="asrama-badge asrama-badge--active">Terbit & terkunci</span>@elseif($rapor)<span class="badge badge-warning">Draft</span>@else<span class="asrama-badge asrama-badge--muted">Belum dibuat</span>@endif</td><td>{{ $rapor?->published_at?->format('d/m/Y H:i')??'-' }}</td><td class="text-right"><a class="btn btn-sm btn-info" href="{{ route('asrama.rapor.edit',[$member,'semester'=>$semester]) }}">Kelola</a>@if($rapor)<a target="_blank" class="btn btn-sm btn-outline-secondary" href="{{ route('asrama.rapor.print',$rapor) }}">Cetak</a>@endif</td></tr>
 @empty<tr><td colspan="6" class="asrama-empty"><i class="fas fa-file-alt"></i>Pilih kelas yang memiliki santri aktif.</td></tr>@endforelse
 </tbody></table></div></div>
+@include('asrama._scripts')
 @stop
 @section('css') @include('asrama._styles') @stop

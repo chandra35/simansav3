@@ -39,4 +39,14 @@ class AsramaSantri extends Model
         return $this->hasOne(AsramaKelasSantri::class)
             ->where('status', 'aktif')->latestOfMany();
     }
+
+    public function kamarRecords()
+    {
+        return $this->hasMany(AsramaKamarSantri::class);
+    }
+
+    public function kamarAktif()
+    {
+        return $this->hasOne(AsramaKamarSantri::class)->where('status', 'aktif')->latestOfMany();
+    }
 }

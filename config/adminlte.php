@@ -563,10 +563,10 @@ return [
                     'can' => 'view-asrama-portal',
                 ],
                 [
-                    'text' => 'Unit Asrama',
-                    'route' => 'asrama.units',
-                    'icon' => 'fas fa-fw fa-building',
-                    'can' => 'manage-asrama',
+                    'text' => 'Operator Asrama',
+                    'route' => 'asrama.operator.index',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'manage-asrama-operator',
                 ],
                 [
                     'text' => 'Santri Asrama',
@@ -575,16 +575,22 @@ return [
                     'can' => 'manage-asrama-santri',
                 ],
                 [
-                    'text' => 'Asatidz Asrama',
+                    'text' => 'Pengasuh & Pengajar',
                     'route' => 'asrama.asatidz.index',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
                     'can' => 'manage-asrama-asatidz',
                 ],
                 [
-                    'text' => 'Kelas Asrama',
+                    'text' => 'Rombel Asrama',
                     'route' => 'asrama.kelas.index',
                     'icon' => 'fas fa-fw fa-school',
                     'can' => 'manage-asrama-kelas',
+                ],
+                [
+                    'text' => 'Kamar Asrama',
+                    'route' => 'asrama.kamar.index',
+                    'icon' => 'fas fa-fw fa-bed',
+                    'can' => 'manage-asrama-kamar',
                 ],
                 [
                     'text' => 'Mapel Asrama',

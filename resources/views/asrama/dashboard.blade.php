@@ -12,9 +12,9 @@
     @include('asrama._hero')
 
     <div class="row mb-4">
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Unit Asrama</span><strong>{{ $stats['asrama'] }}</strong><small>Unit yang dapat diakses</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Kamar Aktif</span><strong>{{ $stats['kamar'] ?? 0 }}</strong><small>Gedung putra dan putri</small></div></div>
         <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Santri Aktif</span><strong>{{ $stats['santri'] }}</strong><small>Terhubung ke master siswa</small></div></div>
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Kelas Aktif</span><strong>{{ $stats['kelas'] }}</strong><small>{{ $tahunAktif?->nama ?? 'Tahun belum aktif' }}</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Rombel Aktif</span><strong>{{ $stats['kelas'] }}</strong><small>{{ $tahunAktif?->nama ?? 'Tahun belum aktif' }}</small></div></div>
         <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Penugasan Saya</span><strong>{{ $stats['pengampu'] }}</strong><small>Mata pelajaran aktif</small></div></div>
     </div>
 
@@ -40,7 +40,7 @@
 
     @if($santri)
         <div class="asrama-panel"><div class="asrama-panel__header"><div><h3>Identitas Asrama</h3><p>Data berasal dari keanggotaan asrama aktif.</p></div></div><div class="asrama-panel__body">
-            <div class="row"><div class="col-md-4"><small>Nomor Induk Santri</small><h5>{{ $santri->nomor_induk_asrama }}</h5></div><div class="col-md-4"><small>Asrama</small><h5>{{ $santri->asrama->nama }}</h5></div><div class="col-md-4"><small>Kelas</small><h5>{{ $santri->kelasAktif?->kelas?->nama_kelas ?? '-' }}</h5></div></div>
+            <div class="row"><div class="col-md-4"><small>Nomor Induk Santri</small><h5>{{ $santri->nomor_induk_asrama }}</h5></div><div class="col-md-4"><small>Rombel</small><h5>{{ $santri->kelasAktif?->kelas?->nama_kelas ?? '-' }}</h5></div><div class="col-md-4"><small>Kamar</small><h5>{{ $santri->kamarAktif?->kamar?->nama ?? 'Belum ditempatkan' }}</h5></div></div>
         </div></div>
         <div class="asrama-panel"><div class="asrama-panel__header"><div><h3>Rapor Saya</h3><p>Hanya rapor yang sudah diterbitkan yang tersedia.</p></div></div>
             <div class="table-responsive"><table class="table asrama-table"><thead><tr><th>Tahun</th><th>Kelas</th><th>Semester</th><th>Terbit</th><th></th></tr></thead><tbody>
@@ -49,5 +49,6 @@
             </tbody></table></div>
         </div>
     @endif
+@include('asrama._scripts')
 @stop
 @section('css') @include('asrama._styles') @stop

@@ -1,0 +1,10 @@
+<div class="row">
+<div class="col-md-4"><label>Kode kamar</label><input required name="kode" class="form-control" value="{{ old('kode',$room?->kode) }}" placeholder="P-A01"></div>
+<div class="col-md-8"><label>Nama kamar</label><input required name="nama" class="form-control" value="{{ old('nama',$room?->nama) }}" placeholder="Kamar Al-Fatih"></div>
+<div class="col-md-4 mt-3"><label>Gedung</label><select required name="gedung" class="form-control asrama-select"><option value="putra" @selected(old('gedung',$room?->gedung)==='putra')>Putra</option><option value="putri" @selected(old('gedung',$room?->gedung)==='putri')>Putri</option></select></div>
+<div class="col-md-3 mt-3"><label>Lantai</label><input name="lantai" class="form-control" value="{{ old('lantai',$room?->lantai) }}" placeholder="1"></div>
+<div class="col-md-5 mt-3"><label>Kapasitas</label><input required type="number" min="1" max="100" name="kapasitas" class="form-control" value="{{ old('kapasitas',$room?->kapasitas??8) }}"></div>
+<div class="col-12 mt-3"><label>Pengasuh kamar</label><select name="pengasuh_asatidz_id" class="form-control asrama-select" data-placeholder="Pilih pengasuh kamar" data-allow-clear="1"><option value=""></option>@foreach($caregivers as $caregiver)<option value="{{ $caregiver->id }}" @selected(old('pengasuh_asatidz_id',$room?->pengasuh_asatidz_id)===$caregiver->id)>{{ $caregiver->gtk->nama_lengkap }}</option>@endforeach</select><small class="text-muted">Satu pengasuh dapat menangani beberapa kamar.</small></div>
+<div class="col-12 mt-3"><label>Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan',$room?->catatan) }}</textarea></div>
+@if($room)<div class="col-12 mt-3"><div class="custom-control custom-switch"><input id="roomActive{{ $room->id }}" type="checkbox" class="custom-control-input" name="is_active" value="1" @checked($room->is_active)><label class="custom-control-label" for="roomActive{{ $room->id }}">Kamar aktif</label></div></div>@endif
+</div>

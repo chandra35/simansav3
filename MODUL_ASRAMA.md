@@ -1,66 +1,64 @@
 # Modul Asrama SIMANSA
 
-Modul Asrama adalah domain mandiri di SIMANSA. Seluruh tabel operasional memakai
-prefiks `asrama_`, sementara identitas orang tetap menggunakan master `siswa`,
-`gtks`, dan `users` yang sudah ada.
+Modul Asrama adalah domain mandiri di SIMANSA. Identitas orang dan rombel tetap
+menggunakan master `siswa`, `gtks`, `users`, dan `kelas`; tabel operasional
+Asrama memakai prefiks `asrama_`.
 
-## Ruang lingkup
+## Prinsip data
 
-- Unit asrama dan kepala asrama dari master GTK.
-- Santri dari master siswa, lengkap dengan nomor induk asrama.
-- Asatidz dari master GTK beserta akses akun otomatis.
-- Kelas asrama per tahun pelajaran, wali kelas, dan ketua kelas.
-- Assign santri per siswa atau dari seluruh anggota rombel reguler.
-- Mata pelajaran bilingual Arab–Latin.
-- Pengampu per kelas, mapel, dan semester.
-- Input nilai massal sesuai penugasan pengampu.
-- Sikap, kehadiran, keputusan, draft, penerbitan, dan penguncian rapor.
-- Portal santri untuk membaca rapor yang sudah diterbitkan.
-- Cetak A4 dengan RTL Arab melalui print engine browser.
+- Hanya ada satu Asrama, sehingga tidak ada menu atau pemilihan unit.
+- Pemisahan tempat tinggal dilakukan melalui kamar pada gedung putra/putri.
+- Rombel Asrama menunjuk langsung ke rombel SIMANSA melalui `kelas_id`.
+- Satu rombel dapat mempunyai beberapa pengasuh.
+- Setiap santri pada rombel mempunyai satu pengasuh utama pada satu waktu.
+- Pengasuh kamar terpisah dari pengasuh rombel; satu pengasuh dapat menangani
+  beberapa kamar.
+- Satu santri hanya dapat mempunyai satu kamar aktif. Riwayat kamar lama tetap
+  disimpan.
 
-## Alur awal operator
+## Alur awal
 
-1. Jalankan migration dan `AsramaMapelSeeder`.
-2. Buat Unit Asrama.
-3. Assign GTK sebagai asatidz.
-4. Buat kelas untuk tahun pelajaran aktif.
-5. Assign santri dari rombel reguler atau pilih siswa satu per satu.
-6. Tetapkan wali kelas dan ketua kelas.
-7. Tambahkan pengampu mapel.
-8. Asatidz mengisi nilai dari akun masing-masing.
-9. Wali melengkapi sikap dan kehadiran.
-10. Pengguna dengan permission penerbitan menerbitkan dan mencetak rapor.
+1. Admin atau Super Admin membuka `ASRAMA > Operator Asrama`.
+2. Tetapkan GTK berakun aktif sebagai `Operator Asrama`.
+3. Operator menambahkan GTK pada `Pengasuh & Pengajar` serta memilih
+   kewenangan pengasuh rombel, pengasuh kamar, dan/atau pengampu mapel.
+4. Aktifkan rombel SIMANSA pada `Rombel Asrama`. Seluruh siswa rombel dapat
+   langsung disinkronkan sebagai santri.
+5. Tambahkan beberapa pengasuh pada rombel, lalu bagi santri per pengasuh atau
+   sekaligus satu rombel.
+6. Buat kamar putra/putri, tetapkan pengasuh kamar, lalu tempatkan santri.
+7. Tetapkan pengampu mata pelajaran per rombel dan semester.
+8. Pengampu mengisi nilai dari akun masing-masing.
+9. Pengasuh melengkapi sikap, kehadiran, keputusan, dan menerbitkan rapor.
 
-## Akses dan permission
+## Akses
 
-- `view-asrama`
-- `manage-asrama`
-- `manage-asrama-santri`
-- `manage-asrama-asatidz`
-- `manage-asrama-kelas`
-- `manage-asrama-mapel`
-- `manage-asrama-pengampu`
-- `input-nilai-asrama`
-- `manage-rapor-asrama`
-- `publish-rapor-asrama`
-- `print-rapor-asrama`
-- `view-asrama-portal`
-- `asrama-rapor-access`
+Role `Operator Asrama` mendapat permission pengelolaan Asrama tetapi tidak
+mendapat permission administrasi umum SIMANSA. Hanya Admin/Super Admin dengan
+`manage-asrama-operator` yang dapat memberikan atau mencabut role ini.
 
-Admin dan Super Admin memperoleh seluruh permission melalui migration. Akun
-santri memperoleh `view-asrama-portal` secara langsung selama keanggotaan aktif.
-Akun GTK memperoleh portal dan input nilai selama penugasan asatidz aktif.
-Data yang terlihat tetap dibatasi oleh penugasan pengampu atau wali kelas.
+Permission tambahan:
 
-## Penerbitan rapor
+- `manage-asrama-operator`
+- `manage-asrama-kamar`
 
-Rapor draft selalu membaca nilai terbaru. Ketika diterbitkan, identitas, institusi,
-mapel, nilai, jumlah, dan rata-rata disimpan sebagai snapshot. Nilai untuk santri
-tersebut tidak dapat diubah sampai penerbitan dibatalkan. Mekanisme ini menjaga
-arsip tetap konsisten walaupun master mapel atau identitas penandatangan berubah.
-Penerbitan ditolak sampai seluruh mapel aktif pada kelas dan semester tersebut
-memiliki nilai.
+Akun santri aktif mendapat `view-asrama-portal`. GTK yang aktif dalam tim Asrama
+mendapat portal dan akses input nilai; data tetap dibatasi berdasarkan penugasan
+mapel atau rombel yang diasuh.
 
-Tulisan Arab dicetak memakai `dir="rtl"` dan prioritas font Noto Naskh Arabic,
-Amiri, lalu Traditional Arabic. Penyimpanan PDF dilakukan dari dialog cetak
-browser agar Arabic shaping dan campuran teks RTL/LTR tetap akurat.
+## Rapor Arab
+
+Rapor menampilkan nama mapel Arab–Latin, terbilang nilai dalam Unicode Arab,
+jumlah, rata-rata, kebersihan, kelakuan, kerajinan, kehadiran, keputusan,
+tanggal Masehi/Hijriah, serta tanda tangan Kepala Asrama dan Pengasuh Rombel.
+Tampilan RTL memakai Noto Naskh Arabic dengan fallback Amiri dan Traditional
+Arabic.
+
+Saat diterbitkan, rapor menyimpan snapshot dan terkunci. Penerbitan ditolak bila
+nilai mapel belum lengkap. Pembatalan terbit membuka kembali nilai untuk koreksi.
+
+## UI
+
+Seluruh halaman Asrama memakai desain panel responsif, modal dengan hierarki
+informasi yang jelas, Select2 untuk pencarian data besar, serta overlay loading
+dan progress pada proses simpan, sinkronisasi, assignment, dan penerbitan.

@@ -341,7 +341,8 @@
                                 <span class="badge badge-info">Santri</span>
                                 <small class="d-block mt-1">
                                     {{ $siswa->asramaSantriAktif->nomor_induk_asrama }}
-                                    · {{ $siswa->asramaSantriAktif->kelasAktif?->kelas?->nama_kelas ?? $siswa->asramaSantriAktif->asrama?->nama }}
+                                    · {{ $siswa->asramaSantriAktif->kelasAktif?->kelas?->kelasReguler?->nama_kelas ?? $siswa->asramaSantriAktif->kelasAktif?->kelas?->nama_kelas ?? 'Rombel belum ditetapkan' }}
+                                    · {{ $siswa->asramaSantriAktif->kamarAktif?->kamar?->nama ?? 'Kamar belum ditetapkan' }}
                                 </small>
                             @else
                                 <span class="badge badge-light">Non-santri</span>

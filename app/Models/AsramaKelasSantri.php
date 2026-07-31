@@ -40,4 +40,10 @@ class AsramaKelasSantri extends Model
     {
         return $this->hasMany(AsramaRapor::class);
     }
+
+    public function pengasuhAssignment()
+    {
+        return $this->hasOne(AsramaPengasuhSantri::class, 'asrama_kelas_santri_id')
+            ->where('is_active', true);
+    }
 }
