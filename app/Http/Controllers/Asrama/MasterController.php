@@ -231,10 +231,21 @@ class MasterController extends Controller
     public function asatidz()
     {
         return view('asrama.master.asatidz', [
-            'records' => AsramaAsatidz::with('gtk.user')->withCount(['rombelDiasuh', 'kamarDiasuh', 'pengampu'])
+            'records' => AsramaAsatidz::with('gtk.user')->withCount([
+                'rombelDiasuh' => fn ($q) => $q->where('is_active', true),
+                'kamarDiasuh' => fn ($q) => $q->where('is_active', true),
+                'pengampu' => fn ($q) => $q->where('is_active', true),
+            ])
                 ->orderByDesc('is_active')->latest()->paginate(50),
             'gtks' => Gtk::whereNotNull('user_id')->orderBy('nama_lengkap')
                 ->get(['id', 'nama_lengkap', 'nip', 'user_id']),
+            'stats' => [
+                'total' => AsramaAsatidz::count(),
+                'aktif' => AsramaAsatidz::where('is_active', true)->count(),
+                'pengasuh' => AsramaAsatidz::where('is_active', true)
+                    ->where(fn ($q) => $q->where('dapat_mengasuh_rombel', true)->orWhere('dapat_mengasuh_kamar', true))->count(),
+                'pengampu' => AsramaAsatidz::where('is_active', true)->where('dapat_mengampu_mapel', true)->count(),
+            ],
         ]);
     }
 
@@ -269,6 +280,27 @@ class MasterController extends Controller
         $access->syncGtk($asatidz->gtk->user);
 
         return back()->with('success', 'Tugas GTK Asrama berhasil diperbarui.');
+    }
+
+    public function destroyAsatidz(Request $request, AsramaAsatidz $asatidz, AsramaAccessService $access)
+    {
+        $bebanAktif = $asatidz->rombelDiasuh()->where('is_active', true)->exists()
+            || $asatidz->kamarDiasuh()->where('is_active', true)->exists()
+            || $asatidz->pengampu()->where('is_active', true)->exists();
+        if ($bebanAktif) {
+            return back()->with('error', 'GTK masih memiliki tugas aktif (rombel/kamar/mapel). Lepas semua tugas terlebih dahulu sebelum menghapus.');
+        }
+
+        $nama = $asatidz->gtk->nama_lengkap;
+        $asatidz->update([
+            'is_active' => false,
+            'tanggal_selesai' => $asatidz->tanggal_selesai?->toDateString() ?: now()->toDateString(),
+            'updated_by' => $request->user()->id,
+        ]);
+        $asatidz->delete();
+        $access->syncGtk($asatidz->gtk->user);
+
+        return back()->with('success', "GTK {$nama} dihapus dari tim Asrama. Data GTK SIMANSA tidak berubah.");
     }
 
     public function mapel()

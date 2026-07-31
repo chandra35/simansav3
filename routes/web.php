@@ -92,6 +92,7 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::get('/asatidz', [App\Http\Controllers\Asrama\MasterController::class, 'asatidz'])->name('asatidz.index');
         Route::post('/asatidz', [App\Http\Controllers\Asrama\MasterController::class, 'storeAsatidz'])->name('asatidz.store');
         Route::put('/asatidz/{asatidz}', [App\Http\Controllers\Asrama\MasterController::class, 'updateAsatidz'])->name('asatidz.update');
+        Route::delete('/asatidz/{asatidz}', [App\Http\Controllers\Asrama\MasterController::class, 'destroyAsatidz'])->name('asatidz.destroy');
     });
 
     Route::middleware('permission:manage-asrama-mapel')->group(function () {
