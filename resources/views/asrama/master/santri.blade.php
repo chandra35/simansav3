@@ -23,25 +23,47 @@
 <div class="modal fade" id="assignSantri" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.store') }}" class="modal-content" data-asrama-loading data-loading-title="Mengaktifkan santri" data-loading-text="Identitas dan akses portal sedang disinkronkan dari SIMANSA.">@csrf
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah Santri Asrama</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body">
-    <div class="alert alert-light border d-flex align-items-center small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i><div>Gunakan rombel, pilihan individual, atau keduanya sekaligus. Semua siswa aktif pada rombel terpilih akan diaktifkan sebagai santri.</div></div>
+    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Gunakan rombel, pilihan individual, atau keduanya sekaligus. Semua siswa aktif pada rombel terpilih akan diaktifkan sebagai santri.</small></div>
     <div class="row">
         <div class="col-lg-6">
-            <div class="form-group">
-                <label for="selectKelas" class="font-weight-bold"><i class="fas fa-users text-primary mr-1"></i> Ambil rombel SIMANSA</label>
-                <select id="selectKelas" multiple name="kelas_ids[]" class="form-control" style="width:100%">@foreach($classes->groupBy('tingkat') as $tingkat => $group)<optgroup label="Tingkat {{ $tingkat ?: '-' }}">@foreach($group as $class)<option value="{{ $class->id }}" data-count="{{ $class->siswa_aktif_count }}" data-name="{{ $class->nama_kelas }}">{{ $class->nama_kelas }} — {{ $class->siswa_aktif_count }} siswa</option>@endforeach</optgroup>@endforeach</select>
-                <small class="form-text text-muted"><i class="fas fa-search mr-1"></i>Bisa memilih beberapa rombel sekaligus.</small>
+            <div class="card card-outline card-primary mb-3">
+                <div class="card-header py-2"><h3 class="card-title"><i class="fas fa-users mr-1"></i> Ambil rombel SIMANSA</h3><div class="card-tools"><span class="badge badge-primary" id="kelasCount">0 dipilih</span></div></div>
+                <div class="card-body p-2">
+                    <div class="input-group input-group-sm mb-2"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" id="kelasSearch" class="form-control" placeholder="Cari rombel..."></div>
+                    <div style="max-height:260px;overflow-y:auto" id="kelasList">
+                        @foreach($classes->groupBy('tingkat') as $tingkat => $group)
+                        <div class="text-muted text-uppercase font-weight-bold small px-1 pt-2 pb-1" data-kelas-group>Tingkat {{ $tingkat ?: '-' }}</div>
+                        @foreach($group as $class)
+                        <div class="custom-control custom-checkbox px-1 py-1 pl-4" data-kelas-item data-search="{{ strtolower($class->nama_kelas) }}">
+                            <input type="checkbox" class="custom-control-input" id="kelas{{ $class->id }}" name="kelas_ids[]" value="{{ $class->id }}" data-count="{{ $class->siswa_aktif_count }}">
+                            <label class="custom-control-label d-flex justify-content-between w-100" for="kelas{{ $class->id }}"><span>{{ $class->nama_kelas }}</span><span class="badge badge-light border ml-2">{{ $class->siswa_aktif_count }} siswa</span></label>
+                        </div>
+                        @endforeach
+                        @endforeach
+                    </div>
+                </div>
+                <div class="card-footer py-1 text-muted small">Total siswa dari rombel terpilih: <strong id="kelasTotal">0</strong></div>
             </div>
-            <div class="table-responsive" id="kelasPreviewWrap" style="display:none"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Rombel</th><th class="text-center" style="width:90px">Jumlah</th><th style="width:40px"></th></tr></thead><tbody id="kelasPreviewBody"></tbody><tfoot><tr class="bg-light"><th>Total siswa dari rombel</th><th class="text-center" id="kelasPreviewTotal">0</th><th></th></tr></tfoot></table></div>
         </div>
-        <div class="col-lg-6 mt-3 mt-lg-0">
-            <div class="form-group">
-                <label for="selectSiswa" class="font-weight-bold"><i class="fas fa-user-check text-primary mr-1"></i> Pilih siswa individual</label>
-                <select id="selectSiswa" multiple name="siswa_ids[]" class="form-control" style="width:100%">@foreach($students as $student)<option value="{{ $student->id }}" data-nis="{{ $student->nis_lokal ?: $student->nisn }}" data-name="{{ $student->nama_lengkap }}">{{ $student->nama_lengkap }} — {{ $student->nis_lokal ?: $student->nisn ?: '-' }}</option>@endforeach</select>
-                <small class="form-text text-muted"><i class="fas fa-search mr-1"></i>Cari berdasarkan nama atau NIS. Bisa memilih banyak siswa.</small>
+        <div class="col-lg-6">
+            <div class="card card-outline card-primary mb-3">
+                <div class="card-header py-2"><h3 class="card-title"><i class="fas fa-user-check mr-1"></i> Pilih siswa individual</h3><div class="card-tools"><span class="badge badge-primary" id="siswaCount">0 dipilih</span></div></div>
+                <div class="card-body p-2">
+                    <div class="input-group input-group-sm mb-2"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" id="siswaSearch" class="form-control" placeholder="Cari nama atau NIS..."></div>
+                    <div style="max-height:260px;overflow-y:auto" id="siswaList">
+                        @foreach($students as $student)
+                        @php $nis = $student->nis_lokal ?: $student->nisn; @endphp
+                        <div class="custom-control custom-checkbox px-1 py-1 pl-4" data-siswa-item data-search="{{ strtolower($student->nama_lengkap.' '.$nis) }}">
+                            <input type="checkbox" class="custom-control-input" id="siswa{{ $student->id }}" name="siswa_ids[]" value="{{ $student->id }}">
+                            <label class="custom-control-label d-flex justify-content-between w-100" for="siswa{{ $student->id }}"><span>{{ $student->nama_lengkap }}</span><span class="text-muted small ml-2">{{ $nis ?: '-' }}</span></label>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="card-footer py-1 text-muted small">Siswa individual terpilih: <strong id="siswaTotal">0</strong></div>
             </div>
-            <div class="table-responsive" id="siswaPreviewWrap" style="display:none"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Nama</th><th style="width:120px">NIS</th><th style="width:40px"></th></tr></thead><tbody id="siswaPreviewBody"></tbody><tfoot><tr class="bg-light"><th>Total siswa dipilih</th><th id="siswaPreviewTotal" colspan="2">0</th></tr></tfoot></table></div>
         </div>
-        <div class="col-md-6 mt-3"><div class="form-group mb-0"><label class="font-weight-bold">Tanggal masuk</label><input type="date" name="tanggal_masuk" class="form-control" value="{{ now()->toDateString() }}"></div></div>
+        <div class="col-md-6"><div class="form-group mb-0"><label class="font-weight-bold">Tanggal masuk</label><input type="date" name="tanggal_masuk" class="form-control" value="{{ now()->toDateString() }}"></div></div>
     </div>
 </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary"><i class="fas fa-check mr-1"></i> Aktifkan Santri</button></div>
 </form></div></div>
@@ -59,63 +81,40 @@
 @section('js')
 <script>
 $(function () {
-    var $modal = $('#assignSantri');
-    var initialized = false;
-
-    $modal.on('shown.bs.modal', function () {
-        if (initialized || !$.fn.select2) return;
-        initialized = true;
-
-        $('#selectKelas').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: 'Pilih satu atau beberapa rombel',
-            dropdownParent: $modal,
-            closeOnSelect: false
-        }).on('change', renderKelasPreview);
-
-        $('#selectSiswa').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: 'Cari nama atau NIS siswa…',
-            dropdownParent: $modal,
-            closeOnSelect: false
-        }).on('change', renderSiswaPreview);
-    });
-
-    function renderKelasPreview() {
-        var $body = $('#kelasPreviewBody').empty();
-        var total = 0;
-        $('#selectKelas option:selected').each(function () {
-            var $o = $(this), count = parseInt($o.data('count')) || 0;
-            total += count;
-            $body.append('<tr><td><strong>' + $o.data('name') + '</strong></td><td class="text-center">' + count + '</td>' +
-                '<td class="text-right"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove-kelas="' + $o.val() + '"><i class="fas fa-times"></i></button></td></tr>');
+    function filterList(term, itemSel, listId) {
+        term = term.toLowerCase().trim();
+        $('#' + listId + ' [' + itemSel + ']').each(function () {
+            $(this).toggle($(this).data('search').indexOf(term) > -1);
         });
-        $('#kelasPreviewTotal').text(total);
-        $('#kelasPreviewWrap').toggle($body.children().length > 0);
+        if (itemSel === 'data-kelas-item') {
+            $('#kelasList [data-kelas-group]').each(function () {
+                var anyVisible = $(this).nextUntil('[data-kelas-group]').filter(':visible').length > 0;
+                $(this).toggle(anyVisible);
+            });
+        }
     }
 
-    function renderSiswaPreview() {
-        var $body = $('#siswaPreviewBody').empty();
-        var count = 0;
-        $('#selectSiswa option:selected').each(function () {
-            var $o = $(this);
-            count++;
-            $body.append('<tr><td><strong>' + $o.data('name') + '</strong></td><td>' + ($o.data('nis') || '-') + '</td>' +
-                '<td class="text-right"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove-siswa="' + $o.val() + '"><i class="fas fa-times"></i></button></td></tr>');
-        });
-        $('#siswaPreviewTotal').text(count);
-        $('#siswaPreviewWrap').toggle(count > 0);
-    }
+    $('#kelasSearch').on('input', function () { filterList(this.value, 'data-kelas-item', 'kelasList'); });
+    $('#siswaSearch').on('input', function () { filterList(this.value, 'data-siswa-item', 'siswaList'); });
 
-    $(document).on('click', '[data-remove-kelas]', function () {
-        var val = String($(this).data('remove-kelas'));
-        $('#selectKelas').val($('#selectKelas').val().filter(function (v) { return v !== val; })).trigger('change');
-    });
-    $(document).on('click', '[data-remove-siswa]', function () {
-        var val = String($(this).data('remove-siswa'));
-        $('#selectSiswa').val($('#selectSiswa').val().filter(function (v) { return v !== val; })).trigger('change');
+    function updateKelas() {
+        var checked = $('#kelasList input:checked'), total = 0;
+        checked.each(function () { total += parseInt($(this).data('count')) || 0; });
+        $('#kelasCount').text(checked.length + ' dipilih');
+        $('#kelasTotal').text(total);
+    }
+    function updateSiswa() {
+        var n = $('#siswaList input:checked').length;
+        $('#siswaCount').text(n + ' dipilih');
+        $('#siswaTotal').text(n);
+    }
+    $('#kelasList').on('change', 'input', updateKelas);
+    $('#siswaList').on('change', 'input', updateSiswa);
+
+    $('#assignSantri').on('hidden.bs.modal', function () {
+        $('#kelasSearch, #siswaSearch').val('');
+        filterList('', 'data-kelas-item', 'kelasList');
+        filterList('', 'data-siswa-item', 'siswaList');
     });
 });
 </script>
