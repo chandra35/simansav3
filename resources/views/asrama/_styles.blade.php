@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
 <style>
     :root{--asrama-navy:#17324d;--asrama-teal:#0f9f94;--asrama-gold:#f3b33d;--asrama-soft:#edf8f7;--asrama-ink:#172b3d}
     .asrama-hero{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;padding:1.6rem 1.75rem;margin-bottom:1.35rem;border-radius:24px;color:#fff;background:linear-gradient(135deg,var(--asrama-navy),var(--asrama-teal));box-shadow:0 18px 42px rgba(24,58,90,.18)}

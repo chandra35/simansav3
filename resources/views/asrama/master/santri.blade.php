@@ -51,7 +51,7 @@ $(function () {
     var initialized = false;
 
     $modal.on('shown.bs.modal', function () {
-        if (initialized) return;
+        if (initialized || !$.fn.select2) return;
         initialized = true;
 
         $('#selectKelas').select2({
