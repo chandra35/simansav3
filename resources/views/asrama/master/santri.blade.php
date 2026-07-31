@@ -23,8 +23,8 @@
 <div class="modal fade asrama-modal" id="assignSantri"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.store') }}" class="modal-content asrama-form" data-asrama-loading data-loading-title="Mengaktifkan santri" data-loading-text="Identitas dan akses portal sedang disinkronkan dari SIMANSA.">@csrf
 <div class="modal-header"><div><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah Santri Asrama</h5><small class="text-white-50">Gunakan rombel, pilihan individual, atau keduanya sekaligus.</small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body"><div class="row">
-    <div class="col-lg-6"><label class="asrama-choice"><strong><i class="fas fa-users mr-1 text-info"></i> Ambil satu rombel SIMANSA</strong><small>Semua siswa aktif di rombel akan menjadi santri.</small><select name="kelas_id" class="form-control asrama-select mt-3" data-placeholder="Pilih rombel" data-allow-clear="1"><option value=""></option>@foreach($classes as $class)<option value="{{ $class->id }}">{{ $class->nama_kelas }} · {{ $class->siswa_aktif_count }} siswa</option>@endforeach</select></label></div>
-    <div class="col-lg-6 mt-3 mt-lg-0"><label class="asrama-choice"><strong><i class="fas fa-user-check mr-1 text-info"></i> Pilih siswa individual</strong><small>Bisa memilih banyak siswa melalui kolom pencarian.</small><select multiple name="siswa_ids[]" class="form-control asrama-select mt-3" data-placeholder="Cari dan pilih siswa">@foreach($students as $student)<option value="{{ $student->id }}">{{ $student->nama_lengkap }} · {{ $student->nis_lokal ?: $student->nisn }}</option>@endforeach</select></label></div>
+    <div class="col-lg-6"><label class="asrama-choice"><strong><i class="fas fa-users mr-1 text-info"></i> Ambil satu rombel SIMANSA</strong><small>Semua siswa aktif di rombel akan menjadi santri.</small><select id="selectKelas" name="kelas_id" class="form-control asrama-kelas-select mt-3"><option value=""></option>@foreach($classes as $class)<option value="{{ $class->id }}" data-count="{{ $class->siswa_aktif_count }}">{{ $class->nama_kelas }}</option>@endforeach</select></label></div>
+    <div class="col-lg-6 mt-3 mt-lg-0"><label class="asrama-choice"><strong><i class="fas fa-user-check mr-1 text-info"></i> Pilih siswa individual</strong><small>Bisa memilih banyak siswa melalui kolom pencarian.</small><select id="selectSiswa" multiple name="siswa_ids[]" class="form-control asrama-siswa-select mt-3">@foreach($students as $student)<option value="{{ $student->id }}" data-nis="{{ $student->nis_lokal ?: $student->nisn }}">{{ $student->nama_lengkap }}</option>@endforeach</select></label></div>
     <div class="col-md-6 mt-3"><label>Nomor induk khusus</label><input name="nomor_induk_asrama" class="form-control" placeholder="Hanya digunakan bila memilih satu siswa"><small class="text-muted">Jika kosong, sistem memakai NIS lokal/NISN.</small></div>
     <div class="col-md-6 mt-3"><label>Tanggal masuk</label><input type="date" name="tanggal_masuk" class="form-control" value="{{ now()->toDateString() }}"></div>
 </div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Batal</button><button class="btn btn-info"><i class="fas fa-sync-alt mr-1"></i> Aktifkan Santri</button></div>
@@ -39,4 +39,51 @@
 @endforeach
 @include('asrama._scripts')
 @stop
-@section('css') @include('asrama._styles') @stop
+@section('css') @include('asrama._styles') @endsection
+@section('js')
+<script>
+$(function () {
+    var $modal = $('#assignSantri');
+
+    $('#selectKelas').select2({
+        theme: 'bootstrap4',
+        width: '100%',
+        allowClear: true,
+        placeholder: 'Pilih rombel',
+        dropdownParent: $modal,
+        templateResult: function (state) {
+            if (!state.id) return state.text;
+            var count = $(state.element).data('count');
+            return $('<div class="d-flex justify-content-between align-items-center"><strong>' + state.text + '</strong><span class="badge badge-info badge-pill ml-2">' + count + ' siswa</span></div>');
+        },
+        templateSelection: function (state) {
+            if (!state.id) return state.text;
+            return state.text + ' · ' + $(state.element).data('count') + ' siswa';
+        }
+    });
+
+    $('#selectSiswa').select2({
+        theme: 'bootstrap4',
+        width: '100%',
+        placeholder: 'Cari nama atau NIS siswa…',
+        dropdownParent: $modal,
+        matcher: function (params, data) {
+            if ($.trim(params.term) === '') return data;
+            if (!data.id) return null;
+            var term = params.term.toLowerCase();
+            var nis  = String($(data.element).data('nis') || '').toLowerCase();
+            if (data.text.toLowerCase().indexOf(term) > -1 || nis.indexOf(term) > -1) return data;
+            return null;
+        },
+        templateResult: function (state) {
+            if (!state.id) return state.text;
+            var nis = $(state.element).data('nis') || '-';
+            return $('<div><strong>' + state.text + '</strong><small class="d-block text-muted" style="font-size:.8em">NIS: ' + nis + '</small></div>');
+        },
+        templateSelection: function (state) {
+            return state.text;
+        }
+    });
+});
+</script>
+@endsection
