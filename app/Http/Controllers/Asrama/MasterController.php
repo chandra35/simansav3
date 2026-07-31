@@ -48,7 +48,6 @@ class MasterController extends Controller
             'kelas_ids.*' => ['exists:kelas,id'],
             'siswa_ids' => ['nullable', 'array'],
             'siswa_ids.*' => ['exists:siswa,id'],
-            'nomor_induk_asrama' => ['nullable', 'string', 'max:50', 'unique:asrama_santri,nomor_induk_asrama'],
             'tanggal_masuk' => ['nullable', 'date'],
         ]);
         $ids = collect($data['siswa_ids'] ?? []);
@@ -71,9 +70,7 @@ class MasterController extends Controller
                 }
                 $record->fill([
                     'asrama_id' => $unit->id,
-                    'nomor_induk_asrama' => $record->nomor_induk_asrama
-                        ?: ($students->count() === 1 && filled($data['nomor_induk_asrama'] ?? null)
-                            ? $data['nomor_induk_asrama'] : $this->generateSantriNumber($student)),
+                    'nomor_induk_asrama' => $record->nomor_induk_asrama ?: $this->generateSantriNumber($student),
                     'tanggal_masuk' => $record->tanggal_masuk ?: ($data['tanggal_masuk'] ?? now()->toDateString()),
                     'tanggal_keluar' => null,
                     'status' => 'aktif',
