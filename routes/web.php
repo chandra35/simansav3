@@ -80,7 +80,8 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
     Route::middleware('permission:manage-asrama-santri')->group(function () {
         Route::get('/santri', [App\Http\Controllers\Asrama\MasterController::class, 'santri'])->name('santri.index');
         Route::post('/santri', [App\Http\Controllers\Asrama\MasterController::class, 'storeSantri'])->name('santri.store');
-        Route::put('/santri/{santri}', [App\Http\Controllers\Asrama\MasterController::class, 'updateSantri'])->name('santri.update');
+        Route::get('/santri/{santri}/detail', [App\Http\Controllers\Asrama\MasterController::class, 'showSantri'])->name('santri.show');
+        Route::delete('/santri/{santri}', [App\Http\Controllers\Asrama\MasterController::class, 'destroySantri'])->name('santri.destroy');
         Route::get('/santri/nomor-induk', [App\Http\Controllers\Asrama\MasterController::class, 'nomorInduk'])->name('santri.induk.index');
         Route::get('/santri/nomor-induk/template', [App\Http\Controllers\Asrama\MasterController::class, 'templateNomorInduk'])->name('santri.induk.template');
         Route::post('/santri/nomor-induk/import', [App\Http\Controllers\Asrama\MasterController::class, 'importNomorInduk'])->name('santri.induk.import');

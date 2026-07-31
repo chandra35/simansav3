@@ -84,29 +84,39 @@ class MasterController extends Controller
         return back()->with('success', $students->count().' siswa berhasil diaktifkan sebagai santri.');
     }
 
-    public function updateSantri(Request $request, AsramaSantri $santri, AsramaAccessService $access)
+    public function showSantri(AsramaSantri $santri)
     {
-        $data = $request->validate([
-            'nomor_induk_asrama' => ['required', 'string', 'max:50', Rule::unique('asrama_santri')->ignore($santri->id)],
-            'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
-            'tanggal_masuk' => ['nullable', 'date'],
-            'tanggal_keluar' => ['nullable', 'date', 'after_or_equal:tanggal_masuk'],
-            'catatan' => ['nullable', 'string'],
+        $santri->load([
+            'siswa.user',
+            'siswa.ortu.provinsi', 'siswa.ortu.kabupaten', 'siswa.ortu.kecamatan', 'siswa.ortu.kelurahan',
+            'siswa.kelasTahunAktif',
+            'kamarAktif.kamar', 'kelasAktif.kelas.kelasReguler',
         ]);
-        $data['updated_by'] = $request->user()->id;
-        if ($data['status'] === 'nonaktif') {
-            $data['tanggal_keluar'] ??= now()->toDateString();
+
+        return response()->json(['success' => true, 'data' => $santri]);
+    }
+
+    public function destroySantri(Request $request, AsramaSantri $santri, AsramaAccessService $access)
+    {
+        $nama = $santri->siswa->nama_lengkap;
+        DB::transaction(function () use ($santri, $request): void {
+            $tanggalKeluar = now()->toDateString();
             $santri->kelasRecords()->where('status', 'aktif')->update([
-                'status' => 'keluar', 'tanggal_keluar' => $data['tanggal_keluar'], 'is_ketua_kelas' => false,
+                'status' => 'keluar', 'tanggal_keluar' => $tanggalKeluar, 'is_ketua_kelas' => false,
             ]);
             $santri->kamarRecords()->where('status', 'aktif')->update([
-                'status' => 'keluar', 'tanggal_keluar' => $data['tanggal_keluar'],
+                'status' => 'keluar', 'tanggal_keluar' => $tanggalKeluar,
             ]);
-        }
-        $santri->update($data);
+            $santri->update([
+                'status' => 'nonaktif',
+                'tanggal_keluar' => $santri->tanggal_keluar ?: $tanggalKeluar,
+                'updated_by' => $request->user()->id,
+            ]);
+            $santri->delete();
+        });
         $access->syncStudent($santri->siswa->user);
 
-        return back()->with('success', 'Data santri berhasil diperbarui.');
+        return back()->with('success', "Santri {$nama} dihapus dari asrama. Data siswa SIMANSA tidak berubah.");
     }
 
     public function nomorInduk(Request $request)

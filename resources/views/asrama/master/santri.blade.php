@@ -16,7 +16,10 @@
 </form></div></div>
 <div class="asrama-panel"><div class="table-responsive"><table class="table asrama-table"><thead><tr><th>No. Induk</th><th>Santri</th><th>Rombel SIMANSA</th><th>Pengasuh</th><th>Kamar</th><th>Status</th><th></th></tr></thead><tbody>
 @forelse($records as $item)
-<tr><td><code>{{ $item->nomor_induk_asrama }}</code></td><td><strong>{{ $item->siswa->nama_lengkap }}</strong><br><small>NISN {{ $item->siswa->nisn ?: '-' }}</small></td><td>{{ $item->kelasAktif?->kelas?->kelasReguler?->nama_kelas ?? $item->siswa->kelasTahunAktif->first()?->nama_kelas ?? '-' }}</td><td>{{ $item->kelasAktif?->pengasuhAssignment?->rombelPengasuh?->pengasuh?->gtk?->nama_lengkap ?? 'Belum dibagi' }}</td><td>{{ $item->kamarAktif?->kamar?->nama ?? 'Belum ditempatkan' }}</td><td><span class="asrama-badge {{ $item->status==='aktif'?'asrama-badge--active':'asrama-badge--muted' }}">{{ ucfirst($item->status) }}</span></td><td><button class="btn btn-sm btn-outline-primary asrama-icon-button" data-toggle="modal" data-target="#editSantri{{ $item->id }}" title="Edit santri"><i class="fas fa-pen"></i></button></td></tr>
+<tr><td><code>{{ $item->nomor_induk_asrama }}</code></td><td><strong>{{ $item->siswa->nama_lengkap }}</strong><br><small>NISN {{ $item->siswa->nisn ?: '-' }}</small></td><td>{{ $item->kelasAktif?->kelas?->kelasReguler?->nama_kelas ?? $item->siswa->kelasTahunAktif->first()?->nama_kelas ?? '-' }}</td><td>{{ $item->kelasAktif?->pengasuhAssignment?->rombelPengasuh?->pengasuh?->gtk?->nama_lengkap ?? 'Belum dibagi' }}</td><td>{{ $item->kamarAktif?->kamar?->nama ?? 'Belum ditempatkan' }}</td><td><span class="asrama-badge {{ $item->status==='aktif'?'asrama-badge--active':'asrama-badge--muted' }}">{{ ucfirst($item->status) }}</span></td><td class="text-nowrap">
+    <button type="button" class="btn btn-sm btn-info asrama-icon-button" onclick="showSantri('{{ $item->id }}')" title="Detail santri"><i class="fas fa-eye"></i></button>
+    <form method="post" action="{{ route('asrama.santri.destroy', $item) }}" class="d-inline" data-asrama-loading data-confirm="Hapus {{ $item->siswa->nama_lengkap }} dari asrama? Data siswa SIMANSA tidak akan terhapus.">@csrf @method('DELETE')<button type="submit" class="btn btn-sm btn-danger asrama-icon-button" title="Hapus dari asrama"><i class="fas fa-trash"></i></button></form>
+</td></tr>
 @empty<tr><td colspan="7" class="asrama-empty"><i class="fas fa-user-graduate"></i>Belum ada santri aktif.</td></tr>@endforelse
 </tbody></table></div><div class="p-3">{{ $records->links() }}</div></div>
 
@@ -67,14 +70,24 @@
     </div>
 </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary"><i class="fas fa-check mr-1"></i> Aktifkan Santri</button></div>
 </form></div></div>
-@foreach($records as $item)
-<div class="modal fade asrama-modal" id="editSantri{{ $item->id }}"><div class="modal-dialog modal-lg modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.update',$item) }}" class="modal-content asrama-form" data-asrama-loading data-loading-title="Menyimpan data santri">@csrf @method('PUT')
-<div class="modal-header"><div><h5 class="modal-title">{{ $item->siswa->nama_lengkap }}</h5><small class="text-white-50">Perbarui nomor identitas dan status tinggal.</small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><div class="row">
-<div class="col-md-6"><label>Nomor induk</label><input required name="nomor_induk_asrama" class="form-control" value="{{ $item->nomor_induk_asrama }}"></div><div class="col-md-6"><label>Status</label><select name="status" class="form-control asrama-select">@foreach(['aktif'=>'Aktif','nonaktif'=>'Nonaktif'] as $key=>$label)<option value="{{ $key }}" @selected($item->status===$key)>{{ $label }}</option>@endforeach</select></div>
-<div class="col-md-6 mt-3"><label>Tanggal masuk</label><input type="date" name="tanggal_masuk" class="form-control" value="{{ $item->tanggal_masuk?->toDateString() }}"></div><div class="col-md-6 mt-3"><label>Tanggal keluar</label><input type="date" name="tanggal_keluar" class="form-control" value="{{ $item->tanggal_keluar?->toDateString() }}"></div>
-<div class="col-12 mt-3"><label>Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ $item->catatan }}</textarea></div>
-</div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Batal</button><button class="btn btn-info"><i class="fas fa-save mr-1"></i> Simpan</button></div></form></div></div>
-@endforeach
+<div class="modal fade" id="viewSantriModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+<div class="modal-header bg-primary"><h5 class="modal-title text-white"><i class="fas fa-user-graduate"></i> Detail Santri</h5><button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button></div>
+<div class="modal-body">
+    <ul class="nav nav-tabs" id="santriDetailTabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#santri-asrama" role="tab" style="color:#007bff;"><i class="fas fa-mosque"></i> Info Asrama</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#santri-data" role="tab" style="color:#495057;"><i class="fas fa-user"></i> Data Siswa</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#santri-diri" role="tab" style="color:#495057;"><i class="fas fa-id-card"></i> Data Diri</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#santri-ortu" role="tab" style="color:#495057;"><i class="fas fa-users"></i> Data Orang Tua</a></li>
+    </ul>
+    <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="santri-asrama" role="tabpanel"></div>
+        <div class="tab-pane fade" id="santri-data" role="tabpanel"></div>
+        <div class="tab-pane fade" id="santri-diri" role="tabpanel"></div>
+        <div class="tab-pane fade" id="santri-ortu" role="tabpanel"></div>
+    </div>
+</div>
+<div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Tutup</button></div>
+</div></div></div>
 @include('asrama._scripts')
 @stop
 @section('css') @include('asrama._styles') @endsection
@@ -116,6 +129,190 @@ $(function () {
         filterList('', 'data-kelas-item', 'kelasList');
         filterList('', 'data-siswa-item', 'siswaList');
     });
+
+    // accent-white membuat teks nav-tabs putih; warna harus dipaksa inline saat tab berganti
+    $('#santriDetailTabs .nav-link').on('shown.bs.tab', function () {
+        $('#santriDetailTabs .nav-link').css('color', '#495057');
+        $(this).css('color', '#007bff');
+    });
 });
+
+function esc(v) {
+    return (v === null || v === undefined || v === '') ? null : $('<div>').text(v).html();
+}
+function cell(v, fallback) {
+    return esc(v) || '<span class="text-muted">' + (fallback || '-') + '</span>';
+}
+function fmtDate(v) {
+    return v ? new Date(v).toLocaleDateString('id-ID') : '-';
+}
+
+function showSantri(id) {
+    $.get(`{{ url('asrama/santri') }}/${id}/detail`)
+        .done(function (response) {
+            if (!response.success) return;
+            const santri = response.data;
+            loadSantriAsramaTab(santri);
+            loadSantriDataTab(santri.siswa);
+            loadSantriDiriTab(santri.siswa);
+            loadSantriOrtuTab(santri.siswa);
+            $('#santriDetailTabs .nav-link').css('color', '#495057').removeClass('active').first().addClass('active').css('color', '#007bff');
+            $('#viewSantriModal .tab-pane').removeClass('show active').first().addClass('show active');
+            $('#viewSantriModal').modal('show');
+        })
+        .fail(function () {
+            if (window.toastr) toastr.error('Gagal memuat data santri', 'Error!');
+            else alert('Gagal memuat data santri');
+        });
+}
+
+function loadSantriAsramaTab(santri) {
+    const statusBadge = santri.status === 'aktif'
+        ? '<span class="badge badge-success">Aktif</span>'
+        : '<span class="badge badge-secondary">' + (esc(santri.status) || '-') + '</span>';
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-id-badge"></i> Identitas Asrama</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Nomor Induk Asrama</strong></td><td><code>${cell(santri.nomor_induk_asrama)}</code></td></tr>
+                    <tr><td class="bg-light"><strong>Status</strong></td><td>${statusBadge}</td></tr>
+                    <tr><td class="bg-light"><strong>Tanggal Masuk</strong></td><td>${fmtDate(santri.tanggal_masuk)}</td></tr>
+                    <tr><td class="bg-light"><strong>Tanggal Keluar</strong></td><td>${fmtDate(santri.tanggal_keluar)}</td></tr>
+                    <tr><td class="bg-light"><strong>Catatan</strong></td><td>${cell(santri.catatan, 'Tidak ada')}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-bed"></i> Penempatan</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Rombel Asrama</strong></td><td>${cell(santri.kelas_aktif?.kelas?.nama_kelas, 'Belum dibagi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Kamar</strong></td><td>${cell(santri.kamar_aktif?.kamar?.nama, 'Belum ditempatkan')}</td></tr>
+                    <tr><td class="bg-light"><strong>Rombel SIMANSA</strong></td><td>${cell(santri.kelas_aktif?.kelas?.kelas_reguler?.nama_kelas || santri.siswa?.kelas_tahun_aktif?.[0]?.nama_kelas)}</td></tr>
+                </table>
+            </div>
+        </div>`;
+    $('#santri-asrama').html(html);
+}
+
+function loadSantriDataTab(siswa) {
+    const jk = siswa.jenis_kelamin === 'L'
+        ? '<span class="badge badge-primary">Laki-laki</span>'
+        : '<span class="badge badge-danger">Perempuan</span>';
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-user"></i> Informasi Siswa</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>NISN</strong></td><td>${cell(siswa.nisn)}</td></tr>
+                    <tr><td class="bg-light"><strong>NIS Lokal</strong></td><td>${cell(siswa.nis_lokal)}</td></tr>
+                    <tr><td class="bg-light"><strong>Nama Lengkap</strong></td><td>${cell(siswa.nama_lengkap)}</td></tr>
+                    <tr><td class="bg-light"><strong>Jenis Kelamin</strong></td><td>${jk}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-key"></i> Akun Login</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Username</strong></td><td><code>${cell(siswa.user?.username)}</code></td></tr>
+                    <tr><td class="bg-light"><strong>Email</strong></td><td>${cell(siswa.user?.email, 'Belum diisi')}</td></tr>
+                </table>
+            </div>
+        </div>`;
+    $('#santri-data').html(html);
+}
+
+function loadSantriDiriTab(siswa) {
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-id-card"></i> Data Pribadi</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>NIK</strong></td><td>${cell(siswa.nik, 'Belum diisi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Tempat Lahir</strong></td><td>${cell(siswa.tempat_lahir, 'Belum diisi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Tanggal Lahir</strong></td><td>${fmtDate(siswa.tanggal_lahir)}</td></tr>
+                    <tr><td class="bg-light"><strong>Anak Ke</strong></td><td>${cell(siswa.anak_ke, 'Belum diisi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Jumlah Saudara</strong></td><td>${cell(siswa.jumlah_saudara, 'Belum diisi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Hobi</strong></td><td>${cell(siswa.hobi, 'Belum diisi')}</td></tr>
+                    <tr><td class="bg-light"><strong>Cita-cita</strong></td><td>${cell(siswa.cita_cita, 'Belum diisi')}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-map-marker-alt"></i> Alamat Siswa</h6>
+                ${buildAlamatSiswa(siswa)}
+            </div>
+        </div>`;
+    $('#santri-diri').html(html);
+}
+
+function buildAlamatSiswa(siswa) {
+    const ortu = siswa.ortu;
+    const bersamaOrtu = siswa.jenis_tempat_tinggal === 'Bersama Orang Tua' || siswa.alamat_sama_ortu;
+    if (bersamaOrtu && ortu && ortu.alamat_ortu) {
+        return `
+            <div class="alert alert-info mb-2 py-2"><i class="fas fa-info-circle"></i> <strong>Tinggal bersama / alamat sama dengan orang tua</strong></div>
+            <table class="table table-sm table-bordered">
+                <tr><td width="40%" class="bg-light"><strong>Alamat</strong></td><td>${cell(ortu.alamat_ortu)}</td></tr>
+                <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${cell(ortu.rt_ortu)} / ${cell(ortu.rw_ortu)}</td></tr>
+                <tr><td class="bg-light"><strong>Kelurahan/Desa</strong></td><td>${cell(ortu.kelurahan?.name)}</td></tr>
+                <tr><td class="bg-light"><strong>Kecamatan</strong></td><td>${cell(ortu.kecamatan?.name)}</td></tr>
+                <tr><td class="bg-light"><strong>Kab/Kota</strong></td><td>${cell(ortu.kabupaten?.name)}</td></tr>
+                <tr><td class="bg-light"><strong>Provinsi</strong></td><td>${cell(ortu.provinsi?.name)}</td></tr>
+            </table>`;
+    }
+    if (siswa.alamat_siswa) {
+        return `
+            <table class="table table-sm table-bordered">
+                <tr><td width="40%" class="bg-light"><strong>Alamat</strong></td><td>${cell(siswa.alamat_siswa)}</td></tr>
+                <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${cell(siswa.rt_siswa)} / ${cell(siswa.rw_siswa)}</td></tr>
+                <tr><td class="bg-light"><strong>Kodepos</strong></td><td>${cell(siswa.kodepos_siswa)}</td></tr>
+            </table>`;
+    }
+    return '<div class="alert alert-info py-2"><i class="fas fa-info-circle"></i> Data alamat belum dilengkapi</div>';
+}
+
+function loadSantriOrtuTab(siswa) {
+    const ortu = siswa.ortu;
+    if (!ortu) {
+        $('#santri-ortu').html('<div class="alert alert-warning py-2"><i class="fas fa-exclamation-triangle"></i> Data orang tua belum dilengkapi</div>');
+        return;
+    }
+    const statusOrtu = (s) => s === 'masih_hidup'
+        ? '<span class="badge badge-success">Masih Hidup</span>'
+        : s === 'meninggal' ? '<span class="badge badge-secondary">Meninggal</span>' : '-';
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-male"></i> Data Ayah</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${statusOrtu(ortu.status_ayah)}</td></tr>
+                    <tr><td class="bg-light"><strong>Nama</strong></td><td>${cell(ortu.nama_ayah)}</td></tr>
+                    <tr><td class="bg-light"><strong>HP</strong></td><td>${cell(ortu.hp_ayah)}</td></tr>
+                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${cell(ortu.pekerjaan_ayah)}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary"><i class="fas fa-female"></i> Data Ibu</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${statusOrtu(ortu.status_ibu)}</td></tr>
+                    <tr><td class="bg-light"><strong>Nama</strong></td><td>${cell(ortu.nama_ibu)}</td></tr>
+                    <tr><td class="bg-light"><strong>HP</strong></td><td>${cell(ortu.hp_ibu)}</td></tr>
+                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${cell(ortu.pekerjaan_ibu)}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <h6 class="text-primary"><i class="fas fa-home"></i> Alamat Orang Tua</h6>
+                <table class="table table-sm table-bordered">
+                    <tr><td width="20%" class="bg-light"><strong>Alamat</strong></td><td>${cell(ortu.alamat_ortu)}</td></tr>
+                    <tr><td class="bg-light"><strong>RT / RW</strong></td><td>${cell(ortu.rt_ortu)} / ${cell(ortu.rw_ortu)}</td></tr>
+                    <tr><td class="bg-light"><strong>Kelurahan/Desa</strong></td><td>${cell(ortu.kelurahan?.name)}</td></tr>
+                    <tr><td class="bg-light"><strong>Kecamatan</strong></td><td>${cell(ortu.kecamatan?.name)}</td></tr>
+                    <tr><td class="bg-light"><strong>Kab/Kota</strong></td><td>${cell(ortu.kabupaten?.name)}</td></tr>
+                    <tr><td class="bg-light"><strong>Provinsi</strong></td><td>${cell(ortu.provinsi?.name)}</td></tr>
+                </table>
+            </div>
+        </div>`;
+    $('#santri-ortu').html(html);
+}
 </script>
 @endsection
