@@ -225,6 +225,7 @@ class KelasController extends Controller
             'ruang_kelas' => 'nullable|string|max:50',
             'deskripsi' => 'nullable|string',
             'is_active' => 'boolean',
+            'is_asrama' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -335,6 +336,7 @@ class KelasController extends Controller
                 'ruang_kelas' => $request->ruang_kelas,
                 'deskripsi' => $request->deskripsi,
                 'is_active' => $request->is_active ?? true,
+                'is_asrama' => $request->boolean('is_asrama'),
             ]);
 
             // Auto-assign Wali Kelas role if wali kelas selected
@@ -515,6 +517,7 @@ class KelasController extends Controller
             'ruang_kelas' => 'nullable|string|max:50',
             'deskripsi' => 'nullable|string',
             'is_active' => 'boolean',
+            'is_asrama' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -549,6 +552,7 @@ class KelasController extends Controller
                 'ruang_kelas' => $request->ruang_kelas,
                 'deskripsi' => $request->deskripsi,
                 'is_active' => $request->is_active ?? true,
+                'is_asrama' => $request->boolean('is_asrama'),
             ]);
 
             // Auto-assign Wali Kelas role if wali kelas changed and new wali assigned

@@ -104,7 +104,6 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
 
     Route::middleware('permission:manage-asrama-kelas')->group(function () {
         Route::get('/kelas', [App\Http\Controllers\Asrama\KelasController::class, 'index'])->name('kelas.index');
-        Route::post('/kelas', [App\Http\Controllers\Asrama\KelasController::class, 'store'])->name('kelas.store');
         Route::get('/kelas/{kelas}', [App\Http\Controllers\Asrama\KelasController::class, 'show'])->name('kelas.show');
         Route::put('/kelas/{kelas}', [App\Http\Controllers\Asrama\KelasController::class, 'update'])->name('kelas.update');
         Route::post('/kelas/{kelas}/santri', [App\Http\Controllers\Asrama\KelasController::class, 'assignStudents'])->name('kelas.santri.store');

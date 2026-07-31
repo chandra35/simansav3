@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Asrama;
 
 use App\Http\Controllers\Controller;
-use App\Models\Asrama;
 use App\Models\AsramaAsatidz;
 use App\Models\AsramaKelas;
 use App\Models\AsramaKelasSantri;
@@ -12,68 +11,29 @@ use App\Models\AsramaPengampu;
 use App\Models\AsramaPengasuhSantri;
 use App\Models\AsramaRombelPengasuh;
 use App\Models\AsramaSantri;
-use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\AsramaAccessService;
+use App\Services\AsramaRombelSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class KelasController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AsramaRombelSyncService $sync)
     {
+        $sync->sync($request->user()->id);
         $tahunId = $request->input('tahun_pelajaran_id') ?: TahunPelajaran::active()->value('id');
-        $used = AsramaKelas::whereNotNull('kelas_id')->pluck('kelas_id');
 
         return view('asrama.kelas.index', [
             'records' => AsramaKelas::with([
                 'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa', 'pengasuhRombel.pengasuh.gtk',
             ])->withCount('anggotaAktif')->when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
                 ->orderBy('nama_kelas')->get(),
-            'regularClasses' => Kelas::withCount('siswaAktif')->where('tahun_pelajaran_id', $tahunId)
-                ->where('is_active', true)->whereNotIn('id', $used)->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
         ]);
-    }
-
-    public function store(Request $request, AsramaAccessService $access)
-    {
-        $data = $request->validate([
-            'kelas_id' => ['required', 'exists:kelas,id', 'unique:asrama_kelas,kelas_id'],
-            'nama_arab' => ['nullable', 'string', 'max:255'],
-            'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
-            'deskripsi' => ['nullable', 'string'],
-        ]);
-        $regular = Kelas::with(['siswaAktif.user', 'tahunPelajaran'])->findOrFail($data['kelas_id']);
-        $unit = Asrama::where('is_active', true)->first() ?: Asrama::firstOrCreate(
-            ['kode' => 'ASRAMA'],
-            ['nama' => 'Asrama MAN 1 Metro', 'jenis' => 'campuran', 'is_active' => true]
-        );
-        $rombel = AsramaKelas::create([
-            'asrama_id' => $unit->id,
-            'tahun_pelajaran_id' => $regular->tahun_pelajaran_id,
-            'kelas_id' => $regular->id,
-            'nama_kelas' => $regular->nama_kelas,
-            'nama_arab' => $data['nama_arab'] ?? null,
-            'tingkat' => $regular->tingkat,
-            'jenis' => $data['jenis'],
-            'kapasitas' => max($regular->kapasitas ?? 0, $regular->siswaAktif->count(), 1),
-            'ruang' => $regular->ruang_kelas,
-            'deskripsi' => $data['deskripsi'] ?? null,
-            'is_active' => true,
-            'created_by' => $request->user()->id,
-            'updated_by' => $request->user()->id,
-        ]);
-
-        if ($request->boolean('sync_students', true)) {
-            $this->placeStudents($regular->siswaAktif, $rombel, $request, $access);
-        }
-
-        return redirect()->route('asrama.kelas.show', $rombel)
-            ->with('success', 'Rombel '.$regular->nama_kelas.' diaktifkan untuk Asrama.');
     }
 
     public function show(AsramaKelas $kelas)
@@ -84,7 +44,7 @@ class KelasController extends Controller
             'pengasuhRombel.pengasuh.gtk', 'pengasuhRombel.santriAssignments',
             'pengampu.mapel', 'pengampu.asatidz.gtk',
         ]);
-        $classStudentIds = $kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect();
+        $availableIds = $this->allowedSiswaIds($kelas);
 
         return view('asrama.kelas.show', [
             'kelas' => $kelas,
@@ -93,9 +53,21 @@ class KelasController extends Controller
             'teachers' => AsramaAsatidz::with('gtk')->where('is_active', true)
                 ->where('dapat_mengampu_mapel', true)->get()->sortBy('gtk.nama_lengkap'),
             'mapels' => AsramaMapel::where('is_active', true)->orderBy('urutan')->get(),
-            'availableStudents' => Siswa::whereIn('id', $classStudentIds)->orderBy('nama_lengkap')
+            'availableStudents' => Siswa::whereIn('id', $availableIds)->orderBy('nama_lengkap')
                 ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
         ]);
+    }
+
+    /**
+     * Siswa rombel SIMANSA yang sama + santri aktif yang belum punya rombel asrama (kasus titipan).
+     */
+    private function allowedSiswaIds(AsramaKelas $kelas)
+    {
+        $classStudentIds = $kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect();
+        $unassignedSantri = AsramaSantri::where('status', 'aktif')
+            ->whereDoesntHave('kelasAktif')->pluck('siswa_id');
+
+        return $classStudentIds->merge($unassignedSantri)->unique()->values();
     }
 
     public function update(Request $request, AsramaKelas $kelas)
@@ -119,10 +91,12 @@ class KelasController extends Controller
             'siswa_ids' => ['nullable', 'array'],
             'siswa_ids.*' => ['exists:siswa,id'],
         ]);
-        $allowedIds = $kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect();
-        $ids = $request->boolean('ambil_semua_rombel') ? $allowedIds : collect($data['siswa_ids'] ?? []);
+        $allowedIds = $this->allowedSiswaIds($kelas);
+        $ids = $request->boolean('ambil_semua_rombel')
+            ? ($kelas->kelasReguler?->siswaAktif()->pluck('siswa.id') ?? collect())
+            : collect($data['siswa_ids'] ?? []);
         $ids = $ids->intersect($allowedIds)->unique()->values();
-        abort_if($ids->isEmpty(), 422, 'Pilih minimal satu siswa dari rombel '.$kelas->nama_kelas.'.');
+        abort_if($ids->isEmpty(), 422, 'Pilih minimal satu siswa untuk rombel '.$kelas->nama_kelas.'.');
         $students = Siswa::with('user')->whereIn('id', $ids)->get();
         $this->placeStudents($students, $kelas, $request, $access);
 

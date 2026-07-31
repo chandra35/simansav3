@@ -101,14 +101,17 @@
 <div class="modal fade" id="assignSantri" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.store') }}" class="modal-content" data-asrama-loading data-loading-title="Mengaktifkan santri" data-loading-text="Identitas dan akses portal sedang disinkronkan dari SIMANSA.">@csrf
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah Santri Asrama</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body">
-    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Gunakan rombel, pilihan individual, atau keduanya sekaligus. Semua siswa aktif pada rombel terpilih akan diaktifkan sebagai santri.</small></div>
+    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Daftar rombel di bawah hanya rombel SIMANSA yang bertanda <strong>Rombel Asrama</strong> (Manajemen Data → Kelas). Santri dari rombel otomatis menjadi anggota rombel asramanya. Siswa individual (titipan dari rombel reguler) dapat dipilih di panel kanan.</small></div>
     <div class="row">
         <div class="col-lg-6">
             <div class="card card-outline card-primary mb-3">
-                <div class="card-header py-2"><h3 class="card-title"><i class="fas fa-users mr-1"></i> Ambil rombel SIMANSA</h3><div class="card-tools"><span class="badge badge-primary" id="kelasCount">0 dipilih</span></div></div>
+                <div class="card-header py-2"><h3 class="card-title"><i class="fas fa-users mr-1"></i> Rombel Asrama (SIMANSA)</h3><div class="card-tools"><span class="badge badge-primary" id="kelasCount">0 dipilih</span></div></div>
                 <div class="card-body p-2">
                     <div class="input-group input-group-sm mb-2"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" id="kelasSearch" class="form-control" placeholder="Cari rombel..."></div>
                     <div style="max-height:260px;overflow-y:auto" id="kelasList">
+                        @if($classes->isEmpty())
+                        <div class="text-muted small px-1 py-2"><i class="fas fa-info-circle mr-1"></i>Belum ada rombel bertanda Asrama. Centang "Rombel Asrama (Kampus 2)" pada rombel di Manajemen Data &rarr; Kelas.</div>
+                        @endif
                         @foreach($classes->groupBy('tingkat') as $tingkat => $group)
                         <div class="text-muted text-uppercase font-weight-bold small px-1 pt-2 pb-1" data-kelas-group>Tingkat {{ $tingkat ?: '-' }}</div>
                         @foreach($group as $class)

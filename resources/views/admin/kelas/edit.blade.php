@@ -205,6 +205,14 @@
                             </select>
                         </div>
 
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_asrama" name="is_asrama" value="1" {{ old('is_asrama', $kelas->is_asrama) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="is_asrama"><i class="fas fa-mosque text-info mr-1"></i>Rombel Asrama (Kampus 2)</label>
+                            </div>
+                            <small class="form-text text-muted">Rombel ini otomatis tersedia di modul Asrama.</small>
+                        </div>
+
                         <div class="callout callout-warning">
                             <h5><i class="fas fa-exclamation-triangle"></i> Perhatian!</h5>
                             <ul class="mb-0 pl-3">

@@ -12,6 +12,7 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\AsramaAccessService;
+use App\Services\AsramaRombelSyncService;
 use App\Imports\AsramaNomorIndukImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +68,7 @@ class MasterController extends Controller
             'students' => Siswa::where('status_siswa', 'aktif')->orderBy('nama_lengkap')
                 ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
             'classes' => Kelas::withCount(['siswaAktif'])->where('tahun_pelajaran_id', $tahunId)
-                ->where('is_active', true)->orderBy('nama_kelas')->get(),
+                ->where('is_active', true)->where('is_asrama', true)->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
             'assignedKelas' => $assignedKelas,
@@ -81,7 +82,7 @@ class MasterController extends Controller
         ]);
     }
 
-    public function storeSantri(Request $request, AsramaAccessService $access)
+    public function storeSantri(Request $request, AsramaAccessService $access, AsramaRombelSyncService $sync)
     {
         $data = $request->validate([
             'kelas_ids' => ['nullable', 'array'],
@@ -100,8 +101,9 @@ class MasterController extends Controller
         abort_if($ids->isEmpty(), 422, 'Pilih rombel atau minimal satu siswa.');
 
         $unit = $this->singleAsrama();
-        $students = Siswa::with('user')->whereIn('id', $ids)->get();
-        DB::transaction(function () use ($students, $unit, $data, $request, $access): void {
+        $students = Siswa::with(['user', 'kelasTahunAktif'])->whereIn('id', $ids)->get();
+        DB::transaction(function () use ($students, $unit, $data, $request, $access, $sync): void {
+            $mirrors = [];
             foreach ($students as $student) {
                 $record = AsramaSantri::withTrashed()->where('siswa_id', $student->id)->first()
                     ?: new AsramaSantri(['asrama_id' => $unit->id, 'siswa_id' => $student->id]);
@@ -117,6 +119,14 @@ class MasterController extends Controller
                     'created_by' => $record->created_by ?: $request->user()->id,
                     'updated_by' => $request->user()->id,
                 ])->save();
+
+                // Otomatis jadi anggota mirror rombel asrama jika rombel SIMANSA-nya bertanda asrama.
+                $kelasAktif = $student->kelasTahunAktif->first();
+                if ($kelasAktif && $kelasAktif->is_asrama) {
+                    $mirrors[$kelasAktif->id] ??= $sync->mirrorFor($kelasAktif, $unit, $request->user()->id);
+                    $sync->placeSantri($mirrors[$kelasAktif->id], $record, $request->user()->id);
+                }
+
                 $access->syncStudent($student->user);
             }
         });

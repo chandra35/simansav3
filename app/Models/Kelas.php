@@ -28,12 +28,14 @@ class Kelas extends Model
         'ruang_kelas',
         'deskripsi',
         'is_active',
+        'is_asrama',
     ];
 
     protected $casts = [
         'tingkat' => 'integer',
         'kapasitas' => 'integer',
         'is_active' => 'boolean',
+        'is_asrama' => 'boolean',
     ];
 
     /**
