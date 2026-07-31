@@ -248,6 +248,7 @@ class MasterController extends Controller
         }
         $record->fill($data + [
             'asrama_id' => $unit->id, 'is_active' => true, 'tanggal_selesai' => null,
+            'tanggal_mulai' => $record->tanggal_mulai?->toDateString() ?: now()->toDateString(),
             'created_by' => $record->created_by ?: $request->user()->id, 'updated_by' => $request->user()->id,
         ])->save();
         $access->syncGtk($record->gtk->user);
