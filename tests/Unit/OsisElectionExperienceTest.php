@@ -170,11 +170,16 @@ class OsisElectionExperienceTest extends TestCase
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
 
         $this->assertStringContainsString('Statistik perolehan', $view);
-        $this->assertStringContainsString('height:clamp(12px,1.35vh,18px)', $view);
+        $this->assertStringContainsString('height:clamp(24px,2.9vh,36px)', $view);
+        $this->assertStringContainsString('class="candidate-vote" data-candidate-votes', $view);
+        $this->assertStringContainsString('suara paket', $view);
+        $this->assertStringContainsString("card.querySelectorAll('[data-candidate-votes]')", $view);
+        $this->assertStringContainsString('.bar.has-value span{min-width:18px}', $view);
         $this->assertStringContainsString('@keyframes barFlow', $view);
         $this->assertStringContainsString('@keyframes barShimmer', $view);
         $this->assertStringContainsString('@keyframes barBeacon', $view);
         $this->assertStringContainsString('@keyframes voteCountPop', $view);
+        $this->assertStringContainsString('@keyframes candidateVotePulse', $view);
         $this->assertStringContainsString("bar.classList.toggle('has-value',nextVotes>0)", $view);
         $this->assertStringContainsString("card.classList.add('vote-updated')", $view);
         $this->assertStringContainsString('@media(prefers-reduced-motion:reduce)', $view);

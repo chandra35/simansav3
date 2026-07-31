@@ -4,9 +4,24 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Jumlah suara tampil pada kandidat dan meter perolehan lebih berbodi
+
+- Setiap figur Ketua, Wakil Ketua, Sekretaris, atau Bendahara pada live polling kini memiliki badge jumlah suara.
+- Badge menggunakan label `suara paket` karena surat suara diberikan kepada paket; seluruh anggota dalam paket yang sama secara benar menampilkan jumlah yang sama.
+- Jumlah pada badge diperbarui bersama data polling setiap empat detik dan mendapat pulse ketika suara paket berubah.
+- Bar statistik diperbesar menjadi meter adaptif setinggi 24–36 px, atau 20 px pada layar desktop yang sangat pendek.
+- Meter kini mempunyai track berlapis, padding badan, highlight permukaan, bayangan bagian dalam, skala interval, dan fill ber-volume. Perolehan kecil tetap terlihat dengan minimum fill 18 px setelah paket memperoleh suara.
+- Titik energi pada ujung fill turut diperbesar agar proporsi dan arah pertumbuhan mudah terlihat dari jauh.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 140 pengujian, 907 assertions.
+
+File utama:
+
+- `resources/views/public/osis-polling.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Statistik perolehan live polling lebih jelas dan hidup
 
-- Bar statistik per paket diperbesar secara adaptif dari ukuran lama 7 px menjadi 12–18 px, dengan batas 11 px pada layar desktop yang sangat pendek agar seluruh paket tetap muat.
+- Bar statistik per paket telah ditingkatkan bertahap dari ukuran awal 7 px menjadi meter berbodi 24–36 px, dengan batas 20 px pada layar desktop yang sangat pendek agar seluruh paket tetap muat.
 - Label `Statistik perolehan`, jumlah suara, dan persentase diperbesar. Pengecilan label ekstrem saat terdapat 5–6 paket dihapus.
 - Track bar memiliki penanda interval, kontras lebih kuat, dan bayangan dalam agar panjang perolehan mudah dibandingkan dari layar monitoring.
 - Isi bar memakai animasi aliran warna dan kilau bergerak, disertai titik energi pada ujung perolehan yang telah memiliki suara.
