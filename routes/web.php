@@ -65,6 +65,70 @@ Route::middleware(['auth'])->prefix('matrikulasi')->name('matrikulasi.')->group(
     Route::get('/dashboard', [App\Http\Controllers\Matrikulasi\DashboardController::class, 'index'])->name('dashboard');
 });
 
+// Modul Asrama berdiri sendiri dan memakai master siswa/GTK SIMANSA.
+Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Asrama\DashboardController::class, 'index'])
+        ->middleware('permission:view-asrama|view-asrama-portal')
+        ->name('dashboard');
+
+    Route::middleware('permission:manage-asrama')->group(function () {
+        Route::get('/unit', [App\Http\Controllers\Asrama\MasterController::class, 'units'])->name('units');
+        Route::post('/unit', [App\Http\Controllers\Asrama\MasterController::class, 'storeUnit'])->name('units.store');
+        Route::put('/unit/{asrama}', [App\Http\Controllers\Asrama\MasterController::class, 'updateUnit'])->name('units.update');
+        Route::delete('/unit/{asrama}', [App\Http\Controllers\Asrama\MasterController::class, 'destroyUnit'])->name('units.destroy');
+    });
+
+    Route::middleware('permission:manage-asrama-santri')->group(function () {
+        Route::get('/santri', [App\Http\Controllers\Asrama\MasterController::class, 'santri'])->name('santri.index');
+        Route::post('/santri', [App\Http\Controllers\Asrama\MasterController::class, 'storeSantri'])->name('santri.store');
+        Route::put('/santri/{santri}', [App\Http\Controllers\Asrama\MasterController::class, 'updateSantri'])->name('santri.update');
+    });
+
+    Route::middleware('permission:manage-asrama-asatidz')->group(function () {
+        Route::get('/asatidz', [App\Http\Controllers\Asrama\MasterController::class, 'asatidz'])->name('asatidz.index');
+        Route::post('/asatidz', [App\Http\Controllers\Asrama\MasterController::class, 'storeAsatidz'])->name('asatidz.store');
+        Route::put('/asatidz/{asatidz}', [App\Http\Controllers\Asrama\MasterController::class, 'updateAsatidz'])->name('asatidz.update');
+    });
+
+    Route::middleware('permission:manage-asrama-mapel')->group(function () {
+        Route::get('/mapel', [App\Http\Controllers\Asrama\MasterController::class, 'mapel'])->name('mapel.index');
+        Route::post('/mapel', [App\Http\Controllers\Asrama\MasterController::class, 'storeMapel'])->name('mapel.store');
+        Route::put('/mapel/{mapel}', [App\Http\Controllers\Asrama\MasterController::class, 'updateMapel'])->name('mapel.update');
+        Route::delete('/mapel/{mapel}', [App\Http\Controllers\Asrama\MasterController::class, 'destroyMapel'])->name('mapel.destroy');
+    });
+
+    Route::middleware('permission:manage-asrama-kelas')->group(function () {
+        Route::get('/kelas', [App\Http\Controllers\Asrama\KelasController::class, 'index'])->name('kelas.index');
+        Route::post('/kelas', [App\Http\Controllers\Asrama\KelasController::class, 'store'])->name('kelas.store');
+        Route::get('/kelas/{kelas}', [App\Http\Controllers\Asrama\KelasController::class, 'show'])->name('kelas.show');
+        Route::put('/kelas/{kelas}', [App\Http\Controllers\Asrama\KelasController::class, 'update'])->name('kelas.update');
+        Route::post('/kelas/{kelas}/santri', [App\Http\Controllers\Asrama\KelasController::class, 'assignStudents'])->name('kelas.santri.store');
+        Route::delete('/kelas/{kelas}/santri/{anggota}', [App\Http\Controllers\Asrama\KelasController::class, 'removeStudent'])->name('kelas.santri.destroy');
+        Route::post('/kelas/{kelas}/ketua', [App\Http\Controllers\Asrama\KelasController::class, 'setChair'])->name('kelas.ketua');
+        Route::post('/kelas/{kelas}/wali', [App\Http\Controllers\Asrama\KelasController::class, 'setWali'])->name('kelas.wali');
+        Route::post('/kelas/{kelas}/pengampu', [App\Http\Controllers\Asrama\KelasController::class, 'storePengampu'])->name('kelas.pengampu.store');
+        Route::delete('/kelas/{kelas}/pengampu/{pengampu}', [App\Http\Controllers\Asrama\KelasController::class, 'destroyPengampu'])->name('kelas.pengampu.destroy');
+    });
+
+    Route::middleware('permission:input-nilai-asrama|manage-asrama-pengampu')->group(function () {
+        Route::get('/nilai', [App\Http\Controllers\Asrama\NilaiController::class, 'index'])->name('nilai.index');
+        Route::get('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'edit'])->name('nilai.edit');
+        Route::put('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'update'])->name('nilai.update');
+    });
+
+    Route::middleware('can:asrama-rapor-access')->group(function () {
+        Route::get('/rapor', [App\Http\Controllers\Asrama\RaporController::class, 'index'])->name('rapor.index');
+        Route::get('/rapor/santri/{anggota}', [App\Http\Controllers\Asrama\RaporController::class, 'edit'])->name('rapor.edit');
+        Route::put('/rapor/santri/{anggota}', [App\Http\Controllers\Asrama\RaporController::class, 'update'])->name('rapor.update');
+    });
+    Route::post('/rapor/{rapor}/terbitkan', [App\Http\Controllers\Asrama\RaporController::class, 'publish'])
+        ->middleware('permission:publish-rapor-asrama')->name('rapor.publish');
+    Route::post('/rapor/{rapor}/batalkan', [App\Http\Controllers\Asrama\RaporController::class, 'unpublish'])
+        ->middleware('permission:publish-rapor-asrama')->name('rapor.unpublish');
+    Route::get('/rapor/{rapor}/cetak', [App\Http\Controllers\Asrama\RaporController::class, 'print'])
+        ->middleware('permission:print-rapor-asrama|view-asrama-portal')->name('rapor.print');
+});
+
 // Forgot Password Routes
 Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])

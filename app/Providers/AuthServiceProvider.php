@@ -133,5 +133,19 @@ class AuthServiceProvider extends ServiceProvider
                     in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk', 'bk', 'wali_kelas'])
                 );
         });
+
+        Gate::define('asrama-rapor-access', function ($user) {
+            if ($user->can('manage-rapor-asrama') || $user->can('manage-asrama')) {
+                return true;
+            }
+            if (!$user->gtk) {
+                return false;
+            }
+
+            return \App\Models\AsramaKelas::query()
+                ->whereHas('wali.gtk', fn ($query) => $query->where('gtks.id', $user->gtk->id))
+                ->where('is_active', true)
+                ->exists();
+        });
     }
 }

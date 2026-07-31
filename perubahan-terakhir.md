@@ -4,6 +4,32 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modul mandiri Asrama dan Rapor Arab
+
+- Menu utama `ASRAMA` ditambahkan ke sidebar dengan submenu Dashboard, Unit, Santri, Asatidz, Kelas, Mapel, Input Nilai, dan Rapor.
+- Seluruh data operasional menggunakan tabel berprefiks `asrama_`; identitas santri dan asatidz tetap merujuk master `siswa` dan `gtks` SIMANSA.
+- Siswa dapat di-assign per orang atau sekaligus dari rombel reguler. Profil siswa menampilkan status santri, nomor induk, serta kelas/unit asrama aktif.
+- Kelas asrama mendukung tahun pelajaran SIMANSA, wali kelas dari asatidz, ketua kelas dari santri aktif, dan penugasan pengampu per semester.
+- Akun GTK yang ditugaskan memperoleh portal dan akses input nilai. Data dibatasi pada mapel yang diampu atau kelas yang menjadi tanggung jawab wali.
+- Akun siswa yang menjadi santri memperoleh portal Asrama dan hanya dapat membuka rapor miliknya yang sudah diterbitkan.
+- Rapor memuat nilai mapel bilingual Arab–Latin, terbilang Arab, jumlah, rata-rata, kebersihan, kelakuan, kerajinan, kehadiran, keputusan, tanggal Masehi/Hijriah, dan tanda tangan.
+- Penerbitan membuat snapshot dan mengunci nilai. Pembatalan terbit membuka kembali nilai untuk koreksi.
+- Permission Asrama masuk ke permission matrix; Admin dan Super Admin memperoleh akses awal melalui migration.
+- Master awal 26 mata pelajaran sesuai contoh rapor tersedia melalui `AsramaMapelSeeder`.
+- Seluruh 139 unit test lulus (925 assertions), dua workflow test Asrama lulus (16 assertions), seluruh Blade berhasil dikompilasi, dan build Vite produksi berhasil.
+
+Dokumentasi:
+
+- `MODUL_ASRAMA.md`
+
+File utama:
+
+- `database/migrations/2026_07_31_100000_create_asrama_module_tables.php`
+- `app/Http/Controllers/Asrama/`
+- `app/Models/Asrama*.php`
+- `resources/views/asrama/`
+- `tests/Unit/AsramaModuleTest.php`
+
 ### Watermark logo sekolah 3D pada live polling
 
 - Background setiap kartu paket live polling menggunakan logo sekolah aktual sebagai watermark besar dan utuh di belakang kandidat.

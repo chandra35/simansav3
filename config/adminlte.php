@@ -548,6 +548,65 @@ return [
             ],
         ],
 
+        // ASRAMA - modul mandiri dengan master siswa dan GTK dari SIMANSA
+        [
+            'key' => 'asrama-main',
+            'text' => 'ASRAMA',
+            'icon' => 'fas fa-fw fa-mosque text-info',
+            'can' => 'view-asrama-portal',
+            'active' => ['asrama*'],
+            'submenu' => [
+                [
+                    'text' => 'Dashboard Asrama',
+                    'route' => 'asrama.dashboard',
+                    'icon' => 'fas fa-fw fa-home',
+                    'can' => 'view-asrama-portal',
+                ],
+                [
+                    'text' => 'Unit Asrama',
+                    'route' => 'asrama.units',
+                    'icon' => 'fas fa-fw fa-building',
+                    'can' => 'manage-asrama',
+                ],
+                [
+                    'text' => 'Santri Asrama',
+                    'route' => 'asrama.santri.index',
+                    'icon' => 'fas fa-fw fa-user-graduate',
+                    'can' => 'manage-asrama-santri',
+                ],
+                [
+                    'text' => 'Asatidz Asrama',
+                    'route' => 'asrama.asatidz.index',
+                    'icon' => 'fas fa-fw fa-chalkboard-teacher',
+                    'can' => 'manage-asrama-asatidz',
+                ],
+                [
+                    'text' => 'Kelas Asrama',
+                    'route' => 'asrama.kelas.index',
+                    'icon' => 'fas fa-fw fa-school',
+                    'can' => 'manage-asrama-kelas',
+                ],
+                [
+                    'text' => 'Mapel Asrama',
+                    'route' => 'asrama.mapel.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'manage-asrama-mapel',
+                ],
+                [
+                    'text' => 'Input Nilai',
+                    'route' => 'asrama.nilai.index',
+                    'icon' => 'fas fa-fw fa-pen',
+                    'can' => 'input-nilai-asrama',
+                ],
+                [
+                    'text' => 'Rapor Asrama',
+                    'route' => 'asrama.rapor.index',
+                    'icon' => 'fas fa-fw fa-file-alt',
+                    'can' => 'asrama-rapor-access',
+                ],
+            ],
+        ],
+
         // SMART-Q KELAS UNGGULAN
         [
             'text' => 'SMART-Q Unggulan',

@@ -108,6 +108,30 @@ class User extends Authenticatable
         return $this->hasOne(Gtk::class);
     }
 
+    public function asramaSantri()
+    {
+        return $this->hasOneThrough(
+            AsramaSantri::class,
+            Siswa::class,
+            'user_id',
+            'siswa_id',
+            'id',
+            'id'
+        );
+    }
+
+    public function asramaAsatidz()
+    {
+        return $this->hasOneThrough(
+            AsramaAsatidz::class,
+            Gtk::class,
+            'user_id',
+            'gtk_id',
+            'id',
+            'id'
+        );
+    }
+
     public function osisVoterRecords()
     {
         return $this->hasMany(OsisVoter::class);

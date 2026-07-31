@@ -335,6 +335,20 @@
                         <a class="float-right">{{ $siswa->nis_lokal ?? '-' }}</a>
                     </li>
                     <li class="list-group-item">
+                        <b><i class="fas fa-mosque text-info"></i> Status Asrama</b>
+                        <span class="float-right text-right">
+                            @if($siswa->asramaSantriAktif)
+                                <span class="badge badge-info">Santri</span>
+                                <small class="d-block mt-1">
+                                    {{ $siswa->asramaSantriAktif->nomor_induk_asrama }}
+                                    · {{ $siswa->asramaSantriAktif->kelasAktif?->kelas?->nama_kelas ?? $siswa->asramaSantriAktif->asrama?->nama }}
+                                </small>
+                            @else
+                                <span class="badge badge-light">Non-santri</span>
+                            @endif
+                        </span>
+                    </li>
+                    <li class="list-group-item">
                         <b><i class="fas fa-envelope text-secondary"></i> Email</b>
                         <a class="float-right">{{ $siswa->user->email ?? '-' }}</a>
                     </li>

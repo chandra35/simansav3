@@ -117,6 +117,16 @@ class Siswa extends Model
         return $this->hasMany(NilaiSiswa::class);
     }
 
+    public function asramaSantri()
+    {
+        return $this->hasOne(AsramaSantri::class);
+    }
+
+    public function asramaSantriAktif()
+    {
+        return $this->hasOne(AsramaSantri::class)->where('status', 'aktif');
+    }
+
     public function dataLulusan()
     {
         return $this->hasMany(SiswaLulusan::class);
