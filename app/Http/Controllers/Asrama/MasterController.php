@@ -26,18 +26,54 @@ class MasterController extends Controller
     public function santri(Request $request)
     {
         $tahunId = $request->input('tahun_pelajaran_id') ?: TahunPelajaran::active()->value('id');
+        $search = trim((string) $request->input('q', ''));
+        $tingkat = $request->input('tingkat');
+        $kelasId = $request->input('kelas_id');
+        $jk = $request->input('jenis_kelamin');
+        $status = $request->input('status');
+
+        $records = AsramaSantri::with([
+            'siswa.kelasTahunAktif', 'kamarAktif.kamar',
+            'kelasAktif.kelas.kelasReguler', 'kelasAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
+        ])
+            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
+                ->where('nomor_induk_asrama', 'like', "%{$search}%")
+                ->orWhereHas('siswa', fn ($s) => $s
+                    ->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%"))))
+            ->when($tingkat, fn ($query) => $query->whereHas('siswa.kelasTahunAktif',
+                fn ($s) => $s->where('siswa_kelas.tingkat', $tingkat)))
+            ->when($kelasId, fn ($query) => $query->whereHas('siswa.kelasTahunAktif',
+                fn ($s) => $s->where('kelas.id', $kelasId)))
+            ->when($jk, fn ($query) => $query->whereHas('siswa', fn ($s) => $s->where('jenis_kelamin', $jk)))
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->orderByDesc('status')->latest()->paginate(50)->withQueryString();
+
+        // Rombel SIMANSA yang siswanya sudah terdaftar sebagai santri
+        $assignedKelas = Kelas::where('is_active', true)
+            ->where('tahun_pelajaran_id', $tahunId)
+            ->whereHas('siswaAktif', fn ($q) => $q->whereIn('siswa.id', AsramaSantri::query()->select('siswa_id')))
+            ->orderBy('tingkat')->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'tingkat']);
+
+        $aktif = AsramaSantri::where('status', 'aktif');
 
         return view('asrama.master.santri', [
-            'records' => AsramaSantri::with([
-                'siswa.kelasTahunAktif', 'kamarAktif.kamar',
-                'kelasAktif.kelas.kelasReguler', 'kelasAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
-            ])->orderByDesc('status')->latest()->paginate(50)->withQueryString(),
+            'records' => $records,
             'students' => Siswa::where('status_siswa', 'aktif')->orderBy('nama_lengkap')
                 ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
             'classes' => Kelas::withCount(['siswaAktif'])->where('tahun_pelajaran_id', $tahunId)
                 ->where('is_active', true)->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
+            'assignedKelas' => $assignedKelas,
+            'tingkatOptions' => $assignedKelas->pluck('tingkat')->filter()->unique()->sort()->values(),
+            'stats' => [
+                'total' => (clone $aktif)->count(),
+                'laki' => (clone $aktif)->whereHas('siswa', fn ($q) => $q->where('jenis_kelamin', 'L'))->count(),
+                'perempuan' => (clone $aktif)->whereHas('siswa', fn ($q) => $q->where('jenis_kelamin', 'P'))->count(),
+                'berkamar' => (clone $aktif)->whereHas('kamarAktif')->count(),
+            ],
         ]);
     }
 

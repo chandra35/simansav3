@@ -10,18 +10,143 @@
     $heroAction='<button class="btn btn-light" data-toggle="modal" data-target="#assignSantri"><i class="fas fa-user-plus mr-1"></i> Tambah Santri</button>';
 @endphp
 @include('asrama._hero')
-<div class="asrama-panel"><div class="asrama-panel__body asrama-form"><form method="get" class="row align-items-end" data-asrama-loading data-loading-title="Memuat data santri">
-    <div class="col-md-5"><label>Tahun Pelajaran Rombel</label><select name="tahun_pelajaran_id" class="form-control asrama-select">@foreach($years as $year)<option value="{{ $year->id }}" @selected($selectedYear===$year->id)>{{ $year->nama }}{{ $year->is_active?' · Aktif':'' }}</option>@endforeach</select></div>
-    <div class="col-md-2 mt-3 mt-md-0"><button class="btn btn-info btn-block"><i class="fas fa-filter mr-1"></i> Terapkan</button></div>
-</form></div></div>
-<div class="asrama-panel"><div class="table-responsive"><table class="table asrama-table"><thead><tr><th>No. Induk</th><th>Santri</th><th>Rombel SIMANSA</th><th>Pengasuh</th><th>Kamar</th><th>Status</th><th></th></tr></thead><tbody>
+<div class="row">
+    <div class="col-md-6 col-xl-3 mb-3">
+        <div class="card card-outline card-primary h-100"><div class="card-body py-3">
+            <div class="text-muted small text-uppercase font-weight-bold">Santri Aktif</div>
+            <h3 class="text-primary mb-0">{{ number_format($stats['total']) }}</h3>
+        </div></div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-3">
+        <div class="card card-outline card-info h-100"><div class="card-body py-3">
+            <div class="text-muted small text-uppercase font-weight-bold">Laki-Laki</div>
+            <h3 class="text-info mb-0">{{ number_format($stats['laki']) }}</h3>
+        </div></div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-3">
+        <div class="card card-outline card-danger h-100"><div class="card-body py-3">
+            <div class="text-muted small text-uppercase font-weight-bold">Perempuan</div>
+            <h3 class="text-danger mb-0">{{ number_format($stats['perempuan']) }}</h3>
+        </div></div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-3">
+        <div class="card card-outline card-success h-100"><div class="card-body py-3">
+            <div class="text-muted small text-uppercase font-weight-bold">Sudah Dapat Kamar</div>
+            <h3 class="text-success mb-0">{{ number_format($stats['berkamar']) }}</h3>
+        </div></div>
+    </div>
+</div>
+
+<div class="card card-outline card-primary">
+    <div class="card-header"><h3 class="card-title"><i class="fas fa-user-graduate mr-2"></i>Manajemen Santri Asrama</h3></div>
+    <div class="card-body">
+        <form method="get" id="filterForm">
+            <div class="row">
+                <div class="col-md-6 col-xl-3 mb-3">
+                    <label class="small font-weight-bold text-muted" for="filterQ"><i class="fas fa-search mr-1"></i> Pencarian</label>
+                    <input type="text" id="filterQ" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="Nama / NISN / No. Induk">
+                </div>
+                <div class="col-md-6 col-xl-2 mb-3">
+                    <label class="small font-weight-bold text-muted" for="filterTingkat"><i class="fas fa-layer-group mr-1"></i> Tingkat</label>
+                    <select id="filterTingkat" name="tingkat" class="form-control form-control-sm">
+                        <option value="">Semua</option>
+                        @foreach($tingkatOptions as $t)<option value="{{ $t }}" @selected(request('tingkat')==$t)>Tingkat {{ $t }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="col-md-6 col-xl-2 mb-3">
+                    <label class="small font-weight-bold text-muted" for="filterKelas"><i class="fas fa-door-open mr-1"></i> Rombel</label>
+                    <select id="filterKelas" name="kelas_id" class="form-control form-control-sm">
+                        <option value="">Semua</option>
+                        @foreach($assignedKelas as $k)<option value="{{ $k->id }}" data-tingkat="{{ $k->tingkat }}" @selected(request('kelas_id')==$k->id)>{{ $k->nama_kelas }}</option>@endforeach
+                    </select>
+                    <small class="text-muted">Hanya rombel yang punya santri.</small>
+                </div>
+                <div class="col-md-6 col-xl-2 mb-3">
+                    <label class="small font-weight-bold text-muted" for="filterJk"><i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin</label>
+                    <select id="filterJk" name="jenis_kelamin" class="form-control form-control-sm">
+                        <option value="">Semua</option>
+                        <option value="L" @selected(request('jenis_kelamin')==='L')>Laki-Laki</option>
+                        <option value="P" @selected(request('jenis_kelamin')==='P')>Perempuan</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-xl-2 mb-3">
+                    <label class="small font-weight-bold text-muted" for="filterStatus"><i class="fas fa-check-circle mr-1"></i> Status</label>
+                    <select id="filterStatus" name="status" class="form-control form-control-sm">
+                        <option value="">Semua</option>
+                        <option value="aktif" @selected(request('status')==='aktif')>Aktif</option>
+                        <option value="nonaktif" @selected(request('status')==='nonaktif')>Nonaktif</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-xl-1 mb-3 d-flex align-items-end">
+                    <div class="btn-group btn-group-sm w-100">
+                        <button type="submit" class="btn btn-primary" title="Terapkan filter"><i class="fas fa-filter"></i></button>
+                        <a href="{{ route('asrama.santri.index') }}" class="btn btn-outline-secondary" title="Reset filter"><i class="fas fa-redo"></i></a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="thead-light"><tr>
+                    <th class="text-center" style="width:56px">Foto</th>
+                    <th>Nama / NISN</th>
+                    <th class="text-center">JK</th>
+                    <th>Kelas</th>
+                    <th>Pengasuh</th>
+                    <th>Kamar</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Tgl Masuk</th>
+                    <th class="text-center" style="width:110px">Aksi</th>
+                </tr></thead>
+                <tbody>
 @forelse($records as $item)
-<tr><td><code>{{ $item->nomor_induk_asrama }}</code></td><td><strong>{{ $item->siswa->nama_lengkap }}</strong><br><small>NISN {{ $item->siswa->nisn ?: '-' }}</small></td><td>{{ $item->kelasAktif?->kelas?->kelasReguler?->nama_kelas ?? $item->siswa->kelasTahunAktif->first()?->nama_kelas ?? '-' }}</td><td>{{ $item->kelasAktif?->pengasuhAssignment?->rombelPengasuh?->pengasuh?->gtk?->nama_lengkap ?? 'Belum dibagi' }}</td><td>{{ $item->kamarAktif?->kamar?->nama ?? 'Belum ditempatkan' }}</td><td><span class="asrama-badge {{ $item->status==='aktif'?'asrama-badge--active':'asrama-badge--muted' }}">{{ ucfirst($item->status) }}</span></td><td class="text-nowrap">
-    <button type="button" class="btn btn-sm btn-info asrama-icon-button" onclick="showSantri('{{ $item->id }}')" title="Detail santri"><i class="fas fa-eye"></i></button>
-    <form method="post" action="{{ route('asrama.santri.destroy', $item) }}" class="d-inline" data-asrama-loading data-confirm="Hapus {{ $item->siswa->nama_lengkap }} dari asrama? Data siswa SIMANSA tidak akan terhapus.">@csrf @method('DELETE')<button type="submit" class="btn btn-sm btn-danger asrama-icon-button" title="Hapus dari asrama"><i class="fas fa-trash"></i></button></form>
-</td></tr>
-@empty<tr><td colspan="7" class="asrama-empty"><i class="fas fa-user-graduate"></i>Belum ada santri aktif.</td></tr>@endforelse
-</tbody></table></div><div class="p-3">{{ $records->links() }}</div></div>
+@php
+    $siswa = $item->siswa;
+    $fallback = 'https://ui-avatars.com/api/?name='.urlencode($siswa->nama_lengkap ?? 'Santri').'&size=100&background='.($siswa->jenis_kelamin === 'L' ? '3498db' : 'e83e8c').'&color=FFFFFF&font-size=0.45&bold=true';
+    $fotoUrl = $siswa->foto_profile ? $siswa->foto_profile_url : $fallback;
+@endphp
+<tr>
+    <td class="text-center align-middle">
+        @if($siswa->foto_profile)
+        <button type="button" class="btn btn-link p-0 border-0 js-preview-foto" data-preview-url="{{ $fotoUrl }}" data-student-name="{{ $siswa->nama_lengkap }}" title="Klik untuk preview foto">
+            <img src="{{ $fotoUrl }}" alt="Foto {{ $siswa->nama_lengkap }}" class="img-circle shadow-sm" onerror="this.onerror=null;this.src='{{ $fallback }}';" style="width:36px;height:36px;object-fit:cover;">
+        </button>
+        @else
+        <img src="{{ $fallback }}" alt="{{ $siswa->nama_lengkap }}" class="img-circle" style="width:36px;height:36px;object-fit:cover;opacity:.7;">
+        @endif
+    </td>
+    <td class="align-middle">
+        <strong>{{ $siswa->nama_lengkap }}</strong><br>
+        <small class="text-muted">NISN {{ $siswa->nisn ?: '-' }} &middot; No. Induk <code>{{ $item->nomor_induk_asrama ?: '-' }}</code></small>
+    </td>
+    <td class="text-center align-middle">{!! $siswa->jenis_kelamin === 'L' ? '<span class="badge badge-primary">L</span>' : '<span class="badge badge-danger">P</span>' !!}</td>
+    <td class="align-middle">{{ $item->kelasAktif?->kelas?->kelasReguler?->nama_kelas ?? $siswa->kelasTahunAktif->first()?->nama_kelas ?? '-' }}</td>
+    <td class="align-middle">{{ $item->kelasAktif?->pengasuhAssignment?->rombelPengasuh?->pengasuh?->gtk?->nama_lengkap ?? 'Belum dibagi' }}</td>
+    <td class="align-middle">{{ $item->kamarAktif?->kamar?->nama ?? 'Belum ditempatkan' }}</td>
+    <td class="text-center align-middle"><span class="badge {{ $item->status==='aktif'?'badge-success':'badge-secondary' }}">{{ ucfirst($item->status) }}</span></td>
+    <td class="text-center align-middle"><small>{{ $item->tanggal_masuk?->format('d/m/Y') ?: '-' }}</small></td>
+    <td class="text-center align-middle text-nowrap">
+        <button type="button" class="btn btn-sm btn-info" onclick="showSantri('{{ $item->id }}')" title="Detail santri"><i class="fas fa-eye"></i></button>
+        <form method="post" action="{{ route('asrama.santri.destroy', $item) }}" class="d-inline" data-asrama-loading data-confirm="Hapus {{ $siswa->nama_lengkap }} dari asrama? Data siswa SIMANSA tidak akan terhapus.">@csrf @method('DELETE')<button type="submit" class="btn btn-sm btn-danger" title="Hapus dari asrama"><i class="fas fa-trash"></i></button></form>
+    </td>
+</tr>
+@empty<tr><td colspan="9" class="text-center text-muted py-5"><i class="fas fa-user-graduate d-block mb-2" style="font-size:2rem"></i>Tidak ada santri yang cocok dengan filter.</td></tr>@endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2">{{ $records->links() }}</div>
+    </div>
+</div>
+
+{{-- Modal Preview Foto --}}
+<div class="modal fade" id="fotoPreviewModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+    <div class="modal-header bg-info"><h5 class="modal-title text-white"><i class="fas fa-camera-retro"></i> Preview Foto Santri</h5><button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button></div>
+    <div class="modal-body text-center">
+        <p class="font-weight-bold mb-3" id="fotoPreviewName">-</p>
+        <img id="fotoPreviewImage" src="" alt="Preview foto santri" class="img-fluid rounded shadow-sm border" style="max-height:65vh;object-fit:contain;">
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button></div>
+</div></div></div>
 
 <div class="modal fade" id="assignSantri" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.store') }}" class="modal-content" data-asrama-loading data-loading-title="Mengaktifkan santri" data-loading-text="Identitas dan akses portal sedang disinkronkan dari SIMANSA.">@csrf
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah Santri Asrama</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
@@ -135,6 +260,23 @@ $(function () {
         $('#santriDetailTabs .nav-link').css('color', '#495057');
         $(this).css('color', '#007bff');
     });
+
+    $(document).on('click', '.js-preview-foto', function () {
+        $('#fotoPreviewName').text($(this).data('student-name') || '-');
+        $('#fotoPreviewImage').attr('src', $(this).data('preview-url'));
+        $('#fotoPreviewModal').modal('show');
+    });
+
+    var $kelasOptions = $('#filterKelas option').clone();
+    $('#filterTingkat').on('change', function () {
+        var tingkat = $(this).val();
+        var current = $('#filterKelas').val();
+        $('#filterKelas').empty().append($kelasOptions.filter(function () {
+            return !tingkat || !this.value || String($(this).data('tingkat')) === tingkat;
+        }).clone());
+        $('#filterKelas').val(current);
+        if ($('#filterKelas').val() === null) $('#filterKelas').val('');
+    }).trigger('change');
 });
 
 function esc(v) {
