@@ -12,9 +12,14 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\AsramaAccessService;
+use App\Imports\AsramaNomorIndukImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class MasterController extends Controller
 {
@@ -39,15 +44,18 @@ class MasterController extends Controller
     public function storeSantri(Request $request, AsramaAccessService $access)
     {
         $data = $request->validate([
-            'kelas_id' => ['nullable', 'exists:kelas,id'],
+            'kelas_ids' => ['nullable', 'array'],
+            'kelas_ids.*' => ['exists:kelas,id'],
             'siswa_ids' => ['nullable', 'array'],
             'siswa_ids.*' => ['exists:siswa,id'],
             'nomor_induk_asrama' => ['nullable', 'string', 'max:50', 'unique:asrama_santri,nomor_induk_asrama'],
             'tanggal_masuk' => ['nullable', 'date'],
         ]);
         $ids = collect($data['siswa_ids'] ?? []);
-        if (! empty($data['kelas_id'])) {
-            $ids = $ids->merge(Kelas::findOrFail($data['kelas_id'])->siswaAktif()->pluck('siswa.id'));
+        if (! empty($data['kelas_ids'])) {
+            foreach (Kelas::whereIn('id', $data['kelas_ids'])->get() as $kelas) {
+                $ids = $ids->merge($kelas->siswaAktif()->pluck('siswa.id'));
+            }
         }
         $ids = $ids->unique()->values();
         abort_if($ids->isEmpty(), 422, 'Pilih rombel atau minimal satu siswa.');
@@ -102,6 +110,75 @@ class MasterController extends Controller
         $access->syncStudent($santri->siswa->user);
 
         return back()->with('success', 'Data santri berhasil diperbarui.');
+    }
+
+    public function nomorInduk(Request $request)
+    {
+        $search = trim((string) $request->input('q', ''));
+
+        return view('asrama.master.nomor-induk', [
+            'records' => AsramaSantri::with('siswa')
+                ->when($search !== '', fn ($query) => $query->whereHas('siswa', fn ($q) => $q
+                    ->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%")
+                    ->orWhere('nis_lokal', 'like', "%{$search}%"))
+                    ->orWhere('nomor_induk_asrama', 'like', "%{$search}%"))
+                ->orderByDesc('status')->latest()->paginate(50)->withQueryString(),
+            'search' => $search,
+        ]);
+    }
+
+    public function updateNomorInduk(Request $request, AsramaSantri $santri)
+    {
+        $data = $request->validate([
+            'nomor_induk_asrama' => ['required', 'string', 'max:50', Rule::unique('asrama_santri', 'nomor_induk_asrama')->ignore($santri->id)],
+        ]);
+        $data['updated_by'] = $request->user()->id;
+        $santri->update($data);
+
+        return back()->with('success', 'Nomor induk santri berhasil diperbarui.');
+    }
+
+    public function importNomorInduk(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:2048'],
+        ], [], ['file' => 'file Excel']);
+
+        $import = new AsramaNomorIndukImport;
+        Excel::import($import, $request->file('file'));
+        $results = $import->getResults();
+
+        return back()
+            ->with('nomor_induk_import', $results)
+            ->with($results['failed'] === 0 ? 'success' : 'warning',
+                $results['success'].' nomor induk diperbarui, '.$results['failed'].' gagal.');
+    }
+
+    public function templateNomorInduk()
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Nomor Induk Santri');
+
+        $headers = ['nisn', 'nama', 'nomor_induk'];
+        $sheet->fromArray($headers, null, 'A1');
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setWidth(28);
+            $sheet->getStyle($col.'1')->getFont()->setBold(true);
+            $sheet->getStyle($col.'1')->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('17324D');
+            $sheet->getStyle($col.'1')->getFont()->getColor()->setRGB('FFFFFF');
+        }
+        $sheet->fromArray([
+            ['0012345678', 'Contoh Nama Santri', 'AST-26-0001'],
+        ], null, 'A2');
+
+        $fileName = 'Template_Nomor_Induk_Santri.xlsx';
+        $tempPath = storage_path('app/'.$fileName);
+        (new Xlsx($spreadsheet))->save($tempPath);
+
+        return response()->download($tempPath, $fileName)->deleteFileAfterSend(true);
     }
 
     public function asatidz()

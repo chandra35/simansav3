@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login Hotspot MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
+    <input type="hidden" name="username">
+    <input type="hidden" name="password">
+    <input type="hidden" name="dst" value="$(link-orig)">
+    <input type="hidden" name="popup" value="true">
+  </form>
+  <script src="md5.js"></script>
+  <script>
+    function doLogin() {
+      if ('$(chap-id)'.indexOf('$(') === 0 || !'$(chap-id)') {
+        return true;
+      }
+      document.sendin.username.value = document.login.username.value;
+      document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+      document.sendin.submit();
+      return false;
+    }
+  </script>
+
+  <main class="page login-page">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <section class="portal-card">
+      <div class="portal-top">
+        <div class="portal-brand">
+          <div class="brand-logo compact"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
+          <div>
+            <span>SIMANSA Hotspot</span>
+            <strong>MAN 1 Metro</strong>
+          </div>
+        </div>
+        <div class="status-dot">Online</div>
+      </div>
+
+      <div class="portal-avatar" aria-hidden="true">
+        <span class="wifi-ring ring-a"></span>
+        <span class="wifi-ring ring-b"></span>
+        <img src="assets/logo.png" alt="">
+      </div>
+
+      <div class="portal-title">
+        <h1>Login Hotspot</h1>
+        <p>Akses internet madrasah dengan akun resmi.</p>
+      </div>
+
+      <div class="alert" data-hotspot-error="$(error)"></div>
+
+      <form name="login" action="$(link-login-only)" method="post" onsubmit="return doLogin()">
+        <input type="hidden" name="dst" value="$(link-orig)">
+        <input type="hidden" name="popup" value="true">
+
+        <div class="field">
+          <label for="username">Username</label>
+          <div class="input-shell">
+            <span>NISN</span>
+            <input class="input" id="username" name="username" type="text" autocomplete="username" inputmode="text" placeholder="Masukkan NISN / akun" required autofocus>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-shell">
+            <span>KEY</span>
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
+          </div>
+        </div>
+
+        <button class="submit" type="submit">Masuk Internet</button>
+      </form>
+
+      <div class="portal-meta">
+        <span>Siswa menggunakan NISN</span>
+        <span>RADIUS terpusat</span>
+      </div>
+
+      <div class="help-box compact-help">
+        <span>Bantuan</span>
+        <a href="mailto:admin@man1metro.sch.id">admin@man1metro.sch.id</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/portal.js"></script>
+</body>
+</html>

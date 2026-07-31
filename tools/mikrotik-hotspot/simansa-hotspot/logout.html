@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logout Hotspot MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="status-wrap">
+      <div class="status-card">
+        <div class="status-head">
+          <div class="brand-logo"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
+          <div>
+            <h1>Sesi Berakhir</h1>
+            <p>Anda sudah keluar dari jaringan hotspot.</p>
+          </div>
+        </div>
+
+        <div class="status-body">
+          <div class="stats">
+            <div class="stat"><span>Username</span><strong>$(username)</strong></div>
+            <div class="stat"><span>IP Address</span><strong>$(ip)</strong></div>
+            <div class="stat"><span>MAC Address</span><strong>$(mac)</strong></div>
+            <div class="stat"><span>Waktu Aktif</span><strong>$(uptime)</strong></div>
+          </div>
+
+          <div class="actions">
+            <a class="button primary" href="$(link-login)">Login Lagi</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

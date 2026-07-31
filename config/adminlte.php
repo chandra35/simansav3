@@ -575,6 +575,12 @@ return [
                     'can' => 'manage-asrama-santri',
                 ],
                 [
+                    'text' => 'Nomor Induk Santri',
+                    'route' => 'asrama.santri.induk.index',
+                    'icon' => 'fas fa-fw fa-id-card',
+                    'can' => 'manage-asrama-santri',
+                ],
+                [
                     'text' => 'Pengasuh & Pengajar',
                     'route' => 'asrama.asatidz.index',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',

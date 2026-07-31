@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Error Hotspot MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="status-wrap">
+      <div class="status-card">
+        <div class="status-head">
+          <div class="brand-logo"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
+          <div>
+            <h1>Akses Belum Berhasil</h1>
+            <p>Portal hotspot menerima pesan error dari router.</p>
+          </div>
+        </div>
+
+        <div class="status-body">
+          <div class="alert is-visible" data-hotspot-error="$(error)">
+            <strong>Login belum berhasil</strong>
+            <span>Router menolak akses untuk akun ini.</span>
+            <small>Detail teknis: $(error)</small>
+          </div>
+
+          <div class="actions">
+            <a class="button primary" href="$(link-login)">Kembali ke Login</a>
+          </div>
+
+          <div class="help-box">
+            <span>Bantuan</span>
+            <a href="mailto:admin@man1metro.sch.id">admin@man1metro.sch.id</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/portal.js"></script>
+</body>
+</html>

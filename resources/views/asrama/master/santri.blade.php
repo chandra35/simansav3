@@ -23,8 +23,12 @@
 <div class="modal fade asrama-modal" id="assignSantri"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.santri.store') }}" class="modal-content asrama-form" data-asrama-loading data-loading-title="Mengaktifkan santri" data-loading-text="Identitas dan akses portal sedang disinkronkan dari SIMANSA.">@csrf
 <div class="modal-header"><div><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah Santri Asrama</h5><small class="text-white-50">Gunakan rombel, pilihan individual, atau keduanya sekaligus.</small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body"><div class="row">
-    <div class="col-lg-6"><label class="asrama-choice"><strong><i class="fas fa-users mr-1 text-info"></i> Ambil satu rombel SIMANSA</strong><small>Semua siswa aktif di rombel akan menjadi santri.</small><select id="selectKelas" name="kelas_id" class="form-control asrama-kelas-select mt-3"><option value=""></option>@foreach($classes as $class)<option value="{{ $class->id }}" data-count="{{ $class->siswa_aktif_count }}">{{ $class->nama_kelas }}</option>@endforeach</select></label></div>
-    <div class="col-lg-6 mt-3 mt-lg-0"><label class="asrama-choice"><strong><i class="fas fa-user-check mr-1 text-info"></i> Pilih siswa individual</strong><small>Bisa memilih banyak siswa melalui kolom pencarian.</small><select id="selectSiswa" multiple name="siswa_ids[]" class="form-control asrama-siswa-select mt-3">@foreach($students as $student)<option value="{{ $student->id }}" data-nis="{{ $student->nis_lokal ?: $student->nisn }}">{{ $student->nama_lengkap }}</option>@endforeach</select></label></div>
+    <div class="col-lg-6"><label class="asrama-choice"><strong><i class="fas fa-users mr-1 text-info"></i> Ambil rombel SIMANSA</strong><small>Bisa memilih beberapa rombel sekaligus. Semua siswa aktif di rombel akan menjadi santri.</small><select id="selectKelas" multiple name="kelas_ids[]" class="form-control mt-3">@foreach($classes->groupBy('tingkat') as $tingkat => $group)<optgroup label="Tingkat {{ $tingkat ?: '-' }}">@foreach($group as $class)<option value="{{ $class->id }}" data-count="{{ $class->siswa_aktif_count }}" data-name="{{ $class->nama_kelas }}">{{ $class->nama_kelas }} · {{ $class->siswa_aktif_count }} siswa</option>@endforeach</optgroup>@endforeach</select></label>
+        <div class="table-responsive mt-2" id="kelasPreviewWrap" style="display:none"><table class="table table-sm asrama-table mb-0"><thead><tr><th>Rombel</th><th class="text-center">Jumlah</th><th></th></tr></thead><tbody id="kelasPreviewBody"></tbody><tfoot><tr><th>Total siswa dari rombel</th><th class="text-center" id="kelasPreviewTotal">0</th><th></th></tr></tfoot></table></div>
+    </div>
+    <div class="col-lg-6 mt-3 mt-lg-0"><label class="asrama-choice"><strong><i class="fas fa-user-check mr-1 text-info"></i> Pilih siswa individual</strong><small>Cari berdasarkan nama atau NIS. Bisa memilih banyak siswa.</small><select id="selectSiswa" multiple name="siswa_ids[]" class="form-control mt-3">@foreach($students as $student)<option value="{{ $student->id }}" data-nis="{{ $student->nis_lokal ?: $student->nisn }}" data-name="{{ $student->nama_lengkap }}">{{ $student->nama_lengkap }}</option>@endforeach</select></label>
+        <div class="table-responsive mt-2" id="siswaPreviewWrap" style="display:none"><table class="table table-sm asrama-table mb-0"><thead><tr><th>Nama</th><th>NIS</th><th></th></tr></thead><tbody id="siswaPreviewBody"></tbody><tfoot><tr><th>Total siswa dipilih</th><th id="siswaPreviewTotal" colspan="2">0</th></tr></tfoot></table></div>
+    </div>
     <div class="col-md-6 mt-3"><label>Nomor induk khusus</label><input name="nomor_induk_asrama" class="form-control" placeholder="Hanya digunakan bila memilih satu siswa"><small class="text-muted">Jika kosong, sistem memakai NIS lokal/NISN.</small></div>
     <div class="col-md-6 mt-3"><label>Tanggal masuk</label><input type="date" name="tanggal_masuk" class="form-control" value="{{ now()->toDateString() }}"></div>
 </div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-dismiss="modal">Batal</button><button class="btn btn-info"><i class="fas fa-sync-alt mr-1"></i> Aktifkan Santri</button></div>
@@ -48,25 +52,27 @@ $(function () {
     $('#selectKelas').select2({
         theme: 'bootstrap4',
         width: '100%',
-        allowClear: true,
-        placeholder: 'Pilih rombel',
+        placeholder: 'Pilih satu atau beberapa rombel',
         dropdownParent: $modal,
+        closeOnSelect: false,
         templateResult: function (state) {
             if (!state.id) return state.text;
             var count = $(state.element).data('count');
-            return $('<div class="d-flex justify-content-between align-items-center"><strong>' + state.text + '</strong><span class="badge badge-info badge-pill ml-2">' + count + ' siswa</span></div>');
+            var name  = $(state.element).data('name');
+            return $('<div class="d-flex justify-content-between align-items-center"><strong>' + name + '</strong><span class="badge badge-info badge-pill ml-2">' + count + ' siswa</span></div>');
         },
         templateSelection: function (state) {
             if (!state.id) return state.text;
-            return state.text + ' · ' + $(state.element).data('count') + ' siswa';
+            return $(state.element).data('name');
         }
-    });
+    }).on('change', renderKelasPreview);
 
     $('#selectSiswa').select2({
         theme: 'bootstrap4',
         width: '100%',
         placeholder: 'Cari nama atau NIS siswa…',
         dropdownParent: $modal,
+        closeOnSelect: false,
         matcher: function (params, data) {
             if ($.trim(params.term) === '') return data;
             if (!data.id) return null;
@@ -80,9 +86,42 @@ $(function () {
             var nis = $(state.element).data('nis') || '-';
             return $('<div><strong>' + state.text + '</strong><small class="d-block text-muted" style="font-size:.8em">NIS: ' + nis + '</small></div>');
         },
-        templateSelection: function (state) {
-            return state.text;
-        }
+        templateSelection: function (state) { return state.text; }
+    }).on('change', renderSiswaPreview);
+
+    function renderKelasPreview() {
+        var $body = $('#kelasPreviewBody').empty();
+        var total = 0;
+        $('#selectKelas option:selected').each(function () {
+            var $o = $(this), count = parseInt($o.data('count')) || 0;
+            total += count;
+            $body.append('<tr><td><strong>' + $o.data('name') + '</strong></td><td class="text-center">' + count + '</td>' +
+                '<td class="text-right"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove-kelas="' + $o.val() + '"><i class="fas fa-times"></i></button></td></tr>');
+        });
+        $('#kelasPreviewTotal').text(total);
+        $('#kelasPreviewWrap').toggle($body.children().length > 0);
+    }
+
+    function renderSiswaPreview() {
+        var $body = $('#siswaPreviewBody').empty();
+        var count = 0;
+        $('#selectSiswa option:selected').each(function () {
+            var $o = $(this);
+            count++;
+            $body.append('<tr><td><strong>' + $o.data('name') + '</strong></td><td>' + ($o.data('nis') || '-') + '</td>' +
+                '<td class="text-right"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove-siswa="' + $o.val() + '"><i class="fas fa-times"></i></button></td></tr>');
+        });
+        $('#siswaPreviewTotal').text(count);
+        $('#siswaPreviewWrap').toggle(count > 0);
+    }
+
+    $(document).on('click', '[data-remove-kelas]', function () {
+        var val = String($(this).data('remove-kelas'));
+        $('#selectKelas').val($('#selectKelas').val().filter(function (v) { return v !== val; })).trigger('change');
+    });
+    $(document).on('click', '[data-remove-siswa]', function () {
+        var val = String($(this).data('remove-siswa'));
+        $('#selectSiswa').val($('#selectSiswa').val().filter(function (v) { return v !== val; })).trigger('change');
     });
 });
 </script>
