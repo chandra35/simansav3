@@ -1,11 +1,3 @@
-<div class="asrama-progress" id="asramaProgress" role="status" aria-live="polite">
-    <div class="asrama-progress__box">
-        <div class="asrama-progress__icon"><i class="fas fa-sync-alt fa-spin"></i></div>
-        <h5 class="font-weight-bold mb-1" id="asramaProgressTitle">Memproses data</h5>
-        <p class="text-muted mb-3" id="asramaProgressText">Mohon tunggu, jangan menutup halaman.</p>
-        <div class="progress"><div class="progress-bar"></div></div>
-    </div>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -21,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+    // Overlay progress ditangani global oleh master.blade.php; di sini hanya konfirmasi + anti double-submit.
     document.querySelectorAll('form[data-asrama-loading]').forEach(function (form) {
         form.addEventListener('submit', function (event) {
             if (!form.checkValidity()) return;
@@ -29,10 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.preventDefault();
                 return;
             }
-            const overlay = document.getElementById('asramaProgress');
-            document.getElementById('asramaProgressTitle').textContent = form.dataset.loadingTitle || 'Memproses data';
-            document.getElementById('asramaProgressText').textContent = form.dataset.loadingText || 'Mohon tunggu, jangan menutup halaman.';
-            overlay.classList.add('is-visible');
             form.querySelectorAll('button[type="submit"]').forEach(function (button) {
                 button.disabled = true;
                 button.dataset.originalHtml = button.innerHTML;
