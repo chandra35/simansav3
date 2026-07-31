@@ -96,6 +96,21 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('.vote-package.is-selected', $view);
     }
 
+    public function test_voter_page_prioritizes_candidates_with_compact_election_information(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
+
+        $this->assertStringContainsString('Suara Anda rahasia', $view);
+        $this->assertStringContainsString('class="vote-receipt"', $view);
+        $this->assertStringContainsString('Informasi dan panduan pemilihan', $view);
+        $this->assertStringContainsString('.vote-hero{padding:.72rem 1rem', $view);
+        $this->assertStringContainsString('.vote-success{gap:.7rem;padding:.65rem .8rem', $view);
+        $this->assertGreaterThan(
+            strpos($view, '<div class="row vote-packages">'),
+            strpos($view, '<details class="election-details mb-4">')
+        );
+    }
+
     public function test_all_student_pages_receive_election_overlay_and_countdown(): void
     {
         $provider = file_get_contents(dirname(__DIR__, 2).'/app/Providers/AppServiceProvider.php');

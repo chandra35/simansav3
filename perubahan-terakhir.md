@@ -4,6 +4,20 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Halaman voting siswa lebih ringkas dan fokus pada kandidat
+
+- Hero judul, status jadwal, informasi kerahasiaan, dan pesan keberhasilan dipadatkan agar tidak menghabiskan layar sebelum daftar kandidat.
+- Kode bukti partisipasi tetap ditampilkan setelah memilih, tetapi dalam blok kecil di sisi pesan keberhasilan. Kode ini merupakan referensi acak yang membuktikan status partisipasi tanpa mengungkap paket pilihan.
+- Bagian Tentang Pemilihan dan Cara Memilih dipindahkan ke panel `Informasi dan panduan pemilihan` yang dapat dibuka setelah daftar paket kandidat.
+- Heading kandidat diperkecil dan keterangan tambahan disederhanakan pada layar ponsel.
+- Tampilan responsif mempertahankan hierarki ringkas pada desktop maupun perangkat kecil.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 139 pengujian, 892 assertions.
+
+File utama:
+
+- `resources/views/siswa/osis-election/index.blade.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Seluruh kartu paket dapat dicoblos
 
 - Pada halaman Pemilihan OSIS siswa, seluruh area kartu paket kini dapat diklik atau disentuh untuk memilih kandidat, tidak terbatas pada tombol di bagian bawah.
