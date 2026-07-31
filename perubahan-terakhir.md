@@ -12,7 +12,7 @@ Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
 - Watermark ditempatkan pada lapisan tersendiri di bawah header, foto, teks, dan meter sehingga tetap terlihat samar di area kosong tanpa terpotong oleh celah antarpaket.
 - Ukuran watermark menyesuaikan desktop dan perangkat kecil, tidak menerima interaksi, serta disembunyikan dari pembaca layar.
 - Animasi watermark dinonaktifkan otomatis untuk preferensi `prefers-reduced-motion`.
-- Blade berhasil dikompilasi dan seluruh unit test lulus: 141 pengujian, 914 assertions.
+- Blade berhasil dikompilasi dan seluruh unit test lulus: 141 pengujian, 915 assertions.
 
 File utama:
 
