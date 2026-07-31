@@ -18,8 +18,8 @@
 <div class="form-group"><label>Tanggal rapor</label><input type="date" name="tanggal_rapor" class="form-control" value="{{ old('tanggal_rapor',$rapor->tanggal_rapor?->toDateString()) }}" @disabled($rapor->status==='terbit')></div><div class="form-group"><label>Tanggal Hijriah (Arab)</label><input dir="rtl" name="tanggal_hijriah" class="form-control asrama-arab" value="{{ old('tanggal_hijriah',$rapor->tanggal_hijriah) }}" @disabled($rapor->status==='terbit')></div>
 @if($rapor->status!=='terbit')<button class="btn btn-info btn-block"><i class="fas fa-save mr-1"></i> Simpan Draft</button>@endif
 </div></form>
-@if($rapor->status!=='terbit')@can('publish-rapor-asrama')<form method="post" action="{{ route('asrama.rapor.publish',$rapor) }}" onsubmit="return confirm('Terbitkan dan kunci rapor ini?')">@csrf<button class="btn btn-success btn-block mb-3"><i class="fas fa-lock mr-1"></i> Terbitkan Rapor</button></form>@endcan
-@else @can('publish-rapor-asrama')<form method="post" action="{{ route('asrama.rapor.unpublish',$rapor) }}" onsubmit="return confirm('Batalkan terbit agar nilai dapat diubah?')">@csrf<button class="btn btn-outline-danger btn-block mb-3"><i class="fas fa-unlock mr-1"></i> Batalkan Terbit</button></form>@endcan @endif
+@if($rapor->status!=='terbit')@can('publish-rapor-asrama')<form method="post" action="{{ route('asrama.rapor.publish',$rapor) }}" data-asrama-loading data-confirm="Terbitkan dan kunci rapor ini?">@csrf<button class="btn btn-success btn-block mb-3"><i class="fas fa-lock mr-1"></i> Terbitkan Rapor</button></form>@endcan
+@else @can('publish-rapor-asrama')<form method="post" action="{{ route('asrama.rapor.unpublish',$rapor) }}" data-asrama-loading data-confirm="Batalkan terbit agar nilai dapat diubah?">@csrf<button class="btn btn-outline-danger btn-block mb-3"><i class="fas fa-unlock mr-1"></i> Batalkan Terbit</button></form>@endcan @endif
 </div></div>
 @include('asrama._scripts')
 @stop

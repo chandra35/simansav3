@@ -49,6 +49,10 @@ class MasterController extends Controller
             ->when($status, fn ($query) => $query->where('status', $status))
             ->orderByDesc('status')->latest()->paginate(50)->withQueryString();
 
+        if ($request->ajax()) {
+            return view('asrama.master._santri-table', ['records' => $records]);
+        }
+
         // Rombel SIMANSA yang siswanya sudah terdaftar sebagai santri
         $assignedKelas = Kelas::where('is_active', true)
             ->where('tahun_pelajaran_id', $tahunId)
