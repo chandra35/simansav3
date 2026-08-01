@@ -55,11 +55,15 @@
         </div>
     @endif
 
+    @php
+        $belumDiisi = '<span class="text-muted font-weight-normal">Belum diisi</span>';
+    @endphp
+
     <div class="row">
         {{-- Ringkasan kepegawaian --}}
         <div class="col-lg-8 mb-3">
             <div class="card h-100 mb-0">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <div class="d-flex align-items-center mb-3" style="gap: 1rem;">
                         @if($gtk->foto_profile_url)
                             <img src="{{ $gtk->foto_profile_url }}" alt="Foto {{ $gtk->nama_lengkap }}" class="gtk-dash-avatar">
@@ -76,26 +80,30 @@
                             @endif
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row my-auto">
                         <div class="col-6 col-md-4 mb-3">
                             <div class="gtk-dash-label">NIK</div>
-                            <div class="gtk-dash-value">{{ $gtk->nik ?? '-' }}</div>
+                            <div class="gtk-dash-value">{!! $gtk->nik ? e($gtk->nik) : $belumDiisi !!}</div>
                         </div>
                         <div class="col-6 col-md-4 mb-3">
                             <div class="gtk-dash-label">NUPTK</div>
-                            <div class="gtk-dash-value">{{ $gtk->nuptk ?? '-' }}</div>
+                            <div class="gtk-dash-value">{!! $gtk->nuptk ? e($gtk->nuptk) : $belumDiisi !!}</div>
                         </div>
                         <div class="col-6 col-md-4 mb-3">
                             <div class="gtk-dash-label">NIP</div>
-                            <div class="gtk-dash-value">{{ $gtk->nip ?? '-' }}</div>
+                            <div class="gtk-dash-value">{!! $gtk->nip ? e($gtk->nip) : $belumDiisi !!}</div>
                         </div>
                         <div class="col-6 col-md-4 mb-3 mb-md-0">
                             <div class="gtk-dash-label">Status Kepegawaian</div>
-                            <div class="gtk-dash-value">{{ $gtk->status_kepegawaian ?? '-' }}</div>
+                            <div class="gtk-dash-value">{!! $gtk->status_kepegawaian ? e($gtk->status_kepegawaian) : $belumDiisi !!}</div>
+                        </div>
+                        <div class="col-6 col-md-4 mb-3 mb-md-0">
+                            <div class="gtk-dash-label">Jabatan</div>
+                            <div class="gtk-dash-value">{!! $gtk->jabatan ? e($gtk->jabatan) : $belumDiisi !!}</div>
                         </div>
                         <div class="col-6 col-md-4 mb-0">
-                            <div class="gtk-dash-label">Jabatan</div>
-                            <div class="gtk-dash-value">{{ $gtk->jabatan ?? '-' }}</div>
+                            <div class="gtk-dash-label">Jenis Kelamin</div>
+                            <div class="gtk-dash-value">{!! $gtk->jenis_kelamin === 'L' ? 'Laki-laki' : ($gtk->jenis_kelamin === 'P' ? 'Perempuan' : $belumDiisi) !!}</div>
                         </div>
                     </div>
                 </div>
@@ -199,6 +207,15 @@
 
 @section('css')
     <style>
+        /* Hero chip: dua kolom penuh & isi rata tengah agar tidak menyisakan ruang kosong */
+        @media (min-width: 576px) {
+            .simansa-hero__side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        .simansa-hero-chip {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
         .gtk-dash-avatar {
             width: 64px;
             height: 64px;
