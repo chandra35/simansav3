@@ -240,7 +240,7 @@
                     <div class="meta">NIK: {{ $siswa->nik ?? '-' }}</div>
                     <div class="badges">
                         <span class="s-badge"><i class="fas fa-hashtag mr-1" style="opacity:.7;"></i>{{ $siswa->nisn ?? 'No NISN' }}</span>
-                        <span class="s-badge"><i class="fas fa-school mr-1" style="opacity:.7;"></i>{{ $siswa->kelasSaatIni?->nama_kelas ?? 'Tanpa Kelas' }}</span>
+                        <span class="s-badge"><i class="fas fa-school mr-1" style="opacity:.7;"></i>{{ $siswa->kelasSaatIni?->nama_kelas ?? 'Tanpa Kelas' }}{{ $siswa->kelasSaatIni?->asrama_suffix }}</span>
                         @if($verifikasi)
                             <span class="s-badge">{!! $verifikasi->status_badge !!}</span>
                         @else

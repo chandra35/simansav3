@@ -25,7 +25,7 @@
                         <h4 class="text-secondary">Fitur Tidak Tersedia</h4>
                         <p class="text-muted">
                             Menu SNBP hanya tersedia untuk siswa kelas 12.<br>
-                            Kelas Anda saat ini: <strong>{{ $kelasSaatIni->nama_kelas ?? 'Tidak ada kelas' }}</strong>
+                            Kelas Anda saat ini: <strong>{{ $kelasSaatIni->nama_kelas ?? 'Tidak ada kelas' }}{{ $kelasSaatIni->asrama_suffix ?? '' }}</strong>
                         </p>
                         @elseif($reason === 'no_menu')
                         <div class="mb-3">

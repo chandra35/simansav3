@@ -56,7 +56,7 @@ class KelasController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('nama_lengkap', function ($row) {
-                    return $row->nama_lengkap;
+                    return e($row->nama_lengkap) . $row->asrama_badge;
                 })
                 ->addColumn('tingkat_romawi', function ($row) {
                     return $row->getTingkatRomawi();
@@ -157,7 +157,7 @@ class KelasController extends Controller
                     $actions .= '</div>';
                     return $actions;
                 })
-                ->rawColumns(['jurusan_nama', 'wali_kelas', 'ketua_kelas', 'kapasitas_info', 'status_badge', 'action'])
+                ->rawColumns(['nama_lengkap', 'jurusan_nama', 'wali_kelas', 'ketua_kelas', 'kapasitas_info', 'status_badge', 'action'])
                 ->make(true);
         }
 

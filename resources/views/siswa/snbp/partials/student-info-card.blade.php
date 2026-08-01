@@ -30,7 +30,7 @@
                 <table class="table table-sm table-borderless">
                     <tr>
                         <td width="35%"><strong>Kelas</strong></td>
-                        <td>: {{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}</td>
+                        <td>: {{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}{{ $siswa->kelasSaatIni->asrama_suffix ?? '' }}</td>
                     </tr>
                     <tr>
                         <td><strong>Jurusan</strong></td>

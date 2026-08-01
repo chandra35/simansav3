@@ -46,7 +46,7 @@
 @php
     $candidate = $assignment['student'];
 @endphp
-<div class="person"><div class="person-photo"><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span></div><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>
+<div class="person"><div class="person-photo"><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span></div><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}{{ $candidate->kelasSaatIni?->asrama_suffix }}</small></div>
 @endforeach
 </div>
 <div class="platform-tabs"><details open><summary><i class="fas fa-eye"></i> Visi</summary><p>{!! nl2br(e($package->vision)) !!}</p></details><details><summary><i class="fas fa-list-ul"></i> Misi</summary><p>{!! nl2br(e($package->mission)) !!}</p></details>@if($package->programs)<details><summary><i class="fas fa-lightbulb"></i> Program Unggulan</summary><p>{!! nl2br(e($package->programs)) !!}</p></details>@endif @if($package->message)<blockquote>“{{ $package->message }}”</blockquote>@endif</div>

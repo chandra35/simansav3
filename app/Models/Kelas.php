@@ -173,6 +173,24 @@ class Kelas extends Model
     }
 
     /**
+     * Suffix teks polos untuk rombel asrama (dropdown/option/plain text).
+     */
+    public function getAsramaSuffixAttribute(): string
+    {
+        return $this->is_asrama ? ' · Asrama Kampus 2' : '';
+    }
+
+    /**
+     * Badge HTML untuk rombel asrama (tabel/teks HTML).
+     */
+    public function getAsramaBadgeAttribute(): string
+    {
+        return $this->is_asrama
+            ? ' <span class="badge badge-info"><i class="fas fa-mosque mr-1"></i>Asrama Kampus 2</span>'
+            : '';
+    }
+
+    /**
      * Helper: Get jumlah siswa aktif
      */
     public function getJumlahSiswaAttribute(): int

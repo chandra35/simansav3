@@ -339,7 +339,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td><code>{{ $siswa->nisn }}</code></td>
                                 <td>{{ $siswa->nama_lengkap }}</td>
-                                <td>{{ $siswa->kelasTahunMenu->nama_kelas ?? 'Belum ditempatkan' }}</td>
+                                <td>{{ $siswa->kelasTahunMenu->nama_kelas ?? 'Belum ditempatkan' }}{!! $siswa->kelasTahunMenu->asrama_badge ?? '' !!}</td>
                                 <td data-order="{{ $siswa->tanggal_lahir?->format('Y-m-d') ?? '' }}">{{ $siswa->tanggal_lahir?->format('d-m-Y') ?? '-' }}</td>
                                 <td>{{ $registration?->nomor_pendaftaran ? $registration->nomor_pendaftaran : 'Belum terimport' }}</td>
                                 <td data-order="{{ $checkStatus }}">

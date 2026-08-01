@@ -446,7 +446,7 @@
                                         $targetFull = $targetClass->siswa_aktif_count >= $targetClass->kapasitas;
                                     @endphp
                                     <option value="{{ $targetClass->id }}" @disabled($targetFull)>
-                                        {{ $targetClass->nama_lengkap }} · {{ $targetClass->siswa_aktif_count }}/{{ $targetClass->kapasitas }} siswa{{ $targetFull ? ' · PENUH' : '' }}
+                                        {{ $targetClass->nama_lengkap }}{{ $targetClass->asrama_suffix }} · {{ $targetClass->siswa_aktif_count }}/{{ $targetClass->kapasitas }} siswa{{ $targetFull ? ' · PENUH' : '' }}
                                     </option>
                                 @endforeach
                             </select>

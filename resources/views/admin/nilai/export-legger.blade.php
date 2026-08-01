@@ -85,7 +85,7 @@
                                         <input class="form-check-input kelas-checkbox" type="checkbox" 
                                                name="kelas[]" value="{{ $kelas->id }}" id="kelas_{{ $kelas->id }}">
                                         <label class="form-check-label" for="kelas_{{ $kelas->id }}">
-                                            {{ $kelas->nama_kelas }}
+                                            {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}
                                             <small class="text-muted">({{ $kelas->siswas_count }} siswa)</small>
                                         </label>
                                     </div>

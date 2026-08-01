@@ -21,7 +21,7 @@
             </div>
             <div class="student-detail-hero__chip">
                 <span class="student-detail-hero__chip-label">Kelas</span>
-                <span class="student-detail-hero__chip-value">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Tanpa Rombel' }}</span>
+                <span class="student-detail-hero__chip-value">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Tanpa Rombel' }}{{ optional($siswa->getKelasSekarang())->asrama_suffix }}</span>
             </div>
             <div class="student-detail-hero__chip">
                 <span class="student-detail-hero__chip-label">Status Login</span>
@@ -316,7 +316,7 @@
                         <span class="badge badge-danger"><i class="fas fa-female"></i> Perempuan</span>
                     @endif
                     @if($siswa->getKelasSekarang())
-                        <span class="badge badge-success">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Aktif' }}</span>
+                        <span class="badge badge-success">{{ optional($siswa->getKelasSekarang())->nama_kelas ?? 'Aktif' }}{{ optional($siswa->getKelasSekarang())->asrama_suffix }}</span>
                     @endif
                     @if($ketuaKelasAktif)
                         <span class="badge badge-warning">

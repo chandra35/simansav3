@@ -13,7 +13,7 @@
 <div class="student-history pb-4">
     <section class="student-hero">
         <div class="student-avatar">{{ strtoupper(substr($siswa->nama_lengkap, 0, 1)) }}</div>
-        <div class="student-title"><div class="eyebrow">ANALITIK HISTORIS SISWA</div><h2>{{ $siswa->nama_lengkap }}</h2><p>NISN {{ $siswa->nisn ?: '-' }} · {{ $siswa->kelasSaatIni?->nama_kelas ?: 'Tidak berada di kelas aktif' }}</p></div>
+        <div class="student-title"><div class="eyebrow">ANALITIK HISTORIS SISWA</div><h2>{{ $siswa->nama_lengkap }}</h2><p>NISN {{ $siswa->nisn ?: '-' }} · {{ $siswa->kelasSaatIni ? $siswa->kelasSaatIni->nama_kelas.$siswa->kelasSaatIni->asrama_suffix : 'Tidak berada di kelas aktif' }}</p></div>
         <div class="hero-message"><i class="fas fa-shield-alt"></i><span>Data ini menjadi bahan pertimbangan wali kelas/BK. Keputusan tetap dilakukan oleh petugas berwenang.</span></div>
     </section>
 

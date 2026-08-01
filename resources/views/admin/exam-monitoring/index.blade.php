@@ -247,7 +247,7 @@
                             </div>
                         </td>
                         <td><code style="font-size:.75rem">{{ $s->siswa?->nisn ?? $s->moodle_username ?? '-' }}</code></td>
-                        <td>{{ $s->siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
+                        <td>{{ $s->siswa?->kelasSaatIni?->nama_kelas ?? '-' }}{!! $s->siswa?->kelasSaatIni?->asrama_badge !!}</td>
                         <td><small>{{ $s->device_model ?? '-' }}</small></td>
                         <td><small>{{ $s->ip_address ?? '-' }}</small></td>
                         <td><small>{{ $s->started_at?->format('H:i') }}</small></td>

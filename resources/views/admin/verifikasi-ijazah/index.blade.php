@@ -208,7 +208,7 @@
                                     data-tingkat="{{ $kelas->tingkat }}"
                                     data-jurusan="{{ $kelas->jurusan_id }}"
                                     {{ $kelasFilter == $kelas->id ? 'selected' : '' }}>
-                                {{ $kelas->nama_kelas }}{{ $kelas->jurusan ? ' ('.$kelas->jurusan->singkatan.')' : '' }}
+                                {{ $kelas->nama_kelas }}{{ $kelas->jurusan ? ' ('.$kelas->jurusan->singkatan.')' : '' }}{{ $kelas->asrama_suffix }}
                             </option>
                         @endforeach
                     </select>
@@ -267,7 +267,7 @@
                                 @endif
                             </td>
                             <td>{!! $siswa->nisn ? e($siswa->nisn) : '<span class="text-danger">-</span>' !!}</td>
-                            <td>{{ $siswa->kelasSaatIni?->nama_lengkap ?? $siswa->kelasSaatIni?->nama_kelas ?? '-' }}</td>
+                            <td>{{ $siswa->kelasSaatIni?->nama_lengkap ?? $siswa->kelasSaatIni?->nama_kelas ?? '-' }}{!! $siswa->kelasSaatIni?->asrama_badge !!}</td>
                             <td>
                                 @if(!$verif || $verif->status === 'belum_diverifikasi')
                                     <span class="badge badge-belum text-white">Belum</span>
@@ -325,7 +325,7 @@
         'id'      => $k->id,
         'tingkat' => $k->tingkat,
         'jurusan' => $k->jurusan_id,
-        'label'   => $k->nama_kelas . ($k->jurusan ? ' ('.$k->jurusan->singkatan.')' : ''),
+        'label'   => $k->nama_kelas . ($k->jurusan ? ' ('.$k->jurusan->singkatan.')' : '') . $k->asrama_suffix,
     ])->values();
     $jsJurusanData = $jurusanAll->map(fn($j) => [
         'id'    => $j->id,

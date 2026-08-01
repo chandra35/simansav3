@@ -85,7 +85,7 @@
                                                 data-year="{{ $kelas->tahun_pelajaran_id }}"
                                                 data-level="{{ $kelas->tingkat }}"
                                                 {{ old('simansa_kelas_id') == $kelas->id ? 'selected' : '' }}>
-                                            {{ $kelas->nama_kelas }}
+                                            {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}
                                         </option>
                                     @endforeach
                                 </select>

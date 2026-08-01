@@ -232,12 +232,12 @@ class SiswaController extends Controller
                     . ' class="font-weight-600 text-primary"'
                     . ' title="Lihat rombel ' . e($kelasAktif->nama_kelas) . '">'
                     . e($kelasAktif->nama_kelas)
-                    . '</a>';
+                    . '</a>' . $kelasAktif->asrama_badge;
             } elseif ($kelasAktif) {
                 $kelasNama = '<span class="text-muted" aria-disabled="true"'
                     . ' title="Anda tidak memiliki akses detail rombel">'
                     . e($kelasAktif->nama_kelas)
-                    . '</span>';
+                    . '</span>' . $kelasAktif->asrama_badge;
             } else {
                 $kelasNama = '<span class="text-muted small">'
                     . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '')

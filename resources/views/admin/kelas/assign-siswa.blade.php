@@ -29,7 +29,7 @@
                 <div class="card-body">
                     <dl class="row">
                         <dt class="col-sm-5">Nama Kelas:</dt>
-                        <dd class="col-sm-7">{{ $kelas->nama_lengkap }}</dd>
+                        <dd class="col-sm-7">{{ $kelas->nama_lengkap }}{!! $kelas->asrama_badge !!}</dd>
 
                         <dt class="col-sm-5">Kode:</dt>
                         <dd class="col-sm-7"><span class="badge badge-info">{{ $kelas->kode_kelas }}</span></dd>

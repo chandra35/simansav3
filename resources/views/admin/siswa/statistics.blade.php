@@ -4,7 +4,7 @@
 
 @php
     $selectedClass = $kelasId ? $classes->firstWhere('id', $kelasId) : null;
-    $scopeLabel = $selectedClass?->nama_kelas ?: ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : 'Semua siswa');
+    $scopeLabel = $selectedClass ? $selectedClass->nama_kelas.$selectedClass->asrama_suffix : ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : 'Semua siswa');
     $listUrl = fn (array $extra = []) => route('admin.siswa.index', array_merge($filterQuery, $extra));
     $schoolStudentsUrl = fn (array $school) => route('admin.siswa.index', array_filter([
         'tingkat' => $tingkat,
@@ -43,7 +43,7 @@
     <div class="simansa-stat-filter__intro"><i class="fas fa-filter"></i><div><h2>Filter Statistik</h2><p>Semua kartu, grafik, peta, domisili, dan sekolah asal mengikuti pilihan ini · {{ $activeYear?->nama ?? 'Tahun aktif belum tersedia' }}</p></div></div>
     <form method="GET" action="{{ route('admin.siswa.statistics') }}">
         <div class="form-group mb-0"><label for="statTingkat">Tingkat</label><select id="statTingkat" name="tingkat" class="form-control"><option value="">Semua tingkat</option><option value="10" @selected($tingkat===10)>Kelas X</option><option value="11" @selected($tingkat===11)>Kelas XI</option><option value="12" @selected($tingkat===12)>Kelas XII</option></select></div>
-        <div class="form-group mb-0"><label for="statKelas">Kelas Tahun Aktif</label><select id="statKelas" name="kelas_id" class="form-control" @disabled(!$tingkat)><option value="">{{ $tingkat ? 'Semua kelas tingkat ini' : 'Pilih tingkat dahulu' }}</option>@foreach($classes as $class)<option value="{{ $class->id }}" data-level="{{ $class->tingkat }}" @selected($kelasId===$class->id)>{{ $class->nama_kelas }}</option>@endforeach</select></div>
+        <div class="form-group mb-0"><label for="statKelas">Kelas Tahun Aktif</label><select id="statKelas" name="kelas_id" class="form-control" @disabled(!$tingkat)><option value="">{{ $tingkat ? 'Semua kelas tingkat ini' : 'Pilih tingkat dahulu' }}</option>@foreach($classes as $class)<option value="{{ $class->id }}" data-level="{{ $class->tingkat }}" @selected($kelasId===$class->id)>{{ $class->nama_kelas }}{{ $class->asrama_suffix }}</option>@endforeach</select></div>
         <button class="btn btn-primary"><i class="fas fa-chart-bar mr-1"></i>Terapkan</button><a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>
     </form>
 </section>

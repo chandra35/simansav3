@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <select name="kelas_id" class="form-control form-control-sm">
                             <option value="">Semua Rombel Kelas 12</option>
                             @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}" @selected($selectedKelasId === $kelas->id)>{{ $kelas->nama_kelas }}</option>
+                                <option value="{{ $kelas->id }}" @selected($selectedKelasId === $kelas->id)>{{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <div class="text-muted small">{{ $row->siswa->nisn }} @if($row->siswa->user?->username) | {{ $row->siswa->user->username }} @endif</div>
                                     </td>
                                     <td>
-                                        <span class="badge badge-light">{{ $row->kelas->nama_kelas }}</span>
+                                        <span class="badge badge-light">{{ $row->kelas->nama_kelas }}{{ $row->kelas->asrama_suffix }}</span>
                                     </td>
                                     <td>
                                         <select name="statuses[{{ $row->siswa->id }}]" class="form-control graduation-status-select" data-siswa-id="{{ $row->siswa->id }}">

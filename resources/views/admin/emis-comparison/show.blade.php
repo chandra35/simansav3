@@ -204,7 +204,7 @@
         <div class="col-md-6 mb-4">
             <section class="simansa-info-card simansa-info-card--blue">
                 <div class="simansa-info-card__head"><div class="simansa-info-card__icon"><i class="fas fa-database"></i></div><div><h3>Informasi SIMANSA</h3><p>Data operasional siswa di SIMANSA.</p></div></div>
-                <dl class="simansa-info-list"><dt>Nama</dt><dd>{{ $siswa?->nama_lengkap ?? '—' }}</dd><dt>NISN</dt><dd>{{ $siswa?->nisn ?? '—' }}</dd><dt>Kelas</dt><dd>{{ $siswa?->kelasSaatIni?->nama_kelas ?? '—' }}</dd></dl>
+                <dl class="simansa-info-list"><dt>Nama</dt><dd>{{ $siswa?->nama_lengkap ?? '—' }}</dd><dt>NISN</dt><dd>{{ $siswa?->nisn ?? '—' }}</dd><dt>Kelas</dt><dd>{{ $siswa?->kelasSaatIni?->nama_kelas ?? '—' }}{!! $siswa?->kelasSaatIni?->asrama_badge !!}</dd></dl>
                 @if($siswa)<a href="{{ route('admin.siswa.show', $siswa) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-user mr-1"></i> Buka Data Siswa</a>@endif
             </section>
         </div>

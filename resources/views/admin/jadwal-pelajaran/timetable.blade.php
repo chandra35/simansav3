@@ -27,7 +27,7 @@
     <div class="simansa-tt-infobar__main">
         <div class="simansa-tt-infobar__icon"><i class="fas fa-chalkboard"></i></div>
         <div>
-            <div class="simansa-tt-infobar__title">{{ $kelasObj->nama_kelas }}</div>
+            <div class="simansa-tt-infobar__title">{{ $kelasObj->nama_kelas }}{!! $kelasObj->asrama_badge !!}</div>
             <div class="simansa-tt-infobar__sub">
                 @if($kelasObj->jurusan) <span>{{ $kelasObj->jurusan->nama_jurusan }}</span> @endif
                 @if($kelasObj->tahunPelajaran) <span>&middot; {{ $kelasObj->tahunPelajaran->tahun_pelajaran }}</span> @endif
@@ -72,7 +72,7 @@
                             <optgroup label="Tingkat {{ $tgk }}">
                                 @foreach($kgrp as $k)
                                 <option value="{{ $k->id }}" {{ $kelasId == $k->id ? 'selected' : '' }}>
-                                    {{ $k->nama_kelas }}{{ $k->jurusan ? ' – '.$k->jurusan->nama_jurusan : '' }}
+                                    {{ $k->nama_kelas }}{{ $k->jurusan ? ' – '.$k->jurusan->nama_jurusan : '' }}{{ $k->asrama_suffix }}
                                 </option>
                                 @endforeach
                             </optgroup>
@@ -139,7 +139,7 @@
     <div class="simansa-jadwal-panel__header">
         <div>
             <h3><i class="fas fa-table"></i>
-                {{ $kelasObj->nama_kelas }}{{ $kelasObj->jurusan ? ' – '.$kelasObj->jurusan->nama_jurusan : '' }}
+                {{ $kelasObj->nama_kelas }}{{ $kelasObj->jurusan ? ' – '.$kelasObj->jurusan->nama_jurusan : '' }}{{ $kelasObj->asrama_suffix }}
                 &mdash; Semester {{ $semester }}
             </h3>
             <p class="text-muted small">Tiap hari bisa punya jumlah jam berbeda. Scroll horizontal jika perlu.</p>

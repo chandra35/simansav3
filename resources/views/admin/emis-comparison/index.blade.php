@@ -148,7 +148,7 @@
                 <select id="kelas_id" name="kelas_id" class="form-control" @disabled($listMode === 'emis' || $tingkat === '')>
                     <option value="">{{ $tingkat === '' ? 'Pilih tingkat dahulu' : 'Semua kelas' }}</option>
                     @foreach($classes->where('tingkat', (int) $tingkat) as $class)
-                        <option value="{{ $class->id }}" @selected($kelasId === $class->id)>{{ $class->nama_kelas }}</option>
+                        <option value="{{ $class->id }}" @selected($kelasId === $class->id)>{{ $class->nama_kelas }}{{ $class->asrama_suffix }}</option>
                     @endforeach
                 </select>
             </div>
@@ -198,7 +198,7 @@
                                 <div class="simansa-empty-identity"><i class="fas fa-unlink mr-1"></i>Belum memiliki pasangan</div>
                             @endif
                         </td>
-                        <td class="simansa-local-class" data-label="Kelas SIMANSA">{{ $siswa?->kelasSaatIni?->nama_kelas ?? '-' }}</td>
+                        <td class="simansa-local-class" data-label="Kelas SIMANSA">{{ $siswa?->kelasSaatIni?->nama_kelas ?? '-' }}{!! $siswa?->kelasSaatIni?->asrama_badge !!}</td>
                         <td class="simansa-emis-identity" data-label="Identitas EMIS">
                             @if($snapshot)
                                 <div class="simansa-table-title simansa-table-title--emis">{{ $snapshot->full_name ?: '-' }}</div>
@@ -281,7 +281,7 @@
 $(function () {
     const startUrl = @json(route('admin.emis-comparison.sync'));
     const csrfToken = @json(csrf_token());
-    const activeClassOptions = @json($classes->map(fn ($class) => ['id' => $class->id, 'name' => $class->nama_kelas, 'level' => (string) $class->tingkat])->values());
+    const activeClassOptions = @json($classes->map(fn ($class) => ['id' => $class->id, 'name' => $class->nama_kelas.$class->asrama_suffix, 'level' => (string) $class->tingkat])->values());
     const initialClassId = @json($kelasId);
     const hasActiveYear = @json((bool) $activeYear);
     const overlay = $('#emisSyncOverlay');

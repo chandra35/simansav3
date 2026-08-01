@@ -28,7 +28,7 @@
 
                         <div class="form-group">
                             <label>Kelas Acuan</label>
-                            <input type="text" class="form-control" value="{{ optional($targetSiswaKelas->kelas)->nama_lengkap ?? optional($targetSiswaKelas->kelas)->nama_kelas ?? '-' }}" readonly>
+                            <input type="text" class="form-control" value="{{ (optional($targetSiswaKelas->kelas)->nama_lengkap ?? optional($targetSiswaKelas->kelas)->nama_kelas ?? '-') . (optional($targetSiswaKelas->kelas)->asrama_suffix ?? '') }}" readonly>
                         </div>
 
                         <div class="form-group">

@@ -73,7 +73,7 @@
                                 <dt class="col-sm-5">NISN</dt>
                                 <dd class="col-sm-7">{{ $siswa->nisn }}</dd>
                                 <dt class="col-sm-5">Kelas</dt>
-                                <dd class="col-sm-7">{{ $kelasSaatIni->nama_kelas ?? '-' }}</dd>
+                                <dd class="col-sm-7">{{ $kelasSaatIni->nama_kelas ?? '-' }}{{ $kelasSaatIni->asrama_suffix ?? '' }}</dd>
                                 <dt class="col-sm-5">Tanggal Lahir</dt>
                                 <dd class="col-sm-7">{{ $siswa->tanggal_lahir?->translatedFormat('j F Y') ?? '-' }}</dd>
                                 <dt class="col-sm-5">Status Lulusan</dt>

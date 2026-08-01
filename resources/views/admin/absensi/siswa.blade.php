@@ -53,7 +53,7 @@
             <form method="GET" action="{{ route('admin.absensi-siswa.index') }}" id="attendanceFilterForm">
                 <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" value="{{ $tanggal }}" max="{{ now()->format('Y-m-d') }}" class="form-control"></div>
                 <div class="form-group"><label>Mode</label><select name="mode" class="form-control">@if($canManageHarian)<option value="harian" @selected($mode==='harian')>Harian Wali Kelas</option>@endif @if($canManageMapel)<option value="mapel" @selected($mode==='mapel')>Per Mapel</option>@endif</select></div>
-                <div class="form-group"><label>Kelas</label><select name="kelas_id" class="form-control"><option value="">Pilih kelas</option>@foreach($kelasOptions as $kelas)<option value="{{ $kelas->id }}" @selected($selectedKelas?->id===$kelas->id)>Tingkat {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}</option>@endforeach</select></div>
+                <div class="form-group"><label>Kelas</label><select name="kelas_id" class="form-control"><option value="">Pilih kelas</option>@foreach($kelasOptions as $kelas)<option value="{{ $kelas->id }}" @selected($selectedKelas?->id===$kelas->id)>Tingkat {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</option>@endforeach</select></div>
                 @if($mode === 'mapel')
                     <div class="form-group attendance-filter__schedule"><label>Jadwal Saya Hari Ini</label><select name="jadwal_pelajaran_id" class="form-control"><option value="">Pilih jadwal</option>@foreach($jadwalOptions as $jadwal)<option value="{{ $jadwal->id }}" @selected($selectedJadwalId===$jadwal->id)>Jam {{ $jadwal->jam_ke }} · {{ substr($jadwal->jam_mulai,0,5) }}–{{ substr($jadwal->jam_selesai,0,5) }} · {{ $jadwal->mapel_nama ?? 'Mapel' }}</option>@endforeach</select></div>
                 @endif
@@ -63,7 +63,7 @@
 
         @if($selectedKelas && ($mode === 'harian' || $selectedJadwalId))
             <div class="attendance-kpis">
-                <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong>{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
+                <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong>{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
                 <div class="attendance-kpi is-green"><span>Hadir Mengikuti</span><strong>{{ $presentCount }}</strong><small>Termasuk terlambat dan keluar awal</small></div>
                 <div class="attendance-kpi is-red"><span>Perlu Keterangan</span><strong>{{ $exceptionCount }}</strong><small>Sakit, izin, alpa, atau dispensasi</small></div>
                 <div class="attendance-kpi is-purple"><span>Status Sesi</span><strong class="text-capitalize">{{ $session?->status ?? 'Baru' }}</strong><small>{{ $session ? 'Versi '.$session->version.' · '.$session->updated_at?->format('d/m/Y H:i') : 'Belum pernah disimpan' }}</small></div>
@@ -71,7 +71,7 @@
 
             <section class="attendance-panel">
                 <div class="attendance-section-head attendance-panel__head">
-                    <div><h2>{{ $mode === 'harian' ? 'Absensi Harian Wali Kelas' : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }} · Input manual oleh guru</p></div>
+                    <div><h2>{{ $mode === 'harian' ? 'Absensi Harian Wali Kelas' : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh guru</p></div>
                     @if($session?->status === 'final')<span class="session-state is-final"><i class="fas fa-lock mr-1"></i>Final · terkunci {{ $session->locked_at?->format('d/m H:i') }}</span>@else<span class="session-state"><i class="fas fa-pencil-alt mr-1"></i>{{ $session ? 'Draft' : 'Sesi baru' }}</span>@endif
                 </div>
 

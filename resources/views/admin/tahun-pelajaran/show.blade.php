@@ -166,7 +166,7 @@
                                     @foreach($kelasGroup as $kelas)
                                         <div class="simansa-level-card__row">
                                             <div>
-                                                <strong>{{ $kelas->nama_kelas }}</strong>
+                                                <strong>{{ $kelas->nama_kelas }}</strong>{!! $kelas->asrama_badge !!}
                                                 @if($kelas->jurusan)
                                                     <div class="text-muted small">{{ $kelas->jurusan->singkatan }}</div>
                                                 @endif

@@ -6,7 +6,7 @@
 $phaseMap=['draft'=>['Draft','secondary','fa-pencil-alt'],'scheduled'=>['Terjadwal','info','fa-hourglass-half'],'open'=>['Sedang Dibuka','success','fa-vote-yea'],'paused'=>['Dijeda','warning','fa-pause-circle'],'closed'=>['Ditutup','dark','fa-lock']];
 [$phaseLabel,$phaseColor,$phaseIcon]=$phaseMap[$election->phase] ?? ['Status','secondary','fa-circle'];
 $turnout=$election->voters_count ? round(($election->voted_count/$election->voters_count)*100,1) : 0;
-$candidateJson=fn($student)=>$student ? ['id'=>$student->id,'name'=>$student->nama_lengkap,'nisn'=>$student->nisn,'class'=>$student->kelasSaatIni?->nama_kelas ?: 'Tanpa rombel','photo'=>$student->foto_profile_url] : null;
+$candidateJson=fn($student)=>$student ? ['id'=>$student->id,'name'=>$student->nama_lengkap,'nisn'=>$student->nisn,'class'=>$student->kelasSaatIni ? $student->kelasSaatIni->nama_kelas.$student->kelasSaatIni->asrama_suffix : 'Tanpa rombel','photo'=>$student->foto_profile_url] : null;
 $roleDefinitions=$election->candidateRoleDefinitions();
 $packageData=$election->packages->mapWithKeys(function($p) use ($roleDefinitions,$candidateJson,$election) {
     $candidates=collect($roleDefinitions)->mapWithKeys(fn($role)=>[$role['field']=>$candidateJson($p->{$role['relation']})])->all();
@@ -44,7 +44,7 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 @php
     $candidate = $assignment['student'];
 @endphp
-<div><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}</small></div>
+<div><img src="{{ $candidate->foto_profile_url }}" alt="{{ $candidate->nama_lengkap }}"><span>{{ $assignment['label'] }}</span><strong>{{ $candidate->nama_lengkap }}</strong><small>{{ $candidate->kelasSaatIni?->nama_kelas }}{{ $candidate->kelasSaatIni?->asrama_suffix }}</small></div>
 @endforeach
 </div>
 @if(in_array($election->status,['published','paused'],true))

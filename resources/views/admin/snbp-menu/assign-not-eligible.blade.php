@@ -44,7 +44,7 @@
                         <select id="filterKelas" class="form-control">
                             <option value="">-- Semua Kelas --</option>
                             @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->nama_kelas }}">{{ $kelas->nama_kelas }}</option>
+                                <option value="{{ $kelas->nama_kelas }}">{{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -87,7 +87,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td><code>{{ $siswa->nisn }}</code></td>
                                 <td>{{ $siswa->nama_lengkap }}</td>
-                                <td>{{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}</td>
+                                <td>{{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}{!! $siswa->kelasSaatIni->asrama_badge ?? '' !!}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -149,7 +149,7 @@
                             <td>{{ $index + 1 }}</td>
                             <td><code>{{ $siswa->nisn }}</code></td>
                             <td>{{ $siswa->nama_lengkap }}</td>
-                            <td>{{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}</td>
+                            <td>{{ $siswa->kelasSaatIni->nama_kelas ?? '-' }}{!! $siswa->kelasSaatIni->asrama_badge ?? '' !!}</td>
                             <td>
                                 <button type="button" class="btn btn-xs btn-warning btn-remove" 
                                         data-id="{{ $siswa->pivot->id }}" data-nama="{{ $siswa->nama_lengkap }}"

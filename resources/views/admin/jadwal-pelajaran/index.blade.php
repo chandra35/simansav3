@@ -122,7 +122,7 @@
                             <optgroup label="Tingkat {{ $tgk }}">
                                 @foreach($kgrp as $k)
                                 <option value="{{ $k->id }}">
-                                    {{ $k->nama_kelas }}{{ $k->jurusan ? ' – '.$k->jurusan->nama_jurusan : '' }}
+                                    {{ $k->nama_kelas }}{{ $k->jurusan ? ' – '.$k->jurusan->nama_jurusan : '' }}{{ $k->asrama_suffix }}
                                 </option>
                                 @endforeach
                             </optgroup>
@@ -167,7 +167,7 @@
             @php $hasJ = in_array($k->id, $stats['kelas_ids_with_jadwal']); @endphp
             <div class="simansa-jadwal-kelas-card {{ $hasJ ? 'has-jadwal' : '' }}">
                 <div class="simansa-jadwal-kelas-card__top">
-                    <span class="simansa-jadwal-kelas-card__nama">{{ $k->nama_kelas }}</span>
+                    <span class="simansa-jadwal-kelas-card__nama">{{ $k->nama_kelas }}{!! $k->asrama_badge !!}</span>
                     @if($k->jurusan)
                     <span class="simansa-jadwal-kelas-card__jurusan">{{ $k->jurusan->singkatan ?? $k->jurusan->nama_jurusan }}</span>
                     @endif

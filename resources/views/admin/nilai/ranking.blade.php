@@ -58,7 +58,7 @@
                     <select name="kelas_id" class="form-control">
                         <option value="">Semua rombel kelas {{ $tingkat }}</option>
                         @foreach($kelasList as $kelas)
-                            <option value="{{ $kelas->id }}" @selected($kelasId === $kelas->id)>{{ $kelas->nama_kelas }}</option>
+                            <option value="{{ $kelas->id }}" @selected($kelasId === $kelas->id)>{{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</option>
                         @endforeach
                     </select>
                 </div>

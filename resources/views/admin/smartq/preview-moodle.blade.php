@@ -480,7 +480,7 @@
                                                     <optgroup label="Tingkat {{ $tkt }}">
                                                         @foreach($kelasList as $kls)
                                                             <option value="{{ $kls->id }}" {{ $tingkat == $tkt ? 'data-auto' : '' }}>
-                                                                {{ $kls->nama_lengkap ?? $kls->nama_kelas }}
+                                                                {{ $kls->nama_lengkap ?? $kls->nama_kelas }}{{ $kls->asrama_suffix }}
                                                             </option>
                                                         @endforeach
                                                     </optgroup>

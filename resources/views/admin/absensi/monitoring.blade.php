@@ -82,7 +82,7 @@
                             <option value="">Semua kelas</option>
                             @foreach($kelasOptions as $kelas)
                                 <option value="{{ $kelas->id }}" @selected(request('kelas_id') === $kelas->id)>
-                                    {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}
+                                    {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}
                                 </option>
                             @endforeach
                         </select>

@@ -5,7 +5,7 @@
 @section('content_header')
     <div>
         <h1 class="mb-1">Pengumuman Kelulusan</h1>
-        <p class="text-muted mb-0">{{ $tahunAktif->nama }} • {{ $kelasAktif->kelas->nama_kelas }}</p>
+        <p class="text-muted mb-0">{{ $tahunAktif->nama }} • {{ $kelasAktif->kelas->nama_kelas }}{{ $kelasAktif->kelas->asrama_suffix }}</p>
     </div>
 @stop
 
@@ -598,7 +598,7 @@
                     <p class="text-muted mb-0">
                         Nama: <strong>{{ $siswa->nama_lengkap }}</strong><br>
                         NISN: <strong>{{ $siswa->nisn }}</strong><br>
-                        Rombel: <strong>{{ $kelasAktif->kelas->nama_kelas }}</strong>
+                        Rombel: <strong>{{ $kelasAktif->kelas->nama_kelas }}{{ $kelasAktif->kelas->asrama_suffix }}</strong>
                     </p>
 
                     @if($announcement->catatan)
