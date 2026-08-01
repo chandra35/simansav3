@@ -29,7 +29,7 @@ class KelasController extends Controller
         return view('asrama.kelas.index', [
             'records' => AsramaKelas::with([
                 'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa', 'pengasuhRombel.pengasuh.gtk',
-            ])->withCount('anggotaAktif')->when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
+            ])->withCount(['anggotaAktif', 'pengampu'])->when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
                 ->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
@@ -40,7 +40,8 @@ class KelasController extends Controller
     {
         $kelas->load([
             'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa',
-            'anggotaAktif.santri.siswa', 'anggotaAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
+            'anggotaAktif.santri.siswa', 'anggotaAktif.santri.kamarAktif.kamar',
+            'anggotaAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
             'pengasuhRombel.pengasuh.gtk', 'pengasuhRombel.santriAssignments',
             'pengampu.mapel', 'pengampu.asatidz.gtk',
         ]);
