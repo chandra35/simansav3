@@ -269,6 +269,27 @@
         background: #fff1f2;
         color: #9f1239;
     }
+
+    /* Mode fokus: sembunyikan menu & sidebar selama wizard */
+    .main-sidebar, #sidebar-overlay { display: none !important; }
+    .content-wrapper, .main-header, .main-footer { margin-left: 0 !important; }
+    [data-widget="pushmenu"] { display: none !important; }
+
+    /* Pane wizard: tampil satu langkah per layar */
+    .wizard-pane { display: none; }
+    .wizard-pane.active { display: block; animation: paneIn .3s ease; }
+    @keyframes paneIn {
+        from { opacity: 0; transform: translateX(14px); }
+        to { opacity: 1; transform: none; }
+    }
+    .wizard-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .5rem;
+        margin-top: 1rem;
+    }
+    .wizard-step { cursor: pointer; }
 </style>
 @stop
 
@@ -320,8 +341,8 @@
 </div>
 @endif
 
-<div class="row">
-    <div class="col-lg-8">
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
         {{-- Alert Banner (always visible in form) --}}
         @if($isAdminReset)
             <div class="alert alert-danger border-0 shadow-sm mb-3" style="border-left: 5px solid #721c24 !important;">
@@ -352,8 +373,11 @@
         <div class="card card-{{ $isAdminReset ? 'danger' : 'primary' }} card-outline">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-key"></i> Buat Password Baru
+                    <i class="fas fa-user-shield"></i> Setup Akun
                 </h3>
+                <div class="card-tools">
+                    <small class="text-muted">{{ $user->name }} &middot; NISN {{ $user->username }}</small>
+                </div>
             </div>
             <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm">
                 @csrf
@@ -390,11 +414,11 @@
                     {{-- ==================== --}}
                     {{-- STEP 1: PASSWORD     --}}
                     {{-- ==================== --}}
-                    <div class="card card-outline card-{{ $isAdminReset ? 'danger' : 'warning' }} mb-4">
+                    <div class="wizard-pane active" id="pane1">
+                    <div class="card card-outline card-{{ $isAdminReset ? 'danger' : 'warning' }} mb-0">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
-                                <span class="badge badge-{{ $isAdminReset ? 'danger' : 'warning' }} mr-2">1</span>
-                                <i class="fas fa-lock"></i> Password Baru
+                                <i class="fas fa-lock"></i> Buat Password Baru
                                 <span class="badge badge-danger ml-2">WAJIB</span>
                             </h5>
                         </div>
@@ -445,21 +469,36 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="callout callout-warning py-2 mb-0">
-                                <small><i class="fas fa-exclamation-triangle"></i> Jangan gunakan NISN, tanggal lahir, atau data pribadi sebagai password.</small>
+                            <div class="callout callout-warning py-2 mb-3">
+                                <small><i class="fas fa-exclamation-triangle"></i> Jangan gunakan NISN, tanggal lahir, atau nama sendiri. Kombinasikan huruf besar/kecil, angka &amp; simbol.</small>
+                            </div>
+                            <div class="setup-requirement-list mb-0">
+                                <div class="setup-requirement-item invalid" id="reqPasswordLength">
+                                    <i class="fas fa-times-circle"></i> Password minimal 8 karakter
+                                </div>
+                                <div class="setup-requirement-item invalid" id="reqPasswordMatch">
+                                    <i class="fas fa-times-circle"></i> Konfirmasi password sama persis
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div class="wizard-nav">
+                        <span></span>
+                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext1" disabled>
+                            Lanjut <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    </div>{{-- /pane1 --}}
 
                     {{-- ==================== --}}
                     {{-- STEP 2: EMAIL        --}}
                     {{-- Tampil jika: first login asli, atau admin reset + email masih default --}}
                     {{-- ==================== --}}
                     @if(!$isAdminReset || $emailMustChange)
-                    <div class="card card-outline card-info mb-4">
+                    <div class="wizard-pane" id="pane2">
+                    <div class="card card-outline card-info mb-0">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
-                                <span class="badge badge-info mr-2">2</span>
                                 <i class="fas fa-envelope"></i>
                                 @if($emailMustChange)
                                     Email Wajib Diganti
@@ -515,20 +554,35 @@
                                     </div>
                                 </div>
                             </div>
+                            @if($emailMustChange)
+                            <div class="setup-requirement-list mb-0">
+                                <div class="setup-requirement-item invalid" id="reqEmailChanged">
+                                    <i class="fas fa-times-circle"></i> Email baru diisi &amp; berbeda dari email lama
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
-
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-nav="prev">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext2" {{ $emailMustChange ? 'disabled' : '' }}>
+                            Lanjut <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    </div>{{-- /pane2 --}}
                     @endif
 
                     {{-- ==================== --}}
                     {{-- STEP 3: FOTO         --}}
                     {{-- ==================== --}}
+                    <div class="wizard-pane" id="pane3">
                     <div class="card card-outline card-secondary mb-0">
                         <div class="card-header py-2">
                             <h5 class="card-title mb-0">
-                                <span class="badge badge-secondary mr-2">3</span>
                                 <i class="fas fa-camera"></i> Foto Profile
-                                <small class="text-muted">(Opsional)</small>
+                                <small class="text-muted">(Opsional &mdash; boleh dilewati)</small>
                             </h5>
                         </div>
                         <div class="card-body">
@@ -562,72 +616,17 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- Ceklis Wajib (selalu tampil, live update) --}}
-                    <div class="mt-4">
-                        <h6 class="font-weight-bold text-muted mb-2">
-                            <i class="fas fa-clipboard-check"></i> Ceklis Wajib Sebelum Simpan
-                        </h6>
-                        <div class="setup-requirement-list mb-0" id="setupRequirementList">
-                            <div class="setup-requirement-item invalid" id="reqPasswordLength">
-                                <i class="fas fa-times-circle"></i> Password minimal 8 karakter
-                            </div>
-                            <div class="setup-requirement-item invalid" id="reqPasswordMatch">
-                                <i class="fas fa-times-circle"></i> Konfirmasi password sama persis
-                            </div>
-                            @if($emailMustChange)
-                            <div class="setup-requirement-item invalid" id="reqEmailChanged">
-                                <i class="fas fa-times-circle"></i> Email baru diisi &amp; berbeda dari email lama
-                            </div>
-                            @endif
-                        </div>
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-outline-secondary btn-lg" data-nav="prev">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                        <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg flex-grow-1" id="submitBtn" disabled>
+                            <i class="fas fa-shield-alt"></i> Simpan &amp; Amankan Akun Saya
+                        </button>
                     </div>
-                </div>
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn" disabled>
-                        <i class="fas fa-lock"></i> Lengkapi Ceklis Wajib Dulu
-                    </button>
-                    <small class="text-muted d-block text-center mt-2">
-                        Tombol aktif otomatis setelah semua ceklis wajib terpenuhi.
-                    </small>
+                    </div>{{-- /pane3 --}}
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div class="col-lg-4">
-        {{-- Security Tips Card --}}
-        <div class="card card-{{ $isAdminReset ? 'danger' : 'success' }} card-outline">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-shield-alt"></i> Tips Password Aman
-                </h3>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Minimal 8 karakter</li>
-                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Kombinasi huruf besar & kecil</li>
-                    <li class="list-group-item"><i class="fas fa-check text-success"></i> Tambahkan angka dan simbol</li>
-                    <li class="list-group-item"><i class="fas fa-times text-danger"></i> Jangan gunakan NISN / tanggal lahir</li>
-                    <li class="list-group-item"><i class="fas fa-times text-danger"></i> Jangan gunakan nama sendiri</li>
-                </ul>
-            </div>
-        </div>
-
-        {{-- User Info Card --}}
-        <div class="card card-outline card-primary">
-            <div class="card-body text-center">
-                <img class="img-circle elevation-2 mb-3" id="welcomeFoto"
-                     src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&size=128&background={{ $user->siswa && $user->siswa->jenis_kelamin == 'P' ? 'e83e8c' : '007bff' }}&color=fff"
-                     alt="User Avatar" style="width: 80px; height: 80px;">
-                <h5 class="mb-1">{{ $user->name }}</h5>
-                <p class="text-muted mb-2">NISN: {{ $user->username }}</p>
-                @if($isAdminReset)
-                    <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Wajib Ganti Password</span>
-                @else
-                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Perlu Setup</span>
-                @endif
-            </div>
         </div>
     </div>
 </div>
@@ -692,6 +691,48 @@ $('#btnDismissBlocker').on('click', function() {
         // Focus on password field
         $('#password').focus();
     });
+});
+
+// ===== Navigasi wizard (satu pane per layar) =====
+var wizardPanes = ['pane1', 'pane2', 'pane3'].filter(function(id) { return document.getElementById(id); });
+var wizardStepIds = { pane1: 'wstep1', pane2: 'wstep2', pane3: 'wstep3' };
+var currentPane = 0;
+
+function showPane(index) {
+    if (index < 0 || index >= wizardPanes.length) return;
+    currentPane = index;
+    wizardPanes.forEach(function(id, i) {
+        document.getElementById(id).classList.toggle('active', i === index);
+    });
+    updateSetupValidationState();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function canLeavePane(index) {
+    var paneId = wizardPanes[index];
+    var nextBtn = document.querySelector('#' + paneId + ' [data-nav="next"]');
+    return !nextBtn || !nextBtn.disabled;
+}
+
+$(document).on('click', '[data-nav="next"]', function() {
+    if (canLeavePane(currentPane)) showPane(currentPane + 1);
+});
+$(document).on('click', '[data-nav="prev"]', function() {
+    showPane(currentPane - 1);
+});
+
+// Klik indikator step: mundur bebas, maju hanya jika step sebelumnya valid
+$('.wizard-step').on('click', function() {
+    var stepId = this.id;
+    var paneId = Object.keys(wizardStepIds).find(function(p) { return wizardStepIds[p] === stepId; });
+    var target = wizardPanes.indexOf(paneId);
+    if (target < 0) return;
+    if (target > currentPane) {
+        for (var i = currentPane; i < target; i++) {
+            if (!canLeavePane(i)) return;
+        }
+    }
+    showPane(target);
 });
 
 var cropper = null;
@@ -788,7 +829,6 @@ $('#btnCropSave').on('click', function() {
             if (response.success) {
                 // Update preview images
                 $('#previewFoto').attr('src', response.foto_url);
-                $('#welcomeFoto').attr('src', response.foto_url);
                 $('#fotoStatus').show();
                 $('#cropperModal').modal('hide');
                 window.fotoUploaded = true;
@@ -941,21 +981,23 @@ function updateSetupValidationState() {
         );
     }
 
-    // Wizard step states
-    setWizardStep('wstep1', isPasswordMatch, true);
-    const emailFieldExists = !!document.getElementById('email');
+    // Wizard step states: done dari validasi, active mengikuti pane yang tampil
+    var activePaneId = wizardPanes[currentPane];
+    setWizardStep('wstep1', isPasswordMatch, activePaneId === 'pane1');
+    var emailFieldExists = !!document.getElementById('email');
     if (emailFieldExists) {
-        const emailDone = emailMustChange ? isEmailValid : currentEmail !== '';
-        setWizardStep('wstep2', emailDone, isPasswordMatch);
+        var emailDone = emailMustChange ? isEmailValid : currentEmail !== '';
+        setWizardStep('wstep2', emailDone, activePaneId === 'pane2');
     }
-    setWizardStep('wstep3', window.fotoUploaded === true, isPasswordMatch && (!emailFieldExists || !emailMustChange || isEmailValid));
+    setWizardStep('wstep3', window.fotoUploaded === true, activePaneId === 'pane3');
+
+    var btnNext1 = document.getElementById('btnNext1');
+    if (btnNext1) btnNext1.disabled = !isPasswordMatch;
+    var btnNext2 = document.getElementById('btnNext2');
+    if (btnNext2) btnNext2.disabled = emailMustChange ? !isEmailValid : false;
 
     if (submitBtn) {
-        const ready = isEmailValid && isPasswordMatch;
-        submitBtn.disabled = !ready;
-        submitBtn.innerHTML = ready
-            ? '<i class="fas fa-shield-alt"></i> Simpan & Amankan Akun Saya'
-            : '<i class="fas fa-lock"></i> Lengkapi Ceklis Wajib Dulu';
+        submitBtn.disabled = !(isEmailValid && isPasswordMatch);
     }
 }
 
