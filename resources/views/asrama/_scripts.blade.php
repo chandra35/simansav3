@@ -2,8 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (window.jQuery && jQuery.fn.select2) {
-        jQuery('.asrama-select').each(function () {
+    if (window.jQuery && jQuery.fn.select2) {        jQuery('.asrama-select').each(function () {
             const modal = jQuery(this).closest('.modal');
             jQuery(this).select2({
                 theme: 'bootstrap4',
@@ -11,6 +10,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 allowClear: Boolean(jQuery(this).data('allow-clear')),
                 placeholder: jQuery(this).data('placeholder') || 'Pilih data',
                 dropdownParent: modal.length ? modal : jQuery(document.body)
+            });
+        });
+    }
+    if (window.jQuery && jQuery.fn.DataTable) {
+        jQuery('.asrama-datatable').each(function () {
+            const table = jQuery(this);
+            if (table.find('tbody .asrama-empty').length) return;
+            table.DataTable({
+                autoWidth: false,
+                pageLength: Number(table.data('page-length')) || 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: table.data('order') !== undefined ? table.data('order') : [],
+                columnDefs: [{ orderable: false, searchable: false, targets: 'no-sort' }],
+                language: {
+                    search: 'Cari:',
+                    searchPlaceholder: 'Ketik kata kunci...',
+                    lengthMenu: 'Tampilkan _MENU_ baris',
+                    info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                    infoEmpty: 'Tidak ada data',
+                    infoFiltered: '(difilter dari _MAX_ total data)',
+                    zeroRecords: 'Tidak ditemukan data yang cocok',
+                    paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+                }
             });
         });
     }

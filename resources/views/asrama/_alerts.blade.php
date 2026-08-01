@@ -1,15 +1,32 @@
-@foreach (['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $type)
-    @if(session($key))
-        <div class="alert alert-{{ $type }} alert-dismissible fade show asrama-alert" role="alert">
-            <i class="fas fa-{{ $type === 'success' ? 'check-circle' : ($type === 'warning' ? 'exclamation-triangle' : 'times-circle') }} mr-1"></i>
-            {{ session($key) }}
-            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-        </div>
-    @endif
-@endforeach
-@if($errors->any())
-    <div class="alert alert-danger asrama-alert">
-        <strong>Data belum dapat disimpan.</strong>
-        <ul class="mb-0 mt-1">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-    </div>
+@php
+    $asramaFlash = collect(['success' => 'success', 'warning' => 'warning', 'error' => 'error'])
+        ->map(fn ($icon, $key) => session($key) ? ['icon' => $icon, 'text' => session($key)] : null)
+        ->filter()->values();
+@endphp
+@if($asramaFlash->isNotEmpty() || $errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.Swal) return;
+            @foreach($asramaFlash as $flash)
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    timer: 4500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    icon: @json($flash['icon']),
+                    title: @json($flash['text'])
+                });
+            @endforeach
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Data belum dapat disimpan',
+                    html: @json('<ul style="text-align:left;margin:0;padding-left:1.25em;">'.implode('', array_map(fn ($e) => '<li>'.e($e).'</li>', $errors->all())).'</ul>'),
+                    confirmButtonText: 'Mengerti',
+                    confirmButtonColor: '#17324d'
+                });
+            @endif
+        });
+    </script>
 @endif
