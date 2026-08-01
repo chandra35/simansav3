@@ -3,17 +3,15 @@
 @section('title', 'Ganti Password')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
+    <div class="simansa-hero__main d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <div class="mr-md-3 mb-2 mb-md-0">
             <div class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Keamanan Akun</div>
             <h1 class="simansa-hero__title">Ganti Password</h1>
-            <p class="simansa-hero__subtitle">Amankan akun Anda dalam tiga langkah mudah. Password baru langsung berlaku pada sesi berikutnya.</p>
+            <p class="simansa-hero__subtitle mb-0">Amankan akun Anda dalam tiga langkah mudah. Password baru langsung berlaku pada sesi berikutnya.</p>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Akun</span>
-                <span class="simansa-hero-chip__value">{{ Auth::user()->username }}</span>
-            </div>
+        <div class="simansa-hero-chip flex-shrink-0">
+            <span class="simansa-hero-chip__label">Akun</span>
+            <span class="simansa-hero-chip__value">{{ Auth::user()->username }}</span>
         </div>
     </div>
 @stop
