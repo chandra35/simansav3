@@ -179,8 +179,76 @@
 
     .setup-requirement-list {
         display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
         gap: 8px;
         margin-bottom: 12px;
+    }
+
+    /* Wizard step indicator */
+    .wizard-steps {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 4px;
+    }
+    .wizard-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    .wizard-step:not(:first-child)::before {
+        content: '';
+        position: absolute;
+        top: 22px;
+        left: -50%;
+        width: 100%;
+        height: 3px;
+        background: #dee2e6;
+        z-index: 0;
+        transition: background .3s;
+    }
+    .wizard-step-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 6px;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+        transition: all .3s;
+    }
+    .wizard-step.active .wizard-step-icon {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+        box-shadow: 0 0 0 5px rgba(0,123,255,.15);
+    }
+    .wizard-step.done .wizard-step-icon {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+    .wizard-step.done:not(:first-child)::before {
+        background: #28a745;
+    }
+    .wizard-step-label {
+        font-size: .8rem;
+        font-weight: 600;
+        color: #495057;
+        line-height: 1.2;
+    }
+    .wizard-step-label small {
+        display: block;
+        font-weight: 400;
+        color: #adb5bd;
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
     }
     .setup-requirement-item {
         border: 1px solid #e2e8f0;
@@ -290,6 +358,24 @@
             <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm">
                 @csrf
                 <div class="card-body">
+                    {{-- Wizard step indicator --}}
+                    <div class="wizard-steps mb-4">
+                        <div class="wizard-step active" id="wstep1">
+                            <div class="wizard-step-icon"><i class="fas fa-key" data-icon="fas fa-key"></i></div>
+                            <div class="wizard-step-label">Password Baru<small>Wajib</small></div>
+                        </div>
+                        @if(!$isAdminReset || $emailMustChange)
+                        <div class="wizard-step" id="wstep2">
+                            <div class="wizard-step-icon"><i class="fas fa-envelope" data-icon="fas fa-envelope"></i></div>
+                            <div class="wizard-step-label">Email<small>{{ $emailMustChange ? 'Wajib' : 'Opsional' }}</small></div>
+                        </div>
+                        @endif
+                        <div class="wizard-step" id="wstep3">
+                            <div class="wizard-step-icon"><i class="fas fa-camera" data-icon="fas fa-camera"></i></div>
+                            <div class="wizard-step-label">Foto Profil<small>Opsional</small></div>
+                        </div>
+                    </div>
+
                     @if($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show">
                             <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -396,16 +482,6 @@
                                     Email Anda (<strong>{{ $user->email }}</strong>) tetap aktif. Anda boleh menggantinya atau biarkan kosong.
                                 </div>
                             @endif
-                            <div class="setup-requirement-list" id="setupRequirementList">
-                                @if($emailMustChange)
-                                <div class="setup-requirement-item invalid" id="reqEmailChanged">
-                                    <i class="fas fa-times-circle"></i> Email harus berbeda dari email sebelumnya
-                                </div>
-                                @endif
-                                <div class="setup-requirement-item invalid" id="reqPasswordMatch">
-                                    <i class="fas fa-times-circle"></i> Password dan konfirmasi harus sama
-                                </div>
-                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -486,11 +562,34 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Ceklis Wajib (selalu tampil, live update) --}}
+                    <div class="mt-4">
+                        <h6 class="font-weight-bold text-muted mb-2">
+                            <i class="fas fa-clipboard-check"></i> Ceklis Wajib Sebelum Simpan
+                        </h6>
+                        <div class="setup-requirement-list mb-0" id="setupRequirementList">
+                            <div class="setup-requirement-item invalid" id="reqPasswordLength">
+                                <i class="fas fa-times-circle"></i> Password minimal 8 karakter
+                            </div>
+                            <div class="setup-requirement-item invalid" id="reqPasswordMatch">
+                                <i class="fas fa-times-circle"></i> Konfirmasi password sama persis
+                            </div>
+                            @if($emailMustChange)
+                            <div class="setup-requirement-item invalid" id="reqEmailChanged">
+                                <i class="fas fa-times-circle"></i> Email baru diisi &amp; berbeda dari email lama
+                            </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg btn-block" id="submitBtn" disabled>
-                        <i class="fas fa-shield-alt"></i> Simpan Perubahan Wajib
+                        <i class="fas fa-lock"></i> Lengkapi Ceklis Wajib Dulu
                     </button>
+                    <small class="text-muted d-block text-center mt-2">
+                        Tombol aktif otomatis setelah semua ceklis wajib terpenuhi.
+                    </small>
                 </div>
             </form>
         </div>
@@ -692,6 +791,8 @@ $('#btnCropSave').on('click', function() {
                 $('#welcomeFoto').attr('src', response.foto_url);
                 $('#fotoStatus').show();
                 $('#cropperModal').modal('hide');
+                window.fotoUploaded = true;
+                updateSetupValidationState();
                 toastr.success('Foto berhasil diupload!');
             } else {
                 toastr.error('Gagal: ' + (response.message || 'Terjadi kesalahan tidak diketahui'));
@@ -816,29 +917,63 @@ function updateSetupValidationState() {
         isEmailValid = true;
     }
 
-    const isPasswordMatch = password.length >= 8 && confirmation !== '' && password === confirmation;
+    const isPasswordLength = password.length >= 8;
+    const isPasswordMatch = isPasswordLength && confirmation !== '' && password === confirmation;
 
+    setRequirementState(
+        document.getElementById('reqPasswordLength'),
+        isPasswordLength,
+        'Password minimal 8 karakter',
+        'Password minimal 8 karakter'
+    );
+    setRequirementState(
+        document.getElementById('reqPasswordMatch'),
+        isPasswordMatch,
+        'Konfirmasi password sama persis',
+        'Konfirmasi password sama persis'
+    );
     if (emailMustChange) {
         setRequirementState(
             document.getElementById('reqEmailChanged'),
             isEmailValid,
-            'Email baru sudah valid dan berbeda dari email lama',
-            'Email harus berbeda dari email sebelumnya'
+            'Email baru diisi & berbeda dari email lama',
+            'Email baru diisi & berbeda dari email lama'
         );
     }
-    setRequirementState(
-        document.getElementById('reqPasswordMatch'),
-        isPasswordMatch,
-        'Password dan konfirmasi sudah sesuai',
-        'Password dan konfirmasi harus sama (minimal 8 karakter)'
-    );
+
+    // Wizard step states
+    setWizardStep('wstep1', isPasswordMatch, true);
+    const emailFieldExists = !!document.getElementById('email');
+    if (emailFieldExists) {
+        const emailDone = emailMustChange ? isEmailValid : currentEmail !== '';
+        setWizardStep('wstep2', emailDone, isPasswordMatch);
+    }
+    setWizardStep('wstep3', window.fotoUploaded === true, isPasswordMatch && (!emailFieldExists || !emailMustChange || isEmailValid));
 
     if (submitBtn) {
-        submitBtn.disabled = !(isEmailValid && isPasswordMatch);
+        const ready = isEmailValid && isPasswordMatch;
+        submitBtn.disabled = !ready;
+        submitBtn.innerHTML = ready
+            ? '<i class="fas fa-shield-alt"></i> Simpan & Amankan Akun Saya'
+            : '<i class="fas fa-lock"></i> Lengkapi Ceklis Wajib Dulu';
     }
 }
 
-document.getElementById('email').addEventListener('input', updateSetupValidationState);
+function setWizardStep(id, isDone, isActive) {
+    const step = document.getElementById(id);
+    if (!step) return;
+    const icon = step.querySelector('.wizard-step-icon i');
+    step.classList.remove('done', 'active');
+    if (isDone) {
+        step.classList.add('done');
+        icon.className = 'fas fa-check';
+    } else {
+        icon.className = icon.dataset.icon;
+        if (isActive) step.classList.add('active');
+    }
+}
+
+document.getElementById('email')?.addEventListener('input', updateSetupValidationState);
 document.getElementById('password').addEventListener('input', updateSetupValidationState);
 document.getElementById('password_confirmation').addEventListener('input', updateSetupValidationState);
 updateSetupValidationState();
