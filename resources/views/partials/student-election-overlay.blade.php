@@ -248,6 +248,39 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
+            /* Fase dijeda: warna menyala + animasi khas */
+            .student-election-pill.is-paused {
+                animation: studentElectionGlow 1.8s ease-in-out infinite,
+                           studentElectionShift 4s ease infinite;
+                background: linear-gradient(270deg, #ff416c, #ff4b2b, #f7971e, #ff416c);
+                background-size: 300% 300%;
+                border: 1px solid rgba(255, 255, 255, .45);
+            }
+            .student-election-pill.is-paused > span {
+                background: rgba(255, 255, 255, .25);
+            }
+            .student-election-pill.is-paused > span i {
+                animation: studentElectionWiggle 2.4s ease-in-out infinite;
+            }
+            .student-election-pill.is-paused small {
+                color: rgba(255, 255, 255, .9);
+            }
+            @keyframes studentElectionGlow {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(255, 65, 108, .55), 0 16px 38px rgba(15, 23, 42, .28); }
+                50% { box-shadow: 0 0 0 12px rgba(255, 65, 108, 0), 0 16px 38px rgba(255, 75, 43, .45); }
+            }
+            @keyframes studentElectionShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            @keyframes studentElectionWiggle {
+                0%, 60%, 100% { transform: rotate(0); }
+                65% { transform: rotate(-14deg) scale(1.12); }
+                72% { transform: rotate(12deg) scale(1.12); }
+                80% { transform: rotate(-8deg); }
+                88% { transform: rotate(6deg); }
+            }
             @keyframes studentElectionFloat {
                 0%, 100% { transform: translateY(0) rotate(-4deg); }
                 50% { transform: translateY(-8px) rotate(2deg); }
@@ -262,7 +295,9 @@
             }
             @media (prefers-reduced-motion: reduce) {
                 .student-election-ballot,
-                .student-election-orbit { animation: none; }
+                .student-election-orbit,
+                .student-election-pill.is-paused,
+                .student-election-pill.is-paused > span i { animation: none; }
             }
         </style>
 
@@ -327,6 +362,7 @@
                         actionText.textContent = 'Lihat Kandidat';
                         pillLabel.textContent = 'PEMILIHAN DIJEDA';
                         pillText.textContent = 'Lihat informasi kandidat';
+                        document.querySelector('.student-election-pill')?.classList.add('is-paused');
                         countdown.hidden = true;
                         return;
                     }
