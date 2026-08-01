@@ -58,20 +58,20 @@
                                     <div class="card-body">
                                         <div class="row align-items-center">
                                             <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
-                                                <div class="gtk-foto-frame" id="fotoFrame" title="Klik untuk ganti foto">
+                                                <label class="gtk-foto-frame mb-0" for="foto_profile" title="Klik untuk ganti foto">
                                                     <img id="fotoPreview" src="{{ $gtk->foto_profile_url }}" alt="Foto">
                                                     <div class="gtk-foto-overlay">
                                                         <i class="fas fa-camera"></i>
                                                         <span>Ganti Foto</span>
                                                     </div>
-                                                </div>
+                                                </label>
                                             </div>
                                             <div class="col">
-                                                <div class="gtk-foto-drop" id="fotoDropZone">
+                                                <label class="gtk-foto-drop mb-0 d-block" for="foto_profile" id="fotoDropZone">
                                                     <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
                                                     <p class="mb-1"><strong>Klik untuk browse</strong> atau tarik &amp; letakkan foto di sini</p>
                                                     <small class="text-muted">JPG / PNG, maks 2 MB. Setelah dipilih Anda dapat <strong>crop, geser, zoom, putar,</strong> dan <strong>atur background</strong> (termasuk transparan).</small>
-                                                </div>
+                                                </label>
                                                 <input type="file" class="d-none" name="foto_profile" id="foto_profile"
                                                        accept="image/jpeg,image/png,image/jpg">
                                                 <div id="fotoReadyBadge" class="mt-2" style="display:none;">
@@ -557,6 +557,7 @@
         /* ===== Foto profil ===== */
         .gtk-foto-frame {
             position: relative;
+            display: block;
             width: 140px;
             height: 140px;
             border-radius: 50%;
@@ -646,23 +647,30 @@
             background: #e83e8c; color: #fff;
         }
 
-        /* ===== Sticky action bar ===== */
+        /* ===== Sticky action bar (fixed agar selalu terlihat saat scroll) ===== */
         .gtk-sticky-actions {
-            position: sticky;
+            position: fixed;
             bottom: 0;
-            z-index: 1020;
+            right: 0;
+            left: 250px; /* lebar sidebar AdminLTE */
+            z-index: 1030;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: .5rem;
-            background: rgba(255,255,255,.95);
+            background: rgba(255,255,255,.97);
             backdrop-filter: blur(4px);
-            border-top: 1px solid #dee2e6;
-            box-shadow: 0 -3px 10px rgba(0,0,0,.06);
-            padding: .65rem .75rem;
-            margin: 1rem -1.25rem -1.25rem;
-            border-radius: 0 0 .25rem .25rem;
+            border-top: 2px solid #007bff;
+            box-shadow: 0 -3px 12px rgba(0,0,0,.12);
+            padding: .65rem 1rem;
+            transition: left .3s ease-in-out;
         }
+        body.sidebar-collapse .gtk-sticky-actions { left: 4.6rem; }
+        @media (max-width: 991.98px) {
+            .gtk-sticky-actions { left: 0 !important; }
+        }
+        /* ruang agar field terakhir tidak tertutup bar */
+        .content-wrapper { padding-bottom: 80px; }
         @media (max-width: 575.98px) {
             .gtk-sticky-actions { justify-content: flex-end; }
             .gtk-sticky-actions .btn { flex: 1; }
@@ -694,9 +702,6 @@
             let cropper = null;
             let cropBg = '#ffffff'; // 'transparent' atau warna hex
             let cropApplied = false;
-
-            function openFilePicker() { $('#foto_profile').trigger('click'); }
-            $('#fotoFrame, #fotoDropZone').on('click', openFilePicker);
 
             // Drag & drop
             $('#fotoDropZone')
@@ -1008,18 +1013,15 @@
                 $('#kodepos').val('');
 
                 if (kecamatanCode) {
-                                    if (kecamatanCode) {
                     $.get(`{{ url('admin/gtk/api/villages') }}/${kecamatanCode}`, function(data) {
                         let options = '<option value="">-- Pilih Kelurahan/Desa --</option>';
                         data.forEach(function(item) {
                             const selected = item.code == initialKelurahan ? 'selected' : '';
-                            // Get postal code from meta if available
                             const postalCode = item.meta && item.meta.pos ? item.meta.pos : '';
                             options += `<option value="${item.code}" data-postal="${postalCode}" ${selected}>${item.name}</option>`;
                         });
                         $('#kelurahan_id').html(options).prop('disabled', false);
-                        
-                        // Trigger auto-fill kodepos if there's initial value
+
                         if (initialKelurahan) {
                             $('#kelurahan_id').trigger('change');
                         }
@@ -1036,36 +1038,10 @@
             $('#kelurahan_id').on('change', function() {
                 const selectedOption = $(this).find(':selected');
                 const kelurahanCode = selectedOption.val();
-                
-                if (kelurahanCode) {
-                    // Get postal code from data attribute (from meta_json)
-                    const postalCode = selectedOption.data('postal');
-                    if (postalCode) {
-                        $('#kodepos').val(postalCode);
-                    } else {
-                        // Fallback: don't auto-fill if not available
-                        $('#kodepos').val('');
-                    }
-                } else {
-                    $('#kodepos').val('');
-                }
-            });
-                } else {
-                    $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').prop('disabled', false);
-                }
-            });
 
-            // Auto-fill Kodepos when Kelurahan selected
-            $('#kelurahan_id').on('change', function() {
-                const selectedOption = $(this).find(':selected');
-                const kelurahanCode = selectedOption.val();
-                
                 if (kelurahanCode) {
-                    // Extract postal code from village code (last 5 digits typically)
-                    // Indonesian village codes are 10 digits: PPKKDDVVVV (Province, City, District, Village)
-                    // We'll use a simple approach: get from meta or use default
-                    const postalCode = selectedOption.data('postal') || kelurahanCode.substring(0, 5);
-                    $('#kodepos').val(postalCode);
+                    const postalCode = selectedOption.data('postal');
+                    $('#kodepos').val(postalCode || '');
                 } else {
                     $('#kodepos').val('');
                 }
