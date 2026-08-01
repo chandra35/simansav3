@@ -19,25 +19,85 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-12">
-            {{-- Tabs for Data Diri and Data Kepegawaian --}}
+        {{-- KOLOM KIRI: Ringkasan Profil --}}
+        <div class="col-12 col-lg-4">
+            <div class="card card-primary card-outline">
+                <div class="card-body box-profile text-center">
+                    <label class="gtk-foto-frame mb-3" for="foto_profile" id="fotoDropZone" title="Klik atau tarik & letakkan foto di sini">
+                        <img id="fotoPreview" src="{{ $gtk->foto_profile_url }}" alt="Foto">
+                        <div class="gtk-foto-overlay">
+                            <i class="fas fa-camera"></i>
+                            <span>Ganti Foto</span>
+                        </div>
+                    </label>
+                    <h3 class="profile-username h5 mb-1">{{ $gtk->nama_lengkap }}</h3>
+                    <p class="text-muted mb-2">{{ $gtk->jabatan ?: 'Jabatan belum diisi' }}{{ $gtk->status_kepegawaian ? ' · ' . $gtk->status_kepegawaian : '' }}</p>
+                    <label for="foto_profile" class="btn btn-primary btn-sm mb-1">
+                        <i class="fas fa-camera"></i> Ganti Foto
+                    </label>
+                    <div id="fotoReadyBadge" style="display:none;">
+                        <span class="badge badge-success"><i class="fas fa-check"></i> Foto siap — klik Simpan Data Diri</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        JPG/PNG maks 2 MB. Foto dapat di-crop, digeser, di-zoom, dan diatur background-nya (termasuk transparan).
+                    </p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-id-card-alt mr-1"></i> NIK</span>
+                        <strong>{{ $gtk->nik ?: '-' }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-address-card mr-1"></i> NUPTK</span>
+                        <strong>{{ $gtk->nuptk ?: '-' }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-id-badge mr-1"></i> NIP</span>
+                        <strong>{{ $gtk->nip ?: '-' }}</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Kelengkapan Profil</h3>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-user text-primary mr-1"></i> Data Diri</span>
+                            @if($gtk->data_diri_completed)
+                                <span class="badge badge-success">Lengkap</span>
+                            @else
+                                <span class="badge badge-warning">Belum Lengkap</span>
+                            @endif
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-briefcase text-primary mr-1"></i> Data Kepegawaian</span>
+                            @if($gtk->data_kepeg_completed)
+                                <span class="badge badge-success">Lengkap</span>
+                            @else
+                                <span class="badge badge-warning">Belum Lengkap</span>
+                            @endif
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- KOLOM KANAN: Form --}}
+        <div class="col-12 col-lg-8">
             <div class="card card-primary card-outline card-outline-tabs">
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs" id="custom-tabs" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="data-diri-tab" data-toggle="pill" href="#data-diri" role="tab" style="color: #007bff;">
                                 <i class="fas fa-user"></i> Data Diri
-                                @if(!$gtk->data_diri_completed)
-                                    <span class="badge badge-danger ml-1">Belum Lengkap</span>
-                                @endif
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="data-kepeg-tab" data-toggle="pill" href="#data-kepeg" role="tab" style="color: #495057;">
                                 <i class="fas fa-briefcase"></i> Data Kepegawaian
-                                @if(!$gtk->data_kepeg_completed)
-                                    <span class="badge badge-danger ml-1">Belum Lengkap</span>
-                                @endif
                             </a>
                         </li>
                     </ul>
@@ -49,47 +109,13 @@
                             <form id="formDataDiri" action="{{ route('admin.gtk.profile.diri.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
+                                <input type="file" class="d-none" name="foto_profile" id="foto_profile"
+                                       accept="image/jpeg,image/png,image/jpg">
 
-                                {{-- Foto Profile --}}
-                                <div class="card card-outline card-info mb-3">
-                                    <div class="card-header">
-                                        <h3 class="card-title"><i class="fas fa-camera"></i> Foto Profile</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
-                                                <label class="gtk-foto-frame mb-0" for="foto_profile" title="Klik untuk ganti foto">
-                                                    <img id="fotoPreview" src="{{ $gtk->foto_profile_url }}" alt="Foto">
-                                                    <div class="gtk-foto-overlay">
-                                                        <i class="fas fa-camera"></i>
-                                                        <span>Ganti Foto</span>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                            <div class="col">
-                                                <label class="gtk-foto-drop mb-0 d-block" for="foto_profile" id="fotoDropZone">
-                                                    <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
-                                                    <p class="mb-1"><strong>Klik untuk browse</strong> atau tarik &amp; letakkan foto di sini</p>
-                                                    <small class="text-muted">JPG / PNG, maks 2 MB. Setelah dipilih Anda dapat <strong>crop, geser, zoom, putar,</strong> dan <strong>atur background</strong> (termasuk transparan).</small>
-                                                </label>
-                                                <input type="file" class="d-none" name="foto_profile" id="foto_profile"
-                                                       accept="image/jpeg,image/png,image/jpg">
-                                                <div id="fotoReadyBadge" class="mt-2" style="display:none;">
-                                                    <span class="badge badge-success"><i class="fas fa-check"></i> Foto siap — jangan lupa klik <strong>Simpan Data Diri</strong></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <h6 class="text-uppercase text-muted font-weight-bold mb-3"><i class="fas fa-id-card mr-1"></i> Identitas</h6>
 
-                                {{-- Card: Data Pribadi --}}
-                                <div class="card card-outline card-primary">
-                                    <div class="card-header">
-                                        <h3 class="card-title"><i class="fas fa-id-card"></i> Data Pribadi</h3>
-                                    </div>
-                                    <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-12">
                                                 <div class="form-group">
                                                     <label for="nama_lengkap">
                                                         <i class="fas fa-user text-primary"></i> Nama Lengkap 
@@ -108,7 +134,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-12 col-md-6">
                                                 <div class="form-group">
                                                     <label for="nik">
                                                         <i class="fas fa-id-card-alt text-primary"></i> NIK 
@@ -130,10 +156,8 @@
                                                     </small>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div class="row">
-                                            <div class="col-12 col-sm-6 col-md-4">
+                                            <div class="col-12 col-md-6">
                                                 <div class="form-group">
                                                     <label class="d-block">
                                                         <i class="fas fa-venus-mars text-primary"></i> Jenis Kelamin 
@@ -153,7 +177,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-12 col-sm-6 col-md-4">
+                                            <div class="col-12 col-md-6">
                                                 <div class="form-group">
                                                     <label for="tempat_lahir">
                                                         <i class="fas fa-map-marker-alt text-primary"></i> Tempat Lahir
@@ -170,7 +194,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-12 col-md-4">
+                                            <div class="col-12 col-md-6">
                                                 <div class="form-group">
                                                     <label for="tanggal_lahir">
                                                         <i class="fas fa-calendar text-primary"></i> Tanggal Lahir
@@ -186,18 +210,12 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {{-- Card: Alamat Tempat Tinggal --}}
-                                <div class="card card-outline card-info">
-                                    <div class="card-header">
-                                        <h3 class="card-title"><i class="fas fa-home"></i> Alamat Tempat Tinggal</h3>
-                                    </div>
-                                    <div class="card-body">
+                                <hr class="mt-2 mb-3">
+                                <h6 class="text-uppercase text-muted font-weight-bold mb-3"><i class="fas fa-home mr-1"></i> Alamat Tempat Tinggal</h6>
 
                                 <div class="row">
-                                    <div class="col-12 col-sm-6 col-lg-3">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
                                             <label for="provinsi_id"><i class="fas fa-map text-info"></i> Provinsi</label>
                                             <select class="form-control select2" 
@@ -214,7 +232,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-sm-6 col-lg-3">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
                                             <label for="kabupaten_id">
                                                 <i class="fas fa-city text-info"></i> Kabupaten/Kota
@@ -227,7 +245,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-sm-6 col-lg-3">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
                                             <label for="kecamatan_id">
                                                 <i class="fas fa-building text-info"></i> Kecamatan
@@ -240,7 +258,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-sm-6 col-lg-3">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
                                             <label for="kelurahan_id">
                                                 <i class="fas fa-map-marked-alt text-info"></i> Kelurahan/Desa
@@ -255,7 +273,7 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-12 col-lg-5">
+                                    <div class="col-12">
                                         <div class="form-group">
                                             <label for="alamat">
                                                 <i class="fas fa-road text-info"></i> Alamat Lengkap 
@@ -269,7 +287,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-4 col-lg-2">
+                                    <div class="col-4">
                                         <div class="form-group">
                                             <label for="rt">
                                                 <i class="fas fa-hashtag text-info"></i> RT
@@ -285,7 +303,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-4 col-lg-2">
+                                    <div class="col-4">
                                         <div class="form-group">
                                             <label for="rw">
                                                 <i class="fas fa-hashtag text-info"></i> RW
@@ -301,7 +319,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-4 col-lg-3">
+                                    <div class="col-4">
                                         <div class="form-group">
                                             <label for="kodepos">
                                                 <i class="fas fa-envelope text-info"></i> Kodepos
@@ -321,14 +339,12 @@
                                     </div>
                                 </div>
 
-                                <div class="alert alert-info mb-0">
+                                <div class="alert alert-info small mb-0">
                                     <i class="icon fas fa-info-circle"></i>
                                     <strong>Petunjuk:</strong> 
                                     Pilih wilayah secara berurutan dari Provinsi → Kabupaten/Kota → Kecamatan → Kelurahan/Desa. 
                                     Kode pos akan terisi otomatis setelah memilih kelurahan.
                                 </div>
-                            </div>
-                        </div>
 
                         {{-- Sticky Action Bar --}}
                         <div class="gtk-sticky-actions">
@@ -353,10 +369,12 @@
                                 @csrf
                                 @method('PUT')
 
+                                <h6 class="text-uppercase text-muted font-weight-bold mb-3"><i class="fas fa-fingerprint mr-1"></i> Nomor Identitas Pegawai</h6>
+
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
-                                            <label for="nuptk">NUPTK</label>
+                                            <label for="nuptk"><i class="fas fa-address-card text-primary"></i> NUPTK</label>
                                             <input type="text" 
                                                    class="form-control @error('nuptk') is-invalid @enderror" 
                                                    id="nuptk" 
@@ -370,9 +388,9 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
-                                            <label for="nip">NIP</label>
+                                            <label for="nip"><i class="fas fa-id-badge text-primary"></i> NIP</label>
                                             <input type="text" 
                                                    class="form-control @error('nip') is-invalid @enderror" 
                                                    id="nip" 
@@ -387,10 +405,13 @@
                                     </div>
                                 </div>
 
+                                <hr class="mt-2 mb-3">
+                                <h6 class="text-uppercase text-muted font-weight-bold mb-3"><i class="fas fa-briefcase mr-1"></i> Status &amp; Jabatan</h6>
+
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
-                                            <label for="status_kepegawaian">Status Kepegawaian</label>
+                                            <label for="status_kepegawaian"><i class="fas fa-user-check text-primary"></i> Status Kepegawaian</label>
                                             <select class="form-control @error('status_kepegawaian') is-invalid @enderror" 
                                                     id="status_kepegawaian" 
                                                     name="status_kepegawaian">
@@ -408,9 +429,9 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
-                                            <label for="jabatan">Jabatan</label>
+                                            <label for="jabatan"><i class="fas fa-user-tie text-primary"></i> Jabatan</label>
                                             <select class="form-control @error('jabatan') is-invalid @enderror" 
                                                     id="jabatan" 
                                                     name="jabatan">
@@ -428,9 +449,9 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-md-6">
                                         <div class="form-group">
-                                            <label for="tmt_kerja">TMT Kerja</label>
+                                            <label for="tmt_kerja"><i class="fas fa-calendar-check text-primary"></i> TMT Kerja</label>
                                             <input type="date" 
                                                    class="form-control @error('tmt_kerja') is-invalid @enderror" 
                                                    id="tmt_kerja" 
@@ -523,8 +544,8 @@
         .gtk-foto-frame {
             position: relative;
             display: block;
-            width: 140px;
-            height: 140px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             overflow: hidden;
             border: 3px solid #007bff;
@@ -532,6 +553,10 @@
             cursor: pointer;
             margin: 0 auto;
             background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+        }
+        .gtk-foto-frame.dragover {
+            border-color: #28a745;
+            box-shadow: 0 0 0 4px rgba(40,167,69,.25);
         }
         .gtk-foto-frame img {
             width: 100%;
@@ -552,18 +577,6 @@
             transition: opacity .2s;
         }
         .gtk-foto-frame:hover .gtk-foto-overlay { opacity: 1; }
-        .gtk-foto-drop {
-            border: 2px dashed #adb5bd;
-            border-radius: .5rem;
-            padding: 1rem 1.25rem;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color .2s, background .2s;
-        }
-        .gtk-foto-drop:hover, .gtk-foto-drop.dragover {
-            border-color: #007bff;
-            background: rgba(0,123,255,.05);
-        }
 
         /* ===== Cropper modal ===== */
         .gtk-crop-wrap {
