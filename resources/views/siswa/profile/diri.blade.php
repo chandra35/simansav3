@@ -1269,6 +1269,11 @@
                                 <small class="form-text text-muted">
                                     <i class="fas fa-envelope"></i> Untuk komunikasi
                                 </small>
+                                @if($siswa->user && $siswa->user->hasDefaultEmail())
+                                    <small class="form-text text-danger font-weight-bold">
+                                        <i class="fas fa-exclamation-triangle"></i> Email ini masih email default sistem dan tidak bisa menerima pesan. Segera ganti dengan email pribadi yang aktif!
+                                    </small>
+                                @endif
                                 @error('email')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>

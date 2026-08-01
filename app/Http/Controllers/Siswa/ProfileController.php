@@ -697,6 +697,8 @@ class ProfileController extends Controller
 
         $email = $validated['email'] ?? null;
         unset($validated['email']);
+        $email = ($email !== null && $email !== '') ? strtolower(trim($email)) : null;
+        $emailChanged = $email !== null && $email !== strtolower((string) $user->email);
 
         try {
             // Get old data before update
@@ -704,12 +706,15 @@ class ProfileController extends Controller
             
             $validated['data_diri_completed'] = true;
 
-            DB::transaction(function () use ($siswa, $user, $validated, $email, $oldData): void {
+            DB::transaction(function () use ($siswa, $user, $validated, $email, $emailChanged, $oldData): void {
                 $siswa->update($validated);
 
                 $userData = ['name' => $validated['nama_lengkap']];
-                if ($email !== null && $email !== '') {
+                if ($email !== null) {
                     $userData['email'] = $email;
+                    if ($emailChanged) {
+                        $userData['email_verified_at'] = null;
+                    }
                 }
                 $user->update($userData);
 
@@ -722,7 +727,21 @@ class ProfileController extends Controller
                 );
             });
 
-            return redirect()->route('siswa.dashboard')->with('success', '✅ Data diri berhasil disimpan! Profil Anda sudah lengkap.');
+            $successMsg = '✅ Data diri berhasil disimpan! Profil Anda sudah lengkap.';
+
+            // Email baru butuh verifikasi ulang
+            if ($emailChanged && !$this->isDefaultEmail($email)) {
+                try {
+                    $result = $this->sendVerificationEmail($user->fresh());
+                    if ($result['success'] ?? false) {
+                        $successMsg .= ' Link verifikasi telah dikirim ke email baru Anda — silakan cek inbox/spam.';
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send verification email after data diri update', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                }
+            }
+
+            return redirect()->route('siswa.dashboard')->with('success', $successMsg);
         } catch (\Exception $e) {
             Log::error('Error updating siswa data diri: ' . $e->getMessage(), [
                 'siswa_id' => $siswa->id,

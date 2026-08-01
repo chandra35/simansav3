@@ -34,7 +34,18 @@
 </div>
 @endif
 @php $dashUser = auth()->user(); @endphp
-@if($dashUser && empty($dashUser->email_verified_at) && !$dashUser->hasDefaultEmail())
+@if($dashUser && $dashUser->hasDefaultEmail())
+<div class="alert alert-danger mx-1 mt-1 mb-2 d-flex flex-wrap align-items-center justify-content-between" role="alert" style="gap:.5rem; border-left: 5px solid #721c24;">
+    <div>
+        <i class="fas fa-exclamation-circle mr-1"></i>
+        <strong>Email Anda masih email default sistem</strong> ({{ $dashUser->email }}).
+        Email ini tidak bisa menerima pesan — Anda <strong>tidak dapat reset password mandiri</strong> jika lupa password. Segera ganti dengan email pribadi yang aktif.
+    </div>
+    <a href="{{ route('siswa.profile.diri') }}" class="btn btn-light btn-sm font-weight-bold">
+        <i class="fas fa-envelope"></i> Ganti Email Sekarang
+    </a>
+</div>
+@elseif($dashUser && empty($dashUser->email_verified_at))
 <div class="alert alert-warning mx-1 mt-1 mb-2 d-flex flex-wrap align-items-center justify-content-between" role="alert" style="gap:.5rem; border-left: 5px solid #ffc107;">
     <div>
         <i class="fas fa-envelope-open-text mr-1"></i>
