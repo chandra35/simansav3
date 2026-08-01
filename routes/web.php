@@ -479,6 +479,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('can:super-admin-access');
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/ketua-kelas', [KelasController::class, 'assignKetuaKelas'])->name('kelas.ketua-kelas')->middleware('permission:edit-kelas');
+    Route::post('/kelas/{kelas}/toggle-asrama', [KelasController::class, 'toggleAsrama'])->name('kelas.toggle-asrama')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
     Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi');
     

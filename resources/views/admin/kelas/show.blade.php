@@ -48,6 +48,7 @@
                             <h3 class="mb-1">
                                 <strong>{{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}</strong>
                                 {!! $kelas->is_active ? '<span class="badge badge-success ml-2">Aktif</span>' : '<span class="badge badge-secondary ml-2">Non-Aktif</span>' !!}
+                                @if($kelas->is_asrama)<span class="badge badge-info ml-1"><i class="fas fa-mosque mr-1"></i>Asrama</span>@endif
                             </h3>
                             <p class="text-muted mb-2">
                                 <i class="fas fa-barcode"></i> {{ $kelas->kode_kelas }} | 
@@ -99,6 +100,19 @@
                                             </button>
                                         @endcan
                                     </small>
+                                </div>
+                                <div class="col-md-6">
+                                    @can('edit-kelas')
+                                    <form method="post" action="{{ route('admin.kelas.toggle-asrama', $kelas) }}" id="formToggleAsrama">
+                                        @csrf
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="switchAsrama" name="is_asrama" value="1" {{ $kelas->is_asrama ? 'checked' : '' }} onchange="document.getElementById('formToggleAsrama').submit()">
+                                            <label class="custom-control-label small text-muted" for="switchAsrama"><i class="fas fa-mosque text-info mr-1"></i><strong>Rombel Asrama (Kampus 2)</strong></label>
+                                        </div>
+                                    </form>
+                                    @else
+                                    <small class="text-muted"><i class="fas fa-mosque text-info mr-1"></i><strong>Rombel Asrama:</strong> {{ $kelas->is_asrama ? 'Ya' : 'Tidak' }}</small>
+                                    @endcan
                                 </div>
                             </div>
                         </div>

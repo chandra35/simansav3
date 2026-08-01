@@ -1523,6 +1523,25 @@ class KelasController extends Controller
     }
 
     /**
+     * Toggle tanda Rombel Asrama (Kampus 2) dari halaman detail kelas.
+     */
+    public function toggleAsrama(Request $request, Kelas $kelas)
+    {
+        $this->authorize('edit-kelas');
+
+        $kelas->update(['is_asrama' => $request->boolean('is_asrama')]);
+
+        activity()
+            ->performedOn($kelas)
+            ->causedBy(Auth::user())
+            ->log(($kelas->is_asrama ? 'Menandai' : 'Menghapus tanda').' Rombel Asrama: '.$kelas->nama_kelas);
+
+        return back()->with('success', $kelas->is_asrama
+            ? 'Rombel '.$kelas->nama_kelas.' ditandai sebagai Rombel Asrama (Kampus 2).'
+            : 'Tanda Rombel Asrama dihapus dari '.$kelas->nama_kelas.'.');
+    }
+
+    /**
      * Tetapkan atau kosongkan ketua kelas dari siswa aktif pada rombel ini.
      */
     public function assignKetuaKelas(Request $request, Kelas $kelas)
