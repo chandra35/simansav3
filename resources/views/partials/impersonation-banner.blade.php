@@ -16,7 +16,7 @@
               action="{{ route($impersonation->target_type === 'siswa' ? 'siswa.impersonation.stop' : 'admin.gtk.impersonation.stop') }}"
               data-no-overlay>
             @csrf
-            <button type="submit" class="btn btn-light btn-sm">
+            <button type="submit" class="btn btn-primary-soft btn-sm">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Admin
             </button>
         </form>
@@ -26,9 +26,9 @@
         <style>
             .impersonation-banner {
                 align-items: center;
-                background: linear-gradient(135deg, #172554, #1d4ed8);
+                background: linear-gradient(135deg, #312e81, #4338ca);
                 border-radius: .65rem;
-                box-shadow: 0 .35rem 1rem rgba(30, 64, 175, .2);
+                box-shadow: 0 .35rem 1rem rgba(67, 56, 202, .18);
                 color: #fff;
                 display: flex;
                 gap: 1rem;

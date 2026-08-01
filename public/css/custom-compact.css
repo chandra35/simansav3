@@ -11,25 +11,27 @@
     --primary: #4f46e5;       /* Indigo */
     --primary-light: #6366f1;
     --primary-dark: #4338ca;
+    --primary-soft: #eef2ff;
     --secondary: #64748b;     /* Slate */
-    --accent: #06b6d4;        /* Cyan/Teal */
-    --accent-light: #22d3ee;
-    --success: #10b981;       /* Emerald */
-    --success-light: #34d399;
-    --warning: #f59e0b;       /* Amber */
-    --warning-light: #fbbf24;
-    --danger: #ef4444;        /* Red */
-    --danger-light: #f87171;
-    --info: #3b82f6;          /* Blue */
-    --info-light: #60a5fa;
+    --accent: #6366f1;        /* Indigo light — aksen tunggal, bukan cyan */
+    --accent-light: #a5b4fc;
+    --success: #16a34a;       /* Green */
+    --success-light: #22c55e;
+    --warning: #d97706;       /* Amber */
+    --warning-light: #f59e0b;
+    --danger: #dc2626;        /* Red */
+    --danger-light: #ef4444;
+    --info: #0284c7;          /* Sky */
+    --info-light: #38bdf8;
 
-    --bg-body: #f1f5f9;       /* Slate-100 */
+    --bg-body: #f5f7fb;
     --bg-card: #ffffff;
-    --bg-sidebar: linear-gradient(180deg, #312e81 0%, #3730a3 40%, #4338ca 100%);
-    --text-primary: #1e293b;  /* Slate-800 */
+    --bg-sidebar: linear-gradient(180deg, #312e81 0%, #3730a3 100%);
+    --text-primary: #1f2937;  /* Gray-800 */
     --text-secondary: #64748b;/* Slate-500 */
     --text-muted: #94a3b8;    /* Slate-400 */
     --border-color: #e2e8f0;  /* Slate-200 */
+    --border-strong: #cbd5e1; /* Slate-300 */
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
@@ -144,13 +146,57 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
    =============================================== */
 
 .btn {
-    padding: 0.4rem 0.85rem !important;
+    padding: 0.45rem 1.1rem !important;
     font-size: 0.875rem !important;
     line-height: 1.5 !important;
     border-radius: var(--radius) !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     transition: var(--transition) !important;
     letter-spacing: 0.01em;
+}
+
+.btn:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35) !important;
+}
+
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.55 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Secondary action: putih, border abu, teks abu gelap */
+.btn-secondary,
+.btn-default,
+.btn-outline-secondary,
+.btn-light {
+    background: #ffffff !important;
+    border: 1px solid var(--border-strong) !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.btn-secondary:hover, .btn-secondary:focus,
+.btn-default:hover, .btn-default:focus,
+.btn-outline-secondary:hover, .btn-outline-secondary:focus,
+.btn-light:hover, .btn-light:focus {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #1f2937 !important;
+}
+
+/* Primary soft: untuk aksi sekunder yang tetap bernuansa primary */
+.btn-primary-soft {
+    background: var(--primary-soft) !important;
+    border: 1px solid transparent !important;
+    color: var(--primary-dark) !important;
+}
+
+.btn-primary-soft:hover, .btn-primary-soft:focus {
+    background: #e0e7ff !important;
+    color: var(--primary-dark) !important;
 }
 
 .btn:hover {
@@ -178,9 +224,9 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     border-color: var(--info) !important;
 }
 .btn-info:hover, .btn-info:focus {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+    background: #0369a1 !important;
+    border-color: #0369a1 !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
 }
 
 /* Success Button */
@@ -189,9 +235,9 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     border-color: var(--success) !important;
 }
 .btn-success:hover, .btn-success:focus {
-    background: #059669 !important;
-    border-color: #059669 !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+    background: #15803d !important;
+    border-color: #15803d !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;
 }
 
 /* Warning Button */
@@ -201,10 +247,10 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     color: #fff !important;
 }
 .btn-warning:hover, .btn-warning:focus {
-    background: #d97706 !important;
-    border-color: #d97706 !important;
+    background: #b45309 !important;
+    border-color: #b45309 !important;
     color: #fff !important;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25) !important;
 }
 
 /* Danger Button */
@@ -213,9 +259,9 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
     border-color: var(--danger) !important;
 }
 .btn-danger:hover, .btn-danger:focus {
-    background: #dc2626 !important;
-    border-color: #dc2626 !important;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
 }
 
 .btn-sm {
@@ -335,29 +381,27 @@ label {
    =============================================== */
 
 :root {
-    --simansa-hero-start: #3359d4;
-    --simansa-hero-end: #2a8b93;
+    --simansa-hero-start: #4f46e5;
+    --simansa-hero-end: #3b82f6;
     --simansa-hero-text: #ffffff;
-    --simansa-card-border: #d9e3f2;
-    --simansa-card-muted: #eef4fb;
-    --simansa-sidebar-surface: rgba(255, 255, 255, 0.08);
-    --simansa-sidebar-active: rgba(255, 255, 255, 0.2);
-    --simansa-sidebar-text: rgba(255, 255, 255, 0.88);
-    --simansa-sidebar-heading: rgba(255, 255, 255, 0.6);
+    --simansa-card-border: #e2e8f0;
+    --simansa-card-muted: #eef2ff;
+    --simansa-sidebar-surface: rgba(255, 255, 255, 0.07);
+    --simansa-sidebar-active: #4338ca;
+    --simansa-sidebar-text: rgba(255, 255, 255, 0.85);
+    --simansa-sidebar-heading: rgba(255, 255, 255, 0.55);
 }
 
 body:not(.layout-top-nav) .content-wrapper,
 .content-wrapper,
 .content {
-    background:
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-        linear-gradient(180deg, #eef4fb 0%, #f6f9fd 32%, #f8fafc 100%) !important;
+    background: var(--bg-body) !important;
 }
 
 .main-header.navbar {
     background: linear-gradient(135deg, var(--simansa-hero-start), var(--simansa-hero-end)) !important;
     border-bottom: 0 !important;
-    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18) !important;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.14) !important;
 }
 
 .main-header.navbar .nav-link,
@@ -383,9 +427,9 @@ body:not(.layout-top-nav) .content-wrapper,
 }
 
 .main-sidebar {
-    background: linear-gradient(180deg, #2343b6 0%, #264eb5 30%, #246788 100%) !important;
+    background: var(--bg-sidebar) !important;
     border-right: 0 !important;
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
 .brand-link {
@@ -516,12 +560,12 @@ body:not(.layout-top-nav) .content-wrapper,
 .info-box,
 .small-box,
 .modal-content {
-    border-radius: 1.25rem !important;
+    border-radius: 1rem !important;
     border-color: var(--simansa-card-border) !important;
 }
 
 .card {
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.04) !important;
 }
 
 .card-header:not([class*="bg-"]) {
@@ -534,14 +578,7 @@ body:not(.layout-top-nav) .content-wrapper,
 }
 
 .card.card-outline::before {
-    content: "";
-    position: absolute;
-    left: 1.1rem;
-    right: 1.1rem;
-    top: 0;
-    height: 4px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--simansa-hero-start), var(--simansa-hero-end));
+    display: none; /* garis aksen gradient dihapus: border netral + shadow saja */
 }
 
 .info-box,
@@ -798,8 +835,8 @@ body:not(.layout-top-nav) .content-wrapper,
 
 .dataTables_wrapper .dataTables_length select:focus,
 .dataTables_wrapper .dataTables_filter input:focus {
-    border-color: #14b8a6 !important;
-    box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.16) !important;
+    border-color: var(--primary-light) !important;
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.14) !important;
     outline: none !important;
 }
 
@@ -848,7 +885,7 @@ body:not(.layout-top-nav) .content-wrapper,
 .badge {
     padding: 0.3em 0.6em !important;
     font-size: 0.75rem !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     border-radius: 9999px !important;
     letter-spacing: 0.01em;
 }
@@ -1710,10 +1747,10 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     color: #fff !important;
 }
 
-/* Active submenu - Cyan/Teal accent */
+/* Active submenu - aksen indigo lembut */
 .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
-    border-left-color: var(--accent) !important;
-    background-color: rgba(6, 182, 212, 0.15) !important;
+    border-left-color: var(--accent-light) !important;
+    background-color: rgba(99, 102, 241, 0.18) !important;
     color: #fff !important;
     font-weight: 600 !important;
     box-shadow: none !important;
@@ -1759,7 +1796,11 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
 /* Hover effect untuk parent menu */
 .nav-sidebar > .nav-item > .nav-link {
     transition: var(--transition) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.nav-sidebar .nav-link:not(.active) > .nav-icon {
+    opacity: 0.75;
 }
 
 .nav-sidebar > .nav-item > .nav-link:hover {
@@ -1779,10 +1820,10 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     color: #fff !important;
 }
 
-/* Single menu (non-collapsible) when active - Cyan accent */
+/* Single menu (non-collapsible) when active - aksen indigo */
 .nav-sidebar > .nav-item > .nav-link.active:not(.has-treeview) {
-    background: linear-gradient(90deg, rgba(6, 182, 212, 0.25) 0%, rgba(6, 182, 212, 0.08) 100%) !important;
-    border-left: 3px solid var(--accent) !important;
+    background: var(--simansa-sidebar-active) !important;
+    border-left: 3px solid var(--accent-light) !important;
     color: #fff !important;
     font-weight: 600 !important;
     padding-left: calc(1rem - 3px) !important;
@@ -1790,7 +1831,7 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
 
 /* Single menu icon when active */
 .nav-sidebar > .nav-item > .nav-link.active:not(.has-treeview) > .nav-icon {
-    color: var(--accent-light) !important;
+    color: #ffffff !important;
 }
 
 /* ===============================================

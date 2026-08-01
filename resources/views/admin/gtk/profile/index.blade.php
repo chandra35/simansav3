@@ -32,7 +32,7 @@
                     </label>
                     <h3 class="profile-username h5 mb-1">{{ $gtk->nama_lengkap }}</h3>
                     <p class="text-muted mb-2">{{ $gtk->jabatan ?: 'Jabatan belum diisi' }}{{ $gtk->status_kepegawaian ? ' · ' . $gtk->status_kepegawaian : '' }}</p>
-                    <label for="foto_profile" class="btn btn-primary btn-sm mb-1">
+                    <label for="foto_profile" class="btn btn-default mb-1">
                         <i class="fas fa-camera"></i> Ganti Foto
                     </label>
                     <div id="fotoReadyBadge" style="display:none;">
@@ -91,12 +91,12 @@
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs" id="custom-tabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="data-diri-tab" data-toggle="pill" href="#data-diri" role="tab" style="color: #007bff;">
+                            <a class="nav-link active" id="data-diri-tab" data-toggle="pill" href="#data-diri" role="tab">
                                 <i class="fas fa-user"></i> Data Diri
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="data-kepeg-tab" data-toggle="pill" href="#data-kepeg" role="tab" style="color: #495057;">
+                            <a class="nav-link" id="data-kepeg-tab" data-toggle="pill" href="#data-kepeg" role="tab">
                                 <i class="fas fa-briefcase"></i> Data Kepegawaian
                             </a>
                         </li>
@@ -351,7 +351,7 @@
                             <div class="text-muted small d-none d-sm-block">
                                 <i class="fas fa-info-circle"></i> Perubahan belum tersimpan sampai Anda klik Simpan.
                             </div>
-                            <div class="d-flex" style="gap:.5rem;">
+                            <div class="d-flex gtk-gap">
                                 <a href="{{ route('admin.gtk.dashboard') }}" class="btn btn-default">
                                     <i class="fas fa-times"></i> Batal
                                 </a>
@@ -474,11 +474,11 @@
                                     <div class="text-muted small d-none d-sm-block">
                                         <i class="fas fa-info-circle"></i> Perubahan belum tersimpan sampai Anda klik Simpan.
                                     </div>
-                                    <div class="d-flex" style="gap:.5rem;">
+                                    <div class="d-flex gtk-gap">
                                         <a href="{{ route('admin.gtk.dashboard') }}" class="btn btn-default">
                                             <i class="fas fa-times"></i> Batal
                                         </a>
-                                        <button type="submit" class="btn btn-success px-4" id="btnSaveDataKepeg">
+                                        <button type="submit" class="btn btn-primary px-4" id="btnSaveDataKepeg">
                                             <i class="fas fa-save"></i> Simpan Data Kepegawaian
                                         </button>
                                     </div>
@@ -495,15 +495,15 @@
     <div class="modal fade" id="cropperModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
-                    <h5 class="modal-title"><i class="fas fa-crop-alt"></i> Atur Foto Profil</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-crop-alt text-primary"></i> Atur Foto Profil</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body p-2 p-sm-3">
                     <div class="gtk-crop-wrap">
                         <img id="cropperImage" src="" alt="Crop">
                     </div>
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-3" style="gap:.5rem;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 gtk-gap">
                         <div class="btn-group btn-group-sm">
                             <button type="button" class="btn btn-outline-secondary" id="cropZoomOut" title="Perkecil"><i class="fas fa-search-minus"></i></button>
                             <button type="button" class="btn btn-outline-secondary" id="cropZoomIn" title="Perbesar"><i class="fas fa-search-plus"></i></button>
@@ -511,13 +511,13 @@
                             <button type="button" class="btn btn-outline-secondary" id="cropRotateRight" title="Putar kanan"><i class="fas fa-redo"></i></button>
                             <button type="button" class="btn btn-outline-secondary" id="cropReset" title="Reset"><i class="fas fa-sync-alt"></i></button>
                         </div>
-                        <div class="d-flex align-items-center" style="gap:.4rem;">
+                        <div class="d-flex align-items-center gtk-gap">
                             <span class="small text-muted mr-1"><i class="fas fa-fill-drip"></i> Background:</span>
                             <button type="button" class="gtk-bg-swatch active" data-bg="#ffffff" style="background:#fff;" title="Putih"></button>
                             <button type="button" class="gtk-bg-swatch" data-bg="#dc3545" style="background:#dc3545;" title="Merah"></button>
                             <button type="button" class="gtk-bg-swatch" data-bg="#007bff" style="background:#007bff;" title="Biru"></button>
                             <button type="button" class="gtk-bg-swatch gtk-bg-transparent" data-bg="transparent" title="Transparan"></button>
-                            <input type="color" id="cropBgCustom" value="#ffffff" title="Warna custom" style="width:32px;height:32px;border:none;padding:0;background:none;cursor:pointer;">
+                            <input type="color" id="cropBgCustom" value="#ffffff" title="Warna custom">
                         </div>
                     </div>
                     <small class="text-muted d-block mt-2">
@@ -540,6 +540,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
     <style>
+        /* ===== Utility ===== */
+        .gtk-gap { gap: .65rem; }
+
+        /* ===== Tabs (ID selector menang dari .accent-white .nav-tabs .nav-link) ===== */
+        #custom-tabs .nav-link {
+            color: var(--secondary, #64748b);
+            font-weight: 600;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            background: transparent;
+        }
+        #custom-tabs .nav-link:hover {
+            color: var(--primary, #4f46e5);
+        }
+        #custom-tabs .nav-link.active {
+            color: var(--primary, #4f46e5);
+            border-bottom-color: var(--primary, #4f46e5);
+            background: transparent;
+        }
+        #custom-tabs .nav-link:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, .3);
+        }
+
+        /* ===== Ikon: heading section primary, ikon label field netral seragam ===== */
+        #custom-tabs-tabContent h6 i { color: var(--primary, #4f46e5); }
+        #formDataDiri label i.text-primary, #formDataDiri label i.text-info,
+        #formDataKepeg label i.text-primary, #formDataKepeg label i.text-info {
+            color: var(--secondary, #64748b) !important;
+        }
+
         /* ===== Foto profil ===== */
         .gtk-foto-frame {
             position: relative;
@@ -548,15 +580,18 @@
             height: 160px;
             border-radius: 50%;
             overflow: hidden;
-            border: 3px solid #007bff;
-            box-shadow: 0 4px 12px rgba(0,0,0,.15);
+            border: 3px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, .1);
             cursor: pointer;
             margin: 0 auto;
             background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 16px 16px;
         }
+        .gtk-foto-frame:hover {
+            border-color: var(--primary, #4f46e5);
+        }
         .gtk-foto-frame.dragover {
-            border-color: #28a745;
-            box-shadow: 0 0 0 4px rgba(40,167,69,.25);
+            border-color: var(--primary, #4f46e5);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, .25);
         }
         .gtk-foto-frame img {
             width: 100%;
@@ -592,11 +627,19 @@
             cursor: pointer;
         }
         .gtk-bg-swatch.active {
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,.35);
+            border-color: var(--primary, #4f46e5);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, .35);
         }
         .gtk-bg-transparent {
             background: repeating-conic-gradient(#ced4da 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+        }
+        #cropBgCustom {
+            width: 32px;
+            height: 32px;
+            border: none;
+            padding: 0;
+            background: none;
+            cursor: pointer;
         }
 
         /* ===== Sticky action bar (fixed agar selalu terlihat saat scroll) ===== */
@@ -609,11 +652,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: .5rem;
-            background: rgba(255,255,255,.97);
+            gap: .75rem;
+            background: rgba(255,255,255,.96);
             backdrop-filter: blur(4px);
-            border-top: 2px solid #007bff;
-            box-shadow: 0 -3px 12px rgba(0,0,0,.12);
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 16px rgba(15, 23, 42, .08);
             padding: .65rem 1rem;
             transition: left .3s ease-in-out;
         }
@@ -755,12 +798,6 @@
                 placeholder: function() {
                     return $(this).data('placeholder');
                 }
-            });
-
-            // Warna tab (fix accent-white AdminLTE)
-            $('#custom-tabs .nav-link').on('shown.bs.tab', function() {
-                $('#custom-tabs .nav-link').css('color', '#495057');
-                $(this).css('color', '#007bff');
             });
 
             // Load initial data if exists

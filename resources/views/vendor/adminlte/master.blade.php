@@ -472,8 +472,8 @@
             padding: .38rem .72rem;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(187, 247, 208, 0.95);
-            color: #0f172a;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            color: #1f2937;
             font-size: .75rem;
             white-space: nowrap;
             box-shadow: 0 3px 10px rgba(15, 23, 42, .06);
@@ -484,8 +484,8 @@
             height: 8px;
             flex: 0 0 8px;
             border-radius: 999px;
-            background: #22c55e;
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+            background: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
         }
 
         .simansa-navbar-academic-year__label {
@@ -494,14 +494,14 @@
         }
 
         .simansa-navbar-academic-year strong {
-            color: #166534;
-            font-weight: 800;
+            color: #1f2937;
+            font-weight: 700;
         }
 
         .simansa-navbar-academic-year small {
             padding-left: .38rem;
-            border-left: 1px solid #d1fae5;
-            color: #15803d;
+            border-left: 1px solid #e2e8f0;
+            color: #64748b;
             font-size: .68rem;
             font-weight: 700;
         }
@@ -519,7 +519,7 @@
         }
 
         .simansa-navbar-live__clock {
-            color: #1d4ed8;
+            color: #1f2937;
             font-variant-numeric: tabular-nums;
         }
 
