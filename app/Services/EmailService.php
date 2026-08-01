@@ -212,6 +212,26 @@ class EmailService
     }
 
     /**
+     * Send email verification link
+     */
+    public function sendEmailVerification(string $to, string $name, string $verifyUrl): array
+    {
+        $template = EmailTemplate::getByCode('email_verification');
+
+        if ($template) {
+            return $this->sendUsingTemplate('email_verification', $to, [
+                '[nama_user]' => $name,
+                '[verify_link]' => $verifyUrl,
+            ], 'email_verification');
+        }
+
+        $subject = 'Verifikasi Email - ' . ($this->settings->nama_sekolah ?? 'SIMANSA');
+        $body = $this->getEmailVerificationBody($name, $verifyUrl);
+
+        return $this->send($to, $subject, $body, 'email_verification');
+    }
+
+    /**
      * Send graduation announcement email
      */
     public function sendGraduationAnnouncement(string $to, array $data): array
@@ -337,6 +357,64 @@ HTML;
             
             <p><small>Jika tombol tidak berfungsi, copy link berikut ke browser:<br>
             <a href="{$resetUrl}">{$resetUrl}</a></small></p>
+        </div>
+        <div class="footer">
+            <p>Email ini dikirim otomatis oleh sistem {$appName}</p>
+            <p style="color: #666; margin-top: 10px;">© {$appName} - Sistem Informasi Madrasah Aliyah</p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Get email verification HTML body
+     */
+    protected function getEmailVerificationBody(string $name, string $verifyUrl): string
+    {
+        $appName = $this->settings->nama_sekolah ?? 'SIMANSA';
+        $logoUrl = $this->getSchoolLogoUrl();
+
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .logo { max-width: 80px; height: auto; margin-bottom: 10px; border-radius: 8px; }
+        .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
+        .footer { background: #333; color: #999; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+        .btn { display: inline-block; background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {$logoUrl}
+            <h1>✉️ {$appName}</h1>
+            <p>Verifikasi Email</p>
+        </div>
+        <div class="content">
+            <h2>Halo, {$name}!</h2>
+            <p>Email ini terdaftar pada akun SIMANSA Anda. Klik tombol di bawah untuk memverifikasi bahwa email ini benar milik Anda:</p>
+
+            <p style="text-align: center;">
+                <a href="{$verifyUrl}" class="btn">Verifikasi Email Saya</a>
+            </p>
+
+            <div class="warning">
+                <strong>⚠️ Perhatian:</strong><br>
+                <small>Link ini berlaku 24 jam.<br>
+                Jika Anda tidak merasa mendaftarkan email ini, abaikan email ini.</small>
+            </div>
+
+            <p><small>Jika tombol tidak berfungsi, copy link berikut ke browser:<br>
+            <a href="{$verifyUrl}">{$verifyUrl}</a></small></p>
         </div>
         <div class="footer">
             <p>Email ini dikirim otomatis oleh sistem {$appName}</p>

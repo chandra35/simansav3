@@ -522,7 +522,7 @@
                                 </div>
                             @endif
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <div class="form-group">
                                         <label for="email"><i class="fas fa-envelope text-primary"></i>
                                             Email Aktif
@@ -531,11 +531,11 @@
                                         <input type="hidden" id="initialEmail" value="{{ strtolower((string) $user->email) }}">
                                         <input type="hidden" id="emailMustChange" value="{{ $emailMustChange ? '1' : '0' }}">
                                         <input type="email" name="email" id="email"
-                                               class="form-control @error('email') is-invalid @enderror"
+                                               class="form-control form-control-lg @error('email') is-invalid @enderror"
                                                value="{{ old('email', $emailMustChange ? '' : $user->email) }}"
                                                placeholder="{{ $emailMustChange ? 'Masukkan email aktif Anda' : 'Kosongkan untuk mempertahankan email lama' }}"
                                                {{ $emailMustChange ? 'required' : '' }}>
-                                        <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting.</small>
+                                        <small class="text-muted">Email digunakan untuk reset password dan notifikasi penting. Setelah wizard selesai, link verifikasi akan dikirim ke email ini.</small>
                                         @if(!empty($user->email) && $emailMustChange)
                                             <small class="text-danger d-block mt-1">
                                                 Email sebelumnya: <strong>{{ $user->email }}</strong>
@@ -544,13 +544,6 @@
                                         @error('email')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label><i class="fas fa-user text-secondary"></i> Username</label>
-                                        <input type="text" class="form-control" value="{{ $user->username }}" readonly disabled>
-                                        <small class="text-muted">Username tidak dapat diubah</small>
                                     </div>
                                 </div>
                             </div>

@@ -1059,6 +1059,12 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     // Force setup (password + email) - no middleware restriction
     Route::get('/force-setup', [SiswaProfileController::class, 'forceSetup'])->name('force-setup');
     Route::post('/force-setup', [SiswaProfileController::class, 'updateForceSetup'])->name('force-setup.update');
+
+    // Email verification
+    Route::get('/email/verify/{id}/{hash}', [SiswaProfileController::class, 'verifyEmail'])
+        ->middleware('signed')->name('email.verify');
+    Route::post('/email/resend-verification', [SiswaProfileController::class, 'resendVerification'])
+        ->middleware('throttle:3,10')->name('email.resend');
     
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
     Route::get('/pemilihan-osis', [App\Http\Controllers\Siswa\OsisElectionController::class, 'index'])->name('osis-election.index');

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
@@ -125,7 +126,9 @@ class ProfileController extends Controller
     private function isDefaultEmail(?string $email): bool
     {
         if (empty($email)) return true;
-        return str_ends_with(strtolower($email), '@siswa.simansa.sch.id');
+        $email = strtolower($email);
+        return str_ends_with($email, '@siswa.simansa.sch.id')
+            || str_ends_with($email, '@student.man1metro.sch.id');
     }
 
     /**
@@ -178,9 +181,13 @@ class ProfileController extends Controller
 
         // Tentukan email final: pakai input baru jika diisi, atau pertahankan email lama
         $finalEmail = ($newEmail !== '') ? $newEmail : $currentEmail;
+        $emailChanged = $finalEmail !== $currentEmail;
 
         $user->password = Hash::make($request->password);
         $user->email = $finalEmail;
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
         $user->is_first_login = false;
         $user->password_reset_at = null;
         $user->password_reset_by = null;
@@ -190,12 +197,17 @@ class ProfileController extends Controller
         $activityLabel = $emailMustChange ? 'Setup awal berhasil: password dan email diperbarui' : 'Ganti password pasca-reset admin berhasil';
         User::logCustomActivity('first_login_setup', $activityLabel);
 
-        // Send email notification
+        // Send email notification + link verifikasi email
+        $verificationSent = false;
         if ($finalEmail) {
             try {
                 $emailService = new EmailService();
                 if ($emailService->isConfigured()) {
                     $emailService->sendPasswordChanged($finalEmail, $user->name);
+                    if (!$this->isDefaultEmail($finalEmail) && empty($user->email_verified_at)) {
+                        $result = $this->sendVerificationEmail($user);
+                        $verificationSent = $result['success'] ?? false;
+                    }
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to send password changed email', [
@@ -208,8 +220,78 @@ class ProfileController extends Controller
         $successMsg = $isAdminReset
             ? 'Password berhasil diganti. Akun Anda telah diamankan kembali.'
             : 'Password dan email berhasil disimpan. Selamat datang!';
+        if ($verificationSent) {
+            $successMsg .= ' Link verifikasi telah dikirim ke email Anda — silakan cek inbox/spam.';
+        }
 
         return redirect()->route('siswa.dashboard')->with('success', $successMsg);
+    }
+
+    /**
+     * Kirim link verifikasi email (signed URL, berlaku 24 jam).
+     */
+    private function sendVerificationEmail(User $user): array
+    {
+        $verifyUrl = URL::temporarySignedRoute('siswa.email.verify', now()->addHours(24), [
+            'id' => $user->id,
+            'hash' => sha1(strtolower((string) $user->email)),
+        ]);
+
+        $emailService = new EmailService();
+        if (!$emailService->isConfigured()) {
+            return ['success' => false, 'message' => 'SMTP belum dikonfigurasi.'];
+        }
+
+        return $emailService->sendEmailVerification($user->email, $user->name, $verifyUrl);
+    }
+
+    /**
+     * Verifikasi email via signed link.
+     */
+    public function verifyEmail(Request $request, string $id, string $hash)
+    {
+        $user = Auth::user();
+
+        if ($user->id !== $id || !hash_equals(sha1(strtolower((string) $user->email)), $hash)) {
+            return redirect()->route('siswa.dashboard')
+                ->with('warning', 'Link verifikasi tidak valid untuk akun ini. Pastikan Anda login dengan akun yang benar.');
+        }
+
+        if (empty($user->email_verified_at)) {
+            $user->email_verified_at = now();
+            $user->save();
+            User::logCustomActivity('email_verified', 'Email berhasil diverifikasi: ' . $user->email);
+        }
+
+        return redirect()->route('siswa.dashboard')
+            ->with('success', 'Email <strong>' . e($user->email) . '</strong> berhasil diverifikasi. Terima kasih!');
+    }
+
+    /**
+     * Kirim ulang email verifikasi.
+     */
+    public function resendVerification()
+    {
+        $user = Auth::user();
+
+        if (!empty($user->email_verified_at)) {
+            return back()->with('info', 'Email Anda sudah terverifikasi.');
+        }
+
+        if ($this->isDefaultEmail($user->email)) {
+            return back()->with('warning', 'Email Anda masih email default sistem. Ubah email terlebih dahulu di menu Pengaturan Akun.');
+        }
+
+        try {
+            $result = $this->sendVerificationEmail($user);
+            if ($result['success'] ?? false) {
+                return back()->with('success', 'Email verifikasi telah dikirim ulang ke <strong>' . e($user->email) . '</strong>. Silakan cek inbox/spam.');
+            }
+            return back()->with('warning', 'Gagal mengirim email verifikasi: ' . ($result['message'] ?? 'kesalahan tidak diketahui') . '. Coba lagi nanti atau hubungi operator.');
+        } catch (\Exception $e) {
+            Log::warning('Failed to resend verification email', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return back()->with('warning', 'Gagal mengirim email verifikasi. Coba lagi nanti atau hubungi operator.');
+        }
     }
 
     public function updatePassword(Request $request)

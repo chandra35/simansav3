@@ -9,12 +9,44 @@
 {{-- CSS is in the second @section('css') below --}}
 
 @section('content')
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show mx-1 mt-1" role="alert">
+    <i class="fas fa-check-circle mr-1"></i> {!! session('success') !!}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+@endif
+@if(session('info'))
+<div class="alert alert-info alert-dismissible fade show mx-1 mt-1" role="alert">
+    <i class="fas fa-info-circle mr-1"></i> {{ session('info') }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+@endif
 @if(session('warning'))
 <div class="alert alert-warning alert-dismissible fade show mx-1 mt-1" role="alert">
     <i class="fas fa-exclamation-triangle mr-1"></i> {{ session('warning') }}
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
+</div>
+@endif
+@php $dashUser = auth()->user(); @endphp
+@if($dashUser && empty($dashUser->email_verified_at) && !$dashUser->hasDefaultEmail())
+<div class="alert alert-warning mx-1 mt-1 mb-2 d-flex flex-wrap align-items-center justify-content-between" role="alert" style="gap:.5rem; border-left: 5px solid #ffc107;">
+    <div>
+        <i class="fas fa-envelope-open-text mr-1"></i>
+        <strong>Email belum diverifikasi.</strong>
+        Cek inbox/spam <strong>{{ $dashUser->email }}</strong> lalu klik link verifikasi, agar email bisa dipakai untuk reset password.
+    </div>
+    <form action="{{ route('siswa.email.resend') }}" method="POST" class="mb-0">
+        @csrf
+        <button type="submit" class="btn btn-warning btn-sm font-weight-bold">
+            <i class="fas fa-paper-plane"></i> Kirim Ulang Email Verifikasi
+        </button>
+    </form>
 </div>
 @endif
 @php

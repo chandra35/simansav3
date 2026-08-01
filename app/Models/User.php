@@ -66,6 +66,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Cek apakah email masih email default sistem (bukan email pribadi user).
+     */
+    public function hasDefaultEmail(): bool
+    {
+        $email = strtolower((string) $this->email);
+        if ($email === '') return true;
+        return str_ends_with($email, '@siswa.simansa.sch.id')
+            || str_ends_with($email, '@student.man1metro.sch.id');
+    }
+
+    /**
      * Get the decrypted readable password
      * This is used for displaying password in admin panel
      */
