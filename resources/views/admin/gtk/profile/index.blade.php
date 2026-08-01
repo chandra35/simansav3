@@ -135,15 +135,17 @@
                                         <div class="row">
                                             <div class="col-12 col-sm-6 col-md-4">
                                                 <div class="form-group">
-                                                    <label>
+                                                    <label class="d-block">
                                                         <i class="fas fa-venus-mars text-primary"></i> Jenis Kelamin 
                                                         <span class="text-danger">*</span>
                                                     </label>
-                                                    <div class="gtk-gender-toggle @error('jenis_kelamin') is-invalid @enderror">
-                                                        <input type="radio" id="jk_l" name="jenis_kelamin" value="L" {{ old('jenis_kelamin', $gtk->jenis_kelamin) == 'L' ? 'checked' : '' }} required>
-                                                        <label for="jk_l"><i class="fas fa-mars"></i> Laki-laki</label>
-                                                        <input type="radio" id="jk_p" name="jenis_kelamin" value="P" {{ old('jenis_kelamin', $gtk->jenis_kelamin) == 'P' ? 'checked' : '' }}>
-                                                        <label for="jk_p"><i class="fas fa-venus"></i> Perempuan</label>
+                                                    <div class="custom-control custom-radio custom-control-inline">
+                                                        <input type="radio" class="custom-control-input" id="jk_l" name="jenis_kelamin" value="L" {{ old('jenis_kelamin', $gtk->jenis_kelamin) == 'L' ? 'checked' : '' }} required>
+                                                        <label class="custom-control-label font-weight-normal" for="jk_l">Laki-laki</label>
+                                                    </div>
+                                                    <div class="custom-control custom-radio custom-control-inline">
+                                                        <input type="radio" class="custom-control-input" id="jk_p" name="jenis_kelamin" value="P" {{ old('jenis_kelamin', $gtk->jenis_kelamin) == 'P' ? 'checked' : '' }}>
+                                                        <label class="custom-control-label font-weight-normal" for="jk_p">Perempuan</label>
                                                     </div>
                                                     @error('jenis_kelamin')
                                                         <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -305,14 +307,13 @@
                                                 <i class="fas fa-envelope text-info"></i> Kodepos
                                             </label>
                                             <input type="text" 
-                                                   class="form-control text-center font-weight-bold @error('kodepos') is-invalid @enderror" 
+                                                   class="form-control text-center @error('kodepos') is-invalid @enderror" 
                                                    id="kodepos" 
                                                    name="kodepos" 
                                                    value="{{ old('kodepos', $gtk->kodepos) }}"
                                                    maxlength="5"
                                                    placeholder="00000"
-                                                   readonly
-                                                   style="background-color: #e9ecef;">
+                                                   readonly>
                                             @error('kodepos')
                                                 <span class="invalid-feedback">{{ $message }}</span>
                                             @enderror
@@ -518,42 +519,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
     <style>
-        .card-outline {
-            border-top: 3px solid;
-            margin-bottom: 20px;
-        }
-        .card-header {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        .form-group label {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-        .form-group label i {
-            margin-right: 5px;
-        }
-        .form-control:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, .15);
-        }
-        .select2-container--bootstrap4 .select2-selection {
-            height: calc(2.25rem + 2px) !important;
-        }
-        .alert-info {
-            border-left: 4px solid #17a2b8;
-        }
-        #kodepos {
-            font-size: 1.1rem;
-            letter-spacing: 2px;
-        }
-        .nav-tabs .nav-link {
-            font-weight: 500;
-        }
-        .nav-tabs .nav-link.active {
-            font-weight: 700;
-        }
-
         /* ===== Foto profil ===== */
         .gtk-foto-frame {
             position: relative;
@@ -619,32 +584,6 @@
         }
         .gtk-bg-transparent {
             background: repeating-conic-gradient(#ced4da 0% 25%, #fff 0% 50%) 50% / 10px 10px;
-        }
-
-        /* ===== Gender toggle ===== */
-        .gtk-gender-toggle {
-            display: flex;
-            border: 1px solid #ced4da;
-            border-radius: .35rem;
-            overflow: hidden;
-        }
-        .gtk-gender-toggle input[type="radio"] { display: none; }
-        .gtk-gender-toggle label {
-            flex: 1;
-            margin: 0;
-            padding: .45rem .5rem;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 500;
-            color: #6c757d;
-            transition: all .15s;
-        }
-        .gtk-gender-toggle label + input + label { border-left: 1px solid #ced4da; }
-        .gtk-gender-toggle input[value="L"]:checked + label {
-            background: #007bff; color: #fff;
-        }
-        .gtk-gender-toggle input[value="P"]:checked + label {
-            background: #e83e8c; color: #fff;
         }
 
         /* ===== Sticky action bar (fixed agar selalu terlihat saat scroll) ===== */
