@@ -1,8 +1,19 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 1 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Redesain Dashboard GTK sesuai SIMANSA Design Principles
+
+- Header halaman memakai `simansa-hero` (eyebrow Portal GTK, sapaan nama, subtitle jabatan/status/tahun pelajaran) dengan hero chip Kelengkapan Profil dan jumlah Rombel Perwalian.
+- Kartu ringkasan kepegawaian baru: avatar (foto profil atau inisial), badge kategori/jenis PTK, dan grid NIK/NUPTK/NIP/Status/Jabatan tanpa tabel.
+- Panel Aksi Cepat berupa tile link (Perbarui Profil, Ganti Password, Pemilihan OSIS) menggantikan tombol besar di welcome card.
+- Peringatan profil belum lengkap diringkas menjadi satu kartu compact dengan CTA.
+- Kartu Rombel Perwalian dirapikan: border dikurangi, blok wali/ketua kelas memakai `bg-light rounded`, nama rombel memakai accessor `asrama_badge`.
+- Placeholder "Jadwal Mengajar Hari Ini" (callout "segera tersedia") dihapus.
+
+File utama: `resources/views/admin/gtk/dashboard.blade.php`
 
 ### Refaktor final Asrama: satu asrama, rombel SIMANSA, pengasuh, dan kamar
 
