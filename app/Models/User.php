@@ -119,6 +119,30 @@ class User extends Authenticatable
         return $this->hasOne(Gtk::class);
     }
 
+    /**
+     * Kelas (rombel) tahun aktif yang wali kelasnya adalah user ini.
+     */
+    public function activeWaliKelasClasses()
+    {
+        return Kelas::where('wali_kelas_id', $this->id)
+            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+            ->where('is_active', true)
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+    }
+
+    /**
+     * Apakah user ini wali kelas aktif di tahun pelajaran aktif.
+     */
+    public function isActiveWaliKelas(): bool
+    {
+        return Kelas::where('wali_kelas_id', $this->id)
+            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+            ->where('is_active', true)
+            ->exists();
+    }
+
     public function asramaSantri()
     {
         return $this->hasOneThrough(

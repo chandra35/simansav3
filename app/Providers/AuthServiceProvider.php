@@ -101,6 +101,16 @@ class AuthServiceProvider extends ServiceProvider
                    !$user->siswa()->exists();
         });
 
+        // Gate menu Portal Wali Kelas ("Kelas Saya"): GTK murni yang menjadi wali kelas
+        // aktif di tahun pelajaran aktif. PAKAI sidebar- prefix agar tidak bentrok Spatie.
+        Gate::define('sidebar-wali-kelas-menu', function ($user) {
+            return $user->hasRole('GTK') &&
+                   !$user->hasRole('Siswa') &&
+                   !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+                   !$user->siswa()->exists() &&
+                   $user->isActiveWaliKelas();
+        });
+
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {

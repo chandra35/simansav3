@@ -1,8 +1,25 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 31 Juli 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 1 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Portal Wali Kelas ("Kelas Saya") untuk akun GTK
+
+- Menu sidebar adaptif: GTK yang menjadi wali kelas aktif memperoleh seksi "Kelas Saya" (Daftar Siswa, Absensi Harian, Rekap Absensi, Catatan Siswa, Jadwal Kelas). Gate `sidebar-wali-kelas-menu` memakai prefix `sidebar-` agar tidak bentrok dengan Spatie `Gate::before`.
+- Daftar siswa hanya-baca yang otomatis dibatasi ke rombel yang diampu, lengkap dengan detail siswa hanya-baca (tanpa tombol ubah/hapus). Scope dilakukan di level query, bukan sekadar menyembunyikan tombol.
+- Absensi harian rombel dengan tombol "Hadir Semua", simpan draft/final, penguncian sesi final, serta audit lengkap via `StudentAttendanceAuditService`. `session_key` identik dengan modul absensi admin sehingga monitoring pusat membaca sesi yang sama.
+- Rekap absensi hanya-baca per hari/minggu/bulan: ringkasan total per status dan rekap per siswa.
+- Catatan pembinaan per siswa (tabel `catatan_wali_kelas`) yang dapat dibaca guru BK/konseling, dengan kategori, penanda penting, serta CRUD ringkas.
+- Jadwal hanya-baca: jadwal pelajaran rombel dan jadwal mengajar pribadi (bila akun memiliki data GTK).
+
+File utama:
+
+- `database/migrations/2026_08_01_090000_create_catatan_wali_kelas_table.php`
+- `app/Models/CatatanWaliKelas.php`
+- `app/Http/Controllers/Admin/WaliKelas/`
+- `resources/views/admin/gtk/wali/`
+- `tests/Unit/WaliKelasPortalTest.php`
 
 ### Refaktor final Asrama: satu asrama, rombel SIMANSA, pengasuh, dan kamar
 

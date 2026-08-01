@@ -495,6 +495,25 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             ->middleware('throttle:5,1')->name('gtk.osis-election.vote');
     });
     
+    // ─── Portal Wali Kelas ("Kelas Saya") ──────────────────────────────────────
+    // GTK murni yang menjadi wali kelas aktif. Semua di-scope ketat ke rombelnya.
+    Route::middleware(['impersonation:gtk', 'can:sidebar-wali-kelas-menu'])
+        ->prefix('gtk/wali')->name('gtk.wali.')->group(function () {
+            Route::get('/siswa', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'index'])->name('siswa.index');
+            Route::get('/siswa/{siswa}', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'show'])->name('siswa.show');
+
+            Route::get('/absensi', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'index'])->name('absensi.index');
+            Route::post('/absensi', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'store'])->name('absensi.store');
+            Route::get('/absensi/rekap', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'rekap'])->name('absensi.rekap');
+
+            Route::get('/catatan', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'index'])->name('catatan.index');
+            Route::post('/catatan', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'store'])->name('catatan.store');
+            Route::put('/catatan/{catatan}', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'update'])->name('catatan.update');
+            Route::delete('/catatan/{catatan}', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'destroy'])->name('catatan.destroy');
+
+            Route::get('/jadwal', [App\Http\Controllers\Admin\WaliKelas\JadwalController::class, 'index'])->name('jadwal.index');
+        });
+    
     Route::middleware(['impersonation:gtk', 'permission:change-password-gtk'])->group(function () {
         Route::get('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'password'])->name('gtk.profile.password');
         Route::put('/gtk/profile/password', [App\Http\Controllers\Admin\GtkProfileController::class, 'updatePassword'])->name('gtk.profile.password.update');

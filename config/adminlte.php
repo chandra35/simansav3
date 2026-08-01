@@ -342,6 +342,51 @@ return [
             'active' => ['admin/gtk/pemilihan-osis*'],
         ],
         
+        // Portal Wali Kelas ("Kelas Saya") — hanya GTK yang jadi wali kelas aktif
+        [
+            'key' => 'wali-kelas-menu',
+            'text' => 'Kelas Saya',
+            'icon' => 'fas fa-fw fa-chalkboard-teacher',
+            'can' => 'sidebar-wali-kelas-menu',
+            'submenu' => [
+                [
+                    'text' => 'Daftar Siswa',
+                    'route' => 'admin.gtk.wali.siswa.index',
+                    'icon' => 'fas fa-fw fa-user-graduate',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/siswa*'],
+                ],
+                [
+                    'text' => 'Absensi Harian',
+                    'route' => 'admin.gtk.wali.absensi.index',
+                    'icon' => 'fas fa-fw fa-clipboard-check',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/absensi'],
+                ],
+                [
+                    'text' => 'Rekap Absensi',
+                    'route' => 'admin.gtk.wali.absensi.rekap',
+                    'icon' => 'fas fa-fw fa-chart-bar',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/absensi/rekap'],
+                ],
+                [
+                    'text' => 'Catatan Siswa',
+                    'route' => 'admin.gtk.wali.catatan.index',
+                    'icon' => 'fas fa-fw fa-sticky-note',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/catatan*'],
+                ],
+                [
+                    'text' => 'Jadwal Kelas',
+                    'route' => 'admin.gtk.wali.jadwal.index',
+                    'icon' => 'fas fa-fw fa-calendar-alt',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/jadwal*'],
+                ],
+            ],
+        ],
+        
         // MANAJEMEN DATA - Collapsible
         [
             'text' => 'Manajemen Data',
