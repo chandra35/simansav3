@@ -247,8 +247,10 @@ class MasterController extends Controller
                 'pengampu' => fn ($q) => $q->where('is_active', true),
             ])
                 ->orderByDesc('is_active')->latest()->paginate(50),
-            'gtks' => Gtk::whereNotNull('user_id')->orderBy('nama_lengkap')
-                ->get(['id', 'nama_lengkap', 'nip', 'user_id']),
+            'gtks' => Gtk::whereNotNull('user_id')
+                ->whereNotIn('id', AsramaAsatidz::pluck('gtk_id'))
+                ->orderBy('nama_lengkap')
+                ->get(['id', 'nama_lengkap', 'nip', 'nuptk', 'user_id', 'foto_profile']),
             'stats' => [
                 'total' => AsramaAsatidz::count(),
                 'aktif' => AsramaAsatidz::where('is_active', true)->count(),
@@ -261,20 +263,31 @@ class MasterController extends Controller
 
     public function storeAsatidz(Request $request, AsramaAccessService $access)
     {
-        $data = $this->validateAsatidz($request);
+        $data = $this->validateAsatidz($request, false);
+        unset($data['gtk_id']);
+        $ids = collect($request->validate([
+            'gtk_ids' => ['required', 'array', 'min:1'],
+            'gtk_ids.*' => ['exists:gtks,id'],
+        ])['gtk_ids'])->unique()->values();
         $unit = $this->singleAsrama();
-        $record = AsramaAsatidz::withTrashed()->firstOrNew(['asrama_id' => $unit->id, 'gtk_id' => $data['gtk_id']]);
-        if ($record->trashed()) {
-            $record->restore();
-        }
-        $record->fill($data + [
-            'asrama_id' => $unit->id, 'is_active' => true, 'tanggal_selesai' => null,
-            'tanggal_mulai' => $record->tanggal_mulai?->toDateString() ?: now()->toDateString(),
-            'created_by' => $record->created_by ?: $request->user()->id, 'updated_by' => $request->user()->id,
-        ])->save();
-        $access->syncGtk($record->gtk->user);
+        $gtks = Gtk::with('user')->whereNotNull('user_id')->whereIn('id', $ids)->get();
+        abort_if($gtks->isEmpty(), 422, 'Pilih minimal satu GTK.');
+        DB::transaction(function () use ($gtks, $unit, $data, $request, $access): void {
+            foreach ($gtks as $gtk) {
+                $record = AsramaAsatidz::withTrashed()->firstOrNew(['asrama_id' => $unit->id, 'gtk_id' => $gtk->id]);
+                if ($record->trashed()) {
+                    $record->restore();
+                }
+                $record->fill($data + [
+                    'asrama_id' => $unit->id, 'is_active' => true, 'tanggal_selesai' => null,
+                    'tanggal_mulai' => $record->tanggal_mulai?->toDateString() ?: now()->toDateString(),
+                    'created_by' => $record->created_by ?: $request->user()->id, 'updated_by' => $request->user()->id,
+                ])->save();
+                $access->syncGtk($gtk->user);
+            }
+        });
 
-        return back()->with('success', 'GTK berhasil ditambahkan ke tim Asrama.');
+        return back()->with('success', $gtks->count().' GTK berhasil ditambahkan ke tim Asrama.');
     }
 
     public function updateAsatidz(Request $request, AsramaAsatidz $asatidz, AsramaAccessService $access)

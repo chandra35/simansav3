@@ -84,27 +84,49 @@
     </div>
 </div>
 
-<div class="modal fade" id="assignAsatidz" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><form method="post" action="{{ route('asrama.asatidz.store') }}" class="modal-content" data-asrama-loading data-loading-title="Menambahkan GTK Asrama" data-loading-text="Akses menu dan kewenangan sedang disinkronkan.">@csrf
+<div class="modal fade" id="assignAsatidz" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.asatidz.store') }}" class="modal-content" data-asrama-loading data-loading-title="Menambahkan GTK Asrama" data-loading-text="Akses menu dan kewenangan sedang disinkronkan.">@csrf
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah GTK Asrama</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body">
-    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Satu GTK dapat memegang beberapa jenis tugas sekaligus. Tanggal mulai tugas diisi otomatis hari ini.</small></div>
+    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Pilih satu atau beberapa GTK sekaligus — kewenangan &amp; jabatan di bawah berlaku untuk semua yang dipilih. GTK yang sudah masuk tim tidak tampil di daftar. Tanggal mulai tugas diisi otomatis hari ini.</small></div>
     <div class="row">
-        <div class="col-md-7 mb-3"><label class="small font-weight-bold text-muted">GTK SIMANSA</label><select required name="gtk_id" class="form-control asrama-select" data-placeholder="Cari nama atau NIP"><option value=""></option>@foreach($gtks as $gtk)<option value="{{ $gtk->id }}">{{ $gtk->nama_lengkap }}{{ $gtk->nip?' · '.$gtk->nip:'' }}</option>@endforeach</select></div>
-        <div class="col-md-5 mb-3"><label class="small font-weight-bold text-muted">Jabatan</label><input required name="jabatan" value="Pengasuh/Pengajar Asrama" class="form-control"></div>
-    </div>
-    <label class="small font-weight-bold text-muted">Pilih kewenangan</label>
-    <div class="row">
-        @foreach([['dapat_mengasuh_rombel','fa-users','Pengasuh Rombel','Dapat ditugaskan pada satu atau beberapa rombel.',false],['dapat_mengasuh_kamar','fa-bed','Pengasuh Kamar','Dapat menangani satu atau beberapa kamar.',false],['dapat_mengampu_mapel','fa-book-open','Pengampu Mapel','Dapat diberi akses input nilai mapel.',true]] as [$name,$icon,$title,$desc,$checked])
-        <div class="col-md-4 mb-2">
-            <div class="card card-outline card-primary h-100 mb-0"><div class="card-body p-2">
+        <div class="col-lg-7 mb-3">
+            <div class="card card-outline card-primary h-100 mb-0">
+                <div class="card-header py-2"><h3 class="card-title"><i class="fas fa-chalkboard-teacher mr-1"></i> GTK SIMANSA</h3><div class="card-tools"><span class="badge badge-primary" id="gtkCount">0 dipilih</span></div></div>
+                <div class="card-body p-2">
+                    <div class="input-group input-group-sm mb-2"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" id="gtkSearch" class="form-control" placeholder="Cari nama, NIP, atau NUPTK..."></div>
+                    <div style="max-height:320px;overflow-y:auto" id="gtkList">
+                        <table class="table table-sm table-hover mb-0">
+                            <tbody>
+                            @forelse($gtks as $gtk)
+                            @php $identitas = $gtk->nip ? 'NIP '.$gtk->nip : ($gtk->nuptk ? 'NUPTK '.$gtk->nuptk : '-'); @endphp
+                            <tr data-gtk-item data-search="{{ strtolower($gtk->nama_lengkap.' '.$gtk->nip.' '.$gtk->nuptk) }}" style="cursor:pointer">
+                                <td style="width:32px" class="align-middle"><div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input" id="gtk{{ $gtk->id }}" name="gtk_ids[]" value="{{ $gtk->id }}"><label class="custom-control-label" for="gtk{{ $gtk->id }}"></label></div></td>
+                                <td style="width:44px" class="align-middle"><img src="{{ $gtk->foto_profile_url }}" alt="{{ $gtk->nama_lengkap }}" class="img-circle elevation-1" style="width:34px;height:34px;object-fit:cover" loading="lazy"></td>
+                                <td class="align-middle"><label class="mb-0 font-weight-normal d-block" for="gtk{{ $gtk->id }}" style="cursor:pointer"><strong>{{ $gtk->nama_lengkap }}</strong><br><small class="text-muted">{{ $identitas }}</small></label></td>
+                            </tr>
+                            @empty
+                            <tr><td class="text-center text-muted py-3"><i class="fas fa-info-circle mr-1"></i>Semua GTK ber-akun sudah masuk tim Asrama.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer py-1 text-muted small">GTK terpilih: <strong id="gtkTotal">0</strong></div>
+            </div>
+        </div>
+        <div class="col-lg-5 mb-3">
+            <div class="form-group"><label class="small font-weight-bold text-muted">Jabatan</label><input required name="jabatan" value="Pengasuh/Pengajar Asrama" class="form-control"></div>
+            <label class="small font-weight-bold text-muted">Pilih kewenangan</label>
+            @foreach([['dapat_mengasuh_rombel','fa-users','Pengasuh Rombel','Dapat ditugaskan pada satu atau beberapa rombel.',false],['dapat_mengasuh_kamar','fa-bed','Pengasuh Kamar','Dapat menangani satu atau beberapa kamar.',false],['dapat_mengampu_mapel','fa-book-open','Pengampu Mapel','Dapat diberi akses input nilai mapel.',true]] as [$name,$icon,$title,$desc,$checked])
+            <div class="card card-outline card-primary mb-2"><div class="card-body p-2">
                 <div class="custom-control custom-checkbox">
                     <input type="checkbox" class="custom-control-input" id="assign_{{ $name }}" name="{{ $name }}" value="1" @checked($checked)>
                     <label class="custom-control-label font-weight-bold" for="assign_{{ $name }}"><i class="fas {{ $icon }} text-primary mr-1"></i>{{ $title }}</label>
                 </div>
                 <small class="text-muted d-block mt-1">{{ $desc }}</small>
             </div></div>
+            @endforeach
         </div>
-        @endforeach
     </div>
 </div>
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-check mr-1"></i> Simpan Penugasan</button></div></form></div></div>
@@ -130,3 +152,32 @@
 @include('asrama._scripts')
 @stop
 @section('css') @include('asrama._styles') @stop
+@section('js')
+<script>
+$(function () {
+    function filterGtk(term) {
+        term = term.toLowerCase().trim();
+        $('#gtkList [data-gtk-item]').each(function () {
+            $(this).toggle(String($(this).data('search')).indexOf(term) > -1);
+        });
+    }
+    function updateGtkCount() {
+        var n = $('#gtkList input:checked').length;
+        $('#gtkCount').text(n + ' dipilih');
+        $('#gtkTotal').text(n);
+    }
+    $('#gtkSearch').on('input', function () { filterGtk(this.value); });
+    $('#gtkList').on('change', 'input', updateGtkCount);
+    // klik di mana pun pada baris ikut men-toggle checkbox
+    $('#gtkList').on('click', 'tr[data-gtk-item]', function (e) {
+        if ($(e.target).is('input, label')) return;
+        var cb = $(this).find('input[type=checkbox]');
+        cb.prop('checked', !cb.prop('checked')).trigger('change');
+    });
+    $('#assignAsatidz').on('hidden.bs.modal', function () {
+        $('#gtkSearch').val('');
+        filterGtk('');
+    });
+});
+</script>
+@stop
