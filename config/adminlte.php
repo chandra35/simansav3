@@ -1117,6 +1117,7 @@ return [
 
         // ============================================
         // SISWA MENU
+        // Urutan: Dashboard, Profil & Data, Presensi, modul custom, Pengaturan Akun
         // ============================================
         [
             'key' => 'siswa-dashboard',
@@ -1125,33 +1126,7 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
             'can' => 'sidebar-siswa-access',
         ],
-        [
-            'key' => 'siswa-osis-election',
-            'text' => 'Pemilihan OSIS',
-            'route' => 'siswa.osis-election.index',
-            'icon' => 'fas fa-fw fa-vote-yea',
-            'can' => 'sidebar-siswa-access',
-            'active' => ['siswa/pemilihan-osis*'],
-        ],
 
-        [
-            'text' => 'Presensi',
-            'icon' => 'fas fa-fw fa-fingerprint',
-            'can' => 'sidebar-siswa-menu-only',
-            'key' => 'siswa-presensi',
-            'active' => ['siswa/face-register*'],
-            'submenu' => [
-                [
-                    'key' => 'siswa-face-register',
-                    'text' => 'Registrasi Wajah',
-                    'route' => 'siswa.face-register',
-                    'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'sidebar-siswa-menu-only',
-                    'active' => ['siswa/face-register*'],
-                ],
-            ],
-        ],
-        
         // PROFIL & DATA - Collapsible
         [
             'text' => 'Profil & Data',
@@ -1176,22 +1151,34 @@ return [
                 ],
             ],
         ],
-        
-        // AKUN - Collapsible
+
         [
-            'text' => 'Pengaturan Akun',
-            'icon' => 'fas fa-fw fa-user-cog',
-            'can' => 'sidebar-siswa-access',
-            'key' => 'siswa-pengaturan-akun',
+            'text' => 'Presensi',
+            'icon' => 'fas fa-fw fa-fingerprint',
+            'can' => 'sidebar-siswa-menu-only',
+            'key' => 'siswa-presensi',
+            'active' => ['siswa/face-register*'],
             'submenu' => [
                 [
-                    'text' => 'Ubah Password',
-                    'route' => 'siswa.profile.password',
-                    'icon' => 'fas fa-fw fa-lock',
+                    'key' => 'siswa-face-register',
+                    'text' => 'Registrasi Wajah',
+                    'route' => 'siswa.face-register',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'sidebar-siswa-menu-only',
+                    'active' => ['siswa/face-register*'],
                 ],
             ],
         ],
-        
+
+        // MODUL CUSTOM
+        [
+            'key' => 'siswa-osis-election',
+            'text' => 'Pemilihan OSIS',
+            'route' => 'siswa.osis-election.index',
+            'icon' => 'fas fa-fw fa-vote-yea',
+            'can' => 'sidebar-siswa-access',
+            'active' => ['siswa/pemilihan-osis*'],
+        ],
         [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
@@ -1239,6 +1226,21 @@ return [
             'icon' => 'fas fa-fw fa-university',
             'can' => 'sidebar-siswa-access',
             'key' => 'siswa-lulusan',
+        ],
+
+        // AKUN - Collapsible (selalu paling bawah)
+        [
+            'text' => 'Pengaturan Akun',
+            'icon' => 'fas fa-fw fa-user-cog',
+            'can' => 'sidebar-siswa-access',
+            'key' => 'siswa-pengaturan-akun',
+            'submenu' => [
+                [
+                    'text' => 'Ubah Password',
+                    'route' => 'siswa.profile.password',
+                    'icon' => 'fas fa-fw fa-lock',
+                ],
+            ],
         ],
     ],
 
