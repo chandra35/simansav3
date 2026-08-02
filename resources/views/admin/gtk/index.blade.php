@@ -189,16 +189,13 @@
         </p>
 
         <div class="simansa-gtk-table-wrap">
-            <table id="gtk-table" class="table table-hover table-sm simansa-gtk-table">
+            <table id="gtk-table" class="table table-hover table-sm align-middle simansa-gtk-table">
                 <thead>
                     <tr>
                         <th class="gtk-col-number">No</th>
-                        <th class="gtk-col-identity">Nama / Identitas GTK</th>
-                        <th class="gtk-col-professional-id">ID PTK</th>
-                        <th class="gtk-col-professional-status">Status Inpassing</th>
-                        <th class="gtk-col-professional-status">Status Sertifikasi</th>
-                        <th class="gtk-col-status">Status Diri</th>
-                        <th class="gtk-col-status">Data Kepeg</th>
+                        <th class="gtk-col-profile">Profil</th>
+                        <th class="gtk-col-role">Peran</th>
+                        <th class="gtk-col-status">Status</th>
                         <th class="gtk-col-actions">Aksi</th>
                     </tr>
                 </thead>
@@ -422,14 +419,11 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'gtk-col-number' },
-            { data: 'identity', name: 'nama_lengkap', className: 'gtk-col-identity' },
-            { data: 'peg_id', name: 'peg_id', className: 'gtk-col-professional-id' },
-            { data: 'status_inpassing', name: 'status_inpassing', className: 'gtk-col-professional-status' },
-            { data: 'status_sertifikasi', name: 'status_sertifikasi', className: 'gtk-col-professional-status' },
-            { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false, className: 'gtk-col-status' },
-            { data: 'status_kepeg', name: 'status_kepeg', orderable: false, searchable: false, className: 'gtk-col-status' },
-            { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'gtk-col-actions' }
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'gtk-col-number align-middle' },
+            { data: 'identity', name: 'nama_lengkap', className: 'gtk-col-profile align-middle' },
+            { data: 'role_summary', name: 'jenis_ptk', className: 'gtk-col-role align-middle' },
+            { data: 'status_summary', name: 'status_summary', orderable: false, searchable: false, className: 'gtk-col-status align-middle' },
+            { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'gtk-col-actions align-middle' }
         ],
         language: {
             processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',

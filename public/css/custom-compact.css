@@ -2357,8 +2357,6 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-number,
-.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-professional-id,
-.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-professional-status,
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-status,
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-actions {
     text-align: center;
@@ -2388,26 +2386,19 @@ a {
     font-weight: 700;
 }
 
-.simansa-gtk-management .simansa-gtk-table .gtk-col-identity {
+.simansa-gtk-management .simansa-gtk-table .gtk-col-profile {
     width: auto !important;
+    min-width: 320px;
 }
 
-.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-id {
+.simansa-gtk-management .simansa-gtk-table .gtk-col-role {
     width: 1% !important;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-status {
-    width: 1% !important;
-    text-align: center;
-    white-space: nowrap;
+    min-width: 150px;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-status {
-    width: 1% !important;
-    text-align: center;
-    white-space: nowrap;
+    width: auto !important;
+    min-width: 340px;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-actions {
@@ -2416,31 +2407,14 @@ a {
     white-space: nowrap;
 }
 
-.simansa-gtk-management .simansa-gtk-table .gtk-col-status .badge,
-.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-status .badge {
-    min-width: 96px;
-    padding: .32rem .6rem;
-    border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 700;
-}
-
-.simansa-gtk-management .simansa-gtk-professional-id {
-    color: #334155;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: .75rem;
-    font-weight: 700;
-    overflow-wrap: anywhere;
-}
-
-.simansa-gtk-management .simansa-gtk-identity {
+.simansa-gtk-management .simansa-gtk-profile {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: .75rem;
-    min-width: 300px;
+    min-width: 0;
 }
 
-.simansa-gtk-management .simansa-gtk-identity__content {
+.simansa-gtk-management .simansa-gtk-profile__content {
     flex: 1 1 auto;
     min-width: 0;
 }
@@ -2486,34 +2460,65 @@ a {
     50% { transform: scale(1.035) translateY(-.5px); }
 }
 
-.simansa-gtk-management .simansa-gtk-identity__name {
-    margin-bottom: .34rem;
+.simansa-gtk-management .simansa-gtk-profile__name {
+    margin-bottom: .42rem;
     color: #0f172a;
-    font-size: .86rem;
+    font-size: .88rem;
     font-weight: 800;
     line-height: 1.25;
 }
 
-.simansa-gtk-management .simansa-gtk-identity__meta {
+.simansa-gtk-management .simansa-gtk-profile__identifiers {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: .16rem;
+    flex-wrap: wrap;
+    gap: .3rem .45rem;
+}
+
+.simansa-gtk-management .simansa-gtk-identifier {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .18rem .42rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    white-space: nowrap;
+}
+
+.simansa-gtk-management .simansa-gtk-identifier small {
     color: #64748b;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+}
+
+.simansa-gtk-management .simansa-gtk-identifier code {
+    padding: 0;
+    background: transparent;
+    color: #334155;
     font-size: .68rem;
-    line-height: 1.4;
+    font-weight: 700;
 }
 
-.simansa-gtk-management .simansa-gtk-identity__meta-row {
-    display: grid;
-    grid-template-columns: 68px minmax(0, 1fr);
-    align-items: start;
-    gap: .4rem;
+.simansa-gtk-management .simansa-gtk-role-cell {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .42rem;
 }
 
-.simansa-gtk-management .simansa-gtk-identity__meta-row > span {
-    min-width: 0;
-    overflow-wrap: anywhere;
+.simansa-gtk-management .simansa-gtk-role-label {
+    color: #64748b;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.simansa-gtk-management .simansa-gtk-role-empty {
+    color: #94a3b8;
+    font-size: .7rem;
 }
 
 .simansa-gtk-management .simansa-gtk-wali-list {
@@ -2532,16 +2537,13 @@ a {
     font-weight: 800;
 }
 
-.simansa-gtk-management .simansa-gtk-identity__meta strong {
-    color: #475569;
-    font-weight: 800;
-}
-
 .simansa-gtk-management .simansa-gtk-meta-badge {
     display: inline-flex;
     align-items: center;
-    padding: .12rem .42rem;
+    gap: .3rem;
+    padding: .25rem .5rem;
     border-radius: 999px;
+    font-size: .7rem;
     font-weight: 800;
 }
 
@@ -2553,6 +2555,70 @@ a {
 .simansa-gtk-management .simansa-gtk-meta-badge--info {
     background: #cffafe;
     color: #0e7490;
+}
+
+.simansa-gtk-management .simansa-gtk-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(145px, 1fr));
+    gap: .38rem;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: center;
+    gap: 0 .38rem;
+    min-height: 39px;
+    padding: .32rem .48rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge > i {
+    grid-row: 1 / span 2;
+    text-align: center;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge > span {
+    font-size: .59rem;
+    font-weight: 800;
+    letter-spacing: .035em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge > strong {
+    overflow: hidden;
+    font-size: .68rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge.is-success {
+    border-color: #bbf7d0;
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge.is-warning {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge.is-danger {
+    border-color: #fecdd3;
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.simansa-gtk-management .simansa-gtk-status-badge.is-muted {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
 }
 
 .simansa-gtk-management .simansa-gtk-action-select {

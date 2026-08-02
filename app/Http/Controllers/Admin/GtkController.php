@@ -131,7 +131,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = [null, 'nama_lengkap', 'peg_id', 'status_inpassing', 'status_sertifikasi', null, null, null];
+            $columns = [null, 'nama_lengkap', 'jenis_ptk', null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -145,55 +145,54 @@ class GtkController extends Controller
                 : 'simansa-gtk-meta-badge--info';
             $nama = e($item->nama_lengkap);
             $nik = e($item->nik ?: '-');
-            $kodeGtk = e($item->kode_gtk ?: '-');
             $jenisPtk = e($item->jenis_ptk ?: '-');
-            $username = e($item->user?->username ?: '-');
             $pegId = e($item->peg_id ?: '-');
-            $statusInpassing = filled($item->status_inpassing)
-                ? '<span class="badge badge-success">'.e($item->status_inpassing).'</span>'
-                : '<span class="badge badge-light">Belum tercatat</span>';
-            $statusSertifikasi = filled($item->status_sertifikasi)
-                ? '<span class="badge '.(str_starts_with(mb_strtolower($item->status_sertifikasi), 'sudah') ? 'badge-success' : 'badge-warning').'">'.e($item->status_sertifikasi).'</span>'
-                : '<span class="badge badge-light">Belum tercatat</span>';
             $avatar = $this->getGtkListAvatar($item);
             $waliKelasNames = $item->kelasWali
                 ->pluck('nama_kelas')
                 ->filter()
                 ->unique()
                 ->values();
-            $waliKelasMeta = $waliKelasNames->isEmpty()
-                ? ''
-                : '<div class="simansa-gtk-identity__meta-row">
-                        <strong>Wali Kelas</strong>
-                        <span class="simansa-gtk-wali-list">'
-                            .$waliKelasNames
-                                ->map(fn ($className) => '<span class="simansa-gtk-wali-badge">'.e($className).'</span>')
-                                ->implode('')
-                        .'</span>
-                    </div>';
+            $waliKelasBadges = $waliKelasNames->isEmpty()
+                ? '<span class="simansa-gtk-role-empty">Bukan wali kelas</span>'
+                : $waliKelasNames
+                    ->map(fn ($className) => '<span class="simansa-gtk-wali-badge">'.e($className).'</span>')
+                    ->implode('');
+            $inpassingText = e($item->status_inpassing ?: 'Belum tercatat');
+            $inpassingClass = filled($item->status_inpassing) ? 'is-success' : 'is-muted';
+            $sertifikasiText = e($item->status_sertifikasi ?: 'Belum tercatat');
+            $sertifikasiClass = str_starts_with(mb_strtolower((string) $item->status_sertifikasi), 'sudah')
+                ? 'is-success'
+                : (filled($item->status_sertifikasi) ? 'is-warning' : 'is-muted');
+            $dataDiriClass = $item->data_diri_completed ? 'is-success' : 'is-danger';
+            $dataKepegClass = $item->data_kepegawaian_completed ? 'is-success' : 'is-danger';
 
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
                 'identity' => '
-                    <div class="simansa-gtk-identity">
+                    <div class="simansa-gtk-profile">
                         '.$avatar.'
-                        <div class="simansa-gtk-identity__content">
-                            <div class="simansa-gtk-identity__name">'.$nama.'</div>
-                            <div class="simansa-gtk-identity__meta">
-                                <div class="simansa-gtk-identity__meta-row"><strong>NIK</strong><span>'.$nik.'</span></div>
-                                <div class="simansa-gtk-identity__meta-row"><strong>Kode GTK</strong><span>'.$kodeGtk.'</span></div>
-                                <div class="simansa-gtk-identity__meta-row"><strong>Username</strong><span>'.$username.'</span></div>
-                                <div class="simansa-gtk-identity__meta-row">
-                                    <strong>Jenis PTK</strong>
-                                    <span><span class="simansa-gtk-meta-badge '.$jenisPtkClass.'">'.$jenisPtk.'</span></span>
-                                </div>
-                                '.$waliKelasMeta.'
+                        <div class="simansa-gtk-profile__content">
+                            <div class="simansa-gtk-profile__name">'.$nama.'</div>
+                            <div class="simansa-gtk-profile__identifiers">
+                                <span class="simansa-gtk-identifier"><small>NIK</small><code>'.$nik.'</code></span>
+                                <span class="simansa-gtk-identifier"><small>ID PTK</small><code>'.$pegId.'</code></span>
                             </div>
                         </div>
                     </div>',
-                'peg_id' => '<span class="simansa-gtk-professional-id">'.$pegId.'</span>',
-                'status_inpassing' => $statusInpassing,
-                'status_sertifikasi' => $statusSertifikasi,
+                'role_summary' => '
+                    <div class="simansa-gtk-role-cell">
+                        <span class="simansa-gtk-meta-badge '.$jenisPtkClass.'"><i class="fas fa-user-tag"></i>'.$jenisPtk.'</span>
+                        <div class="simansa-gtk-role-label">Wali kelas</div>
+                        <div class="simansa-gtk-wali-list">'.$waliKelasBadges.'</div>
+                    </div>',
+                'status_summary' => '
+                    <div class="simansa-gtk-status-grid">
+                        <span class="simansa-gtk-status-badge '.$inpassingClass.'"><i class="fas fa-layer-group"></i><span>Inpassing</span><strong>'.$inpassingText.'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$sertifikasiClass.'"><i class="fas fa-certificate"></i><span>Sertifikasi</span><strong>'.$sertifikasiText.'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$dataDiriClass.'"><i class="fas fa-id-card"></i><span>Data diri</span><strong>'.($item->data_diri_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$dataKepegClass.'"><i class="fas fa-briefcase"></i><span>Kepegawaian</span><strong>'.($item->data_kepegawaian_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
+                    </div>',
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
@@ -201,12 +200,6 @@ class GtkController extends Controller
                 'status_kepegawaian' => $item->status_kepegawaian ?? '-',
                 'jabatan' => $item->jabatan ?? '-',
                 'username' => $item->user->username ?? '-',
-                'status_diri' => $item->data_diri_completed ? 
-                    '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-danger">Belum Lengkap</span>',
-                'status_kepeg' => $item->data_kepegawaian_completed ? 
-                    '<span class="badge badge-success">Lengkap</span>' : 
-                    '<span class="badge badge-danger">Belum Lengkap</span>',
                 'actions' => $this->getActionButtons($item)
             ];
         });
@@ -324,7 +317,7 @@ class GtkController extends Controller
             return '-';
         }
 
-        return '<select class="form-control form-control-sm simansa-gtk-action-select"'
+        return '<select class="custom-select custom-select-sm simansa-gtk-action-select"'
             .' aria-label="Pilih aksi untuk '.e($item->nama_lengkap).'"'
             .' data-gtk-id="'.e($item->id).'"'
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'

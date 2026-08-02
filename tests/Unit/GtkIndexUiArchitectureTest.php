@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class GtkIndexUiArchitectureTest extends TestCase
 {
-    public function test_technical_identity_columns_are_consolidated_below_gtk_name(): void
+    public function test_gtk_information_is_grouped_into_five_semantic_columns(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/index.blade.php');
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/GtkController.php');
@@ -14,32 +14,26 @@ class GtkIndexUiArchitectureTest extends TestCase
         $table = $tableMatch[0] ?? '';
 
         $this->assertNotSame('', $table);
-        $this->assertStringContainsString('>Nama / Identitas GTK</th>', $table);
+        $this->assertStringContainsString('>Profil</th>', $table);
+        $this->assertStringContainsString('>Peran</th>', $table);
+        $this->assertStringContainsString('>Status</th>', $table);
+        $this->assertStringContainsString('>Aksi</th>', $table);
         $this->assertStringNotContainsString('<th>NIK</th>', $table);
-        $this->assertStringNotContainsString('<th>Kode Guru</th>', $table);
-        $this->assertStringNotContainsString('<th>Kategori PTK</th>', $table);
-        $this->assertStringNotContainsString('<th>Username</th>', $table);
-        $this->assertStringNotContainsString('<th>Jenis PTK</th>', $table);
-        $this->assertStringNotContainsString('<th>Status Kepeg</th>', $table);
-        $this->assertStringNotContainsString('<th>Jabatan</th>', $table);
-        $this->assertStringContainsString('>Data Kepeg</th>', $table);
-        $this->assertStringContainsString('>ID PTK</th>', $table);
-        $this->assertStringContainsString('>Status Inpassing</th>', $table);
-        $this->assertStringContainsString('>Status Sertifikasi</th>', $table);
+        $this->assertStringNotContainsString('<th>ID PTK</th>', $table);
+        $this->assertSame(5, preg_match_all('/<th(?:\s|>)/', $table));
         $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap'", $view);
-        $this->assertStringContainsString("{ data: 'peg_id', name: 'peg_id'", $view);
-        $this->assertStringContainsString("{ data: 'status_inpassing', name: 'status_inpassing'", $view);
-        $this->assertStringContainsString("{ data: 'status_sertifikasi', name: 'status_sertifikasi'", $view);
+        $this->assertStringContainsString("{ data: 'role_summary', name: 'jenis_ptk'", $view);
+        $this->assertStringContainsString("{ data: 'status_summary', name: 'status_summary'", $view);
 
         $this->assertStringContainsString("'identity' => '", $controller);
-        $this->assertStringContainsString('simansa-gtk-identity__meta', $controller);
-        $this->assertGreaterThanOrEqual(5, substr_count($controller, 'simansa-gtk-identity__meta-row'));
-        $this->assertStringContainsString('<strong>NIK</strong>', $controller);
-        $this->assertStringContainsString('<strong>Kode GTK</strong>', $controller);
-        $this->assertStringContainsString('<strong>Username</strong>', $controller);
-        $this->assertStringContainsString('<strong>Jenis PTK</strong>', $controller);
-        $this->assertStringNotContainsString('<strong>Kategori PTK</strong>', $controller);
-        $this->assertStringContainsString('simansa-gtk-meta-badge', $controller);
+        $this->assertStringContainsString('simansa-gtk-profile__identifiers', $controller);
+        $this->assertStringContainsString('<small>NIK</small>', $controller);
+        $this->assertStringContainsString('<small>ID PTK</small>', $controller);
+        $this->assertStringNotContainsString('<strong>Kode GTK</strong>', $controller);
+        $this->assertStringNotContainsString('<strong>Username</strong>', $controller);
+        $this->assertStringContainsString("'role_summary' => '", $controller);
+        $this->assertStringContainsString("'status_summary' => '", $controller);
+        $this->assertSame(4, substr_count($controller, 'simansa-gtk-status-badge'));
     }
 
     public function test_filters_reload_smoothly_and_styles_are_scoped_to_gtk_page(): void
@@ -59,7 +53,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-filter', $css);
         $this->assertStringContainsString('flex-direction: column;', $css);
-        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-identity__meta-row', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-profile__identifiers', $css);
         $this->assertStringContainsString('.simansa-gtk-management .dataTables_processing', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter', $css);
         $this->assertStringContainsString('justify-content: flex-end;', $css);
@@ -80,7 +74,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('onerror="this.remove()"', $controller);
         $this->assertStringContainsString("'kelasWali' => function", $controller);
         $this->assertStringContainsString('tahun_pelajaran_id', $controller);
-        $this->assertStringContainsString('<strong>Wali Kelas</strong>', $controller);
+        $this->assertStringContainsString('simansa-gtk-wali-list', $controller);
         $this->assertStringContainsString('public function kelasWali()', $model);
         $this->assertStringContainsString("hasMany(Kelas::class, 'wali_kelas_id', 'user_id')", $model);
         $this->assertStringContainsString('@keyframes simansa-gtk-avatar-breathe', $css);
@@ -95,17 +89,19 @@ class GtkIndexUiArchitectureTest extends TestCase
 
         $this->assertStringContainsString('autoWidth: true', $view);
         $this->assertStringNotContainsString('columnDefs:', $view);
-        $this->assertStringContainsString("className: 'gtk-col-identity'", $view);
-        $this->assertStringContainsString("className: 'gtk-col-professional-id'", $view);
-        $this->assertStringContainsString("className: 'gtk-col-professional-status'", $view);
-        $this->assertStringContainsString("className: 'gtk-col-status'", $view);
-        $this->assertStringContainsString("className: 'gtk-col-actions'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-profile align-middle'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-role align-middle'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-status align-middle'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-actions align-middle'", $view);
+        $this->assertStringContainsString('table table-hover table-sm align-middle simansa-gtk-table', $view);
 
         $this->assertStringContainsString('table-layout: auto;', $css);
         $this->assertStringContainsString('min-width: 0;', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-status', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-actions', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-action-select', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-status-grid', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-status-badge.is-success', $css);
         $this->assertStringContainsString('onchange="handleGtkAction(this)"', $controller);
         $this->assertStringContainsString('function handleGtkAction(select)', $view);
     }
