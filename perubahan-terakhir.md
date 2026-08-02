@@ -4,6 +4,26 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Standardisasi hero modul dan tautan kontak siswa
+
+- `MAN1METRO.md` dan `docs/UI_DESIGN_PRINCIPLES_UPDATED.md` kini menetapkan pola Data Siswa sebagai struktur wajib modul baru: judul/breadcrumb di `content_header`, satu hero `bg-gradient-primary` utuh di awal `content`, dan card operasional `card-outline card-primary`.
+- Daftar Siswa Wali Kelas, Absensi Harian, Rekap Absensi, dan Cetak ID Card Siswa telah dipindahkan dari hero generik terpisah ke pola tersebut.
+- Grid hero, filter absensi, toolbar cetak, dan tombol aksi memperoleh breakpoint ponsel agar tidak menimbulkan horizontal scroll.
+- Nomor HP siswa, ayah, dan ibu pada detail Data Siswa, modal detail Data Siswa, serta detail siswa Wali Kelas kini berupa tautan native `tel:` yang bisa diketuk untuk membuka aplikasi telepon/kontak perangkat.
+- Detail Wali Kelas kini membaca field orang tua yang benar, yaitu `hp_ayah` dan `hp_ibu`.
+
+File terkait:
+
+- `MAN1METRO.md`
+- `docs/UI_DESIGN_PRINCIPLES_UPDATED.md`
+- `resources/views/admin/gtk/wali/siswa/index.blade.php`
+- `resources/views/admin/gtk/wali/absensi/index.blade.php`
+- `resources/views/admin/gtk/wali/absensi/rekap.blade.php`
+- `resources/views/admin/cetak/id-card-siswa-index.blade.php`
+- `resources/views/admin/siswa/index.blade.php`
+- `resources/views/admin/siswa/show.blade.php`
+- `resources/views/admin/gtk/wali/siswa/show.blade.php`
+
 ### Penyelarasan UI akun GTK
 
 - Dashboard GTK, Profil Saya, dan Ganti Password kini memakai struktur yang sama dengan halaman Data Siswa: judul/breadcrumb standar, satu hero `bg-gradient-primary` utuh selebar konten, serta card operasional `card-outline card-primary`.

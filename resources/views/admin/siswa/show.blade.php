@@ -355,7 +355,13 @@
                     </li>
                     <li class="list-group-item">
                         <b><i class="fas fa-phone text-success"></i> No. HP</b>
-                        <a class="float-right">{{ $siswa->nomor_hp ?? '-' }}</a>
+                        @if($siswa->nomor_hp)
+                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->nomor_hp) }}" class="float-right" title="Hubungi {{ $siswa->nama_lengkap }}">
+                                <i class="fas fa-phone-alt mr-1"></i>{{ $siswa->nomor_hp }}
+                            </a>
+                        @else
+                            <span class="float-right">-</span>
+                        @endif
                     </li>
                     <li class="list-group-item">
                         <b><i class="fas fa-hand-holding-heart text-info"></i> No. PKH</b>
@@ -668,7 +674,15 @@
                             </tr>
                             <tr>
                                 <th>No. HP</th>
-                                <td>{{ $siswa->ortu->hp_ayah ?? '-' }}</td>
+                                <td>
+                                    @if($siswa->ortu->hp_ayah)
+                                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->ortu->hp_ayah) }}" title="Hubungi ayah {{ $siswa->nama_lengkap }}">
+                                            <i class="fas fa-phone-alt mr-1"></i>{{ $siswa->ortu->hp_ayah }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                             </tr>
                         </table>
                     </div>
@@ -689,7 +703,15 @@
                             </tr>
                             <tr>
                                 <th>No. HP</th>
-                                <td>{{ $siswa->ortu->hp_ibu ?? '-' }}</td>
+                                <td>
+                                    @if($siswa->ortu->hp_ibu)
+                                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->ortu->hp_ibu) }}" title="Hubungi ibu {{ $siswa->nama_lengkap }}">
+                                            <i class="fas fa-phone-alt mr-1"></i>{{ $siswa->ortu->hp_ibu }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                             </tr>
                         </table>
                     </div>

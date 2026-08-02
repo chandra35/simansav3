@@ -3,21 +3,39 @@
 @section('title', 'Absensi Harian — Kelas Saya')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-clipboard-check"></i> Kelas Saya</div>
-            <h1 class="simansa-hero__title">Absensi Harian</h1>
-            <p class="simansa-hero__subtitle">Catat kehadiran siswa {{ $kelas->nama_kelas }} untuk tanggal terpilih.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-clipboard-check text-primary"></i> Absensi Harian</h1>
         </div>
-        <div class="simansa-hero__side">
-            <a href="{{ route('admin.gtk.wali.absensi.rekap', ['kelas_id' => $kelas->id]) }}" class="btn btn-secondary">
-                <i class="fas fa-chart-bar"></i> Rekap
-            </a>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.dashboard') }}">Dashboard Saya</a></li>
+                <li class="breadcrumb-item active">Absensi Harian</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="gtk-wali-absensi-page">
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-clipboard-check mr-1"></i> Kehadiran Kelas Saya</h3>
+                    <p class="mb-2 text-white-50">Catat kehadiran siswa {{ $kelas->nama_kelas }} untuk tanggal terpilih.</p>
+                    <p class="mb-0">Simpan sebagai draft atau finalkan setelah seluruh status diperiksa.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0 text-center">
+                    <div class="text-white-50 small text-uppercase font-weight-bold mb-2">Laporan Kehadiran</div>
+                    <a href="{{ route('admin.gtk.wali.absensi.rekap', ['kelas_id' => $kelas->id]) }}" class="btn btn-light">
+                        <i class="fas fa-chart-bar mr-1"></i> Buka Rekap
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @includeWhen($kelasList->count() > 1, 'admin.gtk.wali.partials.kelas-switcher', ['route' => 'admin.gtk.wali.absensi.index', 'extraQuery' => ['tanggal' => $tanggal]])
 
     @if(session('success'))
@@ -53,7 +71,7 @@
         <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
         <input type="hidden" name="tanggal" value="{{ $tanggal }}">
 
-        <div class="card simansa-management-card">
+        <div class="card card-outline card-primary">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0"><i class="fas fa-users"></i> {{ $students->count() }} Siswa · {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }}</h3>
                 @unless($locked)
@@ -118,6 +136,22 @@
             @endunless
         </div>
     </form>
+</div>
+@stop
+
+@section('css')
+<style>
+    .gtk-wali-absensi-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+    .gtk-wali-absensi-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
+    .gtk-wali-absensi-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; }
+    @media (max-width:575.98px) {
+        .gtk-wali-absensi-page > .bg-gradient-primary .card-body { padding:1rem; }
+        .gtk-wali-absensi-page > .bg-gradient-primary h3 { font-size:1.1rem; }
+        .gtk-wali-absensi-page .form-inline label,
+        .gtk-wali-absensi-page .form-inline .form-control { width:100%; margin-right:0 !important; margin-bottom:.5rem !important; }
+        .gtk-wali-absensi-page .card-header.d-flex { align-items:stretch !important; flex-direction:column; gap:.65rem; }
+    }
+</style>
 @stop
 
 @section('js')

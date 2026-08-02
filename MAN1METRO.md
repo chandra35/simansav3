@@ -148,11 +148,16 @@ Jika alias `arzano` tidak tersedia, gunakan konfigurasi SSH resmi pengguna untuk
 
 ## Catatan untuk sesi baru
 
+- Selalu baca dan gunakan instruksi `.github/copilot-instructions.md` sebelum mengubah kode.
+- Untuk seluruh pekerjaan UI, selalu baca dan gunakan `docs/UI_DESIGN_PRINCIPLES_UPDATED.md`.
+- Baseline UI wajib adalah halaman Data Siswa (`/admin/siswa`): header judul dan breadcrumb standar, dilanjutkan satu hero utuh `card bg-gradient-primary text-white`, kemudian card operasional `card-outline card-primary`.
+- Jangan memakai hero generik dua kolom yang memisahkan gradient dan chip putih karena membuat header terlihat terputus dan warna tidak seimbang.
+- Hero harus berada di dalam `@section('content')`, selebar area konten. `@section('content_header')` hanya untuk judul halaman dan breadcrumb.
+- Pada tablet/ponsel, isi hero ditumpuk dengan Bootstrap grid dan tidak boleh menyebabkan horizontal scroll.
 - Kerjakan repository sesuai aplikasi yang disebut pengguna; jangan mencampur commit SIMANSA dan PPDB.
 - Pertahankan perubahan lokal pengguna yang tidak terkait.
 - Baca instruksi dan dokumentasi repository sebelum mengubah kode.
 - Untuk SIMANSA, referensi internal tambahan tersedia di `docs/INTERNAL.md`.
 - Untuk PPDB, referensi deployment tersedia di `DEPLOY_PRODUCTION.md` dan `update-ppdb.sh`.
 - Setelah pekerjaan selesai, selalu commit, push, deploy, dan verifikasi.
-
-perubahan terakhir baca di perubahan-terakhir.md.
+Perubahan terakhir baca di `perubahan-terakhir.md`.

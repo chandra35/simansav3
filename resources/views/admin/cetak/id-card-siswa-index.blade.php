@@ -4,25 +4,40 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-id-card"></i> Akademik</div>
-            <h1 class="simansa-hero__title">Cetak ID Card Siswa</h1>
-            <p class="simansa-hero__subtitle">Pilih kelas dan siapkan kartu pelajar dalam preview PDF tanpa meninggalkan halaman kerja.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-id-card text-primary"></i> Cetak ID Card Siswa</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Mode</span>
-                <span class="simansa-hero-chip__value">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ $isRestrictedWaliKelas ? route('admin.gtk.dashboard') : route('admin.cetak.index') }}">{{ $isRestrictedWaliKelas ? 'Dashboard Saya' : 'Cetak Dokumen' }}</a></li>
+                <li class="breadcrumb-item active">ID Card Siswa</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="id-card-siswa-page">
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-id-card mr-1"></i> Cetak Kartu Pelajar</h3>
+                    <p class="mb-2 text-white-50">Pilih kelas dan siapkan kartu pelajar dalam preview PDF tanpa meninggalkan halaman kerja.</p>
+                    <p class="mb-0">Kartu memakai ukuran standar vertikal dan siap dicetak pada kertas A4.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0 text-center">
+                    <div class="text-white-50 small text-uppercase font-weight-bold">Mode</div>
+                    <h3 class="mb-0 text-white">{{ $isRestrictedWaliKelas ? 'Kelas Saya' : 'Massal Admin' }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
-            <div class="card simansa-management-card">
+            <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-id-card"></i> Cetak Kartu Pelajar</h3>
                 </div>
@@ -129,6 +144,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <div class="modal fade" id="printPreviewModal" tabindex="-1" role="dialog" aria-labelledby="printPreviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -384,23 +400,26 @@ $(document).ready(function() {
 
 @section('css')
 <style>
-    .select2-container--default .select2-selection--single {
+    .id-card-siswa-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+    .id-card-siswa-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
+    .id-card-siswa-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
+    .id-card-siswa-page .select2-container--default .select2-selection--single {
         height: calc(2.25rem + 2px);
         border: 1px solid #ced4da;
         border-radius: .25rem;
         padding: .375rem .75rem;
     }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
+    .id-card-siswa-page .select2-container--default .select2-selection--single .select2-selection__rendered {
         color: #495057;
         line-height: 1.5rem;
         padding-left: 0;
         padding-right: 1.5rem;
     }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
+    .id-card-siswa-page .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: calc(2.25rem + 2px);
         right: .35rem;
     }
-    .select2-container {
+    .id-card-siswa-page .select2-container {
         display: block;
     }
     .print-preview-frame {
@@ -418,6 +437,13 @@ $(document).ready(function() {
         background: rgba(255, 255, 255, 0.92);
         z-index: 2;
     }
-    .custom-control-label { cursor: pointer; }
+    .id-card-siswa-page .custom-control-label { cursor: pointer; }
+    @media (max-width:575.98px) {
+        .id-card-siswa-page > .bg-gradient-primary .card-body { padding:1rem; }
+        .id-card-siswa-page > .bg-gradient-primary h3 { font-size:1.1rem; }
+        .id-card-siswa-page .simansa-toolbar__group { display:flex; width:100%; gap:.5rem; }
+        .id-card-siswa-page .simansa-toolbar__group .btn { flex:1 1 0; white-space:normal; }
+        .id-card-siswa-page .card-footer .btn { width:100%; }
+    }
 </style>
 @stop

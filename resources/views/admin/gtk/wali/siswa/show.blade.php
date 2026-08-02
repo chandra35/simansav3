@@ -48,7 +48,14 @@
                         <dt class="col-sm-4">Tempat, Tgl Lahir</dt><dd class="col-sm-8">{{ $siswa->tempat_lahir ?: '—' }}{{ $siswa->tanggal_lahir ? ', '.$siswa->tanggal_lahir->translatedFormat('d F Y') : '' }}</dd>
                         <dt class="col-sm-4">Agama</dt><dd class="col-sm-8">{{ $siswa->agama ?: '—' }}</dd>
                         <dt class="col-sm-4">Anak ke / Saudara</dt><dd class="col-sm-8">{{ $siswa->anak_ke ?: '—' }} / {{ $siswa->jumlah_saudara ?: '—' }}</dd>
-                        <dt class="col-sm-4">No. HP</dt><dd class="col-sm-8">{{ $siswa->nomor_hp ?: '—' }}</dd>
+                        <dt class="col-sm-4">No. HP</dt>
+                        <dd class="col-sm-8">
+                            @if($siswa->nomor_hp)
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->nomor_hp) }}" title="Hubungi {{ $siswa->nama_lengkap }}"><i class="fas fa-phone-alt mr-1"></i>{{ $siswa->nomor_hp }}</a>
+                            @else
+                                —
+                            @endif
+                        </dd>
                         <dt class="col-sm-4">Alamat</dt><dd class="col-sm-8">{{ $siswa->getAlamatLengkapSiswa() ?: '—' }}</dd>
                         <dt class="col-sm-4">Asal Sekolah</dt><dd class="col-sm-8">{{ optional($siswa->sekolahAsal)->nama ?? ($siswa->npsn_asal_sekolah ? 'NPSN '.$siswa->npsn_asal_sekolah : '—') }}</dd>
                         <dt class="col-sm-4">Akun Login</dt><dd class="col-sm-8">{{ optional($siswa->user)->email ?? '—' }}</dd>
@@ -63,7 +70,22 @@
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Nama Ayah</dt><dd class="col-sm-8">{{ $siswa->ortu->nama_ayah ?: '—' }}</dd>
                         <dt class="col-sm-4">Nama Ibu</dt><dd class="col-sm-8">{{ $siswa->ortu->nama_ibu ?: '—' }}</dd>
-                        <dt class="col-sm-4">No. HP Ortu</dt><dd class="col-sm-8">{{ $siswa->ortu->nomor_hp ?? $siswa->ortu->no_hp_ayah ?? $siswa->ortu->no_hp_ibu ?? '—' }}</dd>
+                        <dt class="col-sm-4">No. HP Ayah</dt>
+                        <dd class="col-sm-8">
+                            @if($siswa->ortu->hp_ayah)
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->ortu->hp_ayah) }}" title="Hubungi ayah {{ $siswa->nama_lengkap }}"><i class="fas fa-phone-alt mr-1"></i>{{ $siswa->ortu->hp_ayah }}</a>
+                            @else
+                                —
+                            @endif
+                        </dd>
+                        <dt class="col-sm-4">No. HP Ibu</dt>
+                        <dd class="col-sm-8">
+                            @if($siswa->ortu->hp_ibu)
+                                <a href="tel:{{ preg_replace('/[^0-9+]/', '', $siswa->ortu->hp_ibu) }}" title="Hubungi ibu {{ $siswa->nama_lengkap }}"><i class="fas fa-phone-alt mr-1"></i>{{ $siswa->ortu->hp_ibu }}</a>
+                            @else
+                                —
+                            @endif
+                        </dd>
                     </dl>
                 </div>
             </div>

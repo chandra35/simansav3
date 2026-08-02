@@ -1325,6 +1325,18 @@ function loadSiswaDataTab(siswa) {
     $('#data-siswa').html(html);
 }
 
+function renderPhoneLink(value, label) {
+    if (!value) return '-';
+
+    const display = $('<div>').text(value).html();
+    const number = String(value).replace(/[^0-9+]/g, '');
+    const title = $('<div>').text(label || 'Hubungi nomor ini').html();
+
+    return number
+        ? `<a href="tel:${number}" title="${title}"><i class="fas fa-phone-alt mr-1"></i>${display}</a>`
+        : display;
+}
+
 function loadDataDiriTab(siswa) {
     const tglLahir = siswa.tanggal_lahir ? new Date(siswa.tanggal_lahir).toLocaleDateString('id-ID') : '-';
     
@@ -1388,6 +1400,7 @@ function loadDataDiriTab(siswa) {
                     <tr><td class="bg-light"><strong>Anak Ke</strong></td><td>${siswa.anak_ke || '<span class="text-muted">Belum diisi</span>'}</td></tr>
                     <tr><td class="bg-light"><strong>Hobi</strong></td><td>${siswa.hobi || '<span class="text-muted">Belum diisi</span>'}</td></tr>
                     <tr><td class="bg-light"><strong>Cita-cita</strong></td><td>${siswa.cita_cita || '<span class="text-muted">Belum diisi</span>'}</td></tr>
+                    <tr><td class="bg-light"><strong>No. HP</strong></td><td>${renderPhoneLink(siswa.nomor_hp, 'Hubungi siswa')}</td></tr>
                 </table>
             </div>
             <div class="col-md-6">
@@ -1419,7 +1432,7 @@ function loadDataOrtuTab(siswa) {
                     <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ayah == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : ortu.status_ayah == 'meninggal' ? '<span class="badge badge-secondary">Meninggal</span>' : '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ayah || '-'}</td></tr>
-                    <tr><td class="bg-light"><strong>HP</strong></td><td>${ortu.hp_ayah || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>HP</strong></td><td>${renderPhoneLink(ortu.hp_ayah, 'Hubungi ayah')}</td></tr>
                     <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ayah || '-'}</td></tr>
                 </table>
@@ -1430,7 +1443,7 @@ function loadDataOrtuTab(siswa) {
                     <tr><td width="40%" class="bg-light"><strong>Status</strong></td><td>${ortu.status_ibu == 'masih_hidup' ? '<span class="badge badge-success">Masih Hidup</span>' : ortu.status_ibu == 'meninggal' ? '<span class="badge badge-secondary">Meninggal</span>' : '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ibu || '-'}</td></tr>
-                    <tr><td class="bg-light"><strong>HP</strong></td><td>${ortu.hp_ibu || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>HP</strong></td><td>${renderPhoneLink(ortu.hp_ibu, 'Hubungi ibu')}</td></tr>
                     <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ibu || '-'}</td></tr>
                 </table>

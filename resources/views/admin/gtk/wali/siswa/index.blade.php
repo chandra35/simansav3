@@ -4,29 +4,42 @@
 @section('plugins.Datatables', true)
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-chalkboard-teacher"></i> Kelas Saya</div>
-            <h1 class="simansa-hero__title">Daftar Siswa</h1>
-            <p class="simansa-hero__subtitle">Data siswa rombel yang Anda ampu. Tampilan hanya-baca untuk memantau kelengkapan data.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-graduate text-primary"></i> Daftar Siswa</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Rombel</span>
-                <span class="simansa-hero-chip__value">{{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total Siswa</span>
-                <span class="simansa-hero-chip__value">{{ $siswa->count() }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.dashboard') }}">Dashboard Saya</a></li>
+                <li class="breadcrumb-item active">Daftar Siswa</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="gtk-wali-siswa-page">
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-chalkboard-teacher mr-1"></i> Siswa Kelas Saya</h3>
+                    <p class="mb-2 text-white-50">Data siswa rombel yang Anda ampu dalam tampilan hanya-baca.</p>
+                    <p class="mb-0">Pantau kelengkapan data dan buka detail siswa dari satu daftar operasional.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="row text-center">
+                        <div class="col-7"><div class="text-white-50 small text-uppercase font-weight-bold">Rombel</div><h3 class="mb-0 text-white">{{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}</h3></div>
+                        <div class="col-5"><div class="text-white-50 small text-uppercase font-weight-bold">Total Siswa</div><h3 class="mb-0 text-white">{{ $siswa->count() }}</h3></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @includeWhen($kelasList->count() > 1, 'admin.gtk.wali.partials.kelas-switcher', ['route' => 'admin.gtk.wali.siswa.index'])
 
-    <div class="card simansa-management-card">
+    <div class="card card-outline card-primary">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-user-graduate"></i> Siswa {{ $kelas->nama_kelas }}</h3>
         </div>
@@ -99,6 +112,19 @@
             </table>
         </div>
     </div>
+</div>
+@stop
+
+@section('css')
+<style>
+    .gtk-wali-siswa-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+    .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
+    .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
+    @media (max-width:575.98px) {
+        .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1rem; }
+        .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.1rem; }
+    }
+</style>
 @stop
 
 @section('js')
