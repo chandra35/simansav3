@@ -14,6 +14,8 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 - Dry-run lokal dan produksi terhadap 158 baris workbook dan 122 GTK sama-sama menemukan 114 pasangan pasti, 7 ambigu, dan 37 tidak ditemukan.
 - Transaksi produksi memperbarui 114 GTK: 114 PEG ID, 56 NRG, 79 NPK, 7 status inpassing, dan 114 status sertifikasi. Tidak ada duplikasi PEG ID/NRG/NPK; 7 kasus ambigu serta 37 data di luar GTK aktif tidak diubah.
 - Snapshot sebelum transaksi tersimpan di `storage/app/ptk-sync/backup-before-20260802-180447.json`; laporan hasil dicatat di server dan disalin ke Downloads pengguna sebagai `rekap_manajemen_ptk_hasil_matching.csv`.
+- Verifikasi manual menyelesaikan tiga kasus ambigu: SARIPIN dipasangkan ke `f1b1f3ef-cc29-4319-858f-81976a5482cd`, IWAN SAPUTRA ke `67176bef-cb9a-48ca-b184-8bceca419d16`, dan BADAR AZIZ ke `89a3dbe2-03c0-4383-bd27-5e07fd5d8854`; empat kasus ambigu dan 37 data yang belum tersedia tetap dilewati.
+- NUPTK BADAR AZIZ yang sebelumnya tersimpan pada ISMI AZIZAH telah dipindahkan ke pemilik yang benar. Snapshot sebelum koreksi manual tersimpan di `storage/app/ptk-sync/backup-manual-match-20260802-183527.json`.
 
 File terkait:
 
