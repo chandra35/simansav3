@@ -2352,11 +2352,11 @@ a {
 
 .simansa-gtk-management .simansa-gtk-table {
     width: 100% !important;
-    min-width: 1280px;
+    min-width: 0;
     margin-bottom: 0 !important;
     border-collapse: separate;
     border-spacing: 0;
-    table-layout: fixed;
+    table-layout: auto;
     transition: opacity .18s ease;
 }
 
@@ -2400,34 +2400,38 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-number {
-    width: 4% !important;
+    width: 1% !important;
     text-align: center;
     color: #64748b;
     font-weight: 700;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-identity {
-    width: 30% !important;
+    width: auto !important;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-professional-id {
-    width: 12% !important;
+    width: 1% !important;
     text-align: center;
+    white-space: nowrap;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-professional-status {
-    width: 11% !important;
+    width: 1% !important;
     text-align: center;
+    white-space: nowrap;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-status {
-    width: 10% !important;
+    width: 1% !important;
     text-align: center;
+    white-space: nowrap;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-actions {
-    width: 12% !important;
+    width: 1% !important;
     text-align: center;
+    white-space: nowrap;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-status .badge,
@@ -2569,19 +2573,24 @@ a {
     color: #0e7490;
 }
 
-.simansa-gtk-management .simansa-gtk-table .btn-group {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: nowrap;
-    gap: .18rem;
-    white-space: nowrap;
+.simansa-gtk-management .simansa-gtk-action-select {
+    display: inline-block;
+    width: auto;
+    min-width: 86px;
+    height: 32px;
+    padding-right: 1.65rem !important;
+    border-color: #93c5fd !important;
+    border-radius: 7px;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-size: .75rem;
+    font-weight: 800;
+    cursor: pointer;
 }
 
-.simansa-gtk-management .simansa-gtk-table .btn-group .btn {
-    min-width: 32px;
-    border-radius: 7px !important;
-    box-shadow: none !important;
+.simansa-gtk-management .simansa-gtk-action-select:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .13) !important;
 }
 
 .simansa-gtk-management .dataTables_processing {

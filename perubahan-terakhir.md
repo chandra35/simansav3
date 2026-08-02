@@ -10,6 +10,7 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 - ID PTK dapat dicari serta diurutkan; status ditampilkan sebagai badge semantik dan nilai kosong diberi label `Belum tercatat`.
 - Proporsi kolom dan lebar minimum tabel disesuaikan agar identitas tetap terbaca serta dapat digeser horizontal pada perangkat sempit.
 - Kontrol DataTables kini berada di luar area gulir tabel: pilihan jumlah data dan kolom pencarian seimbang pada desktop, sedangkan hanya badan tabel yang bergulir horizontal sehingga kolom tidak lagi terpotong.
+- Lebar kolom tidak lagi dipaksa dengan persentase: DataTables dan browser menyesuaikannya terhadap isi aktual. Lima tombol per baris diringkas menjadi satu dropdown `Aksi`, sementara konfirmasi reset password dan hapus tetap memakai alur SweetAlert2 yang sama.
 
 File terkait:
 

@@ -298,54 +298,39 @@ class GtkController extends Controller
     private function getActionButtons($item)
     {
         $user = auth()->user();
-        $buttons = '<div class="btn-group" role="group">';
-        
-        // View button - always shown if can view gtk
+        $options = [];
+
         if ($user->can('view-gtk')) {
-            $buttons .= '
-                <button type="button" class="btn btn-info btn-sm" onclick="showGtk(\''.$item->id.'\')">
-                    <i class="fas fa-eye"></i>
-                </button>';
+            $options[] = '<option value="view">Lihat detail</option>';
         }
-        
-        // Edit button
+
         if ($user->can('edit-gtk')) {
-            $editUrl = route('admin.gtk.edit', $item->id);
-            $buttons .= '
-                <a href="'.$editUrl.'" class="btn btn-warning btn-sm" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </a>';
+            $options[] = '<option value="edit">Edit data</option>';
         }
-        
-        // Reset Password button
+
         if ($user->can('reset-password-gtk')) {
-            $buttons .= '
-                <button type="button" class="btn btn-secondary btn-sm" onclick="resetPassword(\''.$item->id.'\')">
-                    <i class="fas fa-key"></i>
-                </button>';
+            $options[] = '<option value="reset-password">Reset password</option>';
         }
 
         if ($user->can('impersonate-users') && $item->user_id) {
-            $buttons .= '
-                <form method="POST" action="'.route('admin.impersonation.gtk.start', $item->id).'" target="_blank" data-no-overlay class="d-inline">
-                    <input type="hidden" name="_token" value="'.csrf_token().'">
-                    <button type="submit" class="btn btn-primary btn-sm" title="Login As GTK">
-                        <i class="fas fa-user-secret"></i>
-                    </button>
-                </form>';
+            $options[] = '<option value="login-as">Login sebagai GTK</option>';
         }
-        
-        // Delete button
+
         if ($user->can('delete-gtk')) {
-            $buttons .= '
-                <button type="button" class="btn btn-danger btn-sm" onclick="deleteGtk(\''.$item->id.'\')">
-                    <i class="fas fa-trash"></i>
-                </button>';
+            $options[] = '<option value="delete">Hapus GTK</option>';
         }
-        
-        $buttons .= '</div>';
-        
-        return $buttons;
+
+        if ($options === []) {
+            return '-';
+        }
+
+        return '<select class="form-control form-control-sm simansa-gtk-action-select"'
+            .' aria-label="Pilih aksi untuk '.e($item->nama_lengkap).'"'
+            .' data-gtk-id="'.e($item->id).'"'
+            .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
+            .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'"'
+            .' onchange="handleGtkAction(this)">'
+            .'<option value="">Aksi</option>'.implode('', $options).'</select>';
     }
 
     /**

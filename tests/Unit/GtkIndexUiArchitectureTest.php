@@ -90,24 +90,23 @@ class GtkIndexUiArchitectureTest extends TestCase
     public function test_table_columns_use_balanced_professional_proportions(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/index.blade.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/GtkController.php');
         $css = file_get_contents(dirname(__DIR__, 2).'/public/css/custom-compact.css');
 
-        $this->assertStringContainsString('autoWidth: false', $view);
-        $this->assertStringContainsString("{ targets: 0, width: '4%' }", $view);
-        $this->assertStringContainsString("{ targets: 1, width: '30%' }", $view);
-        $this->assertStringContainsString("{ targets: 2, width: '12%' }", $view);
-        $this->assertStringContainsString("{ targets: [3, 4], width: '11%' }", $view);
-        $this->assertStringContainsString("{ targets: [5, 6], width: '10%' }", $view);
-        $this->assertStringContainsString("{ targets: 7, width: '12%' }", $view);
+        $this->assertStringContainsString('autoWidth: true', $view);
+        $this->assertStringNotContainsString('columnDefs:', $view);
         $this->assertStringContainsString("className: 'gtk-col-identity'", $view);
         $this->assertStringContainsString("className: 'gtk-col-professional-id'", $view);
         $this->assertStringContainsString("className: 'gtk-col-professional-status'", $view);
         $this->assertStringContainsString("className: 'gtk-col-status'", $view);
         $this->assertStringContainsString("className: 'gtk-col-actions'", $view);
 
-        $this->assertStringContainsString('table-layout: fixed;', $css);
+        $this->assertStringContainsString('table-layout: auto;', $css);
+        $this->assertStringContainsString('min-width: 0;', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-status', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-actions', $css);
-        $this->assertStringContainsString('border-radius: 7px !important;', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-action-select', $css);
+        $this->assertStringContainsString('onchange="handleGtkAction(this)"', $controller);
+        $this->assertStringContainsString('function handleGtkAction(select)', $view);
     }
 }

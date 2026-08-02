@@ -418,17 +418,9 @@ $(document).ready(function() {
                 d.status = $('#filterStatus').val();
             }
         },
-        autoWidth: false,
+        autoWidth: true,
         scrollX: true,
         scrollCollapse: true,
-        columnDefs: [
-            { targets: 0, width: '4%' },
-            { targets: 1, width: '30%' },
-            { targets: 2, width: '12%' },
-            { targets: [3, 4], width: '11%' },
-            { targets: [5, 6], width: '10%' },
-            { targets: 7, width: '12%' }
-        ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
         columns: [
@@ -855,6 +847,32 @@ function escapeHtml(text) {
 }
 
 // Show GTK Detail
+function handleGtkAction(select) {
+    const action = select.value;
+    const gtkId = select.dataset.gtkId;
+    select.value = '';
+
+    if (action === 'view') {
+        showGtk(gtkId);
+    } else if (action === 'edit') {
+        window.location.href = select.dataset.editUrl;
+    } else if (action === 'reset-password') {
+        resetPassword(gtkId);
+    } else if (action === 'login-as') {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = select.dataset.loginUrl;
+        form.target = '_blank';
+        form.setAttribute('data-no-overlay', '');
+        form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">';
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    } else if (action === 'delete') {
+        deleteGtk(gtkId);
+    }
+}
+
 function showGtk(id) {
     $('#viewGtkModal').modal('show');
     $('#viewGtkContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p>Loading...</p></div>');

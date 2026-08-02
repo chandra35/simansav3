@@ -46,13 +46,17 @@ class UserImpersonationArchitectureTest extends TestCase
     {
         $siswaController = file_get_contents($this->root.'/app/Http/Controllers/Admin/SiswaController.php');
         $gtkController = file_get_contents($this->root.'/app/Http/Controllers/Admin/GtkController.php');
+        $gtkView = file_get_contents($this->root.'/resources/views/admin/gtk/index.blade.php');
 
-        foreach ([$siswaController, $gtkController] as $source) {
-            $this->assertStringContainsString("can('impersonate-users')", $source);
-            $this->assertStringContainsString('target="_blank"', $source);
-            $this->assertStringContainsString('fas fa-user-secret', $source);
-            $this->assertStringNotContainsString('alasan', strtolower($source));
-        }
+        $this->assertStringContainsString("can('impersonate-users')", $siswaController);
+        $this->assertStringContainsString('target="_blank"', $siswaController);
+        $this->assertStringContainsString('fas fa-user-secret', $siswaController);
+        $this->assertStringNotContainsString('alasan', strtolower($siswaController));
+
+        $this->assertStringContainsString("can('impersonate-users')", $gtkController);
+        $this->assertStringContainsString('<option value="login-as">', $gtkController);
+        $this->assertStringContainsString("form.target = '_blank'", $gtkView);
+        $this->assertStringNotContainsString('alasan', strtolower($gtkController));
     }
 
     public function test_routes_apply_impersonation_before_personal_permissions(): void
@@ -117,7 +121,7 @@ class UserImpersonationArchitectureTest extends TestCase
     {
         $master = file_get_contents($this->root.'/resources/views/vendor/adminlte/master.blade.php');
         $studentController = file_get_contents($this->root.'/app/Http/Controllers/Admin/SiswaController.php');
-        $gtkController = file_get_contents($this->root.'/app/Http/Controllers/Admin/GtkController.php');
+        $gtkView = file_get_contents($this->root.'/resources/views/admin/gtk/index.blade.php');
         $closedView = file_get_contents($this->root.'/resources/views/admin/impersonation/closed.blade.php');
 
         $this->assertStringContainsString(
@@ -126,7 +130,8 @@ class UserImpersonationArchitectureTest extends TestCase
         );
         $this->assertStringContainsString('simansa:impersonation-ended', $master);
         $this->assertStringContainsString('target="_blank" data-no-overlay', $studentController);
-        $this->assertStringContainsString('target="_blank" data-no-overlay', $gtkController);
+        $this->assertStringContainsString("form.target = '_blank'", $gtkView);
+        $this->assertStringContainsString("form.setAttribute('data-no-overlay', '')", $gtkView);
         $this->assertStringContainsString("window.opener.postMessage(message, window.location.origin)", $closedView);
         $this->assertStringContainsString('window.opener.focus()', $closedView);
         $this->assertStringContainsString('window.close()', $closedView);
