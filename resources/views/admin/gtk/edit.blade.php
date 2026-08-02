@@ -45,48 +45,94 @@
             </div>
         </div>
 
-        <div class="card card-outline card-primary gtk-edit-shell">
-                <div class="card-header">
-                    <div>
-                        <h3 class="card-title"><i class="fas fa-edit text-primary mr-1"></i> Form Data GTK</h3>
-                        <small class="gtk-edit-shell__subtitle">Pilih bagian data yang ingin diperbarui.</small>
+        <div class="row gtk-edit-enterprise-layout">
+            <div class="col-md-3">
+                <div class="card card-outline card-primary gtk-edit-sidebar">
+                    <div class="card-body">
+                        @php
+                            $hasFoto = !empty($gtk->foto_profile);
+                            $initialsBg = $gtk->jenis_kelamin === 'P' ? '#f06292' : '#42a5f5';
+                            $initials = collect(explode(' ', $gtk->nama_lengkap ?? 'G'))->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))->take(2)->join('');
+                        @endphp
+
+                        <div class="gtk-edit-photo-preview text-center" id="fotoContainer">
+                            <img id="fotoPreview"
+                                 src="{{ $hasFoto ? $gtk->foto_profile_url : '' }}"
+                                 alt="Foto profil {{ $gtk->nama_lengkap }}"
+                                 class="gtk-edit-avatar"
+                                 style="{{ $hasFoto ? '' : 'display:none;' }}">
+                            <div id="fotoInitials"
+                                 class="gtk-edit-avatar gtk-edit-avatar--initials"
+                                 style="background: {{ $initialsBg }}; display: {{ $hasFoto ? 'none' : 'flex' }};">
+                                {{ $initials }}
+                            </div>
+                            <button type="button" id="btnDeleteFoto"
+                                    class="btn btn-danger gtk-edit-photo-delete"
+                                    style="{{ $hasFoto ? '' : 'display:none;' }}"
+                                    title="Hapus foto" aria-label="Hapus foto profil">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="gtk-edit-profile-name" id="gtkEditSidebarName">{{ $gtk->nama_lengkap }}</div>
+                        <div class="gtk-edit-profile-role">{{ $gtk->jenis_ptk ?? 'Jenis PTK belum diisi' }}</div>
+
+                        <div class="gtk-edit-dropzone gtk-edit-dropzone--compact" id="dropZone" role="button" tabindex="0" aria-label="Pilih atau seret foto profil">
+                            <input type="file" id="fotoFileInput" accept="image/jpeg,image/png,image/jpg" hidden>
+                            <div id="dropZoneContent">
+                                <i class="fas fa-cloud-upload-alt text-primary gtk-edit-dropzone__icon"></i>
+                                <span>Ganti foto</span>
+                                <small>JPG/PNG, maks. 2 MB</small>
+                            </div>
+                            <div id="uploadProgress" style="display: none;" class="mt-2">
+                                <div class="progress gtk-edit-upload-progress">
+                                    <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%;"></div>
+                                </div>
+                                <small id="uploadStatusText" class="text-muted mt-1 d-block">Mengupload...</small>
+                            </div>
+                        </div>
+
+                        <div class="gtk-edit-identity-summary" aria-label="Ringkasan identitas GTK">
+                            <div><span>NIK</span><strong>{{ $gtk->nik ?? '-' }}</strong></div>
+                            <div><span>NUPTK</span><strong>{{ $gtk->nuptk ?? 'Belum diisi' }}</strong></div>
+                        </div>
+
+                        <div class="gtk-edit-nav-label">Kelola data</div>
+                        <div class="nav nav-pills flex-column gtk-edit-tabs" id="gtkEditTabs" role="tablist" aria-orientation="vertical">
+                            <a class="nav-link active" id="diri-tab" data-toggle="pill" href="#diri" role="tab" aria-controls="diri" aria-selected="true" data-title="Data Pribadi">
+                                <i class="fas fa-user"></i><span>Data Pribadi</span><i class="fas fa-chevron-right gtk-edit-nav-arrow"></i>
+                            </a>
+                            <a class="nav-link" id="kepeg-tab" data-toggle="pill" href="#kepeg" role="tab" aria-controls="kepeg" aria-selected="false" data-title="Data Kepegawaian">
+                                <i class="fas fa-briefcase"></i><span>Data Kepegawaian</span><i class="fas fa-chevron-right gtk-edit-nav-arrow"></i>
+                            </a>
+                            <a class="nav-link" id="akun-tab" data-toggle="pill" href="#akun" role="tab" aria-controls="akun" aria-selected="false" data-title="Akun User">
+                                <i class="fas fa-user-lock"></i><span>Akun User</span><i class="fas fa-chevron-right gtk-edit-nav-arrow"></i>
+                            </a>
+                            <a class="nav-link" id="kemenag-tab" data-toggle="pill" href="#kemenag" role="tab" aria-controls="kemenag" aria-selected="false" data-title="Integrasi Kemenag">
+                                <i class="fas fa-sync-alt"></i><span>Integrasi Kemenag</span>
+                                @if($gtk->kemenagSync && $gtk->kemenagSync->has_differences)
+                                    <span class="badge badge-warning ml-auto">{{ $gtk->kemenagSync->differences_count }}</span>
+                                @else
+                                    <i class="fas fa-chevron-right gtk-edit-nav-arrow"></i>
+                                @endif
+                            </a>
+                        </div>
                     </div>
-                    <div class="card-tools">
-                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Kembali
+                    <div class="card-footer">
+                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-secondary btn-sm btn-block">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali ke Data GTK
                         </a>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <!-- Tabs -->
-                    <div class="gtk-edit-tabs-wrap">
-                    <ul class="nav nav-tabs gtk-edit-tabs flex-nowrap" id="gtkEditTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="diri-tab" data-toggle="tab" href="#diri" role="tab" aria-controls="diri" aria-selected="true">
-                                <i class="fas fa-user"></i> Data Pribadi
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="kepeg-tab" data-toggle="tab" href="#kepeg" role="tab" aria-controls="kepeg" aria-selected="false">
-                                <i class="fas fa-briefcase"></i> Data Kepegawaian
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="akun-tab" data-toggle="tab" href="#akun" role="tab" aria-controls="akun" aria-selected="false">
-                                <i class="fas fa-user-lock"></i> Akun User
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab" aria-controls="kemenag" aria-selected="false">
-                                <i class="fas fa-sync-alt"></i> Data Integrasi Kemenag
-                                @if($gtk->kemenagSync && $gtk->kemenagSync->has_differences)
-                                    <span class="badge badge-warning">{{ $gtk->kemenagSync->differences_count }}</span>
-                                @endif
-                            </a>
-                        </li>
-                    </ul>
-                    </div>
+            </div>
 
+            <div class="col-md-9">
+                <div class="card card-outline card-primary gtk-edit-main">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-edit text-primary mr-1"></i><span id="gtkEditSectionTitle">Data Pribadi</span></h3>
+                        <small class="gtk-edit-main__subtitle">Lengkapi field yang diperlukan, lalu simpan perubahan.</small>
+                    </div>
+                    <div class="card-body p-0">
                     <div class="tab-content gtk-edit-content" id="gtkEditTabsContent">
                         <!-- Tab Data Pribadi -->
                         <div class="tab-pane fade show active" id="diri" role="tabpanel">
@@ -94,69 +140,6 @@
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="tab" value="diri">
-
-                                {{-- Foto Profile - AJAX Upload --}}
-                                <div class="card gtk-edit-photo-card mb-4">
-                                    <div class="card-header py-2">
-                                        <h3 class="card-title"><i class="fas fa-camera text-primary mr-1"></i> Foto Profil</h3>
-                                    </div>
-                                    <div class="card-body py-3">
-                                        <div class="gtk-edit-photo-layout">
-                                            {{-- Current Photo --}}
-                                            <div id="fotoContainer" class="gtk-edit-photo-preview text-center">
-                                                @php
-                                                    $hasFoto = !empty($gtk->foto_profile);
-                                                    $initialsBg = $gtk->jenis_kelamin === 'P' ? '#f06292' : '#42a5f5';
-                                                    $initials = collect(explode(' ', $gtk->nama_lengkap ?? 'G'))->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))->take(2)->join('');
-                                                @endphp
-                                                {{-- Foto Image (hidden if no foto) --}}
-                                                <img id="fotoPreview" 
-                                                     src="{{ $hasFoto ? $gtk->foto_profile_url : '' }}" 
-                                                     alt="Foto profil {{ $gtk->nama_lengkap }}"
-                                                     class="gtk-edit-avatar"
-                                                     style="{{ $hasFoto ? '' : 'display:none;' }}">
-                                                {{-- Avatar Inisial (shown if no foto) --}}
-                                                <div id="fotoInitials" 
-                                                     class="gtk-edit-avatar gtk-edit-avatar--initials"
-                                                     style="background: {{ $initialsBg }}; display: {{ $hasFoto ? 'none' : 'flex' }};">
-                                                    {{ $initials }}
-                                                </div>
-                                                {{-- Delete Button --}}
-                                                <button type="button" id="btnDeleteFoto" 
-                                                        class="btn btn-danger gtk-edit-photo-delete"
-                                                        style="{{ $hasFoto ? '' : 'display:none;' }}"
-                                                        title="Hapus foto" aria-label="Hapus foto profil">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-
-                                            {{-- Upload Area --}}
-                                            <div class="gtk-edit-photo-upload">
-                                                <div id="dropZone" class="gtk-edit-dropzone" role="button" tabindex="0" aria-label="Pilih atau seret foto profil">
-                                                    <input type="file" id="fotoFileInput" 
-                                                           accept="image/jpeg,image/png,image/jpg"
-                                                           style="display: none;">
-                                                    <div id="dropZoneContent">
-                                                        <i class="fas fa-cloud-upload-alt text-primary mb-2 gtk-edit-dropzone__icon"></i>
-                                                        <p class="mb-1">
-                                                            <strong>Klik</strong> atau <strong>seret foto</strong> ke sini
-                                                        </p>
-                                                        <small class="text-muted">JPG, JPEG, PNG &bull; Maks 2MB</small>
-                                                    </div>
-                                                    {{-- Progress Bar --}}
-                                                    <div id="uploadProgress" style="display: none;" class="mt-2 px-4">
-                                                        <div class="progress" style="height: 8px; border-radius: 4px;">
-                                                            <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
-                                                                 style="width: 0%; border-radius: 4px;"></div>
-                                                        </div>
-                                                        <small id="uploadStatusText" class="text-muted mt-1" style="display:block;">Mengupload...</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -313,6 +296,9 @@
                                 </div>
 
                                 <div class="form-group gtk-edit-form-actions">
+                                    <button type="reset" class="btn btn-secondary mr-2">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> Simpan Data Pribadi
                                     </button>
@@ -394,6 +380,9 @@
                                 </div>
 
                                 <div class="form-group gtk-edit-form-actions">
+                                    <button type="reset" class="btn btn-secondary mr-2">
+                                        <i class="fas fa-undo mr-1"></i> Reset
+                                    </button>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> Simpan Data Kepegawaian
                                     </button>
@@ -464,6 +453,9 @@
                                     </div>
 
                                     <div class="form-group gtk-edit-form-actions">
+                                        <button type="reset" class="btn btn-secondary mr-2">
+                                            <i class="fas fa-undo mr-1"></i> Reset
+                                        </button>
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Simpan Data Akun
                                         </button>
@@ -899,6 +891,8 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -1157,6 +1151,17 @@
                 width: '100%'
             });
 
+            $('#gtkEditTabs a[data-toggle="pill"]').on('shown.bs.tab', function() {
+                $('#gtkEditSectionTitle').text($(this).data('title'));
+            });
+
+            $('.gtk-edit-content form').on('reset', function() {
+                const $form = $(this);
+                window.setTimeout(function() {
+                    $form.find('.select2').trigger('change.select2');
+                }, 0);
+            });
+
             // Cascade dropdown wilayah
             $('#provinsi_id').on('change', function() {
                 const provinsiId = $(this).val();
@@ -1260,6 +1265,7 @@
                             // Update display if needed
                             if (tab === 'diri' && response.data.nama_lengkap) {
                                 $('#gtkEditHeroName').text(response.data.nama_lengkap);
+                                $('#gtkEditSidebarName').text(response.data.nama_lengkap);
                             }
                         }
                     },

@@ -8,8 +8,9 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 - Halaman Edit GTK mengikuti struktur operasional standar: judul dan breadcrumb pada `content_header`, satu hero gradient utuh di area konten, lalu card form `card-outline card-primary`.
 - Identitas ringkas NIK dan jenis PTK tetap berada di dalam hero dengan panel transparan agar warna tidak terputus oleh card putih.
-- Navigasi empat tab dapat digeser pada layar sempit, area foto tersusun responsif, dan dropzone kini dapat dioperasikan melalui keyboard.
-- Form menggunakan field serta tombol simpan yang lebih konsisten; ID email akun dipisahkan dari email pribadi dan pembaruan nama hanya menyentuh judul profil yang benar.
+- Workspace memakai layout enterprise Bootstrap dua kolom: sidebar `col-md-3` berisi foto, dropzone, ringkasan NIK/NUPTK, dan `nav-pills` vertikal; form tab aktif berada pada card utama `col-md-9`.
+- Pasangan field menggunakan grid dua kolom, RT/RW/Kode Pos dibagi tiga kolom seimbang, dan pilihan wilayah tetap memakai Select2 responsif.
+- Setiap form memiliki aksi Reset dan Simpan yang jelas; dropzone dapat dioperasikan melalui keyboard, ID email akun dipisahkan dari email pribadi, dan pembaruan nama hanya menyentuh judul profil yang benar.
 
 File terkait:
 

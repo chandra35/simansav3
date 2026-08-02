@@ -2222,63 +2222,116 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.simansa-gtk-edit .gtk-edit-shell {
+.simansa-gtk-edit .gtk-edit-enterprise-layout { align-items: flex-start; }
+.simansa-gtk-edit .gtk-edit-sidebar,
+.simansa-gtk-edit .gtk-edit-main {
     overflow: hidden;
     border-right: 1px solid #dbe4f0;
     border-bottom: 1px solid #dbe4f0;
     border-left: 1px solid #dbe4f0;
-    border-radius: 14px;
-    box-shadow: 0 12px 26px rgba(15, 23, 42, .07);
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
 }
-.simansa-gtk-edit .gtk-edit-shell > .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .8rem 1rem;
+.simansa-gtk-edit .gtk-edit-sidebar > .card-body { padding: 1rem; }
+.simansa-gtk-edit .gtk-edit-sidebar > .card-footer {
+    padding: .75rem 1rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+.simansa-gtk-edit .gtk-edit-main > .card-header {
+    padding: .82rem 1rem;
     border-bottom: 1px solid #e2e8f0;
     background: #fff;
 }
-.simansa-gtk-edit .gtk-edit-shell > .card-header .card-title {
+.simansa-gtk-edit .gtk-edit-main > .card-header .card-title {
     float: none;
     margin: 0;
     color: #0f172a;
     font-size: .95rem;
     font-weight: 800;
 }
-.simansa-gtk-edit .gtk-edit-shell__subtitle {
+.simansa-gtk-edit .gtk-edit-main__subtitle {
     display: block;
     margin-top: .15rem;
     color: #64748b;
     font-size: .72rem;
 }
-.simansa-gtk-edit .gtk-edit-shell > .card-header .card-tools { float: none; margin: 0; }
-.simansa-gtk-edit .gtk-edit-tabs-wrap {
-    overflow-x: auto;
-    padding: .75rem 1rem 0;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-    scrollbar-width: thin;
+.simansa-gtk-edit .gtk-edit-profile-name {
+    margin-top: .65rem;
+    overflow-wrap: anywhere;
+    color: #0f172a;
+    font-size: .88rem;
+    font-weight: 800;
+    text-align: center;
 }
-.simansa-gtk-edit .gtk-edit-tabs { width: max-content; min-width: 100%; border-bottom: 0; }
+.simansa-gtk-edit .gtk-edit-profile-role {
+    margin-top: .12rem;
+    color: #64748b;
+    font-size: .7rem;
+    text-align: center;
+}
+.simansa-gtk-edit .gtk-edit-identity-summary {
+    display: grid;
+    gap: .45rem;
+    margin: .85rem 0;
+}
+.simansa-gtk-edit .gtk-edit-identity-summary > div {
+    min-width: 0;
+    padding: .48rem .55rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    background: #f8fafc;
+}
+.simansa-gtk-edit .gtk-edit-identity-summary span,
+.simansa-gtk-edit .gtk-edit-identity-summary strong { display: block; }
+.simansa-gtk-edit .gtk-edit-identity-summary span {
+    color: #64748b;
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+}
+.simansa-gtk-edit .gtk-edit-identity-summary strong {
+    margin-top: .12rem;
+    overflow-wrap: anywhere;
+    color: #1e293b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .67rem;
+}
+.simansa-gtk-edit .gtk-edit-nav-label {
+    margin: .9rem 0 .4rem;
+    color: #64748b;
+    font-size: .6rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.simansa-gtk-edit .gtk-edit-tabs { width: 100%; }
 .simansa-gtk-edit .gtk-edit-tabs .nav-link {
-    margin-right: .35rem;
-    padding: .58rem .75rem;
-    border: 0;
-    border-bottom: 3px solid transparent;
-    border-radius: 7px 7px 0 0;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .25rem;
+    padding: .58rem .65rem;
+    border: 1px solid transparent;
+    border-radius: 7px;
     color: #475569;
-    font-size: .78rem;
+    font-size: .73rem;
     font-weight: 700;
-    white-space: nowrap;
 }
 .simansa-gtk-edit .gtk-edit-tabs .nav-link:hover { background: #eef2ff; color: #1d4ed8; }
 .simansa-gtk-edit .gtk-edit-tabs .nav-link.active {
-    border-bottom-color: #2563eb;
-    background: #fff;
+    border-color: #bfdbfe;
+    background: #eff6ff;
     color: #1d4ed8;
 }
-.simansa-gtk-edit .gtk-edit-tabs .nav-link .badge { margin-left: .25rem; border-radius: 999px; }
+.simansa-gtk-edit .gtk-edit-tabs .nav-link > i:first-child {
+    width: 16px;
+    color: #64748b;
+    text-align: center;
+}
+.simansa-gtk-edit .gtk-edit-tabs .nav-link.active > i:first-child { color: #2563eb; }
+.simansa-gtk-edit .gtk-edit-nav-arrow { margin-left: auto; font-size: .58rem; opacity: .55; }
+.simansa-gtk-edit .gtk-edit-tabs .nav-link .badge { border-radius: 999px; }
 .simansa-gtk-edit .gtk-edit-content { padding: 1rem; }
 .simansa-gtk-edit .gtk-edit-content .form-group label {
     margin-bottom: .35rem;
@@ -2292,22 +2345,11 @@ a {
     border-color: #2563eb;
     box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .12);
 }
-.simansa-gtk-edit .gtk-edit-photo-card {
-    border: 1px solid #dbe4f0;
-    border-radius: 10px;
-    box-shadow: none;
+.simansa-gtk-edit .gtk-edit-photo-preview {
+    position: relative;
+    width: max-content;
+    margin: 0 auto;
 }
-.simansa-gtk-edit .gtk-edit-photo-card > .card-header {
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-.simansa-gtk-edit .gtk-edit-photo-card .card-title {
-    color: #1e293b;
-    font-size: .85rem;
-    font-weight: 800;
-}
-.simansa-gtk-edit .gtk-edit-photo-layout { display: flex; align-items: center; gap: 1rem; }
-.simansa-gtk-edit .gtk-edit-photo-preview { position: relative; flex: 0 0 auto; }
 .simansa-gtk-edit .gtk-edit-avatar {
     align-items: center;
     justify-content: center;
@@ -2334,7 +2376,6 @@ a {
     line-height: 23px;
     box-shadow: 0 2px 7px rgba(15, 23, 42, .22);
 }
-.simansa-gtk-edit .gtk-edit-photo-upload { flex: 1 1 auto; min-width: 0; }
 .simansa-gtk-edit .gtk-edit-dropzone {
     padding: 1.15rem 1rem;
     border: 2px dashed #bfdbfe;
@@ -2355,31 +2396,45 @@ a {
 .simansa-gtk-edit .gtk-edit-dropzone.is-dragging { border-color: #16a34a; background: #f0fdf4; }
 .simansa-gtk-edit .gtk-edit-dropzone__icon { display: block; font-size: 1.6rem; opacity: .78; }
 .simansa-gtk-edit .gtk-edit-dropzone p { font-size: .82rem; }
+.simansa-gtk-edit .gtk-edit-dropzone--compact {
+    margin-top: .75rem;
+    padding: .65rem .55rem;
+}
+.simansa-gtk-edit .gtk-edit-dropzone--compact #dropZoneContent {
+    display: grid;
+    gap: .1rem;
+}
+.simansa-gtk-edit .gtk-edit-dropzone--compact .gtk-edit-dropzone__icon { font-size: 1.25rem; }
+.simansa-gtk-edit .gtk-edit-dropzone--compact span { font-size: .72rem; font-weight: 800; }
+.simansa-gtk-edit .gtk-edit-dropzone--compact small { color: #64748b; font-size: .6rem; }
+.simansa-gtk-edit .gtk-edit-upload-progress { height: 6px; border-radius: 3px; }
+.simansa-gtk-edit .gtk-edit-upload-progress .progress-bar { border-radius: 3px; }
 .simansa-gtk-edit .gtk-edit-form-actions {
     display: flex;
     justify-content: flex-end;
+    gap: .5rem;
     margin: .35rem -1rem -1rem;
     padding: .75rem 1rem;
     border-top: 1px solid #e2e8f0;
     background: #f8fafc;
 }
-.simansa-gtk-edit .gtk-edit-form-actions .btn { min-width: 190px; font-weight: 700; }
+.simansa-gtk-edit .gtk-edit-form-actions .btn { min-width: 130px; font-weight: 700; }
 
 @media (max-width: 767.98px) {
     .simansa-gtk-edit .simansa-gtk-edit__hero .card-body,
     .simansa-gtk-edit .gtk-edit-content { padding: .9rem; }
     .simansa-gtk-edit .simansa-gtk-edit__hero-meta { grid-template-columns: minmax(0, 1fr); }
-    .simansa-gtk-edit .gtk-edit-shell > .card-header { align-items: flex-start; flex-direction: column; }
-    .simansa-gtk-edit .gtk-edit-shell > .card-header .card-tools,
-    .simansa-gtk-edit .gtk-edit-shell > .card-header .btn { width: 100%; }
-    .simansa-gtk-edit .gtk-edit-photo-layout { align-items: stretch; flex-direction: column; }
-    .simansa-gtk-edit .gtk-edit-photo-preview { align-self: center; }
     .simansa-gtk-edit .gtk-edit-form-actions {
         margin-right: -.9rem;
         margin-bottom: -.9rem;
         margin-left: -.9rem;
     }
-    .simansa-gtk-edit .gtk-edit-form-actions .btn { width: 100%; min-width: 0; }
+    .simansa-gtk-edit .gtk-edit-form-actions { flex-direction: column-reverse; }
+    .simansa-gtk-edit .gtk-edit-form-actions .btn { width: 100%; min-width: 0; margin-right: 0 !important; }
+}
+
+@media (min-width: 992px) {
+    .simansa-gtk-edit .gtk-edit-sidebar { position: sticky; top: 70px; }
 }
 
 /* ===============================================
