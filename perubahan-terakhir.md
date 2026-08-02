@@ -4,6 +4,21 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyelarasan Data Siswa Wali Kelas dengan Data Siswa admin
+
+- Halaman Data Siswa Wali Kelas kini mengikuti struktur Data Siswa admin dengan hero operasional, empat card statistik, filter jenis kelamin/kelengkapan, tabel padat, serta status Verval, EMIS, keberadaan, dan tanggal masuk.
+- Tabel tetap bersifat hanya-baca dan seluruh data tetap dibatasi pada rombel aktif yang diampu oleh wali kelas.
+- Modal detail kini memakai enam tab responsif: Data Siswa, Data Diri, Orang Tua, Sekolah Asal, Dokumen, dan Catatan.
+- Informasi identitas, alamat dan wilayah, akun login, status kelengkapan, kontak klik-telepon, data ayah/ibu, metadata dokumen, dan catatan pembinaan ditampilkan lebih lengkap.
+- Password siswa sengaja tidak ditampilkan kepada wali kelas; akses dokumen tetap mengikuti izin `view-siswa` yang sudah berlaku.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/WaliKelas/SiswaController.php`
+- `resources/views/admin/gtk/wali/siswa/index.blade.php`
+- `resources/views/admin/gtk/wali/siswa/partials/detail.blade.php`
+- `tests/Unit/UiDesignConsistencyTest.php`
+
 ### Modal detail siswa, overlay kontak, dan SweetAlert2
 
 - Klik nomor telepon (`tel:`) atau email (`mailto:`) kini menonaktifkan overlay navigasi global sehingga aplikasi telepon/kontak dapat terbuka tanpa meninggalkan lapisan pemuatan di halaman.

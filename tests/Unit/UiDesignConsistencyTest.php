@@ -80,8 +80,38 @@ class UiDesignConsistencyTest extends TestCase
         $this->assertStringContainsString("dataType: 'json'", $index);
         $this->assertStringContainsString('request()->ajax()', $controller);
         $this->assertStringContainsString("wali.siswa.partials.detail", $controller);
-        $this->assertGreaterThanOrEqual(3, substr_count($partial, 'href="tel:'));
+        $this->assertGreaterThanOrEqual(2, substr_count($partial, 'href="tel:'));
+        $this->assertStringContainsString("data_get(\$siswa->ortu, 'hp_'.\$key)", $partial);
         $this->assertGreaterThanOrEqual(3, substr_count($partial, 'data-no-overlay'));
+    }
+
+    public function test_wali_student_page_matches_admin_student_management_structure(): void
+    {
+        $index = $this->file('resources/views/admin/gtk/wali/siswa/index.blade.php');
+        $controller = $this->file('app/Http/Controllers/Admin/WaliKelas/SiswaController.php');
+
+        $this->assertStringContainsString("'data_lengkap'", $controller);
+        $this->assertSame(4, substr_count($index, "'description' =>"));
+        $this->assertStringContainsString('simansa-filter-panel', $index);
+        $this->assertStringContainsString('filterJenisKelamin', $index);
+        $this->assertStringContainsString('filterStatusData', $index);
+        foreach (['Verval', 'EMIS', 'Keberadaan', 'Tgl Masuk'] as $column) {
+            $this->assertStringContainsString($column, $index);
+        }
+    }
+
+    public function test_wali_student_modal_contains_complete_read_only_tabs(): void
+    {
+        $partial = $this->file('resources/views/admin/gtk/wali/siswa/partials/detail.blade.php');
+        $controller = $this->file('app/Http/Controllers/Admin/WaliKelas/SiswaController.php');
+
+        foreach (['Data Siswa', 'Data Diri', 'Orang Tua', 'Sekolah Asal', 'Dokumen', 'Catatan'] as $tab) {
+            $this->assertStringContainsString($tab, $partial);
+        }
+        foreach (['ortu.provinsi', 'provinsiSiswa', 'kelasTahunAktif', "'dokumen' =>"] as $relation) {
+            $this->assertStringContainsString($relation, $controller);
+        }
+        $this->assertStringNotContainsString('readable_password', $partial);
     }
 
     public function test_gtk_operational_feedback_uses_sweetalert2(): void

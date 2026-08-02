@@ -20,6 +20,12 @@ class SiswaController extends BaseWaliKelasController
             'kelas' => $kelas,
             'kelasList' => $this->waliClasses(),
             'siswa' => $siswa,
+            'stats' => [
+                'total' => $siswa->count(),
+                'laki_laki' => $siswa->where('jenis_kelamin', 'L')->count(),
+                'perempuan' => $siswa->where('jenis_kelamin', 'P')->count(),
+                'data_lengkap' => $siswa->filter(fn ($item) => $item->isDataComplete())->count(),
+            ],
         ]);
     }
 
@@ -29,7 +35,20 @@ class SiswaController extends BaseWaliKelasController
     public function show(string $siswa)
     {
         $siswa = $this->resolveSiswa($siswa);
-        $siswa->load(['user', 'ortu', 'sekolahAsal', 'kelasAktif']);
+        $siswa->load([
+            'user',
+            'ortu.provinsi',
+            'ortu.kabupaten',
+            'ortu.kecamatan',
+            'ortu.kelurahan',
+            'provinsiSiswa',
+            'kabupatenSiswa',
+            'kecamatanSiswa',
+            'kelurahanSiswa',
+            'sekolahAsal',
+            'kelasTahunAktif',
+            'dokumen' => fn ($query) => $query->latest(),
+        ]);
 
         $catatan = CatatanWaliKelas::query()
             ->where('siswa_id', $siswa->id)
