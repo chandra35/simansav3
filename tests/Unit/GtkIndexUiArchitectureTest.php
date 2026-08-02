@@ -50,6 +50,9 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('class="simansa-gtk-management"', $view);
         $this->assertStringContainsString('const reloadGtkTable = function(resetPaging = true)', $view);
         $this->assertStringContainsString('gtkTable.ajax.reload(null, resetPaging);', $view);
+        $this->assertStringContainsString('scrollX: true', $view);
+        $this->assertStringContainsString('scrollCollapse: true', $view);
+        $this->assertStringNotContainsString('table-responsive simansa-gtk-table-wrap', $view);
         $this->assertStringContainsString("on('preXhr.dt'", $view);
         $this->assertStringContainsString("on('xhr.dt'", $view);
         $this->assertStringContainsString('Filter memuat data secara otomatis', $view);
@@ -58,6 +61,9 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('flex-direction: column;', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-identity__meta-row', $css);
         $this->assertStringContainsString('.simansa-gtk-management .dataTables_processing', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter', $css);
+        $this->assertStringContainsString('justify-content: flex-end;', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_scrollBody', $css);
     }
 
     public function test_photo_gender_avatar_and_active_homeroom_metadata_are_available(): void

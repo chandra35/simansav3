@@ -2289,8 +2289,61 @@ a {
 
 .simansa-gtk-management .simansa-gtk-table-wrap {
     position: relative;
+    width: 100%;
     min-height: 210px;
     transition: opacity .18s ease;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_wrapper {
+    width: 100%;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_wrapper > .row:first-child {
+    align-items: center;
+    margin-bottom: .35rem;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_length,
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_length {
+    justify-content: flex-start;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter {
+    justify-content: flex-end;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_length label,
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter label {
+    margin-bottom: 0;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter input {
+    width: 220px !important;
+    margin-left: 0 !important;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_scroll {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_scrollHead,
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_scrollBody {
+    width: 100% !important;
+}
+
+.simansa-gtk-management .simansa-gtk-table-wrap .dataTables_scrollBody {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: #94a3b8 #f1f5f9;
+    scrollbar-width: thin;
 }
 
 .simansa-gtk-management .simansa-gtk-table-wrap.is-loading table {
@@ -2563,6 +2616,25 @@ a {
 
     .simansa-gtk-management .simansa-gtk-filter-footer .btn {
         width: 100%;
+    }
+
+    .simansa-gtk-management .simansa-gtk-table-wrap .dataTables_length,
+    .simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter {
+        display: flex !important;
+        justify-content: flex-start;
+        min-height: 0;
+        margin-bottom: .5rem !important;
+        text-align: left !important;
+    }
+
+    .simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter label {
+        width: 100%;
+    }
+
+    .simansa-gtk-management .simansa-gtk-table-wrap .dataTables_filter input {
+        flex: 1 1 auto;
+        width: auto !important;
+        min-width: 0;
     }
 }
 

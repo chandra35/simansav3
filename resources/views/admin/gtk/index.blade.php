@@ -188,7 +188,7 @@
             Gunakan filter untuk memantau komposisi GTK, kelengkapan data, dan kesiapan sinkronisasi Kemenag tanpa meninggalkan halaman ini.
         </p>
 
-        <div class="table-responsive simansa-gtk-table-wrap">
+        <div class="simansa-gtk-table-wrap">
             <table id="gtk-table" class="table table-hover table-sm simansa-gtk-table">
                 <thead>
                     <tr>
@@ -419,6 +419,8 @@ $(document).ready(function() {
             }
         },
         autoWidth: false,
+        scrollX: true,
+        scrollCollapse: true,
         columnDefs: [
             { targets: 0, width: '4%' },
             { targets: 1, width: '30%' },
