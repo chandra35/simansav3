@@ -11,7 +11,9 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 - Smart matching memprioritaskan NIK, NIP, dan NUPTK; sisa data dibandingkan memakai nama yang dinormalisasi tanpa gelar, dukungan singkatan token, tanggal lahir, skor minimum, dan margin terhadap kandidat kedua.
 - Konflik antar-identitas, nama yang tidak mendukung identitas, pasangan ganda, dan skor rendah tidak pernah diperbarui otomatis.
 - Sebelum transaksi apply, command menyimpan snapshot JSON lengkap untuk seluruh GTK yang akan diubah.
-- Dry-run lokal terhadap 158 baris workbook dan 122 GTK menemukan 114 pasangan pasti, 7 ambigu, dan 37 tidak ditemukan; database belum diubah pada tahap dry-run.
+- Dry-run lokal dan produksi terhadap 158 baris workbook dan 122 GTK sama-sama menemukan 114 pasangan pasti, 7 ambigu, dan 37 tidak ditemukan.
+- Transaksi produksi memperbarui 114 GTK: 114 PEG ID, 56 NRG, 79 NPK, 7 status inpassing, dan 114 status sertifikasi. Tidak ada duplikasi PEG ID/NRG/NPK; 7 kasus ambigu serta 37 data di luar GTK aktif tidak diubah.
+- Snapshot sebelum transaksi tersimpan di `storage/app/ptk-sync/backup-before-20260802-180447.json`; laporan hasil dicatat di server dan disalin ke Downloads pengguna sebagai `rekap_manajemen_ptk_hasil_matching.csv`.
 
 File terkait:
 
