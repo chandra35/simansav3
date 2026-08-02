@@ -2162,7 +2162,228 @@ a {
 }
 
 /* ===============================================
-   DATA GTK — scoped operational UI
+   EDIT GTK - scoped operational UI
+   =============================================== */
+.simansa-gtk-edit .simansa-gtk-edit__hero {
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%) !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, .1);
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero .card-body { padding: 1.15rem 1.25rem; }
+.simansa-gtk-edit .simansa-gtk-edit__eyebrow {
+    margin-bottom: .35rem;
+    color: rgba(255, 255, 255, .88);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero h2 {
+    margin-bottom: .3rem;
+    color: #fff;
+    font-size: clamp(1.35rem, 2vw, 1.75rem);
+    font-weight: 800;
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero p {
+    max-width: 760px;
+    color: rgba(255, 255, 255, .9);
+    font-size: .88rem;
+    line-height: 1.5;
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero-stat {
+    min-width: 0;
+    padding: .7rem .8rem;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .12);
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero-stat span,
+.simansa-gtk-edit .simansa-gtk-edit__hero-stat strong { display: block; }
+.simansa-gtk-edit .simansa-gtk-edit__hero-stat span {
+    margin-bottom: .15rem;
+    color: rgba(255, 255, 255, .78);
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+}
+.simansa-gtk-edit .simansa-gtk-edit__hero-stat strong {
+    overflow: hidden;
+    color: #fff;
+    font-size: .88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.simansa-gtk-edit .gtk-edit-shell {
+    overflow: hidden;
+    border-right: 1px solid #dbe4f0;
+    border-bottom: 1px solid #dbe4f0;
+    border-left: 1px solid #dbe4f0;
+    border-radius: 14px;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, .07);
+}
+.simansa-gtk-edit .gtk-edit-shell > .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fff;
+}
+.simansa-gtk-edit .gtk-edit-shell > .card-header .card-title {
+    float: none;
+    margin: 0;
+    color: #0f172a;
+    font-size: .95rem;
+    font-weight: 800;
+}
+.simansa-gtk-edit .gtk-edit-shell__subtitle {
+    display: block;
+    margin-top: .15rem;
+    color: #64748b;
+    font-size: .72rem;
+}
+.simansa-gtk-edit .gtk-edit-shell > .card-header .card-tools { float: none; margin: 0; }
+.simansa-gtk-edit .gtk-edit-tabs-wrap {
+    overflow-x: auto;
+    padding: .75rem 1rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    scrollbar-width: thin;
+}
+.simansa-gtk-edit .gtk-edit-tabs { width: max-content; min-width: 100%; border-bottom: 0; }
+.simansa-gtk-edit .gtk-edit-tabs .nav-link {
+    margin-right: .35rem;
+    padding: .58rem .75rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 7px 7px 0 0;
+    color: #475569;
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.simansa-gtk-edit .gtk-edit-tabs .nav-link:hover { background: #eef2ff; color: #1d4ed8; }
+.simansa-gtk-edit .gtk-edit-tabs .nav-link.active {
+    border-bottom-color: #2563eb;
+    background: #fff;
+    color: #1d4ed8;
+}
+.simansa-gtk-edit .gtk-edit-tabs .nav-link .badge { margin-left: .25rem; border-radius: 999px; }
+.simansa-gtk-edit .gtk-edit-content { padding: 1rem; }
+.simansa-gtk-edit .gtk-edit-content .form-group label {
+    margin-bottom: .35rem;
+    color: #1e293b;
+    font-size: .78rem;
+    font-weight: 700;
+}
+.simansa-gtk-edit .gtk-edit-content .form-control,
+.simansa-gtk-edit .gtk-edit-content .select2-selection { border-color: #cbd5e1; border-radius: 7px; }
+.simansa-gtk-edit .gtk-edit-content .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .12);
+}
+.simansa-gtk-edit .gtk-edit-photo-card {
+    border: 1px solid #dbe4f0;
+    border-radius: 10px;
+    box-shadow: none;
+}
+.simansa-gtk-edit .gtk-edit-photo-card > .card-header {
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+.simansa-gtk-edit .gtk-edit-photo-card .card-title {
+    color: #1e293b;
+    font-size: .85rem;
+    font-weight: 800;
+}
+.simansa-gtk-edit .gtk-edit-photo-layout { display: flex; align-items: center; gap: 1rem; }
+.simansa-gtk-edit .gtk-edit-photo-preview { position: relative; flex: 0 0 auto; }
+.simansa-gtk-edit .gtk-edit-avatar {
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    border: 3px solid #dbe4f0;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    object-fit: cover;
+}
+.simansa-gtk-edit .gtk-edit-photo-delete {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    font-size: .65rem;
+    line-height: 23px;
+    box-shadow: 0 2px 7px rgba(15, 23, 42, .22);
+}
+.simansa-gtk-edit .gtk-edit-photo-upload { flex: 1 1 auto; min-width: 0; }
+.simansa-gtk-edit .gtk-edit-dropzone {
+    padding: 1.15rem 1rem;
+    border: 2px dashed #bfdbfe;
+    border-radius: 9px;
+    background: #f8fbff;
+    color: #475569;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+.simansa-gtk-edit .gtk-edit-dropzone:hover,
+.simansa-gtk-edit .gtk-edit-dropzone:focus {
+    border-color: #2563eb;
+    outline: 0;
+    background: #eff6ff;
+    box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .1);
+}
+.simansa-gtk-edit .gtk-edit-dropzone.is-dragging { border-color: #16a34a; background: #f0fdf4; }
+.simansa-gtk-edit .gtk-edit-dropzone__icon { display: block; font-size: 1.6rem; opacity: .78; }
+.simansa-gtk-edit .gtk-edit-dropzone p { font-size: .82rem; }
+.simansa-gtk-edit .gtk-edit-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: .35rem -1rem -1rem;
+    padding: .75rem 1rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+.simansa-gtk-edit .gtk-edit-form-actions .btn { min-width: 190px; font-weight: 700; }
+
+@media (max-width: 767.98px) {
+    .simansa-gtk-edit .simansa-gtk-edit__hero .card-body,
+    .simansa-gtk-edit .gtk-edit-content { padding: .9rem; }
+    .simansa-gtk-edit .simansa-gtk-edit__hero-meta { grid-template-columns: minmax(0, 1fr); }
+    .simansa-gtk-edit .gtk-edit-shell > .card-header { align-items: flex-start; flex-direction: column; }
+    .simansa-gtk-edit .gtk-edit-shell > .card-header .card-tools,
+    .simansa-gtk-edit .gtk-edit-shell > .card-header .btn { width: 100%; }
+    .simansa-gtk-edit .gtk-edit-photo-layout { align-items: stretch; flex-direction: column; }
+    .simansa-gtk-edit .gtk-edit-photo-preview { align-self: center; }
+    .simansa-gtk-edit .gtk-edit-form-actions {
+        margin-right: -.9rem;
+        margin-bottom: -.9rem;
+        margin-left: -.9rem;
+    }
+    .simansa-gtk-edit .gtk-edit-form-actions .btn { width: 100%; min-width: 0; }
+}
+
+/* ===============================================
+   DATA GTK - scoped operational UI
    All selectors stay below .simansa-gtk-management so this page does not
    inherit conflicting hero, card, filter, and table presentation rules.
    =============================================== */

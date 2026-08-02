@@ -3,92 +3,81 @@
 @section('title', 'Edit Data GTK')
 
 @section('content_header')
-    <div class="simansa-page-hero">
-        <div class="simansa-page-hero__content">
-            <div class="simansa-page-hero__eyebrow">
-                <i class="fas fa-user-edit"></i>
-                Edit Profil GTK
-            </div>
-            <h1 class="simansa-page-hero__title">Edit Data GTK</h1>
-            <p class="simansa-page-hero__subtitle">
-                Perbarui data pribadi, kepegawaian, akun, dan integrasi Kemenag untuk {{ $gtk->nama_lengkap }} dari satu layar kerja yang lebih jelas.
-            </p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-edit text-primary mr-1"></i> Edit Data GTK</h1>
         </div>
-        <div class="simansa-page-hero__meta">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">NIK</span>
-                <span class="simansa-hero-chip__value">{{ $gtk->nik ?? '-' }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Jenis PTK</span>
-                <span class="simansa-hero-chip__value">{{ $gtk->jenis_ptk ?? '-' }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.index') }}">Data GTK</a></li>
+                <li class="breadcrumb-item active">Edit</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
-    <style>
-        .gtk-edit-shell {
-            border: 0;
-            border-radius: 24px;
-            box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
-            overflow: hidden;
-        }
+    <div class="simansa-gtk-edit">
+        <div class="card bg-gradient-primary text-white simansa-gtk-edit__hero">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <div class="simansa-gtk-edit__eyebrow">
+                            <i class="fas fa-id-badge mr-1"></i> Profil GTK
+                        </div>
+                        <h2 id="gtkEditHeroName">{{ $gtk->nama_lengkap }}</h2>
+                        <p class="mb-0">Perbarui identitas, kepegawaian, akun pengguna, dan integrasi Kemenag dalam satu ruang kerja.</p>
+                    </div>
+                    <div class="col-lg-4 mt-3 mt-lg-0">
+                        <div class="simansa-gtk-edit__hero-meta">
+                            <div class="simansa-gtk-edit__hero-stat">
+                                <span>NIK</span>
+                                <strong>{{ $gtk->nik ?? '-' }}</strong>
+                            </div>
+                            <div class="simansa-gtk-edit__hero-stat">
+                                <span>Jenis PTK</span>
+                                <strong>{{ $gtk->jenis_ptk ?? '-' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        .gtk-edit-shell .card-header {
-            background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
-            color: #fff;
-            border-bottom: 0;
-            padding: 1rem 1.25rem;
-        }
-
-        .gtk-edit-shell .nav-tabs .nav-link {
-            border-radius: 14px;
-            margin-right: .45rem;
-            border: 0;
-            color: #475569;
-            font-weight: 600;
-        }
-
-        .gtk-edit-shell .nav-tabs .nav-link.active {
-            background: rgba(37, 99, 235, .10);
-            color: #1d4ed8;
-        }
-    </style>
-    <div class="row">
-        <div class="col-12">
-            <div class="card gtk-edit-shell">
+        <div class="card card-outline card-primary gtk-edit-shell">
                 <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-user-edit mr-1"></i> {{ $gtk->nama_lengkap }}
-                    </h3>
+                    <div>
+                        <h3 class="card-title"><i class="fas fa-edit text-primary mr-1"></i> Form Data GTK</h3>
+                        <small class="gtk-edit-shell__subtitle">Pilih bagian data yang ingin diperbarui.</small>
+                    </div>
                     <div class="card-tools">
-                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-sm btn-light">
+                        <a href="{{ route('admin.gtk.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <!-- Tabs -->
-                    <ul class="nav nav-tabs" id="gtkEditTabs" role="tablist">
+                    <div class="gtk-edit-tabs-wrap">
+                    <ul class="nav nav-tabs gtk-edit-tabs flex-nowrap" id="gtkEditTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="diri-tab" data-toggle="tab" href="#diri" role="tab">
+                            <a class="nav-link active" id="diri-tab" data-toggle="tab" href="#diri" role="tab" aria-controls="diri" aria-selected="true">
                                 <i class="fas fa-user"></i> Data Pribadi
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="kepeg-tab" data-toggle="tab" href="#kepeg" role="tab">
+                            <a class="nav-link" id="kepeg-tab" data-toggle="tab" href="#kepeg" role="tab" aria-controls="kepeg" aria-selected="false">
                                 <i class="fas fa-briefcase"></i> Data Kepegawaian
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="akun-tab" data-toggle="tab" href="#akun" role="tab">
+                            <a class="nav-link" id="akun-tab" data-toggle="tab" href="#akun" role="tab" aria-controls="akun" aria-selected="false">
                                 <i class="fas fa-user-lock"></i> Akun User
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab">
+                            <a class="nav-link" id="kemenag-tab" data-toggle="tab" href="#kemenag" role="tab" aria-controls="kemenag" aria-selected="false">
                                 <i class="fas fa-sync-alt"></i> Data Integrasi Kemenag
                                 @if($gtk->kemenagSync && $gtk->kemenagSync->has_differences)
                                     <span class="badge badge-warning">{{ $gtk->kemenagSync->differences_count }}</span>
@@ -96,8 +85,9 @@
                             </a>
                         </li>
                     </ul>
+                    </div>
 
-                    <div class="tab-content mt-3" id="gtkEditTabsContent">
+                    <div class="tab-content gtk-edit-content" id="gtkEditTabsContent">
                         <!-- Tab Data Pribadi -->
                         <div class="tab-pane fade show active" id="diri" role="tabpanel">
                             <form id="formDataDiri" enctype="multipart/form-data">
@@ -106,14 +96,14 @@
                                 <input type="hidden" name="tab" value="diri">
 
                                 {{-- Foto Profile - AJAX Upload --}}
-                                <div class="card card-outline card-primary mb-3">
+                                <div class="card gtk-edit-photo-card mb-4">
                                     <div class="card-header py-2">
-                                        <h3 class="card-title"><i class="fas fa-camera mr-1"></i> Foto Profile</h3>
+                                        <h3 class="card-title"><i class="fas fa-camera text-primary mr-1"></i> Foto Profil</h3>
                                     </div>
                                     <div class="card-body py-3">
-                                        <div class="d-flex align-items-center">
+                                        <div class="gtk-edit-photo-layout">
                                             {{-- Current Photo --}}
-                                            <div id="fotoContainer" class="mr-4 text-center" style="position: relative; flex-shrink: 0;">
+                                            <div id="fotoContainer" class="gtk-edit-photo-preview text-center">
                                                 @php
                                                     $hasFoto = !empty($gtk->foto_profile);
                                                     $initialsBg = $gtk->jenis_kelamin === 'P' ? '#f06292' : '#42a5f5';
@@ -122,31 +112,33 @@
                                                 {{-- Foto Image (hidden if no foto) --}}
                                                 <img id="fotoPreview" 
                                                      src="{{ $hasFoto ? $gtk->foto_profile_url : '' }}" 
-                                                     alt=""
-                                                     style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid #dee2e6; {{ $hasFoto ? '' : 'display:none;' }}">
+                                                     alt="Foto profil {{ $gtk->nama_lengkap }}"
+                                                     class="gtk-edit-avatar"
+                                                     style="{{ $hasFoto ? '' : 'display:none;' }}">
                                                 {{-- Avatar Inisial (shown if no foto) --}}
                                                 <div id="fotoInitials" 
-                                                     style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid #dee2e6; background: {{ $initialsBg }}; color: #fff; font-size: 36px; font-weight: 600; display: {{ $hasFoto ? 'none' : 'flex' }}; align-items: center; justify-content: center; line-height: 1;">
+                                                     class="gtk-edit-avatar gtk-edit-avatar--initials"
+                                                     style="background: {{ $initialsBg }}; display: {{ $hasFoto ? 'none' : 'flex' }};">
                                                     {{ $initials }}
                                                 </div>
                                                 {{-- Delete Button --}}
                                                 <button type="button" id="btnDeleteFoto" 
-                                                        style="position:absolute; top:2px; right:2px; width:26px; height:26px; border-radius:50%; border:2px solid #fff; background:#dc3545; color:#fff; font-size:11px; padding:0; line-height:22px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.3); {{ $hasFoto ? '' : 'display:none;' }}"
-                                                        title="Hapus foto">
+                                                        class="btn btn-danger gtk-edit-photo-delete"
+                                                        style="{{ $hasFoto ? '' : 'display:none;' }}"
+                                                        title="Hapus foto" aria-label="Hapus foto profil">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
 
                                             {{-- Upload Area --}}
-                                            <div style="flex: 1; min-width: 0;">
-                                                <div id="dropZone" 
-                                                     style="border: 2px dashed #c3c4c7; border-radius: 8px; padding: 24px 16px; text-align: center; cursor: pointer; background: #fafbfc; transition: all 0.2s ease;">
+                                            <div class="gtk-edit-photo-upload">
+                                                <div id="dropZone" class="gtk-edit-dropzone" role="button" tabindex="0" aria-label="Pilih atau seret foto profil">
                                                     <input type="file" id="fotoFileInput" 
                                                            accept="image/jpeg,image/png,image/jpg"
                                                            style="display: none;">
                                                     <div id="dropZoneContent">
-                                                        <i class="fas fa-cloud-upload-alt text-primary mb-2" style="font-size: 28px; display:block; opacity:0.7;"></i>
-                                                        <p class="mb-1" style="font-size: 14px; color: #495057;">
+                                                        <i class="fas fa-cloud-upload-alt text-primary mb-2 gtk-edit-dropzone__icon"></i>
+                                                        <p class="mb-1">
                                                             <strong>Klik</strong> atau <strong>seret foto</strong> ke sini
                                                         </p>
                                                         <small class="text-muted">JPG, JPEG, PNG &bull; Maks 2MB</small>
@@ -242,21 +234,21 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-2">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="rt">RT</label>
                                             <input type="text" class="form-control" id="rt" name="rt" 
                                                    value="{{ $gtk->rt }}" maxlength="5">
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="rw">RW</label>
                                             <input type="text" class="form-control" id="rw" name="rw" 
                                                    value="{{ $gtk->rw }}" maxlength="5">
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="kodepos">Kode Pos</label>
                                             <input type="text" class="form-control" id="kodepos" name="kodepos" 
@@ -320,7 +312,7 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group gtk-edit-form-actions">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> Simpan Data Pribadi
                                     </button>
@@ -401,7 +393,7 @@
                                            value="{{ $gtk->tmt_kerja ? \Carbon\Carbon::parse($gtk->tmt_kerja)->format('Y-m-d') : '' }}">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group gtk-edit-form-actions">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> Simpan Data Kepegawaian
                                     </button>
@@ -433,8 +425,8 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="email">Email <span class="text-danger">*</span></label>
-                                                <input type="email" class="form-control" id="email" name="email" 
+                                                <label for="user_email">Email <span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control" id="user_email" name="email"
                                                        value="{{ $gtk->user->email }}" required>
                                             </div>
                                         </div>
@@ -471,7 +463,7 @@
                                         Password akan direset menjadi NIK: <strong>{{ $gtk->nik }}</strong>
                                     </div>
 
-                                    <div class="form-group">
+                                    <div class="form-group gtk-edit-form-actions">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save"></i> Simpan Data Akun
                                         </button>
@@ -907,7 +899,6 @@
                 </div>
             </div>
         </div>
-    </div>
 @stop
 
 @section('css')
@@ -992,29 +983,27 @@
             const deleteUrl = '{{ route("admin.gtk.delete-foto", $gtk->id) }}';
             const csrfToken = '{{ csrf_token() }}';
 
-            // Hover effect on drop zone
-            $dropZone.on('mouseenter', function() {
-                $(this).css({ 'border-color': '#007bff', 'background': '#f0f6ff' });
-            }).on('mouseleave', function() {
-                $(this).css({ 'border-color': '#c3c4c7', 'background': '#fafbfc' });
-            });
-
             // Click to open file dialog
             $dropZone.on('click', function(e) {
                 if (e.target === $fileInput[0]) return;
                 $fileInput.trigger('click');
+            }).on('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $fileInput.trigger('click');
+                }
             });
 
             // Drag & drop visual feedback
             $dropZone.on('dragover dragenter', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                $(this).css({ 'border-color': '#28a745', 'background': '#e8f5e9' });
+                $(this).addClass('is-dragging');
             });
             $dropZone.on('dragleave drop', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                $(this).css({ 'border-color': '#c3c4c7', 'background': '#fafbfc' });
+                $(this).removeClass('is-dragging');
             });
 
             // Handle drop
@@ -1270,7 +1259,7 @@
 
                             // Update display if needed
                             if (tab === 'diri' && response.data.nama_lengkap) {
-                                $('.card-title').html('<i class="fas fa-user-edit"></i> ' + response.data.nama_lengkap);
+                                $('#gtkEditHeroName').text(response.data.nama_lengkap);
                             }
                         }
                     },
