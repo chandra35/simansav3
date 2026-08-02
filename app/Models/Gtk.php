@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
+use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\Village;
 
 class Gtk extends Model
@@ -17,9 +17,10 @@ class Gtk extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'gtks';
-    
+
     // UUID sebagai primary key
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -28,6 +29,11 @@ class Gtk extends Model
         'nik',
         'nuptk',
         'nip',
+        'peg_id',
+        'nrg',
+        'npk',
+        'status_inpassing',
+        'status_sertifikasi',
         'kode_gtk',
         'jenis_kelamin',
         'tempat_lahir',
@@ -64,7 +70,7 @@ class Gtk extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($model) {
             if (empty($model->id)) {
                 $model->id = (string) Str::uuid();
@@ -121,6 +127,7 @@ class Gtk extends Model
         }
         $name = urlencode($this->nama_lengkap ?? 'GTK');
         $bg = $this->jenis_kelamin === 'P' ? 'f06292' : '42a5f5';
+
         return "https://ui-avatars.com/api/?name={$name}&size=150&background={$bg}&color=ffffff";
     }
 
@@ -161,10 +168,10 @@ class Gtk extends Model
      */
     public function getUmurAttribute()
     {
-        if (!$this->tanggal_lahir) {
+        if (! $this->tanggal_lahir) {
             return null;
         }
-        
+
         return $this->tanggal_lahir->age;
     }
 

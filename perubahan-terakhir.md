@@ -4,6 +4,23 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sinkronisasi identitas profesional GTK dari Manajemen PTK
+
+- Tabel GTK ditambah kolom unik PEG ID, NRG, dan NPK serta kolom status inpassing dan sertifikasi; kolom NUPTK yang sudah ada tetap digunakan.
+- Perintah `gtk:sync-ptk` membaca workbook Manajemen PTK, menjalankan dry-run secara default, menghasilkan laporan CSV, serta hanya memperbarui pasangan berkeyakinan tinggi ketika opsi `--apply` diberikan.
+- Smart matching memprioritaskan NIK, NIP, dan NUPTK; sisa data dibandingkan memakai nama yang dinormalisasi tanpa gelar, dukungan singkatan token, tanggal lahir, skor minimum, dan margin terhadap kandidat kedua.
+- Konflik antar-identitas, nama yang tidak mendukung identitas, pasangan ganda, dan skor rendah tidak pernah diperbarui otomatis.
+- Sebelum transaksi apply, command menyimpan snapshot JSON lengkap untuk seluruh GTK yang akan diubah.
+- Dry-run lokal terhadap 158 baris workbook dan 122 GTK menemukan 114 pasangan pasti, 7 ambigu, dan 37 tidak ditemukan; database belum diubah pada tahap dry-run.
+
+File terkait:
+
+- `app/Console/Commands/SyncGtkPtkWorkbook.php`
+- `app/Services/GtkPtkMatcher.php`
+- `app/Models/Gtk.php`
+- `database/migrations/2026_08_02_180000_add_professional_identifiers_to_gtks_table.php`
+- `tests/Unit/GtkPtkMatcherTest.php`
+
 ### Penyempurnaan UI Analitik Kehadiran
 
 - Hero Analitik Kehadiran diringkas mengikuti baseline Data Siswa, dengan informasi tahun pelajaran dan periode analisis yang seimbang di dalam satu card gradient.
