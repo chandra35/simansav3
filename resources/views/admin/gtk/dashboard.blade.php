@@ -3,25 +3,36 @@
 @section('title', 'Dashboard GTK')
 
 @section('content_header')
-    <div class="simansa-hero gtk-account-dashboard__hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-user-tie"></i> Ruang Kerja GTK</div>
-            <h1 class="simansa-hero__title">Selamat datang, {{ $gtk->nama_lengkap }}</h1>
-            <p class="simansa-hero__subtitle">Kelola profil, keamanan akun, dan informasi perwalian Anda dari satu halaman.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-home text-primary"></i> Dashboard GTK</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Status Profil</span>
-                <span class="simansa-hero-chip__value {{ $needsCompletion ? 'text-warning' : 'text-success' }}">
-                    {{ $needsCompletion ? 'Perlu dilengkapi' : 'Lengkap' }}
-                </span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item active">Dashboard Saya</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
 <div class="gtk-account-dashboard">
+    <div class="card bg-gradient-primary text-white mb-4 gtk-account-dashboard__hero">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-user-tie mr-1"></i> Selamat Datang, {{ $gtk->nama_lengkap }}</h3>
+                    <p class="mb-2 text-white-50">Ruang kerja pribadi untuk mengelola identitas dan keamanan akun GTK.</p>
+                    <p class="mb-0">Pantau informasi perwalian dan akses layanan utama dari satu halaman.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0 text-center">
+                    <div class="text-white-50 small text-uppercase font-weight-bold">Status Profil</div>
+                    <h3 class="mb-0 text-white">{{ $needsCompletion ? 'Perlu Dilengkapi' : 'Lengkap' }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if($needsCompletion)
         <div class="alert alert-warning alert-dismissible fade show gtk-account-dashboard__alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
@@ -41,7 +52,7 @@
         </div>
     @endif
 
-    <div class="card simansa-management-card gtk-account-dashboard__profile">
+    <div class="card card-outline card-primary gtk-account-dashboard__profile">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-id-card-alt mr-1"></i> Ringkasan Akun</h3>
         </div>
@@ -77,7 +88,7 @@
     </div>
 
     @if($isWaliKelas)
-        <div class="card simansa-management-card">
+        <div class="card card-outline card-primary">
             <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
                 <h3 class="card-title"><i class="fas fa-chalkboard-teacher mr-1"></i> Rombel Perwalian Saya</h3>
                 <span class="badge badge-light mt-2 mt-sm-0">{{ $tahunAktif?->nama ?? 'Tahun aktif belum tersedia' }}</span>
@@ -118,7 +129,7 @@
         </div>
     @endif
 
-    <div class="card simansa-management-card mb-3">
+    <div class="card card-outline card-primary mb-3">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
             <h3 class="card-title"><i class="fas fa-calendar-day mr-1"></i> Jadwal Mengajar Hari Ini</h3>
             <span class="badge badge-light mt-2 mt-sm-0">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM YYYY') }}</span>
@@ -136,7 +147,10 @@
 @section('css')
 <style>
     .gtk-account-dashboard { color:#0f172a; }
-    .gtk-account-dashboard__profile { border-top:3px solid #2563eb !important; }
+    .gtk-account-dashboard__hero { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+    .gtk-account-dashboard__hero > .card-body { padding:1.2rem 1.25rem; }
+    .gtk-account-dashboard__hero h3 { font-size:1.35rem; font-weight:700; }
+    .gtk-account-dashboard .card-outline { border-radius:12px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
     .gtk-account-dashboard__avatar { width:96px; height:96px; object-fit:cover; border-radius:50%; border:3px solid #e2e8f0; box-shadow:0 6px 16px rgba(15,23,42,.12); }
     .gtk-account-dashboard__name { margin:0 0 .2rem; color:#0f172a; font-size:1.25rem; font-weight:800; }
     .gtk-account-dashboard__details { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
@@ -154,7 +168,9 @@
         .gtk-account-dashboard__details { grid-template-columns:1fr; }
         .gtk-account-dashboard__actions { flex-direction:column; }
         .gtk-account-dashboard__actions .btn { width:100%; }
-        .gtk-account-dashboard .simansa-management-card > .card-header { align-items:flex-start !important; }
+        .gtk-account-dashboard .card-outline > .card-header { align-items:flex-start !important; }
+        .gtk-account-dashboard__hero > .card-body { padding:1rem; }
+        .gtk-account-dashboard__hero h3 { font-size:1.15rem; }
     }
 </style>
 @stop

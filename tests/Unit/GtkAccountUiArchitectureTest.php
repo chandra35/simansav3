@@ -14,11 +14,12 @@ class GtkAccountUiArchitectureTest extends TestCase
         $password = file_get_contents($root.'profile/password.blade.php');
 
         foreach ([$dashboard, $profile, $password] as $view) {
-            $this->assertStringContainsString('class="simansa-hero', $view);
-            $this->assertStringContainsString('simansa-hero__main', $view);
-            $this->assertStringContainsString('simansa-hero-chip', $view);
-            $this->assertStringContainsString('simansa-management-card', $view);
+            $this->assertStringContainsString('class="row mb-2"', $view);
+            $this->assertStringContainsString('class="breadcrumb float-sm-right"', $view);
+            $this->assertStringContainsString('card bg-gradient-primary text-white mb-4', $view);
+            $this->assertStringContainsString('card card-outline card-primary', $view);
             $this->assertStringContainsString('@media (max-width:', $view);
+            $this->assertStringNotContainsString('class="simansa-hero', $view);
         }
 
         $this->assertStringContainsString('class="gtk-account-dashboard"', $dashboard);

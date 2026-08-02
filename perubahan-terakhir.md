@@ -6,7 +6,8 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyelarasan UI akun GTK
 
-- Dashboard GTK, Profil Saya, dan Ganti Password kini memakai hero ringkas, card operasional, palet biru-teal, dan hierarki tombol sesuai standar UI SIMANSA.
+- Dashboard GTK, Profil Saya, dan Ganti Password kini memakai struktur yang sama dengan halaman Data Siswa: judul/breadcrumb standar, satu hero `bg-gradient-primary` utuh selebar konten, serta card operasional `card-outline card-primary`.
+- Koreksi lanjutan menghapus hero generik dua kolom yang membuat gradient dan chip status terlihat terputus. Status akun kini menyatu di sisi kanan hero sehingga distribusi warna dan ruang lebih seimbang.
 - Dashboard merangkum identitas GTK dalam grid adaptif, menyediakan aksi akun yang jelas, serta merapikan panel perwalian dan jadwal.
 - Profil GTK menampilkan status kelengkapan pada hero dan memakai action bar sticky di dalam form sehingga tidak menutupi konten atau bergantung pada lebar sidebar.
 - Wizard password tetap mempertahankan tiga langkah, dilengkapi autofill browser yang benar, label tombol aksesibel, feedback konfirmasi live, dan susunan tombol/identitas satu kolom pada ponsel.

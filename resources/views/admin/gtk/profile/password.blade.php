@@ -3,23 +3,36 @@
 @section('title', 'Ganti Password')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Keamanan Akun</div>
-            <h1 class="simansa-hero__title">Ganti Password</h1>
-            <p class="simansa-hero__subtitle">Amankan akun Anda dalam tiga langkah mudah. Password baru langsung berlaku pada sesi berikutnya.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-key text-primary"></i> Ganti Password</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Akun</span>
-                <span class="simansa-hero-chip__value">{{ Auth::user()->username }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.dashboard') }}">Dashboard Saya</a></li>
+                <li class="breadcrumb-item active">Ganti Password</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
 <div class="gtk-account-password">
+<div class="card bg-gradient-primary text-white mb-4 gtk-account-password__hero">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-1"><i class="fas fa-shield-alt mr-1"></i> Keamanan Akun</h3>
+                <p class="mb-2 text-white-50">Amankan akun Anda dalam tiga langkah yang ringkas dan mudah diikuti.</p>
+                <p class="mb-0">Password baru langsung berlaku pada sesi login berikutnya.</p>
+            </div>
+            <div class="col-lg-4 mt-3 mt-lg-0 text-center">
+                <div class="text-white-50 small text-uppercase font-weight-bold">Username</div>
+                <h3 class="mb-0 text-white gtk-account-password__hero-value">{{ Auth::user()->username }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row justify-content-center">
     <div class="col-12 col-xl-8 col-lg-9">
         @if(session('info'))
@@ -34,7 +47,7 @@
             </div>
         @endif
 
-        <div id="pw-wizard" class="card simansa-management-card gtk-account-password__wizard">
+        <div id="pw-wizard" class="card card-outline card-primary gtk-account-password__wizard">
             {{-- Stepper --}}
             <div class="card-body pb-0">
                 <div class="pw-stepper">
@@ -176,7 +189,11 @@
 @section('css')
 <style>
     .gtk-account-password { color:#0f172a; }
-    .gtk-account-password__wizard { border-top:3px solid #2563eb !important; }
+    .gtk-account-password__hero { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+    .gtk-account-password__hero > .card-body { padding:1.2rem 1.25rem; }
+    .gtk-account-password__hero h3 { font-size:1.35rem; font-weight:700; }
+    .gtk-account-password__hero-value { overflow-wrap:anywhere; }
+    .gtk-account-password__wizard { border-radius:12px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
     .gtk-account-password__wizard > .card-body { padding-left:1.35rem; padding-right:1.35rem; }
     .gtk-account-password__wizard .form-control { min-height:42px; }
     .gtk-account-password__wizard .input-group-append .btn { min-width:48px; }
@@ -209,6 +226,8 @@
     #pw-wizard .card-footer { gap:.75rem; }
     #pw-wizard .card-footer > div { display:flex; gap:.5rem; }
     @media (max-width:575.98px) {
+        .gtk-account-password__hero > .card-body { padding:1rem; }
+        .gtk-account-password__hero h3 { font-size:1.15rem; }
         .gtk-account-password__wizard > .card-body { padding-left:1rem; padding-right:1rem; }
         #pw-wizard .pw-stepper::before { left:16%; right:16%; top:19px; }
         #pw-wizard .pw-step__dot { width:40px; height:40px; margin-bottom:6px; }

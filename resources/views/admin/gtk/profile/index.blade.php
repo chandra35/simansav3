@@ -3,29 +3,41 @@
 @section('title', 'Profil GTK')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-user-circle"></i> Pengaturan Akun</div>
-            <h1 class="simansa-hero__title">Profil Saya</h1>
-            <p class="simansa-hero__subtitle">Perbarui identitas, alamat, foto, dan data kepegawaian Anda dalam satu tempat.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-circle text-primary"></i> Profil Saya</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Kelengkapan</span>
-                <span class="simansa-hero-chip__value {{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'text-success' : 'text-warning' }}">
-                    {{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Profil lengkap' : 'Perlu dilengkapi' }}
-                </span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.gtk.dashboard') }}">Dashboard Saya</a></li>
+                <li class="breadcrumb-item active">Profil Saya</li>
+            </ol>
         </div>
     </div>
 @endsection
 
 @section('content')
 <div class="gtk-account-profile">
+    <div class="card bg-gradient-primary text-white mb-4 gtk-account-profile__hero">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h3 class="mb-1"><i class="fas fa-user-circle mr-1"></i> Pengaturan Profil GTK</h3>
+                    <p class="mb-2 text-white-50">Perbarui identitas, alamat, foto, dan data kepegawaian Anda dalam satu tempat.</p>
+                    <p class="mb-0">Pastikan data selalu sesuai dengan dokumen dan kondisi kepegawaian terbaru.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0 text-center">
+                    <div class="text-white-50 small text-uppercase font-weight-bold">Kelengkapan Profil</div>
+                    <h3 class="mb-0 text-white">{{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Lengkap' : 'Perlu Dilengkapi' }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         {{-- KOLOM KIRI: Ringkasan Profil --}}
         <div class="col-12 col-lg-4">
-            <div class="card simansa-management-card gtk-account-profile__summary">
+            <div class="card card-outline card-primary gtk-account-profile__summary">
                 <div class="card-body box-profile text-center">
                     <label class="gtk-foto-frame mb-3" for="foto_profile" id="fotoDropZone" title="Klik atau tarik & letakkan foto di sini">
                         <img id="fotoPreview" src="{{ $gtk->foto_profile_url }}" alt="Foto">
@@ -62,7 +74,7 @@
                 </ul>
             </div>
 
-            <div class="card simansa-management-card gtk-account-profile__completion">
+            <div class="card card-outline card-primary gtk-account-profile__completion">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Kelengkapan Profil</h3>
                 </div>
@@ -91,7 +103,7 @@
 
         {{-- KOLOM KANAN: Form --}}
         <div class="col-12 col-lg-8">
-            <div class="card simansa-management-card card-outline-tabs gtk-account-profile__form">
+            <div class="card card-outline card-primary card-outline-tabs gtk-account-profile__form">
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs" id="custom-tabs" role="tablist">
                         <li class="nav-item">
@@ -546,13 +558,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
     <style>
         .gtk-account-profile { color: #0f172a; }
-        .gtk-account-profile__summary,
-        .gtk-account-profile__completion,
-        .gtk-account-profile__form { border-top: 3px solid #2563eb !important; }
-        .gtk-account-profile__completion > .card-header,
-        .gtk-account-profile__form > .card-header { background: #fff !important; border-bottom: 1px solid #e2e8f0 !important; }
-        .gtk-account-profile__completion > .card-header .card-title,
-        .gtk-account-profile__completion > .card-header .card-title i { color: #0f172a !important; }
+        .gtk-account-profile__hero { overflow: hidden; border: 0; border-radius: 16px; box-shadow: 0 12px 28px rgba(15,23,42,.1); }
+        .gtk-account-profile__hero > .card-body { padding: 1.2rem 1.25rem; }
+        .gtk-account-profile__hero h3 { font-size: 1.35rem; font-weight: 700; }
+        .gtk-account-profile .card-outline { border-radius: 12px; box-shadow: 0 8px 20px rgba(15,23,42,.06); }
         .gtk-account-profile__form > .card-body { padding: 1.25rem; }
         .gtk-account-profile .list-group-item strong { overflow-wrap: anywhere; text-align: right; }
         .gtk-account-profile .form-control { min-height: 38px; }
@@ -680,6 +689,8 @@
             .gtk-account-profile__summary { margin-bottom: 1rem; }
         }
         @media (max-width: 575.98px) {
+            .gtk-account-profile__hero > .card-body { padding: 1rem; }
+            .gtk-account-profile__hero h3 { font-size: 1.15rem; }
             .gtk-account-profile__form > .card-body { padding: 1rem; }
             .gtk-account-profile .nav-tabs { display: flex; }
             .gtk-account-profile .nav-tabs .nav-item { flex: 1 1 50%; text-align: center; }
