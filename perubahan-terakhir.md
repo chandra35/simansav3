@@ -26,6 +26,7 @@ File terkait:
 - Mengikuti pola resmi `Flexible table width` DataTables, tabel desktop dibiarkan menghitung ulang lebar secara otomatis terhadap containernya tanpa `scrollX`; overflow horizontal hanya menjadi fallback pada perangkat sempit. Pilihan jumlah data dan kolom pencarian tetap seimbang di luar area data.
 - Lebar kolom tidak lagi dipaksa dengan persentase: DataTables dan browser menyesuaikannya terhadap isi aktual. Lima tombol per baris diringkas menjadi satu dropdown `Aksi`, sementara konfirmasi reset password dan hapus tetap memakai alur SweetAlert2 yang sama.
 - Struktur tabel diringkas menjadi lima kolom Bootstrap: No, Profil, Peran, Status, dan Aksi. NIK/ID PTK tampil berdampingan di Profil, jenis PTK/wali kelas berada di Peran, dan empat indikator status menggunakan badge soft-color dua kolom dengan seluruh sel disejajarkan vertikal di tengah.
+- Select Aksi diganti menjadi Bootstrap dropdown button `btn-sm btn-outline-primary` dengan ikon per menu, pemisah tindakan sensitif, dan `dropdown-menu-right`. Tooltip Bootstrap diaktifkan kembali setiap DataTables selesai menggambar baris untuk tombol aksi dan indikator status.
 
 File terkait:
 

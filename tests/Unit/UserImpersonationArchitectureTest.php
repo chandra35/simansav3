@@ -54,7 +54,7 @@ class UserImpersonationArchitectureTest extends TestCase
         $this->assertStringNotContainsString('alasan', strtolower($siswaController));
 
         $this->assertStringContainsString("can('impersonate-users')", $gtkController);
-        $this->assertStringContainsString('<option value="login-as">', $gtkController);
+        $this->assertStringContainsString('data-action="login-as"', $gtkController);
         $this->assertStringContainsString("form.target = '_blank'", $gtkView);
         $this->assertStringNotContainsString('alasan', strtolower($gtkController));
     }

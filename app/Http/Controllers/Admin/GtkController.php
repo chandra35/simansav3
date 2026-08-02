@@ -188,10 +188,10 @@ class GtkController extends Controller
                     </div>',
                 'status_summary' => '
                     <div class="simansa-gtk-status-grid">
-                        <span class="simansa-gtk-status-badge '.$inpassingClass.'"><i class="fas fa-layer-group"></i><span>Inpassing</span><strong>'.$inpassingText.'</strong></span>
-                        <span class="simansa-gtk-status-badge '.$sertifikasiClass.'"><i class="fas fa-certificate"></i><span>Sertifikasi</span><strong>'.$sertifikasiText.'</strong></span>
-                        <span class="simansa-gtk-status-badge '.$dataDiriClass.'"><i class="fas fa-id-card"></i><span>Data diri</span><strong>'.($item->data_diri_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
-                        <span class="simansa-gtk-status-badge '.$dataKepegClass.'"><i class="fas fa-briefcase"></i><span>Kepegawaian</span><strong>'.($item->data_kepegawaian_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$inpassingClass.'" data-tooltip="true" title="Status inpassing: '.$inpassingText.'"><i class="fas fa-layer-group"></i><span>Inpassing</span><strong>'.$inpassingText.'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$sertifikasiClass.'" data-tooltip="true" title="Status sertifikasi: '.$sertifikasiText.'"><i class="fas fa-certificate"></i><span>Sertifikasi</span><strong>'.$sertifikasiText.'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$dataDiriClass.'" data-tooltip="true" title="Kelengkapan data diri"><i class="fas fa-id-card"></i><span>Data diri</span><strong>'.($item->data_diri_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$dataKepegClass.'" data-tooltip="true" title="Kelengkapan data kepegawaian"><i class="fas fa-briefcase"></i><span>Kepegawaian</span><strong>'.($item->data_kepegawaian_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
                     </div>',
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
@@ -291,39 +291,44 @@ class GtkController extends Controller
     private function getActionButtons($item)
     {
         $user = auth()->user();
-        $options = [];
+        $groups = [[], [], []];
 
         if ($user->can('view-gtk')) {
-            $options[] = '<option value="view">Lihat detail</option>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view" onclick="handleGtkAction(this)"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
         }
 
         if ($user->can('edit-gtk')) {
-            $options[] = '<option value="edit">Edit data</option>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="edit" onclick="handleGtkAction(this)"><i class="fas fa-edit text-primary"></i><span>Edit data</span></button>';
         }
 
         if ($user->can('reset-password-gtk')) {
-            $options[] = '<option value="reset-password">Reset password</option>';
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="reset-password" onclick="handleGtkAction(this)"><i class="fas fa-key text-warning"></i><span>Reset password</span></button>';
         }
 
         if ($user->can('impersonate-users') && $item->user_id) {
-            $options[] = '<option value="login-as">Login sebagai GTK</option>';
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="login-as" onclick="handleGtkAction(this)"><i class="fas fa-user-shield text-success"></i><span>Login sebagai GTK</span></button>';
         }
 
         if ($user->can('delete-gtk')) {
-            $options[] = '<option value="delete">Hapus GTK</option>';
+            $groups[2][] = '<button type="button" class="dropdown-item simansa-gtk-action-item text-danger" data-action="delete" onclick="handleGtkAction(this)"><i class="fas fa-trash-alt"></i><span>Hapus GTK</span></button>';
         }
 
-        if ($options === []) {
+        $menus = array_values(array_filter($groups));
+
+        if ($menus === []) {
             return '-';
         }
 
-        return '<select class="custom-select custom-select-sm simansa-gtk-action-select"'
-            .' aria-label="Pilih aksi untuk '.e($item->nama_lengkap).'"'
+        return '<div class="btn-group simansa-gtk-action-menu"'
             .' data-gtk-id="'.e($item->id).'"'
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
-            .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'"'
-            .' onchange="handleGtkAction(this)">'
-            .'<option value="">Aksi</option>'.implode('', $options).'</select>';
+            .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
+            .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
+            .' data-toggle="dropdown" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
+            .' aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>'
+            .'<div class="dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown">'
+            .implode('<div class="dropdown-divider"></div>', array_map(fn ($group) => implode('', $group), $menus))
+            .'</div></div>';
     }
 
     /**

@@ -99,10 +99,26 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('min-width: 0;', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-status', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-table .gtk-col-actions', $css);
-        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-action-select', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-action-menu .simansa-gtk-action-toggle', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-action-dropdown', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-status-grid', $css);
         $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-status-badge.is-success', $css);
-        $this->assertStringContainsString('onchange="handleGtkAction(this)"', $controller);
-        $this->assertStringContainsString('function handleGtkAction(select)', $view);
+        $this->assertStringContainsString('btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle', $controller);
+        $this->assertStringContainsString('dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown', $controller);
+        $this->assertStringContainsString('data-action="view"', $controller);
+        $this->assertStringContainsString('data-action="edit"', $controller);
+        $this->assertStringContainsString('data-action="reset-password"', $controller);
+        $this->assertStringContainsString('data-action="login-as"', $controller);
+        $this->assertStringContainsString('data-action="delete"', $controller);
+        $this->assertStringContainsString('fas fa-eye text-info', $controller);
+        $this->assertStringContainsString('fas fa-edit text-primary', $controller);
+        $this->assertStringContainsString('fas fa-key text-warning', $controller);
+        $this->assertStringContainsString('fas fa-user-shield text-success', $controller);
+        $this->assertStringContainsString('fas fa-trash-alt', $controller);
+        $this->assertStringContainsString('data-tooltip="true"', $controller);
+        $this->assertStringNotContainsString('simansa-gtk-action-select', $controller);
+        $this->assertStringContainsString('function handleGtkAction(item)', $view);
+        $this->assertStringContainsString('refreshGtkTooltips', $view);
+        $this->assertStringContainsString(".on('draw.dt'", $view);
     }
 }

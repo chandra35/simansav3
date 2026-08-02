@@ -380,6 +380,14 @@ $(document).ready(function() {
     const $gtkFilterStatus = $('#gtkFilterStatus');
     let filterReloadTimer = null;
 
+    const refreshGtkTooltips = function() {
+        $gtkTableElement.find('[data-tooltip="true"]').tooltip({
+            container: 'body',
+            boundary: 'window',
+            trigger: 'hover focus'
+        });
+    };
+
     $gtkTableElement
         .on('preXhr.dt', function() {
             $gtkTableWrap.addClass('is-loading');
@@ -398,6 +406,15 @@ $(document).ready(function() {
             $gtkFilterStatus
                 .removeClass('is-loading')
                 .html('<i class="fas fa-exclamation-circle mr-1"></i> Data gagal dimuat');
+        })
+        .on('preDraw.dt', function() {
+            $gtkTableElement.find('[data-tooltip="true"]').tooltip('dispose');
+        })
+        .on('draw.dt', function() {
+            refreshGtkTooltips();
+        })
+        .on('show.bs.dropdown', '.simansa-gtk-action-menu', function() {
+            $(this).find('[data-tooltip="true"]').tooltip('hide');
         });
 
     let gtkTable = $('#gtk-table').DataTable({
@@ -839,21 +856,23 @@ function escapeHtml(text) {
 }
 
 // Show GTK Detail
-function handleGtkAction(select) {
-    const action = select.value;
-    const gtkId = select.dataset.gtkId;
-    select.value = '';
+function handleGtkAction(item) {
+    const action = item.dataset.action;
+    const menu = item.closest('.simansa-gtk-action-menu');
+    if (!menu) return;
+
+    const gtkId = menu.dataset.gtkId;
 
     if (action === 'view') {
         showGtk(gtkId);
     } else if (action === 'edit') {
-        window.location.href = select.dataset.editUrl;
+        window.location.href = menu.dataset.editUrl;
     } else if (action === 'reset-password') {
         resetPassword(gtkId);
     } else if (action === 'login-as') {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = select.dataset.loginUrl;
+        form.action = menu.dataset.loginUrl;
         form.target = '_blank';
         form.setAttribute('data-no-overlay', '');
         form.innerHTML = '<input type="hidden" name="_token" value="{{ csrf_token() }}">';
