@@ -3,25 +3,29 @@
 @section('title', 'Profil GTK')
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-sm-6">
-            <h1><i class="fas fa-user-circle"></i> Profil Saya</h1>
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
+            <div class="simansa-hero__eyebrow"><i class="fas fa-user-circle"></i> Pengaturan Akun</div>
+            <h1 class="simansa-hero__title">Profil Saya</h1>
+            <p class="simansa-hero__subtitle">Perbarui identitas, alamat, foto, dan data kepegawaian Anda dalam satu tempat.</p>
         </div>
-        <div class="col-sm-6">
-            <div class="float-sm-right">
-                <a href="{{ route('admin.gtk.dashboard') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-                </a>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Kelengkapan</span>
+                <span class="simansa-hero-chip__value {{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'text-success' : 'text-warning' }}">
+                    {{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Profil lengkap' : 'Perlu dilengkapi' }}
+                </span>
             </div>
         </div>
     </div>
 @endsection
 
 @section('content')
+<div class="gtk-account-profile">
     <div class="row">
         {{-- KOLOM KIRI: Ringkasan Profil --}}
         <div class="col-12 col-lg-4">
-            <div class="card card-primary card-outline">
+            <div class="card simansa-management-card gtk-account-profile__summary">
                 <div class="card-body box-profile text-center">
                     <label class="gtk-foto-frame mb-3" for="foto_profile" id="fotoDropZone" title="Klik atau tarik & letakkan foto di sini">
                         <img id="fotoPreview" src="{{ $gtk->foto_profile_url }}" alt="Foto">
@@ -58,7 +62,7 @@
                 </ul>
             </div>
 
-            <div class="card">
+            <div class="card simansa-management-card gtk-account-profile__completion">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Kelengkapan Profil</h3>
                 </div>
@@ -87,7 +91,7 @@
 
         {{-- KOLOM KANAN: Form --}}
         <div class="col-12 col-lg-8">
-            <div class="card card-primary card-outline card-outline-tabs">
+            <div class="card simansa-management-card card-outline-tabs gtk-account-profile__form">
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs" id="custom-tabs" role="tablist">
                         <li class="nav-item">
@@ -532,6 +536,7 @@
             </div>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')
@@ -540,6 +545,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
     <style>
+        .gtk-account-profile { color: #0f172a; }
+        .gtk-account-profile__summary,
+        .gtk-account-profile__completion,
+        .gtk-account-profile__form { border-top: 3px solid #2563eb !important; }
+        .gtk-account-profile__completion > .card-header,
+        .gtk-account-profile__form > .card-header { background: #fff !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .gtk-account-profile__completion > .card-header .card-title,
+        .gtk-account-profile__completion > .card-header .card-title i { color: #0f172a !important; }
+        .gtk-account-profile__form > .card-body { padding: 1.25rem; }
+        .gtk-account-profile .list-group-item strong { overflow-wrap: anywhere; text-align: right; }
+        .gtk-account-profile .form-control { min-height: 38px; }
+        .gtk-account-profile textarea.form-control { min-height: 88px; }
+
         /* ===== Utility ===== */
         .gtk-gap { gap: .65rem; }
 
@@ -642,13 +660,11 @@
             cursor: pointer;
         }
 
-        /* ===== Sticky action bar (fixed agar selalu terlihat saat scroll) ===== */
+        /* ===== Action bar ===== */
         .gtk-sticky-actions {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            left: 250px; /* lebar sidebar AdminLTE */
-            z-index: 1030;
+            position: sticky;
+            bottom: .5rem;
+            z-index: 20;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -658,18 +674,23 @@
             border-top: 1px solid #e2e8f0;
             box-shadow: 0 -4px 16px rgba(15, 23, 42, .08);
             padding: .65rem 1rem;
-            transition: left .3s ease-in-out;
+            margin: 1.25rem -1.25rem -1.25rem;
         }
-        body.sidebar-collapse .gtk-sticky-actions { left: 4.6rem; }
         @media (max-width: 991.98px) {
-            .gtk-sticky-actions { left: 0 !important; }
+            .gtk-account-profile__summary { margin-bottom: 1rem; }
         }
-        /* ruang agar field terakhir tidak tertutup bar */
-        .content-wrapper { padding-bottom: 80px; }
         @media (max-width: 575.98px) {
+            .gtk-account-profile__form > .card-body { padding: 1rem; }
+            .gtk-account-profile .nav-tabs { display: flex; }
+            .gtk-account-profile .nav-tabs .nav-item { flex: 1 1 50%; text-align: center; }
+            .gtk-account-profile .nav-tabs .nav-link { padding: .75rem .4rem; font-size: .82rem; }
+            .gtk-account-profile .list-group-item { align-items: flex-start !important; gap: .75rem; }
+            .gtk-sticky-actions { position: static; margin: 1rem -1rem -1rem; padding: .75rem; }
             .gtk-sticky-actions { justify-content: flex-end; }
             .gtk-sticky-actions .btn { flex: 1; }
             .gtk-sticky-actions > .d-flex { width: 100%; }
+            .gtk-sticky-actions .text-muted { display: none !important; }
+            .gtk-crop-wrap { max-height: 45vh; }
         }
     </style>
 @stop

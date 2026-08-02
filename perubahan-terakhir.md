@@ -1,8 +1,23 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 1 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Penyelarasan UI akun GTK
+
+- Dashboard GTK, Profil Saya, dan Ganti Password kini memakai hero ringkas, card operasional, palet biru-teal, dan hierarki tombol sesuai standar UI SIMANSA.
+- Dashboard merangkum identitas GTK dalam grid adaptif, menyediakan aksi akun yang jelas, serta merapikan panel perwalian dan jadwal.
+- Profil GTK menampilkan status kelengkapan pada hero dan memakai action bar sticky di dalam form sehingga tidak menutupi konten atau bergantung pada lebar sidebar.
+- Wizard password tetap mempertahankan tiga langkah, dilengkapi autofill browser yang benar, label tombol aksesibel, feedback konfirmasi live, dan susunan tombol/identitas satu kolom pada ponsel.
+- Breakpoint desktop, tablet, dan ponsel ditambahkan secara scoped pada masing-masing halaman tanpa mengubah proses penyimpanan data.
+
+File terkait:
+
+- `resources/views/admin/gtk/dashboard.blade.php`
+- `resources/views/admin/gtk/profile/index.blade.php`
+- `resources/views/admin/gtk/profile/password.blade.php`
+- `tests/Unit/GtkAccountUiArchitectureTest.php`
 
 ### Portal Wali Kelas ("Kelas Saya") untuk akun GTK
 

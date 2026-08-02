@@ -3,22 +3,25 @@
 @section('title', 'Ganti Password')
 
 @section('content_header')
-    <div class="simansa-hero__main d-flex flex-wrap align-items-center justify-content-between mb-3">
-        <div class="mr-md-3 mb-2 mb-md-0">
+    <div class="simansa-hero">
+        <div class="simansa-hero__main">
             <div class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Keamanan Akun</div>
             <h1 class="simansa-hero__title">Ganti Password</h1>
-            <p class="simansa-hero__subtitle mb-0">Amankan akun Anda dalam tiga langkah mudah. Password baru langsung berlaku pada sesi berikutnya.</p>
+            <p class="simansa-hero__subtitle">Amankan akun Anda dalam tiga langkah mudah. Password baru langsung berlaku pada sesi berikutnya.</p>
         </div>
-        <div class="simansa-hero-chip flex-shrink-0">
-            <span class="simansa-hero-chip__label">Akun</span>
-            <span class="simansa-hero-chip__value">{{ Auth::user()->username }}</span>
+        <div class="simansa-hero__side">
+            <div class="simansa-hero-chip">
+                <span class="simansa-hero-chip__label">Akun</span>
+                <span class="simansa-hero-chip__value">{{ Auth::user()->username }}</span>
+            </div>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="gtk-account-password">
 <div class="row justify-content-center">
-    <div class="col-lg-7 col-md-9">
+    <div class="col-12 col-xl-8 col-lg-9">
         @if(session('info'))
             <div class="alert alert-info d-flex align-items-center">
                 <i class="fas fa-info-circle mr-2"></i>
@@ -31,7 +34,7 @@
             </div>
         @endif
 
-        <div id="pw-wizard" class="card simansa-management-card">
+        <div id="pw-wizard" class="card simansa-management-card gtk-account-password__wizard">
             {{-- Stepper --}}
             <div class="card-body pb-0">
                 <div class="pw-stepper">
@@ -62,9 +65,10 @@
                         <label for="current_password">Password Lama <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="password" class="form-control @error('current_password') is-invalid @enderror"
-                                   id="current_password" name="current_password" placeholder="Masukkan password lama" required>
+                                   id="current_password" name="current_password" placeholder="Masukkan password lama"
+                                   autocomplete="current-password" required>
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="current_password" tabindex="-1">
+                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="current_password" aria-label="Tampilkan password lama">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -81,9 +85,10 @@
                         <label for="password">Password Baru <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                   id="password" name="password" placeholder="Minimal 8 karakter" required>
+                                   id="password" name="password" placeholder="Minimal 8 karakter"
+                                   autocomplete="new-password" required>
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="password" tabindex="-1">
+                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="password" aria-label="Tampilkan password baru">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -114,14 +119,15 @@
                         <label for="password_confirmation">Konfirmasi Password Baru <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="password" class="form-control" id="password_confirmation"
-                                   name="password_confirmation" placeholder="Ketik ulang password baru" required>
+                                   name="password_confirmation" placeholder="Ketik ulang password baru"
+                                   autocomplete="new-password" required>
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="password_confirmation" tabindex="-1">
+                                <button class="btn btn-outline-secondary pw-toggle" type="button" data-target="password_confirmation" aria-label="Tampilkan konfirmasi password">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
                         </div>
-                        <small id="pwMatch" class="form-text"></small>
+                        <small id="pwMatch" class="form-text" aria-live="polite"></small>
                     </div>
 
                     <div class="pw-reminder">
@@ -148,7 +154,7 @@
                         <button type="button" class="btn btn-primary" id="btnNext" disabled>
                             Lanjut <i class="fas fa-chevron-right"></i>
                         </button>
-                        <button type="submit" class="btn btn-warning d-none" id="btnSubmit" disabled>
+                        <button type="submit" class="btn btn-primary d-none" id="btnSubmit" disabled>
                             <i class="fas fa-save"></i> Simpan Password Baru
                         </button>
                     </div>
@@ -156,18 +162,27 @@
             </form>
         </div>
 
-        <div class="card card-outline card-primary">
+        <div class="card card-outline card-primary gtk-account-password__identity">
             <div class="card-body py-3">
-                <p class="mb-1"><i class="fas fa-user text-muted mr-1"></i> <strong>Username:</strong> {{ Auth::user()->username }}</p>
-                <p class="mb-0"><i class="fas fa-envelope text-muted mr-1"></i> <strong>Email:</strong> {{ Auth::user()->email }}</p>
+                <div><i class="fas fa-user text-muted mr-1"></i> <strong>Username:</strong> <span>{{ Auth::user()->username }}</span></div>
+                <div><i class="fas fa-envelope text-muted mr-1"></i> <strong>Email:</strong> <span>{{ Auth::user()->email ?: '-' }}</span></div>
             </div>
         </div>
     </div>
+</div>
 </div>
 @stop
 
 @section('css')
 <style>
+    .gtk-account-password { color:#0f172a; }
+    .gtk-account-password__wizard { border-top:3px solid #2563eb !important; }
+    .gtk-account-password__wizard > .card-body { padding-left:1.35rem; padding-right:1.35rem; }
+    .gtk-account-password__wizard .form-control { min-height:42px; }
+    .gtk-account-password__wizard .input-group-append .btn { min-width:48px; }
+    .gtk-account-password__identity { border-radius:14px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
+    .gtk-account-password__identity .card-body { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem 1rem; }
+    .gtk-account-password__identity span { overflow-wrap:anywhere; }
     #pw-wizard .pw-stepper { display:flex; justify-content:space-between; position:relative; margin-bottom:.5rem; }
     #pw-wizard .pw-stepper::before { content:''; position:absolute; top:22px; left:12%; right:12%; height:3px; background:#e5e7eb; z-index:0; }
     #pw-wizard .pw-step { position:relative; z-index:1; text-align:center; flex:1; }
@@ -191,6 +206,19 @@
     #pw-wizard .pw-check li i { width:18px; }
     #pw-wizard .pw-reminder { background:#eef2ff; border:1px solid #e0e7ff; border-radius:10px; padding:14px 16px; font-size:.88rem; color:#3730a3; }
     #pw-wizard .pw-reminder__title { font-weight:700; margin-bottom:6px; }
+    #pw-wizard .card-footer { gap:.75rem; }
+    #pw-wizard .card-footer > div { display:flex; gap:.5rem; }
+    @media (max-width:575.98px) {
+        .gtk-account-password__wizard > .card-body { padding-left:1rem; padding-right:1rem; }
+        #pw-wizard .pw-stepper::before { left:16%; right:16%; top:19px; }
+        #pw-wizard .pw-step__dot { width:40px; height:40px; margin-bottom:6px; }
+        #pw-wizard .pw-step__label { font-size:.72rem; }
+        #pw-wizard .pw-panel__title { font-size:1rem; }
+        #pw-wizard .card-footer { align-items:stretch !important; flex-direction:column-reverse; }
+        #pw-wizard .card-footer > div { width:100%; }
+        #pw-wizard .card-footer .btn { flex:1 1 auto; white-space:normal; }
+        .gtk-account-password__identity .card-body { grid-template-columns:1fr; }
+    }
 </style>
 @stop
 
