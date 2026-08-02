@@ -111,6 +111,13 @@ class AuthServiceProvider extends ServiceProvider
                    $user->isActiveWaliKelas();
         });
 
+        Gate::define('sidebar-school-origin-global', function ($user) {
+            $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+            return $user->can('view-siswa') && ($isManager || !$user->hasAnyRole(['GTK', 'Wali Kelas']));
+        });
+
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {

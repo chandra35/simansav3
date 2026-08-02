@@ -4,6 +4,24 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Scope Sekolah Asal berdasarkan jenis akun
+
+- Modul Sekolah Asal kini membedakan akun pengelola dan akun GTK Wali Kelas pada query, statistik, menu, detail sekolah, serta daftar siswanya.
+- Super Admin/Admin/Operator/Kepala Madrasah/WAKA tetap melihat data global sesuai permission, sedangkan GTK murni/Wali Kelas hanya melihat sekolah asal siswa pada rombel aktif yang diampunya.
+- Statistik untuk wali kelas sekarang dihitung dari sekolah dalam rombelnya, bukan lagi dari seluruh referensi sekolah.
+- Tombol Bulk Lengkapi, sinkronisasi per sekolah, dan aksi Lengkapi Data disembunyikan serta ditolak di controller untuk akun wali kelas.
+- NPSN di luar lingkup rombel wali kelas menghasilkan 404, sehingga sekolah maupun siswa lain tidak dapat diakses dengan memanipulasi URL.
+- Menu Sekolah Asal untuk wali kelas dipindahkan ke kelompok Kelas Saya; menu global Manajemen Data memakai gate khusus akun pengelola.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/SekolahAsalController.php`
+- `app/Providers/AuthServiceProvider.php`
+- `config/adminlte.php`
+- `resources/views/admin/sekolah-asal/index.blade.php`
+- `resources/views/admin/sekolah-asal/show.blade.php`
+- `tests/Unit/SchoolOriginRoleScopeTest.php`
+
 ### Penyelarasan Data Siswa Wali Kelas dengan Data Siswa admin
 
 - Halaman Data Siswa Wali Kelas kini mengikuti struktur Data Siswa admin dengan hero operasional, empat card statistik, filter jenis kelamin/kelengkapan, tabel padat, serta status Verval, EMIS, keberadaan, dan tanggal masuk.

@@ -6,16 +6,18 @@
     <div class="simansa-page-hero">
         <div>
             <div class="simansa-page-hero__eyebrow">
-                <i class="fas fa-school mr-1"></i> Manajemen Peserta Didik
+                <i class="fas fa-school mr-1"></i> {{ $isWaliScope ? 'Kelas Saya' : 'Manajemen Peserta Didik' }}
             </div>
-            <h1>Data Sekolah Asal</h1>
-            <p>Kelola referensi sekolah asal siswa, lengkapi wilayah, NSM, SK, akreditasi, dan kontak dari sumber resmi.</p>
+            <h1>{{ $isWaliScope ? 'Sekolah Asal Siswa Kelas Saya' : 'Data Sekolah Asal' }}</h1>
+            <p>{{ $isWaliScope ? 'Lihat sekolah asal yang tercatat pada siswa di rombel aktif yang Anda ampu.' : 'Kelola referensi sekolah asal siswa, lengkapi wilayah, NSM, SK, akreditasi, dan kontak dari sumber resmi.' }}</p>
         </div>
+        @if($canEnrich)
         <div class="simansa-page-hero__actions">
             <button type="button" class="btn btn-light" id="btnBulkEnrichSchools">
                 <i class="fas fa-sync-alt mr-1"></i>Bulk Lengkapi
             </button>
         </div>
+        @endif
     </div>
 @stop
 
@@ -27,7 +29,7 @@
                 <div>
                     <div class="simansa-kpi__label">Total Sekolah</div>
                     <div class="simansa-kpi__value">{{ number_format($stats['total']) }}</div>
-                    <div class="simansa-kpi__desc">Sekolah asal yang sudah tercatat.</div>
+                    <div class="simansa-kpi__desc">{{ $isWaliScope ? 'Sekolah asal siswa pada rombel Anda.' : 'Sekolah asal yang sudah tercatat.' }}</div>
                 </div>
             </div>
         </div>
@@ -67,7 +69,7 @@
         <div class="simansa-section-head">
             <div>
                 <h3>Daftar Sekolah Asal</h3>
-                <p>Gunakan tombol sync untuk melengkapi data dari Referensi Kemendikdasmen dan EMIS Kemenag.</p>
+                <p>{{ $isWaliScope ? 'Daftar ini hanya memuat sekolah asal siswa pada rombel aktif Anda dan bersifat hanya-baca.' : 'Gunakan tombol sync untuk melengkapi data dari Referensi Kemendikdasmen dan EMIS Kemenag.' }}</p>
             </div>
             <div class="simansa-section-actions">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btnReloadTable">
@@ -93,6 +95,7 @@
         </div>
     </section>
 
+    @if($canEnrich)
     <div id="schoolEnrichOverlay" class="simansa-progress-overlay" aria-hidden="true">
         <div class="simansa-progress-modal">
             <div class="simansa-progress-modal__head">
@@ -117,6 +120,7 @@
             <div class="simansa-progress-log" id="schoolProgressLog"></div>
         </div>
     </div>
+    @endif
 @stop
 
 @section('css')

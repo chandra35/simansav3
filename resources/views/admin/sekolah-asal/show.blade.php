@@ -6,18 +6,20 @@
     <div class="simansa-page-hero">
         <div>
             <div class="simansa-page-hero__eyebrow">
-                <i class="fas fa-school mr-1"></i> Detail Sekolah Asal
+                <i class="fas fa-school mr-1"></i> {{ $isWaliScope ? 'Sekolah Asal Kelas Saya' : 'Detail Sekolah Asal' }}
             </div>
             <h1>{{ $sekolah->nama }}</h1>
             <p>{{ $sekolah->npsn }} | NSM: {{ $sekolah->nsm ?: '-' }} | {{ $sekolah->alamat_lengkap ?: 'Wilayah belum lengkap' }}</p>
         </div>
         <div class="simansa-page-hero__actions">
+            @if($canEnrich)
             <button type="button"
                 class="btn btn-light"
                 id="btnEnrichSchool"
                 data-url="{{ route('admin.sekolah-asal.enrich', $sekolah->npsn) }}">
                 <i class="fas fa-sync-alt mr-1"></i>Lengkapi Data
             </button>
+            @endif
             <a href="{{ route('admin.sekolah-asal.index') }}" class="btn btn-outline-light">
                 <i class="fas fa-arrow-left mr-1"></i>Kembali
             </a>
@@ -198,7 +200,7 @@
     {{-- Daftar Siswa --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user-graduate"></i> Daftar Siswa dari {{ $sekolah->nama }}</h3>
+            <h3 class="card-title"><i class="fas fa-user-graduate"></i> {{ $isWaliScope ? 'Siswa Kelas Saya' : 'Daftar Siswa' }} dari {{ $sekolah->nama }}</h3>
         </div>
         <div class="card-body">
             <div class="table-responsive">

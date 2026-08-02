@@ -6,123 +6,66 @@ use App\Http\Controllers\Controller;
 use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Services\SekolahDataEnrichmentService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Yajra\DataTables\Facades\DataTables;
 
 class SekolahAsalController extends Controller
 {
-    /**
-     * Display a listing of sekolah asal with siswa count
-     */
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            $user = auth()->user();
-            
-            // Load GTK with kelas relation if user is GTK
-            $isWaliKelas = false;
-            if ($user->hasRole('GTK') && $user->gtk) {
-                $user->gtk->load('kelas.siswaAktif');
-                $isWaliKelas = $user->gtk->kelas !== null;
-            }
-            
-            if ($isWaliKelas) {
-                // GTK Wali Kelas: only show sekolah from their class students
-                $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
-                
-                $sekolah = Sekolah::query()
-                    ->whereHas('siswa', function ($query) use ($siswaKelasIds) {
-                        $query->whereIn('id', $siswaKelasIds);
-                    })
-                    ->withCount(['siswa' => function ($query) use ($siswaKelasIds) {
-                        // Count only students in their class
-                        $query->whereIn('id', $siswaKelasIds);
-                    }])
-                    ->orderBy('siswa_count', 'desc');
-            } else {
-                // Admin/Super Admin: show all sekolah
-                $sekolah = Sekolah::query()
-                    ->withCount('siswa')
-                    ->orderBy('siswa_count', 'desc');
-            }
+        $classIds = $this->waliClassIds();
+        $isWaliScope = $classIds !== null;
+        $canEnrich = !$isWaliScope && auth()->user()->can('edit-siswa');
+        $schoolQuery = $this->schoolQuery($classIds);
 
-            return DataTables::of($sekolah)
+        if ($request->ajax()) {
+            return DataTables::of($schoolQuery->orderBy('siswa_count', 'desc'))
                 ->addIndexColumn()
                 ->addColumn('identity', function ($row) {
                     return '
                         <div class="school-name">' . e($row->nama) . '</div>
-                        <div class="school-meta">
-                            NPSN: ' . e($row->npsn) . ' <span>|</span> NSM: ' . e($row->nsm ?: '-') . '
-                        </div>
+                        <div class="school-meta">NPSN: ' . e($row->npsn) . ' <span>|</span> NSM: ' . e($row->nsm ?: '-') . '</div>
                     ';
                 })
-                ->addColumn('action', function ($row) {
-                    $url = route('admin.sekolah-asal.show', $row->npsn);
-                    $syncUrl = route('admin.sekolah-asal.enrich', $row->npsn);
+                ->addColumn('action', function ($row) use ($canEnrich) {
+                    $detail = '<a href="' . e(route('admin.sekolah-asal.show', $row->npsn)) . '" class="btn btn-primary" title="Lihat Detail"><i class="fas fa-eye"></i></a>';
+
+                    if (!$canEnrich) {
+                        return '<div class="btn-group btn-group-sm">' . $detail . '</div>';
+                    }
 
                     return '
                         <div class="btn-group btn-group-sm">
-                            <button type="button"
-                                class="btn btn-primary btn-enrich-school"
-                                data-url="' . e($syncUrl) . '"
-                                data-npsn="' . e($row->npsn) . '"
-                                data-school="' . e($row->nama) . '"
-                                title="Lengkapi data sekolah">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                            <a href="' . e($url) . '" class="btn btn-outline-primary" title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            <button type="button" class="btn btn-primary btn-enrich-school"
+                                data-url="' . e(route('admin.sekolah-asal.enrich', $row->npsn)) . '"
+                                data-npsn="' . e($row->npsn) . '" data-school="' . e($row->nama) . '"
+                                title="Lengkapi data sekolah"><i class="fas fa-sync-alt"></i></button>
+                            ' . $detail . '
                         </div>
                     ';
                 })
                 ->addColumn('status_badge', function ($row) {
                     $color = $row->status === 'NEGERI' ? 'primary' : 'success';
-                    $status = $row->status ?? '-';
-                    return '<span class="badge badge-' . $color . '">' . 
-                           $status . '</span>';
+                    return '<span class="badge badge-' . $color . '">' . e($row->status ?? '-') . '</span>';
                 })
                 ->addColumn('siswa_count_badge', function ($row) {
                     $count = $row->siswa_count;
-                    $color = 'secondary';
-                    if ($count > 50) {
-                        $color = 'success';
-                    } elseif ($count > 20) {
-                        $color = 'primary';
-                    } elseif ($count > 0) {
-                        $color = 'info';
-                    }
-                    
-                    $badge = '<span class="badge badge-' . $color . 
-                             ' badge-pill">' . $count . ' siswa</span>';
-                    return $badge;
+                    $color = $count > 50 ? 'success' : ($count > 20 ? 'primary' : ($count > 0 ? 'info' : 'secondary'));
+                    return '<span class="badge badge-' . $color . ' badge-pill">' . $count . ' siswa</span>';
                 })
-                ->addColumn('wilayah', function ($row) {
-                    return collect([$row->kabupaten_kota, $row->provinsi])->filter()->implode(', ')
-                        ?: '<span class="text-muted">-</span>';
-                })
+                ->addColumn('wilayah', fn ($row) => collect([$row->kabupaten_kota, $row->provinsi])->filter()->implode(', ') ?: '<span class="text-muted">-</span>')
                 ->addColumn('kelengkapan_badge', function ($row) {
-                    $fields = [
-                        'nama',
-                        'status',
-                        'bentuk_pendidikan',
-                        'alamat_jalan',
-                        'desa_kelurahan',
-                        'kecamatan',
-                        'kabupaten_kota',
-                        'provinsi',
-                    ];
+                    $fields = ['nama', 'status', 'bentuk_pendidikan', 'alamat_jalan', 'desa_kelurahan', 'kecamatan', 'kabupaten_kota', 'provinsi'];
                     $filled = collect($fields)->filter(fn ($field) => filled($row->{$field}))->count();
                     $percent = (int) round(($filled / count($fields)) * 100);
                     $color = $percent >= 90 ? 'success' : ($percent >= 60 ? 'info' : 'warning');
 
-                    return '
-                        <span class="badge badge-' . $color . ' badge-pill">' . $percent . '%</span>
-                        <div class="school-meta mt-1">' . ($row->last_fetched_at ? 'Update ' . $row->last_fetched_at->format('d/m/Y') : 'Belum dicek') . '</div>
-                    ';
+                    return '<span class="badge badge-' . $color . ' badge-pill">' . $percent . '%</span>
+                        <div class="school-meta mt-1">' . ($row->last_fetched_at ? 'Update ' . $row->last_fetched_at->format('d/m/Y') : 'Belum dicek') . '</div>';
                 })
                 ->editColumn('bentuk_pendidikan', fn ($row) => $row->bentuk_pendidikan ?: '-')
-                ->editColumn('nsm', fn ($row) => $row->nsm ?: '-')
                 ->filterColumn('identity', function ($query, $keyword) {
                     $query->where(function ($schoolQuery) use ($keyword) {
                         $schoolQuery->where('nama', 'like', "%{$keyword}%")
@@ -135,21 +78,18 @@ class SekolahAsalController extends Controller
         }
 
         $stats = [
-            'total' => Sekolah::count(),
-            'lengkap' => Sekolah::whereNotNull('alamat_jalan')
-                ->whereNotNull('kecamatan')
-                ->whereNotNull('kabupaten_kota')
-                ->whereNotNull('provinsi')
-                ->count(),
-            'nsm' => Sekolah::whereNotNull('nsm')->count(),
-            'perlu_update' => Sekolah::whereNull('last_fetched_at')->count(),
+            'total' => (clone $schoolQuery)->count(),
+            'lengkap' => (clone $schoolQuery)->whereNotNull('alamat_jalan')->whereNotNull('kecamatan')->whereNotNull('kabupaten_kota')->whereNotNull('provinsi')->count(),
+            'nsm' => (clone $schoolQuery)->whereNotNull('nsm')->count(),
+            'perlu_update' => (clone $schoolQuery)->whereNull('last_fetched_at')->count(),
         ];
 
-        return view('admin.sekolah-asal.index', compact('stats'));
+        return view('admin.sekolah-asal.index', compact('stats', 'isWaliScope', 'canEnrich'));
     }
 
     public function enrich(Request $request, Sekolah $sekolah, SekolahDataEnrichmentService $service)
     {
+        abort_if($this->isWaliScopedUser(), 403, 'Akun GTK Wali Kelas hanya memiliki akses baca.');
         $this->authorize('edit-siswa');
 
         $result = $service->enrich($sekolah);
@@ -182,107 +122,50 @@ class SekolahAsalController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified sekolah with all siswa from that school
-     */
     public function show($npsn)
     {
-        $user = auth()->user();
-        
-        // Load GTK with kelas relation if user is GTK
-        $isWaliKelas = false;
-        if ($user->hasRole('GTK') && $user->gtk) {
-            $user->gtk->load('kelas.siswaAktif');
-            $isWaliKelas = $user->gtk->kelas !== null;
-        }
-        
-        if ($isWaliKelas) {
-            // GTK Wali Kelas: only show students from their class
-            $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
+        $classIds = $this->waliClassIds();
+        $isWaliScope = $classIds !== null;
+        $canEnrich = !$isWaliScope && auth()->user()->can('edit-siswa');
+        $siswaBaseQuery = $this->studentQuery($classIds)->where('npsn_asal_sekolah', $npsn);
 
-            $sekolah = Sekolah::withCount(['siswa' => function ($query) use ($siswaKelasIds) {
-                $query->whereIn('id', $siswaKelasIds);
-            }])->findOrFail($npsn);
+        $sekolah = $this->schoolQuery($classIds)->whereKey($npsn)->firstOrFail();
+        $stats = [
+            'total' => (clone $siswaBaseQuery)->count(),
+            'aktif' => (clone $siswaBaseQuery)->where('status_siswa', 'aktif')->count(),
+            'lulus' => (clone $siswaBaseQuery)->where('status_siswa', 'lulus')->count(),
+            'keluar' => (clone $siswaBaseQuery)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
+            'laki' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'P')->count(),
+        ];
 
-            $siswaBaseQuery = Siswa::query()
-                ->where('npsn_asal_sekolah', $npsn)
-                ->whereIn('id', $siswaKelasIds);
-
-            // Get statistics only for their class
-            $stats = [
-                'total' => $sekolah->siswa_count,
-                'aktif' => (clone $siswaBaseQuery)->where('status_siswa', 'aktif')->count(),
-                'lulus' => (clone $siswaBaseQuery)->where('status_siswa', 'lulus')->count(),
-                'keluar' => (clone $siswaBaseQuery)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
-                'laki' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'L')->count(),
-                'perempuan' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'P')->count(),
-            ];
-        } else {
-            // Admin: show all students, but keep detail page lightweight.
-            $sekolah = Sekolah::withCount('siswa')->findOrFail($npsn);
-
-            $siswaBaseQuery = Siswa::query()
-                ->where('npsn_asal_sekolah', $npsn);
-
-            // Get statistics for all students
-            $stats = [
-                'total' => $sekolah->siswa_count,
-                'aktif' => (clone $siswaBaseQuery)->where('status_siswa', 'aktif')->count(),
-                'lulus' => (clone $siswaBaseQuery)->where('status_siswa', 'lulus')->count(),
-                'keluar' => (clone $siswaBaseQuery)->whereIn('status_siswa', ['keluar', 'mutasi_keluar'])->count(),
-                'laki' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'L')->count(),
-                'perempuan' => (clone $siswaBaseQuery)->where('jenis_kelamin', 'P')->count(),
-            ];
-        }
-
-        // Build class distribution with aggregation instead of loading all siswa into memory.
         $siswaPerKelas = (clone $siswaBaseQuery)
             ->leftJoin('kelas', 'siswa.kelas_saat_ini_id', '=', 'kelas.id')
             ->selectRaw("COALESCE(kelas.nama_kelas, 'Belum Ada Kelas') as nama_kelas, COUNT(*) as total_siswa")
             ->groupBy('nama_kelas')
             ->orderBy('nama_kelas')
-            ->get()
-            ->keyBy('nama_kelas')
-            ->sortKeys();
+            ->get()->keyBy('nama_kelas')->sortKeys();
 
-        return view('admin.sekolah-asal.show', compact('sekolah', 'stats', 'siswaPerKelas'));
+        return view('admin.sekolah-asal.show', compact('sekolah', 'stats', 'siswaPerKelas', 'isWaliScope', 'canEnrich'));
     }
 
-    /**
-     * Get siswa data for DataTables in detail view
-     */
     public function getSiswaData($npsn)
     {
-        $user = auth()->user();
-        
-        // Load GTK with kelas relation if user is GTK
-        $isWaliKelas = false;
-        if ($user->hasRole('GTK') && $user->gtk) {
-            $user->gtk->load('kelas.siswaAktif');
-            $isWaliKelas = $user->gtk->kelas !== null;
-        }
-        
-        $query = Siswa::with(['kelasSaatIni.tahunPelajaran', 'user'])
-            ->where('npsn_asal_sekolah', $npsn);
-        
-        if ($isWaliKelas) {
-            // GTK Wali Kelas: only show students from their class
-            $siswaKelasIds = $user->gtk->kelas->siswaAktif->pluck('id');
-            $query->whereIn('id', $siswaKelasIds);
-        }
-        
-        $siswa = $query->select('siswa.*');
+        $classIds = $this->waliClassIds();
+        $isWaliScope = $classIds !== null;
+
+        $this->schoolQuery($classIds)->whereKey($npsn)->firstOrFail();
+        $siswa = $this->studentQuery($classIds)
+            ->with(['kelasSaatIni.tahunPelajaran', 'user'])
+            ->where('npsn_asal_sekolah', $npsn)
+            ->select('siswa.*');
 
         return DataTables::of($siswa)
             ->addIndexColumn()
             ->addColumn('kelas_saat_ini', function ($row) {
-                if ($row->kelasSaatIni) {
-                    $tahunPelajaran = $row->kelasSaatIni->tahunPelajaran->nama ?? null;
-                    return $tahunPelajaran
-                        ? $row->kelasSaatIni->nama_kelas . ' (' . $tahunPelajaran . ')'
-                        : $row->kelasSaatIni->nama_kelas;
-                }
-                return '<span class="text-muted">-</span>';
+                if (!$row->kelasSaatIni) return '<span class="text-muted">-</span>';
+                $year = $row->kelasSaatIni->tahunPelajaran->nama ?? null;
+                return $row->kelasSaatIni->nama_kelas . ($year ? " ({$year})" : '');
             })
             ->addColumn('jenis_kelamin_badge', function ($row) {
                 $color = $row->jenis_kelamin === 'L' ? 'primary' : 'danger';
@@ -290,26 +173,57 @@ class SekolahAsalController extends Controller
                 return '<span class="badge badge-' . $color . '">' . $text . '</span>';
             })
             ->addColumn('status_badge', function ($row) {
-                $badges = [
-                    'aktif' => 'success',
-                    'lulus' => 'primary',
-                    'keluar' => 'warning',
-                    'mutasi_keluar' => 'info',
-                    'alumni' => 'secondary',
-                ];
-                $color = $badges[$row->status_siswa] ?? 'secondary';
-                $status = ucfirst(str_replace('_', ' ', $row->status_siswa));
-                return '<span class="badge badge-' . $color . '">' . $status . '</span>';
+                $color = ['aktif' => 'success', 'lulus' => 'primary', 'keluar' => 'warning', 'mutasi_keluar' => 'info', 'alumni' => 'secondary'][$row->status_siswa] ?? 'secondary';
+                return '<span class="badge badge-' . $color . '">' . e(ucfirst(str_replace('_', ' ', $row->status_siswa))) . '</span>';
             })
-            ->addColumn('action', function ($row) {
-                return '
-                    <button onclick="showSiswa(\'' . $row->id . '\')" 
-                       class="btn btn-sm btn-info" title="Lihat Detail">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                ';
+            ->addColumn('action', function ($row) use ($isWaliScope) {
+                if ($isWaliScope) {
+                    return '<a href="' . e(route('admin.gtk.wali.siswa.show', $row->id)) . '" class="btn btn-sm btn-info" title="Lihat Detail"><i class="fas fa-eye"></i></a>';
+                }
+
+                return '<button onclick="showSiswa(\'' . e($row->id) . '\')" class="btn btn-sm btn-info" title="Lihat Detail"><i class="fas fa-eye"></i></button>';
             })
             ->rawColumns(['kelas_saat_ini', 'jenis_kelamin_badge', 'status_badge', 'action'])
             ->make(true);
+    }
+
+    private function schoolQuery(?Collection $classIds): Builder
+    {
+        $query = Sekolah::query();
+        if ($classIds === null) return $query->withCount('siswa');
+
+        return $query
+            ->whereHas('siswa', fn ($students) => $this->applyClassScope($students, $classIds))
+            ->withCount(['siswa' => fn ($students) => $this->applyClassScope($students, $classIds)]);
+    }
+
+    private function studentQuery(?Collection $classIds): Builder
+    {
+        $query = Siswa::query();
+        return $classIds === null ? $query : $this->applyClassScope($query, $classIds);
+    }
+
+    private function applyClassScope(Builder $query, Collection $classIds): Builder
+    {
+        return $query->whereHas('kelasTahunAktif', fn ($classes) => $classes->whereIn('kelas.id', $classIds));
+    }
+
+    private function waliClassIds(): ?Collection
+    {
+        if (!$this->isWaliScopedUser()) return null;
+
+        $classIds = auth()->user()->activeWaliKelasClasses()->pluck('id');
+        abort_if($classIds->isEmpty(), 403, 'Anda bukan wali kelas aktif.');
+
+        return $classIds;
+    }
+
+    private function isWaliScopedUser(): bool
+    {
+        $user = auth()->user();
+        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
+            || in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+        return !$isManager && $user->hasAnyRole(['GTK', 'Wali Kelas']);
     }
 }

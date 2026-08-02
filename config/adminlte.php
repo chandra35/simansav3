@@ -384,6 +384,13 @@ return [
                     'can' => 'sidebar-wali-kelas-menu',
                     'active' => ['admin/gtk/wali/jadwal*'],
                 ],
+                [
+                    'text' => 'Sekolah Asal',
+                    'route' => 'admin.sekolah-asal.index',
+                    'icon' => 'fas fa-fw fa-school',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/sekolah-asal*'],
+                ],
             ],
         ],
         
@@ -431,7 +438,7 @@ return [
                     'text' => 'Sekolah Asal',
                     'route' => 'admin.sekolah-asal.index',
                     'icon' => 'fas fa-fw fa-school',
-                    'can' => 'view-siswa',
+                    'can' => 'sidebar-school-origin-global',
                     'active' => ['admin/sekolah-asal*'],
                 ],
                 [
