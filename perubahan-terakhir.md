@@ -4,6 +4,19 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Identitas profesional pada daftar GTK
+
+- Daftar GTK menampilkan kolom ID PTK, Status Inpassing, dan Status Sertifikasi langsung pada tabel utama.
+- ID PTK dapat dicari serta diurutkan; status ditampilkan sebagai badge semantik dan nilai kosong diberi label `Belum tercatat`.
+- Proporsi kolom dan lebar minimum tabel disesuaikan agar identitas tetap terbaca serta dapat digeser horizontal pada perangkat sempit.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/GtkController.php`
+- `resources/views/admin/gtk/index.blade.php`
+- `public/css/custom-compact.css`
+- `tests/Unit/GtkIndexUiArchitectureTest.php`
+
 ### Sinkronisasi identitas profesional GTK dari Manajemen PTK
 
 - Tabel GTK ditambah kolom unik PEG ID, NRG, dan NPK serta kolom status inpassing dan sertifikasi; kolom NUPTK yang sudah ada tetap digunakan.

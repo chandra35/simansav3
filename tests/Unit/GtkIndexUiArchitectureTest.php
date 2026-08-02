@@ -23,7 +23,13 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<th>Status Kepeg</th>', $table);
         $this->assertStringNotContainsString('<th>Jabatan</th>', $table);
         $this->assertStringContainsString('>Data Kepeg</th>', $table);
+        $this->assertStringContainsString('>ID PTK</th>', $table);
+        $this->assertStringContainsString('>Status Inpassing</th>', $table);
+        $this->assertStringContainsString('>Status Sertifikasi</th>', $table);
         $this->assertStringContainsString("{ data: 'identity', name: 'nama_lengkap'", $view);
+        $this->assertStringContainsString("{ data: 'peg_id', name: 'peg_id'", $view);
+        $this->assertStringContainsString("{ data: 'status_inpassing', name: 'status_inpassing'", $view);
+        $this->assertStringContainsString("{ data: 'status_sertifikasi', name: 'status_sertifikasi'", $view);
 
         $this->assertStringContainsString("'identity' => '", $controller);
         $this->assertStringContainsString('simansa-gtk-identity__meta', $controller);
@@ -82,10 +88,14 @@ class GtkIndexUiArchitectureTest extends TestCase
 
         $this->assertStringContainsString('autoWidth: false', $view);
         $this->assertStringContainsString("{ targets: 0, width: '4%' }", $view);
-        $this->assertStringContainsString("{ targets: 1, width: '40%' }", $view);
-        $this->assertStringContainsString("{ targets: [2, 3], width: '19%' }", $view);
-        $this->assertStringContainsString("{ targets: 4, width: '18%' }", $view);
+        $this->assertStringContainsString("{ targets: 1, width: '30%' }", $view);
+        $this->assertStringContainsString("{ targets: 2, width: '12%' }", $view);
+        $this->assertStringContainsString("{ targets: [3, 4], width: '11%' }", $view);
+        $this->assertStringContainsString("{ targets: [5, 6], width: '10%' }", $view);
+        $this->assertStringContainsString("{ targets: 7, width: '12%' }", $view);
         $this->assertStringContainsString("className: 'gtk-col-identity'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-professional-id'", $view);
+        $this->assertStringContainsString("className: 'gtk-col-professional-status'", $view);
         $this->assertStringContainsString("className: 'gtk-col-status'", $view);
         $this->assertStringContainsString("className: 'gtk-col-actions'", $view);
 

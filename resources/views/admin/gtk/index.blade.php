@@ -194,6 +194,9 @@
                     <tr>
                         <th class="gtk-col-number">No</th>
                         <th class="gtk-col-identity">Nama / Identitas GTK</th>
+                        <th class="gtk-col-professional-id">ID PTK</th>
+                        <th class="gtk-col-professional-status">Status Inpassing</th>
+                        <th class="gtk-col-professional-status">Status Sertifikasi</th>
                         <th class="gtk-col-status">Status Diri</th>
                         <th class="gtk-col-status">Data Kepeg</th>
                         <th class="gtk-col-actions">Aksi</th>
@@ -418,15 +421,20 @@ $(document).ready(function() {
         autoWidth: false,
         columnDefs: [
             { targets: 0, width: '4%' },
-            { targets: 1, width: '40%' },
-            { targets: [2, 3], width: '19%' },
-            { targets: 4, width: '18%' }
+            { targets: 1, width: '30%' },
+            { targets: 2, width: '12%' },
+            { targets: [3, 4], width: '11%' },
+            { targets: [5, 6], width: '10%' },
+            { targets: 7, width: '12%' }
         ],
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'gtk-col-number' },
             { data: 'identity', name: 'nama_lengkap', className: 'gtk-col-identity' },
+            { data: 'peg_id', name: 'peg_id', className: 'gtk-col-professional-id' },
+            { data: 'status_inpassing', name: 'status_inpassing', className: 'gtk-col-professional-status' },
+            { data: 'status_sertifikasi', name: 'status_sertifikasi', className: 'gtk-col-professional-status' },
             { data: 'status_diri', name: 'status_diri', orderable: false, searchable: false, className: 'gtk-col-status' },
             { data: 'status_kepeg', name: 'status_kepeg', orderable: false, searchable: false, className: 'gtk-col-status' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'gtk-col-actions' }

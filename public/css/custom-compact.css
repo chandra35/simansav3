@@ -2299,7 +2299,7 @@ a {
 
 .simansa-gtk-management .simansa-gtk-table {
     width: 100% !important;
-    min-width: 980px;
+    min-width: 1280px;
     margin-bottom: 0 !important;
     border-collapse: separate;
     border-spacing: 0;
@@ -2322,6 +2322,8 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-number,
+.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-professional-id,
+.simansa-gtk-management .simansa-gtk-table thead th.gtk-col-professional-status,
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-status,
 .simansa-gtk-management .simansa-gtk-table thead th.gtk-col-actions {
     text-align: center;
@@ -2352,25 +2354,44 @@ a {
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-identity {
-    width: 40% !important;
+    width: 30% !important;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-id {
+    width: 12% !important;
+    text-align: center;
+}
+
+.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-status {
+    width: 11% !important;
+    text-align: center;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-status {
-    width: 19% !important;
+    width: 10% !important;
     text-align: center;
 }
 
 .simansa-gtk-management .simansa-gtk-table .gtk-col-actions {
-    width: 18% !important;
+    width: 12% !important;
     text-align: center;
 }
 
-.simansa-gtk-management .simansa-gtk-table .gtk-col-status .badge {
+.simansa-gtk-management .simansa-gtk-table .gtk-col-status .badge,
+.simansa-gtk-management .simansa-gtk-table .gtk-col-professional-status .badge {
     min-width: 96px;
     padding: .32rem .6rem;
     border-radius: 999px;
     font-size: .72rem;
     font-weight: 700;
+}
+
+.simansa-gtk-management .simansa-gtk-professional-id {
+    color: #334155;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .75rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .simansa-gtk-management .simansa-gtk-identity {

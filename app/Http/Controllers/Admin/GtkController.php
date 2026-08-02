@@ -64,7 +64,7 @@ class GtkController extends Controller
                     ->orderBy('tingkat')
                     ->orderBy('nama_kelas');
             },
-        ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+        ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'peg_id', 'status_inpassing', 'status_sertifikasi', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
 
         // Filter by Kategori PTK
         if ($request->filled('kategori_ptk')) {
@@ -107,6 +107,9 @@ class GtkController extends Controller
                   ->orWhere('nik', 'like', "%{$search}%")
                   ->orWhere('nuptk', 'like', "%{$search}%")
                   ->orWhere('nip', 'like', "%{$search}%")
+                  ->orWhere('peg_id', 'like', "%{$search}%")
+                  ->orWhere('status_inpassing', 'like', "%{$search}%")
+                  ->orWhere('status_sertifikasi', 'like', "%{$search}%")
                   ->orWhere('kode_gtk', 'like', "%{$search}%")
                   ->orWhere('kategori_ptk', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQuery) use ($search) {
@@ -128,7 +131,7 @@ class GtkController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = [null, 'nama_lengkap', null, null, null];
+            $columns = [null, 'nama_lengkap', 'peg_id', 'status_inpassing', 'status_sertifikasi', null, null, null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $gtk->orderBy($orderColumn, $orderDirection);
@@ -145,6 +148,13 @@ class GtkController extends Controller
             $kodeGtk = e($item->kode_gtk ?: '-');
             $jenisPtk = e($item->jenis_ptk ?: '-');
             $username = e($item->user?->username ?: '-');
+            $pegId = e($item->peg_id ?: '-');
+            $statusInpassing = filled($item->status_inpassing)
+                ? '<span class="badge badge-success">'.e($item->status_inpassing).'</span>'
+                : '<span class="badge badge-light">Belum tercatat</span>';
+            $statusSertifikasi = filled($item->status_sertifikasi)
+                ? '<span class="badge '.(str_starts_with(mb_strtolower($item->status_sertifikasi), 'sudah') ? 'badge-success' : 'badge-warning').'">'.e($item->status_sertifikasi).'</span>'
+                : '<span class="badge badge-light">Belum tercatat</span>';
             $avatar = $this->getGtkListAvatar($item);
             $waliKelasNames = $item->kelasWali
                 ->pluck('nama_kelas')
@@ -181,6 +191,9 @@ class GtkController extends Controller
                             </div>
                         </div>
                     </div>',
+                'peg_id' => '<span class="simansa-gtk-professional-id">'.$pegId.'</span>',
+                'status_inpassing' => $statusInpassing,
+                'status_sertifikasi' => $statusSertifikasi,
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
                 'jenis_kelamin' => $item->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
