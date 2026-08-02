@@ -7,7 +7,7 @@ use App\Models\AbsensiSiswaAudit;
 use App\Models\ActivityLog;
 use App\Models\AttendanceAlert;
 use App\Models\AttendanceAnalysisRun;
-use App\Models\JadwalPelajaran;
+use App\Models\CatatanWaliKelas;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
@@ -25,7 +25,12 @@ class StudentAttendanceAnalyticsController extends Controller
     {
         $this->authorize('view-attendance-analytics');
         $user = $request->user();
-        $years = TahunPelajaran::query()->orderByDesc('tahun_mulai')->get();
+        $isWaliScope = $this->isWaliScopedUser($user);
+        $years = TahunPelajaran::query()
+            ->when($isWaliScope, fn ($query) => $query->active()
+                ->whereHas('kelas', fn ($classes) => $classes
+                    ->where('wali_kelas_id', $user->id)->where('is_active', true)))
+            ->orderByDesc('tahun_mulai')->get();
         $activeYear = $years->firstWhere('is_active', true);
         $year = $years->firstWhere('id', (string) $request->get('tahun_pelajaran_id')) ?: $activeYear ?: $years->first();
         abort_unless($year, 404, 'Tahun pelajaran belum tersedia.');
@@ -37,6 +42,7 @@ class StudentAttendanceAnalyticsController extends Controller
         $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true) ? (int) $request->get('tingkat') : null;
         $classId = (string) $request->get('kelas_id', '');
         if ($classId !== '' && ! $classes->contains('id', $classId)) {
+            abort_if($accessibleClassIds !== null, 404, 'Rombel tidak ditemukan dalam cakupan wali kelas Anda.');
             $classId = '';
         }
 
@@ -85,7 +91,7 @@ class StudentAttendanceAnalyticsController extends Controller
         $studentRows = (clone $recordScope)
             ->join('siswa', 'siswa.id', '=', 'records.siswa_id')
             ->select([
-                'siswa.id', 'siswa.nama_lengkap', 'siswa.nisn',
+                'siswa.id', 'siswa.nama_lengkap', 'siswa.nisn', DB::raw('MAX(scoped_sessions.kelas_id) as kelas_id'),
                 DB::raw('COUNT(*) total_records'),
                 DB::raw("SUM(records.status IN ('hadir','terlambat','keluar_awal')) present_records"),
                 DB::raw("SUM(records.status='alpa') alpa"),
@@ -100,6 +106,23 @@ class StudentAttendanceAnalyticsController extends Controller
                 return $row;
             });
 
+        $notesScope = CatatanWaliKelas::query()
+            ->where('tahun_pelajaran_id', $year->id)
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->when($accessibleClassIds !== null, fn ($query) => $query->whereIn('kelas_id', $accessibleClassIds))
+            ->when($classId !== '', fn ($query) => $query->where('kelas_id', $classId))
+            ->when($tingkat, fn ($query) => $query->whereHas('kelas', fn ($class) => $class->where('tingkat', $tingkat)))
+            ->when($isWaliScope, fn ($query) => $query->where('created_by', $user->id));
+        $notesByStudent = (clone $notesScope)
+            ->selectRaw('siswa_id, COUNT(*) as total, SUM(is_penting = 1) as important, MAX(tanggal) as latest_date')
+            ->groupBy('siswa_id')->get()->keyBy('siswa_id');
+        $studentRows->each(function ($row) use ($notesByStudent) {
+            $note = $notesByStudent->get($row->id);
+            $row->note_count = (int) ($note->total ?? 0);
+            $row->important_note_count = (int) ($note->important ?? 0);
+            $row->latest_note_date = $note->latest_date ?? null;
+        });
+
         $alertQuery = AttendanceAlert::query()->with(['siswa.kelasSaatIni', 'assignee'])
             ->where('tahun_pelajaran_id', $year->id)->where('is_active', true)
             ->when($accessibleClassIds !== null, fn ($query) => $query->whereHas('siswa.siswaKelasRecords', fn ($membership) => $membership
@@ -108,7 +131,9 @@ class StudentAttendanceAnalyticsController extends Controller
                 ->where('kelas.tahun_pelajaran_id', $year->id)->where('kelas.tingkat', $tingkat)))
             ->when($classId !== '', fn ($query) => $query->whereHas('siswa.siswaKelasRecords', fn ($membership) => $membership->where('kelas_id', $classId)));
         $alerts = $alertQuery->orderByRaw("FIELD(severity, 'high', 'medium', 'low')")->orderByDesc('score')->limit(100)->get();
-        $lastAnalysis = AttendanceAnalysisRun::with('actor')->where('tahun_pelajaran_id', $year->id)->latest()->first();
+        $lastAnalysis = AttendanceAnalysisRun::with('actor')->where('tahun_pelajaran_id', $year->id)
+            ->when($isWaliScope, fn ($query) => $query->where('actor_user_id', $user->id))
+            ->latest()->first();
 
         $kpi = [
             'sessions' => (int) ($sessionSummary->total ?? 0),
@@ -120,11 +145,14 @@ class StudentAttendanceAnalyticsController extends Controller
             'daily_attendance_rate' => $dailyTotal ? round(($dailyPresent / $dailyTotal) * 100, 1) : 0,
             'active_alerts' => $alerts->count(),
             'high_alerts' => $alerts->where('severity', 'high')->count(),
+            'student_notes' => (clone $notesScope)->count(),
+            'important_notes' => (clone $notesScope)->where('is_penting', true)->count(),
+            'students_with_notes' => (clone $notesScope)->distinct()->count('siswa_id'),
         ];
 
         return view('admin.absensi.analytics', compact(
             'years', 'year', 'activeYear', 'classes', 'tingkat', 'classId', 'start', 'end',
-            'statusCounts', 'dailyStatusCounts', 'studentRows', 'alerts', 'lastAnalysis', 'kpi'
+            'statusCounts', 'dailyStatusCounts', 'studentRows', 'alerts', 'lastAnalysis', 'kpi', 'isWaliScope'
         ));
     }
 
@@ -200,8 +228,15 @@ class StudentAttendanceAnalyticsController extends Controller
         $audits = $request->user()->can('view-attendance-audit')
             ? AbsensiSiswaAudit::with(['actor', 'session'])->where('siswa_id', $siswa->id)->latest()->limit(100)->get()
             : collect();
+        $isWaliScope = $this->isWaliScopedUser($request->user());
+        $noteClassIds = $this->accessibleClassIdsAcrossYears($request->user());
+        $notes = CatatanWaliKelas::query()->with(['kelas', 'penulis'])
+            ->where('siswa_id', $siswa->id)
+            ->when($noteClassIds !== null, fn ($query) => $query
+                ->whereIn('kelas_id', $noteClassIds)->where('created_by', $request->user()->id))
+            ->latest('tanggal')->limit(50)->get();
 
-        return view('admin.absensi.student-analytics', compact('siswa', 'records', 'history', 'alerts', 'audits'));
+        return view('admin.absensi.student-analytics', compact('siswa', 'records', 'history', 'alerts', 'audits', 'notes', 'isWaliScope'));
     }
 
     public function generate(Request $request)
@@ -227,6 +262,7 @@ class StudentAttendanceAnalyticsController extends Controller
     public function updateAlert(Request $request, AttendanceAlert $alert)
     {
         $this->authorize('manage-attendance-alerts');
+        abort_unless($alert->siswa && $this->accessibleStudent($request->user(), $alert->siswa), 403);
         $data = $request->validate([
             'status' => ['required', 'in:new,reviewed,monitoring,resolved,dismissed'],
             'review_notes' => ['nullable', 'string', 'max:2000'],
@@ -249,15 +285,28 @@ class StudentAttendanceAnalyticsController extends Controller
             || $user->can('view-attendance-counseling')) {
             return null;
         }
-        $ids = collect();
-        if ($user->hasRole('Wali Kelas')) {
-            $ids = $ids->merge(Kelas::where('tahun_pelajaran_id', $yearId)->where('wali_kelas_id', $user->id)->pluck('id'));
-        }
-        if ($user->gtk) {
-            $ids = $ids->merge(JadwalPelajaran::where('tahun_pelajaran_id', $yearId)->where('gtk_id', $user->gtk->id)->pluck('kelas_id'));
-        }
+        $ids = Kelas::query()->where('tahun_pelajaran_id', $yearId)
+            ->where('wali_kelas_id', $user->id)->where('is_active', true)->pluck('id');
+        abort_if($ids->isEmpty(), 403, 'Anda bukan wali kelas aktif pada tahun pelajaran ini.');
 
         return $ids->unique()->values();
+    }
+
+    private function accessibleClassIdsAcrossYears($user): ?Collection
+    {
+        if (! $this->isWaliScopedUser($user)) {
+            return null;
+        }
+
+        return Kelas::query()->where('wali_kelas_id', $user->id)->pluck('id');
+    }
+
+    private function isWaliScopedUser($user): bool
+    {
+        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'BK'])
+            || $user->can('view-attendance-counseling');
+
+        return ! $isManager && $user->hasAnyRole(['GTK', 'Wali Kelas']);
     }
 
     private function accessibleStudent($user, Siswa $siswa): bool
@@ -266,15 +315,16 @@ class StudentAttendanceAnalyticsController extends Controller
             || $user->can('view-attendance-counseling')) {
             return true;
         }
-        $yearIds = TahunPelajaran::pluck('id');
-        foreach ($yearIds as $yearId) {
-            $classIds = $this->accessibleClassIds($user, $yearId);
-            if ($classIds && $siswa->siswaKelasRecords()->where('tahun_pelajaran_id', $yearId)->whereIn('kelas_id', $classIds)->exists()) {
-                return true;
-            }
-        }
+        $classIds = Kelas::query()
+            ->where('wali_kelas_id', $user->id)
+            ->where('is_active', true)
+            ->whereHas('tahunPelajaran', fn ($year) => $year->where('is_active', true))
+            ->pluck('id');
 
-        return false;
+        return $classIds->isNotEmpty() && $siswa->siswaKelasRecords()
+            ->where('status', 'aktif')
+            ->whereIn('kelas_id', $classIds)
+            ->exists();
     }
 
     private function logAction(Request $request, string $type, $model, array $properties): void

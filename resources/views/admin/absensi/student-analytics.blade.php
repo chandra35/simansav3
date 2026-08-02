@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="student-history pb-4">
-    <section class="student-hero">
+    <section class="student-hero card bg-gradient-primary text-white border-0">
         <div class="student-avatar">{{ strtoupper(substr($siswa->nama_lengkap, 0, 1)) }}</div>
         <div class="student-title"><div class="eyebrow">ANALITIK HISTORIS SISWA</div><h2>{{ $siswa->nama_lengkap }}</h2><p>NISN {{ $siswa->nisn ?: '-' }} · {{ $siswa->kelasSaatIni ? $siswa->kelasSaatIni->nama_kelas.$siswa->kelasSaatIni->asrama_suffix : 'Tidak berada di kelas aktif' }}</p></div>
         <div class="hero-message"><i class="fas fa-shield-alt"></i><span>Data ini menjadi bahan pertimbangan wali kelas/BK. Keputusan tetap dilakukan oleh petugas berwenang.</span></div>
@@ -51,6 +51,18 @@
         </div>
     </div>
 
+    <section class="panel mb-3">
+        <div class="panel-head">
+            <div><h3>Catatan Wali Kelas</h3><p>Catatan pembinaan melengkapi data kehadiran agar tindak lanjut memiliki konteks.</p></div>
+            <div class="d-flex align-items-center"><span class="mr-2">{{ $notes->count() }} catatan</span>@if($isWaliScope)<a href="{{ route('admin.gtk.wali.catatan.index', ['siswa_id' => $siswa->id]) }}" class="btn btn-success btn-sm"><i class="fas fa-plus mr-1"></i> Tulis Catatan</a>@endif</div>
+        </div>
+        <div class="note-grid">
+            @forelse($notes as $note)
+                <article class="student-note {{ $note->is_penting ? 'important' : '' }}"><div class="note-meta"><strong>{{ $note->tanggal?->translatedFormat('d M Y') }}</strong><span>{{ $note->kategori ?: 'Umum' }} · {{ $note->kelas?->nama_kelas ?: '-' }}</span></div><div class="note-content">{!! $note->catatan_html !!}</div><small>{{ $note->penulis?->name ?: 'Wali kelas' }}@if($note->is_penting) · <b class="text-danger">Penting</b>@endif</small></article>
+            @empty<div class="empty-wide compact">Belum ada catatan wali kelas untuk siswa ini.</div>@endforelse
+        </div>
+    </section>
+
     @can('view-attendance-audit')
     <section class="panel">
         <div class="panel-head"><div><h3>Jejak Audit</h3><p>Siapa, kapan, dan alasan perubahan presensi tercatat permanen.</p></div><span>{{ $audits->count() }} aktivitas terbaru</span></div>
@@ -66,7 +78,10 @@
 
 @section('css')
 <style>
+.note-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.student-note{padding:14px;border:1px solid #e2e8f0;border-left:4px solid #4775ee;border-radius:12px}.student-note.important{border-left-color:#dc3545}.note-meta{display:flex;justify-content:space-between;gap:10px}.note-meta span,.student-note>small{color:#718096;font-size:12px}.note-content{margin:8px 0}.student-history .student-hero{background-image:none}
 .student-history{color:#15213a}.student-hero{display:flex;align-items:center;gap:18px;padding:25px;border-radius:20px;background:linear-gradient(120deg,#326af0,#537df0 65%,#3892a1);color:#fff;box-shadow:0 15px 34px rgba(51,94,180,.18)}.student-avatar{display:grid;place-items:center;width:68px;height:68px;flex:0 0 68px;border-radius:20px;background:rgba(255,255,255,.19);font-size:30px;font-weight:900}.eyebrow{font-size:12px;font-weight:800}.student-title h2{font-weight:800;margin:4px 0 1px}.student-title p{margin:0;opacity:.9}.hero-message{display:flex;align-items:center;gap:10px;max-width:390px;margin-left:auto;padding:13px;border-radius:13px;background:rgba(255,255,255,.14);font-size:13px}.history-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.history-card,.panel{border:1px solid #dce5f2;border-radius:17px;background:#fff;box-shadow:0 12px 28px rgba(25,54,104,.07)}.history-card{display:grid;grid-template-columns:1fr auto;gap:12px;padding:17px;border-top:4px solid #4775ee}.history-card span,.history-card strong{display:block}.history-card span{color:#708097;font-size:13px}.history-card strong{font-size:18px}.rate-circle{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;background:#e8f8ef;color:#168451;font-weight:800}.rate-circle.risk{background:#fff0e5;color:#bd6200}.history-meta{display:flex;grid-column:1/-1;gap:8px}.history-meta span{padding:4px 8px;border-radius:15px;background:#f2f5fa;font-size:12px}.panel{padding:20px}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:14px}.panel-head h3{font-size:19px;font-weight:800;margin:0}.panel-head p{color:#65758d;margin:3px 0}.panel-head>span{padding:5px 10px;border-radius:20px;background:#edf3ff;color:#3e67d9;font-size:12px;font-weight:700}.timeline-wrap,.insight-list{max-height:560px;overflow:auto}.timeline-table th{border-top:0;background:#f6f8fc;color:#596a82;font-size:12px;text-transform:uppercase}.timeline-table td{vertical-align:middle}.timeline-table td small{display:block;color:#8290a4}.status{display:inline-block;border-radius:14px;padding:3px 8px;background:#edf2f7;font-size:12px;font-weight:700}.status-hadir{color:#168451;background:#e7f8ef}.status-terlambat,.status-keluar_awal{color:#ba6500;background:#fff1dd}.status-alpa{color:#c42f3e;background:#ffeaed}.status-izin{color:#3565d7;background:#eaf0ff}.status-sakit{color:#7651c7;background:#f0ebff}.insight{padding:14px;margin-bottom:10px;border:1px solid #e2e8f0;border-left:4px solid #e6a100;border-radius:12px}.insight.severity-high{border-left-color:#df3f50}.insight.severity-low{border-left-color:#2cad70}.insight-top{display:flex;gap:5px}.insight-top span{font-size:10px;font-weight:800;padding:3px 7px;border-radius:13px;background:#f1f4f8}.insight h4{font-size:15px;font-weight:800;margin:7px 0 2px}.insight p{color:#63738a;margin:0}.insight small{display:block;margin-top:7px;color:#8995a7}.review-note{margin-top:9px;padding:9px;border-radius:9px;background:#f4f7fb;font-size:13px}.review-note strong{display:block}.audit-list{display:grid;gap:8px}.audit-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e8edf4;border-radius:12px}.audit-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#edf3ff;color:#3d68dc}.audit-item>div:nth-child(2){flex:1}.audit-item p{margin:1px 0;color:#718096;font-size:13px}.audit-item span{font-size:12px;color:#4d5f78}.empty-wide{grid-column:1/-1;padding:40px;text-align:center;border:1px dashed #cfd9e8;border-radius:14px;color:#718096}.empty-wide.compact{padding:24px}@media(max-width:991px){.history-grid{grid-template-columns:repeat(2,1fr)}.student-hero{align-items:flex-start;flex-wrap:wrap}.hero-message{max-width:none;width:100%;margin-left:0}}@media(max-width:575px){.history-grid{grid-template-columns:1fr}.student-avatar{width:52px;height:52px;flex-basis:52px}.student-title h2{font-size:22px}.audit-item{align-items:flex-start;flex-wrap:wrap}.audit-item button{margin-left:48px}}
+@media(max-width:767px){.note-grid{grid-template-columns:1fr}.note-meta{flex-direction:column;gap:2px}}
+.student-history .student-hero{background:linear-gradient(135deg,#4776f4 0%,#4d76e7 52%,#49a49a 100%)!important}
 </style>
 @stop
 

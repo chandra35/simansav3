@@ -242,11 +242,20 @@
             justify-self: stretch;
         }
     }
+.gtk-attendance-page .attendance-hero{padding:0;background:linear-gradient(135deg,#4776f4 0%,#4d76e7 52%,#49a49a 100%)!important}.gtk-attendance-page .attendance-hero__main{background:transparent;border:0;box-shadow:none}.gtk-attendance-page .attendance-hero__eyebrow,.gtk-attendance-page .attendance-hero__title,.gtk-attendance-page .attendance-hero__subtitle{color:#fff}.gtk-attendance-page .attendance-hero__side{padding:1.25rem}.gtk-attendance-page .attendance-hero-chip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);box-shadow:none}.gtk-attendance-page .attendance-hero-chip__label,.gtk-attendance-page .attendance-hero-chip__value{color:#fff}
 </style>
 @stop
 
 @section('content_header')
-    <div class="attendance-hero">
+    <div class="d-flex justify-content-between align-items-center">
+        <div><h1 class="m-0">Presensi GTK</h1><small class="text-muted">Presensi / Kehadiran GTK</small></div>
+        <a href="{{ route('admin.absensi.rekap', ['bulan' => \Carbon\Carbon::parse($tanggal)->month, 'tahun' => \Carbon\Carbon::parse($tanggal)->year]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-chart-bar mr-1"></i> Rekap Bulanan</a>
+    </div>
+@stop
+
+@section('content')
+<div class="gtk-attendance-page pb-4">
+    <div class="attendance-hero card bg-gradient-primary text-white border-0">
         <div class="attendance-hero__main">
             <div class="attendance-hero__eyebrow">
                 <i class="fas fa-clipboard-check"></i>
@@ -254,7 +263,7 @@
             </div>
             <h1 class="attendance-hero__title">Absensi GTK</h1>
             <p class="attendance-hero__subtitle">
-                Pantau kehadiran harian GTK, cek status masuk dan pulang, lalu kelola input manual dari satu halaman operasional yang lebih rapi.
+                {{ $isPersonalScope ? 'Pantau status masuk, pulang, dan riwayat presensi Anda.' : 'Pantau kehadiran harian GTK, status masuk dan pulang, serta tindak lanjut data operasional.' }}
             </p>
         </div>
         <div class="attendance-hero__side">
@@ -271,9 +280,6 @@
             </a>
         </div>
     </div>
-@stop
-
-@section('content')
     {{-- Filter Tanggal --}}
     <div class="attendance-filter-panel">
         <div class="row align-items-end">
@@ -368,9 +374,9 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title"><i class="fas fa-table"></i> Data Absensi Harian</h3>
             <div>
-                <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManual">
+                @can('create-absensi')<button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManual">
                     <i class="fas fa-plus"></i> Input Manual
-                </button>
+                </button>@endcan
                 <a href="{{ route('admin.absensi.rekap', ['bulan' => \Carbon\Carbon::parse($tanggal)->month, 'tahun' => \Carbon\Carbon::parse($tanggal)->year]) }}" class="btn btn-sm btn-info">
                     <i class="fas fa-chart-bar"></i> Rekap Bulan Ini
                 </a>
@@ -437,9 +443,11 @@
                                 @endif
                             </td>
                             <td>
+                                @can('edit-absensi')
                                 <button class="btn btn-xs btn-warning" onclick="editAbsensi('{{ $absensi->id }}')" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
+                                @else<span class="text-muted">—</span>@endcan
                             </td>
                         </tr>
                     @empty
@@ -461,6 +469,7 @@
         </div>
     </div>
 
+    @can('create-absensi')
     {{-- Manual Input Modal --}}
     <div class="modal fade" id="modalManual" tabindex="-1">
         <div class="modal-dialog">
@@ -525,7 +534,9 @@
             </div>
         </div>
     </div>
+    @endcan
 
+    @can('edit-absensi')
     {{-- Edit Modal --}}
     <div class="modal fade" id="modalEdit" tabindex="-1">
         <div class="modal-dialog">
@@ -567,6 +578,8 @@
             </div>
         </div>
     </div>
+    @endcan
+</div>
 @stop
 
 @section('js')
@@ -579,7 +592,7 @@
             });
             const result = await response.json();
             const select = document.querySelector('select[name="user_id"]');
-            if (result.data) {
+            if (select && result.data) {
                 result.data.forEach(gtk => {
                     const opt = document.createElement('option');
                     opt.value = gtk.user_id;

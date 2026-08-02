@@ -378,6 +378,13 @@ return [
                     'active' => ['admin/gtk/wali/absensi/rekap'],
                 ],
                 [
+                    'text' => 'Analitik Kehadiran',
+                    'route' => 'admin.absensi-siswa.analytics',
+                    'icon' => 'fas fa-fw fa-chart-line',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/absensi-siswa/analitik*'],
+                ],
+                [
                     'text' => 'Catatan Siswa',
                     'route' => 'admin.gtk.wali.catatan.index',
                     'icon' => 'fas fa-fw fa-sticky-note',
@@ -838,27 +845,6 @@ return [
                     'icon' => 'fas fa-fw fa-user-shield',
                     'can' => 'face-registration-access',
                     'active' => ['admin/absensi/face-register*'],
-                ],
-                [
-                    'text' => 'Absensi Siswa',
-                    'route' => 'admin.absensi-siswa.index',
-                    'icon' => 'fas fa-fw fa-user-check',
-                    'can' => 'view-student-attendance',
-                    'active' => ['admin/absensi-siswa'],
-                ],
-                [
-                    'text' => 'Pemantauan Siswa',
-                    'route' => 'admin.absensi-siswa.monitoring',
-                    'icon' => 'fas fa-fw fa-clipboard-list',
-                    'can' => 'monitor-all-student-attendance',
-                    'active' => ['admin/absensi-siswa/pemantauan'],
-                ],
-                [
-                    'text' => 'Analitik Kehadiran',
-                    'route' => 'admin.absensi-siswa.analytics',
-                    'icon' => 'fas fa-fw fa-chart-line',
-                    'can' => 'view-attendance-analytics',
-                    'active' => ['admin/absensi-siswa/analitik*'],
                 ],
                 [
                     'text' => 'Verifikasi Wajah',

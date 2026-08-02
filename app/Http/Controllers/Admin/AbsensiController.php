@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
-use App\Models\FaceEncoding;
+use App\Models\AbsensiLocation;
 use App\Models\AbsensiLog;
 use App\Models\AbsensiSetting;
-use App\Models\AbsensiLocation;
+use App\Models\FaceEncoding;
 use App\Models\HariLibur;
 use App\Models\TahunPelajaran;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class AbsensiController extends Controller
 {
@@ -27,6 +28,7 @@ class AbsensiController extends Controller
 
         $absensis = Absensi::gtk()
             ->tanggal($tanggal)
+            ->when($this->isPersonalGtkScope($request), fn ($query) => $query->where('user_id', $request->user()->id))
             ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap,nip,foto_profile', 'location:id,nama'])
             ->orderBy('waktu_masuk')
             ->get();
@@ -43,9 +45,10 @@ class AbsensiController extends Controller
         ];
 
         $locations = AbsensiLocation::where('is_active', true)->get();
+        $isPersonalScope = $this->isPersonalGtkScope($request);
 
         return view('admin.absensi.index', compact(
-            'absensis', 'tanggal', 'isHoliday', 'stats', 'locations', 'tahunPelajaran'
+            'absensis', 'tanggal', 'isHoliday', 'stats', 'locations', 'tahunPelajaran', 'isPersonalScope'
         ));
     }
 
@@ -59,6 +62,7 @@ class AbsensiController extends Controller
 
         $absensis = Absensi::gtk()
             ->bulan($bulan, $tahun)
+            ->when($this->isPersonalGtkScope($request), fn ($query) => $query->where('user_id', $request->user()->id))
             ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap,nip'])
             ->get()
             ->groupBy('user_id');
@@ -68,7 +72,9 @@ class AbsensiController extends Controller
             Carbon::create($tahun, $bulan, 1)->endOfMonth()
         );
 
-        return view('admin.absensi.rekap', compact('absensis', 'bulan', 'tahun', 'hariLibur'));
+        $isPersonalScope = $this->isPersonalGtkScope($request);
+
+        return view('admin.absensi.rekap', compact('absensis', 'bulan', 'tahun', 'hariLibur', 'isPersonalScope'));
     }
 
     /**
@@ -77,7 +83,7 @@ class AbsensiController extends Controller
     public function kiosk(Request $request)
     {
         $locationId = $request->get('location');
-        $userType = $this->normalizeUserType($request->get('type', 'gtk'));
+        $userType = 'gtk';
         $location = $locationId ? AbsensiLocation::find($locationId) : null;
         $locations = AbsensiLocation::where('is_active', true)->get();
 
@@ -106,7 +112,7 @@ class AbsensiController extends Controller
 
         $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
-            'user_type' => 'nullable|in:gtk,siswa',
+            'user_type' => 'nullable|in:gtk',
             'confidence' => 'required|numeric|min:0|max:1',
             'location_id' => 'nullable|uuid',
             'photo' => 'nullable|string', // base64
@@ -127,14 +133,15 @@ class AbsensiController extends Controller
 
         $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
         $now = now();
-        $userType = $this->normalizeUserType($request->input('user_type', 'gtk'));
+        $userType = 'gtk';
+        abort_unless(User::query()->whereKey($request->user_id)->whereHas('gtk')->exists(), 422, 'Akun GTK tidak ditemukan.');
         $approvedFace = FaceEncoding::where('user_id', $request->user_id)
             ->where('user_type', $userType)
             ->where('is_active', true)
             ->where('is_verified', true)
             ->exists();
 
-        if (!$approvedFace) {
+        if (! $approvedFace) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data wajah belum approved atau tidak aktif untuk digunakan di kiosk.',
@@ -156,7 +163,7 @@ class AbsensiController extends Controller
             if ($existing && $existing->waktu_masuk) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Sudah melakukan absen masuk hari ini pada ' . $existing->waktu_masuk->format('H:i:s'),
+                    'message' => 'Sudah melakukan absen masuk hari ini pada '.$existing->waktu_masuk->format('H:i:s'),
                     'data' => $existing,
                 ], 422);
             }
@@ -204,7 +211,7 @@ class AbsensiController extends Controller
             ->where('tanggal', $today)
             ->first();
 
-        if (!$absensi) {
+        if (! $absensi) {
             return response()->json([
                 'success' => false,
                 'message' => 'Belum ada data absen masuk hari ini.',
@@ -214,13 +221,13 @@ class AbsensiController extends Controller
         if ($absensi->waktu_pulang) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sudah melakukan absen pulang hari ini pada ' . $absensi->waktu_pulang->format('H:i:s'),
+                'message' => 'Sudah melakukan absen pulang hari ini pada '.$absensi->waktu_pulang->format('H:i:s'),
             ], 422);
         }
 
         // Determine status pulang
         $jamPulang = Absensi::getJamPulangForType($userType);
-        $batasPulang = Carbon::parse($today . ' ' . $jamPulang);
+        $batasPulang = Carbon::parse($today.' '.$jamPulang);
         $statusPulang = $now->lt($batasPulang) ? 'pulang_cepat' : 'tepat_waktu';
 
         $absensi->update([
@@ -268,6 +275,7 @@ class AbsensiController extends Controller
             'catatan' => 'nullable|string|max:500',
             'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
+        abort_unless(User::query()->whereKey($request->user_id)->whereHas('gtk')->exists(), 422, 'Akun GTK tidak ditemukan.');
 
         $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
 
@@ -279,10 +287,10 @@ class AbsensiController extends Controller
 
         $tanggal = $request->tanggal;
         $waktuMasuk = $request->waktu_masuk
-            ? Carbon::parse($tanggal . ' ' . $request->waktu_masuk)
+            ? Carbon::parse($tanggal.' '.$request->waktu_masuk)
             : null;
         $waktuPulang = $request->waktu_pulang
-            ? Carbon::parse($tanggal . ' ' . $request->waktu_pulang)
+            ? Carbon::parse($tanggal.' '.$request->waktu_pulang)
             : null;
 
         $absensi = Absensi::updateOrCreate(
@@ -317,6 +325,7 @@ class AbsensiController extends Controller
      */
     public function update(Request $request, Absensi $absensi)
     {
+        abort_unless($absensi->user_type === 'gtk', 404);
         $request->validate([
             'status' => 'required|in:hadir,terlambat,izin,sakit,alpa,dinas_luar,cuti',
             'catatan' => 'nullable|string|max:500',
@@ -342,13 +351,37 @@ class AbsensiController extends Controller
             ->with('success', 'Data absensi berhasil diperbarui.');
     }
 
-    /**
-     * Export rekap to Excel (placeholder)
-     */
+    /** Export rekap GTK sebagai CSV yang kompatibel dengan spreadsheet. */
     public function export(Request $request)
     {
-        // TODO: implement Excel export with maatwebsite/excel
-        return back()->with('info', 'Fitur export sedang dalam pengembangan.');
+        $bulan = max(1, min(12, (int) $request->get('bulan', now()->month)));
+        $tahun = max(2000, min(2100, (int) $request->get('tahun', now()->year)));
+        $rows = Absensi::gtk()->bulan($bulan, $tahun)
+            ->when($this->isPersonalGtkScope($request), fn ($query) => $query->where('user_id', $request->user()->id))
+            ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap,nip', 'location:id,nama'])
+            ->orderBy('tanggal')->orderBy('waktu_masuk')->get();
+        $filename = sprintf('rekap-presensi-gtk-%04d-%02d.csv', $tahun, $bulan);
+
+        return response()->streamDownload(function () use ($rows) {
+            $output = fopen('php://output', 'wb');
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, ['Tanggal', 'Nama GTK', 'NIP', 'Masuk', 'Pulang', 'Status', 'Status Pulang', 'Metode', 'Lokasi', 'Catatan'], ';');
+            foreach ($rows as $attendance) {
+                fputcsv($output, [
+                    $attendance->tanggal?->format('d/m/Y'),
+                    $attendance->user?->gtk?->nama_lengkap ?? $attendance->user?->name,
+                    $attendance->user?->gtk?->nip,
+                    $attendance->waktu_masuk?->format('H:i:s'),
+                    $attendance->waktu_pulang?->format('H:i:s'),
+                    $attendance->status,
+                    $attendance->status_pulang,
+                    $attendance->metode_masuk,
+                    $attendance->location?->nama,
+                    $attendance->catatan,
+                ], ';');
+            }
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**
@@ -357,11 +390,12 @@ class AbsensiController extends Controller
     public function todayData(Request $request)
     {
         $today = now()->format('Y-m-d');
-        $userType = $this->normalizeUserType($request->get('type', 'gtk'));
+        $userType = 'gtk';
 
         $absensis = Absensi::query()
             ->where('user_type', $userType)
             ->tanggal($today)
+            ->when($this->isPersonalGtkScope($request), fn ($query) => $query->where('user_id', $request->user()->id))
             ->with([
                 'user:id,name',
                 'user.gtk:id,user_id,nama_lengkap',
@@ -370,7 +404,7 @@ class AbsensiController extends Controller
             ->orderBy('waktu_masuk', 'desc')
             ->get();
 
-        $totalUsers = $userType === 'siswa' ? \App\Models\Siswa::count() : \App\Models\Gtk::count();
+        $totalUsers = $this->isPersonalGtkScope($request) ? 1 : \App\Models\Gtk::count();
 
         $data = $absensis->map(function ($a) {
             return [
@@ -396,6 +430,15 @@ class AbsensiController extends Controller
         return $userType === 'siswa' ? 'siswa' : 'gtk';
     }
 
+    private function isPersonalGtkScope(Request $request): bool
+    {
+        $user = $request->user();
+        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
+            || $user->can('manage-absensi');
+
+        return ! $isManager;
+    }
+
     private function resolveDisplayName(Absensi $absensi, string $userType): string
     {
         return $userType === 'siswa'
@@ -408,7 +451,7 @@ class AbsensiController extends Controller
      */
     private function saveCapturePhoto(string $base64, string $userId, string $type): ?string
     {
-        if (!preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
+        if (! preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
             return null;
         }
 
@@ -419,7 +462,7 @@ class AbsensiController extends Controller
         }
 
         $date = now()->format('Y-m-d');
-        $filename = "absensi/captures/{$date}/{$userId}_{$type}." . $extension;
+        $filename = "absensi/captures/{$date}/{$userId}_{$type}.".$extension;
         \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $data);
 
         return $filename;

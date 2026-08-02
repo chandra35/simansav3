@@ -4,6 +4,26 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pemisahan kehadiran siswa dan Presensi GTK
+
+- Analitik Kehadiran dipindahkan ke menu Kelas Saya dan dibatasi ketat pada rombel aktif wali kelas; kelas yang diajar sebagai guru mapel tidak lagi ikut memperluas scope.
+- Analitik kini menggabungkan sesi kehadiran final, presensi harian, indikator risiko, serta jumlah/riwayat catatan wali kelas per siswa.
+- Absensi Siswa, Pemantauan Siswa, dan analitik siswa diturunkan dari kelompok Presensi. Route lama dipertahankan sementara untuk kompatibilitas, sedangkan alur wali diarahkan ke Absensi Harian dan Rekap Absensi di Kelas Saya.
+- Dashboard, rekap, data kiosk, registrasi/verifikasi wajah, dan pengaturan pada modul Presensi kini khusus GTK. Akun GTK biasa hanya melihat data presensinya sendiri; pengelola berwenang dapat melihat seluruh GTK.
+- Kiosk menolak tipe pengguna selain GTK, input manual memvalidasi target benar-benar GTK, dan editor menolak perubahan record siswa.
+- Ekspor rekap bulanan yang sebelumnya placeholder kini menghasilkan CSV UTF-8 yang dapat dibuka di aplikasi spreadsheet.
+- Dashboard, rekap, analitik, detail siswa, dan pengaturan telah diselaraskan dengan hero utuh, card netral, serta layout responsif.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/AbsensiController.php`
+- `app/Http/Controllers/Admin/AbsensiSettingController.php`
+- `app/Http/Controllers/Admin/FaceRegistrationController.php`
+- `app/Http/Controllers/Admin/StudentAttendanceAnalyticsController.php`
+- `config/adminlte.php`
+- `resources/views/admin/absensi/`
+- `tests/Unit/StudentAttendanceArchitectureTest.php`
+
 ### Modal Catatan Siswa dan scope Statistik Siswa Wali Kelas
 
 - Pemilihan siswa pada Catatan Siswa kini langsung membuka form tulis di modal responsif; composer panjang tidak lagi mengambil area bawah halaman.

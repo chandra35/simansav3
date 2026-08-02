@@ -331,15 +331,12 @@
     <!-- HEADER -->
     <div class="kiosk-header">
         <div>
-            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Absensi Wajah {{ $userType === 'siswa' ? 'Siswa' : 'GTK' }}</h1>
+            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Presensi Wajah GTK</h1>
             <div class="date" id="currentDate"></div>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
             <div>
-                <select id="userTypeSelect" class="form-select form-select-sm" style="background:#1a1a4e; color:#fff; border-color:#2a2a6e; width:160px;">
-                    <option value="gtk" {{ $userType === 'gtk' ? 'selected' : '' }}>Mode GTK</option>
-                    <option value="siswa" {{ $userType === 'siswa' ? 'selected' : '' }}>Mode Siswa</option>
-                </select>
+                <span class="badge bg-primary px-3 py-2"><i class="fas fa-user-tie"></i> Mode GTK</span>
             </div>
             <div>
                 <select id="locationSelect" class="form-select form-select-sm" style="background:#1a1a4e; color:#fff; border-color:#2a2a6e; width:200px;">
@@ -540,7 +537,7 @@
         };
 
         let currentTab = 'masuk';
-        let currentUserType = '{{ $userType }}';
+        const currentUserType = 'gtk';
         let faceDatabase = [];
         let isProcessing = false;
         let detectionLoop = null;
@@ -708,17 +705,6 @@
                 document.removeEventListener('click', enterFS);
             }, { once: true });
 
-            document.getElementById('userTypeSelect')?.addEventListener('change', function() {
-                const locationId = document.getElementById('locationSelect')?.value || '';
-                const url = new URL(window.location.href);
-                url.searchParams.set('type', this.value);
-                if (locationId) {
-                    url.searchParams.set('location', locationId);
-                } else {
-                    url.searchParams.delete('location');
-                }
-                window.location.href = url.toString();
-            });
         });
 
         // ============================================

@@ -22,7 +22,7 @@ class FaceRegistrationController extends Controller
         $selfFace = null;
 
         if ($canManageAll) {
-            $selectedType = $this->normalizeUserType($request->get('type', 'gtk'));
+            $selectedType = 'gtk';
             $registrants = $this->getRegistrantsForType($selectedType);
             $storeUrl = route('admin.absensi.face-register.store');
             $descriptorUrl = route('admin.absensi.face-descriptors');
@@ -60,7 +60,7 @@ class FaceRegistrationController extends Controller
         return view('admin.absensi.face-register', [
             'pageTitle' => $selfOnly
                 ? 'Registrasi Wajah Saya'
-                : 'Registrasi Wajah ' . $this->typeLabel($selectedType),
+                : 'Registrasi Wajah '.$this->typeLabel($selectedType),
             'subjectLabel' => $this->typeLabel($selectedType),
             'identifierLabel' => $selectedType === 'gtk' ? 'NIP' : 'NISN',
             'registrants' => $registrants,
@@ -70,7 +70,7 @@ class FaceRegistrationController extends Controller
             'storeUrl' => $storeUrl,
             'descriptorUrl' => $descriptorUrl,
             'selectedType' => $selectedType,
-            'typeOptions' => $this->typeOptions(),
+            'typeOptions' => $canManageAll ? ['gtk' => 'GTK'] : $this->typeOptions(),
             'initialSelection' => $initialSelection,
             'selfRegistrant' => $selfOnly ? $registrants->first() : null,
             'selfFace' => $selfFace,
@@ -101,9 +101,7 @@ class FaceRegistrationController extends Controller
         $targetUser = User::with(['gtk:id,user_id', 'siswa:id,user_id'])->findOrFail($request->user_id);
 
         if ($canManageAll) {
-            $userType = $this->normalizeUserType(
-                $request->input('user_type', $this->inferUserTypeFromUser($targetUser))
-            );
+            $userType = 'gtk';
         } else {
             $context = $this->getSelfRegistrationContext($authUser);
             abort_unless($context, 403, 'Anda tidak memiliki akses ke fitur registrasi wajah.');
@@ -166,7 +164,7 @@ class FaceRegistrationController extends Controller
         );
 
         abort_if(
-            $requiredSteps->diff($completedSteps)->isNotEmpty() || !$hasDirectionalTurn,
+            $requiredSteps->diff($completedSteps)->isNotEmpty() || ! $hasDirectionalTurn,
             422,
             'Deteksi liveness belum lengkap. Sistem membutuhkan kedipan, senyum, dan gerakan kepala asli.'
         );
@@ -212,7 +210,7 @@ class FaceRegistrationController extends Controller
     {
         abort_unless($this->canManageAllRegistrations($request->user()), 403);
 
-        $selectedType = $this->normalizeUserType($request->get('type', 'gtk'));
+        $selectedType = 'gtk';
 
         $baseQuery = FaceEncoding::query()
             ->where('user_type', $selectedType)
@@ -246,13 +244,14 @@ class FaceRegistrationController extends Controller
             'selectedType' => $selectedType,
             'subjectLabel' => $this->typeLabel($selectedType),
             'identifierLabel' => $selectedType === 'gtk' ? 'NIP' : 'NISN',
-            'typeOptions' => $this->typeOptions(),
+            'typeOptions' => ['gtk' => 'GTK'],
         ]);
     }
 
     public function verify(Request $request, FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations($request->user()), 403);
+        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $request->validate([
             'action' => 'required|in:approve,reject',
@@ -280,6 +279,7 @@ class FaceRegistrationController extends Controller
     public function destroy(FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations(request()->user()), 403);
+        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $profile = $faceEncoding->user_type === 'gtk' ? $faceEncoding->user->gtk : $faceEncoding->user->siswa;
         $name = $profile->nama_lengkap ?? $faceEncoding->user->name ?? 'Unknown';
@@ -293,6 +293,7 @@ class FaceRegistrationController extends Controller
     public function resetVerification(FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations(request()->user()), 403);
+        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $faceEncoding->update([
             'is_verified' => false,
@@ -307,7 +308,7 @@ class FaceRegistrationController extends Controller
 
     public function getDescriptors(Request $request)
     {
-        $userType = $this->normalizeUserType($request->get('type', 'gtk'));
+        $userType = $request->routeIs('siswa.*') ? 'siswa' : 'gtk';
         $verifiedOnly = $request->boolean('verified_only', false);
 
         $query = FaceEncoding::where('user_type', $userType)
@@ -342,7 +343,7 @@ class FaceRegistrationController extends Controller
 
     private function saveBase64Photo(string $base64, string $userId, string $userType): ?string
     {
-        if (!preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
+        if (! preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
             return null;
         }
 
@@ -352,7 +353,7 @@ class FaceRegistrationController extends Controller
             return null;
         }
 
-        $filename = "face-registration/{$userType}/{$userId}." . $extension;
+        $filename = "face-registration/{$userType}/{$userId}.".$extension;
         Storage::disk('public')->put($filename, $data);
 
         return $filename;
@@ -468,17 +469,17 @@ class FaceRegistrationController extends Controller
         $bestMatch = null;
 
         foreach ($candidateFaces as $face) {
-            if (empty($face->descriptors) || !is_array($face->descriptors)) {
+            if (empty($face->descriptors) || ! is_array($face->descriptors)) {
                 continue;
             }
 
             foreach ($submittedDescriptors as $submittedDescriptor) {
-                if (!is_array($submittedDescriptor)) {
+                if (! is_array($submittedDescriptor)) {
                     continue;
                 }
 
                 foreach ($face->descriptors as $storedDescriptor) {
-                    if (!is_array($storedDescriptor)) {
+                    if (! is_array($storedDescriptor)) {
                         continue;
                     }
 
@@ -487,7 +488,7 @@ class FaceRegistrationController extends Controller
                         continue;
                     }
 
-                    if ($distance <= $threshold && (!$bestMatch || $distance < $bestMatch['distance'])) {
+                    if ($distance <= $threshold && (! $bestMatch || $distance < $bestMatch['distance'])) {
                         $bestMatch = [
                             'distance' => $distance,
                             'face' => $face,
@@ -508,7 +509,7 @@ class FaceRegistrationController extends Controller
 
         $sum = 0.0;
         foreach ($descriptorA as $index => $value) {
-            if (!isset($descriptorB[$index]) || !is_numeric($value) || !is_numeric($descriptorB[$index])) {
+            if (! isset($descriptorB[$index]) || ! is_numeric($value) || ! is_numeric($descriptorB[$index])) {
                 return null;
             }
 

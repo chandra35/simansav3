@@ -64,11 +64,49 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('attendance_records.id IS NOT NULL', $controller);
         $this->assertStringContainsString("'unrecorded' => max(0", $controller);
         $this->assertStringContainsString("name('absensi-siswa.monitoring')", $routes);
-        $this->assertStringContainsString("'can' => 'monitor-all-student-attendance'", $menu);
+        $this->assertStringNotContainsString("'route' => 'admin.absensi-siswa.monitoring'", $menu);
         $this->assertStringContainsString("'monitor-all-student-attendance'", $permissionSync);
         $this->assertStringContainsString('Absensi Seluruh Siswa', $view);
         $this->assertStringContainsString('Belum Direkam', $view);
         $this->assertStringContainsString("'monitor-all-student-attendance'", $permission);
+    }
+
+    public function test_student_analytics_is_in_homeroom_menu_and_uses_notes_with_strict_scope(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $menu = file_get_contents($root.'/config/adminlte.php');
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/StudentAttendanceAnalyticsController.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/analytics.blade.php');
+
+        $this->assertStringContainsString("'route' => 'admin.absensi-siswa.analytics'", $menu);
+        $this->assertSame(1, substr_count($menu, "'route' => 'admin.absensi-siswa.analytics'"));
+        $this->assertStringNotContainsString("'route' => 'admin.absensi-siswa.index'", $menu);
+        $this->assertStringContainsString("->where('wali_kelas_id', \$user->id)->where('is_active', true)", $controller);
+        $this->assertStringNotContainsString('JadwalPelajaran', $controller);
+        $this->assertStringContainsString('CatatanWaliKelas::query()', $controller);
+        $this->assertStringContainsString('Catatan wali kelas', $view);
+        $this->assertStringContainsString('admin.gtk.wali.catatan.index', $view);
+    }
+
+    public function test_presensi_admin_is_gtk_only_and_personally_scoped_for_regular_gtk(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiController.php');
+        $faceController = file_get_contents($root.'/app/Http/Controllers/Admin/FaceRegistrationController.php');
+        $settingController = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSettingController.php');
+        $kiosk = file_get_contents($root.'/resources/views/admin/absensi/kiosk.blade.php');
+        $recap = file_get_contents($root.'/resources/views/admin/absensi/rekap.blade.php');
+        $settings = file_get_contents($root.'/resources/views/admin/absensi/settings.blade.php');
+
+        $this->assertStringContainsString('private function isPersonalGtkScope', $controller);
+        $this->assertStringContainsString("->where('user_id', \$request->user()->id)", $controller);
+        $this->assertStringContainsString("\$userType = 'gtk';", $controller);
+        $this->assertStringContainsString('streamDownload', $controller);
+        $this->assertStringContainsString("\$selectedType = 'gtk';", $faceController);
+        $this->assertStringNotContainsString('Mode Siswa', $kiosk);
+        $this->assertStringContainsString('Unduh CSV', $recap);
+        $this->assertStringContainsString("->whereNotIn('key', ['jam_masuk_siswa', 'jam_pulang_siswa'])", $settingController);
+        $this->assertStringContainsString('khusus untuk GTK', $settings);
     }
 
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void

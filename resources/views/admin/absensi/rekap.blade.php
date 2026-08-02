@@ -3,10 +3,12 @@
 @section('title', 'Rekap Absensi GTK')
 
 @section('content_header')
-    <h1><i class="fas fa-chart-bar"></i> Rekap Absensi GTK</h1>
+    <div class="d-flex justify-content-between align-items-center"><div><h1 class="m-0">Rekap Presensi GTK</h1><small class="text-muted">Presensi / Rekap Bulanan</small></div><a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-arrow-left mr-1"></i> Hari Ini</a></div>
 @stop
 
 @section('content')
+<div class="gtk-recap-page pb-4">
+    <section class="card bg-gradient-primary text-white border-0 recap-hero"><div><small class="font-weight-bold"><i class="fas fa-chart-bar mr-1"></i> PRESENSI GTK</small><h2 class="font-weight-bold mb-1">Rekap Bulanan {{ $isPersonalScope ? 'Saya' : 'GTK' }}</h2><p class="mb-0">Ringkasan status hadir, terlambat, izin, sakit, dan alpa per hari dalam satu tampilan.</p></div><div class="recap-period"><small>Periode</small><strong>{{ \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y') }}</strong></div></section>
     {{-- Filter --}}
     <div class="card card-outline card-primary">
         <div class="card-body">
@@ -31,7 +33,7 @@
                 </div>
                 <button class="btn btn-primary"><i class="fas fa-search"></i> Tampilkan</button>
                 <a href="{{ route('admin.absensi.export', ['bulan' => $bulan, 'tahun' => $tahun]) }}" class="btn btn-success ml-2">
-                    <i class="fas fa-file-excel"></i> Export Excel
+                    <i class="fas fa-file-csv"></i> Unduh CSV
                 </a>
             </form>
         </div>
@@ -48,7 +50,7 @@
     @endif
 
     {{-- Rekap Table --}}
-    <div class="card">
+    <div class="card card-outline card-primary">
         <div class="card-body table-responsive p-0">
             @php
                 $daysInMonth = \Carbon\Carbon::create($tahun, $bulan, 1)->daysInMonth;
@@ -138,10 +140,12 @@
             </table>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')
 <style>
     .table-bordered th, .table-bordered td { vertical-align: middle !important; padding: 4px !important; }
+    .recap-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px;border-radius:18px}.recap-period{min-width:180px;padding:12px 16px;border:1px solid rgba(255,255,255,.35);border-radius:12px;background:rgba(255,255,255,.12)}.recap-period small,.recap-period strong{display:block}@media(max-width:767px){.recap-hero{align-items:flex-start;flex-direction:column}.recap-period{width:100%}.gtk-recap-page .form-inline{align-items:stretch;flex-direction:column}.gtk-recap-page .form-inline .form-group,.gtk-recap-page .form-inline .btn{margin:0 0 10px!important}}
 </style>
 @stop

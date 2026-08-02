@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AbsensiSetting;
 use App\Models\AbsensiLocation;
+use App\Models\AbsensiSetting;
 use App\Models\HariLibur;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AbsensiSettingController extends Controller
 {
@@ -17,7 +16,9 @@ class AbsensiSettingController extends Controller
     public function index()
     {
         $this->ensureDefaultSettings();
-        $settings = AbsensiSetting::orderBy('group')->orderBy('key')->get()->groupBy('group');
+        $settings = AbsensiSetting::query()
+            ->whereNotIn('key', ['jam_masuk_siswa', 'jam_pulang_siswa'])
+            ->orderBy('group')->orderBy('key')->get()->groupBy('group');
         $locations = AbsensiLocation::orderBy('nama')->get();
         $hariLibur = HariLibur::orderBy('tanggal', 'desc')->get();
 
@@ -36,6 +37,9 @@ class AbsensiSettingController extends Controller
         ]);
 
         foreach ($request->settings as $key => $value) {
+            if (in_array($key, ['jam_masuk_siswa', 'jam_pulang_siswa'], true)) {
+                continue;
+            }
             AbsensiSetting::setValue($key, $value);
         }
 
@@ -70,7 +74,7 @@ class AbsensiSettingController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'kode' => 'required|string|max:50|unique:absensi_locations,kode,' . $location->id,
+            'kode' => 'required|string|max:50|unique:absensi_locations,kode,'.$location->id,
             'alamat' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -87,7 +91,7 @@ class AbsensiSettingController extends Controller
 
     public function toggleLocation(AbsensiLocation $location)
     {
-        $location->update(['is_active' => !$location->is_active]);
+        $location->update(['is_active' => ! $location->is_active]);
 
         return response()->json(['success' => true, 'is_active' => $location->is_active]);
     }
@@ -160,7 +164,7 @@ class AbsensiSettingController extends Controller
         foreach ($holidays as $h) {
             $exists = HariLibur::where('tanggal', $h['tanggal'])
                 ->where('nama', $h['nama'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 HariLibur::create($h);
                 $count++;
             }
@@ -198,22 +202,6 @@ class AbsensiSettingController extends Controller
                 'group' => 'waktu',
                 'label' => 'Jam Pulang GTK',
                 'description' => 'Jam pulang GTK (format HH:mm)',
-            ],
-            [
-                'key' => 'jam_masuk_siswa',
-                'value' => '06:45',
-                'type' => 'time',
-                'group' => 'waktu',
-                'label' => 'Jam Masuk Siswa',
-                'description' => 'Jam masuk siswa untuk kiosk/pintu gerbang',
-            ],
-            [
-                'key' => 'jam_pulang_siswa',
-                'value' => '15:00',
-                'type' => 'time',
-                'group' => 'waktu',
-                'label' => 'Jam Pulang Siswa',
-                'description' => 'Jam pulang siswa untuk kiosk/pintu gerbang',
             ],
             [
                 'key' => 'face_duplicate_threshold',

@@ -9,19 +9,19 @@
 @stop
 
 @section('content')
-<div class="card border-0 shadow-sm mb-3">
+<div class="card bg-gradient-primary text-white border-0 shadow-sm mb-3 settings-hero">
     <div class="card-body">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
             <div class="pr-lg-4 mb-3 mb-lg-0">
-                <div class="text-uppercase small font-weight-bold text-primary mb-1">Absensi Kamera</div>
+                <div class="text-uppercase small font-weight-bold mb-1">Presensi GTK</div>
                 <h2 class="h4 mb-2">Pengaturan Operasional Registrasi dan Kiosk</h2>
                 <p class="text-muted mb-0">
-                    Gunakan halaman ini untuk mengatur jam GTK dan siswa, ketelitian pengenalan wajah, serta kesiapan kiosk di pintu masuk.
+                    Atur jam kerja GTK, ketelitian pengenalan wajah, lokasi presensi, dan kesiapan kiosk dari satu halaman operasional.
                 </p>
             </div>
-            <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle mr-1"></i>
-                Mode gerbang sekolah sekarang mendukung GTK dan siswa dengan wajah yang sudah approved.
+            <div class="settings-hero-note">
+                <i class="fas fa-user-tie mr-1"></i>
+                Kiosk dan registrasi pada modul ini khusus untuk GTK.
             </div>
         </div>
     </div>
@@ -44,7 +44,7 @@
                         @if($group === 'waktu')
                             <div class="alert alert-light border mb-3">
                                 <strong>Tips operasional:</strong>
-                                Samakan jam GTK dan siswa dengan aturan sekolah agar status hadir dan terlambat dari kiosk lebih akurat.
+                                Samakan jam GTK dengan aturan kerja madrasah agar status hadir dan terlambat dari kiosk lebih akurat.
                             </div>
                         @elseif($group === 'kiosk')
                             <div class="alert alert-light border mb-3">
@@ -276,6 +276,13 @@
         </form>
     </div>
 </div>
+@stop
+
+@section('css')
+<style>
+.settings-hero{border-radius:18px}.settings-hero .text-muted{color:rgba(255,255,255,.9)!important}.settings-hero-note{max-width:340px;padding:12px 15px;border:1px solid rgba(255,255,255,.32);border-radius:12px;background:rgba(255,255,255,.13)}
+@media(max-width:991px){.settings-hero-note{max-width:none;width:100%}}
+</style>
 @stop
 
 @section('js')

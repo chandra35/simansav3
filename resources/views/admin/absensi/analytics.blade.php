@@ -4,14 +4,14 @@
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0"><i class="fas fa-chart-line text-primary mr-2"></i>Analitik Kehadiran</h1>
-        <a href="{{ route('admin.absensi-siswa.index') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-clipboard-check mr-1"></i> Input Presensi</a>
+        <div><h1 class="m-0">Analitik Kehadiran</h1><small class="text-muted">Kelas Saya / Analitik Kehadiran</small></div>
+        @if($isWaliScope)<a href="{{ route('admin.gtk.wali.absensi.index') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-clipboard-check mr-1"></i> Absensi Harian</a>@endif
     </div>
 @stop
 
 @section('content')
 <div class="attendance-page pb-4">
-    <section class="attendance-hero">
+    <section class="card bg-gradient-primary text-white attendance-hero border-0">
         <div>
             <div class="hero-kicker"><i class="fas fa-history mr-1"></i> RIWAYAT LINTAS TINGKAT</div>
             <h2>Analitik Kehadiran Siswa</h2>
@@ -36,6 +36,7 @@
         <div class="metric blue"><span>Sesi mapel final</span><strong>{{ number_format($kpi['subject_sessions']) }}</strong><small>Guru menandai secara manual</small></div>
         <div class="metric green"><span>Kehadiran mapel</span><strong>{{ number_format($kpi['attendance_rate'], 1) }}%</strong><small>Dari {{ number_format($kpi['records']) }} catatan mapel</small></div>
         <div class="metric cyan"><span>Presensi wajah harian</span><strong>{{ number_format($kpi['daily_records']) }}</strong><small>{{ number_format($kpi['daily_attendance_rate'], 1) }}% hadir/terlambat</small></div>
+        <div class="metric purple"><span>Catatan wali kelas</span><strong>{{ number_format($kpi['student_notes']) }}</strong><small>{{ $kpi['students_with_notes'] }} siswa · {{ $kpi['important_notes'] }} penting</small></div>
         <div class="metric amber"><span>Perlu ditindaklanjuti</span><strong>{{ number_format($kpi['active_alerts']) }}</strong><small>{{ $kpi['high_alerts'] }} prioritas tinggi</small></div>
     </div>
 
@@ -68,8 +69,8 @@
 
     <section class="content-card">
         <div class="section-head"><div><h3>Ringkasan per Siswa</h3><p>Urutan memprioritaskan alpa dan keterlambatan agar mudah ditinjau wali kelas/BK.</p></div><span class="record-pill">Maks. 100 siswa</span></div>
-        <div class="table-responsive"><table class="table attendance-table"><thead><tr><th>Siswa</th><th>Total Catatan</th><th>Kehadiran</th><th>Alpa</th><th>Terlambat</th><th>Sakit / Izin</th><th class="text-right">Aksi</th></tr></thead><tbody>
-        @forelse($studentRows as $student)<tr><td><strong>{{ $student->nama_lengkap }}</strong><small>NISN {{ $student->nisn ?: '-' }}</small></td><td>{{ $student->total_records }}</td><td><span class="rate-pill {{ $student->attendance_rate < 85 ? 'risk' : '' }}">{{ number_format($student->attendance_rate,1) }}%</span></td><td>{{ $student->alpa }}</td><td>{{ $student->terlambat }}</td><td>{{ $student->sakit }} / {{ $student->izin }}</td><td class="text-right"><a class="btn btn-outline-primary btn-sm" href="{{ route('admin.absensi-siswa.analytics.student', $student->id) }}"><i class="fas fa-chart-line mr-1"></i> Riwayat</a></td></tr>
+        <div class="table-responsive"><table class="table attendance-table"><thead><tr><th>Siswa</th><th>Catatan Kehadiran</th><th>Kehadiran</th><th>Alpa</th><th>Terlambat</th><th>Catatan Wali</th><th class="text-right">Aksi</th></tr></thead><tbody>
+        @forelse($studentRows as $student)<tr><td><strong>{{ $student->nama_lengkap }}</strong><small>NISN {{ $student->nisn ?: '-' }}</small></td><td>{{ $student->total_records }}</td><td><span class="rate-pill {{ $student->attendance_rate < 85 ? 'risk' : '' }}">{{ number_format($student->attendance_rate,1) }}%</span></td><td>{{ $student->alpa }}</td><td>{{ $student->terlambat }}</td><td><strong>{{ $student->note_count }}</strong>@if($student->important_note_count)<small class="text-danger">{{ $student->important_note_count }} penting</small>@elseif($student->latest_note_date)<small>Terakhir {{ \Carbon\Carbon::parse($student->latest_note_date)->translatedFormat('d M Y') }}</small>@endif</td><td class="text-right"><div class="btn-group btn-group-sm">@if($isWaliScope)<a class="btn btn-outline-success" href="{{ route('admin.gtk.wali.catatan.index', ['kelas_id' => $student->kelas_id, 'siswa_id' => $student->id]) }}"><i class="fas fa-sticky-note mr-1"></i> Catatan</a>@endif<a class="btn btn-outline-primary" href="{{ route('admin.absensi-siswa.analytics.student', $student->id) }}"><i class="fas fa-chart-line mr-1"></i> Riwayat</a></div></td></tr>
         @empty<tr><td colspan="7"><div class="empty-state compact">Belum ada sesi final pada rentang ini.</div></td></tr>@endforelse
         </tbody></table></div>
     </section>
@@ -78,8 +79,12 @@
 
 @section('css')
 <style>
-.metric.cyan{border-top-color:#0ea5a8}
+.metric.cyan{border-top-color:#0ea5a8}.attendance-page .attendance-hero{background-image:none}.attendance-page .form-group{margin-bottom:0}.metric-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 .attendance-page{color:#15213a}.attendance-hero{display:flex;justify-content:space-between;gap:24px;align-items:center;padding:26px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#356df3,#557ff0 65%,#368fa0);box-shadow:0 15px 34px rgba(51,94,180,.18)}.hero-kicker{font-size:13px;font-weight:800}.attendance-hero h2{margin:8px 0 3px;font-weight:800}.attendance-hero p{margin:0;opacity:.93}.hero-side{min-width:190px;padding:14px 18px;border:1px solid rgba(255,255,255,.3);border-radius:14px;background:rgba(255,255,255,.12)}.hero-side span,.hero-side small{display:block}.hero-side strong{font-size:21px}.hero-side small i{font-size:8px;color:#4ade80}.filter-panel,.content-card{background:#fff;border:1px solid #dce5f2;border-radius:18px;box-shadow:0 12px 28px rgba(25,54,104,.07)}.filter-panel{display:grid;grid-template-columns:1.25fr .75fr 1.1fr .9fr .9fr auto;gap:12px;align-items:end;padding:18px}.form-group{margin:0}.form-group label{font-size:12px;text-transform:uppercase;color:#53647e}.filter-button{height:38px}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric{position:relative;overflow:hidden;padding:19px;border-radius:16px;background:#fff;border:1px solid #dce5f2;border-top:4px solid}.metric span,.metric small{display:block;color:#64748b}.metric strong{font-size:28px;line-height:1.25}.metric.blue{border-top-color:#3973f6}.metric.green{border-top-color:#29b36e}.metric.amber{border-top-color:#e99a00}.metric.purple{border-top-color:#8958ef}.content-card{padding:20px}.section-head{display:flex;justify-content:space-between;gap:15px;align-items:start;margin-bottom:15px}.section-head h3{font-size:19px;font-weight:800;margin:0}.section-head p{color:#65758d;margin:3px 0 0}.status-row{display:flex;justify-content:space-between;padding:10px 2px;border-bottom:1px solid #edf1f6}.status-row i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px}.info-note{display:flex;gap:9px;margin-top:15px;padding:12px;border-radius:12px;background:#eef5ff;color:#3b5685;font-size:13px}.alert-list{max-height:420px;overflow:auto}.smart-alert{display:flex;justify-content:space-between;gap:12px;padding:14px;margin-bottom:10px;border:1px solid #e4eaf2;border-left:4px solid #e5a000;border-radius:12px}.smart-alert.severity-high{border-left-color:#e23c4b}.smart-alert.severity-low{border-left-color:#2baf71}.alert-main h4{font-size:16px;font-weight:800;margin:5px 0 2px}.alert-main>strong{font-size:14px}.alert-main p{font-size:13px;color:#65758d;margin:2px 0}.alert-badges span{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;background:#f2f5fa;margin-right:4px}.alert-actions{display:flex;gap:6px;align-items:center;white-space:nowrap}.empty-state{display:flex;min-height:150px;flex-direction:column;align-items:center;justify-content:center;color:#718096}.empty-state i{font-size:28px;color:#3eb878;margin-bottom:8px}.empty-state.compact{min-height:80px}.attendance-table{margin:0}.attendance-table thead th{background:#f6f8fc;color:#53647e;font-size:12px;text-transform:uppercase;border-top:0}.attendance-table td{vertical-align:middle}.attendance-table td small{display:block;color:#8795aa}.rate-pill,.record-pill{display:inline-block;padding:5px 10px;border-radius:20px;background:#e8f8ef;color:#168451;font-weight:700}.rate-pill.risk{background:#fff0e5;color:#c26300}.record-pill{background:#eef3ff;color:#3865de}@media(max-width:1199px){.filter-panel{grid-template-columns:repeat(3,1fr)}.metric-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:767px){.attendance-hero{align-items:flex-start;flex-direction:column}.hero-side{width:100%}.filter-panel{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr 1fr}.smart-alert{flex-direction:column}.alert-actions{justify-content:flex-end}}@media(max-width:480px){.metric-grid{grid-template-columns:1fr}}
+.attendance-page .metric-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1199px){.attendance-page .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.attendance-page .metric-grid{grid-template-columns:1fr}}
+.attendance-page .attendance-hero{background:linear-gradient(135deg,#4776f4 0%,#4d76e7 52%,#49a49a 100%)!important}
 </style>
 @stop
 
