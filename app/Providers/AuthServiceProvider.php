@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -30,7 +30,7 @@ class AuthServiceProvider extends ServiceProvider
             return (
                 $user->hasAnyRole(['Super Admin', 'Admin', 'Operator']) ||
                 in_array($user->role, ['super_admin', 'admin', 'operator'])
-            ) && !$user->hasRole('Siswa') && !$user->siswa()->exists();
+            ) && ! $user->hasRole('Siswa') && ! $user->siswa()->exists();
         });
 
         Gate::define('super-admin-access', function ($user) {
@@ -39,14 +39,22 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('siswa-access', function ($user) {
             // Staff/admin roles jangan tampil meski punya relasi siswa
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
         Gate::define('siswa-smartq-access', function ($user) {
             // Admin/staff roles jangan tampil meski punya data siswa
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
-            if (!$user->siswa) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+            if (! $user->siswa) {
+                return false;
+            }
+
             return \App\Models\SmartqPeserta::where('siswa_id', $user->siswa->id)
                 ->whereIn('status', ['lulus', 'cadangan'])
                 ->exists();
@@ -57,57 +65,74 @@ class AuthServiceProvider extends ServiceProvider
         // JANGAN gunakan 'siswa-access' atau 'siswa-menu-only' sebagai gate di menu config
         // karena nama itu juga ada sebagai Spatie permission → Gate::before intercept duluan
         Gate::define('sidebar-siswa-access', function ($user) {
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
         Gate::define('sidebar-siswa-menu-only', function ($user) {
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+
             return $user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists();
         });
 
         Gate::define('sidebar-siswa-smartq', function ($user) {
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
-            if (!$user->siswa) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+            if (! $user->siswa) {
+                return false;
+            }
+
             return \App\Models\SmartqPeserta::where('siswa_id', $user->siswa->id)
                 ->whereIn('status', ['lulus', 'cadangan'])
                 ->exists();
         });
 
         Gate::define('siswa-graduation-announcement-access', function ($user) {
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+
             return $user->hasRole('Siswa') || $user->role === 'siswa';
         });
 
         // Sidebar gate — nama berbeda agar tidak dioverride Spatie Gate::before
         Gate::define('sidebar-siswa-graduation', function ($user) {
-            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) return false;
+            if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {
+                return false;
+            }
+
             return $user->hasRole('Siswa') || $user->role === 'siswa';
         });
 
         Gate::define('siswa-menu-only', function ($user) {
             return ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists()) &&
-                !$user->hasRole('GTK') &&
-                !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
+                ! $user->hasRole('GTK') &&
+                ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
         });
 
         // Gate for GTK-specific menus (Dashboard Saya, Profil Saya)
         // Only show to users with GTK role, excluding Super Admin and Admin
         // PAKAI sidebar- prefix agar tidak bentrok dengan Spatie permission 'gtk-menu-only'
         Gate::define('sidebar-gtk-menu-only', function ($user) {
-            return $user->hasRole('GTK') && 
-                   !$user->hasRole('Siswa') &&
-                   !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
-                   !$user->siswa()->exists();
+            return $user->hasRole('GTK') &&
+                   ! $user->hasRole('Siswa') &&
+                   ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+                   ! $user->siswa()->exists();
         });
 
         // Gate menu Portal Wali Kelas ("Kelas Saya"): GTK murni yang menjadi wali kelas
         // aktif di tahun pelajaran aktif. PAKAI sidebar- prefix agar tidak bentrok Spatie.
         Gate::define('sidebar-wali-kelas-menu', function ($user) {
             return $user->hasRole('GTK') &&
-                   !$user->hasRole('Siswa') &&
-                   !$user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
-                   !$user->siswa()->exists() &&
+                   ! $user->hasRole('Siswa') &&
+                   ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+                   ! $user->siswa()->exists() &&
                    $user->isActiveWaliKelas();
         });
 
@@ -115,7 +140,14 @@ class AuthServiceProvider extends ServiceProvider
             $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
                 in_array($user->role, ['super_admin', 'admin', 'operator'], true);
 
-            return $user->can('view-siswa') && ($isManager || !$user->hasAnyRole(['GTK', 'Wali Kelas']));
+            return $user->can('view-siswa') && ($isManager || ! $user->hasAnyRole(['GTK', 'Wali Kelas']));
+        });
+
+        Gate::define('sidebar-student-statistics-global', function ($user) {
+            $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+            return $user->can('view-statistik-siswa') && ($isManager || ! $user->hasAnyRole(['GTK', 'Wali Kelas']));
         });
 
         // Gate for Admin Dashboard
@@ -143,8 +175,8 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('staff-presensi-menu', function ($user) {
-            return !$user->hasRole('Siswa') &&
-                !$user->siswa()->exists() &&
+            return ! $user->hasRole('Siswa') &&
+                ! $user->siswa()->exists() &&
                 (
                     $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'GTK', 'BK', 'Wali Kelas', 'Kepala Madrasah', 'WAKA']) ||
                     in_array($user->role, ['super_admin', 'admin', 'operator', 'gtk', 'bk', 'wali_kelas'])
@@ -155,7 +187,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($user->can('manage-rapor-asrama') || $user->can('manage-asrama')) {
                 return true;
             }
-            if (!$user->gtk) {
+            if (! $user->gtk) {
                 return false;
             }
 

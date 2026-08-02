@@ -68,5 +68,8 @@ class WaliKelasPortalTest extends TestCase
         $this->assertStringContainsString('foto_profile_url', $view);
         $this->assertStringContainsString('summernote', $view);
         $this->assertStringContainsString('btn-insert-symbol', $view);
+        $this->assertStringContainsString('id="modalTambahCatatan"', $view);
+        $this->assertStringContainsString('data-target="#modalTambahCatatan"', $view);
+        $this->assertStringContainsString("request()->boolean('compose')", $view);
     }
 }

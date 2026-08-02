@@ -79,6 +79,7 @@
                             'kelas_id' => $kelas->id,
                             'siswa_id' => $student->id,
                             'kategori' => $filterKategori,
+                            'compose' => 1,
                         ]));
                         $absen = $student->pivot->nomor_urut_absen ?? ($index + 1);
                     @endphp
@@ -104,83 +105,18 @@
 
     @if($selectedStudent)
         <div class="row">
-            <div class="col-xl-5 mb-4">
-                <div class="card card-outline card-primary h-100 composer-card">
-                    <div class="card-header">
-                        <h3 class="card-title font-weight-bold"><i class="fas fa-pen-fancy mr-1"></i> Tulis Catatan</h3>
-                    </div>
-                    <form method="POST" action="{{ route('admin.gtk.wali.catatan.store', ['siswa_id' => $selectedStudent->id, 'kelas_id' => $kelas->id]) }}" id="formTambahCatatan">
-                        @csrf
-                        <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
-                        <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
-                        <div class="card-body">
-                            <div class="selected-student mb-3">
-                                <img src="{{ $selectedStudent->foto_profile_url }}" alt="Foto {{ $selectedStudent->nama_lengkap }}">
-                                <div class="min-w-0">
-                                    <div class="text-muted small text-uppercase font-weight-bold">Catatan untuk</div>
-                                    <div class="font-weight-bold text-dark selected-student-name">{{ $selectedStudent->nama_lengkap }}</div>
-                                    <small class="text-muted">NISN {{ $selectedStudent->nisn ?: '—' }} · {{ $kelas->nama_kelas }}</small>
-                                </div>
-                                <a href="{{ route('admin.gtk.wali.siswa.index', ['kelas_id' => $kelas->id]) }}" class="btn btn-sm btn-outline-primary ml-auto" title="Buka Data Siswa"><i class="fas fa-eye"></i></a>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 form-group">
-                                    <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" max="{{ date('Y-m-d') }}" class="form-control @error('tanggal') is-invalid @enderror" required>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label for="kategori">Kategori</label>
-                                    <select name="kategori" id="kategori" class="form-control">
-                                        <option value="">Umum</option>
-                                        @foreach($kategoriList as $key => $label)
-                                            <option value="{{ $key }}" {{ old('kategori') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label for="catatan" class="mb-1">Isi Catatan <span class="text-danger">*</span></label>
-                                    <small class="text-muted"><span id="noteCounter">0</span>/5000</small>
-                                </div>
-                                <textarea name="catatan" id="catatan" class="form-control @error('catatan') is-invalid @enderror" required>{{ old('catatan') }}</textarea>
-                            </div>
-
-                            <div class="visual-tools mb-3" aria-label="Emoji dan simbol cepat">
-                                <div class="small font-weight-bold text-muted mb-2"><i class="far fa-smile mr-1"></i> Emoji & simbol cepat</div>
-                                <div class="symbol-list">
-                                    @foreach(['🙂','😊','👏','⭐','✅','⚠️','📌','📚','🏆','💡','❤️','→','•','✓','★'] as $symbol)
-                                        <button type="button" class="btn btn-light btn-sm btn-insert-symbol" data-target="#catatan" data-symbol="{{ $symbol }}" title="Sisipkan {{ $symbol }}">{{ $symbol }}</button>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <div class="quick-prompts mb-3">
-                                <div class="small font-weight-bold text-muted mb-2"><i class="fas fa-magic mr-1"></i> Awalan cepat</div>
-                                @foreach(['Menunjukkan perkembangan baik dalam ', 'Perlu pendampingan pada ', 'Tindak lanjut yang disepakati: '] as $prompt)
-                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-insert-prompt mb-1" data-target="#catatan" data-prompt="{{ $prompt }}">{{ $prompt }}</button>
-                                @endforeach
-                            </div>
-
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="is_penting" name="is_penting" value="1" {{ old('is_penting') ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_penting"><i class="fas fa-star text-warning mr-1"></i> Tandai penting untuk perhatian khusus</label>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-light">
-                            <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save mr-1"></i> Simpan Catatan {{ $selectedStudent->nama_lengkap }}</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-xl-7 mb-4">
+            <div class="col-12 mb-4">
                 <div class="card card-outline card-info h-100 history-card">
                     <div class="card-header">
-                        <h3 class="card-title font-weight-bold"><i class="fas fa-history mr-1"></i> Riwayat Catatan</h3>
+                        <div class="d-flex flex-wrap align-items-center">
+                            <img src="{{ $selectedStudent->foto_profile_url }}" alt="Foto {{ $selectedStudent->nama_lengkap }}" class="history-student-avatar mr-2">
+                            <div class="min-w-0">
+                                <h3 class="card-title float-none font-weight-bold"><i class="fas fa-history mr-1"></i> Riwayat {{ $selectedStudent->nama_lengkap }}</h3>
+                                <small class="text-muted">NISN {{ $selectedStudent->nisn ?: '—' }} · {{ $kelas->nama_kelas }}</small>
+                            </div>
+                        </div>
                         <div class="card-tools">
+                            <button type="button" class="btn btn-sm btn-primary mr-2" data-toggle="modal" data-target="#modalTambahCatatan"><i class="fas fa-pen-fancy mr-1"></i> Tulis Catatan</button>
                             <form method="GET" action="{{ route('admin.gtk.wali.catatan.index') }}">
                                 <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                                 <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
@@ -246,10 +182,68 @@
         </div>
     @endif
 
+    @if($selectedStudent)
+    <div class="modal fade" id="modalTambahCatatan" tabindex="-1" role="dialog" aria-labelledby="modalTambahCatatanLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+            <form method="POST" action="{{ route('admin.gtk.wali.catatan.store', ['siswa_id' => $selectedStudent->id, 'kelas_id' => $kelas->id]) }}" id="formTambahCatatan" class="modal-content">
+                @csrf
+                <input type="hidden" name="form_context" value="create">
+                <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
+                <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white" id="modalTambahCatatanLabel"><i class="fas fa-pen-fancy mr-1"></i> Tulis Catatan Siswa</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="selected-student mb-3">
+                        <img src="{{ $selectedStudent->foto_profile_url }}" alt="Foto {{ $selectedStudent->nama_lengkap }}">
+                        <div class="min-w-0">
+                            <div class="text-muted small text-uppercase font-weight-bold">Catatan untuk</div>
+                            <div class="font-weight-bold text-dark selected-student-name">{{ $selectedStudent->nama_lengkap }}</div>
+                            <small class="text-muted">NISN {{ $selectedStudent->nisn ?: '—' }} · {{ $kelas->nama_kelas }}</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" max="{{ date('Y-m-d') }}" class="form-control @error('tanggal') is-invalid @enderror" required>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="kategori">Kategori</label>
+                            <select name="kategori" id="kategori" class="form-control">
+                                <option value="">Umum</option>
+                                @foreach($kategoriList as $key => $label)<option value="{{ $key }}" {{ old('kategori') === $key ? 'selected' : '' }}>{{ $label }}</option>@endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mb-2">
+                        <div class="d-flex justify-content-between align-items-center"><label for="catatan" class="mb-1">Isi Catatan <span class="text-danger">*</span></label><small class="text-muted"><span id="noteCounter">0</span>/5000</small></div>
+                        <textarea name="catatan" id="catatan" class="form-control @error('catatan') is-invalid @enderror" required>{{ old('catatan') }}</textarea>
+                    </div>
+                    <div class="visual-tools mb-3" aria-label="Emoji dan simbol cepat">
+                        <div class="small font-weight-bold text-muted mb-2"><i class="far fa-smile mr-1"></i> Emoji & simbol cepat</div>
+                        <div class="symbol-list">@foreach(['🙂','😊','👏','⭐','✅','⚠️','📌','📚','🏆','💡','❤️','→','•','✓','★'] as $symbol)<button type="button" class="btn btn-light btn-sm btn-insert-symbol" data-target="#catatan" data-symbol="{{ $symbol }}" title="Sisipkan {{ $symbol }}">{{ $symbol }}</button>@endforeach</div>
+                    </div>
+                    <div class="quick-prompts mb-3">
+                        <div class="small font-weight-bold text-muted mb-2"><i class="fas fa-magic mr-1"></i> Awalan cepat</div>
+                        @foreach(['Menunjukkan perkembangan baik dalam ', 'Perlu pendampingan pada ', 'Tindak lanjut yang disepakati: '] as $prompt)<button type="button" class="btn btn-sm btn-outline-secondary btn-insert-prompt mb-1" data-target="#catatan" data-prompt="{{ $prompt }}">{{ $prompt }}</button>@endforeach
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="is_penting" name="is_penting" value="1" {{ old('is_penting') ? 'checked' : '' }}>
+                        <label class="custom-control-label" for="is_penting"><i class="fas fa-star text-warning mr-1"></i> Tandai penting untuk perhatian khusus</label>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan Catatan</button></div>
+            </form>
+        </div>
+    </div>
+    @endif
+
     <div class="modal fade" id="modalEditCatatan" tabindex="-1" role="dialog" aria-labelledby="modalEditCatatanLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
             <form method="POST" id="formEditCatatan" class="modal-content">
                 @csrf @method('PUT')
+                <input type="hidden" name="form_context" value="edit">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white" id="modalEditCatatanLabel"><i class="fas fa-edit mr-1"></i> Edit Catatan</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
@@ -283,7 +277,7 @@
     .min-w-0 { min-width:0; } .clear-both { clear:both; }
     .catatan-stat-card { border-radius:12px; }
     .catatan-stat-icon { width:48px; height:48px; flex:0 0 48px; display:flex; align-items:center; justify-content:center; border-radius:14px; margin-right:.85rem; color:#fff; font-size:1.15rem; }
-    .student-picker-panel, .composer-card, .history-card { border-radius:14px; overflow:hidden; }
+    .student-picker-panel, .history-card { border-radius:14px; overflow:hidden; }
     .student-search { width:280px; }
     .student-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; max-height:360px; overflow-y:auto; padding:.1rem; scrollbar-width:thin; }
     .student-choice { position:relative; display:flex; align-items:center; min-width:0; padding:.75rem; border:1px solid #e2e8f0; border-radius:12px; background:#fff; color:#0f172a; transition:border-color .18s,box-shadow .18s,transform .18s; }
@@ -299,6 +293,7 @@
     .selected-student { display:flex; align-items:center; gap:.75rem; padding:.85rem; border:1px solid #bfdbfe; border-radius:12px; background:#eff6ff; }
     .selected-student img { width:58px; height:58px; flex:0 0 58px; border-radius:50%; object-fit:cover; border:3px solid #fff; box-shadow:0 2px 8px rgba(15,23,42,.14); }
     .selected-student-name { overflow-wrap:anywhere; }
+    .history-student-avatar { width:42px; height:42px; flex:0 0 42px; border-radius:50%; object-fit:cover; }
     .note-editor .note-editable { min-height:150px; color:#0f172a; background:#fff; }
     .note-editor.note-frame { border-color:#cbd5e1; border-radius:8px; overflow:hidden; }
     .visual-tools, .quick-prompts { padding:.75rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
@@ -314,7 +309,7 @@
     .note-badges .badge { margin:0 0 .2rem .2rem; }
     .empty-notes, .select-student-empty { padding:2rem 1rem; text-align:center; }
     .empty-notes-icon, .select-student-icon { width:64px; height:64px; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eff6ff; color:#2563eb; font-size:1.5rem; }
-    #modalEditCatatan .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
+    #modalTambahCatatan .modal-content, #modalEditCatatan .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
     @media (max-width:1199.98px) { .student-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
     @media (max-width:767.98px) { .student-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:420px; } .student-search { width:100%; } .stat-description { display:none; } }
     @media (max-width:575.98px) {
@@ -322,7 +317,11 @@
         .catatan-stat-card .card-body { padding:.75rem; } .catatan-stat-icon { width:38px; height:38px; flex-basis:38px; margin-right:.55rem; border-radius:10px; }
         .catatan-stat-card h3 { font-size:1.25rem; } .student-grid { grid-template-columns:1fr; } .student-choice { padding:.65rem; }
         .note-item { padding:.8rem; } .note-item > .d-flex { align-items:flex-start!important; } .note-avatar { width:40px; height:40px; flex-basis:40px; }
-        #modalEditCatatan .modal-dialog { margin:.5rem; }
+        .history-card .card-header { padding-bottom:.85rem; }
+        .history-card .card-tools { float:none; width:100%; margin:.75rem 0 0; display:flex; flex-wrap:wrap; gap:.5rem; }
+        .history-card .card-tools .btn { margin-right:0!important; }
+        .history-card .card-tools form { flex:1 1 160px; }
+        #modalTambahCatatan .modal-dialog, #modalEditCatatan .modal-dialog { margin:.5rem; }
     }
 </style>
 @stop
@@ -334,6 +333,7 @@ $(function () {
     var baseUrl = @json(url('admin/gtk/wali/catatan'));
     var successMessage = @json(session('success'));
     var validationErrors = @json($errors->all());
+    var openComposer = @json((bool) $selectedStudent && ((!$errors->any() && !session('success') && request()->boolean('compose')) || ($errors->any() && old('form_context') === 'create')));
     var editorOptions = {
         height: 170,
         placeholder: 'Tuliskan pengamatan yang objektif, perkembangan siswa, dan tindak lanjutnya…',
@@ -355,6 +355,13 @@ $(function () {
         updateCounter(document.getElementById('catatan'), $('#catatan').summernote('code'));
     }
     $('#edit_catatan').summernote($.extend({}, editorOptions, { height: 190 }));
+
+    if (openComposer) {
+        $('#modalTambahCatatan').modal('show');
+        var currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('compose');
+        window.history.replaceState({}, document.title, currentUrl.toString());
+    }
 
     $('#studentSearch').on('input', function () {
         var query = $(this).val().toLocaleLowerCase('id-ID').trim();

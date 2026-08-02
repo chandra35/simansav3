@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MatrikulasiPeserta;
 use App\Models\Kelas;
+use App\Models\MatrikulasiPeserta;
 use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Services\EmisNisnService;
+use App\Services\SekolahDataEnrichmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\EmisNisnService;
-use App\Services\SekolahDataEnrichmentService;
 
 class SiswaStatisticsController extends Controller
 {
@@ -23,20 +24,25 @@ class SiswaStatisticsController extends Controller
         $this->authorize('view-statistik-siswa');
 
         $activeYear = TahunPelajaran::query()->active()->first();
+        $classIds = $this->waliClassIds();
+        $isWaliScope = $classIds !== null;
+        $canManage = ! $isWaliScope && Auth::user()->can('edit-siswa');
         $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true)
             ? (int) $request->get('tingkat') : null;
         $classes = Kelas::query()
             ->where('is_active', true)
+            ->when($classIds !== null, fn ($query) => $query->whereIn('id', $classIds))
             ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
             ->when(! $activeYear, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('tingkat')->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'tingkat', 'tahun_pelajaran_id']);
         $kelasId = (string) $request->get('kelas_id', '');
         if ($kelasId !== '' && ! $classes->contains(fn (Kelas $class) => $class->id === $kelasId && (! $tingkat || (int) $class->tingkat === $tingkat))) {
+            abort_if($isWaliScope, 404, 'Rombel tidak ditemukan dalam cakupan wali kelas Anda.');
             $kelasId = '';
         }
 
-        $baseQuery = $this->applyDashboardFilters($this->baseSiswaQuery(), $activeYear, $tingkat, $kelasId);
+        $baseQuery = $this->applyDashboardFilters($this->baseSiswaQuery($classIds), $activeYear, $tingkat, $kelasId);
 
         $totalSiswa = (clone $baseQuery)->count();
         $dataLengkap = (clone $baseQuery)
@@ -124,11 +130,14 @@ class SiswaStatisticsController extends Controller
             'tingkat' => $tingkat,
             'kelasId' => $kelasId,
             'filterQuery' => array_filter(['tingkat' => $tingkat, 'kelas_id' => $kelasId]),
+            'isWaliScope' => $isWaliScope,
+            'canManage' => $canManage,
         ]);
     }
 
     public function checkNpsnFromPpdb(Request $request, Siswa $siswa)
     {
+        abort_if($this->isWaliScopedUser(), 403, 'Akun GTK Wali Kelas hanya memiliki akses baca.');
         $this->authorize('edit-siswa');
 
         $nisn = preg_replace('/\D+/', '', (string) $siswa->nisn);
@@ -140,7 +149,7 @@ class SiswaStatisticsController extends Controller
         }
 
         $candidate = $this->findNisnCheckerCandidate($nisn) ?: $this->findPpdbCandidateForSiswa($siswa);
-        if (!$candidate) {
+        if (! $candidate) {
             return response()->json([
                 'success' => false,
                 'message' => 'NPSN belum ditemukan dari checker NISN SIMANSA maupun data PPDB.',
@@ -148,7 +157,7 @@ class SiswaStatisticsController extends Controller
         }
 
         $npsn = $this->normalizeNpsn($this->pick($candidate, ['npsn_asal_sekolah', 'npsn']));
-        if (!$npsn) {
+        if (! $npsn) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data ditemukan, tetapi NPSN asal sekolah masih kosong atau tidak valid.',
@@ -156,7 +165,7 @@ class SiswaStatisticsController extends Controller
         }
 
         $schoolPayload = [
-            'nama' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
+            'nama' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB '.$npsn,
             'status' => $this->pick($candidate, ['status_sekolah_asal']),
             'bentuk_pendidikan' => $this->pick($candidate, ['bentuk_sekolah_asal']) ?: 'SMP/MTs',
             'alamat_jalan' => $this->pick($candidate, ['alamat_sekolah_asal']),
@@ -178,7 +187,7 @@ class SiswaStatisticsController extends Controller
             'success' => true,
             'message' => 'NPSN asal sekolah berhasil diisi.',
             'npsn' => $npsn,
-            'school_name' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB ' . $npsn,
+            'school_name' => $this->pick($candidate, ['nama_sekolah_asal', 'asal_sekolah']) ?: 'Sekolah asal PPDB '.$npsn,
             'source' => $candidate['_source'] ?? 'PPDB',
         ]);
     }
@@ -188,6 +197,8 @@ class SiswaStatisticsController extends Controller
         $this->authorize('view-statistik-siswa');
 
         $activeYear = TahunPelajaran::query()->active()->first();
+        $classIds = $this->waliClassIds();
+        $this->authorizeSchoolInScope($sekolah, $classIds);
         $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true)
             ? (int) $request->get('tingkat') : null;
         $kelasId = (string) $request->get('kelas_id', '');
@@ -195,27 +206,31 @@ class SiswaStatisticsController extends Controller
         if ($kelasId !== '' && ! Kelas::query()
             ->whereKey($kelasId)
             ->where('is_active', true)
+            ->when($classIds !== null, fn ($query) => $query->whereIn('id', $classIds))
             ->when($activeYear, fn ($query) => $query->where('tahun_pelajaran_id', $activeYear->id))
             ->when($tingkat, fn ($query) => $query->where('tingkat', $tingkat))
             ->exists()) {
+            abort_if($classIds !== null, 404, 'Rombel tidak ditemukan dalam cakupan wali kelas Anda.');
             $kelasId = '';
         }
 
         $query = $this->applyDashboardFilters(
-            $this->baseSiswaQuery(),
+            $this->baseSiswaQuery($classIds),
             $activeYear,
             $tingkat,
             $kelasId
         );
 
         $canToggleEmis = Auth::user()?->hasRole('Super Admin') ?? false;
+        $isWaliScope = $classIds !== null;
         $students = $query
             ->where('siswa.npsn_asal_sekolah', $sekolah->npsn)
             ->where(function ($emisQuery) {
                 $emisQuery->whereNull('siswa.emis_registered')
                     ->orWhere('siswa.emis_registered', false);
             })
-            ->with('kelasTahunAktif')
+            ->with(['kelasTahunAktif' => fn ($classes) => $classes
+                ->when($classIds !== null, fn ($classQuery) => $classQuery->whereIn('kelas.id', $classIds))])
             ->orderBy('siswa.nama_lengkap')
             ->get([
                 'siswa.id',
@@ -227,7 +242,7 @@ class SiswaStatisticsController extends Controller
                 'siswa.tanggal_lahir',
                 'siswa.foto_profile',
             ])
-            ->map(function (Siswa $siswa) use ($canToggleEmis) {
+            ->map(function (Siswa $siswa) use ($canToggleEmis, $isWaliScope) {
                 return [
                     'id' => $siswa->id,
                     'nama_lengkap' => $siswa->nama_lengkap,
@@ -238,7 +253,9 @@ class SiswaStatisticsController extends Controller
                     'tanggal_lahir' => $siswa->tanggal_lahir?->format('d/m/Y'),
                     'kelas' => $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Belum masuk rombel',
                     'foto_url' => $siswa->foto_profile_url,
-                    'detail_url' => route('admin.siswa.show', $siswa),
+                    'detail_url' => $isWaliScope
+                        ? route('admin.gtk.wali.siswa.show', $siswa)
+                        : route('admin.siswa.show', $siswa),
                     'can_toggle_emis' => $canToggleEmis,
                     'toggle_emis_url' => $canToggleEmis
                         ? route('admin.siswa.toggle-emis-registered', $siswa)
@@ -266,11 +283,12 @@ class SiswaStatisticsController extends Controller
 
     public function checkSchoolNsm(Request $request, Sekolah $sekolah)
     {
+        abort_if($this->isWaliScopedUser(), 403, 'Akun GTK Wali Kelas hanya memiliki akses baca.');
         $this->authorize('edit-siswa');
 
         $result = app(SekolahDataEnrichmentService::class)->enrich($sekolah);
 
-        if (!($result['success'] ?? false)) {
+        if (! ($result['success'] ?? false)) {
             return response()->json([
                 'success' => false,
                 'message' => $result['message'] ?? 'Data sekolah belum berhasil dilengkapi.',
@@ -295,9 +313,13 @@ class SiswaStatisticsController extends Controller
         ]);
     }
 
-    private function baseSiswaQuery()
+    private function baseSiswaQuery(?Collection $classIds = null)
     {
-        return $this->applyRoleScope(Siswa::query()->from('siswa'));
+        $query = Siswa::query()->from('siswa');
+
+        return $classIds === null
+            ? $query
+            : $query->whereHas('kelasTahunAktif', fn ($classes) => $classes->whereIn('kelas.id', $classIds));
     }
 
     private function applyDashboardFilters($query, ?TahunPelajaran $activeYear, ?int $tingkat, string $kelasId)
@@ -360,23 +382,37 @@ class SiswaStatisticsController extends Controller
             });
     }
 
-    private function applyRoleScope($query)
+    private function waliClassIds(): ?Collection
     {
-        $user = Auth::user();
-
-        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)->pluck('id');
-
-            if ($kelasIds->isNotEmpty()) {
-                $query->whereHas('kelasAktif', function ($q) use ($kelasIds) {
-                    $q->whereIn('kelas.id', $kelasIds);
-                });
-            } else {
-                $query->whereRaw('1 = 0');
-            }
+        if (! $this->isWaliScopedUser()) {
+            return null;
         }
 
-        return $query;
+        $classIds = Auth::user()->activeWaliKelasClasses()->pluck('id');
+        abort_if($classIds->isEmpty(), 403, 'Anda bukan wali kelas aktif.');
+
+        return $classIds;
+    }
+
+    private function isWaliScopedUser(): bool
+    {
+        $user = Auth::user();
+        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
+            || in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+        return ! $isManager && $user->hasAnyRole(['GTK', 'Wali Kelas']);
+    }
+
+    private function authorizeSchoolInScope(Sekolah $sekolah, ?Collection $classIds): void
+    {
+        if ($classIds === null) {
+            return;
+        }
+
+        $isInScope = $this->baseSiswaQuery($classIds)
+            ->where('siswa.npsn_asal_sekolah', $sekolah->npsn)
+            ->exists();
+        abort_unless($isInScope, 404, 'Sekolah asal tidak ditemukan dalam cakupan wali kelas Anda.');
     }
 
     private function countStudentsWhoHaveLoggedIn($baseQuery): int
@@ -404,7 +440,7 @@ class SiswaStatisticsController extends Controller
             return null;
         }
 
-        if (!($result['success'] ?? false) || empty($result['data'])) {
+        if (! ($result['success'] ?? false) || empty($result['data'])) {
             return null;
         }
 
@@ -412,7 +448,7 @@ class SiswaStatisticsController extends Controller
         $kemenag = (array) ($result['data']['kemenag'] ?? []);
         $npsn = $this->normalizeNpsn($kemdikbud['npsn'] ?? ($kemenag['npsn'] ?? null));
 
-        if (!$npsn) {
+        if (! $npsn) {
             return null;
         }
 
@@ -476,7 +512,7 @@ class SiswaStatisticsController extends Controller
             $response = Http::withToken($token)
                 ->acceptJson()
                 ->timeout((int) config('services.ppdb_sync.timeout', 30))
-                ->get($baseUrl . '/api/internal/simansa/pendaftar', [
+                ->get($baseUrl.'/api/internal/simansa/pendaftar', [
                     'q' => $siswa->nisn,
                     'scope' => 'all',
                     'smart' => 0,
@@ -484,7 +520,7 @@ class SiswaStatisticsController extends Controller
                     'per_page' => 5,
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return null;
             }
 

@@ -4,6 +4,26 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modal Catatan Siswa dan scope Statistik Siswa Wali Kelas
+
+- Pemilihan siswa pada Catatan Siswa kini langsung membuka form tulis di modal responsif; composer panjang tidak lagi mengambil area bawah halaman.
+- Setelah modal ditutup, area utama menampilkan riwayat siswa terpilih secara penuh, lengkap dengan foto, identitas, filter kategori, dan tombol Tulis Catatan.
+- Statistik Siswa kini mendeteksi akun GTK yang menjadi wali kelas aktif, bukan hanya akun dengan nama role `Wali Kelas`.
+- Daftar kelas, KPI, status login, kelengkapan data, NPSN, sekolah asal, domisili, grafik, peta, serta endpoint siswa belum EMIS dibatasi ke rombel aktif yang diampu.
+- Manipulasi `kelas_id` atau NPSN sekolah di luar cakupan wali menghasilkan 404; aksi checker NPSN dan pelengkapan sekolah ditolak bagi akun GTK Wali Kelas.
+- Mode wali kelas bersifat hanya-baca, memakai tautan detail/list portal wali, dan menu Statistik Siswa ditempatkan di kelompok Kelas Saya. Menu Statistik global hanya ditampilkan untuk akun pengelola yang berizin.
+- Header Statistik Siswa diselaraskan dengan pola Data Siswa: judul/breadcrumb standar dan satu hero gradient utuh di dalam area konten.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/SiswaStatisticsController.php`
+- `app/Providers/AuthServiceProvider.php`
+- `config/adminlte.php`
+- `resources/views/admin/gtk/wali/catatan/index.blade.php`
+- `resources/views/admin/siswa/statistics.blade.php`
+- `tests/Unit/StudentStatisticsRoleScopeTest.php`
+- `tests/Unit/WaliKelasPortalTest.php`
+
 ### Catatan siswa Wali Kelas berbasis profil siswa
 
 - Halaman Catatan Siswa kini memakai alur berpusat pada siswa: wali kelas memilih kartu siswa berfoto terlebih dahulu, lalu menulis dan membaca riwayat catatan siswa tersebut.

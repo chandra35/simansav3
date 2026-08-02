@@ -4,41 +4,54 @@
 
 @php
     $selectedClass = $kelasId ? $classes->firstWhere('id', $kelasId) : null;
-    $scopeLabel = $selectedClass ? $selectedClass->nama_kelas.$selectedClass->asrama_suffix : ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : 'Semua siswa');
-    $listUrl = fn (array $extra = []) => route('admin.siswa.index', array_merge($filterQuery, $extra));
-    $schoolStudentsUrl = fn (array $school) => route('admin.siswa.index', array_filter([
-        'tingkat' => $tingkat,
-        'school_npsn' => $school['npsn'] ?: null,
-        'school_name' => blank($school['npsn']) ? $school['school_name'] : null,
-    ], fn ($value) => filled($value)));
+    $scopeLabel = $selectedClass ? $selectedClass->nama_kelas.$selectedClass->asrama_suffix : ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : ($isWaliScope ? 'Rombel yang Anda ampu' : 'Semua siswa'));
+    $waliClassId = $kelasId ?: $classes->first()?->id;
+    $listUrl = fn (array $extra = []) => $isWaliScope
+        ? route('admin.gtk.wali.siswa.index', array_filter(['kelas_id' => $waliClassId]))
+        : route('admin.siswa.index', array_merge($filterQuery, $extra));
+    $schoolStudentsUrl = fn (array $school) => $isWaliScope
+        ? route('admin.sekolah-asal.show', $school['npsn'])
+        : route('admin.siswa.index', array_filter([
+            'tingkat' => $tingkat,
+            'school_npsn' => $school['npsn'] ?: null,
+            'school_name' => blank($school['npsn']) ? $school['school_name'] : null,
+        ], fn ($value) => filled($value)));
 @endphp
 
 @section('content_header')
-    <div class="simansa-stat-hero">
-        <div class="simansa-stat-hero__main">
-            <div class="simansa-stat-hero__eyebrow">
-                <i class="fas fa-chart-pie"></i>
-                Manajemen Data
-            </div>
-            <h1 class="simansa-stat-hero__title">Statistik Siswa</h1>
-            <p class="simansa-stat-hero__subtitle">
-                Pantau kelengkapan biodata, status login, sebaran domisili, dan sebaran asal sekolah dari satu tampilan analitik.
-            </p>
-        </div>
-        <div class="simansa-stat-hero__meta">
-            <div class="simansa-stat-hero-chip">
-                <span class="simansa-stat-hero-chip__label">Sudah Login</span>
-                <span class="simansa-stat-hero-chip__value">{{ number_format($kpi['sudah_login']) }}</span>
-            </div>
-            <div class="simansa-stat-hero-chip">
-                <span class="simansa-stat-hero-chip__label">Belum Pernah Login</span>
-                <span class="simansa-stat-hero-chip__value">{{ number_format($kpi['belum_pernah_login']) }}</span>
-            </div>
+    <div class="row mb-2">
+        <div class="col-sm-6"><h1><i class="fas fa-chart-pie text-primary"></i> Statistik Siswa</h1></div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ $isWaliScope ? route('admin.gtk.dashboard') : route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Statistik Siswa</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="simansa-stat-page">
+<div class="card bg-gradient-primary text-white mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-1"><i class="fas fa-chart-pie mr-1"></i> Statistik Peserta Didik</h3>
+                <p class="mb-2 text-white-50">Pantau kelengkapan biodata, status login, domisili, dan sekolah asal dari satu tampilan analitik.</p>
+                <p class="mb-0">{{ $isWaliScope ? 'Seluruh angka dan rincian hanya mencakup rombel aktif yang Anda ampu.' : 'Gunakan filter tingkat dan kelas untuk mempersempit analisis.' }}</p>
+            </div>
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="row text-center">
+                    <div class="col-6"><div class="text-white-50 small text-uppercase font-weight-bold">Sudah Login</div><h3 class="mb-0 text-white">{{ number_format($kpi['sudah_login']) }}</h3></div>
+                    <div class="col-6"><div class="text-white-50 small text-uppercase font-weight-bold">Belum Login</div><h3 class="mb-0 text-white">{{ number_format($kpi['belum_pernah_login']) }}</h3></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@if($isWaliScope)
+    <div class="alert alert-info border-0 shadow-sm"><i class="fas fa-shield-alt mr-1"></i> Mode Wali Kelas: statistik bersifat hanya-baca dan dibatasi pada {{ strtolower($scopeLabel) }}.</div>
+@endif
 <section class="simansa-stat-filter mb-4">
     <div class="simansa-stat-filter__intro"><i class="fas fa-filter"></i><div><h2>Filter Statistik</h2><p>Semua kartu, grafik, peta, domisili, dan sekolah asal mengikuti pilihan ini · {{ $activeYear?->nama ?? 'Tahun aktif belum tersedia' }}</p></div></div>
     <form method="GET" action="{{ route('admin.siswa.statistics') }}">
@@ -121,12 +134,14 @@
             <div class="simansa-section-head">
                 <div>
                     <h3>NPSN Kosong · {{ $tingkat ? $scopeLabel : 'Kelas X' }}</h3>
-                    <p>Gunakan checker NISN SIMANSA untuk mengisi NPSN asal sekolah. Jika belum ditemukan, sistem mencoba data matrikulasi/PPDB.</p>
+                    <p>{{ $canManage ? 'Gunakan checker NISN SIMANSA untuk mengisi NPSN asal sekolah. Jika belum ditemukan, sistem mencoba data matrikulasi/PPDB.' : 'Daftar siswa pada cakupan rombel yang data NPSN sekolah asalnya belum tersedia.' }}</p>
                 </div>
                 <div class="simansa-section-actions">
+                    @if($canManage)
                     <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNpsn" @if($missingNpsnStudents->isEmpty()) disabled @endif>
                         <i class="fas fa-tasks mr-1"></i>Bulk Check
                     </button>
+                    @endif
                     <a href="{{ $listUrl(['npsn_status' => 'kosong', 'tingkat' => $tingkat ?: 10]) }}" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-list mr-1"></i>Lihat Semua
                     </a>
@@ -159,6 +174,7 @@
                                     <span class="badge badge-warning simansa-npsn-status" id="missing-npsn-status-{{ $student['id'] }}">Belum dicek</span>
                                 </td>
                                 <td class="text-right">
+                                    @if($canManage)
                                     <button
                                         type="button"
                                         class="btn btn-xs btn-primary btn-check-npsn"
@@ -168,6 +184,9 @@
                                         data-nisn="{{ $student['nisn'] ?: '-' }}">
                                         <i class="fas fa-search mr-1"></i>Cek NISN
                                     </button>
+                                    @else
+                                        <span class="text-muted small"><i class="fas fa-lock mr-1"></i>Hanya baca</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -358,9 +377,9 @@
                     <h3>Data Sekolah Asal</h3>
                     <p>Seluruh sekolah asal pada {{ strtolower($scopeLabel) }}, diurutkan berdasarkan jumlah siswa · {{ number_format($originSchools->count()) }} sekolah.</p>
                 </div>
-                <button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNsm" @if($nsmCheckCandidates->isEmpty()) disabled @endif>
+                @if($canManage)<button type="button" class="btn btn-sm btn-primary" id="btnBulkCheckNsm" @if($nsmCheckCandidates->isEmpty()) disabled @endif>
                     <i class="fas fa-database mr-1"></i>Bulk Lengkapi
-                </button>
+                </button>@endif
             </div>
             <div class="table-responsive simansa-table-shell simansa-school-table-shell">
                 <table class="table table-hover simansa-table simansa-school-table">
@@ -419,7 +438,7 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="simansa-school-actions">
-                                    @if($canCheckNsm)
+                                    @if($canManage && $canCheckNsm)
                                         <button
                                             type="button"
                                             class="btn btn-xs btn-primary btn-check-school-nsm"
@@ -522,11 +541,15 @@
         </div>
     </div>
 </div>
+</div>
 @stop
 
 @section('css')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
+        .simansa-stat-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
+        .simansa-stat-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
+        .simansa-stat-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
         .simansa-stat-hero {
             display: flex;
             justify-content: space-between;
@@ -1460,7 +1483,7 @@
         const schoolCitySpread = @json($schoolCitySpread);
         const mapAddressPoints = @json($mapAddressPoints);
         const mapSchoolPoints = @json($mapSchoolPoints);
-        const siswaIndexBaseUrl = @json(route('admin.siswa.index'));
+        const siswaIndexBaseUrl = @json($listUrl());
         const activeStatisticsFilters = @json($filterQuery);
         const csrfToken = @json(csrf_token());
         let activeMissingEmisSchoolButton = null;

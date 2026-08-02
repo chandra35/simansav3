@@ -357,6 +357,13 @@ return [
                     'active' => ['admin/gtk/wali/siswa*'],
                 ],
                 [
+                    'text' => 'Statistik Siswa',
+                    'route' => 'admin.siswa.statistics',
+                    'icon' => 'fas fa-fw fa-chart-pie',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/siswa-statistik*'],
+                ],
+                [
                     'text' => 'Absensi Harian',
                     'route' => 'admin.gtk.wali.absensi.index',
                     'icon' => 'fas fa-fw fa-clipboard-check',
@@ -424,7 +431,7 @@ return [
                     'text' => 'Statistik Siswa',
                     'route' => 'admin.siswa.statistics',
                     'icon' => 'fas fa-fw fa-chart-pie',
-                    'can' => 'view-statistik-siswa',
+                    'can' => 'sidebar-student-statistics-global',
                     'active' => ['admin/siswa-statistik*'],
                 ],
                 [
