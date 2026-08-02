@@ -1,4 +1,5 @@
 @extends('adminlte::page')
+@section('plugins.Sweetalert2', true)
 
 @section('title', 'Profil GTK')
 
@@ -988,7 +989,7 @@
                             $('#kabupaten_id').trigger('change');
                         }
                     }).fail(function() {
-                        alert('Gagal memuat data kabupaten/kota');
+                        Swal.fire({ icon: 'error', title: 'Data Wilayah Gagal Dimuat', text: 'Gagal memuat data kabupaten/kota.' });
                         $('#kabupaten_id').html('<option value="">-- Pilih Kabupaten/Kota --</option>').prop('disabled', false);
                     });
                 } else {
@@ -1018,7 +1019,7 @@
                             $('#kecamatan_id').trigger('change');
                         }
                     }).fail(function() {
-                        alert('Gagal memuat data kecamatan');
+                        Swal.fire({ icon: 'error', title: 'Data Wilayah Gagal Dimuat', text: 'Gagal memuat data kecamatan.' });
                         $('#kecamatan_id').html('<option value="">-- Pilih Kecamatan --</option>').prop('disabled', false);
                     });
                 } else {
@@ -1047,7 +1048,7 @@
                             $('#kelurahan_id').trigger('change');
                         }
                     }).fail(function() {
-                        alert('Gagal memuat data kelurahan/desa');
+                        Swal.fire({ icon: 'error', title: 'Data Wilayah Gagal Dimuat', text: 'Gagal memuat data kelurahan/desa.' });
                         $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').prop('disabled', false);
                     });
                 } else {

@@ -922,9 +922,16 @@ $(document).ready(function() {
         
         // Esc = reload page
         if (e.key === 'Escape' && $('#resultRow').is(':visible')) {
-            if (confirm('Kembali ke halaman import?')) {
-                location.reload();
-            }
+            Swal.fire({
+                icon: 'question',
+                title: 'Kembali ke halaman import?',
+                text: 'Hasil import yang sedang ditampilkan akan ditutup.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Kembali',
+                cancelButtonText: 'Batal'
+            }).then(function (result) {
+                if (result.isConfirmed) location.reload();
+            });
         }
     });
     

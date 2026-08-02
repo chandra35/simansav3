@@ -58,4 +58,46 @@ class UiDesignConsistencyTest extends TestCase
         $this->assertStringNotContainsString('$siswa->ortu->no_hp_ayah', $waliShow);
         $this->assertStringNotContainsString('$siswa->ortu->no_hp_ibu', $waliShow);
     }
+
+    public function test_phone_links_suppress_the_global_navigation_overlay(): void
+    {
+        $master = $this->file('resources/views/vendor/adminlte/master.blade.php');
+
+        $this->assertMatchesRegularExpression(
+            "/href\.startsWith\('mailto:'\) \|\| href\.startsWith\('tel:'\)\) \{\s*suppressOverlayForNonNavigation\(\);/s",
+            $master
+        );
+    }
+
+    public function test_wali_student_detail_is_loaded_in_a_responsive_modal(): void
+    {
+        $index = $this->file('resources/views/admin/gtk/wali/siswa/index.blade.php');
+        $controller = $this->file('app/Http/Controllers/Admin/WaliKelas/SiswaController.php');
+        $partial = $this->file('resources/views/admin/gtk/wali/siswa/partials/detail.blade.php');
+
+        $this->assertStringContainsString('btn-detail-siswa', $index);
+        $this->assertStringContainsString('modal-dialog-scrollable', $index);
+        $this->assertStringContainsString("dataType: 'json'", $index);
+        $this->assertStringContainsString('request()->ajax()', $controller);
+        $this->assertStringContainsString("wali.siswa.partials.detail", $controller);
+        $this->assertGreaterThanOrEqual(3, substr_count($partial, 'href="tel:'));
+        $this->assertGreaterThanOrEqual(3, substr_count($partial, 'data-no-overlay'));
+    }
+
+    public function test_gtk_operational_feedback_uses_sweetalert2(): void
+    {
+        $views = [
+            'resources/views/admin/gtk/wali/siswa/index.blade.php',
+            'resources/views/admin/gtk/wali/absensi/index.blade.php',
+            'resources/views/admin/gtk/wali/catatan/index.blade.php',
+            'resources/views/admin/gtk/profile/index.blade.php',
+            'resources/views/admin/gtk/import.blade.php',
+        ];
+
+        foreach ($views as $view) {
+            $contents = $this->file($view);
+            $this->assertStringContainsString('Swal.fire', $contents);
+            $this->assertDoesNotMatchRegularExpression('/\b(?:alert|confirm)\s*\(/', $contents);
+        }
+    }
 }

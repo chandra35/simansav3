@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Catatan Siswa — Kelas Saya')
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
     <div class="simansa-hero">
@@ -14,13 +15,6 @@
 
 @section('content')
     @includeWhen($kelasList->count() > 1, 'admin.gtk.wali.partials.kelas-switcher', ['route' => 'admin.gtk.wali.catatan.index'])
-
-    @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger">@foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
-    @endif
 
     <div class="row">
         <div class="col-lg-4">
@@ -111,7 +105,7 @@
                                         data-catatan="{{ e($c->catatan) }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form method="POST" action="{{ route('admin.gtk.wali.catatan.destroy', $c->id) }}" onsubmit="return confirm('Hapus catatan ini?')">
+                                    <form method="POST" action="{{ route('admin.gtk.wali.catatan.destroy', $c->id) }}" class="form-delete-catatan">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
                                     </form>
@@ -174,6 +168,16 @@
 <script>
     $(function () {
         var baseUrl = "{{ url('admin/gtk/wali/catatan') }}";
+        var successMessage = @json(session('success'));
+        var validationErrors = @json($errors->all());
+
+        if (successMessage) {
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: successMessage, timer: 2200, showConfirmButton: false });
+        }
+        if (validationErrors.length) {
+            Swal.fire({ icon: 'error', title: 'Data Belum Valid', text: validationErrors.join('\n'), confirmButtonText: 'Periksa Kembali' });
+        }
+
         $('.btn-edit-catatan').on('click', function () {
             var d = $(this).data();
             $('#formEditCatatan').attr('action', baseUrl + '/' + d.id);
@@ -182,6 +186,22 @@
             $('#edit_catatan').val(d.catatan);
             $('#edit_penting').prop('checked', d.penting == 1);
             $('#modalEditCatatan').modal('show');
+        });
+
+        $('.form-delete-catatan').on('submit', function (event) {
+            event.preventDefault();
+            var form = this;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus catatan?',
+                text: 'Catatan yang dihapus tidak dapat dipulihkan.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626'
+            }).then(function (result) {
+                if (result.isConfirmed) form.submit();
+            });
         });
     });
 </script>

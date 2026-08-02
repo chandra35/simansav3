@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('title', 'Absensi Harian — Kelas Saya')
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
     <div class="row mb-2">
@@ -38,15 +39,6 @@
 
     @includeWhen($kelasList->count() > 1, 'admin.gtk.wali.partials.kelas-switcher', ['route' => 'admin.gtk.wali.absensi.index', 'extraQuery' => ['tanggal' => $tanggal]])
 
-    @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger">
-            @foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach
-        </div>
-    @endif
-
     <div class="card simansa-filter-panel mb-3">
         <div class="card-body py-3">
             <form method="GET" action="{{ route('admin.gtk.wali.absensi.index') }}" class="form-inline">
@@ -61,7 +53,7 @@
     @php $locked = $session && $session->status === 'final' && $session->locked_at && $session->locked_at->isPast(); @endphp
 
     @if($session && $session->status === 'final')
-        <div class="alert {{ $locked ? 'alert-secondary' : 'alert-warning' }}">
+        <div class="callout {{ $locked ? 'callout-info' : 'callout-warning' }}">
             <i class="fas fa-lock"></i> Sesi ini sudah <strong>difinalkan</strong>{{ $locked ? ' dan dikunci (hubungi admin untuk koreksi).' : '. Perubahan memerlukan alasan revisi.' }}
         </div>
     @endif
@@ -129,7 +121,7 @@
                     <button type="submit" name="submit_action" value="draft" class="btn btn-primary">
                         <i class="fas fa-save"></i> Simpan Draft
                     </button>
-                    <button type="submit" name="submit_action" value="final" class="btn btn-success" onclick="return confirm('Finalkan absensi? Sesi akan dikunci otomatis dalam 24 jam.')">
+                    <button type="button" class="btn btn-success" id="btnFinalkanAbsensi">
                         <i class="fas fa-lock"></i> Finalkan
                     </button>
                 </div>
@@ -157,8 +149,34 @@
 @section('js')
 <script>
     $(function () {
+        var successMessage = @json(session('success'));
+        var validationErrors = @json($errors->all());
+
+        if (successMessage) {
+            Swal.fire({ icon: 'success', title: 'Berhasil', text: successMessage, timer: 2200, showConfirmButton: false });
+        }
+        if (validationErrors.length) {
+            Swal.fire({ icon: 'error', title: 'Data Belum Valid', text: validationErrors.join('\n'), confirmButtonText: 'Periksa Kembali' });
+        }
+
         $('#btnHadirSemua').on('click', function () {
             $('.status-select').val('hadir');
+        });
+
+        $('#btnFinalkanAbsensi').on('click', function () {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Finalkan absensi?',
+                text: 'Sesi akan dikunci otomatis dalam 24 jam.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Finalkan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#16a34a'
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+                $('<input>', { type: 'hidden', name: 'submit_action', value: 'final' }).appendTo('#formAbsensi');
+                document.getElementById('formAbsensi').requestSubmit();
+            });
         });
     });
 </script>

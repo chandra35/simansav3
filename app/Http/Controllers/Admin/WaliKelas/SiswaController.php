@@ -39,10 +39,19 @@ class SiswaController extends BaseWaliKelasController
             ->limit(10)
             ->get();
 
-        return view('admin.gtk.wali.siswa.show', [
+        $viewData = [
             'siswa' => $siswa,
             'catatan' => $catatan,
-        ]);
+        ];
+
+        if (request()->ajax()) {
+            return response()->json([
+                'title' => $siswa->nama_lengkap,
+                'html' => view('admin.gtk.wali.siswa.partials.detail', $viewData)->render(),
+            ]);
+        }
+
+        return view('admin.gtk.wali.siswa.show', $viewData);
     }
 
     /**

@@ -4,6 +4,26 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modal detail siswa, overlay kontak, dan SweetAlert2
+
+- Klik nomor telepon (`tel:`) atau email (`mailto:`) kini menonaktifkan overlay navigasi global sehingga aplikasi telepon/kontak dapat terbuka tanpa meninggalkan lapisan pemuatan di halaman.
+- Detail siswa pada daftar Wali Kelas kini dibuka sebagai modal responsif dan scrollable. Data tetap dibatasi oleh otorisasi rombel pada controller, sementara halaman detail langsung tetap tersedia sebagai fallback.
+- Identitas siswa, data orang tua, nomor telepon yang dapat diketuk, dan catatan terakhir dimuat secara asinkron ke dalam modal.
+- Notifikasi validasi/berhasil, kegagalan memuat data, serta konfirmasi finalisasi dan penghapusan pada alur GTK terkait telah dipindahkan dari alert browser/Bootstrap ke SweetAlert2.
+
+File terkait:
+
+- `resources/views/vendor/adminlte/master.blade.php`
+- `app/Http/Controllers/Admin/WaliKelas/SiswaController.php`
+- `resources/views/admin/gtk/wali/siswa/index.blade.php`
+- `resources/views/admin/gtk/wali/siswa/partials/detail.blade.php`
+- `resources/views/admin/gtk/wali/absensi/index.blade.php`
+- `resources/views/admin/gtk/wali/catatan/index.blade.php`
+- `resources/views/admin/gtk/profile/index.blade.php`
+- `resources/views/admin/gtk/import.blade.php`
+- `resources/views/admin/siswa/index.blade.php`
+- `tests/Unit/UiDesignConsistencyTest.php`
+
 ### Standardisasi hero modul dan tautan kontak siswa
 
 - `MAN1METRO.md` dan `docs/UI_DESIGN_PRINCIPLES_UPDATED.md` kini menetapkan pola Data Siswa sebagai struktur wajib modul baru: judul/breadcrumb di `content_header`, satu hero `bg-gradient-primary` utuh di awal `content`, dan card operasional `card-outline card-primary`.

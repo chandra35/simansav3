@@ -2,6 +2,7 @@
 
 @section('title', 'Daftar Siswa — Kelas Saya')
 @section('plugins.Datatables', true)
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
     <div class="row mb-2">
@@ -99,9 +100,10 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('admin.gtk.wali.siswa.show', $s->id) }}" class="btn btn-sm btn-primary">
+                                <button type="button" class="btn btn-sm btn-primary btn-detail-siswa"
+                                    data-url="{{ route('admin.gtk.wali.siswa.show', $s->id) }}">
                                     <i class="fas fa-eye"></i> Detail
-                                </a>
+                                </button>
                                 <a href="{{ route('admin.gtk.wali.catatan.index', ['kelas_id' => $kelas->id, 'siswa_id' => $s->id]) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="fas fa-sticky-note"></i>
                                 </a>
@@ -112,6 +114,20 @@
             </table>
         </div>
     </div>
+
+    <div class="modal fade" id="modalDetailSiswa" tabindex="-1" role="dialog" aria-labelledby="modalDetailSiswaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetailSiswaLabel"><i class="fas fa-user-graduate text-primary mr-1"></i> Detail Siswa</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body" id="modalDetailSiswaBody">
+                    <div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @stop
 
@@ -120,6 +136,8 @@
     .gtk-wali-siswa-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
     .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
     .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
+    #modalDetailSiswa .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
+    #modalDetailSiswa .modal-header { border-bottom:1px solid #e5e7eb; }
     @media (max-width:575.98px) {
         .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1rem; }
         .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.1rem; }
@@ -137,6 +155,36 @@
             order: [[0, 'asc']],
             columnDefs: [{ orderable: false, targets: [1, 6] }],
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
+        });
+
+        $(document).on('click', '.btn-detail-siswa', function () {
+            var modal = $('#modalDetailSiswa');
+            var body = $('#modalDetailSiswaBody');
+            var title = $('#modalDetailSiswaLabel');
+
+            if (typeof window.hideAppGlobalOverlay === 'function') window.hideAppGlobalOverlay();
+
+            title.html('<i class="fas fa-user-graduate text-primary mr-1"></i> Detail Siswa');
+            body.html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>');
+            modal.modal('show');
+
+            $.ajax({
+                url: $(this).data('url'),
+                method: 'GET',
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function (response) {
+                title.html('<i class="fas fa-user-graduate text-primary mr-1"></i> ' + $('<div>').text(response.title || 'Detail Siswa').html());
+                body.html(response.html);
+            }).fail(function () {
+                modal.modal('hide');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Detail Tidak Dapat Dimuat',
+                    text: 'Silakan coba kembali beberapa saat lagi.',
+                    confirmButtonText: 'Tutup'
+                });
+            });
         });
     });
 </script>

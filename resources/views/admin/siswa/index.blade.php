@@ -1076,7 +1076,11 @@ $(document).ready(function() {
             error: function(xhr, error, code) {
                 console.log('Ajax error:', xhr, error, code);
                 if (xhr.status === 500) {
-                    alert('Terjadi kesalahan server. Silakan coba lagi atau pilih jumlah data yang lebih sedikit.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Data Tidak Dapat Dimuat',
+                        text: 'Terjadi kesalahan server. Silakan coba lagi atau pilih jumlah data yang lebih sedikit.'
+                    });
                 }
             }
         },
