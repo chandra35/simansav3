@@ -4,6 +4,24 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Catatan siswa Wali Kelas berbasis profil siswa
+
+- Halaman Catatan Siswa kini memakai alur berpusat pada siswa: wali kelas memilih kartu siswa berfoto terlebih dahulu, lalu menulis dan membaca riwayat catatan siswa tersebut.
+- Galeri siswa menampilkan foto, nama, NISN, nomor absen, pencarian cepat, serta penanda visual siswa aktif; susunannya responsif dari desktop hingga ponsel.
+- Hero utuh, statistik ringkas, composer, empty state, dan card riwayat diselaraskan dengan baseline UI Data Siswa admin.
+- Editor catatan mendukung teks tebal/miring/garis bawah, daftar, undo/redo, emoji, simbol, serta awalan kalimat cepat. Isi HTML dibatasi ke format aman tanpa atribut, skrip, gambar, atau tautan.
+- Riwayat menampilkan foto siswa, kategori, status penting, status dibaca BK, serta aksi edit/hapus dengan SweetAlert2.
+- Pemilihan dan penyimpanan siswa divalidasi terhadap rombel aktif yang dipilih, sedangkan statistik dan riwayat tetap dibatasi pada wali kelas pembuat catatan.
+- Catatan teks lama tetap aman, mempertahankan pergantian baris, dan dapat ditampilkan bersama format baru.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/WaliKelas/CatatanController.php`
+- `app/Models/CatatanWaliKelas.php`
+- `resources/views/admin/gtk/wali/catatan/index.blade.php`
+- `tests/Unit/CatatanWaliKelasTest.php`
+- `tests/Unit/WaliKelasPortalTest.php`
+
 ### Scope Sekolah Asal berdasarkan jenis akun
 
 - Modul Sekolah Asal kini membedakan akun pengelola dan akun GTK Wali Kelas pada query, statistik, menu, detail sekolah, serta daftar siswanya.

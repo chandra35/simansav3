@@ -54,4 +54,19 @@ class WaliKelasPortalTest extends TestCase
         $this->assertStringContainsString('isActiveWaliKelas()', $provider);
         $this->assertStringContainsString("'can' => 'sidebar-wali-kelas-menu'", $config);
     }
+
+    public function test_student_notes_are_visual_and_scoped_to_selected_class_student(): void
+    {
+        $controller = $this->file('app/Http/Controllers/Admin/WaliKelas/CatatanController.php');
+        $view = $this->file('resources/views/admin/gtk/wali/catatan/index.blade.php');
+
+        $this->assertStringContainsString("->where('created_by', auth()->id())", $controller);
+        $this->assertStringContainsString('abort_if($selectedStudent === null, 404', $controller);
+        $this->assertStringContainsString('abort_unless($studentBelongsToClass, 404', $controller);
+        $this->assertStringContainsString('CatatanWaliKelas::sanitizeContent', $controller);
+        $this->assertStringContainsString('student-grid', $view);
+        $this->assertStringContainsString('foto_profile_url', $view);
+        $this->assertStringContainsString('summernote', $view);
+        $this->assertStringContainsString('btn-insert-symbol', $view);
+    }
 }

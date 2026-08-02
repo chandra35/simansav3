@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CatatanWaliKelas extends Model
 {
-    use HasUuids, HasFactory, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'catatan_wali_kelas';
 
@@ -67,6 +67,24 @@ class CatatanWaliKelas extends Model
 
     public function getKategoriLabelAttribute(): string
     {
-        return self::KATEGORI[$this->kategori] ?? '—';
+        return self::KATEGORI[$this->kategori] ?? 'Umum';
+    }
+
+    /**
+     * Batasi HTML editor ke format teks sederhana tanpa atribut atau skrip.
+     */
+    public static function sanitizeContent(string $content): string
+    {
+        $content = strip_tags($content, '<p><br><strong><b><em><i><u><ul><ol><li><blockquote>');
+        $content = preg_replace('/<([a-z][a-z0-9]*)\b[^>]*>/i', '<$1>', $content) ?? '';
+
+        return trim($content);
+    }
+
+    public function getCatatanHtmlAttribute(): string
+    {
+        $content = self::sanitizeContent((string) $this->catatan);
+
+        return $content === strip_tags($content) ? nl2br(e($content)) : $content;
     }
 }
