@@ -4,6 +4,19 @@ Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyempurnaan UI Analitik Kehadiran
+
+- Hero Analitik Kehadiran diringkas mengikuti baseline Data Siswa, dengan informasi tahun pelajaran dan periode analisis yang seimbang di dalam satu card gradient.
+- Filter disusun menjadi empat kelompok responsif: tahun pelajaran, tingkat, kelas, dan rentang tanggal, disertai aksi reset serta tautan Absensi Harian.
+- Lima KPI dibuat lebih padat dengan ikon dan warna semantik yang lembut tanpa border warna-warni berlebihan.
+- Distribusi status kini menampilkan jumlah dan persentase; Smart Suggestion serta tabel siswa memakai card outline AdminLTE dengan empty state yang proporsional.
+- CSS lama yang saling menimpa dan memakai `!important` dihapus; seluruh style baru dibatasi oleh wrapper `attendance-analytics-page`.
+
+File terkait:
+
+- `resources/views/admin/absensi/analytics.blade.php`
+- `tests/Unit/StudentAttendanceArchitectureTest.php`
+
 ### Pemisahan kehadiran siswa dan Presensi GTK
 
 - Analitik Kehadiran dipindahkan ke menu Kelas Saya dan dibatasi ketat pada rombel aktif wali kelas; kelas yang diajar sebagai guru mapel tidak lagi ikut memperluas scope.

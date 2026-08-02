@@ -86,6 +86,11 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('CatatanWaliKelas::query()', $controller);
         $this->assertStringContainsString('Catatan wali kelas', $view);
         $this->assertStringContainsString('admin.gtk.wali.catatan.index', $view);
+        $this->assertStringContainsString('class="row mb-2"', $view);
+        $this->assertStringContainsString('card bg-gradient-primary text-white attendance-hero', $view);
+        $this->assertStringContainsString('card card-outline card-primary filter-card', $view);
+        $this->assertStringContainsString('class="metric-grid mb-3"', $view);
+        $this->assertStringNotContainsString('!important', $view);
     }
 
     public function test_presensi_admin_is_gtk_only_and_personally_scoped_for_regular_gtk(): void
