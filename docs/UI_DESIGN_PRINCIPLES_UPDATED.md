@@ -142,6 +142,8 @@ Filter dan form harus:
 
 - menggunakan Bootstrap grid
 - memakai label di atas input
+- textarea biasa harus dapat diubah tingginya secara vertikal; jangan menaruh `height: auto !important` pada selector `.form-control` global karena akan memblokir drag native browser
+- text editor visual harus mempertahankan resize handle bawaan editornya
 - memiliki tinggi input yang konsisten
 - maksimal empat kolom pada desktop
 - turun rapi pada tablet dan mobile

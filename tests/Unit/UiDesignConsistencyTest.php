@@ -130,4 +130,15 @@ class UiDesignConsistencyTest extends TestCase
             $this->assertDoesNotMatchRegularExpression('/\b(?:alert|confirm)\s*\(/', $contents);
         }
     }
+
+    public function test_textareas_remain_vertically_resizable(): void
+    {
+        $css = $this->file('public/css/custom-compact.css');
+
+        preg_match('/\.form-control,\s*\.form-select,\s*select\.form-control\s*\{([^}]*)\}/s', $css, $sharedFormRule);
+        $this->assertNotEmpty($sharedFormRule);
+        $this->assertDoesNotMatchRegularExpression('/(?:^|;)\s*height\s*:/', $sharedFormRule[1]);
+        $this->assertMatchesRegularExpression('/textarea\.form-control\s*\{\s*resize:\s*vertical;\s*\}/', $css);
+        $this->assertMatchesRegularExpression('/input\.form-control,\s*\.form-select,\s*select\.form-control\s*\{[^}]*height:\s*auto\s*!important;/s', $css);
+    }
 }

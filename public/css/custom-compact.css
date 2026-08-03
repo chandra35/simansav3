@@ -298,13 +298,22 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
 select.form-control {
     padding: 0.4rem 0.75rem !important;
     font-size: 0.875rem !important;
-    height: auto !important;
     line-height: 1.5 !important;
     border-radius: var(--radius) !important;
     border: 1px solid var(--border-color) !important;
     transition: var(--transition) !important;
     background-color: #fff !important;
     color: var(--text-primary) !important;
+}
+
+input.form-control,
+.form-select,
+select.form-control {
+    height: auto !important;
+}
+
+textarea.form-control {
+    resize: vertical;
 }
 
 .form-control:focus,

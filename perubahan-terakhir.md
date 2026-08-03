@@ -4,6 +4,18 @@ Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan resize textarea global
+
+- Textarea pada seluruh form SIMANSA kembali dapat diperbesar atau diperkecil secara vertikal melalui handle native browser.
+- Akar masalah diperbaiki pada style bersama: `height: auto !important` kini hanya berlaku untuk input/select dan tidak lagi mengalahkan tinggi hasil drag pada textarea.
+- Perubahan mempertahankan lebar textarea agar layout responsif tidak menimbulkan scroll horizontal, serta tidak mengubah perilaku resize bawaan editor visual.
+
+File terkait:
+
+- `public/css/custom-compact.css`
+- `docs/UI_DESIGN_PRINCIPLES_UPDATED.md`
+- `tests/Unit/UiDesignConsistencyTest.php`
+
 ### Modul Polling & Survei lintas akun
 
 - Builder kini memiliki preview responsif yang menampilkan simulasi layar siswa/GTK berdasarkan form saat itu, termasuk jadwal, pertanyaan, opsi, aturan pilihan, dan persetujuan tanpa menyimpan jawaban.
