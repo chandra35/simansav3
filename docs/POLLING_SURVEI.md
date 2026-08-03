@@ -29,6 +29,8 @@ Menu `Preset Cepat` menyediakan contoh TKA Kelas XII, Survei Kepuasan, dan Konfi
 
 Tombol `Preview` pada builder membentuk simulasi tampilan responden langsung dari nilai form saat ini. Preview mencakup judul, deskripsi, jenis responden, batas waktu, seluruh pertanyaan dan opsi, batas pilihan ganda, tanda wajib, persetujuan, serta tombol pengiriman nonaktif. Preview tidak menyimpan data atau jawaban.
 
+Judul/Jadwal dan Deskripsi berada pada card terpisah. Deskripsi memakai editor visual Summernote untuk paragraf, pindah baris, teks tebal/miring/garis bawah, serta daftar bernomor atau berpoin. HTML dibatasi ke elemen format yang aman di model, lalu ditampilkan pada card `Informasi Polling` tersendiri agar uraian panjang tetap mudah dibaca pada preview, halaman responden, laporan admin, dan PDF.
+
 ## Riwayat dan preset
 
 - Setiap polling menyimpan snapshot tahun ajaran aktif, semester aktif, tanggal dibuat, jadwal, target, pertanyaan, dan hasil. Snapshot tidak ikut berubah ketika tahun ajaran aktif berganti.

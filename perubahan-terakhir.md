@@ -18,6 +18,9 @@ File terkait:
 
 ### Modul Polling & Survei lintas akun
 
+- Judul/Jadwal dan Deskripsi polling kini dipisahkan ke card berbeda agar form lebih terstruktur dan uraian panjang tidak bercampur dengan identitas polling.
+- Deskripsi menggunakan editor visual Summernote yang mendukung paragraf/Enter, tebal, miring, garis bawah, serta daftar; hasilnya tampil dalam card `Informasi Polling` pada preview, halaman responden, laporan admin, dan PDF.
+- Format deskripsi disanitasi terpusat pada model: elemen berbahaya dan atribut HTML dibuang, sedangkan ringkasan daftar serta modal pengingat memakai versi teks biasa.
 - Builder kini memiliki preview responsif yang menampilkan simulasi layar siswa/GTK berdasarkan form saat itu, termasuk jadwal, pertanyaan, opsi, aturan pilihan, dan persetujuan tanpa menyimpan jawaban.
 - Dropdown `Preset Cepat` tidak lagi terpotong oleh batas hero; stacking dan overflow hero diperbaiki secara scoped agar menu selalu muncul di atas card operasional berikutnya.
 - Setiap polling kini merekam snapshot tahun ajaran, semester, tanggal pembuatan, serta sumber polling jika dibuat dari riwayat. Data ini tetap stabil saat tahun ajaran aktif berubah.

@@ -47,6 +47,20 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertTrue($service->matchesTarget($gtk, (object) ['scope_type' => 'role', 'scope_value' => 'wali kelas']));
     }
 
+    public function test_description_editor_content_is_sanitized_and_readable(): void
+    {
+        $polling = new Polling;
+        $polling->description = '<p onclick="evil()"><strong>Tujuan</strong></p><script>alert(1)</script><ul class="x"><li>Baris kedua</li></ul>';
+
+        $this->assertSame('<p><strong>Tujuan</strong></p><ul><li>Baris kedua</li></ul>', $polling->description);
+        $this->assertStringNotContainsString('onclick', $polling->description_html);
+        $this->assertStringNotContainsString('<script', $polling->description_html);
+        $this->assertSame("Tujuan\nBaris kedua", $polling->description_plain);
+
+        $polling->description = "Baris satu\nBaris dua";
+        $this->assertStringContainsString('<br', $polling->description_html);
+    }
+
     public function test_module_has_scope_guards_reporting_and_gentle_reminder(): void
     {
         $root = dirname(__DIR__, 2);
@@ -86,6 +100,9 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('source_polling_id', $builder);
         $this->assertStringContainsString('id="previewPolling"', $builder);
         $this->assertStringContainsString('id="pollingPreviewModal"', $builder);
+        $this->assertStringContainsString('Deskripsi & Petunjuk', $builder);
+        $this->assertStringContainsString('summernote@0.8.18', $builder);
+        $this->assertStringContainsString('function safeRichText', $builder);
         $this->assertStringContainsString('function renderPreview()', $builder);
         $this->assertStringContainsString('overflow:visible;position:relative;z-index:20', $builder);
         $this->assertStringContainsString('min_selections:2,max_selections:2', $builder);
@@ -102,6 +119,7 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('function filterGtks()', $builder);
         $this->assertStringContainsString('@media(max-width:575.98px)', $builder);
         $this->assertStringContainsString('option-grid', $respondent);
+        $this->assertStringContainsString('description_html', $respondent);
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);
     }
 }

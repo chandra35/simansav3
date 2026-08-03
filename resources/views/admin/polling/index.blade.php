@@ -50,7 +50,7 @@
                     @forelse($pollings as $polling)
                         @php($phase = $polling->phase)
                         <tr>
-                            <td><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:360px">{{ $polling->description ?: 'Tanpa deskripsi' }}</div>@if($polling->sourcePolling)<div class="small text-info mt-1"><i class="fas fa-copy mr-1"></i>Salinan dari {{ $polling->sourcePolling->title }}</div>@endif</td>
+                            <td><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:360px">{{ $polling->description_plain ?: 'Tanpa deskripsi' }}</div>@if($polling->sourcePolling)<div class="small text-info mt-1"><i class="fas fa-copy mr-1"></i>Salinan dari {{ $polling->sourcePolling->title }}</div>@endif</td>
                             <td><span class="badge badge-light border text-uppercase">{{ $polling->audience === 'both' ? 'Siswa & GTK' : $polling->audience }}</span></td>
                             <td class="small text-nowrap"><strong>{{ $polling->tahun_pelajaran_snapshot ?: 'Belum tercatat' }}</strong><div class="text-muted">{{ $polling->semester_snapshot ? 'Semester '.$polling->semester_snapshot.' · ' : '' }}{{ $polling->created_at->format('d/m/Y') }}</div></td>
                             <td class="small"><div>{{ $polling->starts_at->format('d/m/Y H:i') }}</div><div class="text-muted">s.d. {{ $polling->ends_at->format('d/m/Y H:i') }}</div></td>

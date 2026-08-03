@@ -9,7 +9,11 @@
 @section('content')
 <div class="simansa-polling-report">
     @if(session('warning'))<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>{{ session('warning') }}</div>@endif
-    <div class="card bg-gradient-primary text-white mb-4 report-hero"><div class="card-body"><div class="row align-items-center"><div class="col-lg-8"><div class="small text-uppercase font-weight-bold mb-2"><i class="fas fa-poll-h mr-1"></i>{{ $polling->audience === 'both' ? 'Siswa & GTK' : strtoupper($polling->audience) }}</div><h2 class="h3 font-weight-bold mb-2">{{ $polling->title }}</h2><p class="mb-2">{{ $polling->description ?: 'Tidak ada deskripsi.' }}</p><div class="small"><i class="far fa-calendar-alt mr-1"></i>{{ $polling->starts_at->format('d/m/Y H:i') }} — {{ $polling->ends_at->format('d/m/Y H:i') }} WIB</div></div><div class="col-lg-4 mt-3 mt-lg-0 text-lg-right"><span class="badge badge-light px-3 py-2 text-uppercase">{{ $polling->phase }}</span></div></div></div></div>
+    <div class="card bg-gradient-primary text-white mb-4 report-hero"><div class="card-body"><div class="row align-items-center"><div class="col-lg-8"><div class="small text-uppercase font-weight-bold mb-2"><i class="fas fa-poll-h mr-1"></i>{{ $polling->audience === 'both' ? 'Siswa & GTK' : strtoupper($polling->audience) }}</div><h2 class="h3 font-weight-bold mb-2">{{ $polling->title }}</h2><div class="small"><i class="far fa-calendar-alt mr-1"></i>{{ $polling->starts_at->format('d/m/Y H:i') }} — {{ $polling->ends_at->format('d/m/Y H:i') }} WIB</div></div><div class="col-lg-4 mt-3 mt-lg-0 text-lg-right"><span class="badge badge-light px-3 py-2 text-uppercase">{{ $polling->phase }}</span></div></div></div></div>
+
+    @if($polling->description)
+    <div class="card card-outline card-primary polling-description"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-info-circle text-primary mr-2"></i>Informasi Polling</h3></div><div class="card-body rich-description">{!! $polling->description_html !!}</div></div>
+    @endif
 
     <div class="row">
         @foreach([
@@ -46,7 +50,7 @@
 
 @section('css')
 <style>
-.simansa-polling-report .report-hero{border:0;border-radius:18px;overflow:hidden}.simansa-polling-report .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-report .info-box-icon{width:62px}.simansa-polling-report .table td,.simansa-polling-report .table th{vertical-align:middle}.simansa-polling-report .question-column{min-width:180px;max-width:260px}@media(max-width:767.98px){.simansa-polling-report .card-header{align-items:flex-start}.simansa-polling-report .card-tools{float:none!important;clear:both;padding-top:.65rem}}
+.simansa-polling-report .report-hero{border:0;border-radius:18px;overflow:hidden}.simansa-polling-report .rich-description{color:#334155;line-height:1.7}.simansa-polling-report .rich-description p:last-child,.simansa-polling-report .rich-description ul:last-child,.simansa-polling-report .rich-description ol:last-child{margin-bottom:0}.simansa-polling-report .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-report .info-box-icon{width:62px}.simansa-polling-report .table td,.simansa-polling-report .table th{vertical-align:middle}.simansa-polling-report .question-column{min-width:180px;max-width:260px}@media(max-width:767.98px){.simansa-polling-report .card-header{align-items:flex-start}.simansa-polling-report .card-tools{float:none!important;clear:both;padding-top:.65rem}}
 </style>
 @stop
 

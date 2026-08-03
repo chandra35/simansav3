@@ -145,7 +145,7 @@ class AppServiceProvider extends ServiceProvider
                     $notice = [
                         'id' => $polling->id,
                         'title' => $polling->title,
-                        'description' => $polling->description,
+                        'description' => $polling->description_plain,
                         'ends_at' => $polling->ends_at->translatedFormat('d F Y H:i'),
                         'url' => route($routePrefix.'.show', $polling),
                         'snooze_url' => route($routePrefix.'.snooze', $polling),
