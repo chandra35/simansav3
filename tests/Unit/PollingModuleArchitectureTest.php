@@ -85,6 +85,9 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('name="gtk_categories[]"', $builder);
         $this->assertStringContainsString('name="gtks[]"', $builder);
         $this->assertStringContainsString('id="gtkTargetModal"', $builder);
+        $this->assertStringContainsString('data-grade="{{ $class->tingkat }}"', $builder);
+        $this->assertStringContainsString('function filterClasses()', $builder);
+        $this->assertStringContainsString('function filterGtks()', $builder);
         $this->assertStringContainsString('@media(max-width:575.98px)', $builder);
         $this->assertStringContainsString('option-grid', $respondent);
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);

@@ -12,8 +12,8 @@ Modul ini menyediakan builder polling generik untuk siswa dan GTK. Pengelola dap
 ## Target responden
 
 - Jenis responden dipilih melalui `Siswa`, `GTK`, atau `Siswa & GTK`.
-- Siswa: mode `Semua` atau `Custom`. Mode custom menyediakan tingkat X/XI/XII dan checklist rombel aktif dengan pencarian serta `Pilih semua`.
-- GTK: mode `Semua` atau `Custom`. Mode custom menyediakan kategori Guru/Staf dan pemilihan GTK individual melalui modal tabel yang dapat dicari.
+- Siswa: mode `Semua` atau `Custom`. Mode custom menyediakan tingkat X/XI/XII dan checklist rombel aktif dengan pencarian serta `Pilih semua yang tampil`. Daftar rombel langsung mengikuti tingkat yang dicentang.
+- GTK: mode `Semua` atau `Custom`. Mode custom menyediakan kategori Guru/Staf dan pemilihan GTK individual melalui modal tabel yang dapat dicari. Isi modal langsung mengikuti kategori yang dicentang.
 - Beberapa target dalam jenis responden yang sama memakai aturan OR. Contohnya, kategori Guru ditambah dua GTK individual akan menargetkan seluruh guru serta kedua GTK tersebut. Polling dengan audiens `Siswa & GTK` harus mempunyai target untuk keduanya.
 - Pemeriksaan target dipusatkan di `PollingAudienceService` dan digunakan oleh menu, modal pengingat, halaman pengisian, serta endpoint penyimpanan.
 

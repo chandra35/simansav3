@@ -9,6 +9,7 @@ Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 - Pemilih target diperjelas menjadi tiga pilihan responden: Siswa, GTK, atau Siswa & GTK, masing-masing dengan mode Semua dan Custom.
 - Target siswa custom menyediakan checklist tingkat X/XI/XII serta daftar rombel aktif yang bisa dicari dan dipilih semua.
 - Target GTK custom menyediakan kategori Guru/Staf dan modal tabel GTK individual dengan foto, NIK, ID PTK, jenis PTK, pencarian, serta pilihan massal pada hasil yang tampil.
+- Daftar rombel kini langsung difilter berdasarkan tingkat yang dicentang, sedangkan tabel GTK mengikuti kategori Guru/Staf; pencarian dan `Pilih semua yang tampil` menghormati filter gabungan tersebut.
 - Scope kategori dan GTK individual disimpan sebagai target backend tersendiri; akses menu, pengingat, halaman pengisian, dan penyimpanan jawaban tetap memakai pemeriksaan scope yang sama.
 - Admin dapat membuat polling generik, mengatur periode buka/tutup, opsi perubahan jawaban, persetujuan responden, serta pertanyaan pilihan tunggal, pilihan ganda, ya/tidak, dan teks.
 - Target siswa dapat dibatasi berdasarkan tingkat dan rombel aktif; target GTK dapat dibatasi berdasarkan jenis PTK dan role. Validasi target juga dijalankan kembali di backend sehingga URL langsung tidak dapat membuka polling di luar scope akun.
