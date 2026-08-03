@@ -4,6 +4,29 @@ Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modul Polling & Survei lintas akun
+
+- Admin dapat membuat polling generik, mengatur periode buka/tutup, opsi perubahan jawaban, persetujuan responden, serta pertanyaan pilihan tunggal, pilihan ganda, ya/tidak, dan teks.
+- Target siswa dapat dibatasi berdasarkan tingkat dan rombel aktif; target GTK dapat dibatasi berdasarkan jenis PTK dan role. Validasi target juga dijalankan kembali di backend sehingga URL langsung tidak dapat membuka polling di luar scope akun.
+- Preset `TKA Kelas XII` menyediakan contoh siap pakai untuk pemilihan tepat dua mata pelajaran, tetapi builder tetap dapat digunakan untuk kebutuhan polling lain.
+- Menu `Polling Aktif` hanya muncul pada akun siswa/GTK yang menjadi target selama jadwal terbuka. Responden yang belum mengisi memperoleh pengingat SweetAlert2 yang lembut dan dapat memilih `Ingatkan Nanti`.
+- Setiap akun hanya memiliki satu respons per polling. Jawaban dapat diperbarui hanya jika diizinkan pembuat polling dan seluruh ID opsi divalidasi terhadap pertanyaannya.
+- Dashboard hasil menampilkan target, jumlah respons, tingkat partisipasi, statistik per pilihan, serta status setiap responden. Laporan lengkap tersedia dalam Excel dan PDF.
+- UI admin dan responden mengikuti Bootstrap 4/AdminLTE, hero utuh, card netral, empty state informatif, serta grid satu kolom pada layar ponsel.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/PollingController.php`
+- `app/Http/Controllers/PollingResponseController.php`
+- `app/Services/PollingAudienceService.php`
+- `app/Services/PollingReportService.php`
+- `database/migrations/2026_08_03_090000_create_polling_module_tables.php`
+- `resources/views/admin/polling/`
+- `resources/views/polling/respondent/`
+- `docs/POLLING_SURVEI.md`
+- `tests/Feature/PollingResponseFlowTest.php`
+- `tests/Unit/PollingModuleArchitectureTest.php`
+
 ### Perapihan tabel Data Siswa
 
 - Proporsi kolom Foto dan Nama/NISN diseimbangkan serta diberi lebar minimum agar avatar tidak lagi bertabrakan dengan identitas siswa.

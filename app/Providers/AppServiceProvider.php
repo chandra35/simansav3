@@ -7,6 +7,7 @@ use App\Models\OsisElection;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Services\PollingAudienceService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(PollingAudienceService::class);
+
         // Cross-semester leggers contain tens of thousands of cells. Spill cells
         // to a dedicated cache in batches so exports fit PHP's 128 MB limit.
         config([
@@ -123,6 +126,34 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('studentElectionNotice', $notice);
+        });
+
+        View::composer('partials.polling-reminder', function ($view) {
+            $notice = null;
+            $user = Auth::user();
+
+            if ($user && ! $user->is_first_login) {
+                $audience = app(PollingAudienceService::class);
+                $polling = $audience->pendingForUser($user)->first(function ($candidate) use ($user) {
+                    $state = $candidate->notificationStates()->where('user_id', $user->id)->first();
+                    return ! $state?->snoozed_until || $state->snoozed_until->lte(now());
+                });
+
+                if ($polling) {
+                    $context = $audience->respondentContext($user);
+                    $routePrefix = $context['type'] === 'siswa' ? 'siswa.polling' : 'admin.gtk.polling';
+                    $notice = [
+                        'id' => $polling->id,
+                        'title' => $polling->title,
+                        'description' => $polling->description,
+                        'ends_at' => $polling->ends_at->translatedFormat('d F Y H:i'),
+                        'url' => route($routePrefix.'.show', $polling),
+                        'snooze_url' => route($routePrefix.'.snooze', $polling),
+                    ];
+                }
+            }
+
+            $view->with('pendingPollingNotice', $notice);
         });
 
         // Menu items are now configured in config/adminlte.php

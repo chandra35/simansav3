@@ -30,6 +30,7 @@
             @include('adminlte::partials.common.flash-messages')
             @include('partials.impersonation-banner')
             @include('partials.student-election-overlay')
+            @include('partials.polling-reminder')
             @stack('content')
             @yield('content')
         </div>

@@ -126,6 +126,10 @@ class AuthServiceProvider extends ServiceProvider
                    ! $user->siswa()->exists();
         });
 
+        Gate::define('sidebar-active-polling', function ($user) {
+            return app(\App\Services\PollingAudienceService::class)->activeForUser($user)->isNotEmpty();
+        });
+
         // Gate menu Portal Wali Kelas ("Kelas Saya"): GTK murni yang menjadi wali kelas
         // aktif di tahun pelajaran aktif. PAKAI sidebar- prefix agar tidak bentrok Spatie.
         Gate::define('sidebar-wali-kelas-menu', function ($user) {

@@ -341,6 +341,14 @@ return [
             'can' => 'sidebar-gtk-menu-only',
             'active' => ['admin/gtk/pemilihan-osis*'],
         ],
+        [
+            'key' => 'gtk-active-polling',
+            'text' => 'Polling Aktif',
+            'route' => 'admin.gtk.polling.index',
+            'icon' => 'fas fa-fw fa-poll-h',
+            'can' => 'sidebar-active-polling',
+            'active' => ['admin/gtk/polling*'],
+        ],
         
         // Portal Wali Kelas ("Kelas Saya") — hanya GTK yang jadi wali kelas aktif
         [
@@ -942,6 +950,13 @@ return [
                     'can' => 'view-pengumuman',
                     'active' => ['admin/pengumuman*'],
                 ],
+                [
+                    'text' => 'Polling & Survei',
+                    'route' => 'admin.polling.index',
+                    'icon' => 'fas fa-fw fa-poll-h',
+                    'can' => 'view-polling-results',
+                    'active' => ['admin/polling*'],
+                ],
             ],
         ],
         
@@ -1225,6 +1240,14 @@ return [
             'active' => ['siswa/pemilihan-osis*'],
         ],
         [
+            'key' => 'siswa-active-polling',
+            'text' => 'Polling Aktif',
+            'route' => 'siswa.polling.index',
+            'icon' => 'fas fa-fw fa-poll-h',
+            'can' => 'sidebar-active-polling',
+            'active' => ['siswa/polling*'],
+        ],
+        [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
             'can' => 'sidebar-siswa-access',
@@ -1397,7 +1420,7 @@ return [
             ],
         ],
         'Sweetalert2' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'css',

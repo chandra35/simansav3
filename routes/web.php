@@ -162,6 +162,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/under-development', function () {
         return view('admin.under-development');
     })->name('under-development');
+
+    Route::middleware('permission:view-polling-results|manage-polling')->prefix('polling')->name('polling.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PollingController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\PollingController::class, 'create'])->middleware('permission:manage-polling')->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\PollingController::class, 'store'])->middleware('permission:manage-polling')->name('store');
+        Route::get('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'show'])->name('show');
+        Route::get('/{polling}/edit', [App\Http\Controllers\Admin\PollingController::class, 'edit'])->middleware('permission:manage-polling')->name('edit');
+        Route::put('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'update'])->middleware('permission:manage-polling')->name('update');
+        Route::post('/{polling}/publish', [App\Http\Controllers\Admin\PollingController::class, 'publish'])->middleware('permission:manage-polling')->name('publish');
+        Route::post('/{polling}/close', [App\Http\Controllers\Admin\PollingController::class, 'close'])->middleware('permission:manage-polling')->name('close');
+        Route::delete('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'destroy'])->middleware('permission:manage-polling')->name('destroy');
+        Route::get('/{polling}/export', [App\Http\Controllers\Admin\PollingController::class, 'export'])->name('export');
+        Route::get('/{polling}/pdf', [App\Http\Controllers\Admin\PollingController::class, 'pdf'])->name('pdf');
+    });
     
     // Profile Management
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
@@ -493,6 +507,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/pemilihan-osis', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'index'])->name('gtk.osis-election.index');
         Route::post('/gtk/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'vote'])
             ->middleware('throttle:5,1')->name('gtk.osis-election.vote');
+        Route::get('/gtk/polling', [App\Http\Controllers\PollingResponseController::class, 'index'])->name('gtk.polling.index');
+        Route::get('/gtk/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'show'])->name('gtk.polling.show');
+        Route::post('/gtk/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'store'])->name('gtk.polling.store');
+        Route::post('/gtk/polling/{polling}/snooze', [App\Http\Controllers\PollingResponseController::class, 'snooze'])->name('gtk.polling.snooze');
     });
     
     // ─── Portal Wali Kelas ("Kelas Saya") ──────────────────────────────────────
@@ -1088,6 +1106,10 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
     Route::get('/pemilihan-osis', [App\Http\Controllers\Siswa\OsisElectionController::class, 'index'])->name('osis-election.index');
     Route::post('/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Siswa\OsisElectionController::class, 'vote'])->name('osis-election.vote');
+    Route::get('/polling', [App\Http\Controllers\PollingResponseController::class, 'index'])->name('polling.index');
+    Route::get('/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'show'])->name('polling.show');
+    Route::post('/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'store'])->name('polling.store');
+    Route::post('/polling/{polling}/snooze', [App\Http\Controllers\PollingResponseController::class, 'snooze'])->name('polling.snooze');
     
     // Profile Management for Siswa
     Route::get('/profile/password', [SiswaProfileController::class, 'password'])->name('profile.password');
