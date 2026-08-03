@@ -6,6 +6,8 @@ Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Modul Polling & Survei lintas akun
 
+- Builder kini memiliki preview responsif yang menampilkan simulasi layar siswa/GTK berdasarkan form saat itu, termasuk jadwal, pertanyaan, opsi, aturan pilihan, dan persetujuan tanpa menyimpan jawaban.
+- Dropdown `Preset Cepat` tidak lagi terpotong oleh batas hero; stacking dan overflow hero diperbaiki secara scoped agar menu selalu muncul di atas card operasional berikutnya.
 - Setiap polling kini merekam snapshot tahun ajaran, semester, tanggal pembuatan, serta sumber polling jika dibuat dari riwayat. Data ini tetap stabil saat tahun ajaran aktif berubah.
 - Daftar admin menjadi `Riwayat Polling & Preset`; setiap entri dapat disalin ke builder baru tanpa mengubah polling dan hasil lama.
 - Aksi hapus diganti menjadi arsip non-destruktif. Polling ditutup, tetapi konfigurasi, target, respons, laporan, dan jejak audit tetap tersimpan.

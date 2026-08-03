@@ -27,6 +27,8 @@ Modul ini menyediakan builder polling generik untuk siswa dan GTK. Pengelola dap
 
 Menu `Preset Cepat` menyediakan contoh TKA Kelas XII, Survei Kepuasan, dan Konfirmasi Kegiatan. Preset TKA memuat 18 mata pelajaran pilihan SMA/MA sesuai daftar pada surat contoh. Semua isinya tetap dapat disunting sebelum disimpan.
 
+Tombol `Preview` pada builder membentuk simulasi tampilan responden langsung dari nilai form saat ini. Preview mencakup judul, deskripsi, jenis responden, batas waktu, seluruh pertanyaan dan opsi, batas pilihan ganda, tanda wajib, persetujuan, serta tombol pengiriman nonaktif. Preview tidak menyimpan data atau jawaban.
+
 ## Riwayat dan preset
 
 - Setiap polling menyimpan snapshot tahun ajaran aktif, semester aktif, tanggal dibuat, jadwal, target, pertanyaan, dan hasil. Snapshot tidak ikut berubah ketika tahun ajaran aktif berganti.

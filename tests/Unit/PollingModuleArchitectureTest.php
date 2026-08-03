@@ -84,6 +84,10 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('Survei Kepuasan', $builder);
         $this->assertStringContainsString('Konfirmasi Kegiatan', $builder);
         $this->assertStringContainsString('source_polling_id', $builder);
+        $this->assertStringContainsString('id="previewPolling"', $builder);
+        $this->assertStringContainsString('id="pollingPreviewModal"', $builder);
+        $this->assertStringContainsString('function renderPreview()', $builder);
+        $this->assertStringContainsString('overflow:visible;position:relative;z-index:20', $builder);
         $this->assertStringContainsString('min_selections:2,max_selections:2', $builder);
         $this->assertStringContainsString('Matematika Tingkat Lanjut', $builder);
         $this->assertStringContainsString('Bahasa Mandarin', $builder);
