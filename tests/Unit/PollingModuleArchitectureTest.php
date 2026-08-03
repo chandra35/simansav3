@@ -36,12 +36,14 @@ class PollingModuleArchitectureTest extends TestCase
     {
         $service = new PollingAudienceService;
         $student = ['grade' => 12, 'class_id' => 'kelas-xii-a', 'gtk_type' => null, 'roles' => ['Siswa']];
-        $gtk = ['grade' => null, 'class_id' => null, 'gtk_type' => 'Guru Mapel', 'roles' => ['GTK', 'Wali Kelas']];
+        $gtk = ['id' => 'gtk-1', 'grade' => null, 'class_id' => null, 'gtk_type' => 'Guru Mapel', 'gtk_category' => 'Pendidik', 'roles' => ['GTK', 'Wali Kelas']];
 
         $this->assertTrue($service->matchesTarget($student, (object) ['scope_type' => 'tingkat', 'scope_value' => '12']));
         $this->assertTrue($service->matchesTarget($student, (object) ['scope_type' => 'kelas', 'scope_value' => 'kelas-xii-a']));
         $this->assertFalse($service->matchesTarget($student, (object) ['scope_type' => 'tingkat', 'scope_value' => '11']));
         $this->assertTrue($service->matchesTarget($gtk, (object) ['scope_type' => 'jenis_ptk', 'scope_value' => 'guru mapel']));
+        $this->assertTrue($service->matchesTarget($gtk, (object) ['scope_type' => 'kategori_ptk', 'scope_value' => 'Pendidik']));
+        $this->assertTrue($service->matchesTarget($gtk, (object) ['scope_type' => 'gtk', 'scope_value' => 'gtk-1']));
         $this->assertTrue($service->matchesTarget($gtk, (object) ['scope_type' => 'role', 'scope_value' => 'wali kelas']));
     }
 
@@ -79,6 +81,10 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('Bahasa Mandarin', $builder);
         $this->assertStringContainsString('student_grades[]', $builder);
         $this->assertStringContainsString('student_classes[]', $builder);
+        $this->assertStringContainsString('id="allClasses"', $builder);
+        $this->assertStringContainsString('name="gtk_categories[]"', $builder);
+        $this->assertStringContainsString('name="gtks[]"', $builder);
+        $this->assertStringContainsString('id="gtkTargetModal"', $builder);
         $this->assertStringContainsString('@media(max-width:575.98px)', $builder);
         $this->assertStringContainsString('option-grid', $respondent);
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);

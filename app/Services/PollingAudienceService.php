@@ -39,6 +39,7 @@ class PollingAudienceService
                 'class_name' => null,
                 'grade' => null,
                 'gtk_type' => $user->gtk->jenis_ptk,
+                'gtk_category' => $user->gtk->kategori_ptk,
                 'roles' => $user->getRoleNames()->all(),
             ];
         }
@@ -64,6 +65,8 @@ class PollingAudienceService
             'tingkat' => (string) $context['grade'] === (string) $target->scope_value,
             'kelas' => (string) $context['class_id'] === (string) $target->scope_value,
             'jenis_ptk' => mb_strtolower((string) $context['gtk_type']) === mb_strtolower((string) $target->scope_value),
+            'kategori_ptk' => mb_strtolower((string) ($context['gtk_category'] ?? '')) === mb_strtolower((string) $target->scope_value),
+            'gtk' => (string) $context['id'] === (string) $target->scope_value,
             'role' => collect($context['roles'])->contains(fn ($role) => mb_strtolower($role) === mb_strtolower((string) $target->scope_value)),
             default => false,
         };

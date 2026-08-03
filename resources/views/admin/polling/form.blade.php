@@ -3,6 +3,12 @@
 @php
     $editing = isset($polling);
     $selected = fn($type, $audience) => $editing ? $polling->targets->where('audience_type', $audience)->where('scope_type', $type)->pluck('scope_value')->all() : [];
+    $audienceValue = old('audience', $polling->audience ?? 'siswa');
+    $studentAllValue = (string) old('student_all', $editing && in_array('all', $polling->targets->where('audience_type', 'siswa')->pluck('scope_type')->all()) ? '1' : '0');
+    $gtkAllValue = (string) old('gtk_all', $editing && in_array('all', $polling->targets->where('audience_type', 'gtk')->pluck('scope_type')->all()) ? '1' : '0');
+    $selectedClasses = old('student_classes', $selected('kelas', 'siswa'));
+    $selectedGtkCategories = old('gtk_categories', $selected('kategori_ptk', 'gtk'));
+    $selectedGtks = old('gtks', $selected('gtk', 'gtk'));
     $questions = old('questions', $editing ? $polling->questions->map(fn($q) => [
         'prompt'=>$q->prompt,'type'=>$q->type,'is_required'=>$q->is_required,
         'min_selections'=>$q->min_selections,'max_selections'=>$q->max_selections,
@@ -30,25 +36,50 @@
                 <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-info-circle text-primary mr-2"></i>Identitas & Jadwal</h3></div><div class="card-body">
                     <div class="form-group"><label>Nama Polling <span class="text-danger">*</span></label><input name="title" id="pollTitle" class="form-control" maxlength="255" required value="{{ old('title',$polling->title??'') }}" placeholder="Contoh: Pemilihan Mata Pelajaran TKA 2026"></div>
                     <div class="form-group"><label>Deskripsi</label><textarea name="description" id="pollDescription" class="form-control" rows="3" placeholder="Jelaskan tujuan dan petunjuk singkat polling">{{ old('description',$polling->description??'') }}</textarea></div>
-                    <div class="row"><div class="col-md-4 form-group"><label>Responden <span class="text-danger">*</span></label><select name="audience" id="audience" class="form-control" required>@foreach(['siswa'=>'Siswa','gtk'=>'GTK','both'=>'Siswa & GTK'] as $key=>$label)<option value="{{ $key }}" @selected(old('audience',$polling->audience??'siswa')===$key)>{{ $label }}</option>@endforeach</select></div><div class="col-md-4 form-group"><label>Mulai <span class="text-danger">*</span></label><input type="datetime-local" name="starts_at" class="form-control" required value="{{ old('starts_at',isset($polling)?$polling->starts_at->format('Y-m-d\TH:i'):now()->addHour()->format('Y-m-d\TH:i')) }}"></div><div class="col-md-4 form-group"><label>Selesai <span class="text-danger">*</span></label><input type="datetime-local" name="ends_at" class="form-control" required value="{{ old('ends_at',isset($polling)?$polling->ends_at->format('Y-m-d\TH:i'):now()->addDays(7)->format('Y-m-d\TH:i')) }}"></div></div>
+                    <div class="row"><div class="col-md-6 form-group"><label>Mulai <span class="text-danger">*</span></label><input type="datetime-local" name="starts_at" class="form-control" required value="{{ old('starts_at',isset($polling)?$polling->starts_at->format('Y-m-d\TH:i'):now()->addHour()->format('Y-m-d\TH:i')) }}"></div><div class="col-md-6 form-group"><label>Selesai <span class="text-danger">*</span></label><input type="datetime-local" name="ends_at" class="form-control" required value="{{ old('ends_at',isset($polling)?$polling->ends_at->format('Y-m-d\TH:i'):now()->addDays(7)->format('Y-m-d\TH:i')) }}"></div></div>
                 </div></div>
 
                 <div class="card card-outline card-primary"><div class="card-header d-flex align-items-center"><h3 class="card-title font-weight-bold flex-grow-1"><i class="fas fa-question-circle text-primary mr-2"></i>Pertanyaan</h3><button type="button" class="btn btn-sm btn-primary" id="addQuestion"><i class="fas fa-plus mr-1"></i>Tambah Pertanyaan</button></div><div class="card-body"><div id="questionBuilder"></div></div></div>
             </div>
 
             <div class="col-lg-4">
-                <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-bullseye text-primary mr-2"></i>Target Responden</h3></div><div class="card-body">
-                    <div id="studentTargets">
-                        <h6 class="font-weight-bold"><i class="fas fa-user-graduate mr-1"></i>Siswa</h6>
-                        <div class="custom-control custom-checkbox mb-3"><input type="checkbox" class="custom-control-input target-all" id="studentAll" name="student_all" value="1" @checked(old('student_all',$editing && in_array('all',$polling->targets->where('audience_type','siswa')->pluck('scope_type')->all())))><label class="custom-control-label" for="studentAll">Semua siswa aktif</label></div>
-                        <label class="small font-weight-bold">Tingkat</label><div class="d-flex flex-wrap mb-3">@foreach([10=>'X',11=>'XI',12=>'XII'] as $grade=>$roman)<div class="custom-control custom-checkbox mr-3"><input class="custom-control-input student-scope" type="checkbox" name="student_grades[]" value="{{ $grade }}" id="grade{{ $grade }}" @checked(in_array((string)$grade,array_map('strval',old('student_grades',$selected('tingkat','siswa')))))><label class="custom-control-label" for="grade{{ $grade }}">{{ $roman }}</label></div>@endforeach</div>
-                        <div class="form-group"><label class="small font-weight-bold">Rombel tertentu</label><select name="student_classes[]" class="form-control student-scope" multiple size="6">@foreach($classes as $class)<option value="{{ $class->id }}" @selected(in_array($class->id,old('student_classes',$selected('kelas','siswa'))))>{{ $class->nama_kelas }} · Tingkat {{ $class->tingkat }}</option>@endforeach</select><small class="text-muted">Gunakan Ctrl untuk memilih lebih dari satu.</small></div>
+                <div class="card card-outline card-primary target-card"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-bullseye text-primary mr-2"></i>Target Responden</h3></div><div class="card-body">
+                    <label class="small font-weight-bold d-block">Jenis responden</label>
+                    <div class="audience-options mb-3">
+                        @foreach(['siswa'=>['fa-user-graduate','Siswa'],'gtk'=>['fa-chalkboard-teacher','GTK'],'both'=>['fa-users','Siswa & GTK']] as $key=>$option)
+                            <label class="audience-option"><input type="radio" name="audience" value="{{ $key }}" @checked($audienceValue===$key)><span><i class="fas {{ $option[0] }}"></i>{{ $option[1] }}</span></label>
+                        @endforeach
                     </div>
-                    <div id="gtkTargets" class="border-top pt-3 mt-3">
-                        <h6 class="font-weight-bold"><i class="fas fa-chalkboard-teacher mr-1"></i>GTK</h6>
-                        <div class="custom-control custom-checkbox mb-3"><input type="checkbox" class="custom-control-input target-all" id="gtkAll" name="gtk_all" value="1" @checked(old('gtk_all',$editing && in_array('all',$polling->targets->where('audience_type','gtk')->pluck('scope_type')->all())))><label class="custom-control-label" for="gtkAll">Semua GTK aktif</label></div>
-                        <div class="form-group"><label class="small font-weight-bold">Jenis PTK</label><select name="gtk_types[]" class="form-control gtk-scope" multiple size="5">@foreach($gtkTypes as $type)<option value="{{ $type }}" @selected(in_array($type,old('gtk_types',$selected('jenis_ptk','gtk'))))>{{ $type }}</option>@endforeach</select></div>
-                        <div class="form-group"><label class="small font-weight-bold">Role</label><select name="gtk_roles[]" class="form-control gtk-scope" multiple size="4">@foreach($roles as $role)<option value="{{ $role->name }}" @selected(in_array($role->name,old('gtk_roles',$selected('role','gtk'))))>{{ $role->name }}</option>@endforeach</select></div>
+
+                    <div id="studentTargets" class="target-section">
+                        <h6 class="font-weight-bold"><i class="fas fa-user-graduate text-primary mr-1"></i>Target Siswa</h6>
+                        <div class="mode-options mb-3">
+                            <div class="custom-control custom-radio custom-control-inline"><input class="custom-control-input student-mode" type="radio" id="studentAll" name="student_all" value="1" @checked($studentAllValue==='1')><label class="custom-control-label" for="studentAll">Semua</label></div>
+                            <div class="custom-control custom-radio custom-control-inline"><input class="custom-control-input student-mode" type="radio" id="studentCustom" name="student_all" value="0" @checked($studentAllValue!=='1')><label class="custom-control-label" for="studentCustom">Custom</label></div>
+                        </div>
+                        <div id="studentCustomOptions" class="custom-target-panel">
+                            <label class="small font-weight-bold">Tingkat</label>
+                            <div class="d-flex flex-wrap mb-3">@foreach([10=>'X',11=>'XI',12=>'XII'] as $grade=>$roman)<div class="custom-control custom-checkbox mr-3"><input class="custom-control-input student-scope grade-check" type="checkbox" name="student_grades[]" value="{{ $grade }}" id="grade{{ $grade }}" @checked(in_array((string)$grade,array_map('strval',old('student_grades',$selected('tingkat','siswa')))))><label class="custom-control-label" for="grade{{ $grade }}">{{ $roman }}</label></div>@endforeach</div>
+                            <div class="d-flex justify-content-between align-items-center mb-2"><label class="small font-weight-bold mb-0">Rombel aktif</label><div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input" id="allClasses"><label class="custom-control-label small" for="allClasses">Pilih semua</label></div></div>
+                            <input type="search" id="classSearch" class="form-control form-control-sm mb-2" placeholder="Cari rombel...">
+                            <div class="checklist-panel" id="classChecklist">
+                                @forelse($classes as $class)<div class="custom-control custom-checkbox checklist-row" data-search="{{ strtolower($class->nama_kelas.' '.$class->tingkat) }}"><input class="custom-control-input student-scope class-check" type="checkbox" name="student_classes[]" value="{{ $class->id }}" id="class{{ $class->id }}" @checked(in_array($class->id,$selectedClasses))><label class="custom-control-label" for="class{{ $class->id }}"><strong>{{ $class->nama_kelas }}</strong><small>Tingkat {{ $class->tingkat }}</small></label></div>@empty<p class="text-muted small mb-0">Belum ada rombel aktif.</p>@endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="gtkTargets" class="target-section border-top pt-3 mt-3">
+                        <h6 class="font-weight-bold"><i class="fas fa-chalkboard-teacher text-primary mr-1"></i>Target GTK</h6>
+                        <div class="mode-options mb-3">
+                            <div class="custom-control custom-radio custom-control-inline"><input class="custom-control-input gtk-mode" type="radio" id="gtkAll" name="gtk_all" value="1" @checked($gtkAllValue==='1')><label class="custom-control-label" for="gtkAll">Semua</label></div>
+                            <div class="custom-control custom-radio custom-control-inline"><input class="custom-control-input gtk-mode" type="radio" id="gtkCustom" name="gtk_all" value="0" @checked($gtkAllValue!=='1')><label class="custom-control-label" for="gtkCustom">Custom</label></div>
+                        </div>
+                        <div id="gtkCustomOptions" class="custom-target-panel">
+                            <label class="small font-weight-bold d-block">Kategori</label>
+                            @foreach(['Pendidik'=>'Guru','Tenaga Kependidikan'=>'Staf'] as $value=>$label)<div class="custom-control custom-checkbox custom-control-inline mb-3"><input type="checkbox" class="custom-control-input gtk-scope" name="gtk_categories[]" value="{{ $value }}" id="gtkCategory{{ $loop->index }}" @checked(in_array($value,$selectedGtkCategories))><label class="custom-control-label" for="gtkCategory{{ $loop->index }}">{{ $label }}</label></div>@endforeach
+                            <button type="button" class="btn btn-sm btn-primary btn-block" data-toggle="modal" data-target="#gtkTargetModal"><i class="fas fa-user-check mr-1"></i>Pilih GTK Tertentu <span class="badge badge-light ml-1" id="gtkSelectedCount">0</span></button>
+                            <small class="text-muted d-block mt-2">Kategori dan GTK individual dapat dipakai bersamaan.</small>
+                        </div>
                     </div>
                 </div></div>
 
@@ -62,6 +93,8 @@
             </div>
         </div>
 
+        <div class="modal fade" id="gtkTargetModal" tabindex="-1" role="dialog" aria-labelledby="gtkTargetModalLabel" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable" role="document"><div class="modal-content"><div class="modal-header"><div><h5 class="modal-title font-weight-bold" id="gtkTargetModalLabel"><i class="fas fa-user-check text-primary mr-2"></i>Pilih GTK Tertentu</h5><small class="text-muted">Centang GTK yang akan menerima polling di luar pilihan kategori.</small></div><button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div class="row align-items-center mb-3"><div class="col-md-8"><div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="search" id="gtkSearch" class="form-control" placeholder="Cari nama, NIK, ID PTK, jenis PTK..."></div></div><div class="col-md-4 mt-2 mt-md-0"><div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input" id="allGtks"><label class="custom-control-label" for="allGtks">Pilih semua yang tampil</label></div></div></div><div class="table-responsive"><table class="table table-hover table-sm mb-0 gtk-target-table"><thead><tr><th style="width:42px"></th><th>GTK</th><th>Kategori / Jenis PTK</th><th>ID PTK</th></tr></thead><tbody>@forelse($gtks as $gtk)<tr class="gtk-row" data-search="{{ strtolower($gtk->nama_lengkap.' '.$gtk->nik.' '.$gtk->peg_id.' '.$gtk->kategori_ptk.' '.$gtk->jenis_ptk) }}"><td class="align-middle"><div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input gtk-check gtk-scope" name="gtks[]" value="{{ $gtk->id }}" id="targetGtk{{ $gtk->id }}" @checked(in_array($gtk->id,$selectedGtks))><label class="custom-control-label" for="targetGtk{{ $gtk->id }}"><span class="sr-only">Pilih {{ $gtk->nama_lengkap }}</span></label></div></td><td class="align-middle"><div class="d-flex align-items-center"><img src="{{ $gtk->foto_profile_url }}" alt="" class="gtk-avatar mr-2"><div><strong class="d-block">{{ $gtk->nama_lengkap }}</strong><small class="text-muted">NIK {{ $gtk->nik ?: '-' }}</small></div></div></td><td class="align-middle">@php($categoryLabel = $gtk->kategori_ptk === 'Pendidik' ? 'Guru' : ($gtk->kategori_ptk === 'Tenaga Kependidikan' ? 'Staf' : 'Belum dikategorikan'))<span class="badge badge-{{ $gtk->kategori_ptk === 'Pendidik' ? 'primary' : ($gtk->kategori_ptk === 'Tenaga Kependidikan' ? 'info' : 'secondary') }}">{{ $categoryLabel }}</span><small class="d-block text-muted mt-1">{{ $gtk->jenis_ptk ?: '-' }}</small></td><td class="align-middle text-nowrap">{{ $gtk->peg_id ?: '-' }}</td></tr>@empty<tr><td colspan="4" class="text-center text-muted py-4">Belum ada GTK aktif.</td></tr>@endforelse</tbody></table></div></div><div class="modal-footer"><span class="text-muted mr-auto"><strong id="gtkModalCount">0</strong> GTK dipilih</span><button type="button" class="btn btn-primary" data-dismiss="modal"><i class="fas fa-check mr-1"></i>Selesai</button></div></div></div></div>
+
         <div class="card"><div class="card-body d-flex flex-wrap justify-content-between"><a href="{{ route('admin.polling.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left mr-1"></i>Kembali</a><div><button name="action" value="draft" class="btn btn-outline-primary mr-2"><i class="fas fa-save mr-1"></i>Simpan Draft</button><button name="action" value="publish" class="btn btn-primary"><i class="fas fa-paper-plane mr-1"></i>Simpan & Terbitkan</button></div></div></div>
     </form>
 </div>
@@ -69,7 +102,24 @@
 
 @section('css')
 <style>
-.simansa-polling-form .simansa-form-hero{border:0;border-radius:18px;overflow:hidden}.simansa-polling-form .question-card{border:1px solid #dbe3ef;border-left:4px solid #3b82f6;border-radius:12px;padding:1rem;margin-bottom:1rem;background:#f8fafc}.simansa-polling-form .question-number{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#dbeafe;color:#1d4ed8;font-weight:800}.simansa-polling-form label{color:#334155}.simansa-polling-form select[multiple]{min-height:110px}@media(max-width:575.98px){.simansa-polling-form .card-body{padding:1rem}.simansa-polling-form .card-body.d-flex{gap:.75rem}.simansa-polling-form .card-body.d-flex>div{display:flex;width:100%}.simansa-polling-form .card-body.d-flex>div .btn{flex:1}}
+.simansa-polling-form .simansa-form-hero{border:0;border-radius:18px;overflow:hidden}
+.simansa-polling-form .question-card{border:1px solid #dbe3ef;border-left:4px solid #3b82f6;border-radius:12px;padding:1rem;margin-bottom:1rem;background:#f8fafc}
+.simansa-polling-form .question-number{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#dbeafe;color:#1d4ed8;font-weight:800}
+.simansa-polling-form label{color:#334155}
+.simansa-polling-form .audience-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}
+.simansa-polling-form .audience-option{margin:0}
+.simansa-polling-form .audience-option input{position:absolute;opacity:0}
+.simansa-polling-form .audience-option span{align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;font-size:.76rem;gap:.25rem;justify-content:center;min-height:62px;padding:.5rem;text-align:center}
+.simansa-polling-form .audience-option input:checked+span{background:#eff6ff;border-color:#2563eb;color:#1d4ed8;font-weight:700;box-shadow:0 0 0 1px #2563eb}
+.simansa-polling-form .custom-target-panel{background:#f8fafc;border:1px solid #dbe3ef;border-radius:10px;padding:.75rem}
+.simansa-polling-form .checklist-panel{background:#fff;border:1px solid #dbe3ef;border-radius:8px;max-height:220px;overflow-y:auto;padding:.25rem}
+.simansa-polling-form .checklist-row{border-bottom:1px solid #eef2f7;margin:0;padding:.55rem .5rem .55rem 2rem}
+.simansa-polling-form .checklist-row:last-child{border-bottom:0}
+.simansa-polling-form .checklist-row label{display:flex;justify-content:space-between;width:100%}
+.simansa-polling-form .checklist-row label small{color:#64748b}
+.simansa-polling-form .gtk-target-table{min-width:680px}
+.simansa-polling-form .gtk-avatar{border-radius:50%;height:38px;object-fit:cover;width:38px}
+@media(max-width:575.98px){.simansa-polling-form .card-body{padding:1rem}.simansa-polling-form .card-body.d-flex{gap:.75rem}.simansa-polling-form .card-body.d-flex>div{display:flex;width:100%}.simansa-polling-form .card-body.d-flex>div .btn{flex:1}.simansa-polling-form .audience-options{grid-template-columns:1fr}.simansa-polling-form .audience-option span{flex-direction:row;min-height:44px}.simansa-polling-form .modal-body{padding:.75rem}}
 </style>
 @stop
 
@@ -89,9 +139,16 @@ $(function(){
     function toggleQuestion(card){const type=card.find('.question-type').val(); card.find('.choice-fields').toggle(['single','multiple'].includes(type)); card.find('.multiple-fields').toggle(type==='multiple');}
     function renumber(){$('.question-card').each((i,e)=>$(e).find('.question-number').text(i+1)); $('.remove-question').prop('disabled',$('.question-card').length===1);}
     seed.forEach(addQuestion); $('#addQuestion').on('click',()=>addQuestion({type:'single',is_required:true,options_text:'Pilihan 1\nPilihan 2'})); $(document).on('change','.question-type',function(){toggleQuestion($(this).closest('.question-card'))}); $(document).on('click','.remove-question',function(){$(this).closest('.question-card').remove();renumber()});
-    function toggleAudience(){const a=$('#audience').val();$('#studentTargets').toggle(a==='siswa'||a==='both');$('#gtkTargets').toggle(a==='gtk'||a==='both')}
-    function toggleAll(box,selector){$(selector).prop('disabled',box.checked)} $('#audience').on('change',toggleAudience); $('#studentAll').on('change',function(){toggleAll(this,'.student-scope')}); $('#gtkAll').on('change',function(){toggleAll(this,'.gtk-scope')}); $('#requireConsent').on('change',()=>$('#consentBox').toggle($('#requireConsent').prop('checked'))); toggleAudience(); $('#studentAll,#gtkAll,#requireConsent').trigger('change');
-    $('#tkaPreset').on('click',function(){Swal.fire({icon:'question',title:'Gunakan preset TKA?',text:'Identitas dan pertanyaan saat ini akan diganti dengan contoh pemilihan dua mapel TKA kelas XII.',showCancelButton:true,confirmButtonText:'Gunakan Preset',cancelButtonText:'Batal',confirmButtonColor:'#2563eb'}).then(r=>{if(!r.isConfirmed)return;$('#pollTitle').val('Pemilihan Mata Pelajaran Pilihan TKA 2026');$('#pollDescription').val('Pilih tepat dua mata pelajaran pilihan Tes Kemampuan Akademik yang tercatat di rapor serta sesuai minat dan rencana studi lanjut.');$('#audience').val('siswa').trigger('change');$('#studentAll').prop('checked',false).trigger('change');$('#grade12').prop('checked',true);$('#questionBuilder').empty();questionIndex=0;addQuestion({prompt:'Pilih tepat dua mata pelajaran pilihan TKA',type:'multiple',is_required:true,min_selections:2,max_selections:2,options_text:'Matematika Tingkat Lanjut\nBahasa Indonesia Tingkat Lanjut\nBahasa Inggris Tingkat Lanjut\nFisika\nKimia\nBiologi\nEkonomi\nSosiologi\nGeografi\nSejarah\nAntropologi\nPPKn/Pendidikan Pancasila\nBahasa Arab\nBahasa Jerman\nBahasa Prancis\nBahasa Jepang\nBahasa Korea\nBahasa Mandarin'});$('#requireConsent').prop('checked',true).trigger('change')})});
+    function toggleAudience(){const a=$('[name="audience"]:checked').val();$('#studentTargets').toggle(a==='siswa'||a==='both');$('#gtkTargets').toggle(a==='gtk'||a==='both')}
+    function toggleTargetModes(){const studentAll=$('[name="student_all"]:checked').val()==='1';const gtkAll=$('[name="gtk_all"]:checked').val()==='1';$('#studentCustomOptions').toggle(!studentAll).find(':input').prop('disabled',studentAll);$('#gtkCustomOptions').toggle(!gtkAll).find(':input').prop('disabled',gtkAll);$('.gtk-check').prop('disabled',gtkAll)}
+    function updateGtkCount(){const count=$('.gtk-check:checked').length;$('#gtkSelectedCount,#gtkModalCount').text(count)}
+    $('[name="audience"]').on('change',toggleAudience);$('.student-mode,.gtk-mode').on('change',toggleTargetModes);$('#requireConsent').on('change',()=>$('#consentBox').toggle($('#requireConsent').prop('checked')));
+    $('#classSearch').on('input',function(){const term=this.value.toLowerCase();$('#classChecklist .checklist-row').each(function(){$(this).toggle($(this).data('search').includes(term))})});
+    $('#allClasses').on('change',function(){$('.class-check').prop('checked',this.checked)});$('.class-check').on('change',function(){$('#allClasses').prop('checked',$('.class-check').length>0&&$('.class-check:not(:checked)').length===0)});
+    $('#gtkSearch').on('input',function(){const term=this.value.toLowerCase();$('.gtk-row').each(function(){$(this).toggle($(this).data('search').includes(term))});$('#allGtks').prop('checked',false)});
+    $('#allGtks').on('change',function(){$('.gtk-row:visible .gtk-check').prop('checked',this.checked);updateGtkCount()});$('.gtk-check').on('change',updateGtkCount);
+    toggleAudience();toggleTargetModes();updateGtkCount();$('#allClasses').prop('checked',$('.class-check').length>0&&$('.class-check:not(:checked)').length===0);$('#requireConsent').trigger('change');
+    $('#tkaPreset').on('click',function(){Swal.fire({icon:'question',title:'Gunakan preset TKA?',text:'Identitas dan pertanyaan saat ini akan diganti dengan contoh pemilihan dua mapel TKA kelas XII.',showCancelButton:true,confirmButtonText:'Gunakan Preset',cancelButtonText:'Batal',confirmButtonColor:'#2563eb'}).then(r=>{if(!r.isConfirmed)return;$('#pollTitle').val('Pemilihan Mata Pelajaran Pilihan TKA 2026');$('#pollDescription').val('Pilih tepat dua mata pelajaran pilihan Tes Kemampuan Akademik yang tercatat di rapor serta sesuai minat dan rencana studi lanjut.');$('[name="audience"][value="siswa"]').prop('checked',true).trigger('change');$('#studentCustom').prop('checked',true).trigger('change');$('.grade-check,.class-check').prop('checked',false);$('#grade12').prop('checked',true);$('#allClasses').prop('checked',false);$('#questionBuilder').empty();questionIndex=0;addQuestion({prompt:'Pilih tepat dua mata pelajaran pilihan TKA',type:'multiple',is_required:true,min_selections:2,max_selections:2,options_text:'Matematika Tingkat Lanjut\nBahasa Indonesia Tingkat Lanjut\nBahasa Inggris Tingkat Lanjut\nFisika\nKimia\nBiologi\nEkonomi\nSosiologi\nGeografi\nSejarah\nAntropologi\nPPKn/Pendidikan Pancasila\nBahasa Arab\nBahasa Jerman\nBahasa Prancis\nBahasa Jepang\nBahasa Korea\nBahasa Mandarin'});$('#requireConsent').prop('checked',true).trigger('change')})});
 });
 </script>
 @stop

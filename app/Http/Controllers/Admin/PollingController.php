@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
-use Spatie\Permission\Models\Role;
 
 class PollingController extends Controller
 {
@@ -154,10 +153,10 @@ class PollingController extends Controller
             'student_classes' => ['nullable', 'array'],
             'student_classes.*' => ['uuid', 'exists:kelas,id'],
             'gtk_all' => ['nullable', 'boolean'],
-            'gtk_types' => ['nullable', 'array'],
-            'gtk_types.*' => ['string', 'max:100'],
-            'gtk_roles' => ['nullable', 'array'],
-            'gtk_roles.*' => ['string', 'exists:roles,name'],
+            'gtk_categories' => ['nullable', 'array'],
+            'gtk_categories.*' => ['in:Pendidik,Tenaga Kependidikan'],
+            'gtks' => ['nullable', 'array'],
+            'gtks.*' => ['uuid', 'exists:gtks,id'],
         ]);
 
         if ($request->boolean('require_consent') && blank($data['consent_text'] ?? null)) {
@@ -188,8 +187,8 @@ class PollingController extends Controller
         if ($needsStudents && ! $request->boolean('student_all') && empty($data['student_grades']) && empty($data['student_classes'])) {
             throw ValidationException::withMessages(['student_grades' => 'Pilih semua siswa, tingkat, atau rombel target.']);
         }
-        if ($needsGtk && ! $request->boolean('gtk_all') && empty($data['gtk_types']) && empty($data['gtk_roles'])) {
-            throw ValidationException::withMessages(['gtk_types' => 'Pilih semua GTK, jenis PTK, atau role target.']);
+        if ($needsGtk && ! $request->boolean('gtk_all') && empty($data['gtk_categories']) && empty($data['gtks'])) {
+            throw ValidationException::withMessages(['gtk_categories' => 'Pilih semua GTK, kategori Guru/Staf, atau GTK tertentu.']);
         }
 
         return $data;
@@ -242,8 +241,8 @@ class PollingController extends Controller
         }
         if (in_array($data['audience'], ['gtk', 'both'], true)) {
             $this->saveTargets($polling, 'gtk', $request->boolean('gtk_all'), [
-                'jenis_ptk' => $data['gtk_types'] ?? [],
-                'role' => $data['gtk_roles'] ?? [],
+                'kategori_ptk' => $data['gtk_categories'] ?? [],
+                'gtk' => $data['gtks'] ?? [],
             ]);
         }
 
@@ -282,8 +281,11 @@ class PollingController extends Controller
             'classes' => Kelas::query()->with('tahunPelajaran')->where('is_active', true)
                 ->whereHas('tahunPelajaran', fn ($query) => $query->active())
                 ->orderBy('tingkat')->orderBy('nama_kelas')->get(),
-            'gtkTypes' => Gtk::query()->whereNotNull('jenis_ptk')->distinct()->orderBy('jenis_ptk')->pluck('jenis_ptk'),
-            'roles' => Role::query()->whereNotIn('name', ['Siswa', 'Super Admin', 'Admin'])->orderBy('name')->get(['name']),
+            'gtks' => Gtk::query()->whereHas('user', fn ($query) => $query->where('is_active', true))
+                ->orderBy('nama_lengkap')->get([
+                    'id', 'nama_lengkap', 'nik', 'peg_id', 'foto_profile', 'jenis_kelamin',
+                    'kategori_ptk', 'jenis_ptk', 'user_id',
+                ]),
         ];
     }
 

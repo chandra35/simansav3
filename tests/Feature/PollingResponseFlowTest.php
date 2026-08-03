@@ -96,6 +96,49 @@ class PollingResponseFlowTest extends TestCase
         $this->actingAs($user)->get(route('admin.polling.create'))
             ->assertOk()->assertSee('Preset TKA Kelas XII');
 
+        $gtkUser = User::withoutEvents(fn () => User::factory()->create([
+            'id' => (string) Str::uuid(),
+            'username' => 'polling-target-gtk-'.uniqid(),
+            'role' => 'gtk',
+            'is_active' => true,
+            'is_first_login' => false,
+        ]));
+        $gtk = Gtk::create([
+            'user_id' => $gtkUser->id,
+            'nama_lengkap' => 'TARGET GTK BUILDER TEST',
+            'nik' => (string) random_int(1000000000000000, 8999999999999999),
+            'jenis_kelamin' => 'L',
+            'kategori_ptk' => 'Pendidik',
+            'jenis_ptk' => 'Guru Mapel',
+        ]);
+        $this->actingAs($user)->post(route('admin.polling.store'), [
+            'title' => 'Polling Target GTK Custom',
+            'audience' => 'gtk',
+            'starts_at' => now()->addHour()->format('Y-m-d H:i:s'),
+            'ends_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            'reminder_interval_hours' => 6,
+            'action' => 'draft',
+            'gtk_all' => '0',
+            'gtk_categories' => ['Pendidik'],
+            'gtks' => [$gtk->id],
+            'questions' => [[
+                'prompt' => 'Masukan GTK',
+                'type' => 'long_text',
+                'is_required' => '1',
+            ]],
+        ])->assertRedirect();
+        $storedPolling = Polling::where('title', 'Polling Target GTK Custom')->firstOrFail();
+        $this->assertDatabaseHas('polling_targets', [
+            'polling_id' => $storedPolling->id,
+            'scope_type' => 'kategori_ptk',
+            'scope_value' => 'Pendidik',
+        ]);
+        $this->assertDatabaseHas('polling_targets', [
+            'polling_id' => $storedPolling->id,
+            'scope_type' => 'gtk',
+            'scope_value' => $gtk->id,
+        ]);
+
         $polling = Polling::create([
             'slug' => 'polling-report-'.uniqid(),
             'title' => 'Laporan Polling Test',
