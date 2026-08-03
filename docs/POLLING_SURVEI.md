@@ -4,7 +4,7 @@ Modul ini menyediakan builder polling generik untuk siswa dan GTK. Pengelola dap
 
 ## Hak akses
 
-- `manage-polling`: membuat, mengubah, menerbitkan, menutup, dan menghapus polling yang belum memiliki respons.
+- `manage-polling`: membuat, mengubah, menerbitkan, menutup, mengarsipkan, dan menggunakan riwayat sebagai preset.
 - `view-polling-results`: membuka dashboard hasil serta mengunduh Excel/PDF.
 - Super Admin, Admin, dan Operator menerima kedua permission. Kepala Madrasah dan WAKA menerima akses laporan.
 - Siswa dan GTK tidak memakai permission pengelola; akses mereka ditentukan oleh jenis akun, target polling, dan jadwal aktif.
@@ -25,7 +25,14 @@ Modul ini menyediakan builder polling generik untuk siswa dan GTK. Pengelola dap
 - Jawaban singkat
 - Jawaban panjang
 
-Gunakan tombol `Preset TKA Kelas XII` untuk membuat polling contoh pemilihan tepat dua mapel TKA bagi siswa tingkat XII. Preset memuat 18 mata pelajaran pilihan SMA/MA sesuai daftar pada surat contoh; isinya tetap dapat disunting sebelum disimpan.
+Menu `Preset Cepat` menyediakan contoh TKA Kelas XII, Survei Kepuasan, dan Konfirmasi Kegiatan. Preset TKA memuat 18 mata pelajaran pilihan SMA/MA sesuai daftar pada surat contoh. Semua isinya tetap dapat disunting sebelum disimpan.
+
+## Riwayat dan preset
+
+- Setiap polling menyimpan snapshot tahun ajaran aktif, semester aktif, tanggal dibuat, jadwal, target, pertanyaan, dan hasil. Snapshot tidak ikut berubah ketika tahun ajaran aktif berganti.
+- Polling tidak dihapus dari riwayat. Aksi Arsip menutup polling agar tidak menerima respons baru, tetapi laporan dan konfigurasinya tetap tersedia.
+- Tombol `Jadikan Preset` atau ikon salin pada daftar riwayat membuka builder baru dengan identitas, aturan, pertanyaan, dan target dari polling lama. Polling baru menyimpan referensi ke polling sumber sehingga rantai penggunaannya dapat diaudit.
+- Saat memakai riwayat lintas tahun ajaran, pengelola wajib memeriksa kembali target. Rombel yang ditampilkan selalu rombel aktif pada tahun berjalan; target rombel lama yang tidak aktif tidak ditawarkan kembali.
 
 ## Siklus polling
 
@@ -33,7 +40,7 @@ Gunakan tombol `Preset TKA Kelas XII` untuk membuat polling contoh pemilihan tep
 2. Terbitkan polling. Menu responden baru muncul ketika waktu mulai tercapai.
 3. Responden mengisi satu respons. Perubahan hanya tersedia bila `Izinkan perubahan jawaban` aktif.
 4. Pantau partisipasi dan statistik dari halaman detail.
-5. Tutup polling atau biarkan jadwal berakhir, kemudian unduh Excel/PDF.
+5. Tutup/arsipkan polling atau biarkan jadwal berakhir, kemudian unduh Excel/PDF. Riwayatnya dapat dipakai kembali sebagai preset kapan saja.
 
 Struktur pertanyaan dan target dikunci setelah respons pertama masuk agar laporan historis tidak berubah makna. Data identitas, tingkat, dan rombel responden juga disimpan sebagai snapshot ketika jawaban dikirim.
 

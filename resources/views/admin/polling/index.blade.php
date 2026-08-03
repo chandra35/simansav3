@@ -17,7 +17,7 @@
                 <div class="col-lg-8">
                     <div class="text-uppercase font-weight-bold small mb-2"><i class="fas fa-users mr-1"></i> Respons Terarah</div>
                     <h2 class="h3 font-weight-bold mb-2">Polling & Survei</h2>
-                    <p class="mb-0">Susun pertanyaan, tentukan responden siswa atau GTK, jadwalkan publikasi, dan pantau hasil dari satu modul.</p>
+                    <p class="mb-0">Susun polling baru atau gunakan kembali riwayat lengkap sebagai preset tanpa mengubah hasil sebelumnya.</p>
                 </div>
                 @can('manage-polling')
                 <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
@@ -40,29 +40,32 @@
     </div>
 
     <div class="card card-outline card-primary">
-        <div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-list-ul text-primary mr-2"></i>Daftar Polling</h3></div>
+        <div class="card-header" id="pollingHistory"><h3 class="card-title font-weight-bold"><i class="fas fa-history text-primary mr-2"></i>Riwayat Polling & Preset</h3></div>
+        <div class="card-body border-bottom py-3"><div class="callout callout-info mb-0 py-2"><small>Riwayat tidak dihapus. Tahun ajaran, semester, jadwal, hasil, dan sumber salinan tetap tercatat; gunakan tombol <i class="fas fa-copy"></i> untuk membuat polling baru dari konfigurasi lama.</small></div></div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="bg-light"><tr><th>Polling</th><th>Responden</th><th>Jadwal</th><th>Status</th><th class="text-center">Respons</th><th class="text-right">Aksi</th></tr></thead>
+                    <thead class="bg-light"><tr><th>Polling</th><th>Responden</th><th>Tahun Ajaran / Dibuat</th><th>Jadwal</th><th>Status</th><th class="text-center">Respons</th><th class="text-right">Aksi</th></tr></thead>
                     <tbody>
                     @forelse($pollings as $polling)
                         @php($phase = $polling->phase)
                         <tr>
-                            <td><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:420px">{{ $polling->description ?: 'Tanpa deskripsi' }}</div></td>
+                            <td><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:360px">{{ $polling->description ?: 'Tanpa deskripsi' }}</div>@if($polling->sourcePolling)<div class="small text-info mt-1"><i class="fas fa-copy mr-1"></i>Salinan dari {{ $polling->sourcePolling->title }}</div>@endif</td>
                             <td><span class="badge badge-light border text-uppercase">{{ $polling->audience === 'both' ? 'Siswa & GTK' : $polling->audience }}</span></td>
+                            <td class="small text-nowrap"><strong>{{ $polling->tahun_pelajaran_snapshot ?: 'Belum tercatat' }}</strong><div class="text-muted">{{ $polling->semester_snapshot ? 'Semester '.$polling->semester_snapshot.' · ' : '' }}{{ $polling->created_at->format('d/m/Y') }}</div></td>
                             <td class="small"><div>{{ $polling->starts_at->format('d/m/Y H:i') }}</div><div class="text-muted">s.d. {{ $polling->ends_at->format('d/m/Y H:i') }}</div></td>
                             <td><span class="badge badge-{{ ['draft'=>'secondary','scheduled'=>'info','open'=>'success','closed'=>'dark'][$phase] }}">{{ ['draft'=>'Draft','scheduled'=>'Terjadwal','open'=>'Dibuka','closed'=>'Ditutup'][$phase] }}</span></td>
                             <td class="text-center"><span class="badge badge-primary badge-pill px-3">{{ $polling->responses_count }}</span></td>
                             <td class="text-right text-nowrap">
                                 <a href="{{ route('admin.polling.show', $polling) }}" class="btn btn-sm btn-primary" title="Lihat laporan"><i class="fas fa-chart-bar"></i></a>
                                 @can('manage-polling')
+                                    <a href="{{ route('admin.polling.duplicate', $polling) }}" class="btn btn-sm btn-info" title="Gunakan sebagai preset"><i class="fas fa-copy"></i></a>
                                     @if(!$polling->responses_count)<a href="{{ route('admin.polling.edit', $polling) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>@endif
                                 @endcan
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-5"><i class="fas fa-poll-h fa-3x mb-3 d-block text-light"></i>Belum ada polling.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-poll-h fa-3x mb-3 d-block text-light"></i>Belum ada polling.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -78,6 +81,6 @@
 .simansa-polling-admin .simansa-polling-hero{border:0;border-radius:18px;overflow:hidden;box-shadow:0 18px 38px rgba(37,99,235,.16)}
 .simansa-polling-admin .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-admin .info-box-icon{width:62px;font-size:1.35rem}
 .simansa-polling-admin .table td,.simansa-polling-admin .table th{vertical-align:middle}
-@media(max-width:767.98px){.simansa-polling-admin .card-body{padding:1rem}.simansa-polling-admin .table{min-width:780px}}
+@media(max-width:767.98px){.simansa-polling-admin .card-body{padding:1rem}.simansa-polling-admin .table{min-width:980px}}
 </style>
 @stop

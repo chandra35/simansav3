@@ -167,6 +167,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [App\Http\Controllers\Admin\PollingController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\Admin\PollingController::class, 'create'])->middleware('permission:manage-polling')->name('create');
         Route::post('/', [App\Http\Controllers\Admin\PollingController::class, 'store'])->middleware('permission:manage-polling')->name('store');
+        Route::get('/{polling}/duplicate', [App\Http\Controllers\Admin\PollingController::class, 'duplicate'])->middleware('permission:manage-polling')->name('duplicate');
         Route::get('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'show'])->name('show');
         Route::get('/{polling}/edit', [App\Http\Controllers\Admin\PollingController::class, 'edit'])->middleware('permission:manage-polling')->name('edit');
         Route::put('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'update'])->middleware('permission:manage-polling')->name('update');

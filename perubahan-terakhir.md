@@ -6,6 +6,11 @@ Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Modul Polling & Survei lintas akun
 
+- Setiap polling kini merekam snapshot tahun ajaran, semester, tanggal pembuatan, serta sumber polling jika dibuat dari riwayat. Data ini tetap stabil saat tahun ajaran aktif berubah.
+- Daftar admin menjadi `Riwayat Polling & Preset`; setiap entri dapat disalin ke builder baru tanpa mengubah polling dan hasil lama.
+- Aksi hapus diganti menjadi arsip non-destruktif. Polling ditutup, tetapi konfigurasi, target, respons, laporan, dan jejak audit tetap tersimpan.
+- Builder menyediakan beberapa preset cepat (TKA Kelas XII, Survei Kepuasan, dan Konfirmasi Kegiatan), selain preset tanpa batas yang berasal dari seluruh riwayat polling.
+- Salinan polling menyimpan hubungan ke sumbernya dan meminta pengelola memeriksa kembali target aktif, khususnya bila preset berasal dari tahun ajaran lama.
 - Pemilih target diperjelas menjadi tiga pilihan responden: Siswa, GTK, atau Siswa & GTK, masing-masing dengan mode Semua dan Custom.
 - Target siswa custom menyediakan checklist tingkat X/XI/XII serta daftar rombel aktif yang bisa dicari dan dipilih semua.
 - Target GTK custom menyediakan kategori Guru/Staf dan modal tabel GTK individual dengan foto, NIK, ID PTK, jenis PTK, pencarian, serta pilihan massal pada hasil yang tampil.
@@ -26,6 +31,7 @@ File terkait:
 - `app/Services/PollingAudienceService.php`
 - `app/Services/PollingReportService.php`
 - `database/migrations/2026_08_03_090000_create_polling_module_tables.php`
+- `database/migrations/2026_08_03_110000_add_history_metadata_to_pollings.php`
 - `resources/views/admin/polling/`
 - `resources/views/polling/respondent/`
 - `docs/POLLING_SURVEI.md`

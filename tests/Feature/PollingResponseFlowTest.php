@@ -94,7 +94,7 @@ class PollingResponseFlowTest extends TestCase
         $this->actingAs($user)->get(route('admin.polling.index'))
             ->assertOk()->assertSee('Polling &amp; Survei', false);
         $this->actingAs($user)->get(route('admin.polling.create'))
-            ->assertOk()->assertSee('Preset TKA Kelas XII');
+            ->assertOk()->assertSee('Preset TKA Kelas XII')->assertSee('Survei Kepuasan');
 
         $gtkUser = User::withoutEvents(fn () => User::factory()->create([
             'id' => (string) Str::uuid(),
@@ -138,6 +138,34 @@ class PollingResponseFlowTest extends TestCase
             'scope_type' => 'gtk',
             'scope_value' => $gtk->id,
         ]);
+        $this->actingAs($user)->get(route('admin.polling.duplicate', $storedPolling))
+            ->assertOk()
+            ->assertSee('Salinan Polling Target GTK Custom')
+            ->assertSee('name="source_polling_id"', false)
+            ->assertSee('Masukan GTK');
+
+        $this->actingAs($user)->post(route('admin.polling.store'), [
+            'title' => 'Salinan Polling Target GTK Custom',
+            'audience' => 'gtk',
+            'starts_at' => now()->addHour()->format('Y-m-d H:i:s'),
+            'ends_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            'reminder_interval_hours' => 6,
+            'action' => 'draft',
+            'gtk_all' => '1',
+            'source_polling_id' => $storedPolling->id,
+            'questions' => [[
+                'prompt' => 'Masukan GTK',
+                'type' => 'long_text',
+                'is_required' => '1',
+            ]],
+        ])->assertRedirect();
+        $this->assertDatabaseHas('pollings', [
+            'title' => 'Salinan Polling Target GTK Custom',
+            'source_polling_id' => $storedPolling->id,
+        ]);
+
+        $this->actingAs($user)->delete(route('admin.polling.destroy', $storedPolling))->assertRedirect(route('admin.polling.index'));
+        $this->assertDatabaseHas('pollings', ['id' => $storedPolling->id, 'status' => 'closed']);
 
         $polling = Polling::create([
             'slug' => 'polling-report-'.uniqid(),

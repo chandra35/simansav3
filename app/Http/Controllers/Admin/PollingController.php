@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\Polling;
+use App\Models\TahunPelajaran;
 use App\Services\PollingReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class PollingController extends Controller
     {
         abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
 
-        $pollings = Polling::query()->withCount('responses')->latest()->paginate(15);
+        $pollings = Polling::query()->with('sourcePolling:id,title')->withCount('responses')->latest()->paginate(15);
         $summary = [
             'total' => Polling::count(),
             'open' => Polling::where('status', 'published')->where('starts_at', '<=', now())->where('ends_at', '>=', now())->count(),
@@ -51,9 +52,30 @@ class PollingController extends Controller
         return redirect()->route('admin.polling.show', $polling)->with('success', 'Polling berhasil dibuat.');
     }
 
+    public function duplicate(Polling $polling)
+    {
+        $this->authorizeManage();
+        $polling->load(['questions.options', 'targets']);
+
+        $template = $polling->replicate();
+        $template->setRelations($polling->getRelations());
+        $template->title = 'Salinan '.$polling->title;
+        $template->status = 'draft';
+        $template->starts_at = now()->addHour();
+        $template->ends_at = now()->addDays(7);
+        $template->published_at = null;
+        $template->source_polling_id = $polling->id;
+
+        return view('admin.polling.form', array_merge($this->formOptions(), [
+            'polling' => $template,
+            'sourcePolling' => $polling,
+        ]));
+    }
+
     public function show(Polling $polling)
     {
         abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
+        $polling->load('sourcePolling:id,title');
         $report = $this->reports->build($polling);
         return view('admin.polling.show', compact('polling', 'report'));
     }
@@ -100,11 +122,9 @@ class PollingController extends Controller
     public function destroy(Polling $polling)
     {
         $this->authorizeManage();
-        abort_if($polling->responses()->exists(), 422, 'Polling yang sudah memiliki respons tidak dapat dihapus.');
-        $title = $polling->title;
-        $polling->delete();
-        $this->log($polling, 'delete_polling', 'Menghapus polling '.$title.'.');
-        return redirect()->route('admin.polling.index')->with('success', 'Polling berhasil dihapus.');
+        $polling->update(['status' => 'closed', 'updated_by' => auth()->id()]);
+        $this->log($polling, 'archive_polling', 'Mengarsipkan polling '.$polling->title.' tanpa menghapus riwayat.');
+        return redirect()->route('admin.polling.index')->with('success', 'Polling diarsipkan dan tetap tersedia sebagai riwayat/preset.');
     }
 
     public function export(Polling $polling)
@@ -140,6 +160,7 @@ class PollingController extends Controller
             'consent_text' => ['nullable', 'string', 'max:2000'],
             'reminder_interval_hours' => ['required', 'integer', 'min:1', 'max:168'],
             'action' => ['required', 'in:draft,publish'],
+            'source_polling_id' => ['nullable', 'uuid', 'exists:pollings,id'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.prompt' => ['required', 'string', 'max:2000'],
             'questions.*.type' => ['required', 'in:single,multiple,short_text,long_text,yes_no'],
@@ -196,8 +217,10 @@ class PollingController extends Controller
 
     private function persist(Polling $polling, array $data, Request $request): Polling
     {
+        $creating = ! $polling->exists;
+        $activeYear = $creating ? TahunPelajaran::query()->active()->first() : null;
         $polling->fill([
-            'slug' => $polling->exists ? $polling->slug : $this->uniqueSlug($data['title']),
+            'slug' => $creating ? $this->uniqueSlug($data['title']) : $polling->slug,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'audience' => $data['audience'],
@@ -210,8 +233,12 @@ class PollingController extends Controller
             'consent_text' => $data['consent_text'] ?? null,
             'reminder_interval_hours' => $data['reminder_interval_hours'],
             'published_at' => $data['action'] === 'publish' ? ($polling->published_at ?: now()) : null,
-            'created_by' => $polling->exists ? $polling->created_by : auth()->id(),
+            'created_by' => $creating ? auth()->id() : $polling->created_by,
             'updated_by' => auth()->id(),
+            'tahun_pelajaran_id' => $creating ? $activeYear?->id : $polling->tahun_pelajaran_id,
+            'tahun_pelajaran_snapshot' => $creating ? $activeYear?->nama : $polling->tahun_pelajaran_snapshot,
+            'semester_snapshot' => $creating ? $activeYear?->semester_aktif : $polling->semester_snapshot,
+            'source_polling_id' => $creating ? ($data['source_polling_id'] ?? null) : $polling->source_polling_id,
         ])->save();
 
         $polling->questions()->delete();

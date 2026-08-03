@@ -1,15 +1,16 @@
 @extends('adminlte::page')
 
 @php
-    $editing = isset($polling);
-    $selected = fn($type, $audience) => $editing ? $polling->targets->where('audience_type', $audience)->where('scope_type', $type)->pluck('scope_value')->all() : [];
+    $hasTemplate = isset($polling);
+    $editing = $hasTemplate && $polling->exists;
+    $selected = fn($type, $audience) => $hasTemplate ? $polling->targets->where('audience_type', $audience)->where('scope_type', $type)->pluck('scope_value')->all() : [];
     $audienceValue = old('audience', $polling->audience ?? 'siswa');
-    $studentAllValue = (string) old('student_all', $editing && in_array('all', $polling->targets->where('audience_type', 'siswa')->pluck('scope_type')->all()) ? '1' : '0');
-    $gtkAllValue = (string) old('gtk_all', $editing && in_array('all', $polling->targets->where('audience_type', 'gtk')->pluck('scope_type')->all()) ? '1' : '0');
+    $studentAllValue = (string) old('student_all', $hasTemplate && in_array('all', $polling->targets->where('audience_type', 'siswa')->pluck('scope_type')->all()) ? '1' : '0');
+    $gtkAllValue = (string) old('gtk_all', $hasTemplate && in_array('all', $polling->targets->where('audience_type', 'gtk')->pluck('scope_type')->all()) ? '1' : '0');
     $selectedClasses = old('student_classes', $selected('kelas', 'siswa'));
     $selectedGtkCategories = old('gtk_categories', $selected('kategori_ptk', 'gtk'));
     $selectedGtks = old('gtks', $selected('gtk', 'gtk'));
-    $questions = old('questions', $editing ? $polling->questions->map(fn($q) => [
+    $questions = old('questions', $hasTemplate ? $polling->questions->map(fn($q) => [
         'prompt'=>$q->prompt,'type'=>$q->type,'is_required'=>$q->is_required,
         'min_selections'=>$q->min_selections,'max_selections'=>$q->max_selections,
         'options_text'=>$q->options->pluck('label')->implode("\n"),
@@ -27,7 +28,10 @@
 <div class="simansa-polling-form">
     <form method="POST" action="{{ $editing ? route('admin.polling.update',$polling) : route('admin.polling.store') }}" id="pollingForm">
         @csrf @if($editing) @method('PUT') @endif
-        <div class="card bg-gradient-primary text-white mb-4 simansa-form-hero"><div class="card-body"><div class="row align-items-center"><div class="col-lg-8"><div class="small font-weight-bold text-uppercase mb-2"><i class="fas fa-magic mr-1"></i> Builder Polling</div><h2 class="h3 font-weight-bold mb-2">Rancang respons yang terukur</h2><p class="mb-0">Atur identitas, target, pertanyaan, aturan pilihan, persetujuan, dan jadwal publikasi.</p></div><div class="col-lg-4 mt-3 mt-lg-0 text-lg-right"><button type="button" id="tkaPreset" class="btn btn-light"><i class="fas fa-graduation-cap mr-1"></i> Preset TKA Kelas XII</button></div></div></div></div>
+        @if(isset($sourcePolling))<input type="hidden" name="source_polling_id" value="{{ $sourcePolling->id }}">@endif
+        <div class="card bg-gradient-primary text-white mb-4 simansa-form-hero"><div class="card-body"><div class="row align-items-center"><div class="col-lg-8"><div class="small font-weight-bold text-uppercase mb-2"><i class="fas fa-magic mr-1"></i> Builder Polling</div><h2 class="h3 font-weight-bold mb-2">Rancang respons yang terukur</h2><p class="mb-0">Atur identitas, target, pertanyaan, aturan pilihan, persetujuan, dan jadwal publikasi.</p></div><div class="col-lg-4 mt-3 mt-lg-0 text-lg-right"><div class="dropdown d-inline-block"><button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown"><i class="fas fa-layer-group mr-1"></i> Preset Cepat</button><div class="dropdown-menu dropdown-menu-right"><button type="button" id="tkaPreset" class="dropdown-item"><i class="fas fa-graduation-cap text-primary mr-2"></i>Preset TKA Kelas XII</button><button type="button" id="satisfactionPreset" class="dropdown-item"><i class="fas fa-smile text-success mr-2"></i>Survei Kepuasan</button><button type="button" id="confirmationPreset" class="dropdown-item"><i class="fas fa-check-double text-info mr-2"></i>Konfirmasi Kegiatan</button><div class="dropdown-divider"></div><a href="{{ route('admin.polling.index') }}#pollingHistory" class="dropdown-item"><i class="fas fa-history text-secondary mr-2"></i>Preset dari Riwayat</a></div></div></div></div></div></div>
+
+        @if(isset($sourcePolling))<div class="alert alert-info border-0 shadow-sm"><i class="fas fa-copy mr-2"></i>Form disalin dari <strong>{{ $sourcePolling->title }}</strong> ({{ $sourcePolling->created_at->format('d/m/Y') }}, Tahun Ajaran {{ $sourcePolling->tahun_pelajaran_snapshot ?: 'belum tercatat' }}). Periksa kembali target responden aktif sebelum menyimpan.</div>@endif
 
         @if($errors->any())<div class="alert alert-danger"><strong>Periksa kembali form:</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 
@@ -153,6 +157,19 @@ $(function(){
     $('#allGtks').on('change',function(){$('.gtk-row:visible .gtk-check').prop('checked',this.checked);updateGtkCount()});$('.gtk-check').on('change',updateGtkCount);
     toggleAudience();toggleTargetModes();updateGtkCount();updateClassCount();filterClasses();filterGtks();$('#requireConsent').trigger('change');
     $('#tkaPreset').on('click',function(){Swal.fire({icon:'question',title:'Gunakan preset TKA?',text:'Identitas dan pertanyaan saat ini akan diganti dengan contoh pemilihan dua mapel TKA kelas XII.',showCancelButton:true,confirmButtonText:'Gunakan Preset',cancelButtonText:'Batal',confirmButtonColor:'#2563eb'}).then(r=>{if(!r.isConfirmed)return;$('#pollTitle').val('Pemilihan Mata Pelajaran Pilihan TKA 2026');$('#pollDescription').val('Pilih tepat dua mata pelajaran pilihan Tes Kemampuan Akademik yang tercatat di rapor serta sesuai minat dan rencana studi lanjut.');$('[name="audience"][value="siswa"]').prop('checked',true).trigger('change');$('#studentCustom').prop('checked',true).trigger('change');$('.grade-check,.class-check').prop('checked',false);$('#grade12').prop('checked',true);$('#allClasses').prop('checked',false);filterClasses();updateClassCount();$('#questionBuilder').empty();questionIndex=0;addQuestion({prompt:'Pilih tepat dua mata pelajaran pilihan TKA',type:'multiple',is_required:true,min_selections:2,max_selections:2,options_text:'Matematika Tingkat Lanjut\nBahasa Indonesia Tingkat Lanjut\nBahasa Inggris Tingkat Lanjut\nFisika\nKimia\nBiologi\nEkonomi\nSosiologi\nGeografi\nSejarah\nAntropologi\nPPKn/Pendidikan Pancasila\nBahasa Arab\nBahasa Jerman\nBahasa Prancis\nBahasa Jepang\nBahasa Korea\nBahasa Mandarin'});$('#requireConsent').prop('checked',true).trigger('change')})});
+    function usePreset(config){
+        Swal.fire({icon:'question',title:config.confirmTitle,text:'Identitas dan pertanyaan saat ini akan diganti.',showCancelButton:true,confirmButtonText:'Gunakan Preset',cancelButtonText:'Batal',confirmButtonColor:'#2563eb'}).then(r=>{
+            if(!r.isConfirmed)return;
+            $('#pollTitle').val(config.title);$('#pollDescription').val(config.description);
+            $('[name="audience"][value="'+config.audience+'"]').prop('checked',true).trigger('change');
+            if(config.audience==='both'){$('#studentAll,#gtkAll').prop('checked',true).trigger('change')}
+            if(config.audience==='gtk'){$('#gtkAll').prop('checked',true).trigger('change')}
+            $('#questionBuilder').empty();questionIndex=0;config.questions.forEach(addQuestion);
+            $('#requireConsent').prop('checked',!!config.consent).trigger('change');
+        });
+    }
+    $('#satisfactionPreset').on('click',()=>usePreset({confirmTitle:'Gunakan preset Survei Kepuasan?',title:'Survei Kepuasan Layanan',description:'Berikan penilaian dan masukan untuk membantu peningkatan mutu layanan sekolah.',audience:'both',consent:false,questions:[{prompt:'Bagaimana tingkat kepuasan Anda terhadap layanan?',type:'single',is_required:true,options_text:'Sangat Puas\nPuas\nCukup\nKurang Puas\nTidak Puas'},{prompt:'Saran atau masukan untuk perbaikan layanan',type:'long_text',is_required:false}]}));
+    $('#confirmationPreset').on('click',()=>usePreset({confirmTitle:'Gunakan preset Konfirmasi Kegiatan?',title:'Konfirmasi Keikutsertaan Kegiatan',description:'Konfirmasi kesediaan dan catat keterangan responden untuk pelaksanaan kegiatan.',audience:'gtk',consent:true,questions:[{prompt:'Apakah Anda bersedia mengikuti kegiatan tersebut?',type:'yes_no',is_required:true},{prompt:'Keterangan atau kebutuhan khusus',type:'long_text',is_required:false}]}));
 });
 </script>
 @stop

@@ -51,6 +51,7 @@ class PollingModuleArchitectureTest extends TestCase
     {
         $root = dirname(__DIR__, 2);
         $migration = file_get_contents($root.'/database/migrations/2026_08_03_090000_create_polling_module_tables.php');
+        $historyMigration = file_get_contents($root.'/database/migrations/2026_08_03_110000_add_history_metadata_to_pollings.php');
         $routes = file_get_contents($root.'/routes/web.php');
         $controller = file_get_contents($root.'/app/Http/Controllers/PollingResponseController.php');
         $adminController = file_get_contents($root.'/app/Http/Controllers/Admin/PollingController.php');
@@ -59,7 +60,11 @@ class PollingModuleArchitectureTest extends TestCase
 
         $this->assertStringContainsString("\$table->unique(['polling_id', 'user_id'])", $migration);
         $this->assertStringContainsString('polling_answer_options', $migration);
+        $this->assertStringContainsString('tahun_pelajaran_snapshot', $historyMigration);
+        $this->assertStringContainsString('semester_snapshot', $historyMigration);
+        $this->assertStringContainsString('source_polling_id', $historyMigration);
         $this->assertStringContainsString("permission:manage-polling", $routes);
+        $this->assertStringContainsString("name('duplicate')", $routes);
         $this->assertStringContainsString('isEligible($polling, $request->user())', $controller);
         $this->assertStringContainsString("contains('id', \$optionId)", $controller);
         $this->assertStringContainsString('PollingReportExport', $adminController);
@@ -76,6 +81,9 @@ class PollingModuleArchitectureTest extends TestCase
         $respondent = file_get_contents($root.'/resources/views/polling/respondent/show.blade.php');
 
         $this->assertStringContainsString('Preset TKA Kelas XII', $builder);
+        $this->assertStringContainsString('Survei Kepuasan', $builder);
+        $this->assertStringContainsString('Konfirmasi Kegiatan', $builder);
+        $this->assertStringContainsString('source_polling_id', $builder);
         $this->assertStringContainsString('min_selections:2,max_selections:2', $builder);
         $this->assertStringContainsString('Matematika Tingkat Lanjut', $builder);
         $this->assertStringContainsString('Bahasa Mandarin', $builder);

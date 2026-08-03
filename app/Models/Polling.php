@@ -14,6 +14,7 @@ class Polling extends Model
         'slug', 'title', 'description', 'audience', 'status', 'starts_at', 'ends_at',
         'allow_changes', 'show_results_after_submit', 'require_consent', 'consent_text',
         'reminder_interval_hours', 'published_at', 'created_by', 'updated_by',
+        'tahun_pelajaran_id', 'tahun_pelajaran_snapshot', 'semester_snapshot', 'source_polling_id',
     ];
 
     protected function casts(): array
@@ -46,6 +47,16 @@ class Polling extends Model
     public function notificationStates()
     {
         return $this->hasMany(PollingNotificationState::class);
+    }
+
+    public function tahunPelajaran()
+    {
+        return $this->belongsTo(TahunPelajaran::class);
+    }
+
+    public function sourcePolling()
+    {
+        return $this->belongsTo(self::class, 'source_polling_id')->withTrashed();
     }
 
     public function isOpen(): bool
