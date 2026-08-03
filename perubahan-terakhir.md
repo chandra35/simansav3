@@ -1,8 +1,22 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 2 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Perapihan tabel Data Siswa
+
+- Proporsi kolom Foto dan Nama/NISN diseimbangkan serta diberi lebar minimum agar avatar tidak lagi bertabrakan dengan identitas siswa.
+- Kolom Kelas diperlebar dan isi rombel, badge `Asrama Kampus 2`, serta penanda ketua kelas disusun vertikal agar tidak meluber ke kolom status.
+- Deretan tombol aksi diringkas menjadi satu dropdown Bootstrap `Aksi` yang rata kanan dan tetap memakai ikon FontAwesome untuk detail, edit, reset password, login sebagai siswa, dan hapus.
+- Seluruh permission dan handler aksi lama dipertahankan; menu hapus dipisahkan secara visual sebagai tindakan berisiko.
+- Tabel tetap menggunakan proporsi desktop yang seimbang dengan fallback scroll horizontal pada layar sempit.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/SiswaController.php`
+- `resources/views/admin/siswa/index.blade.php`
+- `tests/Unit/StudentTableResponsiveLayoutTest.php`
 
 ### Penyempurnaan UI Edit GTK
 

@@ -228,18 +228,18 @@ class SiswaController extends Controller
                 ->latest('created_at')
                 ->first();
             if ($kelasAktif && $canViewDetailKelas) {
-                $kelasNama = '<a href="' . e(route('admin.kelas.show', $kelasAktif)) . '"'
+                $kelasLabel = '<a href="' . e(route('admin.kelas.show', $kelasAktif)) . '"'
                     . ' class="font-weight-600 text-primary"'
                     . ' title="Lihat rombel ' . e($kelasAktif->nama_kelas) . '">'
                     . e($kelasAktif->nama_kelas)
-                    . '</a>' . $kelasAktif->asrama_badge;
+                    . '</a>';
             } elseif ($kelasAktif) {
-                $kelasNama = '<span class="text-muted" aria-disabled="true"'
+                $kelasLabel = '<span class="text-muted" aria-disabled="true"'
                     . ' title="Anda tidak memiliki akses detail rombel">'
                     . e($kelasAktif->nama_kelas)
-                    . '</span>' . $kelasAktif->asrama_badge;
+                    . '</span>';
             } else {
-                $kelasNama = '<span class="text-muted small">'
+                $kelasLabel = '<span class="text-muted small">'
                     . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '')
                     . 'Tanpa Rombel</span>';
             }
@@ -247,10 +247,15 @@ class SiswaController extends Controller
             $isKetuaKelas = $kelasAktif
                 && $kelasAktif->pivot->is_ketua_kelas
                 && $kelasAktif->pivot->ketua_kelas_selesai_at === null;
+            $kelasMeta = $kelasAktif ? $kelasAktif->asrama_badge : '';
             if ($isKetuaKelas) {
-                $kelasNama .= '<br><span class="badge badge-warning mt-1">'
+                $kelasMeta .= '<span class="badge badge-warning">'
                     . '<i class="fas fa-crown mr-1"></i>Ketua Kelas</span>';
             }
+            $kelasNama = '<div class="simansa-siswa-class-stack">'
+                . '<div class="simansa-siswa-class-name">' . $kelasLabel . '</div>'
+                . $kelasMeta
+                . '</div>';
 
             $jk = $item->jenis_kelamin;
             $jkBadge = $jk === 'L'
@@ -486,53 +491,65 @@ class SiswaController extends Controller
     private function getActionButtons($item)
     {
         $user = auth()->user();
-        $buttons = '<div class="btn-group" role="group">';
+        $studentId = e($item->id);
+        $menuItems = '';
         
         // View button - always shown if can view siswa
         if ($user->can('view-siswa')) {
-            $buttons .= '
-                <button type="button" class="btn btn-info btn-sm" onclick="showSiswa(\''.$item->id.'\')">
-                    <i class="fas fa-eye"></i>
+            $menuItems .= '
+                <button type="button" class="dropdown-item" onclick="showSiswa(\''.$studentId.'\')">
+                    <i class="fas fa-eye fa-fw mr-2 text-info"></i>Lihat detail
                 </button>';
         }
         
         // Edit button
         if ($user->can('edit-siswa')) {
-            $buttons .= '
-                <button type="button" class="btn btn-warning btn-sm" onclick="editSiswa(\''.$item->id.'\')">
-                    <i class="fas fa-edit"></i>
+            $menuItems .= '
+                <button type="button" class="dropdown-item" onclick="editSiswa(\''.$studentId.'\')">
+                    <i class="fas fa-edit fa-fw mr-2 text-warning"></i>Edit data
                 </button>';
         }
         
         // Reset Password button
         if ($user->can('reset-password-siswa')) {
-            $buttons .= '
-                <button type="button" class="btn btn-secondary btn-sm" onclick="resetPassword(\''.$item->id.'\')">
-                    <i class="fas fa-key"></i>
+            $menuItems .= '
+                <button type="button" class="dropdown-item" onclick="resetPassword(\''.$studentId.'\')">
+                    <i class="fas fa-key fa-fw mr-2 text-secondary"></i>Reset password
                 </button>';
         }
 
         if ($user->can('impersonate-users') && $item->user_id) {
-            $buttons .= '
-                <form method="POST" action="'.route('admin.impersonation.siswa.start', $item->id).'" target="_blank" data-no-overlay class="d-inline">
+            $menuItems .= '
+                <form method="POST" action="'.e(route('admin.impersonation.siswa.start', $item->id)).'" target="_blank" data-no-overlay class="m-0">
                     <input type="hidden" name="_token" value="'.csrf_token().'">
-                    <button type="submit" class="btn btn-primary btn-sm" title="Login As siswa">
-                        <i class="fas fa-user-secret"></i>
+                    <button type="submit" class="dropdown-item">
+                        <i class="fas fa-user-secret fa-fw mr-2 text-primary"></i>Login sebagai siswa
                     </button>
                 </form>';
         }
         
         // Delete button
         if ($user->can('delete-siswa')) {
-            $buttons .= '
-                <button type="button" class="btn btn-danger btn-sm" onclick="deleteSiswa(\''.$item->id.'\')">
-                    <i class="fas fa-trash"></i>
+            $menuItems .= '
+                <div class="dropdown-divider"></div>
+                <button type="button" class="dropdown-item text-danger" onclick="deleteSiswa(\''.$studentId.'\')">
+                    <i class="fas fa-trash-alt fa-fw mr-2"></i>Hapus siswa
                 </button>';
         }
-        
-        $buttons .= '</div>';
-        
-        return $buttons;
+
+        if ($menuItems === '') {
+            return '<span class="text-muted" aria-label="Tidak ada aksi">&mdash;</span>';
+        }
+
+        return '<div class="btn-group simansa-siswa-action-group">'
+            . '<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"'
+            . ' data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false"'
+            . ' title="Buka menu aksi siswa">'
+            . '<i class="fas fa-ellipsis-v mr-1"></i>Aksi'
+            . '</button>'
+            . '<div class="dropdown-menu dropdown-menu-right simansa-siswa-action-dropdown">'
+            . $menuItems
+            . '</div></div>';
     }
 
     /**

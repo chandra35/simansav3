@@ -571,10 +571,15 @@
             border-top: none;
         }
         .simansa-siswa-table .siswa-col-foto {
-            width: 4% !important;
+            width: 6% !important;
+            min-width: 58px;
+            padding-left: .45rem;
+            padding-right: .45rem;
         }
         .simansa-siswa-table .siswa-col-nama {
-            width: 19% !important;
+            width: 22% !important;
+            min-width: 190px;
+            padding-left: .85rem;
             overflow-wrap: anywhere;
             word-break: normal;
         }
@@ -583,35 +588,80 @@
             white-space: nowrap;
         }
         .simansa-siswa-table .siswa-col-kelas {
-            width: 7% !important;
+            width: 14% !important;
+            min-width: 140px;
             overflow-wrap: anywhere;
         }
         .simansa-siswa-table .siswa-col-status {
-            width: 8% !important;
+            width: 7% !important;
         }
         .simansa-siswa-table .siswa-col-keberadaan {
-            width: 10% !important;
+            width: 8% !important;
         }
         .simansa-siswa-table .siswa-col-tanggal {
-            width: 9% !important;
+            width: 8% !important;
             white-space: nowrap;
         }
         .simansa-siswa-table .siswa-col-aksi {
-            width: 15% !important;
-            white-space: normal;
+            width: 10% !important;
+            min-width: 88px;
+            white-space: nowrap;
         }
         .simansa-siswa-table tbody tr:hover td {
             background: #f0f7ff;
+        }
+        .simansa-siswa-table .simansa-siswa-class-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: .28rem;
+            min-width: 0;
+        }
+        .simansa-siswa-table .simansa-siswa-class-name {
+            max-width: 100%;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .simansa-siswa-table .siswa-col-kelas .badge {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.25;
+            text-align: left;
         }
         .simansa-siswa-table .siswa-col-aksi .btn-group {
             display: inline-flex;
             flex-wrap: nowrap;
             white-space: nowrap;
         }
-        .simansa-siswa-table .btn-group .btn {
-            padding: .2rem .45rem;
+        .simansa-siswa-action-group > .btn {
+            min-width: 72px;
+            padding: .3rem .6rem;
+            border-radius: .5rem;
             font-size: .78rem;
-            line-height: 1.4;
+            font-weight: 700;
+        }
+        .simansa-siswa-action-dropdown {
+            z-index: 1080;
+            min-width: 210px;
+            padding: .4rem;
+            border: 1px solid #dbe3ef;
+            border-radius: .65rem;
+            box-shadow: 0 16px 35px rgba(15, 23, 42, .16);
+        }
+        .simansa-siswa-action-dropdown .dropdown-item {
+            padding: .55rem .7rem;
+            border-radius: .42rem;
+            color: #334155;
+            font-size: .82rem;
+            font-weight: 600;
+        }
+        .simansa-siswa-action-dropdown .dropdown-item:hover,
+        .simansa-siswa-action-dropdown .dropdown-item:focus {
+            background: #eff6ff;
+            color: #1d4ed8;
         }
         .simansa-siswa-table .badge {
             font-size: .76rem;
@@ -1086,14 +1136,14 @@ $(document).ready(function() {
         },
         autoWidth: false,
         columnDefs: [
-            { targets: 0, width: '4%'  },   // foto
-            { targets: 1, width: '19%' },   // nama/nisn
+            { targets: 0, width: '6%'  },   // foto
+            { targets: 1, width: '22%' },   // nama/nisn
             { targets: 2, width: '4%'  },   // jk
-            { targets: 3, width: '7%'  },   // kelas
-            { targets: [4, 5, 6, 7], width: '8%' }, // status
-            { targets: 8, width: '10%' },   // keberadaan
-            { targets: 9, width: '9%'  },   // tgl masuk
-            { targets: 10, width: '15%' },  // aksi
+            { targets: 3, width: '14%' },   // kelas dan flag asrama
+            { targets: [4, 5, 6, 7], width: '7%' }, // status
+            { targets: 8, width: '8%' },    // keberadaan
+            { targets: 9, width: '8%'  },   // tgl masuk
+            { targets: 10, width: '10%' },  // aksi dropdown
         ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle siswa-col-foto' },
