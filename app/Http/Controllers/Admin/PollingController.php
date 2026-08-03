@@ -8,6 +8,9 @@ use App\Models\ActivityLog;
 use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\Polling;
+use App\Models\PollingOption;
+use App\Models\PollingQuestion;
+use App\Models\PollingResponse;
 use App\Models\TahunPelajaran;
 use App\Services\PollingReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -16,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class PollingController extends Controller
 {
@@ -78,6 +82,74 @@ class PollingController extends Controller
         $polling->load('sourcePolling:id,title');
         $report = $this->reports->build($polling);
         return view('admin.polling.show', compact('polling', 'report'));
+    }
+
+    public function respondents(Polling $polling)
+    {
+        $this->authorizeReport();
+        $rows = $this->reports->build($polling)['rows'];
+        $questions = $polling->questions()->orderBy('sort_order')->pluck('id');
+        $canUnlock = auth()->user()->can('manage-polling');
+
+        return DataTables::of($rows)
+            ->addIndexColumn()
+            ->addColumn('respondent', fn (array $row) => '<strong>'.e($row['name']).'</strong><div class="small text-muted">'.e($row['username']).'</div>')
+            ->addColumn('scope', function (array $row) {
+                $scope = e($row['class_name'] ?: strtoupper($row['type']));
+                return $scope.($row['grade'] ? '<div class="small text-muted">Tingkat '.e($row['grade']).'</div>' : '');
+            })
+            ->addColumn('response_status', function (array $row) {
+                if (! $row['answered']) return '<span class="badge badge-warning">Belum mengisi</span>';
+                if ($row['unlock_requested_at']) return '<span class="badge badge-warning"><i class="fas fa-bell mr-1"></i>Minta unlock</span>';
+                if (! $row['locked']) return '<span class="badge badge-info"><i class="fas fa-lock-open mr-1"></i>Terbuka</span>';
+                return '<span class="badge badge-success"><i class="fas fa-lock mr-1"></i>Terkunci</span>';
+            })
+            ->addColumn('submitted', fn (array $row) => $row['submitted_at']?->format('d/m/Y H:i') ?: '-')
+            ->addColumn('answers', fn (array $row) => $questions->map(fn ($id) => $row['answers'][$id] ?: '-')->values()->all())
+            ->addColumn('action', function (array $row) use ($polling, $canUnlock) {
+                $response = $row['response'];
+                if (! $canUnlock || ! $response || ! $row['locked'] || ! $polling->isOpen()) return '<span class="text-muted">—</span>';
+                $label = $row['unlock_requested_at'] ? 'Setujui unlock' : 'Buka kunci';
+                return '<button type="button" class="btn btn-sm btn-primary unlock-response" data-url="'.e(route('admin.polling.responses.unlock', [$polling, $response])).'" data-name="'.e($row['name']).'"><i class="fas fa-unlock-alt mr-1"></i>'.e($label).'</button>';
+            })
+            ->rawColumns(['respondent', 'scope', 'response_status', 'action'])
+            ->toJson();
+    }
+
+    public function voters(Polling $polling, PollingQuestion $question, PollingOption $option)
+    {
+        $this->authorizeReport();
+        abort_unless($question->polling_id === $polling->id && $option->polling_question_id === $question->id, 404);
+
+        $query = PollingResponse::query()
+            ->where('polling_id', $polling->id)
+            ->whereHas('answers', fn ($answer) => $answer
+                ->where('polling_question_id', $question->id)
+                ->whereHas('options', fn ($options) => $options->where('polling_options.id', $option->id)));
+
+        return DataTables::eloquent($query)
+            ->addIndexColumn()
+            ->addColumn('respondent', fn (PollingResponse $response) => '<strong>'.e($response->respondent_name).'</strong><div class="small text-muted">'.e(strtoupper($response->respondent_type)).'</div>')
+            ->addColumn('scope', fn (PollingResponse $response) => e($response->class_name ?: strtoupper($response->respondent_type)))
+            ->addColumn('submitted', fn (PollingResponse $response) => $response->submitted_at->format('d/m/Y H:i'))
+            ->rawColumns(['respondent'])
+            ->toJson();
+    }
+
+    public function unlock(Polling $polling, PollingResponse $response)
+    {
+        $this->authorizeManage();
+        abort_unless($response->polling_id === $polling->id, 404);
+        abort_unless($polling->isOpen(), 422, 'Polling sudah tidak berada pada periode pengisian.');
+
+        $response->update([
+            'unlock_requested_at' => null,
+            'unlocked_at' => now(),
+            'unlocked_by' => auth()->id(),
+        ]);
+        $this->log($polling, 'unlock_polling_response', 'Membuka kunci respons '.$response->respondent_name.' pada polling '.$polling->title.'.');
+
+        return response()->json(['success' => true, 'message' => 'Jawaban '.$response->respondent_name.' berhasil dibuka.']);
     }
 
     public function edit(Polling $polling)
@@ -319,6 +391,11 @@ class PollingController extends Controller
     private function authorizeManage(): void
     {
         abort_unless(auth()->user()->can('manage-polling'), 403);
+    }
+
+    private function authorizeReport(): void
+    {
+        abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
     }
 
     private function log(Polling $polling, string $type, string $description): void

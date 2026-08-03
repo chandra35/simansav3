@@ -42,7 +42,7 @@ Judul/Jadwal dan Deskripsi berada pada card terpisah. Deskripsi memakai editor v
 
 1. Simpan sebagai draft dan periksa pertanyaan serta target.
 2. Terbitkan polling. Menu responden baru muncul ketika waktu mulai tercapai.
-3. Responden mengisi satu respons. Perubahan hanya tersedia bila `Izinkan perubahan jawaban` aktif.
+3. Responden mengisi satu respons dan jawaban otomatis terkunci. Bila aturan polling mengizinkan, responden dapat meminta buka kunci; admin menyetujui permintaan dari tabel Status Responden dan izin revisi hanya berlaku satu kali.
 4. Pantau partisipasi dan statistik dari halaman detail.
 5. Tutup/arsipkan polling atau biarkan jadwal berakhir, kemudian unduh Excel/PDF. Riwayatnya dapat dipakai kembali sebagai preset kapan saja.
 
@@ -54,4 +54,4 @@ Modal SweetAlert2 hanya ditampilkan kepada responden target yang belum mengisi. 
 
 ## Laporan
 
-Dashboard menampilkan jumlah target, sudah/belum mengisi, persentase partisipasi, distribusi setiap opsi, dan tabel jawaban per responden. Responden lama tetap dipertahankan pada laporan walaupun kemudian berpindah kelas atau tidak lagi termasuk target aktif.
+Dashboard menampilkan jumlah target, sudah/belum mengisi, persentase partisipasi, dan distribusi setiap opsi. Angka pada opsi membuka modal data pemilih. Tabel Status Responden memakai pagination AJAX, menandai permintaan unlock, dan menyediakan aksi persetujuan untuk pengelola. Responden lama tetap dipertahankan pada laporan walaupun kemudian berpindah kelas atau tidak lagi termasuk target aktif.

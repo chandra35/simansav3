@@ -16,7 +16,7 @@ class PollingResponseFlowTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_targeted_student_can_submit_and_update_one_valid_response(): void
+    public function test_response_is_locked_until_admin_approves_unlock_request(): void
     {
         $user = User::withoutEvents(fn () => User::factory()->create([
             'id' => (string) Str::uuid(),
@@ -67,14 +67,49 @@ class PollingResponseFlowTest extends TestCase
 
         $this->actingAs($user)->post(route('siswa.polling.store', $polling), [
             'answers' => [$question->id => $optionB->id],
+        ])->assertSessionHasErrors('polling');
+
+        $this->actingAs($user)->post(route('siswa.polling.unlock-request', $polling))
+            ->assertRedirect();
+        $response = $polling->responses()->firstOrFail();
+        $this->assertNotNull($response->unlock_requested_at);
+
+        $role = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $admin = User::withoutEvents(fn () => User::factory()->create([
+            'id' => (string) Str::uuid(),
+            'username' => 'polling-unlock-admin-'.uniqid(),
+            'role' => 'super_admin',
+            'is_active' => true,
+            'is_first_login' => false,
+        ]));
+        $admin->assignRole($role);
+        $this->actingAs($admin)->postJson(route('admin.polling.responses.unlock', [$polling, $response]))
+            ->assertOk()->assertJson(['success' => true]);
+
+        $this->actingAs($user)->post(route('siswa.polling.store', $polling), [
+            'answers' => [$question->id => $optionB->id],
         ])->assertRedirect(route('siswa.polling.show', $polling));
 
         $this->assertDatabaseCount('polling_responses', 1);
         $this->assertDatabaseMissing('polling_answer_options', ['polling_option_id' => $optionA->id]);
         $this->assertDatabaseHas('polling_answer_options', ['polling_option_id' => $optionB->id]);
+        $this->assertTrue($response->fresh()->isLocked());
+
+        $voterTable = [
+            'draw' => 1, 'start' => 0, 'length' => 10,
+            'search' => ['value' => '', 'regex' => 'false'],
+            'columns' => [
+                ['data' => 'DT_RowIndex', 'name' => '', 'searchable' => 'false', 'orderable' => 'false', 'search' => ['value' => '', 'regex' => 'false']],
+                ['data' => 'respondent', 'name' => 'respondent_name', 'searchable' => 'true', 'orderable' => 'true', 'search' => ['value' => '', 'regex' => 'false']],
+                ['data' => 'scope', 'name' => 'class_name', 'searchable' => 'true', 'orderable' => 'true', 'search' => ['value' => '', 'regex' => 'false']],
+                ['data' => 'submitted', 'name' => 'submitted_at', 'searchable' => 'true', 'orderable' => 'true', 'search' => ['value' => '', 'regex' => 'false']],
+            ],
+        ];
+        $voters = $this->actingAs($admin)->getJson(route('admin.polling.voters', [$polling, $question, $optionB]).'?'.http_build_query($voterTable));
+        $voters->assertOk()->assertJsonPath('recordsFiltered', 1);
 
         $this->actingAs($user)->get(route('siswa.polling.show', $polling))
-            ->assertOk()->assertSee('Polling Alur Test');
+            ->assertOk()->assertSee('Jawaban sudah terkunci');
         $this->actingAs($user)->get(route('siswa.polling.index'))
             ->assertOk()->assertSee('Riwayat Respons');
     }
@@ -178,6 +213,17 @@ class PollingResponseFlowTest extends TestCase
         ]);
         $this->actingAs($user)->get(route('admin.polling.show', $polling))
             ->assertOk()->assertSee('Laporan Polling Test')->assertSee('Target Responden');
+
+        $respondentTable = [
+            'draw' => 1, 'start' => 0, 'length' => 10,
+            'search' => ['value' => '', 'regex' => 'false'],
+            'columns' => [
+                ['data' => 'DT_RowIndex', 'name' => '', 'searchable' => 'false', 'orderable' => 'false', 'search' => ['value' => '', 'regex' => 'false']],
+                ['data' => 'respondent', 'name' => 'name', 'searchable' => 'true', 'orderable' => 'true', 'search' => ['value' => '', 'regex' => 'false']],
+            ],
+        ];
+        $this->actingAs($user)->getJson(route('admin.polling.respondents', $polling).'?'.http_build_query($respondentTable))
+            ->assertOk()->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
     }
 
     public function test_targeted_gtk_can_open_polling_but_other_gtk_scope_is_denied(): void

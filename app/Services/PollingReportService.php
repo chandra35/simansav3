@@ -51,6 +51,8 @@ class PollingReportService
                 'response' => $response,
                 'answered' => (bool) $response,
                 'submitted_at' => $response?->submitted_at,
+                'locked' => $response?->isLocked() ?? false,
+                'unlock_requested_at' => $response?->unlock_requested_at,
                 'answers' => $answers,
             ]);
         });
@@ -80,6 +82,7 @@ class PollingReportService
                     fn ($response) => (bool) $response->answers->firstWhere('polling_question_id', $question->id)
                 )->count(),
                 'options' => $question->options->map(fn ($option) => [
+                    'id' => $option->id,
                     'label' => $option->label,
                     'count' => $counts[$option->id] ?? 0,
                 ]),

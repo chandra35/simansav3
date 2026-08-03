@@ -66,6 +66,7 @@ class PollingModuleArchitectureTest extends TestCase
         $root = dirname(__DIR__, 2);
         $migration = file_get_contents($root.'/database/migrations/2026_08_03_090000_create_polling_module_tables.php');
         $historyMigration = file_get_contents($root.'/database/migrations/2026_08_03_110000_add_history_metadata_to_pollings.php');
+        $lockMigration = file_get_contents($root.'/database/migrations/2026_08_03_150000_add_lock_workflow_to_polling_responses.php');
         $routes = file_get_contents($root.'/routes/web.php');
         $controller = file_get_contents($root.'/app/Http/Controllers/PollingResponseController.php');
         $adminController = file_get_contents($root.'/app/Http/Controllers/Admin/PollingController.php');
@@ -77,8 +78,12 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('tahun_pelajaran_snapshot', $historyMigration);
         $this->assertStringContainsString('semester_snapshot', $historyMigration);
         $this->assertStringContainsString('source_polling_id', $historyMigration);
+        $this->assertStringContainsString('unlock_requested_at', $lockMigration);
+        $this->assertStringContainsString('unlocked_by', $lockMigration);
         $this->assertStringContainsString("permission:manage-polling", $routes);
         $this->assertStringContainsString("name('duplicate')", $routes);
+        $this->assertStringContainsString("name('responses.unlock')", $routes);
+        $this->assertStringContainsString("name('polling.unlock-request')", $routes);
         $this->assertStringContainsString('isEligible($polling, $request->user())', $controller);
         $this->assertStringContainsString("contains('id', \$optionId)", $controller);
         $this->assertStringContainsString('PollingReportExport', $adminController);
@@ -120,6 +125,7 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('@media(max-width:575.98px)', $builder);
         $this->assertStringContainsString('option-grid', $respondent);
         $this->assertStringContainsString('description_html', $respondent);
+        $this->assertStringContainsString('Minta Buka Kunci', $respondent);
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);
     }
 }

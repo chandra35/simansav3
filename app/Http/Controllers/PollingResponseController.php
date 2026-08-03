@@ -56,8 +56,8 @@ class PollingResponseController extends Controller
         abort_unless($polling->isOpen(), 422, 'Waktu pengisian polling sudah berakhir atau belum dimulai.');
 
         $existing = $polling->responses()->where('user_id', $request->user()->id)->first();
-        if ($existing && ! $polling->allow_changes) {
-            throw ValidationException::withMessages(['polling' => 'Jawaban polling ini sudah dikirim dan tidak dapat diubah.']);
+        if ($existing && $existing->isLocked()) {
+            throw ValidationException::withMessages(['polling' => 'Jawaban sudah dikunci. Ajukan permintaan buka kunci kepada admin untuk mengubahnya.']);
         }
         if ($polling->require_consent && ! $request->boolean('consent')) {
             throw ValidationException::withMessages(['consent' => 'Anda harus menyetujui pernyataan sebelum mengirim jawaban.']);
@@ -78,6 +78,10 @@ class PollingResponseController extends Controller
                 'class_name' => $context['class_name'],
                 'grade' => $context['grade'],
                 'submitted_at' => now(),
+                'locked_at' => now(),
+                'unlock_requested_at' => null,
+                'unlocked_at' => null,
+                'unlocked_by' => null,
             ])->save();
 
             $response->answers()->delete();
@@ -110,6 +114,31 @@ class PollingResponseController extends Controller
 
         return redirect($this->audience->respondentRoute($request->user(), $polling))
             ->with('success', $existing ? 'Jawaban berhasil diperbarui.' : 'Jawaban berhasil dikirim. Terima kasih.');
+    }
+
+    public function requestUnlock(Request $request, Polling $polling)
+    {
+        $this->context($request);
+        abort_unless($polling->isOpen() && $polling->allow_changes, 403);
+        abort_unless($this->audience->isEligible($polling, $request->user()), 403);
+
+        $response = $polling->responses()->where('user_id', $request->user()->id)->firstOrFail();
+        abort_unless($response->isLocked(), 422, 'Jawaban sedang terbuka dan dapat diperbarui.');
+
+        if (! $response->unlock_requested_at) {
+            $response->update(['unlock_requested_at' => now()]);
+            ActivityLog::create([
+                'user_id' => $request->user()->id,
+                'activity_type' => 'request_unlock_polling_response',
+                'model_type' => PollingResponse::class,
+                'model_id' => $response->id,
+                'description' => 'Meminta buka kunci respons polling '.$polling->title.'.',
+                'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(),
+                'url' => $request->fullUrl(), 'method' => $request->method(),
+            ]);
+        }
+
+        return back()->with('success', 'Permintaan buka kunci sudah dikirim kepada admin.');
     }
 
     public function snooze(Request $request, Polling $polling)

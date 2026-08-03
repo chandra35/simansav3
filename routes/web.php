@@ -168,6 +168,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/create', [App\Http\Controllers\Admin\PollingController::class, 'create'])->middleware('permission:manage-polling')->name('create');
         Route::post('/', [App\Http\Controllers\Admin\PollingController::class, 'store'])->middleware('permission:manage-polling')->name('store');
         Route::get('/{polling}/duplicate', [App\Http\Controllers\Admin\PollingController::class, 'duplicate'])->middleware('permission:manage-polling')->name('duplicate');
+        Route::get('/{polling}/respondents', [App\Http\Controllers\Admin\PollingController::class, 'respondents'])->name('respondents');
+        Route::get('/{polling}/questions/{question}/options/{option}/voters', [App\Http\Controllers\Admin\PollingController::class, 'voters'])->name('voters');
+        Route::post('/{polling}/responses/{response}/unlock', [App\Http\Controllers\Admin\PollingController::class, 'unlock'])->middleware('permission:manage-polling')->name('responses.unlock');
         Route::get('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'show'])->name('show');
         Route::get('/{polling}/edit', [App\Http\Controllers\Admin\PollingController::class, 'edit'])->middleware('permission:manage-polling')->name('edit');
         Route::put('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'update'])->middleware('permission:manage-polling')->name('update');
@@ -511,6 +514,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/polling', [App\Http\Controllers\PollingResponseController::class, 'index'])->name('gtk.polling.index');
         Route::get('/gtk/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'show'])->name('gtk.polling.show');
         Route::post('/gtk/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'store'])->name('gtk.polling.store');
+        Route::post('/gtk/polling/{polling}/unlock-request', [App\Http\Controllers\PollingResponseController::class, 'requestUnlock'])->name('gtk.polling.unlock-request');
         Route::post('/gtk/polling/{polling}/snooze', [App\Http\Controllers\PollingResponseController::class, 'snooze'])->name('gtk.polling.snooze');
     });
     
@@ -1110,6 +1114,7 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::get('/polling', [App\Http\Controllers\PollingResponseController::class, 'index'])->name('polling.index');
     Route::get('/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'show'])->name('polling.show');
     Route::post('/polling/{polling}', [App\Http\Controllers\PollingResponseController::class, 'store'])->name('polling.store');
+    Route::post('/polling/{polling}/unlock-request', [App\Http\Controllers\PollingResponseController::class, 'requestUnlock'])->name('polling.unlock-request');
     Route::post('/polling/{polling}/snooze', [App\Http\Controllers\PollingResponseController::class, 'snooze'])->name('polling.snooze');
     
     // Profile Management for Siswa

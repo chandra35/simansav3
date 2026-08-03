@@ -18,6 +18,9 @@ File terkait:
 
 ### Modul Polling & Survei lintas akun
 
+- Angka jumlah pada setiap opsi hasil polling kini dapat diklik untuk membuka modal daftar pemilih lengkap dengan rombel/peran dan waktu memilih.
+- Tabel `Status Responden` menggunakan DataTables AJAX dengan pencarian serta pagination, sehingga laporan besar tidak lagi merender seluruh baris di halaman awal.
+- Setiap jawaban otomatis terkunci setelah dikirim. Responden dapat meminta buka kunci bila diizinkan, admin mendapat badge permintaan dan tombol persetujuan, lalu izin revisi habis setelah jawaban dikirim kembali.
 - Judul/Jadwal dan Deskripsi polling kini dipisahkan ke card berbeda agar form lebih terstruktur dan uraian panjang tidak bercampur dengan identitas polling.
 - Deskripsi menggunakan editor visual Summernote yang mendukung paragraf/Enter, tebal, miring, garis bawah, serta daftar; hasilnya tampil dalam card `Informasi Polling` pada preview, halaman responden, laporan admin, dan PDF.
 - Format deskripsi disanitasi terpusat pada model: elemen berbahaya dan atribut HTML dibuang, sedangkan ringkasan daftar serta modal pengingat memakai versi teks biasa.
