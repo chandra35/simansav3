@@ -55,8 +55,41 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
 <style>
-.simansa-polling-report .report-hero{border:0;border-radius:18px;overflow:hidden}.simansa-polling-report .rich-description{color:#334155;line-height:1.7}.simansa-polling-report .rich-description p:last-child,.simansa-polling-report .rich-description ul:last-child,.simansa-polling-report .rich-description ol:last-child{margin-bottom:0}.simansa-polling-report .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-report .info-box-icon{width:62px}.simansa-polling-report .table td,.simansa-polling-report .table th{vertical-align:middle}.simansa-polling-report .question-column{min-width:180px;max-width:260px}.simansa-polling-report .voter-count{text-decoration:none}.simansa-polling-report .dataTables_filter{text-align:right}.simansa-polling-report .dataTables_filter input{margin-left:.5rem}.simansa-polling-report #respondentTable{min-width:980px}.simansa-polling-report .modal .table{min-width:620px}@media(max-width:767.98px){.simansa-polling-report .card-header{align-items:flex-start}.simansa-polling-report .card-tools{float:none!important;clear:both;padding-top:.65rem}.simansa-polling-report .dataTables_filter{text-align:left;margin-top:.75rem}.simansa-polling-report .dataTables_filter input{width:calc(100% - 45px)}.simansa-polling-report #respondentTable{min-width:0}.simansa-polling-report #respondent-status .table-responsive{overflow-x:visible}.simansa-polling-report #respondentTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before{background-color:#2563eb;border:0;box-shadow:none}.simansa-polling-report #respondentTable.dtr-inline.collapsed>tbody>tr.parent>td.dtr-control:before{background-color:#64748b}.simansa-polling-report #respondentTable .child .btn{min-width:40px;min-height:40px}}
+.simansa-polling-report .report-hero{border:0;border-radius:18px;overflow:hidden}
+.simansa-polling-report .rich-description{color:#334155;line-height:1.7}
+.simansa-polling-report .rich-description p:last-child,.simansa-polling-report .rich-description ul:last-child,.simansa-polling-report .rich-description ol:last-child{margin-bottom:0}
+.simansa-polling-report .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}
+.simansa-polling-report .info-box-icon{width:62px}
+.simansa-polling-report .table td,.simansa-polling-report .table th{vertical-align:middle}
+.simansa-polling-report .question-column{min-width:180px;max-width:260px}
+.simansa-polling-report .voter-count{text-decoration:none}
+.simansa-polling-report .dataTables_filter{text-align:right}
+.simansa-polling-report .dataTables_filter input{margin-left:.5rem}
+.simansa-polling-report #respondentTable{min-width:980px}
+.simansa-polling-report .modal .table{min-width:620px}
 .simansa-polling-report .polling-stat-link{color:inherit;display:block;text-decoration:none}.simansa-polling-report .polling-stat-link .info-box{transition:box-shadow .2s ease,transform .2s ease}.simansa-polling-report .polling-stat-link:hover .info-box,.simansa-polling-report .polling-stat-link:focus .info-box{box-shadow:0 .5rem 1rem rgba(15,23,42,.14)!important;transform:translateY(-2px)}
+@media(max-width:767.98px){
+    .simansa-polling-report .card-header{align-items:flex-start}
+    .simansa-polling-report .card-tools{float:none!important;clear:both;width:100%;padding-top:.65rem}
+    .simansa-polling-report .card-tools .btn{min-height:40px}
+    .simansa-polling-report .dataTables_filter{text-align:left;margin-top:.75rem}
+    .simansa-polling-report .dataTables_filter label{display:flex;align-items:center;width:100%;gap:.5rem}
+    .simansa-polling-report .dataTables_filter input{width:100%;min-width:0;margin-left:0}
+    .simansa-polling-report #respondent-status .card-body{padding:.75rem}
+    .simansa-polling-report #respondent-status .table-responsive{overflow-x:visible}
+    .simansa-polling-report #respondentTable{width:100%!important;min-width:100%!important;table-layout:auto!important}
+    .simansa-polling-report #respondentTable thead th,.simansa-polling-report #respondentTable tbody td{white-space:nowrap}
+    .simansa-polling-report #respondentTable .polling-col-respondent{min-width:165px;white-space:normal}
+    .simansa-polling-report #respondentTable .polling-col-status{min-width:112px}
+    .simansa-polling-report #respondentTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before{background-color:#2563eb;border:0;box-shadow:none;line-height:1rem}
+    .simansa-polling-report #respondentTable.dtr-inline.collapsed>tbody>tr.parent>td.dtr-control:before{background-color:#64748b}
+    .simansa-polling-report .polling-mobile-detail{display:grid;gap:.65rem;padding:.25rem 0}
+    .simansa-polling-report .polling-mobile-detail__item{display:grid;grid-template-columns:minmax(104px,34%) minmax(0,1fr);gap:.7rem;align-items:start;padding-bottom:.55rem;border-bottom:1px solid #e2e8f0}
+    .simansa-polling-report .polling-mobile-detail__item:last-child{padding-bottom:0;border-bottom:0}
+    .simansa-polling-report .polling-mobile-detail__label{color:#475569;font-size:.71rem;font-weight:800;letter-spacing:.035em;text-transform:uppercase;overflow-wrap:anywhere}
+    .simansa-polling-report .polling-mobile-detail__value{min-width:0;color:#0f172a;white-space:normal;overflow-wrap:anywhere}
+    .simansa-polling-report .polling-mobile-detail__value .btn{display:inline-flex;min-width:40px;min-height:40px;align-items:center;justify-content:center}
+}
 </style>
 @stop
 
@@ -68,11 +101,21 @@ $(function(){
     const escapeHtml=value=>$('<div>').text(value??'-').html();
     const tableLanguage={processing:'Memproses...',search:'Cari:',lengthMenu:'Tampilkan _MENU_ data',info:'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',infoEmpty:'Belum ada data',zeroRecords:'Tidak ditemukan data yang sesuai',paginate:{first:'Pertama',last:'Terakhir',next:'Selanjutnya',previous:'Sebelumnya'}};
     const useMobileResponsiveTable=window.matchMedia('(max-width: 767.98px)').matches;
+    const mobileDetailsRenderer=function(api,rowIdx,columns){
+        const details=$.map(columns,function(column){
+            if(!column.hidden)return '';
+            return '<div class="polling-mobile-detail__item" data-dt-row="'+column.rowIndex+'" data-dt-column="'+column.columnIndex+'">'
+                +'<div class="polling-mobile-detail__label">'+escapeHtml(column.title)+'</div>'
+                +'<div class="polling-mobile-detail__value">'+(column.data||'&mdash;')+'</div>'
+                +'</div>';
+        }).join('');
+        return details?$('<div class="polling-mobile-detail"></div>').append(details):false;
+    };
     let respondentStatus='all';
-    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,responsive:useMobileResponsiveTable,searchDelay:350,ajax:{url:'{{ route('admin.polling.respondents',$polling) }}',data:data=>{data.status=respondentStatus}},order:[],pageLength:10,columnDefs:[{responsivePriority:1,targets:1},{responsivePriority:2,targets:3},{responsivePriority:3,targets:2}],columns:[
-        {data:'DT_RowIndex',orderable:false,searchable:false},{data:'respondent',name:'name'},{data:'scope',name:'class_name'},{data:'response_status',orderable:false,searchable:false},{data:'submitted',name:'submitted_at'},
-        @foreach($polling->questions as $index=>$question){data:'answers',orderable:false,searchable:false,render:(answers)=>escapeHtml((answers||[])[{{ $index }}]||'-')},@endforeach
-        {data:'action',orderable:false,searchable:false}
+    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,responsive:useMobileResponsiveTable?{details:{type:'inline',target:0,renderer:mobileDetailsRenderer}}:false,searchDelay:350,ajax:{url:'{{ route('admin.polling.respondents',$polling) }}',data:data=>{data.status=respondentStatus}},order:[],pageLength:10,columnDefs:[{responsivePriority:1,targets:1},{responsivePriority:2,targets:3},{responsivePriority:3,targets:2}],columns:[
+        {data:'DT_RowIndex',orderable:false,searchable:false,className:'text-center align-middle polling-col-index'},{data:'respondent',name:'name',className:'align-middle polling-col-respondent'},{data:'scope',name:'class_name',className:'align-middle polling-col-scope'},{data:'response_status',orderable:false,searchable:false,className:'align-middle polling-col-status'},{data:'submitted',name:'submitted_at',className:'align-middle polling-col-time'},
+        @foreach($polling->questions as $index=>$question){data:'answers',orderable:false,searchable:false,className:'align-middle polling-col-answer',render:(answers)=>escapeHtml((answers||[])[{{ $index }}]||'-')},@endforeach
+        {data:'action',orderable:false,searchable:false,className:'text-center align-middle polling-col-action'}
     ],language:tableLanguage});
     $(document).on('click','.polling-stat-link',function(event){event.preventDefault();respondentStatus=$(this).data('status')||'all';const labels={all:'Semua',answered:'Sudah Mengisi',pending:'Belum Mengisi',unlock:'Minta Unlock'};$('#respondentFilterLabel').text(labels[respondentStatus]||'Semua');respondentTable.ajax.reload(()=>document.getElementById('respondent-status').scrollIntoView({behavior:'smooth',block:'start'}),true)});
     let voterTable=null;
