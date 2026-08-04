@@ -290,6 +290,17 @@
         margin-top: 1rem;
     }
     .wizard-step { cursor: pointer; }
+
+    @media (max-width: 575.98px) {
+        .wizard-nav {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+        .wizard-nav .btn {
+            min-height: 48px;
+            width: 100%;
+        }
+    }
 </style>
 @stop
 
@@ -379,7 +390,7 @@
                     <small class="text-muted">{{ $user->name }} &middot; NISN {{ $user->username }}</small>
                 </div>
             </div>
-            <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm">
+            <form action="{{ route('siswa.force-setup.update') }}" method="POST" id="setupForm" data-no-overlay>
                 @csrf
                 <div class="card-body">
                     {{-- Wizard step indicator --}}
@@ -484,7 +495,7 @@
                     </div>
                     <div class="wizard-nav">
                         <span></span>
-                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext1" disabled>
+                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext1">
                             Lanjut <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -560,7 +571,7 @@
                         <button type="button" class="btn btn-outline-secondary btn-lg" data-nav="prev">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </button>
-                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext2" {{ $emailMustChange ? 'disabled' : '' }}>
+                        <button type="button" class="btn btn-primary btn-lg" data-nav="next" id="btnNext2">
                             Lanjut <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -613,7 +624,7 @@
                         <button type="button" class="btn btn-outline-secondary btn-lg" data-nav="prev">
                             <i class="fas fa-arrow-left"></i> Kembali
                         </button>
-                        <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg flex-grow-1" id="submitBtn" disabled>
+                        <button type="submit" class="btn btn-{{ $isAdminReset ? 'danger' : 'primary' }} btn-lg flex-grow-1" id="submitBtn">
                             <i class="fas fa-shield-alt"></i> Simpan &amp; Amankan Akun Saya
                         </button>
                     </div>
@@ -668,14 +679,25 @@
 <!-- Toastr -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
-// Toastr configuration
-toastr.options = {
-    "closeButton": true,
-    "progressBar": true,
-    "positionClass": "toast-top-right",
-    "timeOut": "3000",
-    "extendedTimeOut": "1000"
-};
+// Fitur utama tidak boleh gagal hanya karena CDN notifikasi tidak termuat.
+if (window.toastr) {
+    window.toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "3000",
+        "extendedTimeOut": "1000"
+    };
+}
+
+function showSetupNotification(type, message) {
+    if (window.toastr && typeof window.toastr[type] === 'function') {
+        window.toastr[type](message);
+        return;
+    }
+
+    console[type === 'error' ? 'error' : 'log'](message);
+}
 
 // Dismiss blocker overlay
 $('#btnDismissBlocker').on('click', function() {
@@ -698,13 +720,28 @@ function showPane(index) {
         document.getElementById(id).classList.toggle('active', i === index);
     });
     updateSetupValidationState();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+        window.scrollTo(0, 0);
+    }
 }
 
 function canLeavePane(index) {
     var paneId = wizardPanes[index];
     var nextBtn = document.querySelector('#' + paneId + ' [data-nav="next"]');
-    return !nextBtn || !nextBtn.disabled;
+    if (!nextBtn) return true;
+
+    updateSetupValidationState();
+    if (nextBtn.getAttribute('data-form-valid') === 'true') return true;
+
+    var pane = document.getElementById(paneId);
+    var invalidField = pane ? pane.querySelector(':invalid') : null;
+    if (invalidField) {
+        invalidField.focus();
+        if (typeof invalidField.reportValidity === 'function') invalidField.reportValidity();
+    }
+    return false;
 }
 
 $(document).on('click', '[data-nav="next"]', function() {
@@ -717,7 +754,14 @@ $(document).on('click', '[data-nav="prev"]', function() {
 // Klik indikator step: mundur bebas, maju hanya jika step sebelumnya valid
 $('.wizard-step').on('click', function() {
     var stepId = this.id;
-    var paneId = Object.keys(wizardStepIds).find(function(p) { return wizardStepIds[p] === stepId; });
+    var paneId = null;
+    Object.keys(wizardStepIds).some(function(p) {
+        if (wizardStepIds[p] === stepId) {
+            paneId = p;
+            return true;
+        }
+        return false;
+    });
     var target = wizardPanes.indexOf(paneId);
     if (target < 0) return;
     if (target > currentPane) {
@@ -741,15 +785,15 @@ $('#fotoInput').on('change', function() {
     
     // Validate file type
     var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-        toastr.error('Format file harus JPG atau PNG!');
+    if (allowedTypes.indexOf(file.type) === -1) {
+        showSetupNotification('error', 'Format file harus JPG atau PNG!');
         this.value = '';
         return;
     }
     
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-        toastr.error('Ukuran file maksimal 2MB!');
+        showSetupNotification('error', 'Ukuran file maksimal 2MB!');
         this.value = '';
         return;
     }
@@ -765,11 +809,17 @@ $('#fotoInput').on('change', function() {
 
 // Initialize cropper when modal is shown
 $('#cropperModal').on('shown.bs.modal', function() {
+    if (typeof window.Cropper !== 'function') {
+        $('#cropperModal').modal('hide');
+        showSetupNotification('error', 'Editor foto belum termuat. Silakan coba lagi atau lewati foto profil.');
+        return;
+    }
+
     var image = document.getElementById('cropperPreview');
     if (cropper) {
         cropper.destroy();
     }
-    cropper = new Cropper(image, {
+    cropper = new window.Cropper(image, {
         aspectRatio: 1,
         viewMode: 2,
         dragMode: 'move',
@@ -826,9 +876,9 @@ $('#btnCropSave').on('click', function() {
                 $('#cropperModal').modal('hide');
                 window.fotoUploaded = true;
                 updateSetupValidationState();
-                toastr.success('Foto berhasil diupload!');
+                showSetupNotification('success', 'Foto berhasil diupload!');
             } else {
-                toastr.error('Gagal: ' + (response.message || 'Terjadi kesalahan tidak diketahui'));
+                showSetupNotification('error', 'Gagal: ' + (response.message || 'Terjadi kesalahan tidak diketahui'));
             }
         },
         error: function(xhr, status, error) {
@@ -845,7 +895,7 @@ $('#btnCropSave').on('click', function() {
             } else if (error) {
                 msg = error;
             }
-            toastr.error(msg);
+            showSetupNotification('error', msg);
         },
         complete: function() {
             btn.prop('disabled', false).html('<i class="fas fa-check"></i> Simpan Foto');
@@ -854,8 +904,8 @@ $('#btnCropSave').on('click', function() {
 });
 
 function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = document.getElementById(fieldId + '-icon');
+    var field = document.getElementById(fieldId);
+    var icon = document.getElementById(fieldId + '-icon');
     
     if (field.type === 'password') {
         field.type = 'text';
@@ -870,11 +920,11 @@ function togglePassword(fieldId) {
 
 // Password strength checker
 document.getElementById('password').addEventListener('input', function() {
-    const password = this.value;
-    const strengthBar = document.getElementById('password-strength');
-    const hint = document.getElementById('password-hint');
+    var password = this.value;
+    var strengthBar = document.getElementById('password-strength');
+    var hint = document.getElementById('password-hint');
     
-    let strength = 0;
+    var strength = 0;
     if (password.length >= 8) strength += 25;
     if (password.match(/[a-z]/)) strength += 25;
     if (password.match(/[A-Z]/)) strength += 25;
@@ -908,9 +958,10 @@ document.getElementById('password').addEventListener('input', function() {
 document.getElementById('password_confirmation').addEventListener('input', checkPasswordMatch);
 
 function checkPasswordMatch() {
-    const password = document.getElementById('password').value;
-    const confirmation = document.getElementById('password_confirmation').value;
-    const matchDiv = document.getElementById('password-match');
+    var password = document.getElementById('password').value;
+    var confirmationField = document.getElementById('password_confirmation');
+    var confirmation = confirmationField.value;
+    var matchDiv = document.getElementById('password-match');
     
     if (confirmation === '') {
         matchDiv.innerHTML = '';
@@ -934,14 +985,18 @@ function setRequirementState(el, isValid, validText, invalidText) {
 }
 
 function updateSetupValidationState() {
-    const initialEmail = (document.getElementById('initialEmail')?.value || '').trim().toLowerCase();
-    const currentEmail = (document.getElementById('email')?.value || '').trim().toLowerCase();
-    const emailMustChange = document.getElementById('emailMustChange')?.value === '1';
-    const password = document.getElementById('password').value;
-    const confirmation = document.getElementById('password_confirmation').value;
-    const submitBtn = document.getElementById('submitBtn');
+    var initialEmailField = document.getElementById('initialEmail');
+    var emailField = document.getElementById('email');
+    var emailMustChangeField = document.getElementById('emailMustChange');
+    var initialEmail = ((initialEmailField ? initialEmailField.value : '') || '').trim().toLowerCase();
+    var currentEmail = ((emailField ? emailField.value : '') || '').trim().toLowerCase();
+    var emailMustChange = !!emailMustChangeField && emailMustChangeField.value === '1';
+    var password = document.getElementById('password').value;
+    var confirmationField = document.getElementById('password_confirmation');
+    var confirmation = confirmationField.value;
+    var submitBtn = document.getElementById('submitBtn');
 
-    let isEmailValid;
+    var isEmailValid;
     if (emailMustChange) {
         // Email wajib diisi, harus berbeda dari email lama
         isEmailValid = currentEmail !== '' && (initialEmail === '' || currentEmail !== initialEmail);
@@ -950,8 +1005,19 @@ function updateSetupValidationState() {
         isEmailValid = true;
     }
 
-    const isPasswordLength = password.length >= 8;
-    const isPasswordMatch = isPasswordLength && confirmation !== '' && password === confirmation;
+    var isPasswordLength = password.length >= 8;
+    var isPasswordMatch = isPasswordLength && confirmation !== '' && password === confirmation;
+
+    confirmationField.setCustomValidity(
+        confirmation !== '' && password !== confirmation ? 'Konfirmasi password tidak sama.' : ''
+    );
+    if (emailField) {
+        emailField.setCustomValidity(
+            emailMustChange && currentEmail !== '' && initialEmail !== '' && currentEmail === initialEmail
+                ? 'Gunakan email aktif yang berbeda dari email lama.'
+                : ''
+        );
+    }
 
     setRequirementState(
         document.getElementById('reqPasswordLength'),
@@ -985,19 +1051,19 @@ function updateSetupValidationState() {
     setWizardStep('wstep3', window.fotoUploaded === true, activePaneId === 'pane3');
 
     var btnNext1 = document.getElementById('btnNext1');
-    if (btnNext1) btnNext1.disabled = !isPasswordMatch;
+    if (btnNext1) btnNext1.setAttribute('data-form-valid', isPasswordMatch ? 'true' : 'false');
     var btnNext2 = document.getElementById('btnNext2');
-    if (btnNext2) btnNext2.disabled = emailMustChange ? !isEmailValid : false;
+    if (btnNext2) btnNext2.setAttribute('data-form-valid', (!emailMustChange || isEmailValid) ? 'true' : 'false');
 
-    if (submitBtn) {
-        submitBtn.disabled = !(isEmailValid && isPasswordMatch);
-    }
+    // Tombol final sengaja tidak dikunci lewat JavaScript. Browser akan menjalankan
+    // validasi native saat submit, termasuk saat autofill mobile tidak memicu event input.
+    if (submitBtn) submitBtn.setAttribute('data-form-valid', (isEmailValid && isPasswordMatch) ? 'true' : 'false');
 }
 
 function setWizardStep(id, isDone, isActive) {
-    const step = document.getElementById(id);
+    var step = document.getElementById(id);
     if (!step) return;
-    const icon = step.querySelector('.wizard-step-icon i');
+    var icon = step.querySelector('.wizard-step-icon i');
     step.classList.remove('done', 'active');
     if (isDone) {
         step.classList.add('done');
@@ -1008,13 +1074,36 @@ function setWizardStep(id, isDone, isActive) {
     }
 }
 
-document.getElementById('email')?.addEventListener('input', updateSetupValidationState);
+var setupEmailField = document.getElementById('email');
+if (setupEmailField) {
+    setupEmailField.addEventListener('input', updateSetupValidationState);
+    setupEmailField.addEventListener('change', updateSetupValidationState);
+}
 document.getElementById('password').addEventListener('input', updateSetupValidationState);
+document.getElementById('password').addEventListener('change', updateSetupValidationState);
 document.getElementById('password_confirmation').addEventListener('input', updateSetupValidationState);
+document.getElementById('password_confirmation').addEventListener('change', updateSetupValidationState);
 updateSetupValidationState();
 
 // Form submit with loading
-document.getElementById('setupForm').addEventListener('submit', function() {
+document.getElementById('setupForm').addEventListener('submit', function(event) {
+    var form = this;
+    var password = document.getElementById('password').value;
+    var confirmation = document.getElementById('password_confirmation').value;
+
+    updateSetupValidationState();
+
+    var passwordInvalid = password.length < 8 || password !== confirmation;
+    if (passwordInvalid || !form.checkValidity()) {
+        event.preventDefault();
+        showPane(passwordInvalid ? 0 : wizardPanes.indexOf('pane2'));
+        if (typeof form.reportValidity === 'function') form.reportValidity();
+        return;
+    }
+
+    var submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
     document.getElementById('loadingOverlay').style.display = 'flex';
 });
 </script>

@@ -1,8 +1,21 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 3 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Perbaikan force password siswa pada perangkat mobile
+
+- Tombol `Lanjut` dan `Simpan & Amankan Akun Saya` tidak lagi bergantung pada status `disabled` dari JavaScript, sehingga autofill/password manager mobile yang tidak memicu event `input` tidak membuat wizard berhenti merespons.
+- Validasi password, konfirmasi, dan email wajib tetap dijalankan saat submit serta diperkuat oleh validasi backend; tombol dikunci hanya setelah form valid benar-benar dikirim untuk mencegah submit ganda.
+- Form memakai overlay penyimpanan lokal tanpa ditumpuk overlay navigasi global, dengan tombol aksi selebar layar dan tinggi sentuh minimum pada ponsel.
+- Inisialisasi form tidak lagi gagal ketika CDN Toastr atau Cropper belum termuat, dan sintaks JavaScript kritis dibuat kompatibel dengan browser mobile lama.
+- Ditambahkan pengujian regresi untuk alur siswa pasca-reset admin dengan email pribadi tetap dipertahankan serta progressive enhancement tombol submit.
+
+File terkait:
+
+- `resources/views/siswa/profile/force-setup.blade.php`
+- `tests/Feature/StudentForceSetupFlowTest.php`
 
 ### Perbaikan resize textarea global
 
