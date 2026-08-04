@@ -13,6 +13,7 @@ Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 - Tampilan desktop, otorisasi setiap aksi, dan alur server-side pagination tetap dipertahankan.
 - Responsive child-row dibatasi hanya untuk viewport mobile maksimal `767,98px`; laptop/desktop selalu memakai tabel penuh tanpa tombol expand.
 - Klik foto siswa menghentikan propagasi event sehingga hanya membuka preview foto dan tidak ikut membuka child-row.
+- Perhitungan lebar tabel Data Siswa pada mobile memakai layout otomatis dan header tidak dibungkus per huruf, sehingga DataTables dapat memindahkan kolom sekunder ke child-row tanpa badge atau teks saling menimpa.
 
 File terkait:
 

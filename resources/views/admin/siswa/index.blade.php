@@ -840,7 +840,23 @@
                 overflow-x: visible;
             }
             .simansa-siswa-table {
-                min-width: 0 !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                table-layout: auto !important;
+            }
+            .simansa-siswa-table thead th,
+            .simansa-siswa-table tbody td {
+                white-space: nowrap;
+            }
+            .simansa-siswa-table .siswa-col-nama,
+            .simansa-siswa-table .siswa-col-kelas {
+                white-space: normal;
+            }
+            .simansa-siswa-table .siswa-col-nama {
+                min-width: 180px;
+            }
+            .simansa-siswa-table .siswa-col-kelas {
+                min-width: 118px;
             }
             .simansa-siswa-table.dtr-inline.collapsed > tbody > tr > td.dtr-control::before {
                 background-color: #2563eb;

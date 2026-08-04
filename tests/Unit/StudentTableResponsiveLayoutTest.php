@@ -57,6 +57,8 @@ class StudentTableResponsiveLayoutTest extends TestCase
         $this->assertStringContainsString('dataTables.responsive.min.js', $view);
         $this->assertStringContainsString("window.matchMedia('(max-width: 767.98px)').matches", $view);
         $this->assertStringContainsString('responsive: useMobileResponsiveTable ?', $view);
+        $this->assertStringContainsString('table-layout: auto !important;', $view);
+        $this->assertStringContainsString('min-width: 100% !important;', $view);
         $this->assertStringContainsString("type: 'inline'", $view);
         $this->assertStringContainsString('target: 1', $view);
         $this->assertStringContainsString('simansa-mobile-detail__item', $view);
