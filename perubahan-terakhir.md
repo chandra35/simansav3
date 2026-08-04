@@ -4,6 +4,25 @@ Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Optimalisasi laporan admin Polling & Survei
+
+- Card `Target Responden`, `Sudah Mengisi`, `Belum Mengisi`, dan `Partisipasi` kini dapat diklik untuk membuka sekaligus memfilter tabel Status Responden.
+- Badge permintaan unlock juga menjadi pintasan langsung ke daftar responden yang meminta pembukaan jawaban.
+- Pilihan pada hasil polling diurutkan berdasarkan jumlah pemilih terbanyak; pilihan dengan jumlah sama tetap mengikuti urutan konfigurasi awal.
+- Kolom pertanyaan TKA `Pilih tepat dua mata pelajaran pilihan...` diringkas menjadi `Mapel Pilihan` tanpa mengubah pertanyaan maupun data yang tersimpan.
+- N+1 query saat membaca rombel aktif dihilangkan dengan memakai relasi yang sudah dimuat. Halaman awal kini menggunakan ringkasan laporan dan tidak lagi membentuk seluruh baris tabel responden.
+- Filter status diteruskan ke endpoint DataTables sehingga tabel AJAX hanya mengembalikan kelompok responden yang sedang dipilih.
+- Terjemahan DataTables ditanam langsung pada halaman laporan sehingga tabel tidak lagi menunggu berkas bahasa dari CDN eksternal.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/PollingController.php`
+- `app/Services/PollingAudienceService.php`
+- `app/Services/PollingReportService.php`
+- `resources/views/admin/polling/show.blade.php`
+- `tests/Unit/PollingReportServiceTest.php`
+- `tests/Unit/PollingModuleArchitectureTest.php`
+
 ### Perbaikan force password siswa pada perangkat mobile
 
 - Tombol `Lanjut` dan `Simpan & Amankan Akun Saya` tidak lagi bergantung pada status `disabled` dari JavaScript, sehingga autofill/password manager mobile yang tidak memicu event `input` tidak membuat wizard berhenti merespons.

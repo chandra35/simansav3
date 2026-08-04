@@ -9,6 +9,30 @@ class PollingReportService
 {
     public function __construct(private PollingAudienceService $audience) {}
 
+    public function summary(Polling $polling): array
+    {
+        $polling->loadMissing([
+            'questions.options',
+            'targets',
+            'responses.answers.options',
+        ]);
+
+        $targets = $this->audience->targetRespondents($polling);
+        $knownUsers = $targets->pluck('user_id');
+        $historicalCount = $polling->responses->whereNotIn('user_id', $knownUsers->all())->count();
+        $targetCount = $targets->count() + $historicalCount;
+        $answeredCount = $polling->responses->count();
+
+        return [
+            'questionStats' => $this->questionStats($polling),
+            'targetCount' => $targetCount,
+            'answeredCount' => $answeredCount,
+            'pendingCount' => max(0, $targetCount - $answeredCount),
+            'responseRate' => $targetCount ? round(($answeredCount / $targetCount) * 100, 1) : 0,
+            'unlockRequestCount' => $polling->responses->whereNotNull('unlock_requested_at')->count(),
+        ];
+    }
+
     public function build(Polling $polling): array
     {
         $polling->loadMissing([
@@ -57,7 +81,26 @@ class PollingReportService
             ]);
         });
 
-        $questionStats = $polling->questions->map(function ($question) use ($polling) {
+        $questionStats = $this->questionStats($polling);
+
+        $targetCount = $targets->count();
+        $answeredCount = $rows->where('answered', true)->count();
+
+        return [
+            'targets' => $targets,
+            'rows' => $rows,
+            'questionStats' => $questionStats,
+            'targetCount' => $targetCount,
+            'answeredCount' => $answeredCount,
+            'pendingCount' => max(0, $targetCount - $answeredCount),
+            'responseRate' => $targetCount ? round(($answeredCount / $targetCount) * 100, 1) : 0,
+            'unlockRequestCount' => $rows->whereNotNull('unlock_requested_at')->count(),
+        ];
+    }
+
+    private function questionStats(Polling $polling): Collection
+    {
+        return $polling->questions->map(function ($question) use ($polling) {
             if (! in_array($question->type, ['single', 'multiple', 'yes_no'], true)) {
                 return [
                     'question' => $question,
@@ -85,27 +128,21 @@ class PollingReportService
                     'id' => $option->id,
                     'label' => $option->label,
                     'count' => $counts[$option->id] ?? 0,
-                ]),
+                    'sort_order' => $option->sort_order,
+                ])->sort(function (array $left, array $right) {
+                    return ($right['count'] <=> $left['count'])
+                        ?: ($left['sort_order'] <=> $right['sort_order']);
+                })->map(function (array $option) {
+                    unset($option['sort_order']);
+                    return $option;
+                })->values(),
             ];
         });
-
-        $targetCount = $targets->count();
-        $answeredCount = $rows->where('answered', true)->count();
-
-        return [
-            'targets' => $targets,
-            'rows' => $rows,
-            'questionStats' => $questionStats,
-            'targetCount' => $targetCount,
-            'answeredCount' => $answeredCount,
-            'pendingCount' => max(0, $targetCount - $answeredCount),
-            'responseRate' => $targetCount ? round(($answeredCount / $targetCount) * 100, 1) : 0,
-        ];
     }
 
     public function publicStats(Polling $polling): Collection
     {
-        return collect($this->build($polling)['questionStats'])->map(function ($stat) {
+        return collect($this->summary($polling)['questionStats'])->map(function ($stat) {
             return [
                 'prompt' => $stat['question']->prompt,
                 'type' => $stat['question']->type,

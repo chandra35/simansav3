@@ -80,15 +80,19 @@ class PollingController extends Controller
     {
         abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
         $polling->load('sourcePolling:id,title');
-        $report = $this->reports->build($polling);
+        $report = $this->reports->summary($polling);
         return view('admin.polling.show', compact('polling', 'report'));
     }
 
-    public function respondents(Polling $polling)
+    public function respondents(Request $request, Polling $polling)
     {
         $this->authorizeReport();
         $rows = $this->reports->build($polling)['rows'];
-        $questions = $polling->questions()->orderBy('sort_order')->pluck('id');
+        $status = $request->string('status')->toString();
+        if ($status === 'answered') $rows = $rows->where('answered', true)->values();
+        if ($status === 'pending') $rows = $rows->where('answered', false)->values();
+        if ($status === 'unlock') $rows = $rows->whereNotNull('unlock_requested_at')->values();
+        $questions = $polling->questions->pluck('id');
         $canUnlock = auth()->user()->can('manage-polling');
 
         return DataTables::of($rows)

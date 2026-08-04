@@ -19,12 +19,12 @@
 
     <div class="row">
         @foreach([
-            ['Target Responden',$report['targetCount'],'fa-bullseye','primary'],
-            ['Sudah Mengisi',$report['answeredCount'],'fa-check-circle','success'],
-            ['Belum Mengisi',$report['pendingCount'],'fa-user-clock','warning'],
-            ['Partisipasi',$report['responseRate'].'%','fa-percentage','info'],
-        ] as [$label,$value,$icon,$color])
-        <div class="col-6 col-xl-3"><div class="info-box bg-white shadow-sm"><span class="info-box-icon bg-{{ $color }}"><i class="fas {{ $icon }}"></i></span><div class="info-box-content"><span class="info-box-text">{{ $label }}</span><span class="info-box-number">{{ $value }}</span></div></div></div>
+            ['Target Responden',$report['targetCount'],'fa-bullseye','primary','all'],
+            ['Sudah Mengisi',$report['answeredCount'],'fa-check-circle','success','answered'],
+            ['Belum Mengisi',$report['pendingCount'],'fa-user-clock','warning','pending'],
+            ['Partisipasi',$report['responseRate'].'%','fa-percentage','info','all'],
+        ] as [$label,$value,$icon,$color,$status])
+        <div class="col-6 col-xl-3"><a href="#respondent-status" class="polling-stat-link" data-status="{{ $status }}" aria-label="Lihat {{ strtolower($label) }}"><div class="info-box bg-white shadow-sm"><span class="info-box-icon bg-{{ $color }}"><i class="fas {{ $icon }}"></i></span><div class="info-box-content"><span class="info-box-text">{{ $label }}</span><span class="info-box-number">{{ $value }}</span><span class="small text-primary">Lihat data <i class="fas fa-arrow-right ml-1"></i></span></div></div></a></div>
         @endforeach
     </div>
 
@@ -46,7 +46,7 @@
         @endforeach
     </div>
 
-    <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-users text-primary mr-2"></i>Status Responden @if($report['rows']->whereNotNull('unlock_requested_at')->isNotEmpty())<span class="badge badge-warning ml-2"><i class="fas fa-bell mr-1"></i>{{ $report['rows']->whereNotNull('unlock_requested_at')->count() }} minta unlock</span>@endif</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-hover w-100" id="respondentTable"><thead class="bg-light"><tr><th>#</th><th>Responden</th><th>Rombel/Peran</th><th>Status Jawaban</th><th>Waktu</th>@foreach($polling->questions as $question)<th class="question-column">{{ Str::limit($question->prompt,35) }}</th>@endforeach<th>Aksi</th></tr></thead></table></div></div></div>
+    <div class="card card-outline card-primary" id="respondent-status"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-users text-primary mr-2"></i>Status Responden <span class="badge badge-light ml-2" id="respondentFilterLabel">Semua</span> @if($report['unlockRequestCount'] > 0)<a href="#respondent-status" class="badge badge-warning ml-2 polling-stat-link" data-status="unlock"><i class="fas fa-bell mr-1"></i>{{ $report['unlockRequestCount'] }} minta unlock</a>@endif</h3></div><div class="card-body"><div class="table-responsive"><table class="table table-hover w-100" id="respondentTable"><thead class="bg-light"><tr><th>#</th><th>Responden</th><th>Rombel/Peran</th><th>Status Jawaban</th><th>Waktu</th>@foreach($polling->questions as $question)<th class="question-column">{{ Str::contains(Str::lower($question->prompt), 'mata pelajaran pilihan') ? 'Mapel Pilihan' : Str::limit($question->prompt,35) }}</th>@endforeach<th>Aksi</th></tr></thead></table></div></div></div>
 
     <div class="modal fade" id="voterModal" tabindex="-1" role="dialog" aria-labelledby="voterModalTitle" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable" role="document"><div class="modal-content"><div class="modal-header"><div><div class="small text-uppercase text-muted font-weight-bold">Data Pemilih</div><h5 class="modal-title font-weight-bold" id="voterModalTitle">Pilihan</h5></div><button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div class="table-responsive"><table class="table table-hover w-100" id="voterTable"><thead class="bg-light"><tr><th>#</th><th>Pemilih</th><th>Rombel/Peran</th><th>Waktu Memilih</th></tr></thead></table></div></div></div></div></div>
 </div>
@@ -55,6 +55,7 @@
 @section('css')
 <style>
 .simansa-polling-report .report-hero{border:0;border-radius:18px;overflow:hidden}.simansa-polling-report .rich-description{color:#334155;line-height:1.7}.simansa-polling-report .rich-description p:last-child,.simansa-polling-report .rich-description ul:last-child,.simansa-polling-report .rich-description ol:last-child{margin-bottom:0}.simansa-polling-report .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-report .info-box-icon{width:62px}.simansa-polling-report .table td,.simansa-polling-report .table th{vertical-align:middle}.simansa-polling-report .question-column{min-width:180px;max-width:260px}.simansa-polling-report .voter-count{text-decoration:none}.simansa-polling-report .dataTables_filter{text-align:right}.simansa-polling-report .dataTables_filter input{margin-left:.5rem}.simansa-polling-report #respondentTable{min-width:980px}.simansa-polling-report .modal .table{min-width:620px}@media(max-width:767.98px){.simansa-polling-report .card-header{align-items:flex-start}.simansa-polling-report .card-tools{float:none!important;clear:both;padding-top:.65rem}.simansa-polling-report .dataTables_filter{text-align:left;margin-top:.75rem}.simansa-polling-report .dataTables_filter input{width:calc(100% - 45px)}}
+.simansa-polling-report .polling-stat-link{color:inherit;display:block;text-decoration:none}.simansa-polling-report .polling-stat-link .info-box{transition:box-shadow .2s ease,transform .2s ease}.simansa-polling-report .polling-stat-link:hover .info-box,.simansa-polling-report .polling-stat-link:focus .info-box{box-shadow:0 .5rem 1rem rgba(15,23,42,.14)!important;transform:translateY(-2px)}
 </style>
 @stop
 
@@ -62,13 +63,16 @@
 <script>
 $(function(){
     const escapeHtml=value=>$('<div>').text(value??'-').html();
-    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,searchDelay:350,ajax:'{{ route('admin.polling.respondents',$polling) }}',order:[],pageLength:10,columns:[
+    const tableLanguage={processing:'Memproses...',search:'Cari:',lengthMenu:'Tampilkan _MENU_ data',info:'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',infoEmpty:'Belum ada data',zeroRecords:'Tidak ditemukan data yang sesuai',paginate:{first:'Pertama',last:'Terakhir',next:'Selanjutnya',previous:'Sebelumnya'}};
+    let respondentStatus='all';
+    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,searchDelay:350,ajax:{url:'{{ route('admin.polling.respondents',$polling) }}',data:data=>{data.status=respondentStatus}},order:[],pageLength:10,columns:[
         {data:'DT_RowIndex',orderable:false,searchable:false},{data:'respondent',name:'name'},{data:'scope',name:'class_name'},{data:'response_status',orderable:false,searchable:false},{data:'submitted',name:'submitted_at'},
         @foreach($polling->questions as $index=>$question){data:'answers',orderable:false,searchable:false,render:(answers)=>escapeHtml((answers||[])[{{ $index }}]||'-')},@endforeach
         {data:'action',orderable:false,searchable:false}
-    ],language:{url:'//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'}});
+    ],language:tableLanguage});
+    $(document).on('click','.polling-stat-link',function(event){event.preventDefault();respondentStatus=$(this).data('status')||'all';const labels={all:'Semua',answered:'Sudah Mengisi',pending:'Belum Mengisi',unlock:'Minta Unlock'};$('#respondentFilterLabel').text(labels[respondentStatus]||'Semua');respondentTable.ajax.reload(()=>document.getElementById('respondent-status').scrollIntoView({behavior:'smooth',block:'start'}),true)});
     let voterTable=null;
-    $(document).on('click','.voter-count',function(){const button=$(this);$('#voterModalTitle').text(button.data('option'));$('#voterModal').modal('show');if(voterTable)voterTable.destroy();voterTable=$('#voterTable').DataTable({processing:true,serverSide:true,destroy:true,searchDelay:300,ajax:button.data('url'),order:[],pageLength:10,columns:[{data:'DT_RowIndex',orderable:false,searchable:false},{data:'respondent',name:'respondent_name'},{data:'scope',name:'class_name'},{data:'submitted',name:'submitted_at'}],language:{url:'//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'}})});
+    $(document).on('click','.voter-count',function(){const button=$(this);$('#voterModalTitle').text(button.data('option'));$('#voterModal').modal('show');if(voterTable)voterTable.destroy();voterTable=$('#voterTable').DataTable({processing:true,serverSide:true,destroy:true,searchDelay:300,ajax:button.data('url'),order:[],pageLength:10,columns:[{data:'DT_RowIndex',orderable:false,searchable:false},{data:'respondent',name:'respondent_name'},{data:'scope',name:'class_name'},{data:'submitted',name:'submitted_at'}],language:tableLanguage})});
     $(document).on('click','.unlock-response',function(){const button=$(this);Swal.fire({icon:'question',title:'Buka kunci jawaban?',text:button.data('name')+' dapat mengubah jawaban satu kali sebelum terkunci kembali.',showCancelButton:true,confirmButtonText:'Ya, Buka Kunci',cancelButtonText:'Batal',confirmButtonColor:'#2563eb'}).then(result=>{if(!result.isConfirmed)return;$.post(button.data('url'),{_token:'{{ csrf_token() }}'}).done(response=>{Swal.fire({icon:'success',title:'Berhasil',text:response.message,timer:1800,showConfirmButton:false});respondentTable.ajax.reload(null,false)}).fail(xhr=>Swal.fire({icon:'error',title:'Gagal',text:xhr.responseJSON?.message||'Jawaban tidak dapat dibuka.'}))})});
     $('.confirm-close').on('submit',function(e){e.preventDefault();const f=this;Swal.fire({icon:'warning',title:'Tutup polling?',text:'Responden tidak dapat lagi mengirim jawaban.',showCancelButton:true,confirmButtonText:'Ya, tutup',cancelButtonText:'Batal',confirmButtonColor:'#64748b'}).then(r=>{if(r.isConfirmed)f.submit()})});
     $('.confirm-archive').on('submit',function(e){e.preventDefault();const f=this;Swal.fire({icon:'question',title:'Arsipkan polling?',text:'Polling ditutup, tetapi jadwal, hasil, dan konfigurasi tetap tersimpan sebagai riwayat/preset.',showCancelButton:true,confirmButtonText:'Ya, arsipkan',cancelButtonText:'Batal',confirmButtonColor:'#64748b'}).then(r=>{if(r.isConfirmed)f.submit()})});

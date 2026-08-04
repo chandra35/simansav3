@@ -108,6 +108,11 @@ class PollingResponseFlowTest extends TestCase
         $voters = $this->actingAs($admin)->getJson(route('admin.polling.voters', [$polling, $question, $optionB]).'?'.http_build_query($voterTable));
         $voters->assertOk()->assertJsonPath('recordsFiltered', 1);
 
+        $respondents = $this->actingAs($admin)->getJson(
+            route('admin.polling.respondents', $polling).'?status=answered&'.http_build_query($voterTable)
+        );
+        $respondents->assertOk()->assertJsonPath('recordsFiltered', 1);
+
         $this->actingAs($user)->get(route('siswa.polling.show', $polling))
             ->assertOk()->assertSee('Jawaban sudah terkunci');
         $this->actingAs($user)->get(route('siswa.polling.index'))

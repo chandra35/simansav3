@@ -98,6 +98,8 @@ class PollingModuleArchitectureTest extends TestCase
         $root = dirname(__DIR__, 2);
         $builder = file_get_contents($root.'/resources/views/admin/polling/form.blade.php');
         $respondent = file_get_contents($root.'/resources/views/polling/respondent/show.blade.php');
+        $report = file_get_contents($root.'/resources/views/admin/polling/show.blade.php');
+        $audienceService = file_get_contents($root.'/app/Services/PollingAudienceService.php');
 
         $this->assertStringContainsString('Preset TKA Kelas XII', $builder);
         $this->assertStringContainsString('Survei Kepuasan', $builder);
@@ -127,5 +129,9 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('description_html', $respondent);
         $this->assertStringContainsString('Minta Buka Kunci', $respondent);
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);
+        $this->assertStringContainsString('Mapel Pilihan', $report);
+        $this->assertStringContainsString('polling-stat-link', $report);
+        $this->assertStringNotContainsString('cdn.datatables.net/plug-ins', $report);
+        $this->assertStringContainsString("relationLoaded('kelasTahunAktif')", $audienceService);
     }
 }

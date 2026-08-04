@@ -17,7 +17,9 @@ class PollingAudienceService
         if ($user->hasAnyRole(self::MANAGER_ROLES)) return null;
 
         if (($user->hasRole('Siswa') || $user->role === 'siswa') && $user->siswa) {
-            $kelas = $user->siswa->kelasTahunAktif()->first();
+            $kelas = $user->siswa->relationLoaded('kelasTahunAktif')
+                ? $user->siswa->kelasTahunAktif->first()
+                : $user->siswa->kelasTahunAktif()->first();
             return [
                 'type' => 'siswa',
                 'id' => $user->siswa->id,
