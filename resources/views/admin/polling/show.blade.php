@@ -67,8 +67,9 @@
 $(function(){
     const escapeHtml=value=>$('<div>').text(value??'-').html();
     const tableLanguage={processing:'Memproses...',search:'Cari:',lengthMenu:'Tampilkan _MENU_ data',info:'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',infoEmpty:'Belum ada data',zeroRecords:'Tidak ditemukan data yang sesuai',paginate:{first:'Pertama',last:'Terakhir',next:'Selanjutnya',previous:'Sebelumnya'}};
+    const useMobileResponsiveTable=window.matchMedia('(max-width: 767.98px)').matches;
     let respondentStatus='all';
-    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,responsive:true,searchDelay:350,ajax:{url:'{{ route('admin.polling.respondents',$polling) }}',data:data=>{data.status=respondentStatus}},order:[],pageLength:10,columnDefs:[{responsivePriority:1,targets:1},{responsivePriority:2,targets:3},{responsivePriority:3,targets:2}],columns:[
+    const respondentTable=$('#respondentTable').DataTable({processing:true,serverSide:true,responsive:useMobileResponsiveTable,searchDelay:350,ajax:{url:'{{ route('admin.polling.respondents',$polling) }}',data:data=>{data.status=respondentStatus}},order:[],pageLength:10,columnDefs:[{responsivePriority:1,targets:1},{responsivePriority:2,targets:3},{responsivePriority:3,targets:2}],columns:[
         {data:'DT_RowIndex',orderable:false,searchable:false},{data:'respondent',name:'name'},{data:'scope',name:'class_name'},{data:'response_status',orderable:false,searchable:false},{data:'submitted',name:'submitted_at'},
         @foreach($polling->questions as $index=>$question){data:'answers',orderable:false,searchable:false,render:(answers)=>escapeHtml((answers||[])[{{ $index }}]||'-')},@endforeach
         {data:'action',orderable:false,searchable:false}

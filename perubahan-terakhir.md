@@ -11,6 +11,8 @@ Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 - Daftar riwayat Polling menggunakan baris detail ringan pada mobile; jadwal, target responden, dan aksi laporan/preset/edit dapat dibuka tanpa scroll horizontal.
 - Tabel Status Responden pada laporan Polling juga memakai DataTables Responsive agar aksi unlock dan jawaban tetap mudah dijangkau di ponsel.
 - Tampilan desktop, otorisasi setiap aksi, dan alur server-side pagination tetap dipertahankan.
+- Responsive child-row dibatasi hanya untuk viewport mobile maksimal `767,98px`; laptop/desktop selalu memakai tabel penuh tanpa tombol expand.
+- Klik foto siswa menghentikan propagasi event sehingga hanya membuka preview foto dan tidak ikut membuka child-row.
 
 File terkait:
 

@@ -918,6 +918,7 @@ let ocrText = '';
 let selectMode = false;
 let selDown = false, selSX = 0, selSY = 0, selEX = 0, selEY = 0;
 const statsContextFilters = @json($contextQuery ?? []);
+const useMobileResponsiveTable = window.matchMedia('(max-width: 767.98px)').matches;
 const populationLabels = {
     active_year: 'Siswa Tahun Aktif',
     unassigned: 'Aktif Belum Rombel',
@@ -1194,7 +1195,7 @@ $(document).ready(function() {
             }
         },
         autoWidth: false,
-        responsive: {
+        responsive: useMobileResponsiveTable ? {
             details: {
                 type: 'inline',
                 target: 1,
@@ -1218,7 +1219,7 @@ $(document).ready(function() {
                     return details ? $('<div class="simansa-mobile-detail"></div>').append(details) : false;
                 }
             }
-        },
+        } : false,
         columnDefs: [
             { targets: 0, width: '6%', responsivePriority: 2 },   // foto
             { targets: 1, width: '22%', responsivePriority: 1 },   // nama/nisn
@@ -1306,7 +1307,9 @@ $(document).ready(function() {
         $('#siswaDetailTabs a:first').tab('show');
     });
 
-    $(document).on('click', '.js-preview-foto', function() {
+    $(document).on('click', '.js-preview-foto', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
         const previewUrl = $(this).data('preview-url');
         const downloadUrl = $(this).data('download-url');
         const studentName = $(this).data('student-name');

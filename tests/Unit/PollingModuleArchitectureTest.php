@@ -133,7 +133,8 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('Mapel Pilihan', $report);
         $this->assertStringContainsString('polling-stat-link', $report);
         $this->assertStringContainsString('dataTables.responsive.min.js', $report);
-        $this->assertStringContainsString('responsive:true', $report);
+        $this->assertStringContainsString("window.matchMedia('(max-width: 767.98px)').matches", $report);
+        $this->assertStringContainsString('responsive:useMobileResponsiveTable', $report);
         $this->assertStringContainsString('polling-mobile-toggle', $history);
         $this->assertStringContainsString('polling-mobile-detail-row', $history);
         $this->assertStringContainsString('polling-mobile-actions', $history);

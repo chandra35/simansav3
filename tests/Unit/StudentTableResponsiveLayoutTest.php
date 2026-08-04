@@ -55,6 +55,8 @@ class StudentTableResponsiveLayoutTest extends TestCase
         $controller = file_get_contents($root.'/app/Http/Controllers/Admin/SiswaController.php');
 
         $this->assertStringContainsString('dataTables.responsive.min.js', $view);
+        $this->assertStringContainsString("window.matchMedia('(max-width: 767.98px)').matches", $view);
+        $this->assertStringContainsString('responsive: useMobileResponsiveTable ?', $view);
         $this->assertStringContainsString("type: 'inline'", $view);
         $this->assertStringContainsString('target: 1', $view);
         $this->assertStringContainsString('simansa-mobile-detail__item', $view);
@@ -63,5 +65,6 @@ class StudentTableResponsiveLayoutTest extends TestCase
         $this->assertStringContainsString('simansa-mobile-action-group', $controller);
         $this->assertStringContainsString('aria-label="Lihat detail"', $controller);
         $this->assertStringContainsString('aria-label="Hapus siswa"', $controller);
+        $this->assertStringContainsString('event.stopPropagation();', $view);
     }
 }
