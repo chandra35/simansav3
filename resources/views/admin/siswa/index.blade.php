@@ -504,6 +504,7 @@
 
 @section('css')
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
     <!-- Toastr CSS for toast notifications -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
     <!-- SweetAlert2 CSS -->
@@ -835,6 +836,62 @@
             .simansa-stat-context .simansa-btn-contrast {
                 width: 100%;
             }
+            .simansa-table-scroll {
+                overflow-x: visible;
+            }
+            .simansa-siswa-table {
+                min-width: 0 !important;
+            }
+            .simansa-siswa-table.dtr-inline.collapsed > tbody > tr > td.dtr-control::before {
+                background-color: #2563eb;
+                border: 0;
+                box-shadow: none;
+                line-height: 1rem;
+            }
+            .simansa-siswa-table.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control::before {
+                background-color: #64748b;
+            }
+            .simansa-mobile-detail {
+                display: grid;
+                gap: .65rem;
+                padding: .25rem 0;
+            }
+            .simansa-mobile-detail__item {
+                display: grid;
+                grid-template-columns: minmax(92px, 34%) minmax(0, 1fr);
+                gap: .75rem;
+                align-items: start;
+                padding-bottom: .55rem;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .simansa-mobile-detail__item:last-child {
+                padding-bottom: 0;
+                border-bottom: 0;
+            }
+            .simansa-mobile-detail__label {
+                color: #475569;
+                font-size: .72rem;
+                font-weight: 800;
+                letter-spacing: .035em;
+                text-transform: uppercase;
+            }
+            .simansa-mobile-detail__value {
+                min-width: 0;
+                color: #0f172a;
+            }
+            .simansa-mobile-action-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: .4rem;
+            }
+            .simansa-mobile-action-group .btn {
+                display: inline-flex;
+                width: 40px;
+                height: 40px;
+                align-items: center;
+                justify-content: center;
+                border-radius: .55rem;
+            }
         }
     </style>
 @stop
@@ -842,6 +899,8 @@
 @section('js')
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <script src="//cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
 <!-- Toastr JS for toast notifications -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
 <!-- SweetAlert2 JS -->
@@ -1135,11 +1194,36 @@ $(document).ready(function() {
             }
         },
         autoWidth: false,
+        responsive: {
+            details: {
+                type: 'inline',
+                target: 1,
+                renderer: function(api, rowIdx, columns) {
+                    const rowData = api.row(rowIdx).data() || {};
+                    const details = $.map(columns, function(column) {
+                        if (!column.hidden) {
+                            return '';
+                        }
+
+                        const value = column.title === 'Aksi'
+                            ? (rowData.actions_mobile || '&mdash;')
+                            : column.data;
+
+                        return '<div class="simansa-mobile-detail__item" data-dt-row="' + column.rowIndex + '" data-dt-column="' + column.columnIndex + '">'
+                            + '<div class="simansa-mobile-detail__label">' + column.title + '</div>'
+                            + '<div class="simansa-mobile-detail__value">' + value + '</div>'
+                            + '</div>';
+                    }).join('');
+
+                    return details ? $('<div class="simansa-mobile-detail"></div>').append(details) : false;
+                }
+            }
+        },
         columnDefs: [
-            { targets: 0, width: '6%'  },   // foto
-            { targets: 1, width: '22%' },   // nama/nisn
+            { targets: 0, width: '6%', responsivePriority: 2 },   // foto
+            { targets: 1, width: '22%', responsivePriority: 1 },   // nama/nisn
             { targets: 2, width: '4%'  },   // jk
-            { targets: 3, width: '14%' },   // kelas dan flag asrama
+            { targets: 3, width: '14%', responsivePriority: 3 },   // kelas dan flag asrama
             { targets: [4, 5, 6, 7], width: '7%' }, // status
             { targets: 8, width: '8%' },    // keberadaan
             { targets: 9, width: '8%'  },   // tgl masuk

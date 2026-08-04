@@ -99,6 +99,7 @@ class PollingModuleArchitectureTest extends TestCase
         $builder = file_get_contents($root.'/resources/views/admin/polling/form.blade.php');
         $respondent = file_get_contents($root.'/resources/views/polling/respondent/show.blade.php');
         $report = file_get_contents($root.'/resources/views/admin/polling/show.blade.php');
+        $history = file_get_contents($root.'/resources/views/admin/polling/index.blade.php');
         $audienceService = file_get_contents($root.'/app/Services/PollingAudienceService.php');
 
         $this->assertStringContainsString('Preset TKA Kelas XII', $builder);
@@ -131,6 +132,11 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('@media(max-width:575.98px)', $respondent);
         $this->assertStringContainsString('Mapel Pilihan', $report);
         $this->assertStringContainsString('polling-stat-link', $report);
+        $this->assertStringContainsString('dataTables.responsive.min.js', $report);
+        $this->assertStringContainsString('responsive:true', $report);
+        $this->assertStringContainsString('polling-mobile-toggle', $history);
+        $this->assertStringContainsString('polling-mobile-detail-row', $history);
+        $this->assertStringContainsString('polling-mobile-actions', $history);
         $this->assertStringNotContainsString('cdn.datatables.net/plug-ins', $report);
         $this->assertStringContainsString("relationLoaded('kelasTahunAktif')", $audienceService);
     }

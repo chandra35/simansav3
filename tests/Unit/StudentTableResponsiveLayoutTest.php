@@ -15,10 +15,10 @@ class StudentTableResponsiveLayoutTest extends TestCase
         $this->assertStringContainsString('width: 22% !important;', $view);
         $this->assertStringContainsString('.simansa-siswa-table .siswa-col-jk', $view);
         $this->assertStringContainsString('.simansa-siswa-table .siswa-col-kelas', $view);
-        $this->assertStringContainsString("{ targets: 0, width: '6%'", $view);
-        $this->assertStringContainsString("{ targets: 1, width: '22%' }", $view);
+        $this->assertStringContainsString("{ targets: 0, width: '6%', responsivePriority: 2 }", $view);
+        $this->assertStringContainsString("{ targets: 1, width: '22%', responsivePriority: 1 }", $view);
         $this->assertStringContainsString("{ targets: 2, width: '4%'  }", $view);
-        $this->assertStringContainsString("{ targets: 3, width: '14%' }", $view);
+        $this->assertStringContainsString("{ targets: 3, width: '14%', responsivePriority: 3 }", $view);
         $this->assertStringContainsString('simansa-siswa-class-stack', $view);
     }
 
@@ -46,5 +46,22 @@ class StudentTableResponsiveLayoutTest extends TestCase
         $this->assertStringContainsString('fas fa-key fa-fw', $controller);
         $this->assertStringContainsString('fas fa-user-secret fa-fw', $controller);
         $this->assertStringContainsString('fas fa-trash-alt fa-fw', $controller);
+    }
+
+    public function test_student_table_exposes_touch_friendly_actions_in_responsive_child_rows(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $view = file_get_contents($root.'/resources/views/admin/siswa/index.blade.php');
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/SiswaController.php');
+
+        $this->assertStringContainsString('dataTables.responsive.min.js', $view);
+        $this->assertStringContainsString("type: 'inline'", $view);
+        $this->assertStringContainsString('target: 1', $view);
+        $this->assertStringContainsString('simansa-mobile-detail__item', $view);
+        $this->assertStringContainsString('rowData.actions_mobile', $view);
+        $this->assertStringContainsString("'actions_mobile' => \$this->getMobileActionButtons(\$item)", $controller);
+        $this->assertStringContainsString('simansa-mobile-action-group', $controller);
+        $this->assertStringContainsString('aria-label="Lihat detail"', $controller);
+        $this->assertStringContainsString('aria-label="Hapus siswa"', $controller);
     }
 }

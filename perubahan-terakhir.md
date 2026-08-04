@@ -4,6 +4,23 @@ Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Aksi tabel responsif untuk perangkat mobile
+
+- Tabel Data Siswa kini mengikuti pola Data Kelas: kolom penting tetap terlihat, sedangkan informasi lain dapat dibuka sebagai child row pada layar sempit.
+- Tombol aksi siswa di child row ditampilkan sebagai grup ikon berukuran sentuh untuk detail, edit, reset password, login sebagai siswa, dan hapus sesuai izin pengguna.
+- Daftar riwayat Polling menggunakan baris detail ringan pada mobile; jadwal, target responden, dan aksi laporan/preset/edit dapat dibuka tanpa scroll horizontal.
+- Tabel Status Responden pada laporan Polling juga memakai DataTables Responsive agar aksi unlock dan jawaban tetap mudah dijangkau di ponsel.
+- Tampilan desktop, otorisasi setiap aksi, dan alur server-side pagination tetap dipertahankan.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/SiswaController.php`
+- `resources/views/admin/siswa/index.blade.php`
+- `resources/views/admin/polling/index.blade.php`
+- `resources/views/admin/polling/show.blade.php`
+- `tests/Unit/StudentTableResponsiveLayoutTest.php`
+- `tests/Unit/PollingModuleArchitectureTest.php`
+
 ### Optimalisasi laporan admin Polling & Survei
 
 - Card `Target Responden`, `Sudah Mengisi`, `Belum Mengisi`, dan `Partisipasi` kini dapat diklik untuk membuka sekaligus memfilter tabel Status Responden.

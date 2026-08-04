@@ -285,7 +285,8 @@ class SiswaController extends Controller
                 'emis_registered' => $this->getEmisRegisteredBadge($item),
                 'keberadaan' => $this->getKeberadaanBadge($kelasAktif),
                 'created_at' => $item->created_at->format('d/m/Y'),
-                'actions' => $this->getActionButtons($item)
+                'actions' => $this->getActionButtons($item),
+                'actions_mobile' => $this->getMobileActionButtons($item)
             ];
         });
 
@@ -550,6 +551,45 @@ class SiswaController extends Controller
             . '<div class="dropdown-menu dropdown-menu-right simansa-siswa-action-dropdown">'
             . $menuItems
             . '</div></div>';
+    }
+
+    /**
+     * Render touch-friendly actions inside the DataTables responsive child row.
+     */
+    private function getMobileActionButtons($item): string
+    {
+        $user = auth()->user();
+        $studentId = e($item->id);
+        $buttons = '';
+
+        if ($user->can('view-siswa')) {
+            $buttons .= '<button type="button" class="btn btn-sm btn-info" onclick="showSiswa(\''.$studentId.'\')" title="Lihat detail" aria-label="Lihat detail"><i class="fas fa-eye"></i></button>';
+        }
+
+        if ($user->can('edit-siswa')) {
+            $buttons .= '<button type="button" class="btn btn-sm btn-warning" onclick="editSiswa(\''.$studentId.'\')" title="Edit data" aria-label="Edit data"><i class="fas fa-edit"></i></button>';
+        }
+
+        if ($user->can('reset-password-siswa')) {
+            $buttons .= '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetPassword(\''.$studentId.'\')" title="Reset password" aria-label="Reset password"><i class="fas fa-key"></i></button>';
+        }
+
+        if ($user->can('impersonate-users') && $item->user_id) {
+            $buttons .= '<form method="POST" action="'.e(route('admin.impersonation.siswa.start', $item->id)).'" target="_blank" data-no-overlay class="d-inline-flex m-0">'
+                . '<input type="hidden" name="_token" value="'.csrf_token().'">'
+                . '<button type="submit" class="btn btn-sm btn-primary" title="Login sebagai siswa" aria-label="Login sebagai siswa"><i class="fas fa-user-secret"></i></button>'
+                . '</form>';
+        }
+
+        if ($user->can('delete-siswa')) {
+            $buttons .= '<button type="button" class="btn btn-sm btn-danger" onclick="deleteSiswa(\''.$studentId.'\')" title="Hapus siswa" aria-label="Hapus siswa"><i class="fas fa-trash-alt"></i></button>';
+        }
+
+        if ($buttons === '') {
+            return '<span class="text-muted" aria-label="Tidak ada aksi">&mdash;</span>';
+        }
+
+        return '<div class="simansa-mobile-action-group" role="group" aria-label="Aksi siswa">'.$buttons.'</div>';
     }
 
     /**

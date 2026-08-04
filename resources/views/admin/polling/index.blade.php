@@ -49,8 +49,8 @@
                     <tbody>
                     @forelse($pollings as $polling)
                         @php($phase = $polling->phase)
-                        <tr>
-                            <td><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:360px">{{ $polling->description_plain ?: 'Tanpa deskripsi' }}</div>@if($polling->sourcePolling)<div class="small text-info mt-1"><i class="fas fa-copy mr-1"></i>Salinan dari {{ $polling->sourcePolling->title }}</div>@endif</td>
+                        <tr class="polling-data-row">
+                            <td><button type="button" class="polling-mobile-toggle d-md-none" aria-expanded="false" aria-label="Tampilkan detail {{ $polling->title }}"><i class="fas fa-caret-right"></i></button><strong>{{ $polling->title }}</strong><div class="small text-muted text-truncate" style="max-width:360px">{{ $polling->description_plain ?: 'Tanpa deskripsi' }}</div>@if($polling->sourcePolling)<div class="small text-info mt-1"><i class="fas fa-copy mr-1"></i>Salinan dari {{ $polling->sourcePolling->title }}</div>@endif</td>
                             <td><span class="badge badge-light border text-uppercase">{{ $polling->audience === 'both' ? 'Siswa & GTK' : $polling->audience }}</span></td>
                             <td class="small text-nowrap"><strong>{{ $polling->tahun_pelajaran_snapshot ?: 'Belum tercatat' }}</strong><div class="text-muted">{{ $polling->semester_snapshot ? 'Semester '.$polling->semester_snapshot.' · ' : '' }}{{ $polling->created_at->format('d/m/Y') }}</div></td>
                             <td class="small"><div>{{ $polling->starts_at->format('d/m/Y H:i') }}</div><div class="text-muted">s.d. {{ $polling->ends_at->format('d/m/Y H:i') }}</div></td>
@@ -62,6 +62,22 @@
                                     <a href="{{ route('admin.polling.duplicate', $polling) }}" class="btn btn-sm btn-info" title="Gunakan sebagai preset"><i class="fas fa-copy"></i></a>
                                     @if(!$polling->responses_count)<a href="{{ route('admin.polling.edit', $polling) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>@endif
                                 @endcan
+                            </td>
+                        </tr>
+                        <tr class="polling-mobile-detail-row d-md-none">
+                            <td colspan="7">
+                                <div class="polling-mobile-details">
+                                    <div><span>Responden</span><strong>{{ $polling->audience === 'both' ? 'Siswa & GTK' : Str::upper($polling->audience) }}</strong></div>
+                                    <div><span>Tahun ajaran</span><strong>{{ $polling->tahun_pelajaran_snapshot ?: 'Belum tercatat' }}</strong><small>{{ $polling->semester_snapshot ? 'Semester '.$polling->semester_snapshot.' · ' : '' }}dibuat {{ $polling->created_at->format('d/m/Y') }}</small></div>
+                                    <div><span>Jadwal</span><strong>{{ $polling->starts_at->format('d/m/Y H:i') }}</strong><small>s.d. {{ $polling->ends_at->format('d/m/Y H:i') }}</small></div>
+                                    <div><span>Aksi</span><div class="polling-mobile-actions" role="group" aria-label="Aksi polling {{ $polling->title }}">
+                                        <a href="{{ route('admin.polling.show', $polling) }}" class="btn btn-sm btn-primary" title="Lihat laporan" aria-label="Lihat laporan"><i class="fas fa-chart-bar"></i></a>
+                                        @can('manage-polling')
+                                            <a href="{{ route('admin.polling.duplicate', $polling) }}" class="btn btn-sm btn-info" title="Gunakan sebagai preset" aria-label="Gunakan sebagai preset"><i class="fas fa-copy"></i></a>
+                                            @if(!$polling->responses_count)<a href="{{ route('admin.polling.edit', $polling) }}" class="btn btn-sm btn-warning" title="Edit" aria-label="Edit polling"><i class="fas fa-edit"></i></a>@endif
+                                        @endcan
+                                    </div></div>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -81,6 +97,40 @@
 .simansa-polling-admin .simansa-polling-hero{border:0;border-radius:18px;overflow:hidden;box-shadow:0 18px 38px rgba(37,99,235,.16)}
 .simansa-polling-admin .info-box{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.simansa-polling-admin .info-box-icon{width:62px;font-size:1.35rem}
 .simansa-polling-admin .table td,.simansa-polling-admin .table th{vertical-align:middle}
-@media(max-width:767.98px){.simansa-polling-admin .card-body{padding:1rem}.simansa-polling-admin .table{min-width:980px}}
+.simansa-polling-admin .polling-mobile-toggle{width:28px;height:28px;margin-right:.35rem;padding:0;border:0;border-radius:50%;background:#e8efff;color:#2563eb}
+.simansa-polling-admin .polling-mobile-detail-row{display:none}
+@media(max-width:767.98px){
+    .simansa-polling-admin .card-body{padding:1rem}
+    .simansa-polling-admin .table-responsive{overflow-x:visible}
+    .simansa-polling-admin .table{min-width:0;table-layout:fixed}
+    .simansa-polling-admin .table th:nth-child(2),.simansa-polling-admin .table td:nth-child(2),.simansa-polling-admin .table th:nth-child(3),.simansa-polling-admin .table td:nth-child(3),.simansa-polling-admin .table th:nth-child(4),.simansa-polling-admin .table td:nth-child(4),.simansa-polling-admin .table th:nth-child(7),.simansa-polling-admin .polling-data-row td:nth-child(7){display:none}
+    .simansa-polling-admin .table th:first-child{width:58%}.simansa-polling-admin .table th:nth-child(5){width:24%}.simansa-polling-admin .table th:nth-child(6){width:18%}
+    .simansa-polling-admin .polling-data-row td{padding:.75rem .4rem}
+    .simansa-polling-admin .polling-mobile-detail-row.is-open{display:table-row!important}
+    .simansa-polling-admin .polling-mobile-detail-row>td{display:table-cell!important;padding:.75rem;background:#f8fafc;border-top:0}
+    .simansa-polling-admin .polling-mobile-details{display:grid;gap:.65rem}
+    .simansa-polling-admin .polling-mobile-details>div{display:grid;grid-template-columns:minmax(92px,34%) minmax(0,1fr);gap:.75rem;padding-bottom:.55rem;border-bottom:1px solid #e2e8f0}
+    .simansa-polling-admin .polling-mobile-details>div:last-child{padding-bottom:0;border-bottom:0}
+    .simansa-polling-admin .polling-mobile-details span{color:#475569;font-size:.72rem;font-weight:800;letter-spacing:.035em;text-transform:uppercase}
+    .simansa-polling-admin .polling-mobile-details strong,.simansa-polling-admin .polling-mobile-details small{display:block;min-width:0}
+    .simansa-polling-admin .polling-mobile-actions{display:flex;flex-wrap:wrap;gap:.4rem}
+    .simansa-polling-admin .polling-mobile-actions .btn{display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:.55rem}
+}
 </style>
+@stop
+
+@section('js')
+<script>
+$(function(){
+    $(document).on('click', '.polling-mobile-toggle', function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        const button = $(this);
+        const detailRow = button.closest('.polling-data-row').next('.polling-mobile-detail-row');
+        const expanded = !detailRow.hasClass('is-open');
+        detailRow.toggleClass('is-open', expanded);
+        button.attr('aria-expanded', expanded).find('i').toggleClass('fa-caret-right', !expanded).toggleClass('fa-caret-down', expanded);
+    });
+});
+</script>
 @stop
