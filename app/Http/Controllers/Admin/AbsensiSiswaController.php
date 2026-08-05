@@ -24,6 +24,7 @@ class AbsensiSiswaController extends Controller
         $this->authorize('view-student-attendance');
 
         $user = $request->user();
+        $isGlobalScope = $this->isUnrestrictedStaff($user);
         $tanggal = $this->normalizeDate($request->get('tanggal'));
         $tahunPelajaran = TahunPelajaran::query()->active()->first();
         $canManageHarian = $tahunPelajaran && $this->canManageHarian($user, $tahunPelajaran->id);
@@ -73,7 +74,7 @@ class AbsensiSiswaController extends Controller
         }
 
         return view('admin.absensi.siswa', compact(
-            'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel',
+            'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
             'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId',
             'session', 'students', 'existingRecords', 'summary'
         ));

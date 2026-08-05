@@ -64,7 +64,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('attendance_records.id IS NOT NULL', $controller);
         $this->assertStringContainsString("'unrecorded' => max(0", $controller);
         $this->assertStringContainsString("name('absensi-siswa.monitoring')", $routes);
-        $this->assertStringNotContainsString("'route' => 'admin.absensi-siswa.monitoring'", $menu);
+        $this->assertStringContainsString("'route' => 'admin.absensi-siswa.monitoring'", $menu);
         $this->assertStringContainsString("'monitor-all-student-attendance'", $permissionSync);
         $this->assertStringContainsString('Absensi Seluruh Siswa', $view);
         $this->assertStringContainsString('Belum Direkam', $view);
@@ -79,8 +79,10 @@ class StudentAttendanceArchitectureTest extends TestCase
         $view = file_get_contents($root.'/resources/views/admin/absensi/analytics.blade.php');
 
         $this->assertStringContainsString("'route' => 'admin.absensi-siswa.analytics'", $menu);
-        $this->assertSame(1, substr_count($menu, "'route' => 'admin.absensi-siswa.analytics'"));
-        $this->assertStringNotContainsString("'route' => 'admin.absensi-siswa.index'", $menu);
+        $this->assertSame(2, substr_count($menu, "'route' => 'admin.absensi-siswa.analytics'"));
+        $this->assertStringContainsString("'route' => 'admin.absensi-siswa.index'", $menu);
+        $this->assertStringContainsString("'can' => 'sidebar-student-attendance-global'", $menu);
+        $this->assertStringContainsString("Gate::define('sidebar-student-attendance-global'", file_get_contents($root.'/app/Providers/AuthServiceProvider.php'));
         $this->assertStringContainsString("->where('wali_kelas_id', \$user->id)->where('is_active', true)", $controller);
         $this->assertStringNotContainsString('JadwalPelajaran', $controller);
         $this->assertStringContainsString('CatatanWaliKelas::query()', $controller);

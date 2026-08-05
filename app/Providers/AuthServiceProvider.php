@@ -154,6 +154,13 @@ class AuthServiceProvider extends ServiceProvider
             return $user->can('view-statistik-siswa') && ($isManager || ! $user->hasAnyRole(['GTK', 'Wali Kelas']));
         });
 
+        Gate::define('sidebar-student-attendance-global', function ($user) {
+            $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+            return $isManager && $user->can('view-student-attendance');
+        });
+
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {

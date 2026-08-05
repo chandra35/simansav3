@@ -21,7 +21,7 @@
         <div>
             <span><i class="fas fa-user-check mr-2"></i>PRESENSI SISWA</span>
             <h1>Absensi Harian & Mapel</h1>
-            <p>Presensi wajah tetap khusus masuk–pulang. Guru mapel menandai kehadiran secara manual berdasarkan jadwal aktif.</p>
+            <p>Kelola absensi harian dan kehadiran per mata pelajaran berdasarkan kelas serta jadwal aktif.</p>
         </div>
         <div class="attendance-hero__meta">
             <div><small>Tahun Pelajaran Aktif</small><strong>{{ $tahunPelajaran?->nama ?? 'Belum tersedia' }}</strong></div>
@@ -49,13 +49,13 @@
         <div class="attendance-empty"><i class="fas fa-lock"></i><h3>Tidak ada jadwal absensi yang dapat dikelola</h3><p>Akun ini dapat melihat modul, tetapi tidak mempunyai kelas wali atau jadwal mengajar pada tahun aktif.</p>@can('view-attendance-analytics')<a href="{{ route('admin.absensi-siswa.analytics') }}" class="btn btn-primary">Buka Analitik</a>@endcan</div>
     @else
         <section class="attendance-filter mb-4">
-            <div class="attendance-section-head"><div><h2><i class="fas fa-filter mr-2"></i>Pilih Sesi</h2><p>Kelas dan jadwal dibatasi otomatis sesuai hak akses akun.</p></div><span class="badge badge-light border">Metode: Manual</span></div>
+            <div class="attendance-section-head"><div><h2><i class="fas fa-filter mr-2"></i>Pilih Sesi</h2><p>{{ $isGlobalScope ? 'Anda dapat memilih seluruh kelas aktif; setiap perubahan tetap tercatat dalam audit.' : 'Kelas dan jadwal dibatasi otomatis sesuai hak akses akun.' }}</p></div><span class="badge badge-light border">Metode: Manual</span></div>
             <form method="GET" action="{{ route('admin.absensi-siswa.index') }}" id="attendanceFilterForm">
                 <div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" value="{{ $tanggal }}" max="{{ now()->format('Y-m-d') }}" class="form-control"></div>
-                <div class="form-group"><label>Mode</label><select name="mode" class="form-control">@if($canManageHarian)<option value="harian" @selected($mode==='harian')>Harian Wali Kelas</option>@endif @if($canManageMapel)<option value="mapel" @selected($mode==='mapel')>Per Mapel</option>@endif</select></div>
+                <div class="form-group"><label>Mode</label><select name="mode" class="form-control">@if($canManageHarian)<option value="harian" @selected($mode==='harian')>{{ $isGlobalScope ? 'Harian Semua Kelas' : 'Harian Wali Kelas' }}</option>@endif @if($canManageMapel)<option value="mapel" @selected($mode==='mapel')>Per Mapel</option>@endif</select></div>
                 <div class="form-group"><label>Kelas</label><select name="kelas_id" class="form-control"><option value="">Pilih kelas</option>@foreach($kelasOptions as $kelas)<option value="{{ $kelas->id }}" @selected($selectedKelas?->id===$kelas->id)>Tingkat {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</option>@endforeach</select></div>
                 @if($mode === 'mapel')
-                    <div class="form-group attendance-filter__schedule"><label>Jadwal Saya Hari Ini</label><select name="jadwal_pelajaran_id" class="form-control"><option value="">Pilih jadwal</option>@foreach($jadwalOptions as $jadwal)<option value="{{ $jadwal->id }}" @selected($selectedJadwalId===$jadwal->id)>Jam {{ $jadwal->jam_ke }} · {{ substr($jadwal->jam_mulai,0,5) }}–{{ substr($jadwal->jam_selesai,0,5) }} · {{ $jadwal->mapel_nama ?? 'Mapel' }}</option>@endforeach</select></div>
+                    <div class="form-group attendance-filter__schedule"><label>{{ $isGlobalScope ? 'Jadwal Kelas Hari Ini' : 'Jadwal Saya Hari Ini' }}</label><select name="jadwal_pelajaran_id" class="form-control"><option value="">Pilih jadwal</option>@foreach($jadwalOptions as $jadwal)<option value="{{ $jadwal->id }}" @selected($selectedJadwalId===$jadwal->id)>Jam {{ $jadwal->jam_ke }} · {{ substr($jadwal->jam_mulai,0,5) }}–{{ substr($jadwal->jam_selesai,0,5) }} · {{ $jadwal->mapel_nama ?? 'Mapel' }}</option>@endforeach</select></div>
                 @endif
                 <button class="btn btn-primary"><i class="fas fa-sync-alt mr-1"></i>Muat Sesi</button>
             </form>
@@ -71,7 +71,7 @@
 
             <section class="attendance-panel">
                 <div class="attendance-section-head attendance-panel__head">
-                    <div><h2>{{ $mode === 'harian' ? 'Absensi Harian Wali Kelas' : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh guru</p></div>
+                    <div><h2>{{ $mode === 'harian' ? ($isGlobalScope ? 'Absensi Harian Siswa' : 'Absensi Harian Wali Kelas') : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh {{ $isGlobalScope ? 'petugas' : 'guru' }}</p></div>
                     @if($session?->status === 'final')<span class="session-state is-final"><i class="fas fa-lock mr-1"></i>Final · terkunci {{ $session->locked_at?->format('d/m H:i') }}</span>@else<span class="session-state"><i class="fas fa-pencil-alt mr-1"></i>{{ $session ? 'Draft' : 'Sesi baru' }}</span>@endif
                 </div>
 
@@ -126,7 +126,7 @@
                 @endif
             </section>
         @elseif($kelasOptions->isEmpty())
-            <div class="attendance-empty"><i class="fas fa-calendar-day"></i><h3>Tidak ada kelas atau jadwal pada tanggal ini</h3><p>Guru mapel hanya melihat kelas yang sesuai jadwal aktif pada hari terpilih.</p></div>
+            <div class="attendance-empty"><i class="fas fa-calendar-day"></i><h3>Tidak ada kelas atau jadwal pada tanggal ini</h3><p>{{ $isGlobalScope ? 'Pastikan kelas dan jadwal pada tahun pelajaran aktif telah tersedia.' : 'Guru mapel hanya melihat kelas yang sesuai jadwal aktif pada hari terpilih.' }}</p></div>
         @endif
     @endif
 

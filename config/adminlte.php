@@ -450,6 +450,35 @@ return [
                     'active' => ['admin/siswa-statistik*'],
                 ],
                 [
+                    'text' => 'Absensi Siswa',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'sidebar-student-attendance-global',
+                    'active' => ['admin/absensi-siswa*'],
+                    'submenu' => [
+                        [
+                            'text' => 'Input Absensi',
+                            'route' => 'admin.absensi-siswa.index',
+                            'icon' => 'fas fa-fw fa-clipboard-check',
+                            'can' => 'input-daily-attendance',
+                            'active' => ['admin/absensi-siswa'],
+                        ],
+                        [
+                            'text' => 'Pemantauan Harian',
+                            'route' => 'admin.absensi-siswa.monitoring',
+                            'icon' => 'fas fa-fw fa-clipboard-list',
+                            'can' => 'monitor-all-student-attendance',
+                            'active' => ['admin/absensi-siswa/pemantauan'],
+                        ],
+                        [
+                            'text' => 'Analitik Kehadiran',
+                            'route' => 'admin.absensi-siswa.analytics',
+                            'icon' => 'fas fa-fw fa-chart-line',
+                            'can' => 'view-attendance-analytics',
+                            'active' => ['admin/absensi-siswa/analitik*'],
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'Cek Data EMIS',
                     'route' => 'admin.emis-comparison.index',
                     'icon' => 'fas fa-fw fa-exchange-alt',
@@ -824,7 +853,7 @@ return [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
             'can' => 'staff-presensi-menu',
-            'active' => ['admin/absensi*'],
+            'active' => ['admin/absensi', 'admin/absensi/*'],
             'submenu' => [
                 [
                     'text' => 'Presensi Hari Ini',
