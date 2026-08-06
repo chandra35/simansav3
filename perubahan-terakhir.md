@@ -6,7 +6,7 @@ Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Modul Absensi Siswa untuk Super Admin
 
-- Modul sebenarnya sudah tersedia di `/admin/absensi-siswa`, tetapi belum ditampilkan pada sidebar admin. Menu **Absensi Siswa** kini tersedia di **Manajemen Data** bagi akun manajerial yang memiliki izin.
+- Modul sebenarnya sudah tersedia di `/admin/absensi-siswa`, tetapi sebelumnya belum ditampilkan pada sidebar admin. Menu **Absensi Siswa** kini ditempatkan di dalam **Presensi** bagi akun manajerial yang memiliki izin.
 - Submenu mencakup Input Absensi, Pemantauan Harian seluruh siswa, dan Analitik Kehadiran; modul Presensi utama tetap khusus presensi masuk/pulang GTK.
 - Super Admin dapat memilih seluruh kelas aktif untuk absensi harian maupun seluruh jadwal aktif kelas untuk absensi per mapel. Wali kelas dan guru tetap dibatasi pada kelas/jadwal masing-masing.
 - Teks antarmuka menyesuaikan scope admin dan seluruh perubahan data tetap melewati permission, validasi kelas/jadwal, finalisasi, serta audit yang sudah ada.
