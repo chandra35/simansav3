@@ -84,9 +84,12 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'can' => 'sidebar-student-attendance-global'", $menu);
         $this->assertStringContainsString("Gate::define('sidebar-student-attendance-global'", file_get_contents($root.'/app/Providers/AuthServiceProvider.php'));
         $gtkMenuPosition = strpos($menu, "'text' => 'Absensi GTK'");
+        $faceMenuPosition = strpos($menu, "'text' => 'Face Recognition'");
         $gtkTodayPosition = strpos($menu, "'text' => 'Presensi Hari Ini'", $gtkMenuPosition);
         $studentMenuPosition = strpos($menu, "'text' => 'Absensi Siswa'", $gtkMenuPosition);
+        $this->assertNotFalse($faceMenuPosition);
         $this->assertNotFalse($gtkMenuPosition);
+        $this->assertLessThan($gtkMenuPosition, $faceMenuPosition);
         $this->assertLessThan($studentMenuPosition, $gtkTodayPosition);
         $this->assertLessThan($studentMenuPosition, strpos($menu, "'text' => 'Pengaturan Presensi'", $gtkMenuPosition));
         $this->assertGreaterThan(strpos($menu, '// PRESENSI'), strpos($menu, "'text' => 'Absensi Siswa'"));
@@ -118,7 +121,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("->where('user_id', \$request->user()->id)", $controller);
         $this->assertStringContainsString("\$userType = 'gtk';", $controller);
         $this->assertStringContainsString('streamDownload', $controller);
-        $this->assertStringContainsString("\$selectedType = 'gtk';", $faceController);
+        $this->assertStringContainsString("\$selectedType = \$this->normalizeUserType(\$request->query('type'));", $faceController);
+        $this->assertStringContainsString("'typeOptions' => \$this->typeOptions()", $faceController);
+        $this->assertStringContainsString('abort_unless($this->canManageAllRegistrations($request->user()), 403);', $faceController);
         $this->assertStringNotContainsString('Mode Siswa', $kiosk);
         $this->assertStringContainsString('Unduh CSV', $recap);
         $this->assertStringContainsString("->whereNotIn('key', ['jam_masuk_siswa', 'jam_pulang_siswa'])", $settingController);

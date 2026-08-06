@@ -5,37 +5,58 @@
 @section('plugins.DatatablesPlugins', true)
 
 @php
+    $approvedDescription = $selectedType === 'siswa'
+        ? 'Data wajah aktif dan siap digunakan saat kiosk Absensi Siswa diaktifkan.'
+        : 'Data wajah aktif dan siap dipakai untuk absensi kamera otomatis.';
     $selfStatus = 'belum';
     if ($selfFace) {
         $selfStatus = $selfFace->is_verified ? 'approved' : ($selfFace->is_active ? 'pending' : 'belum');
     }
 
     $statusMeta = match ($selfStatus) {
-        'approved' => ['badge' => 'success', 'icon' => 'check-circle', 'title' => 'Registrasi Anda sudah disetujui', 'description' => 'Data wajah aktif dan siap dipakai untuk absensi kamera otomatis.', 'label' => 'Approved'],
-        'pending' => ['badge' => 'warning', 'icon' => 'clock', 'title' => 'Registrasi sedang menunggu verifikasi', 'description' => 'Admin akan meninjau hasil capture sebelum data wajah dipakai untuk absensi.', 'label' => 'Pending'],
-        default => ['badge' => 'secondary', 'icon' => 'camera', 'title' => 'Anda belum melakukan registrasi wajah', 'description' => 'Mulai registrasi agar akun Anda bisa dipakai untuk absensi tanpa login.', 'label' => 'Belum Registrasi'],
+        'approved' => ['badge' => 'success', 'icon' => 'check-circle', 'title' => 'Registrasi Anda sudah disetujui', 'description' => $approvedDescription, 'label' => 'Approved'],
+        'pending' => ['badge' => 'warning', 'icon' => 'clock', 'title' => 'Registrasi sedang menunggu verifikasi', 'description' => 'Admin akan meninjau hasil capture sebelum data wajah diaktifkan.', 'label' => 'Pending'],
+        default => ['badge' => 'secondary', 'icon' => 'camera', 'title' => 'Anda belum melakukan registrasi wajah', 'description' => 'Mulai registrasi agar akun Anda memiliki identitas biometrik resmi.', 'label' => 'Belum Registrasi'],
     };
 @endphp
 
 @section('content_header')
-    <h1><i class="fas fa-user-shield"></i> {{ $pageTitle }}</h1>
+    <div class="row mb-2">
+        <div class="col-sm-6"><h1><i class="fas fa-id-card-alt text-primary"></i> {{ $pageTitle }}</h1></div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ request()->routeIs('siswa.*') ? route('siswa.dashboard') : route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Face Recognition</li>
+            </ol>
+        </div>
+    </div>
 @stop
 
 @section('content')
-<div class="card border-0 shadow-sm face-register-hero mb-3">
-    <div class="card-body p-3 p-md-4">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
-            <div class="pr-lg-4 mb-3 mb-lg-0">
-                <div class="text-uppercase small font-weight-bold text-primary mb-1">Face Registration</div>
-                <h2 class="h4 mb-2">{{ $pageTitle }}</h2>
-                <p class="text-muted mb-0">
+<div class="face-recognition-module">
+<div class="card bg-gradient-primary text-white face-register-hero mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="text-uppercase small font-weight-bold text-white-50 mb-1">Pusat Biometrik SIMANSA</div>
+                <h2 class="h4 text-white mb-2">{{ $pageTitle }}</h2>
+                <p class="text-white-50 mb-0">
                     Gunakan pencahayaan yang cukup, posisikan wajah di tengah kamera, dan ikuti instruksi sampai semua langkah selesai.
                 </p>
             </div>
-            <div class="face-register-hero__tips">
-                <span class="badge badge-light">Responsif semua device</span>
-                <span class="badge badge-light">Auto capture</span>
-                <span class="badge badge-light">Verifikasi admin</span>
+            <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
+                @if($canManageAll)
+                    <div class="small text-white-50 text-uppercase font-weight-bold mb-2">Jenis responden</div>
+                    <div class="btn-group" role="group" aria-label="Pilih jenis responden">
+                        @foreach($typeOptions as $typeKey => $typeName)
+                            <a href="{{ route('admin.absensi.face-register', ['type' => $typeKey]) }}" class="btn btn-{{ $selectedType === $typeKey ? 'light' : 'outline-light' }}">
+                                <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }} mr-1"></i>{{ $typeName }}
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <span class="badge badge-light px-3 py-2"><i class="fas fa-user-shield mr-1"></i>Registrasi akun sendiri</span>
+                @endif
             </div>
         </div>
     </div>
@@ -103,32 +124,17 @@
                         <div><i class="fas fa-check text-success mr-1"></i> Ambil wajah dari akun Anda sendiri</div>
                         <div><i class="fas fa-check text-success mr-1"></i> Sistem menyimpan beberapa sudut otomatis</div>
                         <div><i class="fas fa-check text-success mr-1"></i> Admin melakukan approval</div>
-                        <div><i class="fas fa-check text-success mr-1"></i> Wajah approved bisa dipakai untuk absensi tanpa login</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Wajah approved menjadi identitas biometrik resmi akun</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @else
-    <div class="row">
-        <div class="col-lg-4 col-6">
-            <div class="small-box bg-info">
-                <div class="inner"><h3>{{ $registrants->count() }}</h3><p>Total {{ $subjectLabel }}</p></div>
-                <div class="icon"><i class="fas fa-users"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-6">
-            <div class="small-box bg-success">
-                <div class="inner"><h3>{{ $registeredCount }}</h3><p>Sudah Registrasi</p></div>
-                <div class="icon"><i class="fas fa-check-circle"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-12">
-            <div class="small-box bg-warning">
-                <div class="inner"><h3>{{ $pendingCount }}</h3><p>Menunggu Verifikasi</p></div>
-                <div class="icon"><i class="fas fa-clock"></i></div>
-            </div>
-        </div>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3 mb-md-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total {{ $subjectLabel }}</div><h3 class="text-info mb-0">{{ $registrants->count() }}</h3><small class="text-muted">Akun yang dapat diregistrasi.</small></div></div></div>
+        <div class="col-md-4 mb-3 mb-md-0"><div class="card card-outline card-success h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Sudah Registrasi</div><h3 class="text-success mb-0">{{ $registeredCount }}</h3><small class="text-muted">Memiliki data wajah aktif.</small></div></div></div>
+        <div class="col-md-4"><div class="card card-outline card-warning h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Menunggu Verifikasi</div><h3 class="text-warning mb-0">{{ $pendingCount }}</h3><small class="text-muted">Perlu ditinjau oleh admin.</small></div></div></div>
     </div>
 
     <div class="row mb-3">
@@ -167,14 +173,6 @@
     <div class="card card-primary card-outline">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
             <h3 class="card-title mb-0"><i class="fas fa-table"></i> Daftar {{ $subjectLabel }} & Status Registrasi Wajah</h3>
-            <div class="btn-group btn-group-sm mt-2 mt-md-0">
-                @foreach($typeOptions as $typeKey => $typeName)
-                    <a href="{{ route('admin.absensi.face-register', ['type' => $typeKey]) }}"
-                       class="btn btn-{{ $selectedType === $typeKey ? 'primary' : 'outline-primary' }}">
-                        {{ $typeName }}
-                    </a>
-                @endforeach
-            </div>
         </div>
         <div class="card-body">
             @if($registrants->count() > 1)
@@ -380,13 +378,14 @@
         </div>
     </div>
 </div>
+ </div>
 @stop
 
 @section('css')
 <style>
-    .face-register-hero {
-        background: linear-gradient(135deg, #f6fbff 0%, #eef4ff 100%);
+    .face-recognition-module .face-register-hero {
         border-radius: 1rem;
+        overflow: hidden;
     }
     .face-register-hero__tips {
         display: flex;
@@ -710,8 +709,10 @@ async function loadModels() {
         setLoadingText('Memuat model deteksi wajah...'); await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model landmark wajah...'); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model pengenalan wajah...'); await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        setLoadingText('Memuat database validasi wajah...');
-        await loadDuplicateFaceDatabase();
+        if (canManageAll && descriptorUrl) {
+            setLoadingText('Memuat database validasi wajah...');
+            await loadDuplicateFaceDatabase();
+        }
         modelsLoaded = true; startCameraAndRegister();
     } catch (err) { setLoadingText('Error: ' + err.message); }
 }

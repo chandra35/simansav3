@@ -979,9 +979,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/absensi/today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.today-data');
     });
 
-    // Absensi Kiosk Mode (Fullscreen)
-    Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
-    Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');
+    // Absensi Kiosk Mode (Fullscreen) hanya dijalankan oleh perangkat/admin tepercaya.
+    Route::middleware(['can:face-registration-admin'])->group(function () {
+        Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
+        Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');
+        Route::get('/absensi/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('absensi.face-descriptors');
+    });
 
     // Absensi Input & Edit
     Route::middleware(['permission:create-absensi'])->group(function () {
@@ -992,9 +995,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/absensi/{absensi}', [App\Http\Controllers\Admin\AbsensiController::class, 'update'])->name('absensi.update');
     });
 
-    // Face Registration
-    Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
-    Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
+    // Face Registration terpusat: admin mengelola GTK/Siswa, GTK hanya akun sendiri.
+    Route::middleware(['can:face-registration-access'])->group(function () {
+        Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
+        Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
+    });
 
     // Face Verification (Admin only)
     Route::middleware(['can:face-registration-admin'])->group(function () {
@@ -1003,9 +1008,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/absensi/face-encoding/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'destroy'])->name('absensi.face-encoding.destroy');
         Route::post('/absensi/face-encoding/{faceEncoding}/reset', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'resetVerification'])->name('absensi.face-encoding.reset');
     });
-
-    // Face Descriptors API (for kiosk matching)
-    Route::get('/absensi/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('absensi.face-descriptors');
 
     // Absensi Settings (Admin)
     Route::middleware(['permission:manage-settings'])->group(function () {
@@ -1166,7 +1168,6 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     // Registrasi wajah mandiri siswa
     Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
     Route::post('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('face-register.store');
-    Route::get('/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('face-descriptors');
 
     // SMART-Q Pengumuman Kelulusan
     Route::get('/smartq', [App\Http\Controllers\Siswa\SmartqController::class, 'index'])->name('smartq.index');

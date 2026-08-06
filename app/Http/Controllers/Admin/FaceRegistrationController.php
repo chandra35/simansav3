@@ -22,7 +22,7 @@ class FaceRegistrationController extends Controller
         $selfFace = null;
 
         if ($canManageAll) {
-            $selectedType = 'gtk';
+            $selectedType = $this->normalizeUserType($request->query('type'));
             $registrants = $this->getRegistrantsForType($selectedType);
             $storeUrl = route('admin.absensi.face-register.store');
             $descriptorUrl = route('admin.absensi.face-descriptors');
@@ -36,9 +36,7 @@ class FaceRegistrationController extends Controller
             $storeUrl = $authUser->isSiswa()
                 ? route('siswa.face-register.store')
                 : route('admin.absensi.face-register.store');
-            $descriptorUrl = $authUser->isSiswa()
-                ? route('siswa.face-descriptors')
-                : route('admin.absensi.face-descriptors');
+            $descriptorUrl = null;
             $selfOnly = true;
             $selfFace = FaceEncoding::where('user_id', $authUser->id)
                 ->where('user_type', $selectedType)
@@ -70,7 +68,7 @@ class FaceRegistrationController extends Controller
             'storeUrl' => $storeUrl,
             'descriptorUrl' => $descriptorUrl,
             'selectedType' => $selectedType,
-            'typeOptions' => $canManageAll ? ['gtk' => 'GTK'] : $this->typeOptions(),
+            'typeOptions' => $this->typeOptions(),
             'initialSelection' => $initialSelection,
             'selfRegistrant' => $selfOnly ? $registrants->first() : null,
             'selfFace' => $selfFace,
@@ -85,7 +83,7 @@ class FaceRegistrationController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'user_type' => 'nullable|in:gtk,siswa',
+            'user_type' => 'required|in:gtk,siswa',
             'descriptors' => 'required|array|min:3',
             'descriptors.*' => 'required|array',
             'angles' => 'required|array|min:3',
@@ -101,7 +99,7 @@ class FaceRegistrationController extends Controller
         $targetUser = User::with(['gtk:id,user_id', 'siswa:id,user_id'])->findOrFail($request->user_id);
 
         if ($canManageAll) {
-            $userType = 'gtk';
+            $userType = $request->user_type;
         } else {
             $context = $this->getSelfRegistrationContext($authUser);
             abort_unless($context, 403, 'Anda tidak memiliki akses ke fitur registrasi wajah.');
@@ -210,7 +208,7 @@ class FaceRegistrationController extends Controller
     {
         abort_unless($this->canManageAllRegistrations($request->user()), 403);
 
-        $selectedType = 'gtk';
+        $selectedType = $this->normalizeUserType($request->query('type'));
 
         $baseQuery = FaceEncoding::query()
             ->where('user_type', $selectedType)
@@ -244,14 +242,13 @@ class FaceRegistrationController extends Controller
             'selectedType' => $selectedType,
             'subjectLabel' => $this->typeLabel($selectedType),
             'identifierLabel' => $selectedType === 'gtk' ? 'NIP' : 'NISN',
-            'typeOptions' => ['gtk' => 'GTK'],
+            'typeOptions' => $this->typeOptions(),
         ]);
     }
 
     public function verify(Request $request, FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations($request->user()), 403);
-        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $request->validate([
             'action' => 'required|in:approve,reject',
@@ -279,7 +276,6 @@ class FaceRegistrationController extends Controller
     public function destroy(FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations(request()->user()), 403);
-        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $profile = $faceEncoding->user_type === 'gtk' ? $faceEncoding->user->gtk : $faceEncoding->user->siswa;
         $name = $profile->nama_lengkap ?? $faceEncoding->user->name ?? 'Unknown';
@@ -293,7 +289,6 @@ class FaceRegistrationController extends Controller
     public function resetVerification(FaceEncoding $faceEncoding)
     {
         abort_unless($this->canManageAllRegistrations(request()->user()), 403);
-        abort_unless($faceEncoding->user_type === 'gtk', 404);
 
         $faceEncoding->update([
             'is_verified' => false,
@@ -308,7 +303,12 @@ class FaceRegistrationController extends Controller
 
     public function getDescriptors(Request $request)
     {
-        $userType = $request->routeIs('siswa.*') ? 'siswa' : 'gtk';
+        abort_unless($this->canManageAllRegistrations($request->user()), 403);
+        $request->validate([
+            'type' => 'required|in:gtk,siswa',
+            'verified_only' => 'nullable|boolean',
+        ]);
+        $userType = $request->query('type');
         $verifiedOnly = $request->boolean('verified_only', false);
 
         $query = FaceEncoding::where('user_type', $userType)
@@ -387,6 +387,7 @@ class FaceRegistrationController extends Controller
     {
         if ($userType === 'siswa') {
             return Siswa::whereNotNull('user_id')
+                ->whereHas('user')
                 ->orderBy('nama_lengkap')
                 ->get(['id', 'user_id', 'nama_lengkap', 'nisn', 'foto_profile'])
                 ->map(fn (Siswa $siswa) => $this->mapSiswaRegistrant($siswa))
@@ -394,6 +395,7 @@ class FaceRegistrationController extends Controller
         }
 
         return Gtk::whereNotNull('user_id')
+            ->whereHas('user')
             ->orderBy('nama_lengkap')
             ->get(['id', 'user_id', 'nama_lengkap', 'nip', 'foto_profile'])
             ->map(fn (Gtk $gtk) => $this->mapGtkRegistrant($gtk))

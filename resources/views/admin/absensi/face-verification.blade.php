@@ -3,47 +3,55 @@
 @section('title', 'Verifikasi Wajah')
 @section('plugins.Datatables', true)
 @section('plugins.DatatablesPlugins', true)
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
-    <h1><i class="fas fa-user-check"></i> Data Registrasi Wajah {{ $subjectLabel }}</h1>
+    <div class="row mb-2">
+        <div class="col-sm-6"><h1><i class="fas fa-user-check text-primary"></i> Verifikasi Wajah {{ $subjectLabel }}</h1></div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item">Face Recognition</li>
+                <li class="breadcrumb-item active">Verifikasi</li>
+            </ol>
+        </div>
+    </div>
 @stop
 
 @section('content')
-<div class="card border-0 shadow-sm mb-3">
+<div class="face-recognition-verification">
+<div class="card bg-gradient-primary text-white mb-4">
     <div class="card-body">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
-            <div class="pr-lg-4 mb-3 mb-lg-0">
-                <div class="text-uppercase small font-weight-bold text-primary mb-1">Face Approval</div>
-                <h2 class="h4 mb-2">Verifikasi Data Wajah {{ $subjectLabel }}</h2>
-                <p class="text-muted mb-0">
-                    Setujui hanya hasil registrasi yang jelas dan stabil. Data yang approved akan langsung dipakai di kiosk absensi tanpa login.
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="text-uppercase small font-weight-bold text-white-50 mb-1">Face Approval</div>
+                <h2 class="h4 text-white mb-2">Verifikasi Data Wajah {{ $subjectLabel }}</h2>
+                <p class="text-white-50 mb-0">
+                    Setujui hanya hasil registrasi yang jelas dan stabil. Data approved menjadi identitas biometrik resmi sesuai jenis responden.
                 </p>
             </div>
-            <div class="alert alert-warning mb-0">
-                <i class="fas fa-shield-alt mr-1"></i>
-                Hanya data berstatus approved yang bisa dipakai untuk absensi kamera otomatis.
+            <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
+                <div class="small text-white-50 text-uppercase font-weight-bold mb-2">Jenis responden</div>
+                <div class="btn-group" role="group" aria-label="Pilih jenis responden">
+                    @foreach($typeOptions as $typeKey => $typeName)
+                        <a class="btn btn-{{ $selectedType === $typeKey ? 'light' : 'outline-light' }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}">
+                            <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }} mr-1"></i>{{ $typeName }}
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h3>{{ $allFaces->count() }}</h3><p>Total Terdaftar</p></div><div class="icon"><i class="fas fa-users"></i></div></div></div>
-    <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h3>{{ $verified->total() }}</h3><p>Terverifikasi</p></div><div class="icon"><i class="fas fa-check-circle"></i></div></div></div>
-    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h3>{{ $pending->count() }}</h3><p>Menunggu Verifikasi</p></div><div class="icon"><i class="fas fa-clock"></i></div></div></div>
-    <div class="col-lg-3 col-6"><div class="small-box bg-secondary"><div class="inner"><h3>{{ $allFaces->avg('quality_score') ? number_format($allFaces->avg('quality_score'), 0) : 0 }}%</h3><p>Rata-rata Quality</p></div><div class="icon"><i class="fas fa-chart-bar"></i></div></div></div>
+<div class="row mb-4">
+    <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total Terdaftar</div><h3 class="text-info mb-0">{{ $allFaces->count() }}</h3><small class="text-muted">Data wajah {{ strtolower($subjectLabel) }} aktif.</small></div></div></div>
+    <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-success h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Terverifikasi</div><h3 class="text-success mb-0">{{ $verified->total() }}</h3><small class="text-muted">Identitas biometrik sudah aktif.</small></div></div></div>
+    <div class="col-md-6 col-xl-3 mb-3 mb-md-0"><div class="card card-outline card-warning h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Menunggu</div><h3 class="text-warning mb-0">{{ $pending->count() }}</h3><small class="text-muted">Perlu ditinjau admin.</small></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card card-outline card-primary h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Rata-rata Quality</div><h3 class="text-primary mb-0">{{ $allFaces->avg('quality_score') ? number_format($allFaces->avg('quality_score'), 0) : 0 }}%</h3><small class="text-muted">Kualitas seluruh capture aktif.</small></div></div></div>
 </div>
 
-<div class="card card-primary card-outline card-tabs">
-    <div class="card-header p-0 pt-1">
-        <ul class="nav nav-tabs">
-            @foreach($typeOptions as $typeKey => $typeName)
-                <li class="nav-item">
-                    <a class="nav-link {{ $selectedType === $typeKey ? 'active' : '' }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}">{{ $typeName }}</a>
-                </li>
-            @endforeach
-        </ul>
-    </div>
+<div class="card card-primary card-outline">
     <div class="card-body">
         <div class="mb-3">
             <ul class="nav nav-pills">
@@ -105,7 +113,7 @@
                                             <form method="POST" action="{{ route('admin.absensi.face-verify', $face) }}" class="ml-1">
                                                 @csrf
                                                 <input type="hidden" name="action" value="reject">
-                                                <button class="btn btn-sm btn-danger" onclick="return confirm('Tolak data wajah ini?')"><i class="fas fa-times"></i> Tolak</button>
+                                                <button type="button" class="btn btn-sm btn-danger js-face-confirm" data-title="Tolak data wajah?" data-text="Data dinonaktifkan dan pengguna dapat melakukan registrasi ulang." data-confirm="Ya, tolak"><i class="fas fa-times"></i> Tolak</button>
                                             </form>
                                         </div>
                                     </div>
@@ -181,13 +189,13 @@
                                             @if($face->is_verified)
                                                 <form method="POST" action="{{ route('admin.absensi.face-encoding.reset', $face) }}" class="d-inline">
                                                     @csrf
-                                                    <button class="btn btn-warning" title="Reset ke Pending" onclick="return confirm('Reset verifikasi ke pending?')"><i class="fas fa-undo"></i></button>
+                                                    <button type="button" class="btn btn-warning js-face-confirm" title="Reset ke Pending" data-title="Reset status verifikasi?" data-text="Data wajah kembali ke antrean verifikasi." data-confirm="Ya, reset"><i class="fas fa-undo"></i></button>
                                                 </form>
                                             @endif
                                             <form method="POST" action="{{ route('admin.absensi.face-encoding.destroy', $face) }}" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-danger" title="Hapus Data Wajah" onclick="return confirm('Hapus data wajah {{ $name }}? Data akan hilang permanen.')"><i class="fas fa-trash"></i></button>
+                                                <button type="button" class="btn btn-danger js-face-confirm" title="Hapus Data Wajah" data-title="Hapus data wajah?" data-text="Data wajah {{ $name }} akan dihapus dan perlu diregistrasi ulang." data-confirm="Ya, hapus"><i class="fas fa-trash"></i></button>
                                             </form>
                                         </div>
                                     </td>
@@ -202,6 +210,7 @@
         </div>
     </div>
 </div>
+</div>
 @stop
 
 @section('js')
@@ -213,6 +222,21 @@ $(function() {
         order: [[8, 'desc']],
         scrollX: true,
         autoWidth: false,
+    });
+
+    $(document).on('click', '.js-face-confirm', function() {
+        const button = this;
+        Swal.fire({
+            icon: 'warning',
+            title: button.dataset.title,
+            text: button.dataset.text,
+            showCancelButton: true,
+            confirmButtonText: button.dataset.confirm,
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc3545',
+        }).then(result => {
+            if (result.isConfirmed) button.closest('form').submit();
+        });
     });
 });
 </script>

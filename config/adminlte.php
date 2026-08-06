@@ -827,9 +827,31 @@ return [
             'active' => ['admin/absensi', 'admin/absensi/*', 'admin/absensi-siswa*'],
             'submenu' => [
                 [
+                    'text' => 'Face Recognition',
+                    'icon' => 'fas fa-fw fa-id-card-alt',
+                    'can' => 'face-registration-access',
+                    'active' => ['admin/absensi/face-*'],
+                    'submenu' => [
+                        [
+                            'text' => 'Registrasi Wajah',
+                            'route' => 'admin.absensi.face-register',
+                            'icon' => 'fas fa-fw fa-camera',
+                            'can' => 'face-registration-access',
+                            'active' => ['admin/absensi/face-register*'],
+                        ],
+                        [
+                            'text' => 'Verifikasi & Data',
+                            'route' => 'admin.absensi.face-verification',
+                            'icon' => 'fas fa-fw fa-user-check',
+                            'can' => 'face-registration-admin',
+                            'active' => ['admin/absensi/face-verification*'],
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'Absensi GTK',
                     'icon' => 'fas fa-fw fa-user-clock',
-                    'active' => ['admin/absensi', 'admin/absensi/*'],
+                    'active' => ['admin/absensi', 'admin/absensi/kiosk*', 'admin/absensi/rekap*', 'admin/absensi/settings*'],
                     'submenu' => [
                         [
                             'text' => 'Presensi Hari Ini',
@@ -842,7 +864,7 @@ return [
                             'text' => 'Mode Kiosk',
                             'route' => 'admin.absensi.kiosk',
                             'icon' => 'fas fa-fw fa-desktop',
-                            'can' => 'view-absensi',
+                            'can' => 'face-registration-admin',
                             'active' => ['admin/absensi/kiosk*'],
                         ],
                         [
@@ -851,20 +873,6 @@ return [
                             'icon' => 'fas fa-fw fa-chart-bar',
                             'can' => 'view-absensi',
                             'active' => ['admin/absensi/rekap*'],
-                        ],
-                        [
-                            'text' => 'Registrasi Wajah',
-                            'route' => 'admin.absensi.face-register',
-                            'icon' => 'fas fa-fw fa-user-shield',
-                            'can' => 'face-registration-access',
-                            'active' => ['admin/absensi/face-register*'],
-                        ],
-                        [
-                            'text' => 'Verifikasi Wajah',
-                            'route' => 'admin.absensi.face-verification',
-                            'icon' => 'fas fa-fw fa-user-check',
-                            'can' => 'face-registration-admin',
-                            'active' => ['admin/absensi/face-verification*'],
                         ],
                         [
                             'text' => 'Pengaturan Presensi',
