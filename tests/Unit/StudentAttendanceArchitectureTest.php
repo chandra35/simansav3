@@ -83,6 +83,12 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'route' => 'admin.absensi-siswa.index'", $menu);
         $this->assertStringContainsString("'can' => 'sidebar-student-attendance-global'", $menu);
         $this->assertStringContainsString("Gate::define('sidebar-student-attendance-global'", file_get_contents($root.'/app/Providers/AuthServiceProvider.php'));
+        $gtkMenuPosition = strpos($menu, "'text' => 'Absensi GTK'");
+        $gtkTodayPosition = strpos($menu, "'text' => 'Presensi Hari Ini'", $gtkMenuPosition);
+        $studentMenuPosition = strpos($menu, "'text' => 'Absensi Siswa'", $gtkMenuPosition);
+        $this->assertNotFalse($gtkMenuPosition);
+        $this->assertLessThan($studentMenuPosition, $gtkTodayPosition);
+        $this->assertLessThan($studentMenuPosition, strpos($menu, "'text' => 'Pengaturan Presensi'", $gtkMenuPosition));
         $this->assertGreaterThan(strpos($menu, '// PRESENSI'), strpos($menu, "'text' => 'Absensi Siswa'"));
         $this->assertLessThan(strpos($menu, '// HOTSPOT MANAGER'), strpos($menu, "'text' => 'Absensi Siswa'"));
         $this->assertStringContainsString("'active' => ['admin/absensi', 'admin/absensi/*', 'admin/absensi-siswa*']", $menu);

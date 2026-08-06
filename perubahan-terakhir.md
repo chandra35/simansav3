@@ -4,6 +4,17 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Struktur modul Presensi dan Absensi GTK
+
+- Sidebar Presensi kini memisahkan modul **Absensi GTK** dan **Absensi Siswa** agar fungsi kedua jenis responden tidak bercampur.
+- Presensi Hari Ini, Mode Kiosk, Rekap Bulanan, Registrasi Wajah, Verifikasi Wajah, dan Pengaturan Presensi dipusatkan di dalam submenu Absensi GTK.
+- Permission setiap halaman dan penanda menu aktif tetap mengikuti kewenangan pengguna yang sudah ada.
+
+File terkait:
+
+- `config/adminlte.php`
+- `tests/Unit/StudentAttendanceArchitectureTest.php`
+
 ### Integritas GTK dan penugasan Asrama
 
 - Halaman Pengasuh & Pengajar Asrama tetap dapat membaca profil GTK yang sudah terlanjur dihapus secara lunak, sehingga data historis tidak lagi menyebabkan Internal Server Error.
