@@ -9,13 +9,21 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 - Menu Presensi kini memiliki modul **Face Recognition** terpusat untuk Registrasi Wajah serta Verifikasi & Data biometrik.
 - Admin dapat berpindah antara data GTK dan Siswa melalui pilihan responden yang konsisten pada hero halaman; seluruh daftar, statistik, registrasi, dan antrean verifikasi mengikuti pilihan tersebut.
 - Approval, penolakan, reset, dan penghapusan data wajah kini mendukung GTK maupun Siswa dengan scope `user_type` yang divalidasi di server.
-- Akun GTK dan Siswa tetap hanya dapat mendaftarkan wajah milik akunnya sendiri. Endpoint descriptor massal pada akun siswa dihapus; pemeriksaan duplikasi tetap dijalankan di server.
+- Akun GTK dan Siswa hanya dapat melakukan registrasi pertama atau satu kali registrasi ulang setelah admin membuka izin. Setelah tersimpan, endpoint mengunci perubahan kembali secara otomatis.
+- Pada akun pengguna, data yang sudah terekam hanya menampilkan preview hasil registrasi, status akses, riwayat aktivitas biometrik, serta rekap presensi pribadi per bulan, tahun, dan tanggal tanpa tombol presensi mandiri.
+- Admin dapat merekam ulang secara langsung atau membuka izin registrasi ulang sementara dari halaman Verifikasi & Data, termasuk untuk rekaman yang sudah ditolak/nonaktif.
+- Registrasi wajah pada akun GTK/siswa ditegaskan bukan sebagai pencatatan presensi. Presensi tetap dilakukan melalui kiosk resmi di area madrasah.
+- Seluruh registrasi, registrasi ulang, approval, penolakan, reset, pembukaan izin, dan penghapusan dicatat pada activity log Face Recognition.
+- Endpoint descriptor massal pada akun siswa tetap tidak tersedia; pemeriksaan duplikasi dijalankan di server. Bug evaluasi pesan duplikasi yang dapat menyebabkan respons 500 pada wajah nonduplikat juga diperbaiki.
+- Foto hasil kamera disimpan sebagai preview dengan validasi MIME gambar, batas ukuran 2 MB, dan nama file yang dikendalikan server.
 - Descriptor wajah hanya tersedia untuk admin tepercaya dan Mode Kiosk GTK juga dibatasi pada admin. Operasional Absensi GTK dan Absensi Siswa tetap menjadi modul terpisah.
 - Hero, statistik, tombol jenis responden, dan konfirmasi tindakan mengikuti baseline UI Data Siswa serta SweetAlert2.
 
 File terkait:
 
 - `app/Http/Controllers/Admin/FaceRegistrationController.php`
+- `app/Models/FaceEncoding.php`
+- `database/migrations/2026_08_06_003000_add_self_registration_lock_to_face_encodings.php`
 - `config/adminlte.php`
 - `routes/web.php`
 - `resources/views/admin/absensi/face-register.blade.php`

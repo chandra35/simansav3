@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\StorageHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -11,12 +12,15 @@ class FaceEncoding extends Model
     use SoftDeletes;
 
     protected $table = 'face_encodings';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
         'user_id', 'user_type', 'descriptors', 'capture_angles',
-        'total_captures', 'quality_score', 'is_active', 'is_verified',
+        'total_captures', 'quality_score', 'registration_photo', 'self_registration_unlocked_at',
+        'is_active', 'is_verified',
         'verified_by', 'verified_at', 'last_used_at',
     ];
 
@@ -25,6 +29,7 @@ class FaceEncoding extends Model
         'capture_angles' => 'array',
         'is_active' => 'boolean',
         'is_verified' => 'boolean',
+        'self_registration_unlocked_at' => 'datetime',
         'verified_at' => 'datetime',
         'last_used_at' => 'datetime',
     ];
@@ -49,12 +54,17 @@ class FaceEncoding extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function getRegistrationPhotoUrlAttribute(): ?string
+    {
+        return StorageHelper::publicFileUrl($this->registration_photo);
+    }
+
     /**
      * Check if face encoding is ready for matching
      */
     public function isReady(): bool
     {
-        return $this->is_active && !empty($this->descriptors) && count($this->descriptors) > 0;
+        return $this->is_active && ! empty($this->descriptors) && count($this->descriptors) > 0;
     }
 
     /**

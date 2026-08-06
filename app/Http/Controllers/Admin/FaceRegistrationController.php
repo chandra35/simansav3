@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Absensi;
 use App\Models\AbsensiSetting;
 use App\Models\FaceEncoding;
 use App\Models\Gtk;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Models\Activity;
 
 class FaceRegistrationController extends Controller
 {
@@ -20,6 +23,12 @@ class FaceRegistrationController extends Controller
         $authUser = $request->user();
         $canManageAll = $this->canManageAllRegistrations($authUser);
         $selfFace = null;
+        $selfHistory = collect();
+        $selfCanRegister = false;
+        $selfAttendance = null;
+        $selfAttendanceYears = collect();
+        $attendanceMonth = (int) now()->month;
+        $attendanceYear = (int) now()->year;
 
         if ($canManageAll) {
             $selectedType = $this->normalizeUserType($request->query('type'));
@@ -42,6 +51,42 @@ class FaceRegistrationController extends Controller
                 ->where('user_type', $selectedType)
                 ->latest('created_at')
                 ->first();
+            $selfCanRegister = ! $selfFace || $selfFace->self_registration_unlocked_at !== null;
+
+            if ($selfFace) {
+                $selfHistory = Activity::query()
+                    ->where('log_name', 'face-recognition')
+                    ->where('subject_type', FaceEncoding::class)
+                    ->where('subject_id', $selfFace->id)
+                    ->with('causer:id,name')
+                    ->latest()
+                    ->limit(50)
+                    ->get();
+            }
+
+            $attendanceMonth = min(max((int) $request->query('attendance_month', now()->month), 1), 12);
+            $attendanceYear = min(max((int) $request->query('attendance_year', now()->year), 2000), (int) now()->year + 1);
+            $selfAttendanceYears = Absensi::query()
+                ->where('user_id', $authUser->id)
+                ->where('user_type', $selectedType)
+                ->selectRaw('YEAR(tanggal) as year')
+                ->distinct()
+                ->orderByDesc('year')
+                ->pluck('year');
+
+            if ($selfAttendanceYears->isEmpty()) {
+                $selfAttendanceYears = collect([(int) now()->year]);
+            }
+
+            $selfAttendance = Absensi::query()
+                ->where('user_id', $authUser->id)
+                ->where('user_type', $selectedType)
+                ->whereYear('tanggal', $attendanceYear)
+                ->whereMonth('tanggal', $attendanceMonth)
+                ->with('location:id,nama')
+                ->latest('tanggal')
+                ->paginate(31, ['*'], 'attendance_page')
+                ->withQueryString();
         }
 
         $faceMap = FaceEncoding::where('user_type', $selectedType)
@@ -72,6 +117,12 @@ class FaceRegistrationController extends Controller
             'initialSelection' => $initialSelection,
             'selfRegistrant' => $selfOnly ? $registrants->first() : null,
             'selfFace' => $selfFace,
+            'selfHistory' => $selfHistory,
+            'selfCanRegister' => $selfCanRegister,
+            'selfAttendance' => $selfAttendance,
+            'selfAttendanceYears' => $selfAttendanceYears,
+            'attendanceMonth' => $attendanceMonth,
+            'attendanceYear' => $attendanceYear,
             'registeredCount' => $registeredCount,
             'verifiedCount' => $verifiedCount,
             'pendingCount' => max($registeredCount - $verifiedCount, 0),
@@ -91,7 +142,7 @@ class FaceRegistrationController extends Controller
             'quality_score' => 'nullable|numeric|min:0|max:100',
             'liveness_score' => 'nullable|numeric|min:0|max:100',
             'liveness_summary' => 'required|array',
-            'photo' => 'nullable|string',
+            'photo' => 'nullable|string|max:3000000',
         ]);
 
         $authUser = $request->user();
@@ -110,13 +161,27 @@ class FaceRegistrationController extends Controller
 
         abort_unless($this->userMatchesType($targetUser, $userType), 422, 'Target registrasi tidak sesuai dengan tipe pengguna.');
 
+        $existingFace = FaceEncoding::where('user_id', $targetUser->id)
+            ->where('user_type', $userType)
+            ->first();
+
+        if (! $canManageAll && $existingFace && ! $existingFace->self_registration_unlocked_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registrasi wajah sudah terkunci. Hubungi admin untuk meminta izin registrasi ulang.',
+            ], 423);
+        }
+
         $this->validateLivenessPayload($request);
 
         $duplicateMatch = $this->findDuplicateFaceMatch($request->descriptors, $targetUser->id);
-        abort_if($duplicateMatch, 422, $this->buildDuplicateMessage($duplicateMatch));
+        if ($duplicateMatch) {
+            abort(422, $this->buildDuplicateMessage($duplicateMatch));
+        }
 
+        $photoPath = $existingFace?->registration_photo;
         if ($request->photo) {
-            $this->saveBase64Photo($request->photo, $targetUser->id, $userType);
+            $photoPath = $this->saveBase64Photo($request->photo, $targetUser->id, $userType);
         }
 
         $faceData = FaceEncoding::updateOrCreate(
@@ -126,11 +191,20 @@ class FaceRegistrationController extends Controller
                 'capture_angles' => $request->angles,
                 'total_captures' => count($request->descriptors),
                 'quality_score' => $request->input('quality_score', $request->input('liveness_score')),
+                'registration_photo' => $photoPath,
+                'self_registration_unlocked_at' => null,
                 'is_active' => true,
                 'is_verified' => false,
                 'verified_by' => null,
                 'verified_at' => null,
             ]
+        );
+
+        $this->logFaceActivity(
+            $faceData,
+            $existingFace ? 'reregistered' : 'registered',
+            $canManageAll ? 'admin' : 'self',
+            $existingFace ? 'Registrasi wajah diperbarui.' : 'Registrasi wajah dibuat.'
         );
 
         return response()->json([
@@ -231,7 +305,6 @@ class FaceRegistrationController extends Controller
             ->withQueryString();
 
         $allFaces = (clone $baseQuery)
-            ->where('is_active', true)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -261,12 +334,16 @@ class FaceRegistrationController extends Controller
                 'verified_at' => now(),
             ]);
             $message = 'Data wajah berhasil diverifikasi.';
+            $event = 'approved';
         } else {
             $faceEncoding->update([
                 'is_active' => false,
             ]);
-            $message = 'Data wajah ditolak. User dapat mendaftar ulang.';
+            $message = 'Data wajah ditolak. Admin dapat meregistrasi ulang atau membuka izin registrasi ulang pengguna.';
+            $event = 'rejected';
         }
+
+        $this->logFaceActivity($faceEncoding, $event, 'admin', $message);
 
         return redirect()->route('admin.absensi.face-verification', [
             'type' => $faceEncoding->user_type,
@@ -279,6 +356,7 @@ class FaceRegistrationController extends Controller
 
         $profile = $faceEncoding->user_type === 'gtk' ? $faceEncoding->user->gtk : $faceEncoding->user->siswa;
         $name = $profile->nama_lengkap ?? $faceEncoding->user->name ?? 'Unknown';
+        $this->logFaceActivity($faceEncoding, 'deleted', 'admin', "Data wajah {$name} dihapus.");
         $faceEncoding->delete();
 
         return redirect()->route('admin.absensi.face-verification', [
@@ -296,9 +374,34 @@ class FaceRegistrationController extends Controller
             'verified_at' => null,
         ]);
 
+        $this->logFaceActivity($faceEncoding, 'verification_reset', 'admin', 'Status verifikasi di-reset ke pending.');
+
         return redirect()->route('admin.absensi.face-verification', [
             'type' => $faceEncoding->user_type,
         ])->with('success', 'Status verifikasi di-reset ke pending.');
+    }
+
+    public function updateSelfRegistrationAccess(Request $request, FaceEncoding $faceEncoding)
+    {
+        abort_unless($this->canManageAllRegistrations($request->user()), 403);
+
+        $validated = $request->validate(['action' => 'required|in:unlock,lock']);
+        $isUnlock = $validated['action'] === 'unlock';
+        $faceEncoding->update(['self_registration_unlocked_at' => $isUnlock ? now() : null]);
+        $this->logFaceActivity(
+            $faceEncoding,
+            $isUnlock ? 'self_registration_unlocked' : 'self_registration_locked',
+            'admin',
+            $isUnlock
+                ? 'Admin membuka izin registrasi ulang dari akun pengguna.'
+                : 'Admin membatalkan izin registrasi ulang dari akun pengguna.'
+        );
+
+        return redirect()->route('admin.absensi.face-verification', [
+            'type' => $faceEncoding->user_type,
+        ])->with('success', $isUnlock
+            ? 'Izin registrasi ulang pengguna berhasil dibuka. Izin akan terkunci otomatis setelah registrasi berhasil.'
+            : 'Izin registrasi ulang pengguna berhasil dibatalkan.');
     }
 
     public function getDescriptors(Request $request)
@@ -343,20 +446,43 @@ class FaceRegistrationController extends Controller
 
     private function saveBase64Photo(string $base64, string $userId, string $userType): ?string
     {
-        if (! preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
-            return null;
+        if (! preg_match('/^data:image\/(jpeg|jpg|png|webp);base64,/', $base64)) {
+            throw ValidationException::withMessages(['photo' => 'Format foto registrasi tidak didukung.']);
         }
 
-        $extension = $matches[1];
-        $data = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $base64));
-        if ($data === false) {
-            return null;
+        $data = base64_decode(substr($base64, strpos($base64, ',') + 1), true);
+        $imageInfo = $data === false ? false : getimagesizefromstring($data);
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+
+        if (! $imageInfo || ! isset($extensions[$imageInfo['mime']]) || strlen($data) > 2 * 1024 * 1024) {
+            throw ValidationException::withMessages(['photo' => 'Foto registrasi tidak valid atau melebihi 2 MB.']);
         }
 
-        $filename = "face-registration/{$userType}/{$userId}.".$extension;
+        $filename = "face-registration/{$userType}/{$userId}.".$extensions[$imageInfo['mime']];
         Storage::disk('public')->put($filename, $data);
 
         return $filename;
+    }
+
+    private function logFaceActivity(FaceEncoding $faceEncoding, string $event, string $source, string $description): void
+    {
+        activity('face-recognition')
+            ->performedOn($faceEncoding)
+            ->causedBy(request()->user())
+            ->withProperties([
+                'event' => $event,
+                'source' => $source,
+                'user_id' => $faceEncoding->user_id,
+                'user_type' => $faceEncoding->user_type,
+                'registration_photo' => $faceEncoding->registration_photo,
+                'quality_score' => $faceEncoding->quality_score,
+                'total_captures' => $faceEncoding->total_captures,
+            ])
+            ->log($description);
     }
 
     private function canManageAllRegistrations(User $user): bool

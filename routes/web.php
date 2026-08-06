@@ -1007,6 +1007,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/absensi/face-verify/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'verify'])->name('absensi.face-verify');
         Route::delete('/absensi/face-encoding/{faceEncoding}', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'destroy'])->name('absensi.face-encoding.destroy');
         Route::post('/absensi/face-encoding/{faceEncoding}/reset', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'resetVerification'])->name('absensi.face-encoding.reset');
+        Route::post('/absensi/face-encoding/{faceEncoding}/self-access', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'updateSelfRegistrationAccess'])->name('absensi.face-encoding.self-access');
     });
 
     // Absensi Settings (Admin)

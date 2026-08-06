@@ -85,7 +85,7 @@
                             <div class="col-lg-3 col-md-4 col-sm-6">
                                 <div class="card card-outline card-warning">
                                     <div class="card-body text-center">
-                                        <div class="mb-2"><img src="{{ $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle" width="64" height="64" style="object-fit:cover;"></div>
+                                        <div class="mb-2"><img src="{{ $face->registration_photo_url ?? $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle" width="64" height="64" style="object-fit:cover;" alt="Hasil registrasi {{ $name }}"></div>
                                         <h6 class="mb-0">{{ $name }}</h6>
                                         <small class="text-muted d-block">{{ $identifierLabelFace }}: {{ $identifier }}</small>
                                         <small class="text-muted d-block">{{ strtoupper($face->user_type) }}</small>
@@ -113,7 +113,7 @@
                                             <form method="POST" action="{{ route('admin.absensi.face-verify', $face) }}" class="ml-1">
                                                 @csrf
                                                 <input type="hidden" name="action" value="reject">
-                                                <button type="button" class="btn btn-sm btn-danger js-face-confirm" data-title="Tolak data wajah?" data-text="Data dinonaktifkan dan pengguna dapat melakukan registrasi ulang." data-confirm="Ya, tolak"><i class="fas fa-times"></i> Tolak</button>
+                                                <button type="button" class="btn btn-sm btn-danger js-face-confirm" data-title="Tolak data wajah?" data-text="Data dinonaktifkan dan tetap terkunci. Admin dapat merekam ulang atau membuka izin registrasi ulang secara terpisah." data-confirm="Ya, tolak"><i class="fas fa-times"></i> Tolak</button>
                                             </form>
                                         </div>
                                     </div>
@@ -157,7 +157,7 @@
                                     <td>{{ $i + 1 }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-2" width="32" height="32" style="object-fit:cover;">
+                                            <img src="{{ $face->registration_photo_url ?? $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-2" width="32" height="32" style="object-fit:cover;" alt="Hasil registrasi {{ $name }}">
                                             <div>
                                                 <div>{{ $name }}</div>
                                                 <small class="text-muted">{{ strtoupper($face->user_type) }}</small>
@@ -169,7 +169,9 @@
                                     <td>@foreach($face->capture_angles ?? [] as $angle)<span class="badge badge-light">{{ $angle }}</span>@endforeach</td>
                                     <td>@php $q = $face->quality_score ?? 0; @endphp <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span></td>
                                     <td>
-                                        @if($face->is_verified)
+                                        @if(! $face->is_active)
+                                            <span class="badge badge-danger"><i class="fas fa-ban"></i> Ditolak</span>
+                                        @elseif($face->is_verified)
                                             <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
                                         @else
                                             <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
@@ -186,6 +188,19 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ route('admin.absensi.face-register', ['type' => $face->user_type, 'user_id' => $face->user_id]) }}" class="btn btn-info" title="Registrasi Ulang"><i class="fas fa-redo"></i></a>
+                                            @if(! $face->self_registration_unlocked_at)
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="d-inline">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="unlock">
+                                                    <button type="button" class="btn btn-primary js-face-confirm" title="Izinkan Registrasi Ulang dari Akun Pengguna" data-title="Buka izin registrasi ulang?" data-text="Pengguna dapat merekam ulang satu kali dari akunnya. Setelah berhasil, akses otomatis terkunci kembali." data-confirm="Ya, izinkan"><i class="fas fa-user-lock"></i></button>
+                                                </form>
+                                            @else
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="d-inline">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="lock">
+                                                    <button type="button" class="btn btn-success js-face-confirm" title="Batalkan Izin Registrasi Ulang" data-title="Batalkan izin registrasi ulang?" data-text="Akun pengguna akan kembali terkunci dan tidak dapat merekam ulang." data-confirm="Ya, kunci"><i class="fas fa-lock-open"></i></button>
+                                                </form>
+                                            @endif
                                             @if($face->is_verified)
                                                 <form method="POST" action="{{ route('admin.absensi.face-encoding.reset', $face) }}" class="d-inline">
                                                     @csrf

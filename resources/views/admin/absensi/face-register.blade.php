@@ -41,7 +41,11 @@
                 <div class="text-uppercase small font-weight-bold text-white-50 mb-1">Pusat Biometrik SIMANSA</div>
                 <h2 class="h4 text-white mb-2">{{ $pageTitle }}</h2>
                 <p class="text-white-50 mb-0">
-                    Gunakan pencahayaan yang cukup, posisikan wajah di tengah kamera, dan ikuti instruksi sampai semua langkah selesai.
+                    @if($selfOnly)
+                        Halaman ini hanya untuk pendaftaran identitas wajah. Presensi dilakukan melalui kiosk resmi di area madrasah, bukan dari akun pribadi.
+                    @else
+                        Kelola pendaftaran wajah GTK dan siswa. Admin dapat merekam langsung atau membuka izin registrasi ulang pada akun pengguna.
+                    @endif
                 </p>
             </div>
             <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
@@ -68,7 +72,10 @@
             <div class="card card-primary card-outline face-self-card">
                 <div class="card-body p-3 p-md-4">
                     <div class="d-flex flex-column flex-md-row align-items-md-center">
-                        <img src="{{ $selfRegistrant['avatar_url'] }}" alt="{{ $selfRegistrant['name'] }}" class="img-circle mr-md-3 mb-3 mb-md-0 face-self-card__avatar">
+                        <div class="mr-md-3 mb-3 mb-md-0 text-center">
+                            <img src="{{ $selfFace?->registration_photo_url ?: $selfRegistrant['avatar_url'] }}" alt="Preview registrasi {{ $selfRegistrant['name'] }}" class="img-circle face-self-card__avatar">
+                            <small class="d-block text-muted mt-2">{{ $selfFace?->registration_photo_url ? 'Preview hasil registrasi' : 'Foto profil' }}</small>
+                        </div>
                         <div class="flex-grow-1">
                             <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                                 <div>
@@ -89,27 +96,42 @@
                             </div>
 
                             <div class="row mt-3">
-                                <div class="col-sm-6 mb-2 mb-sm-0">
+                                <div class="col-sm-4 mb-2 mb-sm-0">
                                     <div class="face-self-metric">
                                         <small class="text-muted d-block">Capture Tersimpan</small>
                                         <strong>{{ $selfFace?->total_captures ?? 0 }} frame</strong>
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-sm-4 mb-2 mb-sm-0">
                                     <div class="face-self-metric">
                                         <small class="text-muted d-block">Update Terakhir</small>
                                         <strong>{{ $selfFace?->updated_at?->format('d/m/Y H:i') ?? '-' }}</strong>
                                     </div>
                                 </div>
+                                <div class="col-sm-4">
+                                    <div class="face-self-metric">
+                                        <small class="text-muted d-block">Akses Registrasi</small>
+                                        <strong class="text-{{ $selfCanRegister ? 'warning' : 'success' }}">
+                                            <i class="fas fa-{{ $selfCanRegister ? 'lock-open' : 'lock' }} mr-1"></i>{{ $selfCanRegister ? 'Diizinkan' : 'Terkunci' }}
+                                        </strong>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="d-flex flex-column flex-md-row mt-4">
-                                <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
-                                        onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
-                                    <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
-                                    {{ $selfFace ? 'Edit / Registrasi Ulang' : 'Mulai Registrasi' }}
-                                </button>
-                            </div>
+                            @if($selfCanRegister)
+                                <div class="d-flex flex-column flex-md-row mt-4">
+                                    <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
+                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
+                                        <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
+                                        {{ $selfFace ? 'Registrasi Ulang Diizinkan' : 'Mulai Registrasi' }}
+                                    </button>
+                                </div>
+                            @else
+                                <div class="alert alert-success mt-4 mb-0">
+                                    <i class="fas fa-lock mr-1"></i>
+                                    <strong>Registrasi terkunci.</strong> Data wajah tidak dapat diubah dari akun ini. Jika deteksi gagal, hubungi admin untuk registrasi ulang atau pembukaan izin sementara.
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -121,14 +143,127 @@
                 <div class="card-body">
                     <h5 class="font-weight-bold mb-3"><i class="fas fa-list-check mr-1"></i> Alur Registrasi</h5>
                     <div class="face-register-checklist text-muted small">
-                        <div><i class="fas fa-check text-success mr-1"></i> Ambil wajah dari akun Anda sendiri</div>
+                        <div><i class="fas fa-check text-success mr-1"></i> Registrasi hanya satu kali dari akun sendiri</div>
                         <div><i class="fas fa-check text-success mr-1"></i> Sistem menyimpan beberapa sudut otomatis</div>
                         <div><i class="fas fa-check text-success mr-1"></i> Admin melakukan approval</div>
-                        <div><i class="fas fa-check text-success mr-1"></i> Wajah approved menjadi identitas biometrik resmi akun</div>
+                        <div><i class="fas fa-lock text-success mr-1"></i> Sistem mengunci perubahan setelah tersimpan</div>
+                        <div><i class="fas fa-building text-success mr-1"></i> Presensi dilakukan di kiosk resmi madrasah</div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    @if($selfFace)
+        <div class="card card-outline card-primary mt-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-history mr-1"></i> Riwayat Registrasi Wajah</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Aktivitas</th>
+                                <th>Tanggal</th>
+                                <th>Bulan</th>
+                                <th>Tahun</th>
+                                <th>Pelaksana</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($selfHistory as $activity)
+                                @php
+                                    $event = $activity->properties->get('event');
+                                    $eventMeta = match($event) {
+                                        'registered' => ['primary', 'camera', 'Registrasi awal'],
+                                        'reregistered' => ['info', 'redo', 'Registrasi ulang'],
+                                        'approved' => ['success', 'check-circle', 'Disetujui admin'],
+                                        'rejected' => ['danger', 'times-circle', 'Ditolak admin'],
+                                        'verification_reset' => ['warning', 'undo', 'Verifikasi di-reset'],
+                                        'self_registration_unlocked' => ['warning', 'lock-open', 'Izin registrasi ulang dibuka'],
+                                        'self_registration_locked' => ['secondary', 'lock', 'Izin registrasi ulang dibatalkan'],
+                                        default => ['secondary', 'history', $activity->description],
+                                    };
+                                @endphp
+                                <tr>
+                                    <td><span class="badge badge-{{ $eventMeta[0] }}"><i class="fas fa-{{ $eventMeta[1] }} mr-1"></i>{{ $eventMeta[2] }}</span></td>
+                                    <td>{{ $activity->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $activity->created_at->translatedFormat('F') }}</td>
+                                    <td>{{ $activity->created_at->format('Y') }}</td>
+                                    <td>{{ $activity->causer?->name ?? ($activity->properties->get('source') === 'self' ? 'Akun sendiri' : 'Sistem') }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td><span class="badge badge-primary"><i class="fas fa-camera mr-1"></i>Registrasi awal</span></td>
+                                    <td>{{ $selfFace->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $selfFace->created_at->translatedFormat('F') }}</td>
+                                    <td>{{ $selfFace->created_at->format('Y') }}</td>
+                                    <td>Akun sendiri</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="card card-outline card-primary mt-4">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <h3 class="card-title mb-2 mb-md-0"><i class="fas fa-calendar-check mr-1"></i> Rekap Presensi Pribadi</h3>
+            <form method="GET" class="form-inline">
+                <label class="sr-only" for="attendanceMonth">Bulan</label>
+                <select name="attendance_month" id="attendanceMonth" class="form-control form-control-sm mr-2 mb-2 mb-md-0">
+                    @foreach(range(1, 12) as $month)
+                        <option value="{{ $month }}" @selected($attendanceMonth === $month)>{{ \Carbon\Carbon::create(2000, $month, 1)->translatedFormat('F') }}</option>
+                    @endforeach
+                </select>
+                <label class="sr-only" for="attendanceYear">Tahun</label>
+                <select name="attendance_year" id="attendanceYear" class="form-control form-control-sm mr-2 mb-2 mb-md-0">
+                    @foreach($selfAttendanceYears as $year)
+                        <option value="{{ $year }}" @selected($attendanceYear === (int) $year)>{{ $year }}</option>
+                    @endforeach
+                    @if(!$selfAttendanceYears->contains($attendanceYear))
+                        <option value="{{ $attendanceYear }}" selected>{{ $attendanceYear }}</option>
+                    @endif
+                </select>
+                <button class="btn btn-sm btn-primary"><i class="fas fa-filter mr-1"></i>Tampilkan</button>
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Status</th>
+                            <th>Masuk</th>
+                            <th>Pulang</th>
+                            <th>Metode</th>
+                            <th>Lokasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($selfAttendance as $attendance)
+                            <tr>
+                                <td>{{ $attendance->tanggal->translatedFormat('l, d F Y') }}</td>
+                                <td><span class="badge badge-{{ $attendance->status_badge }}">{{ ucfirst(str_replace('_', ' ', $attendance->status)) }}</span></td>
+                                <td>{{ $attendance->waktu_masuk_formatted }}</td>
+                                <td>{{ $attendance->waktu_pulang_formatted }}</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $attendance->metode_masuk ?? '-')) }}</td>
+                                <td>{{ $attendance->location?->nama ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-center text-muted py-4">Belum ada rekaman presensi pada {{ \Carbon\Carbon::create($attendanceYear, $attendanceMonth, 1)->translatedFormat('F Y') }}.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if($selfAttendance->hasPages())
+            <div class="card-footer">{{ $selfAttendance->links() }}</div>
+        @endif
     </div>
 @else
     <div class="row mb-4">
