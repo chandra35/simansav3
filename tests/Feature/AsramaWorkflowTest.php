@@ -128,4 +128,55 @@ class AsramaWorkflowTest extends TestCase
         $this->actingAs($admin)->get(route('asrama.nilai.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.rapor.index'))->assertOk();
     }
+
+    public function test_gtk_with_asrama_assignment_cannot_be_deleted(): void
+    {
+        $admin = User::permission('delete-gtk')->first();
+        $teacher = Gtk::whereNotNull('user_id')
+            ->when($admin, fn ($query) => $query->where('user_id', '!=', $admin->id))
+            ->first();
+        if (! $admin || ! $teacher) {
+            $this->markTestSkipped('Akun penghapus dan GTK diperlukan.');
+        }
+
+        $suffix = strtoupper(Str::random(7));
+        $unit = Asrama::create(['kode' => 'D'.$suffix, 'nama' => 'Asrama Delete Test', 'jenis' => 'campuran']);
+        AsramaAsatidz::create([
+            'asrama_id' => $unit->id,
+            'gtk_id' => $teacher->id,
+            'jabatan' => 'Asatidz',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->withSession(['_token' => 'asrama-delete-test'])
+            ->deleteJson(route('admin.gtk.destroy', $teacher), ['_token' => 'asrama-delete-test'])
+            ->assertUnprocessable()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'GTK masih terdaftar pada tim Asrama. Lepas seluruh tugas dan hapus GTK dari menu Pengasuh & Pengajar Asrama terlebih dahulu.');
+
+        $this->assertNull($teacher->fresh()->deleted_at);
+    }
+
+    public function test_asatidz_can_read_soft_deleted_gtk_history(): void
+    {
+        $teacher = Gtk::whereNotNull('user_id')->first();
+        if (! $teacher) {
+            $this->markTestSkipped('GTK diperlukan.');
+        }
+
+        $suffix = strtoupper(Str::random(7));
+        $unit = Asrama::create(['kode' => 'H'.$suffix, 'nama' => 'Asrama History Test', 'jenis' => 'campuran']);
+        $asatidz = AsramaAsatidz::create([
+            'asrama_id' => $unit->id,
+            'gtk_id' => $teacher->id,
+            'jabatan' => 'Asatidz',
+            'is_active' => false,
+        ]);
+
+        $teacher->delete();
+
+        $this->assertTrue($asatidz->fresh()->gtk->trashed());
+        $this->assertSame($teacher->nama_lengkap, $asatidz->fresh()->gtk->nama_lengkap);
+    }
 }

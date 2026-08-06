@@ -1,8 +1,22 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 4 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Integritas GTK dan penugasan Asrama
+
+- Halaman Pengasuh & Pengajar Asrama tetap dapat membaca profil GTK yang sudah terlanjur dihapus secara lunak, sehingga data historis tidak lagi menyebabkan Internal Server Error.
+- GTK historis diberi penanda **GTK dihapus**, tidak dapat diedit, tetapi tetap dapat dilepas dari tim Asrama melalui alur pembersihan yang aman.
+- Penghapusan GTK dari Data GTK kini ditolak apabila GTK masih tercatat pada tim Asrama. Admin harus melepas beban rombel, kamar, dan mapel lalu menghapus penugasannya dari Asrama terlebih dahulu.
+- Pengujian mencakup proteksi penghapusan GTK yang masih ditugaskan dan pembacaan relasi GTK yang sudah dihapus secara lunak.
+
+File terkait:
+
+- `app/Models/AsramaAsatidz.php`
+- `app/Http/Controllers/Admin/GtkController.php`
+- `resources/views/asrama/master/asatidz.blade.php`
+- `tests/Feature/AsramaWorkflowTest.php`
 
 ### Modul Absensi Siswa untuk Super Admin
 

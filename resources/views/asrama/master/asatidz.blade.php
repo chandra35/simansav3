@@ -49,7 +49,11 @@
                 @forelse($records as $item)
                 <tr>
                     <td><img src="{{ $item->gtk->foto_profile_url }}" alt="{{ $item->gtk->nama_lengkap }}" class="img-circle elevation-1" style="width:36px;height:36px;object-fit:cover"></td>
-                    <td class="align-middle"><strong>{{ $item->gtk->nama_lengkap }}</strong><br><small class="text-muted">{{ $item->gtk->nip ? 'NIP '.$item->gtk->nip : ($item->gtk->nuptk ? 'NUPTK '.$item->gtk->nuptk : '-') }}</small></td>
+                    <td class="align-middle">
+                        <strong>{{ $item->gtk->nama_lengkap }}</strong>
+                        @if($item->gtk->trashed())<span class="badge badge-danger ml-1">GTK dihapus</span>@endif
+                        <br><small class="text-muted">{{ $item->gtk->nip ? 'NIP '.$item->gtk->nip : ($item->gtk->nuptk ? 'NUPTK '.$item->gtk->nuptk : '-') }}</small>
+                    </td>
                     <td class="align-middle">{{ $item->jabatan }}</td>
                     <td class="align-middle">
                         @if($item->dapat_mengasuh_rombel)<span class="badge badge-primary mr-1"><i class="fas fa-users mr-1"></i>Rombel</span>@endif
@@ -65,7 +69,9 @@
                     <td class="align-middle">{{ $item->tanggal_mulai?->format('d/m/Y') ?: '-' }}</td>
                     <td class="align-middle"><span class="badge badge-{{ $item->is_active ? 'success' : 'secondary' }}">{{ $item->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                     <td class="align-middle text-right text-nowrap">
+                        @unless($item->gtk->trashed())
                         <button class="btn btn-sm btn-primary" title="Edit tugas" data-toggle="modal" data-target="#editAsatidz{{ $item->id }}"><i class="fas fa-pen"></i></button>
+                        @endunless
                         <form method="post" action="{{ route('asrama.asatidz.destroy', $item) }}" class="d-inline" data-asrama-loading data-confirm="Hapus {{ $item->gtk->nama_lengkap }} dari tim Asrama? Data GTK SIMANSA tidak akan berubah.">@csrf @method('DELETE')
                             <button class="btn btn-sm btn-danger" title="Hapus dari asrama"><i class="fas fa-trash"></i></button>
                         </form>
@@ -132,6 +138,7 @@
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-check mr-1"></i> Simpan Penugasan</button></div></form></div></div>
 
 @foreach($records as $item)
+@unless($item->gtk->trashed())
 <div class="modal fade" id="editAsatidz{{ $item->id }}" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form method="post" action="{{ route('asrama.asatidz.update',$item) }}" class="modal-content" data-asrama-loading data-loading-title="Memperbarui tugas GTK">@csrf @method('PUT')
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-edit mr-2"></i>{{ $item->gtk->nama_lengkap }}</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body">
@@ -148,6 +155,7 @@
     <small class="text-muted d-block mt-1">Jika dinonaktifkan, tanggal selesai diisi otomatis hari ini.</small>
 </div>
 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan</button></div></form></div></div>
+@endunless
 @endforeach
 @include('asrama._scripts')
 @stop

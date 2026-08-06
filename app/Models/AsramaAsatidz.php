@@ -31,7 +31,7 @@ class AsramaAsatidz extends Model
 
     public function gtk()
     {
-        return $this->belongsTo(Gtk::class);
+        return $this->belongsTo(Gtk::class)->withTrashed();
     }
 
     public function kelasWali()

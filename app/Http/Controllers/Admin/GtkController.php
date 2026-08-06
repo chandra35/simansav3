@@ -645,7 +645,14 @@ class GtkController extends Controller
     {
         try {
             $gtk = Gtk::findOrFail($id);
-            
+
+            if ($gtk->asramaAssignments()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'GTK masih terdaftar pada tim Asrama. Lepas seluruh tugas dan hapus GTK dari menu Pengasuh & Pengajar Asrama terlebih dahulu.',
+                ], 422);
+            }
+
             DB::beginTransaction();
 
             // Hapus user jika ada
