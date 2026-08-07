@@ -92,5 +92,6 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString("now('Asia/Jakarta')", $controller);
         $this->assertStringContainsString('requestFullscreen', $view);
         $this->assertStringContainsString('SEDANG BERLANGSUNG', $view);
+        $this->assertStringContainsString('jm-class--tone-', $view);
     }
 }
