@@ -4,6 +4,18 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan identitas GTK
+
+- Form Edit GTK pada tab Data Pribadi kini menyediakan field **PEG ID / ID PTK** di samping NIK dan NUPTK.
+- Nilai divalidasi unik pada server sebelum disimpan, lalu ikut tampil pada ringkasan identitas di panel kiri.
+- Field memakai data `peg_id` yang telah ada pada tabel GTK dan proses sinkronisasi workbook, sehingga tidak memerlukan migrasi baru.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/GtkController.php`
+- `resources/views/admin/gtk/edit.blade.php`
+- `tests/Unit/GtkEditUiArchitectureTest.php`
+
 ### Pusat Face Recognition GTK dan Siswa
 
 - Menu Presensi kini memiliki modul **Face Recognition** terpusat untuk Registrasi Wajah serta Verifikasi & Data biometrik.

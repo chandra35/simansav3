@@ -8,12 +8,11 @@ use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\GtkKemenagSyncService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class GtkController extends Controller
 {
@@ -29,8 +28,8 @@ class GtkController extends Controller
             'laki_laki' => Gtk::where('jenis_kelamin', 'L')->count(),
             'perempuan' => Gtk::where('jenis_kelamin', 'P')->count(),
             'data_lengkap' => Gtk::where('data_diri_completed', true)
-                                 ->where('data_kepegawaian_completed', true)
-                                 ->count(),
+                ->where('data_kepegawaian_completed', true)
+                ->count(),
         ];
 
         // Filter options for status kepegawaian
@@ -92,9 +91,9 @@ class GtkController extends Controller
                 $gtk->where('data_diri_completed', true)
                     ->where('data_kepegawaian_completed', true);
             } elseif ($request->status == 'belum') {
-                $gtk->where(function($q) {
+                $gtk->where(function ($q) {
                     $q->where('data_diri_completed', false)
-                      ->orWhere('data_kepegawaian_completed', false);
+                        ->orWhere('data_kepegawaian_completed', false);
                 });
             }
         }
@@ -102,25 +101,25 @@ class GtkController extends Controller
         // Search functionality
         if ($request->has('search') && $request->search['value']) {
             $search = $request->search['value'];
-            $gtk->where(function($q) use ($search) {
+            $gtk->where(function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%")
-                  ->orWhere('nuptk', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%")
-                  ->orWhere('peg_id', 'like', "%{$search}%")
-                  ->orWhere('status_inpassing', 'like', "%{$search}%")
-                  ->orWhere('status_sertifikasi', 'like', "%{$search}%")
-                  ->orWhere('kode_gtk', 'like', "%{$search}%")
-                  ->orWhere('kategori_ptk', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($userQuery) use ($search) {
-                      $userQuery->where('username', 'like', "%{$search}%");
-                  });
+                    ->orWhere('nik', 'like', "%{$search}%")
+                    ->orWhere('nuptk', 'like', "%{$search}%")
+                    ->orWhere('nip', 'like', "%{$search}%")
+                    ->orWhere('peg_id', 'like', "%{$search}%")
+                    ->orWhere('status_inpassing', 'like', "%{$search}%")
+                    ->orWhere('status_sertifikasi', 'like', "%{$search}%")
+                    ->orWhere('kode_gtk', 'like', "%{$search}%")
+                    ->orWhere('kategori_ptk', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('username', 'like', "%{$search}%");
+                    });
             });
         }
 
         $totalRecords = Gtk::count();
         $filteredRecords = $gtk->count();
-        
+
         // Pagination - Handle "All" option
         if ($request->has('start') && $request->has('length')) {
             $length = $request->length;
@@ -139,7 +138,7 @@ class GtkController extends Controller
             $gtk->latest();
         }
 
-        $data = $gtk->get()->map(function($item, $index) use ($request) {
+        $data = $gtk->get()->map(function ($item, $index) use ($request) {
             $jenisPtkClass = $item->kategori_ptk === 'Pendidik'
                 ? 'simansa-gtk-meta-badge--primary'
                 : 'simansa-gtk-meta-badge--info';
@@ -200,7 +199,7 @@ class GtkController extends Controller
                 'status_kepegawaian' => $item->status_kepegawaian ?? '-',
                 'jabatan' => $item->jabatan ?? '-',
                 'username' => $item->user->username ?? '-',
-                'actions' => $this->getActionButtons($item)
+                'actions' => $this->getActionButtons($item),
             ];
         });
 
@@ -208,7 +207,7 @@ class GtkController extends Controller
             'draw' => intval($request->draw),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -256,10 +255,10 @@ class GtkController extends Controller
      */
     public function syncKemenagCandidates()
     {
-        if (!auth()->user()->can('edit-gtk')) {
+        if (! auth()->user()->can('edit-gtk')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi massal.'
+                'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi massal.',
             ], 403);
         }
 
@@ -362,7 +361,7 @@ class GtkController extends Controller
             $user = User::create([
                 'name' => $validated['nama_lengkap'],
                 'username' => $username,
-                'email' => $username . '@gtk.simansa.sch.id', // Email dummy
+                'email' => $username.'@gtk.simansa.sch.id', // Email dummy
                 'password' => Hash::make($validated['nik']), // Default password = NIK
                 'is_active' => true,
             ]);
@@ -383,23 +382,23 @@ class GtkController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data GTK berhasil ditambahkan. Username: ' . $username . ', Password default: NIK',
-                'data' => $gtk
+                'message' => 'Data GTK berhasil ditambahkan. Username: '.$username.', Password default: NIK',
+                'data' => $gtk,
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error creating GTK: ' . $e->getMessage());
-            
+            Log::error('Error creating GTK: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -411,14 +410,12 @@ class GtkController extends Controller
     {
         $gtk = Gtk::with(['user', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan'])
             ->findOrFail($id);
-            
+
         return response()->json([
             'success' => true,
-            'data' => $gtk
+            'data' => $gtk,
         ]);
     }
-
-
 
     /**
      * Show the form for editing the specified resource.
@@ -426,30 +423,30 @@ class GtkController extends Controller
     public function edit($id)
     {
         $gtk = Gtk::with(['user.roles', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan', 'kemenagSync.syncedBy'])->findOrFail($id);
-        
+
         // Get all provinces for dropdown
         $provinces = \Laravolt\Indonesia\Models\Province::all();
-        
+
         // Get cities, districts, villages based on current data
         $cities = [];
         $districts = [];
         $villages = [];
-        
+
         if ($gtk->provinsi_id) {
             $cities = \Laravolt\Indonesia\Models\City::where('province_code', $gtk->provinsi_id)->get();
         }
-        
+
         if ($gtk->kabupaten_id) {
             $districts = \Laravolt\Indonesia\Models\District::where('city_code', $gtk->kabupaten_id)->get();
         }
-        
+
         if ($gtk->kecamatan_id) {
             $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $gtk->kecamatan_id)->get();
         }
-        
+
         // Get all roles for dropdown
         $roles = \Spatie\Permission\Models\Role::all();
-        
+
         return view('admin.gtk.edit', compact('gtk', 'provinces', 'cities', 'districts', 'villages', 'roles'));
     }
 
@@ -459,19 +456,20 @@ class GtkController extends Controller
     public function update(Request $request, $id)
     {
         $gtk = Gtk::with('user')->findOrFail($id);
-        
+
         // Determine which tab is being updated
         $tab = $request->input('tab', 'diri');
-        
+
         try {
             DB::beginTransaction();
-            
+
             if ($tab === 'diri') {
                 // Update Data Pribadi
                 $validated = $request->validate([
                     'nama_lengkap' => 'required|string|max:255',
-                    'nik' => 'required|string|size:16|unique:gtks,nik,' . $gtk->id,
+                    'nik' => 'required|string|size:16|unique:gtks,nik,'.$gtk->id,
                     'nuptk' => 'nullable|string|max:20',
+                    'peg_id' => 'nullable|string|max:20|unique:gtks,peg_id,'.$gtk->id,
                     'jenis_kelamin' => 'required|in:L,P',
                     'tempat_lahir' => 'nullable|string|max:100',
                     'tanggal_lahir' => 'nullable|date',
@@ -488,15 +486,15 @@ class GtkController extends Controller
                 ]);
 
                 $gtk->update($validated);
-                
+
                 // Check if data diri is complete
-                $dataLengkap = !empty($gtk->nik) && !empty($gtk->nama_lengkap) && 
-                               !empty($gtk->jenis_kelamin) && !empty($gtk->tempat_lahir) && 
-                               !empty($gtk->tanggal_lahir);
+                $dataLengkap = ! empty($gtk->nik) && ! empty($gtk->nama_lengkap) &&
+                               ! empty($gtk->jenis_kelamin) && ! empty($gtk->tempat_lahir) &&
+                               ! empty($gtk->tanggal_lahir);
                 $gtk->update(['data_diri_completed' => $dataLengkap]);
-                
+
                 $message = 'Data pribadi berhasil diperbarui';
-                
+
             } elseif ($tab === 'kepeg') {
                 // Update Data Kepegawaian
                 $validated = $request->validate([
@@ -507,67 +505,68 @@ class GtkController extends Controller
                     'jabatan' => 'nullable|string|max:100',
                     'tmt_kerja' => 'nullable|date',
                 ]);
-                
+
                 $gtk->update($validated);
-                
+
                 // Check if data kepegawaian is complete
-                $kepegLengkap = !empty($gtk->status_kepegawaian) && !empty($gtk->jabatan) && !empty($gtk->tmt_kerja);
+                $kepegLengkap = ! empty($gtk->status_kepegawaian) && ! empty($gtk->jabatan) && ! empty($gtk->tmt_kerja);
                 $gtk->update(['data_kepegawaian_completed' => $kepegLengkap]);
-                
+
                 $message = 'Data kepegawaian berhasil diperbarui';
-                
+
             } elseif ($tab === 'akun') {
                 // Update Akun User
-                if (!$gtk->user) {
+                if (! $gtk->user) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'GTK tidak memiliki akun user'
+                        'message' => 'GTK tidak memiliki akun user',
                     ], 404);
                 }
-                
+
                 $validated = $request->validate([
                     'name' => 'required|string|max:255',
-                    'username' => 'required|string|max:255|unique:users,username,' . $gtk->user->id,
-                    'email' => 'required|email|max:255|unique:users,email,' . $gtk->user->id,
+                    'username' => 'required|string|max:255|unique:users,username,'.$gtk->user->id,
+                    'email' => 'required|email|max:255|unique:users,email,'.$gtk->user->id,
                     'is_active' => 'required|boolean',
                     'role' => 'required|exists:roles,name',
                 ]);
-                
+
                 $gtk->user->update([
                     'name' => $validated['name'],
                     'username' => $validated['username'],
                     'email' => $validated['email'],
                     'is_active' => $validated['is_active'],
                 ]);
-                
+
                 // Sync role
                 $gtk->user->syncRoles([$validated['role']]);
-                
+
                 $message = 'Data akun berhasil diperbarui';
             }
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => $gtk->fresh(['user.roles'])
+                'data' => $gtk->fresh(['user.roles']),
             ]);
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating GTK: ' . $e->getMessage());
-            
+            Log::error('Error updating GTK: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -600,10 +599,11 @@ class GtkController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Foto berhasil diupload.',
-                'foto_url' => asset('storage/' . $path),
+                'foto_url' => asset('storage/'.$path),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error uploading GTK foto: ' . $e->getMessage());
+            Log::error('Error uploading GTK foto: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengupload foto.',
@@ -630,7 +630,8 @@ class GtkController extends Controller
                 'default_url' => $gtk->fresh()->foto_profile_url,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error deleting GTK foto: ' . $e->getMessage());
+            Log::error('Error deleting GTK foto: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus foto.',
@@ -670,16 +671,16 @@ class GtkController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data GTK berhasil dihapus'
+                'message' => 'Data GTK berhasil dihapus',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error deleting GTK: ' . $e->getMessage());
-            
+            Log::error('Error deleting GTK: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -692,10 +693,10 @@ class GtkController extends Controller
         try {
             $gtk = Gtk::with('user')->findOrFail($id);
 
-            if (!$gtk->user) {
+            if (! $gtk->user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'GTK tidak memiliki akun user'
+                    'message' => 'GTK tidak memiliki akun user',
                 ], 404);
             }
 
@@ -706,15 +707,15 @@ class GtkController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password berhasil direset ke NIK'
+                'message' => 'Password berhasil direset ke NIK',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error resetting password: ' . $e->getMessage());
-            
+            Log::error('Error resetting password: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -725,6 +726,7 @@ class GtkController extends Controller
     public function getCities($provinceCode)
     {
         $cities = \Laravolt\Indonesia\Models\City::where('province_code', $provinceCode)->get();
+
         return response()->json($cities);
     }
 
@@ -734,6 +736,7 @@ class GtkController extends Controller
     public function getDistricts($cityCode)
     {
         $districts = \Laravolt\Indonesia\Models\District::where('city_code', $cityCode)->get();
+
         return response()->json($districts);
     }
 
@@ -744,7 +747,7 @@ class GtkController extends Controller
     {
         $villages = \Laravolt\Indonesia\Models\Village::where('district_code', $districtCode)
             ->get()
-            ->map(function($village) {
+            ->map(function ($village) {
                 return [
                     'code' => $village->code,
                     'district_code' => $village->district_code,
@@ -752,6 +755,7 @@ class GtkController extends Controller
                     'meta' => $village->meta_json ? json_decode($village->meta_json, true) : null,
                 ];
             });
+
         return response()->json($villages);
     }
 
@@ -764,12 +768,12 @@ class GtkController extends Controller
             // Load GTK dengan relasi wilayah untuk comparison alamat
             $gtk = Gtk::with(['provinsi', 'kabupaten', 'kecamatan', 'kelurahan'])
                 ->findOrFail($id);
-            
+
             // Check permission
-            if (!auth()->user()->can('edit-gtk')) {
+            if (! auth()->user()->can('edit-gtk')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi'
+                    'message' => 'Anda tidak memiliki izin untuk melakukan sinkronisasi',
                 ], 403);
             }
 
@@ -777,7 +781,7 @@ class GtkController extends Controller
             if (empty($gtk->nip)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'GTK ini tidak memiliki NIP. Sinkronisasi tidak dapat dilakukan.'
+                    'message' => 'GTK ini tidak memiliki NIP. Sinkronisasi tidak dapat dilakukan.',
                 ]);
             }
 
@@ -789,12 +793,12 @@ class GtkController extends Controller
         } catch (\Exception $e) {
             Log::error('GtkController: Sync Kemenag error', [
                 'gtk_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat sinkronisasi: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat sinkronisasi: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -806,26 +810,26 @@ class GtkController extends Controller
     {
         try {
             $gtk = Gtk::with('kemenagSync')->findOrFail($id);
-            
+
             // Check permission
-            if (!auth()->user()->can('edit-gtk')) {
+            if (! auth()->user()->can('edit-gtk')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda tidak memiliki izin untuk menerapkan data'
+                    'message' => 'Anda tidak memiliki izin untuk menerapkan data',
                 ], 403);
             }
 
             // Check if sync data exists
-            if (!$gtk->kemenagSync) {
+            if (! $gtk->kemenagSync) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Belum ada data sinkronisasi. Silakan lakukan sinkronisasi terlebih dahulu.'
+                    'message' => 'Belum ada data sinkronisasi. Silakan lakukan sinkronisasi terlebih dahulu.',
                 ], 404);
             }
 
             // Apply data
             $result = $syncService->applyKemenagDataToLocal(
-                $gtk->kemenagSync, 
+                $gtk->kemenagSync,
                 auth()->id()
             );
 
@@ -834,12 +838,12 @@ class GtkController extends Controller
         } catch (\Exception $e) {
             Log::error('GtkController: Apply Kemenag data error', [
                 'gtk_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat menerapkan data: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat menerapkan data: '.$e->getMessage(),
             ], 500);
         }
     }

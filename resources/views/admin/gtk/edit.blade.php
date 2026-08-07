@@ -95,6 +95,7 @@
                         <div class="gtk-edit-identity-summary" aria-label="Ringkasan identitas GTK">
                             <div><span>NIK</span><strong>{{ $gtk->nik ?? '-' }}</strong></div>
                             <div><span>NUPTK</span><strong>{{ $gtk->nuptk ?? 'Belum diisi' }}</strong></div>
+                            <div><span>PEG ID / ID PTK</span><strong>{{ $gtk->peg_id ?? 'Belum diisi' }}</strong></div>
                         </div>
 
                         <div class="gtk-edit-nav-label">Kelola data</div>
@@ -141,7 +142,7 @@
                                 @method('PUT')
                                 <input type="hidden" name="tab" value="diri">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="nik">NIK <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="nik" name="nik" 
@@ -149,11 +150,19 @@
                                             <small class="text-muted">16 digit</small>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="nuptk">NUPTK</label>
                                             <input type="text" class="form-control" id="nuptk" name="nuptk" 
                                                    value="{{ $gtk->nuptk }}" maxlength="20">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="peg_id">PEG ID / ID PTK</label>
+                                            <input type="text" class="form-control" id="peg_id" name="peg_id"
+                                                   value="{{ $gtk->peg_id }}" maxlength="20" inputmode="numeric">
+                                            <small class="text-muted">Nomor identitas PTK dari data manajemen PTK.</small>
                                         </div>
                                     </div>
                                 </div>
