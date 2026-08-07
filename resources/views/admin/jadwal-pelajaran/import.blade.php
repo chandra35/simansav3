@@ -2,6 +2,8 @@
 
 @section('title', 'Import Jadwal Wakakur')
 
+@section('plugins.Sweetalert2', true)
+
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6"><h1><i class="fas fa-file-import text-primary"></i> Import Jadwal Wakakur</h1></div>
@@ -124,5 +126,30 @@
 @stop
 
 @section('js')
-<script>document.getElementById('wakakurImportCommit')?.addEventListener('submit',function(event){if(!confirm('Jadwal semester yang ada akan ditimpa. Lanjutkan impor?'))event.preventDefault()})</script>
+<script>
+document.getElementById('wakakurImportCommit')?.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const form = this;
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'Timpa jadwal semester?',
+        html: '<p class="mb-2">Jadwal yang ada pada semester ini akan diganti dengan hasil impor.</p>' +
+            '<div class="text-left small bg-light rounded p-2">' +
+                '<div><strong>Target:</strong> {{ $preview["tahun"]->nama }} · Semester {{ $preview["semester"] }}</div>' +
+                '<div><strong>Slot impor:</strong> {{ count($preview["rows"]) }}</div>' +
+                '<div><strong>Jadwal ditimpa:</strong> {{ $preview["existing_count"] }}</div>' +
+            '</div>',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-file-import"></i> Ya, import jadwal',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc3545',
+        focusCancel: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+});
+</script>
 @stop

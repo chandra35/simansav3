@@ -73,4 +73,13 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('JadwalHariJam::create', $controller);
         $this->assertStringContainsString('JadwalPelajaran::where', $controller);
     }
+
+    public function test_import_confirmation_uses_sweetalert_instead_of_browser_confirm(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/jadwal-pelajaran/import.blade.php');
+
+        $this->assertStringContainsString("@section('plugins.Sweetalert2', true)", $view);
+        $this->assertStringContainsString("Swal.fire({", $view);
+        $this->assertStringNotContainsString("if(!confirm(", $view);
+    }
 }
