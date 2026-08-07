@@ -14,6 +14,7 @@ use App\Models\MataPelajaran;
 use App\Models\Gtk;
 use App\Models\TahunPelajaran;
 use App\Services\JadwalWakakurImportService;
+use App\Services\JadwalAliasMappingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,7 +36,11 @@ class JadwalPelajaranController extends Controller
         ]);
     }
 
-    public function previewWakakurImport(Request $request, JadwalWakakurImportService $importer)
+    public function previewWakakurImport(
+        Request $request,
+        JadwalWakakurImportService $importer,
+        JadwalAliasMappingService $mappingService
+    )
     {
         $this->authorize('manage-jadwal-pelajaran');
 
@@ -60,6 +65,12 @@ class JadwalPelajaranController extends Controller
             ->where('status', 'verified')
             ->whereNotNull('gtk_id')
             ->pluck('gtk_id', 'external_code')->all();
+        $gtkByExactName = Gtk::query()
+            ->get(['id', 'nama_lengkap'])
+            ->groupBy(fn (Gtk $gtk) => $mappingService->normalizePersonName($gtk->nama_lengkap))
+            ->map(fn ($matches) => $matches->count() === 1 ? $matches->first()->id : null)
+            ->filter()
+            ->all();
         $mapelByCode = MataPelajaran::query()
             ->where('kurikulum_id', $tahun->kurikulum_id)
             ->whereIn('kode_jadwal', array_keys($parsed['mapel_references']))
@@ -74,10 +85,12 @@ class JadwalPelajaranController extends Controller
             ->keyBy(fn (Kelas $kelas) => $importer->classKey($kelas->nama_kelas));
 
         $seenSlots = [];
-        $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $mapelByCode, $mapelAliases, &$seenSlots) {
+        $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $gtkByExactName, $mapelByCode, $mapelAliases, $mappingService, &$seenSlots) {
             $errors = [];
             $kelas = $classes->get($slot['kelas_key']);
-            $gtkId = $gtkByCode[$slot['kode_gtk']] ?? $gtkAliases[$slot['kode_gtk']] ?? null;
+            $gtkId = $gtkByCode[$slot['kode_gtk']]
+                ?? $gtkAliases[$slot['kode_gtk']]
+                ?? ($slot['gtk_excel'] ? ($gtkByExactName[$mappingService->normalizePersonName($slot['gtk_excel'])] ?? null) : null);
             $mapelId = $mapelByCode[$slot['kode_mapel']] ?? $mapelAliases[$slot['kode_mapel']] ?? null;
             $slotKey = implode('|', [$slot['kelas_key'], $slot['hari'], $slot['jam_ke']]);
 

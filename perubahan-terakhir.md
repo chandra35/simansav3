@@ -10,6 +10,7 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 - Upload selalu menghasilkan preview; kode GTK, mapel, kelas, dan slot ganda harus valid sebelum jadwal semester ditimpa.
 - Slot BK dilaporkan tetapi tidak dimasukkan sebagai jadwal kelas reguler; jadwal yang valid disimpan dengan slot waktu dari konfigurasi jam SIMANSA.
 - Normalisasi kelas menyamakan format template `12-A1` dengan master kelas `XII-A1`.
+- Jika kode GTK pada revisi template berubah, importer memakai nama GTK pada sheet kode sebagai fallback eksak yang aman.
 
 ### Sinkronisasi kode jadwal Wakakur
 

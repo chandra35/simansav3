@@ -48,4 +48,12 @@ class JadwalWakakurImportServiceTest extends TestCase
             @unlink($file);
         }
     }
+
+    public function test_importer_uses_exact_excel_name_when_a_revised_gtk_code_is_not_mapped(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+
+        $this->assertStringContainsString('$gtkByExactName', $controller);
+        $this->assertStringContainsString('normalizePersonName($slot[\'gtk_excel\'])', $controller);
+    }
 }
