@@ -48,6 +48,11 @@
         </div>
 
         @if($tahunDipilih)
+        @php
+            $istirahat1 = $presetGenerator['istirahat'][0] ?? null;
+            $istirahat2 = $presetGenerator['istirahat'][1] ?? null;
+            $gunakanIstirahatBawaan = $jamList->isEmpty();
+        @endphp
         {{-- Generate Otomatis --}}
         <div class="simansa-jjc-panel mb-3">
             <div class="simansa-jjc-panel__header">
@@ -65,13 +70,13 @@
                             <label class="simansa-jjc-label">
                                 <i class="fas fa-sign-in-alt text-primary"></i> Jam Masuk
                             </label>
-                            <input type="time" name="jam_mulai" id="inpJamMasuk" class="form-control" value="07:00" required>
+                            <input type="time" name="jam_mulai" id="inpJamMasuk" class="form-control" value="{{ $presetGenerator['jam_mulai'] }}" required>
                         </div>
                         <div class="form-group col-6">
                             <label class="simansa-jjc-label">
                                 <i class="fas fa-sign-out-alt text-danger"></i> Jam Pulang
                             </label>
-                            <input type="time" name="jam_pulang" id="inpJamPulang" class="form-control" value="14:30" required>
+                            <input type="time" name="jam_pulang" id="inpJamPulang" class="form-control" value="{{ $presetGenerator['jam_pulang'] }}" required>
                         </div>
                     </div>
 
@@ -80,15 +85,15 @@
                             <i class="fas fa-stopwatch text-info"></i> Durasi per Jam Pelajaran
                         </label>
                         <div class="input-group">
-                            <input type="number" name="durasi_menit" id="inpDurasi" class="form-control" value="45" min="20" max="120" required>
+                            <input type="number" name="durasi_menit" id="inpDurasi" class="form-control" value="{{ $presetGenerator['durasi_menit'] }}" min="20" max="120" required>
                             <div class="input-group-append"><span class="input-group-text">menit</span></div>
                         </div>
                         <div class="simansa-jjc-presets mt-1">
                             <span>Preset:</span>
-                            <button type="button" class="simansa-jjc-preset-btn" data-val="30">30'</button>
-                            <button type="button" class="simansa-jjc-preset-btn" data-val="40">40'</button>
-                            <button type="button" class="simansa-jjc-preset-btn active" data-val="45">45'</button>
-                            <button type="button" class="simansa-jjc-preset-btn" data-val="50">50'</button>
+                            <button type="button" class="simansa-jjc-preset-btn {{ (int) $presetGenerator['durasi_menit'] === 30 ? 'active' : '' }}" data-val="30">30'</button>
+                            <button type="button" class="simansa-jjc-preset-btn {{ (int) $presetGenerator['durasi_menit'] === 40 ? 'active' : '' }}" data-val="40">40'</button>
+                            <button type="button" class="simansa-jjc-preset-btn {{ (int) $presetGenerator['durasi_menit'] === 45 ? 'active' : '' }}" data-val="45">45'</button>
+                            <button type="button" class="simansa-jjc-preset-btn {{ (int) $presetGenerator['durasi_menit'] === 50 ? 'active' : '' }}" data-val="50">50'</button>
                         </div>
                     </div>
 
@@ -101,29 +106,29 @@
                             Istirahat 1
                             <small class="text-muted">— pagi menjelang siang</small>
                             <div class="custom-control custom-switch ml-auto">
-                                <input type="checkbox" class="custom-control-input" id="ist1Active" checked>
+                                <input type="checkbox" class="custom-control-input" id="ist1Active" {{ ($istirahat1 || $gunakanIstirahatBawaan) ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="ist1Active"></label>
                             </div>
                         </div>
-                        <div class="simansa-jjc-istirahat-body" id="ist1Body">
+                        <div class="simansa-jjc-istirahat-body" id="ist1Body" {{ ($istirahat1 || $gunakanIstirahatBawaan) ? '' : 'style=display:none' }}>
                             <div class="form-row">
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Setelah jam ke-</label>
                                     <input type="number" name="istirahat[0][setelah_jam]" id="ist1Setelah"
-                                           class="form-control" value="3" min="1" max="15">
+                                           class="form-control" value="{{ $istirahat1['setelah_jam'] ?? 3 }}" min="1" max="15">
                                 </div>
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Durasi</label>
                                     <div class="input-group">
                                         <input type="number" name="istirahat[0][durasi]" id="ist1Durasi"
-                                               class="form-control" value="15" min="5" max="60">
+                                               class="form-control" value="{{ $istirahat1['durasi'] ?? 15 }}" min="5" max="90">
                                         <div class="input-group-append"><span class="input-group-text">mnt</span></div>
                                     </div>
                                 </div>
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Label</label>
                                     <input type="text" name="istirahat[0][label]" class="form-control"
-                                           value="Istirahat" maxlength="30">
+                                           value="{{ $istirahat1['label'] ?? 'Istirahat' }}" maxlength="30">
                                 </div>
                             </div>
                         </div>
@@ -136,29 +141,29 @@
                             Istirahat 2
                             <small class="text-muted">— sholat &amp; makan</small>
                             <div class="custom-control custom-switch ml-auto">
-                                <input type="checkbox" class="custom-control-input" id="ist2Active" checked>
+                                <input type="checkbox" class="custom-control-input" id="ist2Active" {{ ($istirahat2 || $gunakanIstirahatBawaan) ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="ist2Active"></label>
                             </div>
                         </div>
-                        <div class="simansa-jjc-istirahat-body" id="ist2Body">
+                        <div class="simansa-jjc-istirahat-body" id="ist2Body" {{ ($istirahat2 || $gunakanIstirahatBawaan) ? '' : 'style=display:none' }}>
                             <div class="form-row">
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Setelah jam ke-</label>
                                     <input type="number" name="istirahat[1][setelah_jam]" id="ist2Setelah"
-                                           class="form-control" value="6" min="1" max="15">
+                                           class="form-control" value="{{ $istirahat2['setelah_jam'] ?? 6 }}" min="1" max="15">
                                 </div>
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Durasi</label>
                                     <div class="input-group">
                                         <input type="number" name="istirahat[1][durasi]" id="ist2Durasi"
-                                               class="form-control" value="30" min="5" max="90">
+                                               class="form-control" value="{{ $istirahat2['durasi'] ?? 30 }}" min="5" max="90">
                                         <div class="input-group-append"><span class="input-group-text">mnt</span></div>
                                     </div>
                                 </div>
                                 <div class="form-group col-4">
                                     <label class="simansa-jjc-label">Label</label>
                                     <input type="text" name="istirahat[1][label]" class="form-control"
-                                           value="Istirahat Sholat" maxlength="30">
+                                           value="{{ $istirahat2['label'] ?? 'Istirahat Sholat' }}" maxlength="30">
                                 </div>
                             </div>
                         </div>

@@ -29,9 +29,10 @@ class JadwalJamConfigController extends Controller
                 ->orderBy('urutan')
                 ->get()
             : collect();
+        $presetGenerator = $this->presetGenerator($jamList);
 
         return view('admin.jadwal-jam-config.index', compact(
-            'tahunList', 'tahunAktif', 'tahunDipilih', 'jamList'
+            'tahunList', 'tahunAktif', 'tahunDipilih', 'jamList', 'presetGenerator'
         ));
     }
 
@@ -215,5 +216,47 @@ class JadwalJamConfigController extends Controller
             ->count();
 
         return ['jadwal' => $jadwalTersinkron, 'tanpaSlot' => $tanpaSlot];
+    }
+
+    /** Bentuk kembali parameter generator dari konfigurasi terakhir yang tersimpan. */
+    private function presetGenerator($configs): array
+    {
+        $default = [
+            'jam_mulai' => '07:00', 'jam_pulang' => '14:30', 'durasi_menit' => 45,
+            'istirahat' => [],
+        ];
+
+        if ($configs->isEmpty()) {
+            return $default;
+        }
+
+        $pelajaran = $configs->where('is_istirahat', false);
+        $durasi = $pelajaran->map(function ($item) {
+            [$jam, $menit] = array_map('intval', explode(':', substr($item->waktu_mulai, 0, 5)));
+            [$akhirJam, $akhirMenit] = array_map('intval', explode(':', substr($item->waktu_selesai, 0, 5)));
+
+            return (($akhirJam * 60) + $akhirMenit) - (($jam * 60) + $menit);
+        })->countBy()->sortDesc()->keys()->first() ?? 45;
+
+        $istirahat = $configs->where('is_istirahat', true)->take(2)->values()->map(function ($item) use ($configs) {
+            $sebelumnya = $configs->where('urutan', '<', $item->urutan)
+                ->where('is_istirahat', false)
+                ->max('jam_ke');
+            [$jam, $menit] = array_map('intval', explode(':', substr($item->waktu_mulai, 0, 5)));
+            [$akhirJam, $akhirMenit] = array_map('intval', explode(':', substr($item->waktu_selesai, 0, 5)));
+
+            return [
+                'setelah_jam' => $sebelumnya,
+                'durasi' => (($akhirJam * 60) + $akhirMenit) - (($jam * 60) + $menit),
+                'label' => $item->label ?: 'Istirahat',
+            ];
+        })->all();
+
+        return [
+            'jam_mulai' => substr($pelajaran->first()?->waktu_mulai ?? $default['jam_mulai'], 0, 5),
+            'jam_pulang' => substr($configs->last()->waktu_selesai, 0, 5),
+            'durasi_menit' => (int) $durasi,
+            'istirahat' => $istirahat,
+        ];
     }
 }

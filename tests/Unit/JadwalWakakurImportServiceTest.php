@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\JadwalWakakurImportService;
+use App\Models\JadwalJamConfig;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\TestCase;
@@ -74,6 +75,19 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('JadwalPelajaran::where', $controller);
         $this->assertStringContainsString('sinkronkanSlotDanJadwal', $controller);
         $this->assertStringContainsString('whereNotExists', $controller);
+    }
+
+    public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void
+    {
+        $rows = JadwalJamConfig::generateRows('07:00', 45, [
+            ['setelah_jam' => 3, 'durasi' => 15, 'label' => 'Istirahat'],
+            ['setelah_jam' => 6, 'durasi' => 60, 'label' => 'Istirahat Sholat'],
+        ], '16:30');
+
+        $this->assertSame(11, collect($rows)->where('is_istirahat', false)->count());
+        $this->assertSame('11:45', $rows[7]['waktu_mulai']);
+        $this->assertSame('12:45', $rows[7]['waktu_selesai']);
+        $this->assertSame('16:30', $rows[array_key_last($rows)]['waktu_selesai']);
     }
 
     public function test_import_confirmation_uses_sweetalert_instead_of_browser_confirm(): void
