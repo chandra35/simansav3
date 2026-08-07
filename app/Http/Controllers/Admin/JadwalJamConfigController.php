@@ -63,7 +63,7 @@ class JadwalJamConfigController extends Controller
             $request->jam_pulang
         );
 
-        DB::transaction(function () use ($tahunId, $tahun, $rows) {
+        $sync = DB::transaction(function () use ($tahunId, $tahun, $rows) {
             // Hapus config lama untuk tahun ini
             JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->delete();
 
@@ -71,44 +71,7 @@ class JadwalJamConfigController extends Controller
                 JadwalJamConfig::create(array_merge($row, ['tahun_pelajaran_id' => $tahunId]));
             }
 
-            // Satu sumber konfigurasi untuk tampilan lama dan timetable baru.
-            // Hari mengikuti konfigurasi tahun pelajaran (5 atau 6 hari).
-            // kedua semester disiapkan agar impor semester aktif tidak
-            // menghasilkan jadwal tanpa waktu mulai/selesai.
-            $hariSekolah = $tahun->hariKerja();
-            foreach ([1, 2] as $semester) {
-                JadwalHariJam::where('tahun_pelajaran_id', $tahunId)
-                    ->where('semester', $semester)
-                    ->whereIn('hari', $hariSekolah)
-                    ->delete();
-
-                foreach ($hariSekolah as $hari) {
-                    foreach ($rows as $row) {
-                        JadwalHariJam::create([
-                            'tahun_pelajaran_id' => $tahunId,
-                            'semester' => $semester,
-                            'hari' => $hari,
-                            'urutan' => $row['urutan'],
-                            'jam_ke' => $row['jam_ke'],
-                            'waktu_mulai' => $row['waktu_mulai'],
-                            'waktu_selesai' => $row['waktu_selesai'],
-                            'tipe' => $row['is_istirahat'] ? 'istirahat' : 'pelajaran',
-                            'label' => $row['label'],
-                        ]);
-
-                        if (! $row['is_istirahat']) {
-                            JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
-                                ->where('semester', $semester)
-                                ->where('hari', $hari)
-                                ->where('jam_ke', $row['jam_ke'])
-                                ->update([
-                                    'jam_mulai' => $row['waktu_mulai'],
-                                    'jam_selesai' => $row['waktu_selesai'],
-                                ]);
-                        }
-                    }
-                }
-            }
+            return $this->sinkronkanSlotDanJadwal($tahun);
         });
 
         $saved = JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)
@@ -117,7 +80,8 @@ class JadwalJamConfigController extends Controller
 
         $response = [
             'success' => true,
-            'message' => count($rows) . ' baris jam berhasil di-generate dan disinkronkan ke slot '.implode(', ', array_map('ucfirst', $tahun->hariKerja())).'.',
+            'message' => count($rows) . ' baris jam berhasil di-generate dan '.$sync['jadwal'].' jadwal mapel disinkronkan ke slot '.implode(', ', array_map('ucfirst', $tahun->hariKerja())).'.'
+                . ($sync['tanpaSlot'] ? ' '.$sync['tanpaSlot'].' jadwal lama belum memiliki slot jam dan perlu disesuaikan.' : ''),
             'data'    => $saved,
         ];
 
@@ -151,19 +115,23 @@ class JadwalJamConfigController extends Controller
         $maxUrutan = JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->max('urutan') ?? 0;
         $maxJamKe  = JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->whereNotNull('jam_ke')->max('jam_ke') ?? 0;
 
-        $row = JadwalJamConfig::create([
-            'tahun_pelajaran_id' => $tahunId,
-            'urutan'             => $maxUrutan + 1,
-            'jam_ke'             => $isIstirahat ? null : ($maxJamKe + 1),
-            'waktu_mulai'        => $request->waktu_mulai,
-            'waktu_selesai'      => $request->waktu_selesai,
-            'is_istirahat'       => $isIstirahat,
-            'label'              => $request->label,
-        ]);
+        [$row, $sync] = DB::transaction(function () use ($tahunId, $maxUrutan, $maxJamKe, $isIstirahat, $request) {
+            $row = JadwalJamConfig::create([
+                'tahun_pelajaran_id' => $tahunId,
+                'urutan'             => $maxUrutan + 1,
+                'jam_ke'             => $isIstirahat ? null : ($maxJamKe + 1),
+                'waktu_mulai'        => $request->waktu_mulai,
+                'waktu_selesai'      => $request->waktu_selesai,
+                'is_istirahat'       => $isIstirahat,
+                'label'              => $request->label,
+            ]);
+
+            return [$row, $this->sinkronkanSlotDanJadwal(TahunPelajaran::findOrFail($tahunId))];
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Baris jam berhasil ditambahkan.',
+            'message' => 'Baris jam berhasil ditambahkan dan '.$sync['jadwal'].' jadwal mapel disinkronkan.',
             'data'    => $row,
         ]);
     }
@@ -175,11 +143,77 @@ class JadwalJamConfigController extends Controller
     {
         $this->authorize('manage-jadwal-pelajaran');
 
-        $jamConfig->delete();
+        $sync = DB::transaction(function () use ($jamConfig) {
+            $tahun = TahunPelajaran::findOrFail($jamConfig->tahun_pelajaran_id);
+            $jamConfig->delete();
+
+            return $this->sinkronkanSlotDanJadwal($tahun);
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Baris jam berhasil dihapus.',
+            'message' => 'Baris jam berhasil dihapus dan jadwal mapel aktif telah disinkronkan.'
+                . ($sync['tanpaSlot'] ? ' '.$sync['tanpaSlot'].' jadwal lama belum memiliki slot jam.' : ''),
         ]);
+    }
+
+    /** Sinkronkan slot harian dan waktu jadwal mapel dari konfigurasi jam terakhir. */
+    private function sinkronkanSlotDanJadwal(TahunPelajaran $tahun): array
+    {
+        $configs = JadwalJamConfig::where('tahun_pelajaran_id', $tahun->id)
+            ->orderBy('urutan')
+            ->get();
+        $hariSekolah = $tahun->hariKerja();
+        $jadwalTersinkron = 0;
+
+        foreach ([1, 2] as $semester) {
+            // Hapus juga hari yang tidak lagi aktif, misalnya Sabtu setelah beralih ke 5 hari kerja.
+            JadwalHariJam::where('tahun_pelajaran_id', $tahun->id)
+                ->where('semester', $semester)
+                ->whereIn('hari', JadwalHariJam::HARI)
+                ->delete();
+
+            foreach ($hariSekolah as $hari) {
+                foreach ($configs as $config) {
+                    JadwalHariJam::create([
+                        'tahun_pelajaran_id' => $tahun->id,
+                        'semester' => $semester,
+                        'hari' => $hari,
+                        'urutan' => $config->urutan,
+                        'jam_ke' => $config->jam_ke,
+                        'waktu_mulai' => $config->waktu_mulai,
+                        'waktu_selesai' => $config->waktu_selesai,
+                        'tipe' => $config->is_istirahat ? 'istirahat' : 'pelajaran',
+                        'label' => $config->label,
+                    ]);
+
+                    if (! $config->is_istirahat) {
+                        $jadwalTersinkron += JadwalPelajaran::where('tahun_pelajaran_id', $tahun->id)
+                            ->where('semester', $semester)
+                            ->where('hari', $hari)
+                            ->where('jam_ke', $config->jam_ke)
+                            ->update([
+                                'jam_mulai' => $config->waktu_mulai,
+                                'jam_selesai' => $config->waktu_selesai,
+                            ]);
+                    }
+                }
+            }
+        }
+
+        $tanpaSlot = JadwalPelajaran::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('jadwal_hari_jam')
+                    ->whereColumn('jadwal_hari_jam.tahun_pelajaran_id', 'jadwal_pelajaran.tahun_pelajaran_id')
+                    ->whereColumn('jadwal_hari_jam.semester', 'jadwal_pelajaran.semester')
+                    ->whereColumn('jadwal_hari_jam.hari', 'jadwal_pelajaran.hari')
+                    ->whereColumn('jadwal_hari_jam.jam_ke', 'jadwal_pelajaran.jam_ke')
+                    ->where('jadwal_hari_jam.tipe', 'pelajaran');
+            })
+            ->count();
+
+        return ['jadwal' => $jadwalTersinkron, 'tanpaSlot' => $tanpaSlot];
     }
 }

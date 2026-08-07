@@ -72,6 +72,8 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('$hariSekolah = $tahun->hariKerja()', $controller);
         $this->assertStringContainsString('JadwalHariJam::create', $controller);
         $this->assertStringContainsString('JadwalPelajaran::where', $controller);
+        $this->assertStringContainsString('sinkronkanSlotDanJadwal', $controller);
+        $this->assertStringContainsString('whereNotExists', $controller);
     }
 
     public function test_import_confirmation_uses_sweetalert_instead_of_browser_confirm(): void
