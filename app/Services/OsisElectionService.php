@@ -99,12 +99,25 @@ class OsisElectionService
                 throw new RuntimeException('Kandidat tidak diperbolehkan memilih paketnya sendiri.');
             }
 
-            OsisBallot::create(['election_id' => $election->id, 'package_id' => $package->id, 'cast_at' => now()]);
+            OsisBallot::create(['election_id' => $election->id, 'voter_id' => $voter->id, 'package_id' => $package->id, 'cast_at' => now()]);
             do { $receipt = strtoupper(Str::random(10)); }
             while (OsisVoter::query()->where('receipt_code', $receipt)->exists());
             $voter->update(['has_voted' => true, 'voted_at' => now(), 'receipt_code' => $receipt]);
 
             return $receipt;
+        });
+    }
+
+    public function unlockVote(OsisElection $election, OsisVoter $voter, User $admin): void
+    {
+        if (! in_array($election->status, ['published', 'paused'], true)) throw new RuntimeException('Unlock hanya tersedia saat pemilihan masih berlangsung.');
+        DB::transaction(function () use ($election, $voter, $admin) {
+            $voter = OsisVoter::query()->whereKey($voter->id)->lockForUpdate()->firstOrFail();
+            if (! $voter->has_voted) throw new RuntimeException('Pemilih ini belum menggunakan hak suaranya.');
+            $ballot = OsisBallot::query()->where('election_id', $election->id)->where('voter_id', $voter->id)->lockForUpdate()->first();
+            if (! $ballot) throw new RuntimeException('Suara lama tidak dapat di-unlock karena dibuat sebelum fitur audit unlock tersedia.');
+            $ballot->delete();
+            $voter->update(['has_voted' => false, 'voted_at' => null, 'receipt_code' => null, 'unlocked_at' => now(), 'unlocked_by' => $admin->id]);
         });
     }
 

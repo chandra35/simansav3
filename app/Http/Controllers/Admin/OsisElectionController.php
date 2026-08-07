@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
+use App\Models\OsisVoter;
+use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\OsisElectionService;
@@ -81,7 +83,8 @@ class OsisElectionController extends Controller
             'package' => $package,
             'votes' => $package->ballots()->count(),
         ]);
-        return view('admin.osis-election.show', compact('election', 'results'));
+        $classes = Kelas::query()->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)->where('is_active', true)->orderBy('tingkat')->orderBy('nama_kelas')->get(['id', 'tingkat', 'nama_kelas']);
+        return view('admin.osis-election.show', compact('election', 'results', 'classes'));
     }
 
     public function preview(OsisElection $election): View
@@ -200,6 +203,28 @@ class OsisElectionController extends Controller
             ]),
             'updated_at' => now()->format('H:i:s'),
         ]);
+    }
+
+    public function voters(Request $request, OsisElection $election): JsonResponse
+    {
+        $data = $request->validate(['type' => ['nullable', Rule::in(['student', 'gtk'])], 'status' => ['nullable', Rule::in(['voted', 'pending'])], 'tingkat' => ['nullable', Rule::in([10, 11, 12])], 'kelas_id' => ['nullable', 'uuid'], 'search' => ['nullable', 'string', 'max:100']]);
+        $query = $election->voters()->with(['user.gtk:id,user_id,nama_lengkap', 'siswa.kelasSaatIni:id,nama_kelas,tingkat'])
+            ->when($data['type'] ?? null, fn ($q, $type) => $q->where('participant_type', $type))
+            ->when($data['status'] ?? null, fn ($q, $status) => $q->where('has_voted', $status === 'voted'))
+            ->when($data['tingkat'] ?? null, fn ($q, $tingkat) => $q->whereHas('siswa.kelasSaatIni', fn ($kelas) => $kelas->where('tingkat', $tingkat)))
+            ->when($data['kelas_id'] ?? null, fn ($q, $kelas) => $q->whereHas('siswa', fn ($siswa) => $siswa->where('kelas_saat_ini_id', $kelas)))
+            ->when(filled($data['search'] ?? null), function ($q) use ($data) { $term = trim($data['search']); $q->where(function ($v) use ($term) { $v->whereHas('siswa', fn ($s) => $s->where('nama_lengkap', 'like', "%{$term}%")->orWhere('nisn', 'like', "%{$term}%"))->orWhereHas('user.gtk', fn ($g) => $g->where('nama_lengkap', 'like', "%{$term}%")); }); });
+        $page = $query->latest('voted_at')->paginate(15);
+        return response()->json(['rows' => $page->getCollection()->map(function (OsisVoter $voter) {
+            $student = $voter->siswa; $gtk = $voter->user?->gtk; $name = $student?->nama_lengkap ?: ($gtk?->nama_lengkap ?: $voter->user?->name);
+            return ['id' => $voter->id, 'name' => $name, 'identity' => $student?->nisn ?: ($gtk?->nik ?: $voter->user?->username), 'type' => $voter->participant_type, 'scope' => $student?->kelasSaatIni?->nama_kelas ?: 'GTK', 'voted' => $voter->has_voted, 'voted_at' => $voter->voted_at?->format('d/m/Y H:i'), 'can_unlock' => $voter->has_voted && in_array($election->status, ['published', 'paused'], true)]; }), 'pagination' => ['page' => $page->currentPage(), 'last' => $page->lastPage(), 'total' => $page->total()]]);
+    }
+
+    public function unlockVoter(OsisElection $election, OsisVoter $voter): JsonResponse
+    {
+        abort_unless($voter->election_id === $election->id, 404);
+        try { $this->service->unlockVote($election, $voter, auth()->user()); Siswa::logCustomActivity('osis_vote_unlocked', "Membuka kembali hak pilih {$voter->user?->name} pada {$election->title}.", $election); return response()->json(['message' => 'Hak pilih dibuka kembali. Pemilih harus memilih ulang.']); }
+        catch (RuntimeException $exception) { return response()->json(['message' => $exception->getMessage()], 422); }
     }
 
     public function edit(OsisElection $election): View

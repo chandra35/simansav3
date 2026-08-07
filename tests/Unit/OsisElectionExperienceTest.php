@@ -68,6 +68,20 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('->lockForUpdate()->first()', $service);
         $this->assertStringContainsString('if ($voter->has_voted)', $service);
         $this->assertStringContainsString("'has_voted' => true", $service);
+        $this->assertStringContainsString("'voter_id' => \$voter->id", $service);
+        $this->assertStringContainsString('function unlockVote', $service);
+    }
+
+    public function test_admin_can_monitor_and_unlock_a_voter_before_election_closes(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
+        $this->assertStringContainsString("name('voters.unlock')", $routes);
+        $this->assertStringContainsString('function unlockVoter', $controller);
+        $this->assertStringContainsString('Monitoring Pemilih', $view);
+        $this->assertStringContainsString('Belum Memilih', $view);
+        $this->assertStringContainsString('unlock-voter', $view);
     }
 
     public function test_voter_page_uses_large_portrait_candidate_cards(): void
