@@ -4,17 +4,236 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\JadwalPelajaran;
+use App\Models\AbsensiSiswaSession;
 use App\Models\JadwalJamConfig;
 use App\Models\JadwalHariJam;
+use App\Models\JadwalGuruAlias;
+use App\Models\JadwalMapelAlias;
 use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\Gtk;
 use App\Models\TahunPelajaran;
+use App\Services\JadwalWakakurImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class JadwalPelajaranController extends Controller
 {
+    public function importForm(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $tahunList = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+        $tahunAktif = TahunPelajaran::where('is_active', true)->first();
+
+        return view('admin.jadwal-pelajaran.import', [
+            'tahunList' => $tahunList,
+            'tahunId' => $request->old('tahun_pelajaran_id', $tahunAktif?->id),
+            'semester' => (int) $request->old('semester', 1),
+            'preview' => null,
+        ]);
+    }
+
+    public function previewWakakurImport(Request $request, JadwalWakakurImportService $importer)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+
+        $data = $request->validate([
+            'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
+            'semester' => ['required', 'integer', 'in:1,2'],
+            'file' => ['required', 'file', 'mimes:xls,xlsx', 'max:10240'],
+        ]);
+        $tahun = TahunPelajaran::findOrFail($data['tahun_pelajaran_id']);
+
+        try {
+            $parsed = $importer->preview($request->file('file')->getRealPath());
+        } catch (\Throwable $exception) {
+            return back()->withInput()->with('error', 'Template tidak dapat dibaca: '.$exception->getMessage());
+        }
+
+        $gtkByCode = Gtk::query()->whereIn('kode_gtk', array_keys($parsed['gtk_references']))
+            ->pluck('id', 'kode_gtk')->all();
+        $gtkAliases = JadwalGuruAlias::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('source', 'jadwal_excel')
+            ->where('status', 'verified')
+            ->whereNotNull('gtk_id')
+            ->pluck('gtk_id', 'external_code')->all();
+        $mapelByCode = MataPelajaran::query()
+            ->where('kurikulum_id', $tahun->kurikulum_id)
+            ->whereIn('kode_jadwal', array_keys($parsed['mapel_references']))
+            ->pluck('id', 'kode_jadwal')->all();
+        $mapelAliases = JadwalMapelAlias::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('source', 'jadwal_excel')
+            ->where('status', 'verified')
+            ->whereNotNull('mata_pelajaran_id')
+            ->pluck('mata_pelajaran_id', 'external_code')->all();
+        $classes = Kelas::query()->where('tahun_pelajaran_id', $tahun->id)->get(['id', 'nama_kelas'])
+            ->keyBy(fn (Kelas $kelas) => $importer->classKey($kelas->nama_kelas));
+
+        $seenSlots = [];
+        $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $mapelByCode, $mapelAliases, &$seenSlots) {
+            $errors = [];
+            $kelas = $classes->get($slot['kelas_key']);
+            $gtkId = $gtkByCode[$slot['kode_gtk']] ?? $gtkAliases[$slot['kode_gtk']] ?? null;
+            $mapelId = $mapelByCode[$slot['kode_mapel']] ?? $mapelAliases[$slot['kode_mapel']] ?? null;
+            $slotKey = implode('|', [$slot['kelas_key'], $slot['hari'], $slot['jam_ke']]);
+
+            if (! $kelas) {
+                $errors[] = 'Kelas SIMANSA tidak ditemukan.';
+            }
+            if (! $gtkId) {
+                $errors[] = 'Kode GTK belum terhubung.';
+            }
+            if (! $mapelId) {
+                $errors[] = 'Kode mapel belum terhubung.';
+            }
+            if (isset($seenSlots[$slotKey])) {
+                $errors[] = 'Slot kelas muncul lebih dari sekali pada file.';
+            }
+            $seenSlots[$slotKey] = true;
+
+            return array_merge($slot, [
+                'kelas_id' => $kelas?->id,
+                'gtk_id' => $gtkId,
+                'mapel_id' => $mapelId,
+                'errors' => $errors,
+                'ready' => $errors === [],
+            ]);
+        })->values()->all();
+
+        $token = (string) Str::uuid();
+        $payload = [
+            'tahun_pelajaran_id' => $tahun->id,
+            'semester' => (int) $data['semester'],
+            'file_name' => $request->file('file')->getClientOriginalName(),
+            'rows' => $rows,
+            'warnings' => $parsed['warnings'],
+            'ignored' => $parsed['ignored'],
+        ];
+        session()->put('jadwal_wakakur_preview.'.$token, $payload);
+
+        $preview = array_merge($payload, [
+            'token' => $token,
+            'tahun' => $tahun,
+            'existing_count' => JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $tahun->id)
+                ->where('semester', $data['semester'])
+                ->where('is_active', true)
+                ->count(),
+            'attendance_count' => AbsensiSiswaSession::query()
+                ->whereIn('jadwal_pelajaran_id', JadwalPelajaran::query()
+                    ->where('tahun_pelajaran_id', $tahun->id)
+                    ->where('semester', $data['semester'])
+                    ->where('is_active', true)
+                    ->select('id'))
+                ->count(),
+            'ready_count' => collect($rows)->where('ready', true)->count(),
+            'error_count' => collect($rows)->where('ready', false)->count(),
+        ]);
+
+        return view('admin.jadwal-pelajaran.import', [
+            'tahunList' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
+            'tahunId' => $tahun->id,
+            'semester' => (int) $data['semester'],
+            'preview' => $preview,
+        ]);
+    }
+
+    public function importWakakur(Request $request)
+    {
+        $this->authorize('manage-jadwal-pelajaran');
+        $data = $request->validate([
+            'token' => ['required', 'uuid'],
+            'confirm_replace' => ['accepted'],
+        ]);
+        $preview = session('jadwal_wakakur_preview.'.$data['token']);
+        if (! $preview) {
+            return redirect()->route('admin.jadwal-pelajaran.import')
+                ->with('error', 'Preview impor sudah habis. Upload file kembali.');
+        }
+        if (collect($preview['rows'])->contains(fn (array $row) => ! $row['ready'])) {
+            return back()->with('error', 'Perbaiki mapping yang belum cocok sebelum mengimpor jadwal.');
+        }
+
+        $tahunId = $preview['tahun_pelajaran_id'];
+        $semester = $preview['semester'];
+        $imported = 0;
+        $overwritten = JadwalPelajaran::query()
+            ->where('tahun_pelajaran_id', $tahunId)
+            ->where('semester', $semester)
+            ->where('is_active', true)
+            ->count();
+        $attendanceLinked = AbsensiSiswaSession::query()
+            ->whereIn('jadwal_pelajaran_id', JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->where('is_active', true)
+                ->select('id'))
+            ->exists();
+        if ($attendanceLinked) {
+            return back()->with('error', 'Jadwal tidak dapat ditimpa karena sudah dipakai sesi absensi siswa.');
+        }
+
+        DB::transaction(function () use ($preview, $tahunId, $semester, &$imported) {
+            JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->delete();
+
+            $existing = JadwalPelajaran::withTrashed()
+                ->where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->get()
+                ->keyBy(fn (JadwalPelajaran $jadwal) => implode('|', [$jadwal->kelas_id, $jadwal->hari, $jadwal->jam_ke]));
+            $jam = JadwalHariJam::query()
+                ->where('tahun_pelajaran_id', $tahunId)
+                ->where('semester', $semester)
+                ->get()
+                ->keyBy(fn (JadwalHariJam $slot) => $slot->hari.'|'.$slot->jam_ke);
+
+            foreach ($preview['rows'] as $row) {
+                $key = implode('|', [$row['kelas_id'], $row['hari'], $row['jam_ke']]);
+                $record = $existing->get($key) ?? new JadwalPelajaran();
+                if ($record->exists && $record->trashed()) {
+                    $record->restore();
+                }
+                $time = $jam->get($row['hari'].'|'.$row['jam_ke']);
+                $record->fill([
+                    'tahun_pelajaran_id' => $tahunId,
+                    'kelas_id' => $row['kelas_id'],
+                    'mapel_id' => $row['mapel_id'],
+                    'gtk_id' => $row['gtk_id'],
+                    'hari' => $row['hari'],
+                    'jam_ke' => $row['jam_ke'],
+                    'jam_mulai' => $time?->waktu_mulai,
+                    'jam_selesai' => $time?->waktu_selesai,
+                    'semester' => $semester,
+                    'is_active' => true,
+                    'created_by' => auth()->id(),
+                ])->save();
+                $imported++;
+            }
+        });
+
+        activity('jadwal-pelajaran')
+            ->causedBy($request->user())
+            ->withProperties([
+                'tahun_pelajaran_id' => $tahunId,
+                'semester' => $semester,
+                'file_name' => $preview['file_name'],
+                'imported' => $imported,
+                'overwritten' => $overwritten,
+            ])
+            ->log('Mengimpor jadwal Wakakur dan menimpa jadwal semester');
+        session()->forget('jadwal_wakakur_preview.'.$data['token']);
+
+        return redirect()->route('admin.jadwal-pelajaran.index', ['tahun_pelajaran_id' => $tahunId])
+            ->with('success', "Impor selesai: {$imported} slot tersimpan dan {$overwritten} slot sebelumnya ditimpa.");
+    }
+
     public function index(Request $request)
     {
         $this->authorize('view-jadwal-pelajaran');

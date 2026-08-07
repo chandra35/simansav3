@@ -94,6 +94,9 @@
                 </a>
             @endcan
             @can('manage-jadwal-pelajaran')
+                <a href="{{ route('admin.jadwal-pelajaran.import') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-import"></i> Import Jadwal Wakakur
+                </a>
                 <a href="{{ route('admin.jadwal-jam-config.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-sliders-h"></i> Konfigurasi Jam
                 </a>

@@ -776,6 +776,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/jadwal-mapping/mapel/{alias}', [App\Http\Controllers\Admin\JadwalMappingController::class, 'updateMapel'])->name('jadwal-mapping.mapel.update');
     });
     Route::middleware(['permission:manage-jadwal-pelajaran'])->group(function () {
+        Route::get('/jadwal-pelajaran/import', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'importForm'])->name('jadwal-pelajaran.import');
+        Route::post('/jadwal-pelajaran/import/preview', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'previewWakakurImport'])->name('jadwal-pelajaran.import.preview');
+        Route::post('/jadwal-pelajaran/import/commit', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'importWakakur'])->name('jadwal-pelajaran.import.commit');
         Route::post('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'store'])->name('jadwal-pelajaran.store');
         Route::post('/jadwal-pelajaran/copy', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
         Route::post('/jadwal-pelajaran/clear-all', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'clearAll'])->name('jadwal-pelajaran.clear-all');
