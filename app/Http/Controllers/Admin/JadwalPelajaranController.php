@@ -363,6 +363,55 @@ class JadwalPelajaranController extends Controller
         ));
     }
 
+    /** Layar monitor real-time untuk jadwal belajar mengajar hari ini. */
+    public function monitor()
+    {
+        $this->authorize('view-jadwal-pelajaran');
+
+        $tahun = TahunPelajaran::where('is_active', true)->first();
+        $now = now('Asia/Jakarta');
+        $hari = [1 => 'senin', 2 => 'selasa', 3 => 'rabu', 4 => 'kamis', 5 => 'jumat', 6 => 'sabtu'][$now->dayOfWeekIso] ?? null;
+        $semester = $tahun?->semester_aktif === 'Genap' ? 2 : 1;
+
+        $slotRows = ($tahun && $hari && $tahun->isHariKerja($hari))
+            ? JadwalHariJam::query()
+                ->where('tahun_pelajaran_id', $tahun->id)
+                ->where('semester', $semester)
+                ->where('hari', $hari)
+                ->where('tipe', 'pelajaran')
+                ->whereNotNull('jam_ke')
+                ->whereNotNull('waktu_mulai')
+                ->whereNotNull('waktu_selesai')
+                ->orderBy('urutan')
+                ->get()
+            : collect();
+        $jadwalByJam = ($tahun && $slotRows->isNotEmpty())
+            ? JadwalPelajaran::query()
+                ->with(['kelas:id,nama_kelas', 'mataPelajaran:id,nama_mapel', 'gtk:id,nama_lengkap'])
+                ->where('tahun_pelajaran_id', $tahun->id)
+                ->where('semester', $semester)
+                ->where('hari', $hari)
+                ->where('is_active', true)
+                ->whereIn('jam_ke', $slotRows->pluck('jam_ke'))
+                ->get()
+                ->groupBy('jam_ke')
+            : collect();
+        $slots = $slotRows->map(function (JadwalHariJam $slot) use ($jadwalByJam) {
+            return [
+                'jam_ke' => $slot->jam_ke,
+                'mulai' => substr($slot->waktu_mulai, 0, 5),
+                'selesai' => substr($slot->waktu_selesai, 0, 5),
+                'kelas' => ($jadwalByJam->get($slot->jam_ke) ?? collect())->map(fn (JadwalPelajaran $jadwal) => [
+                    'kelas' => $jadwal->kelas?->nama_kelas ?? '-',
+                    'mapel' => $jadwal->mataPelajaran?->nama_mapel ?? '-',
+                    'guru' => $jadwal->gtk?->nama_lengkap ?? '-',
+                ])->values(),
+            ];
+        })->values();
+
+        return view('admin.jadwal-pelajaran.monitor', compact('tahun', 'semester', 'hari', 'slots'));
+    }
+
     public function timetableData(Request $request)
     {
         $request->validate([

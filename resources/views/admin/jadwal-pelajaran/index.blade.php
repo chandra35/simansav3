@@ -88,6 +88,9 @@
             <p>Pilih tahun pelajaran, kelas, dan semester untuk membuka timetable.</p>
         </div>
         <div class="d-flex flex-wrap" style="gap:8px">
+            <a href="{{ route('admin.jadwal-pelajaran.monitor') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-tv"></i> Monitor Jadwal
+            </a>
             @can('view-jadwal-mapping')
                 <a href="{{ route('admin.jadwal-mapping.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-link"></i> Mapping Kode

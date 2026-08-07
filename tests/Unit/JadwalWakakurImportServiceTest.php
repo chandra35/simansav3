@@ -82,4 +82,15 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString("Swal.fire({", $view);
         $this->assertStringNotContainsString("if(!confirm(", $view);
     }
+
+    public function test_schedule_monitor_uses_current_slot_and_fullscreen_view(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/jadwal-pelajaran/monitor.blade.php');
+
+        $this->assertStringContainsString('public function monitor()', $controller);
+        $this->assertStringContainsString("now('Asia/Jakarta')", $controller);
+        $this->assertStringContainsString('requestFullscreen', $view);
+        $this->assertStringContainsString('SEDANG BERLANGSUNG', $view);
+    }
 }
