@@ -138,6 +138,13 @@ class MataPelajaranController extends Controller
 
         return datatables()->eloquent($query)
             ->addIndexColumn()
+            ->editColumn('kode_mapel', function ($mapel) {
+                if (! $mapel->kode_jadwal) {
+                    return e($mapel->kode_mapel);
+                }
+
+                return '<span class="badge badge-primary mr-1">'.$mapel->kode_jadwal.'</span><code>'.e($mapel->kode_mapel).'</code>';
+            })
             ->addColumn('tahun_pelajaran_display', function ($mapel) {
                 return $mapel->tahunPelajaran ? $mapel->tahunPelajaran->nama_tahun_pelajaran : '-';
             })
@@ -179,7 +186,7 @@ class MataPelajaranController extends Controller
                 
                 return $showBtn . ' ' . $editBtn . ' ' . $duplicateBtn . ' ' . $deleteBtn;
             })
-            ->rawColumns(['kelompok_badge', 'integrasi_badge', 'status_badge', 'action'])
+            ->rawColumns(['kode_mapel', 'kelompok_badge', 'integrasi_badge', 'status_badge', 'action'])
             ->make(true);
     }
 
@@ -334,10 +341,22 @@ class MataPelajaranController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'kode_jadwal' => $request->filled('kode_jadwal') ? strtoupper($request->kode_jadwal) : null,
+        ]);
+
         $validated = $request->validate([
             'kurikulum_id' => 'required|exists:kurikulum,id',
             'jurusan_id' => 'nullable|exists:jurusan,id',
             'kode_mapel' => 'required|string|max:10|unique:mata_pelajaran,kode_mapel',
+            'kode_jadwal' => [
+                'nullable',
+                'string',
+                'size:1',
+                'regex:/^[A-Z]$/',
+                Rule::unique('mata_pelajaran', 'kode_jadwal')
+                    ->where(fn ($query) => $query->where('kurikulum_id', $request->kurikulum_id)),
+            ],
             'nama_mapel' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:20',
             'kategori' => 'nullable|string|max:50',
@@ -403,6 +422,7 @@ class MataPelajaranController extends Controller
     public function update(Request $request, MataPelajaran $mapel)
     {
         $request->merge([
+            'kode_jadwal' => $request->filled('kode_jadwal') ? strtoupper($request->kode_jadwal) : null,
             'is_mapel_agama' => $request->boolean('is_mapel_agama'),
             'is_rumpun_pai' => $request->boolean('is_rumpun_pai'),
             'is_bahasa_arab' => $request->boolean('is_bahasa_arab'),
@@ -420,6 +440,15 @@ class MataPelajaranController extends Controller
                 'string',
                 'max:10',
                 Rule::unique('mata_pelajaran', 'kode_mapel')->ignore($mapel->id)
+            ],
+            'kode_jadwal' => [
+                'nullable',
+                'string',
+                'size:1',
+                'regex:/^[A-Z]$/',
+                Rule::unique('mata_pelajaran', 'kode_jadwal')
+                    ->where(fn ($query) => $query->where('kurikulum_id', $request->kurikulum_id))
+                    ->ignore($mapel->id),
             ],
             'nama_mapel' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:20',

@@ -19,6 +19,7 @@ class MataPelajaran extends Model
         'tahun_pelajaran_id',
         'jurusan_id',
         'kode_mapel',
+        'kode_jadwal',
         'nama_mapel',
         'kelompok',
         'kategori',
@@ -230,6 +231,11 @@ class MataPelajaran extends Model
         }
 
         return $fase ? implode(', ', $fase) : '-';
+    }
+
+    public function getKodeTampilJadwalAttribute(): string
+    {
+        return $this->kode_jadwal ?: $this->kode_mapel;
     }
 
     public function getStrukturLabelAttribute(): string

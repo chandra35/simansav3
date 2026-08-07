@@ -126,7 +126,7 @@ class JadwalPelajaranController extends Controller
                     'jam_ke'      => $j->jam_ke,
                     'mapel_id'    => $j->mapel_id,
                     'mapel_nama'  => $j->mataPelajaran?->nama_mapel ?? '-',
-                    'mapel_kode'  => $j->mataPelajaran?->kode_mapel ?? '',
+                    'mapel_kode'  => $j->mataPelajaran?->kode_tampil_jadwal ?? '',
                     'gtk_id'      => $j->gtk_id,
                     'gtk_nama'    => $j->gtk?->nama_lengkap ?? '-',
                     'gtk_kode'    => $j->gtk?->kode_gtk ?? '',
@@ -275,7 +275,7 @@ class JadwalPelajaranController extends Controller
             'data' => [
                 'mapel_id'   => $jadwal->mapel_id,
                 'mapel_nama' => $jadwal->mataPelajaran->nama_mapel,
-                'mapel_kode' => $jadwal->mataPelajaran->kode_mapel ?? '',
+                'mapel_kode' => $jadwal->mataPelajaran->kode_tampil_jadwal ?? '',
             ],
         ]);
     }
@@ -368,7 +368,7 @@ class JadwalPelajaranController extends Controller
             'data' => [
                 'id'         => $jadwal->id,
                 'mapel_nama' => $jadwal->mataPelajaran?->nama_mapel ?? '-',
-                'mapel_kode' => $jadwal->mataPelajaran?->kode_mapel ?? '',
+                'mapel_kode' => $jadwal->mataPelajaran?->kode_tampil_jadwal ?? '',
                 'gtk_nama'   => $jadwal->gtk?->nama_lengkap ?? '-',
                 'gtk_kode'   => $jadwal->gtk?->kode_gtk ?? '',
                 'ruangan'    => $jadwal->ruangan ?? '',
@@ -438,7 +438,7 @@ class JadwalPelajaranController extends Controller
             'data' => [
                 'id'         => $jadwalPelajaran->id,
                 'mapel_nama' => $jadwalPelajaran->mataPelajaran?->nama_mapel ?? '-',
-                'mapel_kode' => $jadwalPelajaran->mataPelajaran?->kode_mapel ?? '',
+                'mapel_kode' => $jadwalPelajaran->mataPelajaran?->kode_tampil_jadwal ?? '',
                 'gtk_nama'   => $jadwalPelajaran->gtk?->nama_lengkap ?? '-',
                 'gtk_kode'   => $jadwalPelajaran->gtk?->kode_gtk ?? '',
                 'ruangan'    => $jadwalPelajaran->ruangan ?? '',

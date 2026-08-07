@@ -81,6 +81,15 @@ class JadwalAliasMappingService
                     ->where('kode_mapel', $row['canonical_code'])
                     ->first();
 
+                if ($mapel && $mapel->kode_jadwal !== $row['code']) {
+                    MataPelajaran::query()
+                        ->where('kurikulum_id', $mapel->kurikulum_id)
+                        ->where('kode_jadwal', $row['code'])
+                        ->where('id', '!=', $mapel->id)
+                        ->update(['kode_jadwal' => null]);
+                    $mapel->update(['kode_jadwal' => $row['code']]);
+                }
+
                 $alias = JadwalMapelAlias::firstOrNew([
                     'tahun_pelajaran_id' => $year->id,
                     'source' => $source,
@@ -92,7 +101,7 @@ class JadwalAliasMappingService
                 if (!$alias->exists || !in_array($alias->status, ['verified', 'rejected'], true)) {
                     $alias->mata_pelajaran_id = $mapel?->id;
                     $alias->confidence = $mapel ? 100 : 0;
-                    $alias->match_method = $mapel ? 'canonical_code' : 'not_found';
+                    $alias->match_method = $mapel ? 'wakakur_schedule_code' : 'not_found';
                     $alias->status = $mapel ? 'verified' : 'pending';
                     if ($mapel) {
                         $alias->verified_by = $actor?->id;

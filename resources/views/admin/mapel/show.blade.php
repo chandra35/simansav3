@@ -39,6 +39,10 @@
                             <td>: <span class="badge badge-info">{{ $mapel->kode_mapel }}</span></td>
                         </tr>
                         <tr>
+                            <td class="text-bold">Kode Jadwal Wakakur</td>
+                            <td>: <span class="badge badge-primary">{{ $mapel->kode_jadwal ?? '-' }}</span></td>
+                        </tr>
+                        <tr>
                             <td class="text-bold">Nama Mapel</td>
                             <td>: {{ $mapel->nama_mapel }}</td>
                         </tr>

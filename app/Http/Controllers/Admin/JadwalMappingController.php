@@ -63,10 +63,11 @@ class JadwalMappingController extends Controller
                     ->orWhereJsonContains('tingkat', 12);
             })
             ->orderBy('nama_mapel')
-            ->get(['id', 'kode_mapel', 'nama_mapel', 'struktur_fase_e', 'struktur_fase_f'])
+            ->get(['id', 'kode_mapel', 'kode_jadwal', 'nama_mapel', 'struktur_fase_e', 'struktur_fase_f'])
             ->map(fn (MataPelajaran $mapel) => [
                 'id' => $mapel->id,
-                'kode' => $mapel->kode_mapel,
+                'kode' => $mapel->kode_tampil_jadwal,
+                'kode_internal' => $mapel->kode_mapel,
                 'nama' => $mapel->nama_mapel,
                 'fase' => $mapel->fase_text,
             ])->values();

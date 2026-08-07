@@ -4,6 +4,12 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sinkronisasi kode jadwal Wakakur
+
+- Master mata pelajaran menyimpan `kode_jadwal` terpisah untuk format Aâ€“Z dari jadwal Wakakur 2026/2027; kode internal `kode_mapel` tetap dipertahankan demi nilai dan RDM.
+- Migrasi mengisi 26 kode dari A (Qur'an Hadist) hingga Z (Bimbingan Konseling), dan penyegaran mapping jadwal akan mempertahankannya.
+- Tampilan slot jadwal kini memprioritaskan kode Wakakur, dengan fallback aman ke kode internal pada data lama.
+
 ### Perbaikan identitas GTK
 
 - Form Edit GTK pada tab Data Pribadi kini menyediakan field **PEG ID / ID PTK** di samping NIK dan NUPTK.

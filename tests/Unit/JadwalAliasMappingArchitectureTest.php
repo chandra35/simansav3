@@ -15,6 +15,8 @@ class JadwalAliasMappingArchitectureTest extends TestCase
         $this->assertCount(26, $reference['mapel']);
         $this->assertCount(90, array_unique(array_column($reference['guru'], 'code')));
         $this->assertSame(range('A', 'Z'), array_column($reference['mapel'], 'code'));
+        $this->assertSame('M-QH', collect($reference['mapel'])->firstWhere('code', 'A')['canonical_code']);
+        $this->assertSame('M-BK', collect($reference['mapel'])->firstWhere('code', 'Z')['canonical_code']);
     }
 
     public function test_gunawan_susanto_and_santoso_have_explicit_distinct_hints(): void
@@ -51,5 +53,18 @@ class JadwalAliasMappingArchitectureTest extends TestCase
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalMappingController.php');
 
         $this->assertStringContainsString("activity('jadwal-mapping')", $controller);
+    }
+
+    public function test_wakakur_code_is_kept_separate_from_internal_subject_code(): void
+    {
+        $service = file_get_contents(dirname(__DIR__, 2).'/app/Services/JadwalAliasMappingService.php');
+        $schedule = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+        $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_08_07_030000_add_wakakur_schedule_code_to_mata_pelajaran.php');
+
+        $this->assertStringContainsString("->where('kode_mapel', \$row['canonical_code'])", $service);
+        $this->assertStringContainsString("->where('kode_jadwal', \$row['code'])", $service);
+        $this->assertStringContainsString("'kode_jadwal' => \$row['code']", $service);
+        $this->assertStringContainsString('kode_tampil_jadwal', $schedule);
+        $this->assertStringContainsString("string('kode_jadwal', 20)", $migration);
     }
 }

@@ -204,7 +204,7 @@
                                     <td>
                                         @if($alias->mataPelajaran)
                                             <strong>{{ $alias->mataPelajaran->nama_mapel }}</strong>
-                                            <small class="d-block text-muted">{{ $alias->mataPelajaran->kode_mapel }}</small>
+                                            <small class="d-block text-muted">Jadwal {{ $alias->mataPelajaran->kode_tampil_jadwal }} · Internal {{ $alias->mataPelajaran->kode_mapel }}</small>
                                         @else
                                             <span class="text-danger">Belum dipasangkan</span>
                                         @endif

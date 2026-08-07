@@ -27,7 +27,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label for="kurikulum_id">Kurikulum <span class="text-danger">*</span></label>
                             <select name="kurikulum_id" id="kurikulum_id" class="form-control @error('kurikulum_id') is-invalid @enderror" required>
@@ -68,6 +68,17 @@
                             <input type="text" name="kode_mapel" id="kode_mapel" class="form-control @error('kode_mapel') is-invalid @enderror" 
                                    value="{{ old('kode_mapel') }}" placeholder="Contoh: MAT, BIN" required maxlength="10">
                             @error('kode_mapel')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="kode_jadwal">Kode Jadwal Wakakur</label>
+                            <input type="text" name="kode_jadwal" id="kode_jadwal" class="form-control @error('kode_jadwal') is-invalid @enderror"
+                                   value="{{ old('kode_jadwal') }}" placeholder="A-Z" maxlength="1" style="text-transform:uppercase">
+                            <small class="text-muted">Kosongkan bila mapel tidak memakai kode jadwal.</small>
+                            @error('kode_jadwal')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
