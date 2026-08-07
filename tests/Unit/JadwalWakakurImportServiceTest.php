@@ -93,5 +93,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('requestFullscreen', $view);
         $this->assertStringContainsString('SEDANG BERLANGSUNG', $view);
         $this->assertStringContainsString('jm-class--tone-', $view);
+        $this->assertStringContainsString('nextLesson', $view);
+        $this->assertStringContainsString('jm-focus--break', $view);
     }
 }

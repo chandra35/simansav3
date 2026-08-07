@@ -378,8 +378,6 @@ class JadwalPelajaranController extends Controller
                 ->where('tahun_pelajaran_id', $tahun->id)
                 ->where('semester', $semester)
                 ->where('hari', $hari)
-                ->where('tipe', 'pelajaran')
-                ->whereNotNull('jam_ke')
                 ->whereNotNull('waktu_mulai')
                 ->whereNotNull('waktu_selesai')
                 ->orderBy('urutan')
@@ -401,11 +399,13 @@ class JadwalPelajaranController extends Controller
                 'jam_ke' => $slot->jam_ke,
                 'mulai' => substr($slot->waktu_mulai, 0, 5),
                 'selesai' => substr($slot->waktu_selesai, 0, 5),
-                'kelas' => ($jadwalByJam->get($slot->jam_ke) ?? collect())->map(fn (JadwalPelajaran $jadwal) => [
+                'tipe' => $slot->tipe,
+                'label' => $slot->displayLabel(),
+                'kelas' => $slot->isPelajaran() ? ($jadwalByJam->get($slot->jam_ke) ?? collect())->map(fn (JadwalPelajaran $jadwal) => [
                     'kelas' => $jadwal->kelas?->nama_kelas ?? '-',
                     'mapel' => $jadwal->mataPelajaran?->nama_mapel ?? '-',
                     'guru' => $jadwal->gtk?->nama_lengkap ?? '-',
-                ])->values(),
+                ])->values() : collect(),
             ];
         })->values();
 

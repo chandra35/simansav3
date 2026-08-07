@@ -1043,3 +1043,4 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
  - Konfirmasi penimpaan pada import Jadwal Wakakur kini memakai SweetAlert2 dengan ringkasan target, jumlah slot, dan jadwal yang akan ditimpa.
  - Ditambahkan Monitor Jadwal Belajar real-time: layar penuh, jam WIB, status sesi berlangsung/berikutnya, dan daftar kelas-mapel-guru aktif.
  - Tampilan Monitor Jadwal kini memakai kartu mapel beraksen warna konsisten, ikon kontekstual, hero lebih hidup, serta timeline sesi aktif yang kontras untuk layar besar.
+ - Monitor Jadwal kini menampilkan slot istirahat dari konfigurasi jam, progres waktu jeda, dan informasi jam pelajaran berikutnya.
