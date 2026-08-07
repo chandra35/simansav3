@@ -64,4 +64,13 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString("'missing_time_slots' => \$missingTimeSlots", $controller);
         $this->assertStringContainsString('Lengkapi konfigurasi slot jam pelajaran sebelum mengimpor jadwal.', $controller);
     }
+
+    public function test_generate_jam_config_syncs_the_daily_slots_used_by_import(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalJamConfigController.php');
+
+        $this->assertStringContainsString("\$hariSekolah = ['senin', 'selasa', 'rabu', 'kamis', 'jumat']", $controller);
+        $this->assertStringContainsString('JadwalHariJam::create', $controller);
+        $this->assertStringContainsString('JadwalPelajaran::where', $controller);
+    }
 }

@@ -1038,3 +1038,4 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 5. Setelah perubahan selesai, wajib test, commit, push, deploy, dan verifikasi.
 6. Ganti isi ringkasan file ini dengan perubahan terbaru atau tambahkan entri terbaru di bagian paling atas.
  - Import jadwal Wakakur kini memblokir konfirmasi bila slot jam per hari belum mempunyai waktu mulai/selesai, agar jadwal tidak tersimpan tanpa waktu.
+ - Generate Konfigurasi Jam kini memakai fallback form POST bila JavaScript tidak termuat dan sekaligus menyinkronkan slot Senin--Jumat ke jadwal_hari_jam untuk kedua semester.

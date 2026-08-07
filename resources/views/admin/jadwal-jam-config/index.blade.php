@@ -20,6 +20,9 @@
 @endsection
 
 @section('content')
+@if(session('success'))
+    <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
+@endif
 <div class="row">
 
     {{-- ===== KIRI: Form ===== --}}
@@ -52,7 +55,8 @@
                 <small class="ml-1 text-muted font-weight-normal">— jadwal dihitung dari parameter di bawah</small>
             </div>
             <div class="simansa-jjc-panel__body">
-                <form id="formGenerate">
+                <form id="formGenerate" method="POST" action="{{ route('admin.jadwal-jam-config.generate') }}">
+                    @csrf
                     <input type="hidden" name="tahun_pelajaran_id" value="{{ $tahunDipilih->id }}">
 
                     {{-- Baris 1: Jam Masuk + Durasi --}}
@@ -331,7 +335,9 @@ if (typeof Swal === 'undefined') {
 
 <script>
 $(function () {
-    $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+    if ($.fn.select2) {
+        $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+    }
 
     // Preset buttons
     $('.simansa-jjc-preset-btn').on('click', function () {
@@ -440,12 +446,15 @@ $(function () {
             data['istirahat[1][durasi]']      = $('#ist2Durasi').val();
             data['istirahat[1][label]']       = $('#ist2Body input[type=text]').val();
         }
-        Swal.fire({
+        const confirmation = window.Swal
+            ? Swal.fire({
             title: 'Generate ulang?',
             text: 'Konfigurasi jam lama untuk tahun ini akan dihapus.',
             icon: 'warning', showCancelButton: true,
             confirmButtonText: 'Ya, generate', cancelButtonText: 'Batal'
-        }).then(result => {
+            })
+            : Promise.resolve({ isConfirmed: window.confirm('Konfigurasi jam lama untuk tahun ini akan dihapus. Lanjutkan?') });
+        confirmation.then(result => {
             if (!result.isConfirmed) return;
             $('#btnGenerate').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating…');
             $.ajax({
@@ -454,16 +463,16 @@ $(function () {
                 data: data,
                 success: function (res) {
                     if (res.success) {
-                        toastr.success(res.message);
+                        if (window.toastr) toastr.success(res.message);
                         setTimeout(() => location.reload(), 700);
                     } else {
-                        toastr.error(res.message || 'Gagal generate.');
+                        if (window.toastr) toastr.error(res.message || 'Gagal generate.');
                     }
                 },
                 error: function (xhr) {
                     const errs = xhr.responseJSON?.errors;
                     const msg  = errs ? Object.values(errs).flat().join(' | ') : (xhr.responseJSON?.message || 'Terjadi kesalahan.');
-                    toastr.error(msg);
+                    if (window.toastr) toastr.error(msg);
                     $('#btnGenerate').prop('disabled', false).html('<i class="fas fa-magic"></i> Generate Jadwal');
                 }
             });
