@@ -40,6 +40,7 @@ class JadwalWakakurImportServiceTest extends TestCase
             $this->assertSame([], $result['warnings']);
             $this->assertSame('X-1', $result['slots'][0]['kelas_nama']);
             $this->assertSame('12-A1', $result['slots'][1]['kelas_nama']);
+            $this->assertSame('XIIA1', (new JadwalWakakurImportService())->classKey('12-A1'));
             $this->assertSame('56', $result['slots'][0]['kode_gtk']);
             $this->assertSame('S', $result['slots'][0]['kode_mapel']);
         } finally {

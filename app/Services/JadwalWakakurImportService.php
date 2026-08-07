@@ -35,7 +35,11 @@ class JadwalWakakurImportService
 
     public function classKey(string $name): string
     {
-        return Str::upper(preg_replace('/[^A-Z0-9]+/i', '', $name) ?: '');
+        $key = Str::upper(preg_replace('/[^A-Z0-9]+/i', '', $name) ?: '');
+
+        // Template Wakakur memakai 12-A1, sedangkan master kelas 2026/2027
+        // menggunakan XII-A1. Keduanya adalah kelas yang sama.
+        return preg_replace('/^12(?=[A-Z0-9])/', 'XII', $key) ?: $key;
     }
 
     private function findSheet(array $sheets, string $needle): ?Worksheet

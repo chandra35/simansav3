@@ -9,6 +9,7 @@ Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
 - Modul **Import Jadwal Wakakur** membaca template `.xls/.xlsx` dengan sheet `Kode_GTK_mapel` dan `jadwal`, termasuk kode gabungan seperti `56S`.
 - Upload selalu menghasilkan preview; kode GTK, mapel, kelas, dan slot ganda harus valid sebelum jadwal semester ditimpa.
 - Slot BK dilaporkan tetapi tidak dimasukkan sebagai jadwal kelas reguler; jadwal yang valid disimpan dengan slot waktu dari konfigurasi jam SIMANSA.
+- Normalisasi kelas menyamakan format template `12-A1` dengan master kelas `XII-A1`.
 
 ### Sinkronisasi kode jadwal Wakakur
 
