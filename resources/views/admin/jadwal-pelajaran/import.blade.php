@@ -68,6 +68,16 @@
             <div class="col-md-3 col-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-history"></i></span><div class="info-box-content"><span class="info-box-text">Akan ditimpa</span><span class="info-box-number">{{ $preview['existing_count'] }}</span></div></div></div>
         </div>
 
+        @if(!empty($preview['day_max_jam']))
+            <div class="callout callout-info py-2 mb-3">
+                <small><i class="fas fa-clock mr-1"></i> Jumlah jam mengikuti file Wakakur:
+                    @foreach($preview['day_max_jam'] as $hari => $jamTerakhir)
+                        <strong>{{ ucfirst($hari) }} {{ $jamTerakhir }} jam</strong>{{ $loop->last ? '.' : ' · ' }}
+                    @endforeach
+                </small>
+            </div>
+        @endif
+
         @if($preview['warnings'] || $preview['ignored'])
             <div class="alert alert-warning"><i class="fas fa-info-circle"></i>
                 {{ $preview['ignored'] ? $preview['ignored'].' slot kolom BK dilewati karena bukan jadwal kelas reguler.' : '' }}

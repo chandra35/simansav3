@@ -152,6 +152,7 @@ class JadwalPelajaranController extends Controller
             'semester' => (int) $data['semester'],
             'file_name' => $request->file('file')->getClientOriginalName(),
             'rows' => $rows,
+            'day_max_jam' => $parsed['dayMaxJam'],
             'warnings' => $parsed['warnings'],
             'ignored' => $parsed['ignored'],
         ];
@@ -228,6 +229,26 @@ class JadwalPelajaranController extends Controller
                 ->where('tahun_pelajaran_id', $tahunId)
                 ->where('semester', $semester)
                 ->delete();
+
+            // Wakakur menentukan jumlah jam setiap hari. Baris Excel yang kosong
+            // tidak menjadi jadwal, tetapi slotnya tetap tersedia untuk diisi manual.
+            foreach ($preview['day_max_jam'] ?? [] as $hari => $jamTerakhir) {
+                $slotTerakhir = JadwalHariJam::query()
+                    ->where('tahun_pelajaran_id', $tahunId)
+                    ->where('semester', $semester)
+                    ->where('hari', $hari)
+                    ->where('jam_ke', $jamTerakhir)
+                    ->first();
+
+                if ($slotTerakhir) {
+                    JadwalHariJam::query()
+                        ->where('tahun_pelajaran_id', $tahunId)
+                        ->where('semester', $semester)
+                        ->where('hari', $hari)
+                        ->where('urutan', '>', $slotTerakhir->urutan)
+                        ->delete();
+                }
+            }
 
             $existing = JadwalPelajaran::withTrashed()
                 ->where('tahun_pelajaran_id', $tahunId)

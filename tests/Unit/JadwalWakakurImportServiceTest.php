@@ -44,6 +44,7 @@ class JadwalWakakurImportServiceTest extends TestCase
             $this->assertSame('XIIA1', (new JadwalWakakurImportService())->classKey('12-A1'));
             $this->assertSame('56', $result['slots'][0]['kode_gtk']);
             $this->assertSame('S', $result['slots'][0]['kode_mapel']);
+            $this->assertSame(1, $result['dayMaxJam']['senin']);
         } finally {
             restore_error_handler();
             @unlink($file);
@@ -77,6 +78,18 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('JadwalPelajaran::where', $controller);
         $this->assertStringContainsString('sinkronkanSlotDanJadwal', $controller);
         $this->assertStringContainsString('whereNotExists', $controller);
+    }
+
+    public function test_import_uses_each_excel_days_last_period_and_marks_blank_slots(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+        $timetable = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/jadwal-pelajaran/timetable.blade.php');
+        $publicMonitor = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/jadwal-monitor.blade.php');
+
+        $this->assertStringContainsString("'day_max_jam' => \$parsed['dayMaxJam']", $controller);
+        $this->assertStringContainsString("->where('urutan', '>', \$slotTerakhir->urutan)", $controller);
+        $this->assertStringContainsString('Jadwal masih kosong', $timetable);
+        $this->assertStringContainsString('Jadwal masih kosong pada jam ini.', $publicMonitor);
     }
 
     public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void

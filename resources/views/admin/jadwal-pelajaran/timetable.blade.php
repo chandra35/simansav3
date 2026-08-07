@@ -202,7 +202,9 @@
                                     </div>
                                 @else
                                     @can('manage-jadwal-pelajaran')
-                                    <div class="simansa-tt-add-btn"><i class="fas fa-plus-circle"></i></div>
+                                    <div class="simansa-tt-add-btn"><i class="fas fa-plus-circle"></i> Jadwal masih kosong</div>
+                                    @else
+                                    <div class="text-muted small"><i class="far fa-calendar-times"></i> Jadwal masih kosong</div>
                                     @endcan
                                 @endif
                             </div>

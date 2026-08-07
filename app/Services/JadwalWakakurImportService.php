@@ -100,6 +100,7 @@ class JadwalWakakurImportService
         $columns = $this->readClassColumns($sheet, $headerRow, $headerRow + 1);
         $hari = null;
         $slots = [];
+        $dayMaxJam = [];
         $ignored = 0;
         $warnings = [];
 
@@ -110,6 +111,7 @@ class JadwalWakakurImportService
             if (! $hari || ! ctype_digit($jam) || (int) $jam < 1) {
                 continue;
             }
+            $dayMaxJam[$hari] = max($dayMaxJam[$hari] ?? 0, (int) $jam);
 
             foreach ($columns as $column => $class) {
                 $raw = Str::upper(trim((string) $sheet->getCell($column.$row)->getFormattedValue()));
@@ -144,7 +146,7 @@ class JadwalWakakurImportService
             throw new \DomainException('Tidak ada slot jadwal kelas yang dapat dibaca dari template.');
         }
 
-        return compact('slots', 'ignored', 'warnings');
+        return compact('slots', 'dayMaxJam', 'ignored', 'warnings');
     }
 
     private function readClassColumns(Worksheet $sheet, int $groupRow, int $numberRow): array
