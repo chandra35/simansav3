@@ -6,6 +6,7 @@
     <div class="row mb-2 monitor-header">
         <div class="col-sm-7"><h1><i class="fas fa-tv text-primary"></i> Monitor Jadwal Belajar</h1></div>
         <div class="col-sm-5 text-sm-right mt-2 mt-sm-0">
+            <a href="{{ route('public.jadwal-monitor') }}" target="_blank" rel="noopener" class="btn btn-success btn-sm"><i class="fas fa-external-link-alt"></i> Layar Guru Piket</a>
             <a href="{{ route('admin.jadwal-pelajaran.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Jadwal Pelajaran</a>
             <button type="button" id="monitorFullscreen" class="btn btn-primary btn-sm"><i class="fas fa-expand"></i> Layar Penuh</button>
         </div>

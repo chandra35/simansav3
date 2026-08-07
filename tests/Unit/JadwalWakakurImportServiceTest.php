@@ -112,4 +112,17 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('nextLesson', $view);
         $this->assertStringContainsString('jm-focus--break', $view);
     }
+
+    public function test_public_schedule_monitor_uses_the_same_live_schedule_data(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/jadwal-monitor.blade.php');
+
+        $this->assertStringContainsString('public function publicMonitor()', $controller);
+        $this->assertStringContainsString('dataMonitor()', $controller);
+        $this->assertStringContainsString("Route::get('/monitor-jadwal'", $routes);
+        $this->assertStringContainsString("name('public.jadwal-monitor')", $routes);
+        $this->assertStringContainsString('MONITOR GURU PIKET', $view);
+    }
 }

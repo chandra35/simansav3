@@ -56,6 +56,11 @@ Route::get('/live-polling-osis/data', [PublicOsisPollingController::class, 'data
     ->middleware('throttle:30,1')
     ->name('public.osis-polling.data');
 
+// Layar TV guru piket: hanya menampilkan jadwal aktif hari ini, tanpa akses admin.
+Route::get('/monitor-jadwal', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'publicMonitor'])
+    ->middleware('throttle:60,1')
+    ->name('public.jadwal-monitor');
+
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);

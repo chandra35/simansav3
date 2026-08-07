@@ -368,6 +368,18 @@ class JadwalPelajaranController extends Controller
     {
         $this->authorize('view-jadwal-pelajaran');
 
+        return view('admin.jadwal-pelajaran.monitor', $this->dataMonitor());
+    }
+
+    /** Layar monitor tanpa login untuk TV/layar guru piket. */
+    public function publicMonitor()
+    {
+        return view('public.jadwal-monitor', $this->dataMonitor());
+    }
+
+    /** Data bersama untuk monitor admin dan layar publik. */
+    private function dataMonitor(): array
+    {
         $tahun = TahunPelajaran::where('is_active', true)->first();
         $now = now('Asia/Jakarta');
         $hari = [1 => 'senin', 2 => 'selasa', 3 => 'rabu', 4 => 'kamis', 5 => 'jumat', 6 => 'sabtu'][$now->dayOfWeekIso] ?? null;
@@ -409,7 +421,7 @@ class JadwalPelajaranController extends Controller
             ];
         })->values();
 
-        return view('admin.jadwal-pelajaran.monitor', compact('tahun', 'semester', 'hari', 'slots'));
+        return compact('tahun', 'semester', 'hari', 'slots');
     }
 
     public function timetableData(Request $request)
