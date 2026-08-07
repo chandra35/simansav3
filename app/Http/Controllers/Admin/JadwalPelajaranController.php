@@ -117,6 +117,24 @@ class JadwalPelajaranController extends Controller
             ]);
         })->values()->all();
 
+        // Excel hanya membawa nomor jam. Waktu mulai/selesai wajib berasal
+        // dari konfigurasi slot per hari di SIMANSA agar timetable lengkap.
+        $requiredTimeSlots = collect($rows)
+            ->map(fn (array $row) => $row['hari'].'|'.$row['jam_ke'])
+            ->unique();
+        $configuredTimeSlots = JadwalHariJam::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('semester', $data['semester'])
+            ->where('tipe', 'pelajaran')
+            ->whereNotNull('waktu_mulai')
+            ->whereNotNull('waktu_selesai')
+            ->get(['hari', 'jam_ke'])
+            ->mapWithKeys(fn (JadwalHariJam $slot) => [$slot->hari.'|'.$slot->jam_ke => true]);
+        $missingTimeSlots = $requiredTimeSlots
+            ->reject(fn (string $slot) => $configuredTimeSlots->has($slot))
+            ->values()
+            ->all();
+
         $token = (string) Str::uuid();
         $payload = [
             'tahun_pelajaran_id' => $tahun->id,
@@ -145,6 +163,7 @@ class JadwalPelajaranController extends Controller
                 ->count(),
             'ready_count' => collect($rows)->where('ready', true)->count(),
             'error_count' => collect($rows)->where('ready', false)->count(),
+            'missing_time_slots' => $missingTimeSlots,
         ]);
 
         return view('admin.jadwal-pelajaran.import', [
@@ -169,6 +188,9 @@ class JadwalPelajaranController extends Controller
         }
         if (collect($preview['rows'])->contains(fn (array $row) => ! $row['ready'])) {
             return back()->with('error', 'Perbaiki mapping yang belum cocok sebelum mengimpor jadwal.');
+        }
+        if (! empty($preview['missing_time_slots'])) {
+            return back()->with('error', 'Lengkapi konfigurasi slot jam pelajaran sebelum mengimpor jadwal.');
         }
 
         $tahunId = $preview['tahun_pelajaran_id'];

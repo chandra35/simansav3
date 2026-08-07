@@ -56,4 +56,12 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('$gtkByExactName', $controller);
         $this->assertStringContainsString('normalizePersonName($slot[\'gtk_excel\'])', $controller);
     }
+
+    public function test_import_requires_configured_time_slots_before_committing_schedule(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalPelajaranController.php');
+
+        $this->assertStringContainsString("'missing_time_slots' => \$missingTimeSlots", $controller);
+        $this->assertStringContainsString('Lengkapi konfigurasi slot jam pelajaran sebelum mengimpor jadwal.', $controller);
+    }
 }

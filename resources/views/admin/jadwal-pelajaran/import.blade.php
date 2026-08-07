@@ -75,6 +75,15 @@
         @if($preview['attendance_count'])
             <div class="alert alert-danger"><i class="fas fa-lock"></i> {{ $preview['attendance_count'] }} sesi absensi siswa sudah memakai jadwal ini. Demi menjaga riwayat absensi, impor penimpaan dikunci.</div>
         @endif
+        @if(count($preview['missing_time_slots']))
+            <div class="alert alert-warning">
+                <i class="fas fa-clock"></i>
+                <strong>Konfigurasi slot jam belum lengkap.</strong>
+                {{ count($preview['missing_time_slots']) }} kombinasi hari dan jam belum mempunyai waktu mulai/selesai.
+                Atur slot jam terlebih dahulu agar jadwal yang diimpor langsung memiliki waktu yang benar.
+                <a href="{{ route('admin.jadwal-pelajaran.index', ['tahun_pelajaran_id' => $preview['tahun']->id]) }}" class="alert-link">Buka Jadwal Pelajaran</a>
+            </div>
+        @endif
 
         <div class="card card-outline {{ $preview['error_count'] ? 'card-danger' : 'card-success' }}">
             <div class="card-header"><h3 class="card-title"><i class="fas fa-clipboard-check"></i> Preview {{ $preview['file_name'] }}</h3></div>
@@ -93,14 +102,16 @@
             </div>
             <div class="card-footer d-flex flex-wrap align-items-center justify-content-between" style="gap:10px">
                 <span class="text-muted">Target: {{ $preview['tahun']->nama }} · Semester {{ $preview['semester'] }}</span>
-                @if($preview['error_count'] === 0 && ! $preview['attendance_count'])
+                @if($preview['error_count'] === 0 && ! $preview['attendance_count'] && ! count($preview['missing_time_slots']))
                     <form method="POST" action="{{ route('admin.jadwal-pelajaran.import.commit') }}" class="mb-0" id="wakakurImportCommit">
                         @csrf<input type="hidden" name="token" value="{{ $preview['token'] }}">
                         <div class="custom-control custom-checkbox d-inline-block mr-2"><input class="custom-control-input" type="checkbox" id="confirm_replace" name="confirm_replace" value="1" required><label class="custom-control-label" for="confirm_replace">Saya setuju jadwal semester ini ditimpa.</label></div>
                         <button type="submit" class="btn btn-danger"><i class="fas fa-file-import"></i> Konfirmasi & Import</button>
                     </form>
-                @else
+                @elseif($preview['error_count'])
                     <a class="btn btn-warning" href="{{ route('admin.jadwal-mapping.index', ['tahun_pelajaran_id' => $preview['tahun']->id]) }}"><i class="fas fa-link"></i> Lengkapi Mapping Dulu</a>
+                @else
+                    <a class="btn btn-warning" href="{{ route('admin.jadwal-pelajaran.index', ['tahun_pelajaran_id' => $preview['tahun']->id]) }}"><i class="fas fa-clock"></i> Atur Slot Jam Dulu</a>
                 @endif
             </div>
         </div>
