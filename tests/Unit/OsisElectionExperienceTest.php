@@ -107,10 +107,12 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("'is-selectable'", $view);
         $this->assertStringContainsString('class="card-choice-surface"', $view);
         $this->assertStringContainsString('aria-pressed="false"', $view);
-        $this->assertStringContainsString('KLIK UNTUK COBLOS', $view);
+        $this->assertStringContainsString('SENTUH PASLON', $view);
         $this->assertStringContainsString("$('.card-choice-surface').on('click'", $view);
         $this->assertStringContainsString('.platform-tabs{cursor:default;position:relative;z-index:6}', $view);
         $this->assertStringContainsString('.vote-package.is-selected', $view);
+        $this->assertStringContainsString('--people-columns:2', $view);
+        $this->assertStringContainsString('max-width:760px', $view);
     }
 
     public function test_voter_page_prioritizes_candidates_with_compact_election_information(): void
