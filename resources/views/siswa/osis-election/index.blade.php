@@ -1,6 +1,8 @@
 @extends('adminlte::page')
 @section('title', 'Pemilihan OSIS')
-@php($previewMode = $previewMode ?? false)
+@php
+    $previewMode = $previewMode ?? false;
+@endphp
 
 @section('content_header')
 <div class="vote-hero {{ $election?->phase==='open' ? 'is-open' : '' }}"><div><span><i class="fas fa-vote-yea mr-2"></i>{{ $previewMode ? 'Pratinjau Admin' : 'Suara Siswa' }}</span><h1>{{ $election?->title ?? 'Pemilihan OSIS' }}</h1><p>{{ $election?->theme ?? 'Gunakan hak pilih dengan cermat, aman, dan bertanggung jawab.' }}</p></div>@if($election)<div class="vote-phase"><small>Status</small><strong>{{ $previewMode ? 'Belum Dipublikasikan' : (['scheduled'=>'Segera Dibuka','open'=>'Sedang Dibuka','paused'=>'Dijeda Panitia','closed'=>'Telah Ditutup'][$election->phase] ?? 'Informasi') }}</strong><span id="voteCountdown" data-start="{{ $election->starts_at->toIso8601String() }}" data-end="{{ $election->ends_at->toIso8601String() }}"></span></div>@endif</div>

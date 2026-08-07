@@ -31,6 +31,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Pratinjau Pemilih', $panel);
         $this->assertStringContainsString('Hapus Simulasi', $panel);
         $this->assertStringContainsString('Mode pratinjau', $voterView);
+        $this->assertStringContainsString('@endphp', $voterView);
+        $this->assertStringNotContainsString('@php(', $voterView);
     }
 
     public function test_admin_has_live_polling_and_visual_candidate_picker(): void
