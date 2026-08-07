@@ -40,7 +40,11 @@
             <h3>{{ $election->title }}</h3><p>{{ $election->theme ?: 'Pemilihan pengurus OSIS yang aman dan tertib.' }}</p>
             <div class="election-dates"><div><i class="far fa-calendar-alt"></i><span>Mulai<strong>{{ $election->starts_at->format('d M Y · H:i') }}</strong></span></div><div><i class="far fa-clock"></i><span>Selesai<strong>{{ $election->ends_at->format('d M Y · H:i') }}</strong></span></div></div>
             <div class="election-metrics"><span><strong>{{ $election->packages_count }}</strong>Paket</span><span><strong>{{ $election->voters_count }}</strong>Pemilih</span><span><strong>{{ $election->voted_count }}</strong>Suara</span></div>
+            @if($election->status === 'draft')
+            <div class="d-flex" style="gap:.5rem"><a href="{{ route('admin.osis-election.preview',$election) }}" target="_blank" rel="noopener" class="btn btn-outline-info flex-fill"><i class="fas fa-eye mr-1"></i>Pratinjau</a><a href="{{ route('admin.osis-election.show',$election) }}" class="btn btn-outline-primary flex-fill">Buka Panel <i class="fas fa-arrow-right ml-1"></i></a></div>
+            @else
             <a href="{{ route('admin.osis-election.show',$election) }}" class="btn btn-outline-primary btn-block">Buka Panel Pemilihan <i class="fas fa-arrow-right ml-1"></i></a>
+            @endif
         </article></div>
         @empty
         <div class="col-12"><div class="osis-empty"><i class="fas fa-vote-yea"></i><h3>Belum ada pemilihan</h3><p>Buat periode pemilihan pertama, lalu susun minimal dua paket kandidat.</p></div></div>

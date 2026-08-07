@@ -1,8 +1,9 @@
 @extends('adminlte::page')
 @section('title', 'Pemilihan OSIS')
+@php($previewMode = $previewMode ?? false)
 
 @section('content_header')
-<div class="vote-hero {{ $election?->phase==='open' ? 'is-open' : '' }}"><div><span><i class="fas fa-vote-yea mr-2"></i>Suara Siswa</span><h1>{{ $election?->title ?? 'Pemilihan OSIS' }}</h1><p>{{ $election?->theme ?? 'Gunakan hak pilih dengan cermat, aman, dan bertanggung jawab.' }}</p></div>@if($election)<div class="vote-phase"><small>Status</small><strong>{{ ['scheduled'=>'Segera Dibuka','open'=>'Sedang Dibuka','paused'=>'Dijeda Panitia','closed'=>'Telah Ditutup'][$election->phase] ?? 'Informasi' }}</strong><span id="voteCountdown" data-start="{{ $election->starts_at->toIso8601String() }}" data-end="{{ $election->ends_at->toIso8601String() }}"></span></div>@endif</div>
+<div class="vote-hero {{ $election?->phase==='open' ? 'is-open' : '' }}"><div><span><i class="fas fa-vote-yea mr-2"></i>{{ $previewMode ? 'Pratinjau Admin' : 'Suara Siswa' }}</span><h1>{{ $election?->title ?? 'Pemilihan OSIS' }}</h1><p>{{ $election?->theme ?? 'Gunakan hak pilih dengan cermat, aman, dan bertanggung jawab.' }}</p></div>@if($election)<div class="vote-phase"><small>Status</small><strong>{{ $previewMode ? 'Belum Dipublikasikan' : (['scheduled'=>'Segera Dibuka','open'=>'Sedang Dibuka','paused'=>'Dijeda Panitia','closed'=>'Telah Ditutup'][$election->phase] ?? 'Informasi') }}</strong><span id="voteCountdown" data-start="{{ $election->starts_at->toIso8601String() }}" data-end="{{ $election->ends_at->toIso8601String() }}"></span></div>@endif</div>
 @stop
 
 @section('content')
@@ -11,7 +12,9 @@
 @else
 <section class="vote-info mb-3"><i class="fas fa-shield-alt"></i><div><h2>Suara Anda rahasia</h2><p>Identitas tidak disimpan pada surat suara dan pilihan tidak dapat diubah.</p></div>@if($voter?->has_voted)<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>Sudah Memilih</span>@endif</section>
 
-@if($voter?->has_voted || session('vote_success'))
+@if($previewMode)
+<section class="vote-notice mb-4"><i class="fas fa-eye"></i><div><h2>Mode pratinjau</h2><p>Ini adalah tampilan yang akan dilihat pemilih. Tombol coblos dinonaktifkan sampai pemilihan dipublikasikan.</p></div></section>
+@elseif($voter?->has_voted || session('vote_success'))
 <section class="vote-success mb-3"><div class="success-icon"><i class="fas fa-check"></i></div><div class="success-copy"><span>SUARA BERHASIL DIREKAM</span><h2>Terima kasih, {{ strtok($participantName,' ') }}!</h2><p>Partisipasi Anda telah tercatat dengan aman.</p></div><div class="vote-receipt"><small>Kode bukti partisipasi</small><strong>{{ session('vote_success',$voter?->receipt_code) }}</strong><span>Tidak menunjukkan pilihan</span></div></section>
 @elseif(!$voter)
 <section class="vote-notice vote-notice--warning mb-4"><i class="fas fa-user-lock"></i><div><h2>Anda tidak terdaftar sebagai pemilih</h2><p>Kemungkinan tingkat Anda tidak termasuk sasaran pemilih atau kandidat tidak diberi hak pilih pada pengaturan pemilihan ini.</p></div></section>

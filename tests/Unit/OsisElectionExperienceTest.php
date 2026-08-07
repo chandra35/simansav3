@@ -18,6 +18,21 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Buka Pemilihan Aktif', $index);
     }
 
+    public function test_draft_can_be_previewed_and_only_unpublished_closed_simulations_can_be_deleted(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $panel = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
+        $voterView = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
+
+        $this->assertStringContainsString("name('preview')", $routes);
+        $this->assertStringContainsString('public function preview', $controller);
+        $this->assertStringContainsString('$election->status === \'closed\' && ! $election->results_visible', $controller);
+        $this->assertStringContainsString('Pratinjau Pemilih', $panel);
+        $this->assertStringContainsString('Hapus Simulasi', $panel);
+        $this->assertStringContainsString('Mode pratinjau', $voterView);
+    }
+
     public function test_admin_has_live_polling_and_visual_candidate_picker(): void
     {
         $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');

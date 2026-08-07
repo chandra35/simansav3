@@ -24,7 +24,10 @@ class OsisElectionController extends Controller
 
     public function index(): View
     {
-        $ongoingElection = OsisElection::query()->whereIn('status', ['draft', 'published', 'paused'])->latest('starts_at')->first();
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $ongoingElection = $activeYearId
+            ? OsisElection::query()->where('tahun_pelajaran_id', $activeYearId)->whereIn('status', ['draft', 'published', 'paused'])->latest('starts_at')->first()
+            : null;
         $elections = OsisElection::query()->with('tahunPelajaran')
             ->withCount(['packages', 'voters', 'voters as voted_count' => fn ($q) => $q->where('has_voted', true)])
             ->latest('starts_at')->paginate(12);
@@ -33,7 +36,8 @@ class OsisElectionController extends Controller
 
     public function create(): View|RedirectResponse
     {
-        if ($ongoing = OsisElection::query()->whereIn('status', ['draft', 'published', 'paused'])->latest('starts_at')->first()) {
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        if ($ongoing = $activeYearId ? OsisElection::query()->where('tahun_pelajaran_id', $activeYearId)->whereIn('status', ['draft', 'published', 'paused'])->latest('starts_at')->first() : null) {
             return redirect()->route('admin.osis-election.show', $ongoing)
                 ->with('error', 'Selesaikan atau hapus pemilihan yang sedang dikelola sebelum membuat pemilihan baru.');
         }
@@ -45,9 +49,9 @@ class OsisElectionController extends Controller
     {
         $data = $this->validatedElection($request);
         $election = Cache::lock('osis-election-single-ongoing', 10)->block(5, function () use ($data, $request) {
-            if (OsisElection::query()->whereIn('status', ['draft', 'published', 'paused'])->exists()) {
+            if (OsisElection::query()->where('tahun_pelajaran_id', $data['tahun_pelajaran_id'])->whereIn('status', ['draft', 'published', 'paused'])->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'title' => 'Hanya satu pemilihan yang boleh dikelola. Selesaikan atau hapus pemilihan sebelumnya.',
+                    'title' => 'Hanya satu pemilihan yang boleh dikelola untuk tahun pelajaran yang sama. Selesaikan atau hapus pemilihan sebelumnya.',
                 ]);
             }
 
@@ -78,6 +82,22 @@ class OsisElectionController extends Controller
             'votes' => $package->ballots()->count(),
         ]);
         return view('admin.osis-election.show', compact('election', 'results'));
+    }
+
+    public function preview(OsisElection $election): View
+    {
+        $this->ensureDraft($election);
+        $election->load(['packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
+
+        return view('siswa.osis-election.index', [
+            'participantName' => 'Pratinjau Admin',
+            'election' => $election,
+            'voter' => null,
+            'ownPackageIds' => collect(),
+            'results' => collect(),
+            'voteRoute' => null,
+            'previewMode' => true,
+        ]);
     }
 
     public function candidateOptions(Request $request, OsisElection $election): JsonResponse
@@ -199,9 +219,14 @@ class OsisElectionController extends Controller
 
     public function destroy(OsisElection $election): RedirectResponse
     {
-        abort_unless($election->status === 'draft', 422);
-        $election->delete();
-        return redirect()->route('admin.osis-election.index')->with('success', 'Draft pemilihan dihapus.');
+        $canDelete = $election->status === 'draft' || ($election->status === 'closed' && ! $election->results_visible);
+        abort_unless($canDelete, 422, 'Pemilihan yang masih berjalan atau hasilnya sudah diumumkan tidak dapat dihapus.');
+
+        $label = $election->status === 'draft' ? 'Draft pemilihan' : 'Simulasi pemilihan tertutup';
+        DB::transaction(fn () => $election->delete());
+        Siswa::logCustomActivity('osis_election_deleted', "Menghapus {$label}: {$election->title}", $election);
+
+        return redirect()->route('admin.osis-election.index')->with('success', "{$label} beserta paket, DPT, dan suara uji coba dihapus.");
     }
 
     public function storePackage(Request $request, OsisElection $election): RedirectResponse
