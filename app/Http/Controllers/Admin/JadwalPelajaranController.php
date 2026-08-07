@@ -58,7 +58,8 @@ class JadwalPelajaranController extends Controller
         }
 
         $gtkByCode = Gtk::query()->whereIn('kode_gtk', array_keys($parsed['gtk_references']))
-            ->pluck('id', 'kode_gtk')->all();
+            ->get(['id', 'kode_gtk'])
+            ->keyBy('kode_gtk');
         $gtkAliases = JadwalGuruAlias::query()
             ->where('tahun_pelajaran_id', $tahun->id)
             ->where('source', 'jadwal_excel')
@@ -89,11 +90,17 @@ class JadwalPelajaranController extends Controller
         $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $gtkByExactName, $mapelByCode, $mapelAliases, $mappingService, $hariKerja, &$seenSlots) {
             $errors = [];
             $kelas = $classes->get($slot['kelas_key']);
-            $gtkId = $gtkByCode[$slot['kode_gtk']]
-                ?? $gtkAliases[$slot['kode_gtk']]
-                ?? ($slot['gtk_excel'] ? ($gtkByExactName[$mappingService->normalizePersonName($slot['gtk_excel'])] ?? null) : null);
+            $gtkDariKode = $gtkByCode[$slot['kode_gtk']]?->id;
+            $gtkDariNama = $slot['gtk_excel']
+                ? ($gtkByExactName[$mappingService->normalizePersonName($slot['gtk_excel'])] ?? null)
+                : null;
+            $gtkId = $gtkDariNama ?? $gtkDariKode ?? $gtkAliases[$slot['kode_gtk']] ?? null;
             $mapelId = $mapelByCode[$slot['kode_mapel']] ?? $mapelAliases[$slot['kode_mapel']] ?? null;
             $slotKey = implode('|', [$slot['kelas_key'], $slot['hari'], $slot['jam_ke']]);
+
+            if ($gtkDariNama && $gtkDariKode && $gtkDariNama !== $gtkDariKode) {
+                $errors[] = "Kode GTK {$slot['kode_gtk']} tidak sesuai dengan nama guru pada file Wakakur.";
+            }
 
             if (! $kelas) {
                 $errors[] = 'Kelas SIMANSA tidak ditemukan.';

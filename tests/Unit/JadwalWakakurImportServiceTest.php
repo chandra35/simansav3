@@ -56,6 +56,8 @@ class JadwalWakakurImportServiceTest extends TestCase
 
         $this->assertStringContainsString('$gtkByExactName', $controller);
         $this->assertStringContainsString('normalizePersonName($slot[\'gtk_excel\'])', $controller);
+        $this->assertStringContainsString('$gtkDariNama ?? $gtkDariKode', $controller);
+        $this->assertStringContainsString('tidak sesuai dengan nama guru pada file Wakakur', $controller);
     }
 
     public function test_import_requires_configured_time_slots_before_committing_schedule(): void
