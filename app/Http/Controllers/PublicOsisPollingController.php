@@ -80,6 +80,8 @@ class PublicOsisPollingController extends Controller
                 'number' => $package->number,
                 'name' => $package->name ?: 'Paket '.$package->number,
                 'slogan' => $package->slogan,
+                'campaign_photo' => $package->campaign_photo_url,
+                'live_photos' => $package->live_photo_urls,
                 'votes' => (int) ($votes[$package->id] ?? 0),
                 'percentage' => $voted ? round(((int) ($votes[$package->id] ?? 0) / $voted) * 100, 1) : 0,
                 'candidates' => collect($package->candidateAssignments())->map(fn (array $candidate) => [

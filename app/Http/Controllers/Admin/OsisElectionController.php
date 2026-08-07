@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -257,7 +258,7 @@ class OsisElectionController extends Controller
     public function storePackage(Request $request, OsisElection $election): RedirectResponse
     {
         $this->ensureDraft($election);
-        $data = $this->validatedPackage($request, $election);
+        $data = $this->persistPackagePhotos($request, $this->validatedPackage($request, $election), $election);
         $election->packages()->create($data);
         return back()->with('success', 'Paket kandidat berhasil ditambahkan.');
     }
@@ -266,11 +267,10 @@ class OsisElectionController extends Controller
     {
         abort_unless(in_array($election->status, ['draft', 'paused'], true), 422);
         abort_unless($package->election_id === $election->id, 404);
-        $package->update(
-            $election->status === 'paused'
+        $data = $election->status === 'paused'
                 ? $this->validatedPausedPackage($request, $election, $package)
-                : $this->validatedPackage($request, $election, $package)
-        );
+                : $this->validatedPackage($request, $election, $package);
+        $package->update($this->persistPackagePhotos($request, $data, $election, $package));
         return back()->with('success', 'Paket kandidat berhasil diperbarui.');
     }
 
@@ -345,6 +345,9 @@ class OsisElectionController extends Controller
             'slogan' => ['nullable', 'string', 'max:180'], 'vision' => ['required', 'string', 'max:4000'],
             'mission' => ['required', 'string', 'max:6000'], 'programs' => ['nullable', 'string', 'max:6000'],
             'message' => ['nullable', 'string', 'max:3000'],
+            'campaign_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'live_photos' => ['nullable', 'array', 'max:6'],
+            'live_photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
         foreach (OsisElection::CANDIDATE_ROLE_DEFINITIONS as $definition) {
             $field = $definition['field'];
@@ -388,6 +391,9 @@ class OsisElectionController extends Controller
             'mission' => ['required', 'string', 'max:6000'],
             'programs' => ['nullable', 'string', 'max:6000'],
             'message' => ['nullable', 'string', 'max:3000'],
+            'campaign_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'live_photos' => ['nullable', 'array', 'max:6'],
+            'live_photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
         $duplicateNumber = $election->packages()
             ->where('number', $data['number'])
@@ -397,6 +403,21 @@ class OsisElectionController extends Controller
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'number' => 'Nomor paket sudah digunakan.',
             ]);
+        }
+
+        return $data;
+    }
+
+    private function persistPackagePhotos(Request $request, array $data, OsisElection $election, ?OsisPackage $package = null): array
+    {
+        if ($request->hasFile('campaign_photo')) {
+            if ($package?->campaign_photo) Storage::disk('public')->delete($package->campaign_photo);
+            $data['campaign_photo'] = $request->file('campaign_photo')->store("osis-election/{$election->id}", 'public');
+        }
+        if ($request->hasFile('live_photos')) {
+            foreach ($package?->live_photos ?? [] as $photo) Storage::disk('public')->delete($photo);
+            $data['live_photos'] = collect($request->file('live_photos'))
+                ->map(fn ($photo) => $photo->store("osis-election/{$election->id}", 'public'))->all();
         }
 
         return $data;
