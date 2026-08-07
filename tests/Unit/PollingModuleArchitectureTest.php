@@ -91,6 +91,9 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString("'can' => 'sidebar-active-polling'", $menu);
         $this->assertStringContainsString('Swal.fire', $reminder);
         $this->assertStringContainsString('snooze_url', $reminder);
+        $this->assertStringContainsString('studentElectionOverlay', $reminder);
+        $this->assertStringContainsString('simansa:osis-notice-dismissed', $reminder);
+        $this->assertStringContainsString('window.setTimeout(showReminder, 500)', $reminder);
     }
 
     public function test_builder_and_responder_are_responsive_and_include_tka_preset(): void

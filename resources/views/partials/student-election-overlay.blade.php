@@ -291,7 +291,10 @@
                 .student-election-visual { height: 95px; transform: scale(.82); }
                 .student-election-actions { flex-direction: column-reverse; }
                 .student-election-actions .btn { width: 100%; }
-                .student-election-pill { bottom: .75rem; right: .75rem; }
+                .student-election-pill { bottom: 0; left: 0; right: 0; max-width: none; min-height: 64px; padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom)); border-radius: 17px 17px 0 0; box-shadow: 0 -8px 30px rgba(15,23,42,.2); z-index: 1040; }
+                .student-election-pill > span { height: 44px; width: 44px; }
+                .student-election-pill strong { font-size: .84rem; max-width: none; }
+                body.has-student-election-pill .content-wrapper { padding-bottom: 78px; }
             }
             @media (prefers-reduced-motion: reduce) {
                 .student-election-ballot,
@@ -326,10 +329,13 @@
                     document.body.style.overflow = 'hidden';
                 }
 
+                document.body.classList.add('has-student-election-pill');
+
                 const dismiss = () => {
                     overlay.hidden = true;
                     document.body.style.overflow = '';
                     try { storage?.setItem(key, 'seen'); } catch (error) {}
+                    window.dispatchEvent(new CustomEvent('simansa:osis-notice-dismissed'));
                 };
 
                 document.getElementById('studentElectionClose')?.addEventListener('click', dismiss);

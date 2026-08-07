@@ -182,6 +182,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('PEMILIHAN SEDANG BERLANGSUNG', $overlay);
         $this->assertStringContainsString('window.setInterval(update, 1000)', $overlay);
         $this->assertStringContainsString('student-election-pill', $overlay);
+        $this->assertStringContainsString("simansa:osis-notice-dismissed", $overlay);
+        $this->assertStringContainsString('has-student-election-pill', $overlay);
+        $this->assertStringContainsString('env(safe-area-inset-bottom)', $overlay);
     }
 
     public function test_public_live_polling_is_anonymous_fullscreen_and_resource_aware(): void
