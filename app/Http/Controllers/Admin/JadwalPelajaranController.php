@@ -85,7 +85,8 @@ class JadwalPelajaranController extends Controller
             ->keyBy(fn (Kelas $kelas) => $importer->classKey($kelas->nama_kelas));
 
         $seenSlots = [];
-        $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $gtkByExactName, $mapelByCode, $mapelAliases, $mappingService, &$seenSlots) {
+        $hariKerja = $tahun->hariKerja();
+        $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $gtkByExactName, $mapelByCode, $mapelAliases, $mappingService, $hariKerja, &$seenSlots) {
             $errors = [];
             $kelas = $classes->get($slot['kelas_key']);
             $gtkId = $gtkByCode[$slot['kode_gtk']]
@@ -102,6 +103,9 @@ class JadwalPelajaranController extends Controller
             }
             if (! $mapelId) {
                 $errors[] = 'Kode mapel belum terhubung.';
+            }
+            if (! in_array($slot['hari'], $hariKerja, true)) {
+                $errors[] = 'Hari '.ucfirst($slot['hari']).' tidak aktif pada tahun pelajaran ini.';
             }
             if (isset($seenSlots[$slotKey])) {
                 $errors[] = 'Slot kelas muncul lebih dari sekali pada file.';
@@ -350,7 +354,7 @@ class JadwalPelajaranController extends Controller
             $jadwalMap[$j->hari][$j->jam_ke] = $j;
         }
 
-        $hariList = array_keys(JadwalPelajaran::HARI);
+        $hariList = $tahunAktif?->hariKerja() ?? array_keys(JadwalPelajaran::HARI);
 
         return view('admin.jadwal-pelajaran.timetable', compact(
             'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'kelasObj',

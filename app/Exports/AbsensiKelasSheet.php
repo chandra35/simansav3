@@ -20,13 +20,16 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
 
     public function array(): array
     {
+        $hariKerja = $this->kelas->tahunPelajaran?->namaHariKerja() ?? [
+            'senin' => 'Senin', 'selasa' => 'Selasa', 'rabu' => 'Rabu', 'kamis' => 'Kamis', 'jumat' => 'Jumat',
+        ];
         $rows = [
             ['DAFTAR HADIR KELAS'],
             ['Kelas', $this->kelas->nama_lengkap],
             ['Semester/Tahun', ucfirst($this->kelas->tahunPelajaran->semester_aktif ?? '-') . ' / ' . ($this->kelas->tahunPelajaran->nama ?? '-')],
             ['Wali Kelas', $this->kelas->waliKelas->name ?? '-'],
             [],
-            ['No', 'NISN', 'Nama', 'L/P', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'S', 'I', 'A'],
+            array_merge(['No', 'NISN', 'Nama', 'L/P'], array_values($hariKerja), ['S', 'I', 'A']),
         ];
 
         foreach ($this->kelas->siswas as $index => $siswa) {
@@ -35,7 +38,7 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
                 $siswa->nisn,
                 strtoupper($siswa->nama_lengkap),
                 $siswa->jenis_kelamin === 'L' ? 'L' : 'P',
-                '', '', '', '', '', '', '', '', '',
+                ...array_fill(0, count($hariKerja) + 3, ''),
             ];
         }
 
@@ -63,15 +66,17 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
         $lastStudentRow = 6 + max($this->kelas->siswas->count(), 1);
         $summaryStart = $lastStudentRow + 2;
 
-        $sheet->mergeCells('A1:M1');
+        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + count($hariKerja) + 3);
+        $sheet->mergeCells("A1:{$lastColumn}1");
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2:A4')->getFont()->setBold(true);
-        $sheet->getStyle('A6:M6')->getFont()->setBold(true);
-        $sheet->getStyle('A6:M6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A6:M{$lastStudentRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + count($this->kelas->tahunPelajaran?->hariKerja() ?? []) + 3);
+        $sheet->getStyle("A6:{$lastColumn}6")->getFont()->setBold(true);
+        $sheet->getStyle("A6:{$lastColumn}6")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A6:{$lastColumn}{$lastStudentRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle("A6:A{$lastStudentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("D6:M{$lastStudentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("D6:{$lastColumn}{$lastStudentRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("A{$summaryStart}:A" . ($summaryStart + 2))->getFont()->setBold(true);
 
         return [];
@@ -83,7 +88,9 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
             AfterSheet::class => function (AfterSheet $event) {
                 $event->sheet->freezePane('A7');
                 $event->sheet->getDelegate()->getColumnDimension('C')->setWidth(34);
-                foreach (['E', 'F', 'G', 'H', 'I', 'J'] as $column) {
+                $hariKerja = $this->kelas->tahunPelajaran?->hariKerja() ?? [];
+                foreach (range(5, 4 + count($hariKerja)) as $index) {
+                    $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index);
                     $event->sheet->getDelegate()->getColumnDimension($column)->setWidth(11);
                 }
             },

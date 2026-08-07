@@ -117,6 +117,7 @@ class TahunPelajaranController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'semester_aktif' => 'required|in:Ganjil,Genap',
+            'jumlah_hari_kerja' => 'required|integer|in:5,6',
             'status' => 'required|in:aktif,non-aktif,selesai',
         ], [
             'kurikulum_id.required' => 'Kurikulum harus dipilih',
@@ -150,6 +151,7 @@ class TahunPelajaranController extends Controller
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'semester_aktif' => $request->semester_aktif,
+                'jumlah_hari_kerja' => $request->jumlah_hari_kerja,
                 'status' => $request->status,
                 'is_active' => false, // Default tidak aktif, harus di-set manual
             ]);
@@ -213,6 +215,7 @@ class TahunPelajaranController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'semester_aktif' => 'required|in:Ganjil,Genap',
+            'jumlah_hari_kerja' => 'required|integer|in:5,6',
             'status' => 'required|in:aktif,non-aktif,selesai',
         ]);
 
@@ -233,6 +236,7 @@ class TahunPelajaranController extends Controller
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'semester_aktif' => $request->semester_aktif,
+                'jumlah_hari_kerja' => $request->jumlah_hari_kerja,
                 'status' => $request->status,
             ]);
 

@@ -55,6 +55,7 @@ class JadwalJamConfigController extends Controller
         ]);
 
         $tahunId   = $request->tahun_pelajaran_id;
+        $tahun = TahunPelajaran::findOrFail($tahunId);
         $rows      = JadwalJamConfig::generateRows(
             $request->jam_mulai,
             (int) $request->durasi_menit,
@@ -62,7 +63,7 @@ class JadwalJamConfigController extends Controller
             $request->jam_pulang
         );
 
-        DB::transaction(function () use ($tahunId, $rows) {
+        DB::transaction(function () use ($tahunId, $tahun, $rows) {
             // Hapus config lama untuk tahun ini
             JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->delete();
 
@@ -71,10 +72,10 @@ class JadwalJamConfigController extends Controller
             }
 
             // Satu sumber konfigurasi untuk tampilan lama dan timetable baru.
-            // Template Wakakur lima hari kerja memakai slot Senin--Jumat;
+            // Hari mengikuti konfigurasi tahun pelajaran (5 atau 6 hari).
             // kedua semester disiapkan agar impor semester aktif tidak
             // menghasilkan jadwal tanpa waktu mulai/selesai.
-            $hariSekolah = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
+            $hariSekolah = $tahun->hariKerja();
             foreach ([1, 2] as $semester) {
                 JadwalHariJam::where('tahun_pelajaran_id', $tahunId)
                     ->where('semester', $semester)
@@ -116,7 +117,7 @@ class JadwalJamConfigController extends Controller
 
         $response = [
             'success' => true,
-            'message' => count($rows) . ' baris jam berhasil di-generate dan disinkronkan ke slot Senin--Jumat.',
+            'message' => count($rows) . ' baris jam berhasil di-generate dan disinkronkan ke slot '.implode(', ', array_map('ucfirst', $tahun->hariKerja())).'.',
             'data'    => $saved,
         ];
 

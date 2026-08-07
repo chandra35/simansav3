@@ -21,6 +21,7 @@ class TahunPelajaran extends Model
         'tahun_mulai',
         'tahun_selesai',
         'semester_aktif',
+        'jumlah_hari_kerja',
         'tanggal_mulai',
         'tanggal_selesai',
         'is_active',
@@ -34,6 +35,7 @@ class TahunPelajaran extends Model
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'is_active' => 'boolean',
+        'jumlah_hari_kerja' => 'integer',
     ];
 
     /**
@@ -123,6 +125,26 @@ class TahunPelajaran extends Model
     public function getSemesterAttribute(): string
     {
         return $this->semester_aktif;
+    }
+
+    /** Hari operasional yang berlaku untuk tahun pelajaran ini. */
+    public function hariKerja(): array
+    {
+        return (int) ($this->jumlah_hari_kerja ?: 5) === 6
+            ? ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']
+            : ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
+    }
+
+    public function namaHariKerja(): array
+    {
+        return collect($this->hariKerja())
+            ->mapWithKeys(fn (string $hari) => [$hari => ucfirst($hari)])
+            ->all();
+    }
+
+    public function isHariKerja(string $hari): bool
+    {
+        return in_array(strtolower($hari), $this->hariKerja(), true);
     }
 
     /**

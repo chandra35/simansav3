@@ -168,6 +168,17 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="jumlah_hari_kerja">Hari Kerja <span class="text-danger">*</span></label>
+                                    <select name="jumlah_hari_kerja" id="jumlah_hari_kerja" class="form-control @error('jumlah_hari_kerja') is-invalid @enderror" required>
+                                        <option value="5" @selected(old('jumlah_hari_kerja', $tahunPelajaran->jumlah_hari_kerja ?: 5) == 5)>5 hari (Senin–Jumat)</option>
+                                        <option value="6" @selected(old('jumlah_hari_kerja', $tahunPelajaran->jumlah_hari_kerja) == 6)>6 hari (Senin–Sabtu)</option>
+                                    </select>
+                                    <small class="form-text text-muted">Dipakai oleh konfigurasi jadwal, impor Wakakur, dan format absensi.</small>
+                                    @error('jumlah_hari_kerja')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

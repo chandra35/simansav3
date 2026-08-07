@@ -163,14 +163,8 @@ class JadwalHariJamController extends Controller
             'semester'           => 'required|integer|in:1,2',
         ]);
 
-        $jamPerHari = [
-            'senin'  => 8,
-            'selasa' => 8,
-            'rabu'   => 8,
-            'kamis'  => 8,
-            'jumat'  => 8,
-            'sabtu'  => 6,
-        ];
+        $tahun = TahunPelajaran::findOrFail($validated['tahun_pelajaran_id']);
+        $jamPerHari = array_fill_keys($tahun->hariKerja(), 8);
 
         $created = 0;
         $skipped = [];

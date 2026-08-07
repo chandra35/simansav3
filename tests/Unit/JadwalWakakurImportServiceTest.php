@@ -69,7 +69,7 @@ class JadwalWakakurImportServiceTest extends TestCase
     {
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/JadwalJamConfigController.php');
 
-        $this->assertStringContainsString("\$hariSekolah = ['senin', 'selasa', 'rabu', 'kamis', 'jumat']", $controller);
+        $this->assertStringContainsString('$hariSekolah = $tahun->hariKerja()', $controller);
         $this->assertStringContainsString('JadwalHariJam::create', $controller);
         $this->assertStringContainsString('JadwalPelajaran::where', $controller);
     }
