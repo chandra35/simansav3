@@ -120,6 +120,10 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('array_merge($existingPhotos', $controller);
         $this->assertStringContainsString('packageGalleryModal', $panel);
         $this->assertStringContainsString('package-gallery-open', $panel);
+        $this->assertStringContainsString('packageMediaManagerTemplate', $panel);
+        $this->assertStringContainsString('package-media-dropzone', $panel);
+        $this->assertStringContainsString('packageCropModal', $panel);
+        $this->assertStringContainsString('new window.Cropper', $panel);
     }
 
     public function test_student_vote_has_friendly_password_limiter_and_casting_animation(): void

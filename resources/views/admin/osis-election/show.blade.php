@@ -90,7 +90,7 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 
 @section('css')
 <style>
-.osis-detail-hero{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.35rem 1.5rem;border-radius:17px;background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;box-shadow:0 15px 34px rgba(37,99,235,.2)}.osis-detail-hero>div>span{font-size:.76rem;font-weight:800;text-transform:uppercase}.osis-detail-hero h1{color:#fff;font-size:1.45rem;font-weight:800;margin:.3rem 0}.osis-detail-hero p{margin:0;color:rgba(255,255,255,.85)}.hero-actions{display:flex;align-items:center;gap:.7rem}.hero-actions .badge{padding:.65rem}.detail-stat{display:flex;align-items:center;gap:.8rem;padding:1rem;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;border-radius:13px;background:#fff}.detail-stat>i{display:grid;place-items:center;width:42px;height:42px;border-radius:10px;background:#eff6ff;color:#2563eb}.detail-stat span{display:block;font-size:.7rem;font-weight:800;color:#64748b;text-transform:uppercase}.detail-stat strong{font-size:1.35rem;color:#0f172a}.detail-stat--success{border-top-color:#22c55e}.detail-stat--success>i{background:#ecfdf5;color:#15803d}.detail-stat--info{border-top-color:#06b6d4}.detail-stat--warning{border-top-color:#f59e0b}.control-panel,.candidate-section,.results-panel{padding:1.15rem 1.25rem;border:1px solid #dbe4f0;border-radius:15px;background:#fff;box-shadow:0 10px 26px rgba(15,23,42,.05)}.control-panel{display:flex;justify-content:space-between;align-items:center;gap:1rem}.control-panel h2,.section-head h2{font-size:1.08rem;font-weight:800;color:#0f172a;margin:0}.control-panel p,.section-head p{font-size:.83rem;color:#64748b;margin:.3rem 0 0}.control-actions{display:flex;gap:.5rem;flex-wrap:wrap}.control-actions form,.package-actions form{margin:0}.section-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}.section-head>span{padding:.35rem .65rem;border-radius:999px;background:#eff6ff;color:#2563eb;font-size:.75rem;font-weight:800}.package-card{height:100%;border:1px solid #dbe4f0;border-radius:15px;overflow:hidden;background:#fff}.package-banner{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;background:linear-gradient(135deg,#2563eb,#0ea5a4);color:#fff}.package-banner>strong{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#fff;color:#2563eb;font-size:1.6rem}.package-banner span{font-size:.68rem;font-weight:800}.package-banner h3{font-size:1.15rem;font-weight:800;margin:.1rem 0}.package-banner p{margin:0;color:rgba(255,255,255,.85);font-size:.8rem}.candidate-grid{display:grid;grid-template-columns:repeat(var(--candidate-columns,2),1fr);gap:.65rem;padding:1rem}.candidate-grid>div{text-align:center;min-width:0}.candidate-grid img{width:78px;height:92px;object-fit:cover;border-radius:12px;border:3px solid #e0e7ff}.candidate-grid span,.candidate-grid small{display:block;color:#64748b;font-size:.67rem}.candidate-grid span{font-weight:800;text-transform:uppercase;margin-top:.45rem}.candidate-grid strong{display:block;color:#1e293b;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.package-copy{padding:0 1rem 1rem}.package-copy h4{font-size:.72rem;text-transform:uppercase;color:#2563eb;font-weight:800;margin:.6rem 0 .2rem}.package-copy p{color:#64748b;font-size:.8rem;white-space:pre-line;margin:0}.package-actions{display:flex;justify-content:flex-end;gap:.45rem;padding:.75rem 1rem;border-top:1px solid #edf2f7;background:#f8fafc}.empty-package{text-align:center;padding:3rem;color:#64748b}.empty-package i{font-size:2.4rem;color:#bfdbfe}.empty-package h3{font-size:1rem;color:#1e293b;margin:1rem 0 .25rem}.result-row{display:grid;grid-template-columns:110px 1fr 100px;align-items:center;gap:.8rem;margin:.75rem 0}.result-row>div{height:12px;border-radius:999px;background:#e2e8f0;overflow:hidden}.result-row>div span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3b82f6,#14b8a6)}.result-row b{text-align:right;color:#1e293b}.modal-content{border:0;border-radius:15px;overflow:hidden}.modal-header{background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff}.modal-header small{font-weight:800}.modal-header h5{font-weight:800}.modal-header .close{color:#fff}.modal-body label{font-size:.72rem;text-transform:uppercase;font-weight:800;color:#64748b}@media(max-width:767.98px){.osis-detail-hero,.control-panel{flex-direction:column;align-items:flex-start}.hero-actions,.control-actions{width:100%}.hero-actions .btn,.control-actions>*{flex:1}.candidate-grid img{width:64px;height:78px}.result-row{grid-template-columns:80px 1fr}.result-row b{grid-column:2}.detail-stat{padding:.8rem}}
+.osis-detail-hero{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.35rem 1.5rem;border-radius:17px;background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;box-shadow:0 15px 34px rgba(37,99,235,.2)}.osis-detail-hero>div>span{font-size:.76rem;font-weight:800;text-transform:uppercase}.osis-detail-hero h1{color:#fff;font-size:1.45rem;font-weight:800;margin:.3rem 0}.osis-detail-hero p{margin:0;color:rgba(255,255,255,.85)}.hero-actions{display:flex;align-items:center;gap:.7rem}.hero-actions .badge{padding:.65rem}.detail-stat{display:flex;align-items:center;gap:.8rem;padding:1rem;border:1px solid #dbe4f0;border-top:4px solid #3b82f6;border-radius:13px;background:#fff}.detail-stat>i{display:grid;place-items:center;width:42px;height:42px;border-radius:10px;background:#eff6ff;color:#2563eb}.detail-stat span{display:block;font-size:.7rem;font-weight:800;color:#64748b;text-transform:uppercase}.detail-stat strong{font-size:1.35rem;color:#0f172a}.detail-stat--success{border-top-color:#22c55e}.detail-stat--success>i{background:#ecfdf5;color:#15803d}.detail-stat--info{border-top-color:#06b6d4}.detail-stat--warning{border-top-color:#f59e0b}.control-panel,.candidate-section,.results-panel{padding:1.15rem 1.25rem;border:1px solid #dbe4f0;border-radius:15px;background:#fff;box-shadow:0 10px 26px rgba(15,23,42,.05)}.control-panel{display:flex;justify-content:space-between;align-items:center;gap:1rem}.control-panel h2,.section-head h2{font-size:1.08rem;font-weight:800;color:#0f172a;margin:0}.control-panel p,.section-head p{font-size:.83rem;color:#64748b;margin:.3rem 0 0}.control-actions{display:flex;gap:.5rem;flex-wrap:wrap}.control-actions form,.package-actions form{margin:0}.section-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}.section-head>span{padding:.35rem .65rem;border-radius:999px;background:#eff6ff;color:#2563eb;font-size:.75rem;font-weight:800}.candidate-section>.row{align-items:stretch}.candidate-section>.row>[class*=col-]{display:flex}.package-card{display:flex;width:100%;min-height:100%;flex-direction:column;border:1px solid #dbe4f0;border-radius:15px;overflow:hidden;background:#fff}.package-banner{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;background:linear-gradient(135deg,#2563eb,#0ea5a4);color:#fff}.package-banner>strong{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#fff;color:#2563eb;font-size:1.6rem}.package-banner span{font-size:.68rem;font-weight:800}.package-banner h3{font-size:1.15rem;font-weight:800;margin:.1rem 0}.package-banner p{margin:0;color:rgba(255,255,255,.85);font-size:.8rem}.candidate-grid{display:grid;grid-template-columns:repeat(var(--candidate-columns,2),1fr);gap:.65rem;padding:1rem}.candidate-grid>div{text-align:center;min-width:0}.candidate-grid img{width:78px;height:92px;object-fit:cover;border-radius:12px;border:3px solid #e0e7ff}.candidate-grid span,.candidate-grid small{display:block;color:#64748b;font-size:.67rem}.candidate-grid span{font-weight:800;text-transform:uppercase;margin-top:.45rem}.candidate-grid strong{display:block;color:#1e293b;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.package-copy{padding:0 1rem 1rem}.package-copy h4{font-size:.72rem;text-transform:uppercase;color:#2563eb;font-weight:800;margin:.6rem 0 .2rem}.package-copy p{color:#64748b;font-size:.8rem;white-space:pre-line;margin:0}.package-actions{display:flex;justify-content:flex-end;gap:.45rem;margin-top:auto;padding:.75rem 1rem;border-top:1px solid #edf2f7;background:#f8fafc}.empty-package{text-align:center;padding:3rem;color:#64748b}.empty-package i{font-size:2.4rem;color:#bfdbfe}.empty-package h3{font-size:1rem;color:#1e293b;margin:1rem 0 .25rem}.result-row{display:grid;grid-template-columns:110px 1fr 100px;align-items:center;gap:.8rem;margin:.75rem 0}.result-row>div{height:12px;border-radius:999px;background:#e2e8f0;overflow:hidden}.result-row>div span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3b82f6,#14b8a6)}.result-row b{text-align:right;color:#1e293b}.modal-content{border:0;border-radius:15px;overflow:hidden}.modal-header{background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff}.modal-header small{font-weight:800}.modal-header h5{font-weight:800}.modal-header .close{color:#fff}.modal-body label{font-size:.72rem;text-transform:uppercase;font-weight:800;color:#64748b}@media(max-width:767.98px){.osis-detail-hero,.control-panel{flex-direction:column;align-items:flex-start}.hero-actions,.control-actions{width:100%}.hero-actions .btn,.control-actions>*{flex:1}.candidate-grid img{width:64px;height:78px}.result-row{grid-template-columns:80px 1fr}.result-row b{grid-column:2}.detail-stat{padding:.8rem}}
 .voter-breakdown{display:block;margin-top:.35rem;color:#0f766e;font-weight:700}
 .package-card .candidate-grid img{width:108px;height:132px;border-radius:17px;box-shadow:0 10px 24px rgba(15,23,42,.12)}.package-card .candidate-grid strong{margin-top:.25rem;font-size:.82rem;white-space:normal}.package-card .candidate-grid span{margin-top:.6rem}
 .candidate-live-summary{display:grid;grid-template-columns:auto auto;align-items:center;gap:.1rem .65rem;padding:.5rem .75rem;border:1px solid #fecaca;border-radius:11px;background:#fff7f7}.candidate-live-summary>span{grid-row:1/3;font-size:.68rem;font-weight:900;color:#dc2626;text-transform:uppercase}.candidate-live-summary strong{font-size:.76rem;color:#1e293b}.candidate-live-summary small{font-size:.65rem;color:#64748b}.package-live-result{margin:0 1rem 1rem;padding:.85rem 1rem;border:1px solid #bfdbfe;border-radius:13px;background:linear-gradient(145deg,#eff6ff,#f0fdfa)}.package-live-result__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem}.package-live-result__head>span{font-size:.7rem;font-weight:900;color:#dc2626;text-transform:uppercase}.package-live-result .live-package-value{display:flex;align-items:baseline;gap:.4rem}.package-live-result .live-package-value strong{font-size:1.2rem}.package-live-result .live-bar{height:12px}.package-live-result>small{display:block;margin-top:.45rem;color:#64748b;font-size:.66rem}
@@ -102,14 +102,16 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 </style>
 <style>
 .package-campaign-photo{aspect-ratio:16/7;margin:1rem;overflow:hidden;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f0fdfa);box-shadow:0 10px 24px rgba(15,23,42,.08)}.package-campaign-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 32%}@media(max-width:767.98px){.package-campaign-photo{aspect-ratio:4/3;margin:.8rem}.package-campaign-photo img{object-position:center 25%}}
+.package-campaign-photo{position:relative}.package-media-delete{position:absolute;right:.65rem;top:.65rem}.package-media-delete .btn{box-shadow:0 4px 12px rgba(127,29,29,.3)}.package-gallery-strip{display:flex;align-items:center;gap:.75rem;padding:0 1rem 1rem}.package-gallery-open{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;width:74px;height:74px;border:1px solid #bfdbfe;border-radius:13px;background:#eff6ff;color:#1d4ed8;font-size:.65rem;font-weight:800}.package-gallery-open i{font-size:1.2rem;margin-bottom:.2rem}.package-gallery-open b{font-size:.7rem}.package-gallery-thumbs{display:flex;flex:1;gap:.45rem;min-width:0;overflow:auto;padding:.1rem}.package-gallery-thumbs figure{position:relative;flex:0 0 76px;height:64px;overflow:hidden;margin:0;border:1px solid #dbeafe;border-radius:9px;background:#f8fafc}.package-gallery-thumbs img{width:100%;height:100%;object-fit:cover}.package-gallery-thumbs form{position:absolute;right:3px;top:3px}.package-gallery-thumbs .btn{display:grid;place-items:center;width:22px;height:22px;padding:0;border-radius:50%;font-size:.62rem}.package-gallery-thumbs::-webkit-scrollbar{height:5px}.package-gallery-thumbs::-webkit-scrollbar-thumb{border-radius:99px;background:#bfdbfe}#packageGalleryImage{display:block;max-height:70vh;object-fit:contain;background:#0f172a}@media(max-width:767.98px){.package-gallery-strip{align-items:flex-start;flex-direction:column}.package-gallery-open{width:100%;height:auto;padding:.55rem;flex-direction:row;gap:.45rem}.package-gallery-open i{margin:0}.package-gallery-thumbs{width:100%}}
+.package-media-manager{margin:1rem 0;padding:1rem;border:1px solid #bfdbfe;border-radius:15px;background:linear-gradient(145deg,#f8fbff,#f0fdfa)}.package-media-manager__head{display:flex;justify-content:space-between;gap:1rem;margin-bottom:.8rem}.package-media-manager__head span{display:block;font-size:.65rem;font-weight:900;letter-spacing:.08em;color:#2563eb}.package-media-manager__head h6{margin:.12rem 0;font-weight:800;color:#0f172a}.package-media-manager__head p{margin:0;color:#64748b;font-size:.75rem}.package-media-manager__head>i{font-size:1.8rem;color:#2dd4bf}.package-media-dropzone{display:flex;width:100%;min-height:102px;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;padding:.85rem;border:2px dashed #93c5fd;border-radius:13px;background:rgba(255,255,255,.8);color:#1d4ed8;cursor:pointer;transition:.18s}.package-media-dropzone:hover,.package-media-dropzone.is-dragover{transform:translateY(-1px);border-color:#2563eb;background:#eff6ff}.package-media-dropzone i{font-size:1.45rem}.package-media-dropzone strong{font-size:.78rem}.package-media-dropzone small{color:#64748b;font-size:.68rem}.package-media-preview{position:relative;min-height:112px;margin-top:.6rem;overflow:hidden;border:1px solid #dbeafe;border-radius:11px;background:#fff}.package-media-preview img{display:block;width:100%;height:112px;object-fit:cover}.package-media-preview span{position:absolute;right:.4rem;bottom:.4rem;left:.4rem;padding:.35rem .5rem;border-radius:7px;background:rgba(15,23,42,.7);color:#fff;font-size:.65rem}.package-media-hint{margin:.45rem 0;color:#64748b;font-size:.7rem}.package-media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}.package-media-grid figure{position:relative;aspect-ratio:16/10;overflow:hidden;margin:0;border:1px solid #bfdbfe;border-radius:9px;background:#fff}.package-media-grid img{width:100%;height:100%;object-fit:cover}.package-media-grid figcaption{position:absolute;right:3px;bottom:3px;left:3px;padding:.18rem .3rem;border-radius:5px;background:rgba(15,23,42,.66);color:#fff;font-size:.58rem}.package-crop-body{min-height:360px;max-height:65vh;background:#0f172a}.package-crop-body img{display:block;max-width:100%;max-height:58vh;margin:auto}.package-crop-body .cropper-container{margin:auto}.package-media-manager+.candidate-assignment{margin-top:1rem}@media(max-width:767.98px){.candidate-section>.row>[class*=col-]{display:block}.package-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.package-crop-body{min-height:280px}.package-media-manager__head>i{display:none}}
 </style>
 @stop
 
-<style>
-.package-campaign-photo{position:relative}.package-media-delete{position:absolute;right:.65rem;top:.65rem}.package-media-delete .btn{box-shadow:0 4px 12px rgba(127,29,29,.3)}.package-gallery-strip{display:flex;align-items:center;gap:.75rem;padding:0 1rem 1rem}.package-gallery-open{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;width:74px;height:74px;border:1px solid #bfdbfe;border-radius:13px;background:#eff6ff;color:#1d4ed8;font-size:.65rem;font-weight:800}.package-gallery-open i{font-size:1.2rem;margin-bottom:.2rem}.package-gallery-open b{font-size:.7rem}.package-gallery-thumbs{display:flex;flex:1;gap:.45rem;min-width:0;overflow:auto;padding:.1rem}.package-gallery-thumbs figure{position:relative;flex:0 0 76px;height:64px;overflow:hidden;margin:0;border:1px solid #dbeafe;border-radius:9px;background:#f8fafc}.package-gallery-thumbs img{width:100%;height:100%;object-fit:cover}.package-gallery-thumbs form{position:absolute;right:3px;top:3px}.package-gallery-thumbs .btn{display:grid;place-items:center;width:22px;height:22px;padding:0;border-radius:50%;font-size:.62rem}.package-gallery-thumbs::-webkit-scrollbar{height:5px}.package-gallery-thumbs::-webkit-scrollbar-thumb{border-radius:99px;background:#bfdbfe}#packageGalleryImage{display:block;max-height:70vh;object-fit:contain;background:#0f172a}@media(max-width:767.98px){.package-gallery-strip{align-items:flex-start;flex-direction:column}.package-gallery-open{width:100%;height:auto;padding:.55rem;flex-direction:row;gap:.45rem}.package-gallery-open i{margin:0}.package-gallery-thumbs{width:100%}}
-</style>
-
 @section('js')
+<template id="packageMediaManagerTemplate"><section class="package-media-manager"><div class="package-media-manager__head"><div><span>MEDIA KAMPANYE</span><h6>Foto bersama &amp; galeri live</h6><p>Seret foto ke area unggah. Setiap foto akan dipotong agar proporsinya rapi di semua tampilan.</p></div><i class="fas fa-images"></i></div><div class="row"><div class="col-md-5 mb-3 mb-md-0"><button type="button" class="package-media-dropzone" data-input="campaignPhotoInput"><i class="fas fa-image"></i><strong>Foto bersama kandidat</strong><small>Seret atau pilih satu foto utama</small></button><div id="campaignMediaPreview" class="package-media-preview" hidden><img alt="Pratinjau foto bersama"><span id="campaignPhotoHint">Foto utama paket.</span></div></div><div class="col-md-7"><button type="button" class="package-media-dropzone package-media-dropzone--gallery" data-input="livePhotosInput"><i class="fas fa-cloud-upload-alt"></i><strong>Galeri live polling</strong><small>Seret beberapa foto · maksimal 6 foto</small></button><div id="livePhotosHint" class="package-media-hint">Belum ada galeri live.</div><div id="liveMediaPreview" class="package-media-grid"></div></div></div></section></template>
+<div class="modal fade" id="packageCropModal" tabindex="-1" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><div><small>RAPIKAN FOTO</small><h5 class="modal-title">Atur area foto</h5></div><button type="button" class="close cancel-package-crop" aria-label="Tutup"><span>&times;</span></button></div><div class="modal-body package-crop-body"><img id="packageCropImage" alt="Crop foto kampanye"></div><div class="modal-footer"><small class="text-muted mr-auto">Rasio 16:7 untuk tampilan paket dan layar live.</small><button type="button" class="btn btn-light cancel-package-crop">Batal</button><button type="button" class="btn btn-primary" id="savePackageCrop"><i class="fas fa-check mr-1"></i>Pakai Foto</button></div></div></div></div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const packageForm=document.getElementById('packageForm');if(packageForm){const photoControls=document.createElement('div');photoControls.className='row package-photo-controls';photoControls.innerHTML='<div class="col-md-6 form-group"><label><i class="fas fa-image text-primary mr-1"></i>Foto Bersama Kandidat</label><label class="btn btn-sm btn-outline-primary d-block text-left mb-1" for="campaignPhotoInput"><i class="fas fa-upload mr-1"></i>Unggah foto utama</label><small class="text-muted d-block" id="campaignPhotoHint">Foto utama paket dan fallback ketika foto profil kandidat tidak tersedia.</small></div><div class="col-md-6 form-group"><label><i class="fas fa-images text-primary mr-1"></i>Galeri Live Polling</label><label class="btn btn-sm btn-outline-primary d-block text-left mb-1" for="livePhotosInput"><i class="fas fa-images mr-1"></i>Unggah hingga 6 foto</label><small class="text-muted d-block" id="livePhotosHint">Foto akan bergantian otomatis di layar live. Upload baru menggantikan galeri sebelumnya.</small></div>';
@@ -145,5 +147,149 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
 @if(session('success'))Swal.fire({icon:'success',title:'Berhasil',text:@json(session('success')),confirmButtonColor:'#2563eb'});@endif
 @if(session('error'))Swal.fire({icon:'error',title:'Belum dapat diproses',text:@json(session('error')),confirmButtonColor:'#2563eb'});@endif
 @if($errors->any())Swal.fire({icon:'error',title:'Periksa isian',html:@json(implode('<br>',$errors->all())),confirmButtonColor:'#2563eb'}).then(()=>$('#packageModal').modal('show'));@endif
+</script>
+<script>
+(() => {
+    const form = document.getElementById('packageForm');
+    if (!form) return;
+
+    const assignment = form.querySelector('.candidate-assignment');
+    const template = document.getElementById('packageMediaManagerTemplate');
+    form.querySelector('.package-photo-controls')?.remove();
+    assignment.before(template.content.cloneNode(true));
+
+    const campaignInput = document.getElementById('campaignPhotoInput');
+    const galleryInput = document.getElementById('livePhotosInput');
+    const campaignPreview = document.getElementById('campaignMediaPreview');
+    const campaignPreviewImage = campaignPreview.querySelector('img');
+    const campaignHint = document.getElementById('campaignPhotoHint');
+    const galleryPreview = document.getElementById('liveMediaPreview');
+    const galleryHint = document.getElementById('livePhotosHint');
+    const cropModal = $('#packageCropModal');
+    const cropImage = document.getElementById('packageCropImage');
+    let cropper = null;
+    let cropQueue = [];
+    let activeCrop = null;
+    let existingGalleryCount = 0;
+    let existingGallery = [];
+
+    const toFile = (blob, source) => new File([blob], `${source.name.replace(/\.[^.]+$/, '') || 'foto-kampanye'}.jpg`, { type: 'image/jpeg' });
+    const setFiles = (input, files) => {
+        const transfer = new DataTransfer();
+        files.forEach(file => transfer.items.add(file));
+        input.files = transfer.files;
+    };
+    const thumbnail = (url, label) => `<figure><img src="${url}" alt="${label}"><figcaption>${label}</figcaption></figure>`;
+    const renderGallery = (existing = [], pending = []) => {
+        galleryPreview.innerHTML = [
+            ...existing.map((url, index) => thumbnail(url, `Tersimpan ${index + 1}`)),
+            ...pending.map((file, index) => thumbnail(URL.createObjectURL(file), `Baru ${index + 1}`)),
+        ].join('');
+        const total = existing.length + pending.length;
+        galleryHint.textContent = total ? `${existing.length} tersimpan · ${pending.length} foto baru siap disimpan (maksimal 6).` : 'Belum ada galeri live. Seret foto untuk menambah galeri.';
+    };
+    const renderMedia = packageData => {
+        const campaign = packageData?.campaignPhoto;
+        existingGallery = packageData?.livePhotos || [];
+        existingGalleryCount = existingGallery.length;
+        if (campaign) {
+            campaignPreview.hidden = false;
+            campaignPreviewImage.src = campaign;
+            campaignHint.textContent = 'Foto utama yang tersimpan. Unggah foto baru untuk mengganti.';
+        } else {
+            campaignPreview.hidden = true;
+            campaignPreviewImage.removeAttribute('src');
+            campaignHint.textContent = 'Belum ada foto utama.';
+        }
+        renderGallery(existingGallery, []);
+    };
+    const resetMedia = () => {
+        existingGalleryCount = 0;
+        existingGallery = [];
+        campaignPreview.hidden = true;
+        campaignPreviewImage.removeAttribute('src');
+        campaignHint.textContent = 'Belum ada foto utama.';
+        renderGallery([], []);
+    };
+
+    const closeCrop = () => {
+        cropModal.modal('hide');
+        if (cropper) { cropper.destroy(); cropper = null; }
+        if (cropImage.src.startsWith('blob:')) URL.revokeObjectURL(cropImage.src);
+        cropImage.removeAttribute('src');
+    };
+    const openNextCrop = () => {
+        activeCrop = cropQueue.shift();
+        if (!activeCrop) return;
+        cropImage.src = URL.createObjectURL(activeCrop.file);
+        cropModal.one('shown.bs.modal', () => {
+            if (typeof window.Cropper !== 'function') {
+                Swal.fire('Editor foto belum siap', 'Muat ulang halaman lalu coba kembali.', 'error');
+                closeCrop();
+                return;
+            }
+            cropper = new window.Cropper(cropImage, { aspectRatio: 16 / 7, viewMode: 1, dragMode: 'move', autoCropArea: .9, responsive: true, background: false });
+        }).modal('show');
+    };
+    const cropFiles = (input, files) => {
+        const imageFiles = Array.from(files).filter(file => /^image\/(jpeg|png|webp)$/.test(file.type));
+        if (!imageFiles.length) return;
+        if (input === galleryInput && existingGalleryCount + imageFiles.length > 6) {
+            Swal.fire('Galeri penuh', `Maksimal 6 foto. Saat ini sudah ada ${existingGalleryCount} foto tersimpan.`, 'warning');
+            input.value = '';
+            return;
+        }
+        input.value = '';
+        cropQueue = imageFiles.map(file => ({ file, input, output: [] }));
+        openNextCrop();
+    };
+
+    document.querySelectorAll('.package-media-dropzone').forEach(zone => {
+        const input = document.getElementById(zone.dataset.input);
+        zone.addEventListener('click', () => input.click());
+        ['dragenter', 'dragover'].forEach(eventName => zone.addEventListener(eventName, event => { event.preventDefault(); zone.classList.add('is-dragover'); }));
+        ['dragleave', 'drop'].forEach(eventName => zone.addEventListener(eventName, event => { event.preventDefault(); zone.classList.remove('is-dragover'); }));
+        zone.addEventListener('drop', event => cropFiles(input, event.dataTransfer.files));
+    });
+    campaignInput.addEventListener('change', event => cropFiles(campaignInput, event.target.files));
+    galleryInput.addEventListener('change', event => cropFiles(galleryInput, event.target.files));
+    document.querySelectorAll('.cancel-package-crop').forEach(button => button.addEventListener('click', () => { cropQueue = []; closeCrop(); }));
+    document.getElementById('savePackageCrop').addEventListener('click', () => {
+        if (!cropper || !activeCrop) return;
+        const button = document.getElementById('savePackageCrop');
+        button.disabled = true;
+        cropper.getCroppedCanvas({ width: 1600, height: 700, imageSmoothingQuality: 'high' }).toBlob(blob => {
+            button.disabled = false;
+            if (!blob) return;
+            activeCrop.output.push(toFile(blob, activeCrop.file));
+            const target = activeCrop.input;
+            const output = activeCrop.output;
+            closeCrop();
+            if (cropQueue.length) {
+                cropQueue[0].output = target === galleryInput ? [...Array.from(galleryInput.files), ...output] : output;
+                openNextCrop();
+                return;
+            }
+            const files = target === galleryInput ? [...Array.from(galleryInput.files), ...output] : output;
+            setFiles(target, files);
+            if (target === campaignInput) {
+                campaignPreview.hidden = false;
+                campaignPreviewImage.src = URL.createObjectURL(files[0]);
+                campaignHint.textContent = 'Foto baru siap disimpan.';
+            } else {
+                renderGallery(existingGallery, files);
+            }
+        }, 'image/jpeg', .9);
+    });
+
+    $('[data-target="#packageModal"]').on('click', resetMedia);
+    $('.btn-edit-package').on('click', function () { renderMedia(packages[$(this).data('id')]); });
+    form.addEventListener('submit', event => {
+        if (cropper || activeCrop) {
+            event.preventDefault();
+            Swal.fire('Selesaikan crop dahulu', 'Terapkan atau batalkan crop foto sebelum menyimpan Paket.', 'info');
+        }
+    });
+})();
 </script>
 @stop
