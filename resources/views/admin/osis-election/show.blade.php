@@ -167,6 +167,7 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
     const galleryHint = document.getElementById('livePhotosHint');
     const cropModal = $('#packageCropModal');
     const cropImage = document.getElementById('packageCropImage');
+    document.querySelector('#packageCropModal .modal-footer small').textContent = 'Tarik sisi atau sudut mana pun. Rasio foto bebas mengikuti kebutuhan kampanye.';
     let cropper = null;
     let cropQueue = [];
     let activeCrop = null;
@@ -228,7 +229,7 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
                 closeCrop();
                 return;
             }
-            cropper = new window.Cropper(cropImage, { aspectRatio: 16 / 7, viewMode: 1, dragMode: 'move', autoCropArea: .9, responsive: true, background: false });
+            cropper = new window.Cropper(cropImage, { aspectRatio: NaN, viewMode: 1, dragMode: 'move', autoCropArea: .9, cropBoxResizable: true, cropBoxMovable: true, responsive: true, background: false });
         }).modal('show');
     };
     const cropFiles = (input, files) => {
@@ -258,7 +259,7 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
         if (!cropper || !activeCrop) return;
         const button = document.getElementById('savePackageCrop');
         button.disabled = true;
-        cropper.getCroppedCanvas({ width: 1600, height: 700, imageSmoothingQuality: 'high' }).toBlob(blob => {
+        cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' }).toBlob(blob => {
             button.disabled = false;
             if (!blob) return;
             activeCrop.output.push(toFile(blob, activeCrop.file));
