@@ -96,6 +96,7 @@ class OsisElectionExperienceTest extends TestCase
     public function test_packages_support_campaign_photo_and_live_gallery(): void
     {
         $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_08_07_150000_add_campaign_photos_to_osis_packages.php');
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
         $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/OsisPackage.php');
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
         $panel = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
@@ -112,6 +113,13 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('package-campaign-photo', $panel);
         $this->assertStringContainsString('campaign-gallery', $liveView);
         $this->assertStringContainsString('rotateGalleries', $liveView);
+        $this->assertStringContainsString("name('packages.campaign-photo.destroy')", $routes);
+        $this->assertStringContainsString("name('packages.live-photo.destroy')", $routes);
+        $this->assertStringContainsString('deletePackageCampaignPhoto', $controller);
+        $this->assertStringContainsString('deletePackageLivePhoto', $controller);
+        $this->assertStringContainsString('array_merge($existingPhotos', $controller);
+        $this->assertStringContainsString('packageGalleryModal', $panel);
+        $this->assertStringContainsString('package-gallery-open', $panel);
     }
 
     public function test_student_vote_has_friendly_password_limiter_and_casting_animation(): void

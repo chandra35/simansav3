@@ -291,6 +291,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'destroy'])->middleware('permission:manage-osis-election')->name('destroy');
         Route::post('/{election}/paket', [App\Http\Controllers\Admin\OsisElectionController::class, 'storePackage'])->middleware('permission:manage-osis-election')->name('packages.store');
         Route::put('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'updatePackage'])->middleware('permission:manage-osis-election')->name('packages.update');
+        Route::delete('/{election}/paket/{package}/foto-utama', [App\Http\Controllers\Admin\OsisElectionController::class, 'deletePackageCampaignPhoto'])->middleware('permission:manage-osis-election')->name('packages.campaign-photo.destroy');
+        Route::delete('/{election}/paket/{package}/galeri', [App\Http\Controllers\Admin\OsisElectionController::class, 'deletePackageLivePhoto'])->middleware('permission:manage-osis-election')->name('packages.live-photo.destroy');
         Route::delete('/{election}/paket/{package}', [App\Http\Controllers\Admin\OsisElectionController::class, 'destroyPackage'])->middleware('permission:manage-osis-election')->name('packages.destroy');
         Route::post('/{election}/publish', [App\Http\Controllers\Admin\OsisElectionController::class, 'publish'])->middleware('permission:manage-osis-election')->name('publish');
         Route::post('/{election}/pause', [App\Http\Controllers\Admin\OsisElectionController::class, 'pause'])->middleware('permission:manage-osis-election')->name('pause');

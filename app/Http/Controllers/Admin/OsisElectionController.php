@@ -280,6 +280,29 @@ class OsisElectionController extends Controller
         $package->delete(); return back()->with('success', 'Paket kandidat dihapus.');
     }
 
+    public function deletePackageCampaignPhoto(OsisElection $election, OsisPackage $package): RedirectResponse
+    {
+        abort_unless(in_array($election->status, ['draft', 'paused'], true), 422);
+        abort_unless($package->election_id === $election->id && $package->campaign_photo, 404);
+        Storage::disk('public')->delete($package->campaign_photo);
+        $package->update(['campaign_photo' => null]);
+
+        return back()->with('success', 'Foto bersama kandidat dihapus.');
+    }
+
+    public function deletePackageLivePhoto(Request $request, OsisElection $election, OsisPackage $package): RedirectResponse
+    {
+        abort_unless(in_array($election->status, ['draft', 'paused'], true), 422);
+        abort_unless($package->election_id === $election->id, 404);
+        $photo = $request->validate(['photo' => ['required', 'string']])['photo'];
+        $photos = $package->live_photos ?? [];
+        abort_unless(in_array($photo, $photos, true), 404);
+        Storage::disk('public')->delete($photo);
+        $package->update(['live_photos' => array_values(array_diff($photos, [$photo]))]);
+
+        return back()->with('success', 'Foto galeri dihapus.');
+    }
+
     public function publish(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->publish($election), 'Pemilihan dipublikasikan dan daftar pemilih telah dibekukan.'); }
     public function pause(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->pause($election), 'Pemilihan dijeda. Voting berhenti sementara dan pengaturan non-kandidat dapat diedit.'); }
     public function resume(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->resume($election), 'Pemilihan dilanjutkan. Voting kembali mengikuti jadwal.'); }
@@ -415,9 +438,15 @@ class OsisElectionController extends Controller
             $data['campaign_photo'] = $request->file('campaign_photo')->store("osis-election/{$election->id}", 'public');
         }
         if ($request->hasFile('live_photos')) {
-            foreach ($package?->live_photos ?? [] as $photo) Storage::disk('public')->delete($photo);
-            $data['live_photos'] = collect($request->file('live_photos'))
-                ->map(fn ($photo) => $photo->store("osis-election/{$election->id}", 'public'))->all();
+            $existingPhotos = $package?->live_photos ?? [];
+            $newPhotos = $request->file('live_photos');
+            if (count($existingPhotos) + count($newPhotos) > 6) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'live_photos' => 'Galeri maksimal berisi 6 foto. Hapus foto lama terlebih dahulu.',
+                ]);
+            }
+            $data['live_photos'] = array_merge($existingPhotos, collect($newPhotos)
+                ->map(fn ($photo) => $photo->store("osis-election/{$election->id}", 'public'))->all());
         }
 
         return $data;
