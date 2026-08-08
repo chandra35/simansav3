@@ -98,6 +98,7 @@ class OsisElectionExperienceTest extends TestCase
         $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_08_07_150000_add_campaign_photos_to_osis_packages.php');
         $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/OsisPackage.php');
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $panel = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
         $studentView = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
         $liveView = file_get_contents(dirname(__DIR__, 2).'/resources/views/public/osis-polling.blade.php');
 
@@ -107,6 +108,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('getLivePhotoUrlsAttribute', $model);
         $this->assertStringContainsString('persistPackagePhotos', $controller);
         $this->assertStringContainsString('campaign-photo', $studentView);
+        $this->assertStringContainsString('aspect-ratio:16/7', $studentView);
+        $this->assertStringContainsString('package-campaign-photo', $panel);
         $this->assertStringContainsString('campaign-gallery', $liveView);
         $this->assertStringContainsString('rotateGalleries', $liveView);
     }

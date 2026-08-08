@@ -97,6 +97,9 @@ $resultsByPackage=$results->keyBy(fn($result)=>$result['package']->id);
 .candidate-role-grid{grid-template-columns:repeat(var(--role-columns,2),1fr)}
 @media(max-width:991.98px){.candidate-browser__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:767.98px){.live-polling__head{flex-direction:column}.live-polling__time{width:100%}.live-polling__packages article{grid-template-columns:1fr}.live-package-value{text-align:left}.candidate-role-grid{grid-template-columns:1fr}.candidate-browser__toolbar{align-items:stretch;flex-wrap:wrap}.candidate-search{flex-basis:100%}.candidate-browser__grid{grid-template-columns:1fr}}
 </style>
+<style>
+.package-campaign-photo{aspect-ratio:16/7;margin:1rem;overflow:hidden;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f0fdfa);box-shadow:0 10px 24px rgba(15,23,42,.08)}.package-campaign-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 32%}@media(max-width:767.98px){.package-campaign-photo{aspect-ratio:4/3;margin:.8rem}.package-campaign-photo img{object-position:center 25%}}
+</style>
 @stop
 
 @section('js')
