@@ -335,7 +335,7 @@ return [
         ],
         [
             'key' => 'gtk-osis-election',
-            'text' => 'Pemilihan OSIS',
+            'text' => 'Pemilihan OSIM',
             'route' => 'admin.gtk.osis-election.index',
             'icon' => 'fas fa-fw fa-vote-yea',
             'can' => 'sidebar-gtk-menu-only',
@@ -774,7 +774,7 @@ return [
                     'active' => ['admin/catatan-konseling*'],
                 ],
                 [
-                    'text' => 'Pemilihan OSIS',
+                    'text' => 'Pemilihan OSIM',
                     'route' => 'admin.osis-election.index',
                     'icon' => 'fas fa-fw fa-vote-yea',
                     'can' => 'view-osis-election',
@@ -1277,7 +1277,7 @@ return [
         // MODUL CUSTOM
         [
             'key' => 'siswa-osis-election',
-            'text' => 'Pemilihan OSIS',
+            'text' => 'Pemilihan OSIM',
             'route' => 'siswa.osis-election.index',
             'icon' => 'fas fa-fw fa-vote-yea',
             'can' => 'sidebar-siswa-access',
