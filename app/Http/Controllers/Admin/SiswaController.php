@@ -123,8 +123,9 @@ class SiswaController extends Controller
         $this->applyOperationalFilters($query, $request);
 
         $rows = $query->with(['user', 'ortu', 'kelasTahunAktif'])->get();
+        $isLoginDrilldown = in_array($request->input('login_status'), ['sudah', 'belum'], true);
 
-        if ($population === 'active_year' && !$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel') {
+        if ($population === 'active_year' && !$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel' && !$isLoginDrilldown) {
             $tingkatLabel = $request->filled('tingkat') ? 'tingkat-' . $request->tingkat : 'semua-tingkat';
             $filename = 'data-siswa-' . $tingkatLabel . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
             $tingkat = $request->filled('tingkat') ? (int) $request->tingkat : null;
@@ -132,7 +133,9 @@ class SiswaController extends Controller
             return Excel::download(new SiswaPerRombelExport($rows, 'Data Siswa', $tingkat), $filename);
         }
 
-        $filename = 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
+        $filename = $isLoginDrilldown
+            ? 'data-siswa-' . ($request->login_status === 'belum' ? 'belum-pernah-login' : 'sudah-login') . '-' . now()->format('Ymd-His') . '.xlsx'
+            : 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
 
         return Excel::download(new SiswaExport($rows), $filename);
     }

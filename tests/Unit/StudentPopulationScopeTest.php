@@ -25,4 +25,13 @@ class StudentPopulationScopeTest extends TestCase
         $this->assertStringContainsString('value="transferred_out"', $view);
         $this->assertStringContainsString('value="all"', $view);
     }
+
+    public function test_login_drilldown_export_uses_a_single_lightweight_sheet(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/SiswaController.php');
+
+        $this->assertStringContainsString('$isLoginDrilldown', $controller);
+        $this->assertStringContainsString('&& !$isLoginDrilldown', $controller);
+        $this->assertStringContainsString('belum-pernah-login', $controller);
+    }
 }
