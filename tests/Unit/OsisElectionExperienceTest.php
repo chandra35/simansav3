@@ -156,6 +156,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('package-media-dropzone', $panel);
         $this->assertStringContainsString('packageCropModal', $panel);
         $this->assertStringContainsString('new window.Cropper', $panel);
+        $this->assertStringContainsString('initialAspectRatio: originalRatio', $panel);
         $this->assertStringContainsString('aspectRatio: NaN', $panel);
         $this->assertStringContainsString('activeCrop = null;', $panel);
         $this->assertStringContainsString('rgba(0,92,59,.42)', $panel);

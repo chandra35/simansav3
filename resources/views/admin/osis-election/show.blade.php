@@ -167,7 +167,7 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
     const galleryHint = document.getElementById('livePhotosHint');
     const cropModal = $('#packageCropModal');
     const cropImage = document.getElementById('packageCropImage');
-    document.querySelector('#packageCropModal .modal-footer small').textContent = 'Tarik sisi atau sudut mana pun. Rasio foto bebas mengikuti kebutuhan kampanye.';
+    document.querySelector('#packageCropModal .modal-footer small').textContent = 'Rasio awal mengikuti foto unggahan. Tarik sisi atau sudut mana pun bila perlu.';
     let cropper = null;
     let cropQueue = [];
     let activeCrop = null;
@@ -230,7 +230,8 @@ const livePolling=document.getElementById('livePolling');if(livePolling){const r
                 closeCrop();
                 return;
             }
-            cropper = new window.Cropper(cropImage, { aspectRatio: NaN, viewMode: 1, dragMode: 'move', autoCropArea: .9, cropBoxResizable: true, cropBoxMovable: true, responsive: true, background: false });
+            const originalRatio = cropImage.naturalWidth && cropImage.naturalHeight ? cropImage.naturalWidth / cropImage.naturalHeight : NaN;
+            cropper = new window.Cropper(cropImage, { aspectRatio: NaN, initialAspectRatio: originalRatio, viewMode: 1, dragMode: 'move', autoCropArea: .9, cropBoxResizable: true, cropBoxMovable: true, responsive: true, background: false });
         }).modal('show');
     };
     const cropFiles = (input, files) => {
