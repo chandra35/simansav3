@@ -125,6 +125,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('packageCropModal', $panel);
         $this->assertStringContainsString('new window.Cropper', $panel);
         $this->assertStringContainsString('aspectRatio: NaN', $panel);
+        $this->assertStringContainsString('activeCrop = null;', $panel);
+        $this->assertStringContainsString('rgba(0,92,59,.42)', $panel);
+        $this->assertStringContainsString('rgba(0,92,59,.44)', $studentView);
     }
 
     public function test_student_vote_has_friendly_password_limiter_and_casting_animation(): void
