@@ -304,6 +304,14 @@ class OsisElectionController extends Controller
     }
 
     public function publish(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->publish($election), 'Pemilihan dipublikasikan dan daftar pemilih telah dibekukan.'); }
+    public function syncStudentVoters(OsisElection $election): RedirectResponse
+    {
+        try {
+            $added = $this->service->syncStudentVoters($election);
+            Siswa::logCustomActivity('osis_student_voters_synced', "Memperbarui DPT siswa {$election->title}: {$added} siswa baru ditambahkan.", $election);
+            return back()->with('success', $added ? "Data siswa diperbarui. {$added} siswa baru ditambahkan ke DPT." : 'Data siswa sudah terbaru. Tidak ada siswa baru yang perlu ditambahkan.');
+        } catch (RuntimeException $e) { return back()->with('error', $e->getMessage()); }
+    }
     public function pause(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->pause($election), 'Pemilihan dijeda. Voting berhenti sementara dan pengaturan non-kandidat dapat diedit.'); }
     public function resume(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->resume($election), 'Pemilihan dilanjutkan. Voting kembali mengikuti jadwal.'); }
     public function close(OsisElection $election): RedirectResponse { return $this->runAction(fn () => $this->service->close($election), 'Pemilihan telah ditutup.'); }

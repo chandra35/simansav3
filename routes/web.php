@@ -284,6 +284,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{election}/preview', [App\Http\Controllers\Admin\OsisElectionController::class, 'preview'])->middleware('permission:manage-osis-election')->name('preview');
         Route::get('/{election}/kandidat', [App\Http\Controllers\Admin\OsisElectionController::class, 'candidateOptions'])->middleware('permission:manage-osis-election')->name('candidates');
         Route::get('/{election}/pemilih', [App\Http\Controllers\Admin\OsisElectionController::class, 'voters'])->middleware('permission:manage-osis-election')->name('voters');
+        Route::post('/{election}/pemilih/sinkron-siswa', [App\Http\Controllers\Admin\OsisElectionController::class, 'syncStudentVoters'])->middleware('permission:manage-osis-election')->name('voters.sync-students');
         Route::post('/{election}/pemilih/{voter}/unlock', [App\Http\Controllers\Admin\OsisElectionController::class, 'unlockVoter'])->middleware('permission:manage-osis-election')->name('voters.unlock');
         Route::get('/{election}/live-polling', [App\Http\Controllers\Admin\OsisElectionController::class, 'livePolling'])->name('live-polling');
         Route::get('/{election}', [App\Http\Controllers\Admin\OsisElectionController::class, 'show'])->name('show');

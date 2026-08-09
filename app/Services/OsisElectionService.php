@@ -31,20 +31,7 @@ class OsisElectionService
         }
 
         $candidateIds = $election->packages->flatMap->candidateIds()->unique()->values();
-        $levels = collect($election->eligible_levels ?? [])->map(fn ($level) => (int) $level)->all();
-        $studentUsers = $levels === [] ? collect() : User::query()
-            ->where('is_active', true)
-            ->whereHas('siswa', fn ($student) => $student
-                ->where('status_siswa', 'aktif')
-                ->whereHas('kelasSaatIni', fn ($class) => $class
-                    ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
-                    ->whereIn('tingkat', $levels)))
-            ->with('siswa:id,user_id')
-            ->get(['id']);
-
-        if ($election->candidate_voting_policy === 'not_allowed') {
-            $studentUsers = $studentUsers->reject(fn (User $user) => $candidateIds->contains($user->siswa?->id));
-        }
+        $studentUsers = $this->eligibleStudentUsers($election, $candidateIds);
 
         $gtkUsers = $election->include_gtk
             ? User::query()->where('is_active', true)->whereHas('gtk')->with('gtk:id,user_id')->get(['id'])
@@ -77,6 +64,42 @@ class OsisElectionService
         });
 
         return $election->fresh();
+    }
+
+    /** Add newly eligible students without changing the existing frozen DPT or ballots. */
+    public function syncStudentVoters(OsisElection $election): int
+    {
+        if (! in_array($election->status, ['published', 'paused'], true) || $election->phase === 'closed') {
+            throw new RuntimeException('Update data siswa hanya tersedia sebelum pemilihan ditutup.');
+        }
+
+        return DB::transaction(function () use ($election) {
+            $election = OsisElection::query()->lockForUpdate()->findOrFail($election->id);
+            if (! in_array($election->status, ['published', 'paused'], true) || $election->phase === 'closed') {
+                throw new RuntimeException('Update data siswa hanya tersedia sebelum pemilihan ditutup.');
+            }
+
+            $election->load('packages');
+            $candidateIds = $election->packages->flatMap->candidateIds()->unique()->values();
+            $existingUserIds = $election->voters()->pluck('user_id');
+            $students = $this->eligibleStudentUsers($election, $candidateIds)
+                ->reject(fn (User $user) => $existingUserIds->contains($user->id));
+
+            if ($students->isEmpty()) return 0;
+
+            $now = now();
+            $rows = $students->map(fn (User $user) => [
+                'id' => (string) Str::uuid(), 'election_id' => $election->id,
+                'user_id' => $user->id, 'siswa_id' => $user->siswa?->id,
+                'participant_type' => 'student', 'is_candidate' => $candidateIds->contains($user->siswa?->id),
+                'has_voted' => false, 'created_at' => $now, 'updated_at' => $now,
+            ])->all();
+
+            $added = 0;
+            foreach (array_chunk($rows, 300) as $chunk) $added += DB::table('osis_voters')->insertOrIgnore($chunk);
+
+            return $added;
+        });
     }
 
     public function vote(OsisElection $election, User $user, OsisPackage $package, string $password): string
@@ -150,5 +173,23 @@ class OsisElectionService
         if ($election->phase !== 'closed') throw new RuntimeException('Hasil hanya dapat diumumkan setelah pemilihan ditutup.');
         $election->update(['status' => 'closed', 'closed_at' => $election->closed_at ?: now(), 'result_published_at' => now()]);
         return $election->fresh();
+    }
+
+    private function eligibleStudentUsers(OsisElection $election, $candidateIds)
+    {
+        $levels = collect($election->eligible_levels ?? [])->map(fn ($level) => (int) $level)->all();
+        $students = $levels === [] ? collect() : User::query()
+            ->where('is_active', true)
+            ->whereHas('siswa', fn ($student) => $student
+                ->where('status_siswa', 'aktif')
+                ->whereHas('kelasSaatIni', fn ($class) => $class
+                    ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
+                    ->whereIn('tingkat', $levels)))
+            ->with('siswa:id,user_id')
+            ->get(['id']);
+
+        return $election->candidate_voting_policy === 'not_allowed'
+            ? $students->reject(fn (User $user) => $candidateIds->contains($user->siswa?->id))
+            : $students;
     }
 }

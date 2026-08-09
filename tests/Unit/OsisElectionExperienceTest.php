@@ -84,6 +84,23 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('unlock-voter', $view);
     }
 
+    public function test_admin_can_safely_add_newly_eligible_students_to_a_running_dpt(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $service = file_get_contents(dirname(__DIR__, 2).'/app/Services/OsisElectionService.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/show.blade.php');
+        $syncStart = strpos($service, 'public function syncStudentVoters');
+        $syncSection = substr($service, $syncStart, strpos($service, 'public function vote', $syncStart) - $syncStart);
+
+        $this->assertStringContainsString("name('voters.sync-students')", $routes);
+        $this->assertStringContainsString('function syncStudentVoters', $controller);
+        $this->assertStringContainsString('function syncStudentVoters', $service);
+        $this->assertStringContainsString('insertOrIgnore', $syncSection);
+        $this->assertStringNotContainsString('->delete()', $syncSection);
+        $this->assertStringContainsString('Update Data Siswa', $view);
+    }
+
     public function test_voter_page_uses_large_portrait_candidate_cards(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
