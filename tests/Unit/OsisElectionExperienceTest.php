@@ -158,8 +158,10 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('package-media-dropzone', $panel);
         $this->assertStringContainsString('packageCropModal', $panel);
         $this->assertStringContainsString('new window.Cropper', $panel);
-        $this->assertStringContainsString('initialAspectRatio: originalRatio', $panel);
-        $this->assertStringContainsString('aspectRatio: NaN', $panel);
+        $this->assertStringContainsString('const smartAspectRatio = isPortrait ? 4 / 5 : 16 / 9', $panel);
+        $this->assertStringContainsString('aspectRatio: smartAspectRatio', $panel);
+        $this->assertStringContainsString('cropBoxResizable: false', $panel);
+        $this->assertStringContainsString('zoomOnWheel: true', $panel);
         $this->assertStringContainsString('activeCrop = null;', $panel);
         $this->assertStringContainsString('rgba(0,92,59,.42)', $panel);
         $this->assertStringContainsString('rgba(0,92,59,.44)', $studentView);
