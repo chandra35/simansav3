@@ -26,12 +26,15 @@ class StudentPopulationScopeTest extends TestCase
         $this->assertStringContainsString('value="all"', $view);
     }
 
-    public function test_login_drilldown_export_uses_a_single_lightweight_sheet(): void
+    public function test_all_student_exports_use_a_single_lightweight_sheet(): void
     {
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/SiswaController.php');
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/siswa/index.blade.php');
 
         $this->assertStringContainsString('$isLoginDrilldown', $controller);
-        $this->assertStringContainsString('&& !$isLoginDrilldown', $controller);
         $this->assertStringContainsString('belum-pernah-login', $controller);
+        $this->assertStringContainsString('Excel::download(new SiswaExport($rows)', $controller);
+        $this->assertStringNotContainsString('SiswaPerRombelExport', $controller);
+        $this->assertStringContainsString("route('admin.siswa.export', \$contextQuery ?? [])", $view);
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\SiswaExport;
-use App\Exports\SiswaPerRombelExport;
 use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
@@ -124,14 +123,6 @@ class SiswaController extends Controller
 
         $rows = $query->with(['user', 'ortu', 'kelasTahunAktif'])->get();
         $isLoginDrilldown = in_array($request->input('login_status'), ['sudah', 'belum'], true);
-
-        if ($population === 'active_year' && !$request->filled('kelas_id') && $request->tingkat !== 'tanpa_rombel' && !$isLoginDrilldown) {
-            $tingkatLabel = $request->filled('tingkat') ? 'tingkat-' . $request->tingkat : 'semua-tingkat';
-            $filename = 'data-siswa-' . $tingkatLabel . '-per-rombel-' . now()->format('Ymd-His') . '.xlsx';
-            $tingkat = $request->filled('tingkat') ? (int) $request->tingkat : null;
-
-            return Excel::download(new SiswaPerRombelExport($rows, 'Data Siswa', $tingkat), $filename);
-        }
 
         $filename = $isLoginDrilldown
             ? 'data-siswa-' . ($request->login_status === 'belum' ? 'belum-pernah-login' : 'sudah-login') . '-' . now()->format('Ymd-His') . '.xlsx'
