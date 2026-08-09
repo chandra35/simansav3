@@ -6,8 +6,10 @@ use App\Models\Gtk;
 use App\Models\Polling;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Http\Controllers\Admin\PollingController;
 use App\Services\PollingAudienceService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -229,6 +231,47 @@ class PollingResponseFlowTest extends TestCase
         ];
         $this->actingAs($user)->getJson(route('admin.polling.respondents', $polling).'?'.http_build_query($respondentTable))
             ->assertOk()->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
+    }
+
+    public function test_manager_can_reopen_closed_polling_without_changing_existing_responses(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $admin = User::withoutEvents(fn () => User::factory()->create([
+            'id' => (string) Str::uuid(),
+            'username' => 'polling-reopen-admin-'.uniqid(),
+            'role' => 'super_admin',
+            'is_active' => true,
+            'is_first_login' => false,
+        ]));
+        $admin->assignRole($role);
+        $polling = Polling::create([
+            'slug' => 'polling-reopen-'.uniqid(),
+            'title' => 'Polling Perpanjangan Test',
+            'audience' => 'siswa',
+            'status' => 'closed',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->subHour(),
+            'reminder_interval_hours' => 6,
+        ]);
+        $response = $polling->responses()->create([
+            'user_id' => $admin->id,
+            'respondent_type' => 'siswa',
+            'respondent_id' => (string) Str::uuid(),
+            'respondent_name' => 'Respons Lama',
+            'submitted_at' => now()->subHours(2),
+            'locked_at' => now()->subHours(2),
+        ]);
+        $newEndsAt = now()->addDay()->startOfMinute();
+
+        auth()->login($admin);
+        $redirect = app(PollingController::class)->reopen(Request::create('/', 'POST', [
+            'ends_at' => $newEndsAt->format('Y-m-d H:i:s'),
+        ]), $polling);
+
+        $this->assertTrue($redirect->isRedirection());
+        $this->assertDatabaseHas('pollings', ['id' => $polling->id, 'status' => 'published']);
+        $this->assertTrue($polling->fresh()->ends_at->equalTo($newEndsAt));
+        $this->assertDatabaseHas('polling_responses', ['id' => $response->id, 'locked_at' => $response->locked_at]);
     }
 
     public function test_targeted_gtk_can_open_polling_but_other_gtk_scope_is_denied(): void

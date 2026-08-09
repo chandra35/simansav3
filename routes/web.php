@@ -181,6 +181,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'update'])->middleware('permission:manage-polling')->name('update');
         Route::post('/{polling}/publish', [App\Http\Controllers\Admin\PollingController::class, 'publish'])->middleware('permission:manage-polling')->name('publish');
         Route::post('/{polling}/close', [App\Http\Controllers\Admin\PollingController::class, 'close'])->middleware('permission:manage-polling')->name('close');
+        Route::post('/{polling}/reopen', [App\Http\Controllers\Admin\PollingController::class, 'reopen'])->middleware('permission:manage-polling')->name('reopen');
         Route::delete('/{polling}', [App\Http\Controllers\Admin\PollingController::class, 'destroy'])->middleware('permission:manage-polling')->name('destroy');
         Route::get('/{polling}/export', [App\Http\Controllers\Admin\PollingController::class, 'export'])->name('export');
         Route::get('/{polling}/pdf', [App\Http\Controllers\Admin\PollingController::class, 'pdf'])->name('pdf');

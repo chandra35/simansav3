@@ -195,6 +195,30 @@ class PollingController extends Controller
         return back()->with('success', 'Polling telah ditutup.');
     }
 
+    public function reopen(Request $request, Polling $polling)
+    {
+        $this->authorizeManage();
+        abort_unless($polling->phase === 'closed', 422, 'Hanya polling yang sudah ditutup dapat dibuka kembali.');
+
+        $data = $request->validate(['ends_at' => ['required', 'date']]);
+        $endsAt = now()->parse($data['ends_at']);
+        if ($endsAt->lte(now())) {
+            throw ValidationException::withMessages(['ends_at' => 'Waktu selesai harus setelah waktu saat ini.']);
+        }
+        if ($endsAt->lte($polling->starts_at)) {
+            throw ValidationException::withMessages(['ends_at' => 'Waktu selesai harus setelah waktu mulai polling.']);
+        }
+
+        $polling->update([
+            'status' => 'published',
+            'ends_at' => $endsAt,
+            'updated_by' => auth()->id(),
+        ]);
+        $this->log($polling, 'reopen_polling', 'Membuka kembali polling '.$polling->title.' hingga '.$endsAt->format('d/m/Y H:i').' WIB. Respons yang sudah masuk tetap dipertahankan.');
+
+        return back()->with('success', 'Polling dibuka kembali hingga '.$endsAt->format('d/m/Y H:i').' WIB. Respons yang sudah masuk tetap aman.');
+    }
+
     public function destroy(Polling $polling)
     {
         $this->authorizeManage();
