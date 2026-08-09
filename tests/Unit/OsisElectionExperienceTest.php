@@ -130,6 +130,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('package-campaign-photo', $panel);
         $this->assertStringContainsString('campaign-gallery', $liveView);
         $this->assertStringContainsString('rotateGalleries', $liveView);
+        $this->assertStringContainsString('grid-template-rows:auto auto minmax(0,1fr) auto', $liveView);
+        $this->assertStringContainsString('object-fit:contain', $liveView);
         $this->assertStringContainsString("name('packages.campaign-photo.destroy')", $routes);
         $this->assertStringContainsString("name('packages.live-photo.destroy')", $routes);
         $this->assertStringContainsString('deletePackageCampaignPhoto', $controller);
