@@ -134,6 +134,10 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('object-fit:contain', $liveView);
         $this->assertStringContainsString('showing-gallery', $liveView);
         $this->assertStringContainsString('campaign-gallery__backdrop', $liveView);
+        $this->assertStringContainsString("'vision' => \$package->vision", file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/PublicOsisPollingController.php'));
+        $this->assertStringContainsString('package-story', $liveView);
+        $this->assertStringContainsString('typeStory', $liveView);
+        $this->assertStringContainsString('showing-story', $liveView);
         $this->assertStringContainsString("name('packages.campaign-photo.destroy')", $routes);
         $this->assertStringContainsString("name('packages.live-photo.destroy')", $routes);
         $this->assertStringContainsString('deletePackageCampaignPhoto', $controller);

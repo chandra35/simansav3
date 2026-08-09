@@ -80,6 +80,8 @@ class PublicOsisPollingController extends Controller
                 'number' => $package->number,
                 'name' => $package->name ?: 'Paket '.$package->number,
                 'slogan' => $package->slogan,
+                'vision' => $package->vision,
+                'mission' => $package->mission,
                 'campaign_photo' => $package->campaign_photo_url,
                 'live_photos' => $package->live_photo_urls,
                 'votes' => (int) ($votes[$package->id] ?? 0),
