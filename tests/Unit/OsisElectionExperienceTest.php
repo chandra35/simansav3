@@ -139,8 +139,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('showing-story', $liveView);
         $this->assertStringContainsString('scheduleShowcase', $liveView);
         $this->assertStringContainsString('story-credit', $liveView);
-        $this->assertStringContainsString('@keyframes creditRoll', $liveView);
-        $this->assertStringContainsString('12%,86%{opacity:1', $liveView);
+        $this->assertStringNotContainsString('creditRoll', $liveView);
         $this->assertStringContainsString('width:min(78%,700px)', $liveView);
         $this->assertStringContainsString("name('packages.campaign-photo.destroy')", $routes);
         $this->assertStringContainsString("name('packages.live-photo.destroy')", $routes);
