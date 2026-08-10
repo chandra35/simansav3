@@ -287,6 +287,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{election}/laporan', [App\Http\Controllers\Admin\OsisElectionController::class, 'report'])->middleware('permission:manage-osis-election')->name('report');
         Route::get('/{election}/laporan/pdf', [App\Http\Controllers\Admin\OsisElectionController::class, 'reportPdf'])->middleware('permission:manage-osis-election')->name('report.pdf');
         Route::get('/{election}/laporan/excel', [App\Http\Controllers\Admin\OsisElectionController::class, 'reportExcel'])->middleware('permission:manage-osis-election')->name('report.excel');
+        Route::get('/{election}/laporan/belum-memilih', [App\Http\Controllers\Admin\OsisElectionController::class, 'pendingReport'])->middleware('permission:manage-osis-election')->name('report.pending');
+        Route::get('/{election}/laporan/belum-memilih/pdf', [App\Http\Controllers\Admin\OsisElectionController::class, 'pendingReportPdf'])->middleware('permission:manage-osis-election')->name('report.pending.pdf');
+        Route::get('/{election}/laporan/belum-memilih/excel', [App\Http\Controllers\Admin\OsisElectionController::class, 'pendingReportExcel'])->middleware('permission:manage-osis-election')->name('report.pending.excel');
         Route::post('/{election}/pemilih/sinkron-siswa', [App\Http\Controllers\Admin\OsisElectionController::class, 'syncStudentVoters'])->middleware('permission:manage-osis-election')->name('voters.sync-students');
         Route::post('/{election}/pemilih/{voter}/unlock', [App\Http\Controllers\Admin\OsisElectionController::class, 'unlockVoter'])->middleware('permission:manage-osis-election')->name('voters.unlock');
         Route::get('/{election}/live-polling', [App\Http\Controllers\Admin\OsisElectionController::class, 'livePolling'])->name('live-polling');

@@ -14,7 +14,7 @@ class OsisElectionReportExport implements FromArray, ShouldAutoSize, WithStyles
 
     public function array(): array
     {
-        $rows = [['LAPORAN HASIL PEMILIHAN OSIM'], [$this->election->title], ['Tahun pelajaran', $this->election->tahunPelajaran?->nama], ['Periode', $this->election->starts_at->format('d/m/Y H:i').' - '.$this->election->ends_at->format('d/m/Y H:i').' WIB'], [], ['RINGKASAN', 'JUMLAH'], ['DPT', $this->report['total']], ['Sudah memilih', $this->report['voted']], ['Belum memilih', $this->report['pending']], ['Partisipasi', $this->report['turnout'].'%'], [], ['PEROLEHAN SUARA', 'SUARA', 'PERSENTASE']];
+        $rows = [['LAPORAN HASIL PEMILIHAN OSIM'], [$this->election->title], ['Tahun pelajaran', $this->election->tahunPelajaran?->nama], ['Periode', $this->election->starts_at->format('d/m/Y H:i').' - '.$this->election->ends_at->format('d/m/Y H:i').' WIB'], ['Berkas dicetak langsung dari SIMANSA'], [], ['RINGKASAN', 'JUMLAH'], ['DPT', $this->report['total']], ['Sudah memilih', $this->report['voted']], ['Belum memilih', $this->report['pending']], ['Partisipasi', $this->report['turnout'].'%'], [], ['PEROLEHAN SUARA', 'SUARA', 'PERSENTASE']];
         foreach ($this->report['packages'] as $item) $rows[] = ['Paslon '.$item['package']->number.' - '.($item['package']->name ?: 'Paket '.$item['package']->number), $item['votes'], $item['percentage'].'%'];
         $rows[] = []; $rows[] = ['PARTISIPASI PER ROMBEL', 'DPT', 'SUDAH', 'BELUM', 'PARTISIPASI'];
         foreach ($this->report['participation'] as $item) $rows[] = [$item['class'], $item['total'], $item['voted'], $item['pending'], $item['percentage'].'%'];
@@ -23,5 +23,5 @@ class OsisElectionReportExport implements FromArray, ShouldAutoSize, WithStyles
         return $rows;
     }
 
-    public function styles(Worksheet $sheet): array { return [1 => ['font' => ['bold' => true, 'size' => 15]], 6 => ['font' => ['bold' => true]], 12 => ['font' => ['bold' => true]]]; }
+    public function styles(Worksheet $sheet): array { return [1 => ['font' => ['bold' => true, 'size' => 15]], 7 => ['font' => ['bold' => true]], 13 => ['font' => ['bold' => true]]]; }
 }

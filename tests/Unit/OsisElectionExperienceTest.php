@@ -96,10 +96,14 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("name('report')", $routes);
         $this->assertStringContainsString("name('report.pdf')", $routes);
         $this->assertStringContainsString("name('report.excel')", $routes);
+        $this->assertStringContainsString("name('report.pending')", $routes);
+        $this->assertStringContainsString("name('report.pending.pdf')", $routes);
+        $this->assertStringContainsString("name('report.pending.excel')", $routes);
         $this->assertStringContainsString('private function reportData', $controller);
         $this->assertStringContainsString('individual voter choices never enter the report', $controller);
         $this->assertStringContainsString('Perolehan Suara', $report);
         $this->assertStringContainsString('Partisipasi per Rombel', $report);
+        $this->assertStringContainsString('Berkas dicetak langsung dari SIMANSA', $report);
     }
 
     public function test_admin_can_safely_add_newly_eligible_students_to_a_running_dpt(): void
