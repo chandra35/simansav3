@@ -97,6 +97,42 @@
                         </div>
                     </div>
 
+                    <div class="simansa-jjc-opening-block">
+                        <div class="simansa-jjc-opening-heading">
+                            <div>
+                                <i class="fas fa-sun text-warning"></i>
+                                <strong>Kegiatan Pembuka</strong>
+                            </div>
+                            <small>Kegiatan ini tidak dihitung sebagai jam pelajaran.</small>
+                        </div>
+                        <div class="simansa-jjc-opening-grid">
+                            <div class="simansa-jjc-opening-item">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="upacaraActive"
+                                           {{ $presetGenerator['upacara_senin_aktif'] ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="upacaraActive">Upacara hari Senin</label>
+                                </div>
+                                <div class="input-group input-group-sm mt-2" id="upacaraDurationWrap">
+                                    <input type="number" id="upacaraDuration" class="form-control"
+                                           value="{{ $presetGenerator['durasi_upacara_senin'] }}" min="5" max="120">
+                                    <div class="input-group-append"><span class="input-group-text">menit</span></div>
+                                </div>
+                            </div>
+                            <div class="simansa-jjc-opening-item">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="religiActive"
+                                           {{ $presetGenerator['religi_harian_aktif'] ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="religiActive">Religi selain Senin</label>
+                                </div>
+                                <div class="input-group input-group-sm mt-2" id="religiDurationWrap">
+                                    <input type="number" id="religiDuration" class="form-control"
+                                           value="{{ $presetGenerator['durasi_religi_harian'] }}" min="5" max="120">
+                                    <div class="input-group-append"><span class="input-group-text">menit</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <hr class="my-2">
 
                     {{-- Istirahat 1 --}}
@@ -229,7 +265,7 @@
     <div class="col-lg-7">
         <div class="simansa-jjc-panel">
             <div class="simansa-jjc-panel__header">
-                <i class="fas fa-list-ol"></i> Daftar Jam
+                <i class="fas fa-list-ol"></i> Pola Dasar Jam
                 @if($tahunDipilih)
                     <span class="badge badge-primary ml-2">{{ $tahunDipilih->nama }}</span>
                     @if($jamList->isNotEmpty())
@@ -249,6 +285,10 @@
                         <p>Belum ada konfigurasi jam. Gunakan Generate Otomatis di kiri.</p>
                     </div>
                 @else
+                    <div class="px-3 py-2 bg-light border-bottom text-muted" style="font-size:.76rem">
+                        <i class="fas fa-info-circle text-info"></i>
+                        Waktu aktual per hari mengikuti kegiatan pembuka pada preview di sebelah kiri.
+                    </div>
                     <div class="simansa-jjc-jam-list" id="jamTableBody">
                         @foreach($jamList as $jam)
                             @if($jam->is_istirahat)
@@ -303,6 +343,11 @@
 .simansa-jjc-istirahat-block{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:.85rem}
 .simansa-jjc-istirahat-title{display:flex;align-items:center;gap:.5rem;padding:.65rem 1rem;background:#f8fafc;font-size:.85rem;font-weight:700;color:#374151}
 .simansa-jjc-istirahat-body{padding:.85rem 1rem}
+.simansa-jjc-opening-block{border:1px solid #bae6fd;background:#f0f9ff;border-radius:12px;padding:.8rem 1rem;margin:.25rem 0 .9rem}
+.simansa-jjc-opening-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;color:#0c4a6e;font-size:.84rem}
+.simansa-jjc-opening-heading small{color:#64748b;text-align:right}
+.simansa-jjc-opening-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin-top:.75rem}
+.simansa-jjc-opening-item{background:#fff;border:1px solid #e0f2fe;border-radius:10px;padding:.7rem .8rem;font-size:.82rem}
 
 .simansa-jjc-preview{background:#f0fdf4;border:1px solid #6ee7b7;border-radius:12px;padding:.75rem 1rem;margin-top:.75rem}
 .simansa-jjc-preview__label{font-size:.75rem;font-weight:700;color:#059669;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em}
@@ -310,6 +355,11 @@
 .simansa-jjc-preview-badge{min-width:28px;height:22px;border-radius:5px;background:#3b82f6;color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
 .simansa-jjc-preview-badge--break{background:#f59e0b}
 .simansa-jjc-preview-time{color:#374151;font-size:.8rem}
+.simansa-jjc-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.simansa-jjc-preview-day{background:rgba(255,255,255,.75);border:1px solid #a7f3d0;border-radius:9px;padding:.55rem .65rem}
+.simansa-jjc-preview-day__title{font-size:.75rem;font-weight:800;color:#047857;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.04em}
+.simansa-jjc-preview-badge--opening{background:#0ea5e9;min-width:36px}
+@media(max-width:575.98px){.simansa-jjc-opening-grid,.simansa-jjc-preview-grid{grid-template-columns:1fr}.simansa-jjc-opening-heading{display:block}.simansa-jjc-opening-heading small{display:block;text-align:left;margin-top:.25rem}}
 
 .simansa-jjc-empty{text-align:center;padding:2.5rem 1rem;color:#94a3b8}
 .simansa-jjc-empty i{font-size:2rem;margin-bottom:.5rem;display:block;color:#cbd5e1}
@@ -360,6 +410,11 @@ $(function () {
         $('#ist2Body').toggle(this.checked);
         updatePreview();
     });
+    $('#upacaraActive, #religiActive').on('change', function () {
+        $('#upacaraDuration').prop('disabled', !$('#upacaraActive').is(':checked'));
+        $('#religiDuration').prop('disabled', !$('#religiActive').is(':checked'));
+        updatePreview();
+    }).trigger('change');
 
     // Toggle manual panel
     $('#toggleManual').on('click', function () {
@@ -368,7 +423,7 @@ $(function () {
     });
 
     // Preview on any input change
-    $('#inpJamMasuk, #inpJamPulang, #inpDurasi, #ist1Setelah, #ist1Durasi, #ist2Setelah, #ist2Durasi')
+    $('#inpJamMasuk, #inpJamPulang, #inpDurasi, #upacaraDuration, #religiDuration, #ist1Setelah, #ist1Durasi, #ist2Setelah, #ist2Durasi')
         .on('change input', updatePreview);
 
     // Initial preview
@@ -388,9 +443,9 @@ $(function () {
         const durasi = parseInt($('#inpDurasi').val()) || 45;
         if (!masuk || !pulang) return;
 
-        let cur  = timeToMin(masuk);
+        const start = timeToMin(masuk);
         const end = timeToMin(pulang);
-        if (cur >= end) { $('#previewContent').html('<span class="text-danger">Jam masuk harus sebelum jam pulang.</span>'); return; }
+        if (start >= end) { $('#previewContent').html('<span class="text-danger">Jam masuk harus sebelum jam pulang.</span>'); return; }
 
         const breaks = {};
         if ($('#ist1Active').is(':checked')) {
@@ -400,33 +455,53 @@ $(function () {
             breaks[parseInt($('#ist2Setelah').val())] = { durasi: parseInt($('#ist2Durasi').val()), label: 'Istirahat 2' };
         }
 
-        let html = '';
-        let jam  = 1;
-        let i    = 1;
-        while (i <= 20) {
-            if (cur + durasi > end) break;
-            const s = minToTime(cur);
-            cur += durasi;
-            const e = minToTime(cur);
-            html += `<div class="simansa-jjc-preview-row">
-                <span class="simansa-jjc-preview-badge">${jam}</span>
-                <span class="simansa-jjc-preview-time">${s} – ${e}</span>
-            </div>`;
-            jam++;
-            if (breaks[i]) {
-                const bDur = breaks[i].durasi;
-                const bs = minToTime(cur);
-                cur += bDur;
-                const be = minToTime(cur);
-                html += `<div class="simansa-jjc-preview-row">
-                    <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--break"><i class="fas fa-coffee" style="font-size:.6rem"></i></span>
-                    <span class="simansa-jjc-preview-time">${bs} – ${be} &mdash; ${breaks[i].label} (${bDur} mnt)</span>
+        function renderDay(title, openingLabel, openingDuration) {
+            let cur = start;
+            let rows = '';
+            let jam = 1;
+
+            if (openingDuration > 0) {
+                const openingEnd = cur + openingDuration;
+                rows += `<div class="simansa-jjc-preview-row">
+                    <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--opening">Awal</span>
+                    <span class="simansa-jjc-preview-time">${minToTime(cur)} – ${minToTime(openingEnd)} &mdash; ${openingLabel} (${openingDuration} mnt)</span>
                 </div>`;
+                cur = openingEnd;
             }
-            i++;
+
+            while (jam <= 20 && cur + durasi <= end) {
+                const s = minToTime(cur);
+                cur += durasi;
+                rows += `<div class="simansa-jjc-preview-row">
+                    <span class="simansa-jjc-preview-badge">${jam}</span>
+                    <span class="simansa-jjc-preview-time">${s} – ${minToTime(cur)}</span>
+                </div>`;
+
+                if (breaks[jam] && cur + breaks[jam].durasi <= end) {
+                    const bDur = breaks[jam].durasi;
+                    const bs = minToTime(cur);
+                    cur += bDur;
+                    rows += `<div class="simansa-jjc-preview-row">
+                        <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--break"><i class="fas fa-coffee" style="font-size:.6rem"></i></span>
+                        <span class="simansa-jjc-preview-time">${bs} – ${minToTime(cur)} &mdash; ${breaks[jam].label} (${bDur} mnt)</span>
+                    </div>`;
+                }
+                jam++;
+            }
+
+            return `<div class="simansa-jjc-preview-day">
+                <div class="simansa-jjc-preview-day__title">${title}</div>
+                ${rows}
+                <div class="mt-2 text-muted" style="font-size:.75rem"><strong>${jam - 1} jam pelajaran</strong> · Selesai ${minToTime(cur)}</div>
+            </div>`;
         }
-        html += `<div class="mt-2 text-muted" style="font-size:.78rem"><strong>${jam-1} jam pelajaran</strong> · Selesai ${minToTime(cur)}</div>`;
-        $('#previewContent').html(html);
+
+        const upacaraDuration = $('#upacaraActive').is(':checked') ? (parseInt($('#upacaraDuration').val()) || 30) : 0;
+        const religiDuration = $('#religiActive').is(':checked') ? (parseInt($('#religiDuration').val()) || 15) : 0;
+        $('#previewContent').html(`<div class="simansa-jjc-preview-grid">
+            ${renderDay('Senin', 'Upacara Bendera', upacaraDuration)}
+            ${renderDay('Selain Senin', 'Religi', religiDuration)}
+        </div>`);
     }
 
     // Generate form submit
@@ -440,6 +515,10 @@ $(function () {
             jam_mulai:    $('#inpJamMasuk').val(),
             jam_pulang:   $('#inpJamPulang').val(),
             durasi_menit: $('#inpDurasi').val(),
+            upacara_senin_aktif: $('#upacaraActive').is(':checked') ? 1 : 0,
+            durasi_upacara_senin: $('#upacaraDuration').val(),
+            religi_harian_aktif: $('#religiActive').is(':checked') ? 1 : 0,
+            durasi_religi_harian: $('#religiDuration').val(),
         };
         if ($('#ist1Active').is(':checked')) {
             data['istirahat[0][setelah_jam]'] = $('#ist1Setelah').val();
@@ -454,7 +533,7 @@ $(function () {
         const confirmation = window.Swal
             ? Swal.fire({
             title: 'Generate ulang?',
-            text: 'Konfigurasi jam lama untuk tahun ini akan dihapus.',
+            html: 'Konfigurasi jam lama akan diganti.<br><small>Upacara dan Religi dibuat sebagai kegiatan pembuka tanpa nomor jam.</small>',
             icon: 'warning', showCancelButton: true,
             confirmButtonText: 'Ya, generate', cancelButtonText: 'Batal'
             })

@@ -29,7 +29,7 @@ class JadwalJamConfigController extends Controller
                 ->orderBy('urutan')
                 ->get()
             : collect();
-        $presetGenerator = $this->presetGenerator($jamList);
+        $presetGenerator = $this->presetGenerator($jamList, $tahunDipilih);
 
         return view('admin.jadwal-jam-config.index', compact(
             'tahunList', 'tahunAktif', 'tahunDipilih', 'jamList', 'presetGenerator'
@@ -53,6 +53,10 @@ class JadwalJamConfigController extends Controller
             'istirahat.*.setelah_jam' => 'required_with:istirahat|integer|min:1',
             'istirahat.*.durasi'      => 'required_with:istirahat|integer|min:5|max:90',
             'istirahat.*.label'       => 'nullable|string|max:50',
+            'upacara_senin_aktif'     => 'nullable|boolean',
+            'durasi_upacara_senin'    => 'required_if:upacara_senin_aktif,1|integer|min:5|max:120',
+            'religi_harian_aktif'     => 'nullable|boolean',
+            'durasi_religi_harian'    => 'required_if:religi_harian_aktif,1|integer|min:5|max:120',
         ]);
 
         $tahunId   = $request->tahun_pelajaran_id;
@@ -64,7 +68,15 @@ class JadwalJamConfigController extends Controller
             $request->jam_pulang
         );
 
-        $sync = DB::transaction(function () use ($tahunId, $tahun, $rows) {
+        $sync = DB::transaction(function () use ($request, $tahunId, $tahun, $rows) {
+            $tahun->update([
+                'jadwal_jam_pulang' => $request->jam_pulang,
+                'upacara_senin_aktif' => $request->boolean('upacara_senin_aktif'),
+                'durasi_upacara_senin' => (int) ($request->durasi_upacara_senin ?: 30),
+                'religi_harian_aktif' => $request->boolean('religi_harian_aktif'),
+                'durasi_religi_harian' => (int) ($request->durasi_religi_harian ?: 15),
+            ]);
+
             // Hapus config lama untuk tahun ini
             JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->delete();
 
@@ -72,7 +84,7 @@ class JadwalJamConfigController extends Controller
                 JadwalJamConfig::create(array_merge($row, ['tahun_pelajaran_id' => $tahunId]));
             }
 
-            return $this->sinkronkanSlotDanJadwal($tahun);
+            return $this->sinkronkanSlotDanJadwal($tahun->fresh());
         });
 
         $saved = JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)
@@ -175,15 +187,33 @@ class JadwalJamConfigController extends Controller
                 ->delete();
 
             foreach ($hariSekolah as $hari) {
+                $offsetMenit = 0;
+                $urutan = 1;
+
+                if ($hari === 'senin' && $tahun->upacara_senin_aktif) {
+                    $offsetMenit = (int) $tahun->durasi_upacara_senin;
+                    $this->buatSlotPembuka($tahun, $semester, $hari, $urutan++, 'upacara', 'Upacara Bendera', $configs->first()?->waktu_mulai, $offsetMenit);
+                } elseif ($hari !== 'senin' && $tahun->religi_harian_aktif) {
+                    $offsetMenit = (int) $tahun->durasi_religi_harian;
+                    $this->buatSlotPembuka($tahun, $semester, $hari, $urutan++, 'khusus', 'Religi', $configs->first()?->waktu_mulai, $offsetMenit);
+                }
+
                 foreach ($configs as $config) {
+                    $waktuMulai = $this->geserWaktu($config->waktu_mulai, $offsetMenit);
+                    $waktuSelesai = $this->geserWaktu($config->waktu_selesai, $offsetMenit);
+
+                    if ($tahun->jadwal_jam_pulang && substr($waktuSelesai, 0, 5) > substr($tahun->jadwal_jam_pulang, 0, 5)) {
+                        continue;
+                    }
+
                     JadwalHariJam::create([
                         'tahun_pelajaran_id' => $tahun->id,
                         'semester' => $semester,
                         'hari' => $hari,
-                        'urutan' => $config->urutan,
+                        'urutan' => $urutan++,
                         'jam_ke' => $config->jam_ke,
-                        'waktu_mulai' => $config->waktu_mulai,
-                        'waktu_selesai' => $config->waktu_selesai,
+                        'waktu_mulai' => $waktuMulai,
+                        'waktu_selesai' => $waktuSelesai,
                         'tipe' => $config->is_istirahat ? 'istirahat' : 'pelajaran',
                         'label' => $config->label,
                     ]);
@@ -194,8 +224,8 @@ class JadwalJamConfigController extends Controller
                             ->where('hari', $hari)
                             ->where('jam_ke', $config->jam_ke)
                             ->update([
-                                'jam_mulai' => $config->waktu_mulai,
-                                'jam_selesai' => $config->waktu_selesai,
+                                'jam_mulai' => $waktuMulai,
+                                'jam_selesai' => $waktuSelesai,
                             ]);
                     }
                 }
@@ -218,12 +248,55 @@ class JadwalJamConfigController extends Controller
         return ['jadwal' => $jadwalTersinkron, 'tanpaSlot' => $tanpaSlot];
     }
 
+    private function buatSlotPembuka(
+        TahunPelajaran $tahun,
+        int $semester,
+        string $hari,
+        int $urutan,
+        string $tipe,
+        string $label,
+        ?string $waktuMulai,
+        int $durasiMenit
+    ): void {
+        if (! $waktuMulai) {
+            return;
+        }
+
+        JadwalHariJam::create([
+            'tahun_pelajaran_id' => $tahun->id,
+            'semester' => $semester,
+            'hari' => $hari,
+            'urutan' => $urutan,
+            'jam_ke' => null,
+            'waktu_mulai' => substr($waktuMulai, 0, 5),
+            'waktu_selesai' => $this->geserWaktu($waktuMulai, $durasiMenit),
+            'tipe' => $tipe,
+            'label' => $label,
+        ]);
+    }
+
+    private function geserWaktu(?string $waktu, int $menit): ?string
+    {
+        if (! $waktu) {
+            return null;
+        }
+
+        [$jam, $minute] = array_map('intval', explode(':', substr($waktu, 0, 5)));
+        $total = ($jam * 60) + $minute + $menit;
+
+        return sprintf('%02d:%02d', intdiv($total, 60), $total % 60);
+    }
+
     /** Bentuk kembali parameter generator dari konfigurasi terakhir yang tersimpan. */
-    private function presetGenerator($configs): array
+    private function presetGenerator($configs, ?TahunPelajaran $tahun): array
     {
         $default = [
             'jam_mulai' => '07:00', 'jam_pulang' => '14:30', 'durasi_menit' => 45,
             'istirahat' => [],
+            'upacara_senin_aktif' => (bool) ($tahun?->upacara_senin_aktif ?? true),
+            'durasi_upacara_senin' => (int) ($tahun?->durasi_upacara_senin ?? 30),
+            'religi_harian_aktif' => (bool) ($tahun?->religi_harian_aktif ?? true),
+            'durasi_religi_harian' => (int) ($tahun?->durasi_religi_harian ?? 15),
         ];
 
         if ($configs->isEmpty()) {
@@ -254,9 +327,13 @@ class JadwalJamConfigController extends Controller
 
         return [
             'jam_mulai' => substr($pelajaran->first()?->waktu_mulai ?? $default['jam_mulai'], 0, 5),
-            'jam_pulang' => substr($configs->last()->waktu_selesai, 0, 5),
+            'jam_pulang' => substr($tahun?->jadwal_jam_pulang ?? $configs->last()->waktu_selesai, 0, 5),
             'durasi_menit' => (int) $durasi,
             'istirahat' => $istirahat,
+            'upacara_senin_aktif' => (bool) ($tahun?->upacara_senin_aktif ?? true),
+            'durasi_upacara_senin' => (int) ($tahun?->durasi_upacara_senin ?? 30),
+            'religi_harian_aktif' => (bool) ($tahun?->religi_harian_aktif ?? true),
+            'durasi_religi_harian' => (int) ($tahun?->durasi_religi_harian ?? 15),
         ];
     }
 }

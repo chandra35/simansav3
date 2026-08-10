@@ -22,6 +22,11 @@ class TahunPelajaran extends Model
         'tahun_selesai',
         'semester_aktif',
         'jumlah_hari_kerja',
+        'jadwal_jam_pulang',
+        'upacara_senin_aktif',
+        'durasi_upacara_senin',
+        'religi_harian_aktif',
+        'durasi_religi_harian',
         'tanggal_mulai',
         'tanggal_selesai',
         'is_active',
@@ -36,6 +41,10 @@ class TahunPelajaran extends Model
         'tanggal_selesai' => 'date',
         'is_active' => 'boolean',
         'jumlah_hari_kerja' => 'integer',
+        'upacara_senin_aktif' => 'boolean',
+        'durasi_upacara_senin' => 'integer',
+        'religi_harian_aktif' => 'boolean',
+        'durasi_religi_harian' => 'integer',
     ];
 
     /**

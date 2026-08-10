@@ -1,8 +1,24 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 6 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Kegiatan pembuka pada konfigurasi jam pelajaran
+
+- Generator jam pelajaran kini menyediakan pengaturan **Upacara hari Senin** dengan durasi bawaan 30 menit dan **Religi selain Senin** dengan durasi bawaan 15 menit.
+- Upacara dan Religi disimpan sebagai slot pembuka tanpa nomor jam, sehingga pelajaran pertama tetap menggunakan `jam_ke = 1`.
+- Preview menampilkan perbandingan jadwal Senin dan selain Senin secara langsung sebelum admin melakukan generate.
+- Waktu pelajaran, istirahat, dan jadwal mapel digeser sesuai kegiatan pembuka serta dibatasi agar tidak melewati jam pulang.
+- Pengaturan kegiatan pembuka tersimpan per tahun pelajaran dan diterapkan ke semester ganjil maupun genap.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/JadwalJamConfigController.php`
+- `app/Models/TahunPelajaran.php`
+- `database/migrations/2026_08_10_090000_add_opening_activities_to_tahun_pelajaran_table.php`
+- `resources/views/admin/jadwal-jam-config/index.blade.php`
+- `tests/Unit/JadwalOpeningActivityArchitectureTest.php`
 
 ### Import jadwal Excel Wakakur
 
