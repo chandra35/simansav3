@@ -201,6 +201,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('id="voteReceiptOverlay"', $view);
         $this->assertStringContainsString('id="closeVoteReceipt"', $view);
         $this->assertStringContainsString('vote-receipt-card__brand', $view);
+        $this->assertStringContainsString('di Pemilihan OSIM MAN 1 Metro 2026', $view);
+        $this->assertStringContainsString('vote-receipt-card__event', $view);
         $this->assertStringContainsString('{{ $election->title }}', $view);
     }
 
