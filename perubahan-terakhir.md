@@ -4,6 +4,17 @@ Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan tombol browse foto profil GTK
+
+- Klik pada area upload foto GTK kini langsung membuka pemilih file bawaan browser.
+- Input file dipindahkan keluar dari elemen dropzone untuk mencegah event klik berulang akibat bubbling.
+- Tombol **Pilih Ulang** dan akses keyboard Enter/Spasi menggunakan mekanisme browse yang sama.
+
+File terkait:
+
+- `resources/views/admin/gtk/index.blade.php`
+- `tests/Unit/GtkIndexUiArchitectureTest.php`
+
 ### Rasio galeri OSIM dan update foto profil GTK
 
 - Galeri kandidat pada Live Polling OSIM kini menggunakan bingkai potret 4:5 seperti foto profil, dengan `object-fit: contain` dan posisi tengah agar foto terlihat utuh.

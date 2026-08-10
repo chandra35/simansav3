@@ -385,8 +385,8 @@
                         <small>Hasil akhir disimpan dalam rasio potret 4:5 dengan ukuran 720 × 900 piksel.</small>
                     </aside>
                     <div class="gtk-photo-workspace">
+                        <input type="file" id="gtkPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
                         <div class="gtk-photo-dropzone" id="gtkPhotoDropzone" role="button" tabindex="0" aria-label="Pilih atau seret foto GTK">
-                            <input type="file" id="gtkPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
                             <i class="fas fa-cloud-upload-alt"></i>
                             <strong>Seret foto ke sini</strong>
                             <span>atau klik untuk memilih file</span>
@@ -1140,12 +1140,18 @@ async function saveGtkPhoto() {
 $(function() {
     const $dropzone = $('#gtkPhotoDropzone');
     const $input = $('#gtkPhotoInput');
+    const openGtkPhotoBrowser = () => {
+        const input = $input.get(0);
+        if (!input) return;
+        input.value = '';
+        input.click();
+    };
 
-    $dropzone.on('click', () => $input.trigger('click'))
+    $dropzone.on('click', openGtkPhotoBrowser)
         .on('keydown', event => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                $input.trigger('click');
+                openGtkPhotoBrowser();
             }
         })
         .on('dragenter dragover', function(event) {
@@ -1164,7 +1170,7 @@ $(function() {
     $input.on('change', function() {
         if (this.files?.[0]) prepareGtkPhoto(this.files[0]);
     });
-    $('#gtkPhotoChooseAgain').on('click', () => $input.trigger('click'));
+    $('#gtkPhotoChooseAgain').on('click', openGtkPhotoBrowser);
     $('#gtkPhotoSave').on('click', saveGtkPhoto);
     $('[data-photo-control]').on('click', function() {
         if (!gtkPhotoCropper) return;

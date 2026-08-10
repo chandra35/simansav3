@@ -124,6 +124,9 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('getCroppedCanvas({', $view);
         $this->assertStringContainsString('compressedGtkPhotoBlob', $view);
         $this->assertStringContainsString('20 * 1024 * 1024', $view);
+        $this->assertStringContainsString('const openGtkPhotoBrowser = () => {', $view);
+        $this->assertStringContainsString('input.click();', $view);
+        $this->assertStringNotContainsString('$input.trigger(\'click\')', $view);
         $this->assertStringContainsString("->cover(720, 900)", $controller);
         $this->assertStringContainsString("->toJpeg(82)", $controller);
         $this->assertStringContainsString("'compressed_size_kb'", $controller);
