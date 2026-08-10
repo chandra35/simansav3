@@ -82,6 +82,24 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Monitoring Pemilih', $view);
         $this->assertStringContainsString('Belum Memilih', $view);
         $this->assertStringContainsString('unlock-voter', $view);
+        $this->assertStringContainsString('AbortController', $view);
+        $this->assertStringContainsString('Coba lagi', $view);
+        $this->assertStringContainsString('detail-stat-action', $view);
+    }
+
+    public function test_admin_has_a_complete_aggregate_only_election_report(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+        $report = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/report.blade.php');
+
+        $this->assertStringContainsString("name('report')", $routes);
+        $this->assertStringContainsString("name('report.pdf')", $routes);
+        $this->assertStringContainsString("name('report.excel')", $routes);
+        $this->assertStringContainsString('private function reportData', $controller);
+        $this->assertStringContainsString('individual voter choices never enter the report', $controller);
+        $this->assertStringContainsString('Perolehan Suara', $report);
+        $this->assertStringContainsString('Partisipasi per Rombel', $report);
     }
 
     public function test_admin_can_safely_add_newly_eligible_students_to_a_running_dpt(): void

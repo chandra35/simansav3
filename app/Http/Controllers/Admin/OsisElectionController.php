@@ -9,7 +9,9 @@ use App\Models\OsisVoter;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Exports\OsisElectionReportExport;
 use App\Services\OsisElectionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
@@ -86,6 +89,25 @@ class OsisElectionController extends Controller
         ]);
         $classes = Kelas::query()->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)->where('is_active', true)->orderBy('tingkat')->orderBy('nama_kelas')->get(['id', 'tingkat', 'nama_kelas']);
         return view('admin.osis-election.show', compact('election', 'results', 'classes'));
+    }
+
+    public function report(OsisElection $election): View
+    {
+        return view('admin.osis-election.report', $this->reportData($election));
+    }
+
+    public function reportPdf(OsisElection $election)
+    {
+        return Pdf::loadView('admin.osis-election.report-pdf', $this->reportData($election))
+            ->setPaper('a4', 'landscape')
+            ->download('laporan-pemilihan-osis-'.$election->slug.'.pdf');
+    }
+
+    public function reportExcel(OsisElection $election)
+    {
+        $report = $this->reportData($election);
+
+        return Excel::download(new OsisElectionReportExport($election, $report), 'laporan-pemilihan-osis-'.$election->slug.'.xlsx');
     }
 
     public function preview(OsisElection $election): View
@@ -232,6 +254,33 @@ class OsisElectionController extends Controller
         abort_unless($voter->election_id === $election->id, 404);
         try { $this->service->unlockVote($election, $voter, auth()->user()); Siswa::logCustomActivity('osis_vote_unlocked', "Membuka kembali hak pilih {$voter->user?->name} pada {$election->title}.", $election); return response()->json(['message' => 'Hak pilih dibuka kembali. Pemilih harus memilih ulang.']); }
         catch (RuntimeException $exception) { return response()->json(['message' => $exception->getMessage()], 422); }
+    }
+
+    /** Keeps ballot choices aggregate-only; individual voter choices never enter the report. */
+    private function reportData(OsisElection $election): array
+    {
+        $election->load(['tahunPelajaran', 'packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
+        $voters = $election->voters()->with(['user.gtk:id,user_id,nama_lengkap', 'siswa.kelasSaatIni:id,nama_kelas,tingkat'])->orderByDesc('has_voted')->orderBy('voted_at')->get();
+        $total = $voters->count();
+        $voted = $voters->where('has_voted', true)->count();
+        $votes = $election->ballots()->select('package_id', DB::raw('COUNT(*) as total'))->groupBy('package_id')->pluck('total', 'package_id');
+        $packages = $election->packages->map(function (OsisPackage $package) use ($votes, $voted) {
+            $totalVotes = (int) ($votes[$package->id] ?? 0);
+            return ['package' => $package, 'votes' => $totalVotes, 'percentage' => $voted ? round($totalVotes / $voted * 100, 1) : 0];
+        })->sortByDesc('votes')->values();
+        $participation = $voters->filter(fn (OsisVoter $voter) => $voter->participant_type === 'student')
+            ->groupBy(fn (OsisVoter $voter) => $voter->siswa?->kelasSaatIni?->nama_kelas ?: 'Belum terpetakan')
+            ->map(function ($rows, $class) {
+                $classVoted = $rows->where('has_voted', true)->count();
+                return ['class' => $class, 'total' => $rows->count(), 'voted' => $classVoted, 'pending' => $rows->count() - $classVoted, 'percentage' => $rows->count() ? round($classVoted / $rows->count() * 100, 1) : 0];
+            })->sortBy('class')->values();
+        $voterRows = $voters->map(function (OsisVoter $voter) {
+            $student = $voter->siswa;
+            $gtk = $voter->user?->gtk;
+            return ['name' => $student?->nama_lengkap ?: ($gtk?->nama_lengkap ?: $voter->user?->name), 'identity' => $student?->nisn ?: ($gtk?->nik ?: $voter->user?->username), 'type' => $voter->participant_type === 'student' ? 'Siswa' : 'GTK', 'scope' => $student?->kelasSaatIni?->nama_kelas ?: 'GTK', 'status' => $voter->has_voted ? 'Sudah memilih' : 'Belum memilih', 'voted_at' => $voter->voted_at?->format('d/m/Y H:i') ?: '-'];
+        });
+
+        return compact('election', 'total', 'voted', 'packages', 'participation', 'voterRows') + ['pending' => $total - $voted, 'turnout' => $total ? round($voted / $total * 100, 1) : 0, 'studentTotal' => $voters->where('participant_type', 'student')->count(), 'gtkTotal' => $voters->where('participant_type', 'gtk')->count()];
     }
 
     public function edit(OsisElection $election): View
