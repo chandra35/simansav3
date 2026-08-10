@@ -176,9 +176,12 @@ class OsisElectionService
             ->where('is_active', true)
             ->whereHas('siswa', fn ($student) => $student
                 ->where('status_siswa', 'aktif')
-                ->whereHas('kelasSaatIni', fn ($class) => $class
-                    ->where('tahun_pelajaran_id', $election->tahun_pelajaran_id)
-                    ->whereIn('tingkat', $levels)))
+                // Gunakan roster aktif sebagai sumber DPT; kelas_saat_ini_id lama dapat kosong walau siswa sudah ditempatkan.
+                ->whereHas('kelas', fn ($class) => $class
+                    ->where('kelas.tahun_pelajaran_id', $election->tahun_pelajaran_id)
+                    ->whereIn('kelas.tingkat', $levels)
+                    ->where('siswa_kelas.status', 'aktif')
+                    ->whereNull('siswa_kelas.tanggal_keluar')))
             ->with('siswa:id,user_id')
             ->get(['id']);
 

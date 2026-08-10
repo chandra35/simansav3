@@ -101,6 +101,15 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Update Data Siswa', $view);
     }
 
+    public function test_dpt_uses_the_active_class_roster_instead_of_the_legacy_current_class_column(): void
+    {
+        $service = file_get_contents(dirname(__DIR__, 2).'/app/Services/OsisElectionService.php');
+
+        $this->assertStringContainsString("->whereHas('kelas'", $service);
+        $this->assertStringContainsString("->where('siswa_kelas.status', 'aktif')", $service);
+        $this->assertStringContainsString("->whereNull('siswa_kelas.tanggal_keluar')", $service);
+    }
+
     public function test_voter_page_uses_large_portrait_candidate_cards(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
