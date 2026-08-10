@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
+use App\Models\AppSetting;
 use App\Models\TahunPelajaran;
 use App\Services\OsisElectionService;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,8 @@ class GtkOsisElectionController extends Controller
             'ownPackageIds' => collect(),
             'results' => $results,
             'voteRoute' => $election ? route('admin.gtk.osis-election.vote', $election) : null,
+            'schoolLogo' => AppSetting::first()?->logo_sekolah_url
+                ?? asset('vendor/adminlte/dist/img/logo-sekolah.png'),
         ]);
     }
 

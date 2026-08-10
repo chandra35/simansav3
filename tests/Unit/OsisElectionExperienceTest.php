@@ -191,6 +191,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringNotContainsString('Paket <span id="castingNumber"', $view);
         $this->assertStringContainsString('id="voteReceiptOverlay"', $view);
         $this->assertStringContainsString('id="closeVoteReceipt"', $view);
+        $this->assertStringContainsString('vote-receipt-card__brand', $view);
+        $this->assertStringContainsString('{{ $election->title }}', $view);
     }
 
     public function test_entire_candidate_card_can_be_used_to_choose_a_package(): void
