@@ -4,6 +4,23 @@ Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Rasio galeri OSIM dan update foto profil GTK
+
+- Galeri kandidat pada Live Polling OSIM kini menggunakan bingkai potret 4:5 seperti foto profil, dengan `object-fit: contain` dan posisi tengah agar foto terlihat utuh.
+- Menu aksi pada Data GTK kini menyediakan **Update foto profil** langsung tanpa membuka halaman edit.
+- Modal foto mendukung pemilihan file dan drag-and-drop, crop potret 4:5, zoom, rotasi, preview, progress AJAX, serta pemilihan ulang.
+- File kamera JPG, PNG, atau WEBP hingga 20 MB dapat dipilih. Browser menghasilkan JPEG 720 × 900 dan mengompresnya sebelum upload; server kembali menormalisasi serta mengompresi hasil untuk keamanan dan konsistensi.
+- Foto lama baru dihapus setelah foto baru berhasil tersimpan, sehingga kegagalan upload tidak menghilangkan foto sebelumnya.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/GtkController.php`
+- `resources/views/admin/gtk/index.blade.php`
+- `resources/views/admin/gtk/edit.blade.php`
+- `resources/views/public/osis-polling.blade.php`
+- `tests/Unit/GtkIndexUiArchitectureTest.php`
+- `tests/Unit/OsisElectionExperienceTest.php`
+
 ### Perbaikan duplikasi Polling Aktif pada akun siswa
 
 - Gate sidebar Polling Aktif kini dipisahkan antara responden GTK dan Siswa.

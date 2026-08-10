@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Laravel\Facades\Image;
 
 class GtkController extends Controller
 {
@@ -298,6 +300,7 @@ class GtkController extends Controller
 
         if ($user->can('edit-gtk')) {
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="edit" onclick="handleGtkAction(this)"><i class="fas fa-edit text-primary"></i><span>Edit data</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="update-photo" onclick="handleGtkAction(this)"><i class="fas fa-camera text-success"></i><span>Update foto profil</span></button>';
         }
 
         if ($user->can('reset-password-gtk')) {
@@ -320,6 +323,9 @@ class GtkController extends Controller
 
         return '<div class="btn-group simansa-gtk-action-menu"'
             .' data-gtk-id="'.e($item->id).'"'
+            .' data-gtk-name="'.e($item->nama_lengkap).'"'
+            .' data-photo-url="'.($item->foto_profile ? e($item->foto_profile_url) : '').'"'
+            .' data-upload-url="'.e(route('admin.gtk.upload-foto', $item->id)).'"'
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
             .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
@@ -579,29 +585,51 @@ class GtkController extends Controller
         $gtk = Gtk::findOrFail($id);
 
         $request->validate([
-            'foto_profile' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'foto_profile' => 'required|image|mimes:jpg,jpeg,png,webp|max:20480',
         ], [
             'foto_profile.required' => 'File foto wajib dipilih.',
             'foto_profile.image' => 'File harus berupa gambar.',
-            'foto_profile.mimes' => 'Format yang diizinkan: JPG, JPEG, PNG.',
-            'foto_profile.max' => 'Ukuran file maksimal 2MB.',
+            'foto_profile.mimes' => 'Format yang diizinkan: JPG, JPEG, PNG, atau WEBP.',
+            'foto_profile.max' => 'Ukuran file asli maksimal 20MB.',
         ]);
 
+        $newPath = null;
+
         try {
-            // Delete old foto if exists
-            if ($gtk->foto_profile) {
-                Storage::disk('public')->delete($gtk->foto_profile);
+            $file = $request->file('foto_profile');
+            $originalSize = (int) $file->getSize();
+            $oldPath = $gtk->foto_profile_path;
+            $newPath = 'foto_profile/gtk/'.$gtk->id.'-'.Str::uuid().'.jpg';
+
+            // Normalisasi foto profil menjadi potret 4:5. Hasil akhir kecil dan konsisten
+            // walaupun admin memilih file kamera beresolusi tinggi.
+            $encoded = Image::read($file->getRealPath())
+                ->cover(720, 900)
+                ->toJpeg(82);
+
+            if (! Storage::disk('public')->put($newPath, (string) $encoded)) {
+                throw new \RuntimeException('Penyimpanan foto profil gagal.');
             }
 
-            $path = $request->file('foto_profile')->store('foto_profile/gtk', 'public');
-            $gtk->update(['foto_profile' => $path]);
+            $gtk->update(['foto_profile' => $newPath]);
+
+            if ($oldPath && $oldPath !== $newPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Foto berhasil diupload.',
-                'foto_url' => asset('storage/'.$path),
+                'message' => 'Foto profil berhasil dipotong dan dikompresi.',
+                'foto_url' => $gtk->fresh()->foto_profile_url,
+                'original_size_kb' => (int) ceil($originalSize / 1024),
+                'compressed_size_kb' => (int) ceil(Storage::disk('public')->size($newPath) / 1024),
+                'width' => 720,
+                'height' => 900,
             ]);
         } catch (\Exception $e) {
+            if ($newPath) {
+                Storage::disk('public')->delete($newPath);
+            }
             Log::error('Error uploading GTK foto: '.$e->getMessage());
 
             return response()->json([

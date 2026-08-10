@@ -162,8 +162,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('fitStory', $liveView);
         $this->assertStringContainsString('--story-font-size', $liveView);
         $this->assertStringContainsString("window.addEventListener('resize'", $liveView);
-        $this->assertStringContainsString('width:min(72%,640px)', $liveView);
-        $this->assertStringContainsString('width:86%;height:86%;object-fit:contain', $liveView);
+        $this->assertStringContainsString('aspect-ratio:4/5', $liveView);
+        $this->assertStringContainsString('height:min(82%,480px)', $liveView);
+        $this->assertStringContainsString('width:92%;height:92%;object-fit:contain;object-position:center', $liveView);
         $this->assertStringContainsString("name('packages.campaign-photo.destroy')", $routes);
         $this->assertStringContainsString("name('packages.live-photo.destroy')", $routes);
         $this->assertStringContainsString('deletePackageCampaignPhoto', $controller);

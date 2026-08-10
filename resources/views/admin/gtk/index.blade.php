@@ -362,7 +362,76 @@
     </div>
 </div>
 
+{{-- Modal Update Foto Profil GTK --}}
+<div class="modal fade" id="gtkPhotoModal" tabindex="-1" role="dialog" aria-labelledby="gtkPhotoModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content gtk-photo-modal">
+            <div class="modal-header gtk-photo-modal__header">
+                <div>
+                    <small class="gtk-photo-modal__eyebrow"><i class="fas fa-camera mr-1"></i> FOTO PROFIL GTK</small>
+                    <h5 class="modal-title" id="gtkPhotoModalTitle">Update Foto Profil</h5>
+                    <span id="gtkPhotoGtkName">-</span>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="gtk-photo-layout">
+                    <aside class="gtk-photo-current">
+                        <span>Foto saat ini</span>
+                        <div class="gtk-photo-current__frame">
+                            <img id="gtkPhotoCurrent" alt="Foto profil GTK saat ini">
+                            <i id="gtkPhotoCurrentEmpty" class="fas fa-user"></i>
+                        </div>
+                        <small>Hasil akhir disimpan dalam rasio potret 4:5 dengan ukuran 720 × 900 piksel.</small>
+                    </aside>
+                    <div class="gtk-photo-workspace">
+                        <div class="gtk-photo-dropzone" id="gtkPhotoDropzone" role="button" tabindex="0" aria-label="Pilih atau seret foto GTK">
+                            <input type="file" id="gtkPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <strong>Seret foto ke sini</strong>
+                            <span>atau klik untuk memilih file</span>
+                            <small>JPG, PNG, WEBP · file asli maksimal 20 MB · otomatis dikompresi</small>
+                        </div>
+                        <div class="gtk-photo-cropper d-none" id="gtkPhotoCropperWrap">
+                            <div class="gtk-photo-cropper__canvas"><img id="gtkPhotoCropImage" alt="Area crop foto GTK"></div>
+                            <div class="gtk-photo-controls" aria-label="Kontrol crop foto">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-photo-control="zoom-out" title="Perkecil"><i class="fas fa-search-minus"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-photo-control="zoom-in" title="Perbesar"><i class="fas fa-search-plus"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-photo-control="rotate-left" title="Putar kiri"><i class="fas fa-undo"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-photo-control="rotate-right" title="Putar kanan"><i class="fas fa-redo"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-primary ml-auto" id="gtkPhotoChooseAgain"><i class="fas fa-image mr-1"></i>Pilih Ulang</button>
+                            </div>
+                            <div class="gtk-photo-file-meta" id="gtkPhotoFileMeta"></div>
+                        </div>
+                        <div class="gtk-photo-upload-progress d-none" id="gtkPhotoProgress">
+                            <div class="d-flex justify-content-between mb-1"><strong id="gtkPhotoProgressLabel">Menyiapkan foto…</strong><span id="gtkPhotoProgressValue">0%</span></div>
+                            <div class="progress"><div class="progress-bar progress-bar-striped progress-bar-animated" id="gtkPhotoProgressBar" style="width:0%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted mr-auto"><i class="fas fa-shield-alt text-success mr-1"></i>Foto lama baru dihapus setelah foto baru berhasil tersimpan.</small>
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="gtkPhotoSave" disabled><i class="fas fa-save mr-1"></i>Crop, Kompres & Simpan</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+</div>
+@stop
+
+@section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+<style>
+.gtk-photo-modal{overflow:hidden;border:0;border-radius:18px;box-shadow:0 24px 65px rgba(15,23,42,.3)}
+.gtk-photo-modal__header{align-items:flex-start;border:0;background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;padding:1rem 1.25rem}.gtk-photo-modal__eyebrow{display:block;font-size:.65rem;font-weight:900;letter-spacing:.1em;opacity:.85}.gtk-photo-modal__header h5{margin:.15rem 0 0;font-weight:900}.gtk-photo-modal__header span{font-size:.78rem;opacity:.8}
+.gtk-photo-layout{display:grid;grid-template-columns:170px minmax(0,1fr);gap:1rem}.gtk-photo-current{padding:.85rem;border:1px solid #dbeafe;border-radius:14px;background:#f8fbff;text-align:center}.gtk-photo-current>span{display:block;margin-bottom:.6rem;color:#475569;font-size:.7rem;font-weight:900;text-transform:uppercase}.gtk-photo-current__frame{display:grid;place-items:center;width:120px;aspect-ratio:4/5;margin:auto;overflow:hidden;border:3px solid #fff;border-radius:16px;background:linear-gradient(145deg,#dbeafe,#e0f2fe);box-shadow:0 8px 20px rgba(37,99,235,.14)}.gtk-photo-current__frame img{width:100%;height:100%;object-fit:cover}.gtk-photo-current__frame i{color:#60a5fa;font-size:2.4rem}.gtk-photo-current>small{display:block;margin-top:.7rem;color:#64748b;font-size:.68rem;line-height:1.45}
+.gtk-photo-workspace{min-width:0}.gtk-photo-dropzone{display:flex;min-height:300px;align-items:center;justify-content:center;flex-direction:column;padding:1.2rem;border:2px dashed #93c5fd;border-radius:15px;background:linear-gradient(145deg,#f8fbff,#eff6ff);color:#475569;text-align:center;cursor:pointer;transition:.18s ease}.gtk-photo-dropzone:hover,.gtk-photo-dropzone:focus,.gtk-photo-dropzone.is-dragging{border-color:#2563eb;background:#dbeafe;outline:0;transform:translateY(-1px)}.gtk-photo-dropzone>i{margin-bottom:.7rem;color:#2563eb;font-size:2.7rem}.gtk-photo-dropzone strong,.gtk-photo-dropzone span,.gtk-photo-dropzone small{display:block}.gtk-photo-dropzone strong{color:#0f172a;font-size:1rem}.gtk-photo-dropzone span{font-size:.8rem}.gtk-photo-dropzone small{margin-top:.55rem;color:#64748b;font-size:.7rem}
+.gtk-photo-cropper__canvas{height:min(52vh,430px);overflow:hidden;border-radius:14px;background:#0f172a}.gtk-photo-cropper__canvas img{display:block;max-width:100%}.gtk-photo-controls{display:flex;align-items:center;gap:.4rem;margin-top:.65rem}.gtk-photo-file-meta{margin-top:.55rem;color:#64748b;font-size:.72rem}.gtk-photo-upload-progress{padding:.85rem;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:.75rem}.gtk-photo-upload-progress .progress{height:9px;border-radius:999px}.gtk-photo-upload-progress .progress-bar{background:linear-gradient(90deg,#2563eb,#14b8a6)}
+@media(max-width:767.98px){.gtk-photo-layout{grid-template-columns:1fr}.gtk-photo-current{display:grid;grid-template-columns:85px 1fr;align-items:center;text-align:left}.gtk-photo-current>span{grid-column:1/-1}.gtk-photo-current__frame{width:72px;margin:0}.gtk-photo-current>small{margin:0}.gtk-photo-cropper__canvas{height:42vh}.gtk-photo-modal .modal-footer{align-items:stretch;flex-direction:column}.gtk-photo-modal .modal-footer small{margin-bottom:.35rem}.gtk-photo-modal .modal-footer .btn{width:100%}}
+</style>
 @stop
 
 
@@ -370,9 +439,12 @@
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script>
 const BULK_SYNC_DELAY_MS = 350;
+let gtkPhotoCropper = null;
+let gtkPhotoContext = null;
 
 $(document).ready(function() {
     const $gtkTableElement = $('#gtk-table');
@@ -867,6 +939,8 @@ function handleGtkAction(item) {
         showGtk(gtkId);
     } else if (action === 'edit') {
         window.location.href = menu.dataset.editUrl;
+    } else if (action === 'update-photo') {
+        openGtkPhotoModal(menu);
     } else if (action === 'reset-password') {
         resetPassword(gtkId);
     } else if (action === 'login-as') {
@@ -883,6 +957,229 @@ function handleGtkAction(item) {
         deleteGtk(gtkId);
     }
 }
+
+function openGtkPhotoModal(menu) {
+    gtkPhotoContext = {
+        gtkId: menu.dataset.gtkId,
+        name: menu.dataset.gtkName,
+        uploadUrl: menu.dataset.uploadUrl
+    };
+
+    destroyGtkPhotoCropper();
+    $('#gtkPhotoGtkName').text(gtkPhotoContext.name || '-');
+    $('#gtkPhotoInput').val('');
+    $('#gtkPhotoCropperWrap, #gtkPhotoProgress').addClass('d-none');
+    $('#gtkPhotoDropzone').removeClass('d-none is-dragging');
+    $('#gtkPhotoSave').prop('disabled', true).html('<i class="fas fa-save mr-1"></i>Crop, Kompres & Simpan');
+    $('#gtkPhotoProgressBar').css('width', '0%');
+
+    if (menu.dataset.photoUrl) {
+        $('#gtkPhotoCurrent').attr('src', menu.dataset.photoUrl).show();
+        $('#gtkPhotoCurrentEmpty').hide();
+    } else {
+        $('#gtkPhotoCurrent').attr('src', '').hide();
+        $('#gtkPhotoCurrentEmpty').show();
+    }
+
+    $('#gtkPhotoModal').modal('show');
+}
+
+function destroyGtkPhotoCropper() {
+    if (gtkPhotoCropper) {
+        gtkPhotoCropper.destroy();
+        gtkPhotoCropper = null;
+    }
+    $('#gtkPhotoCropImage').attr('src', '');
+}
+
+function formatGtkPhotoBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return Math.ceil(bytes / 1024) + ' KB';
+}
+
+function prepareGtkPhoto(file) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxOriginalSize = 20 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+        Swal.fire({icon:'error', title:'Format Tidak Didukung', text:'Gunakan foto JPG, PNG, atau WEBP.'});
+        return;
+    }
+    if (file.size > maxOriginalSize) {
+        Swal.fire({icon:'error', title:'File Terlalu Besar', text:'Ukuran file asli maksimal 20 MB.'});
+        return;
+    }
+    if (typeof Cropper === 'undefined') {
+        Swal.fire({icon:'error', title:'Editor Foto Belum Siap', text:'Muat ulang halaman lalu coba kembali.'});
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = event => {
+        destroyGtkPhotoCropper();
+        $('#gtkPhotoDropzone').addClass('d-none');
+        $('#gtkPhotoCropperWrap').removeClass('d-none');
+        $('#gtkPhotoFileMeta').html(`<i class="fas fa-file-image text-primary mr-1"></i>${escapeHtml(file.name)} · ${formatGtkPhotoBytes(file.size)} <span class="text-success ml-1">akan dikompresi otomatis</span>`);
+
+        const image = document.getElementById('gtkPhotoCropImage');
+        image.onload = () => {
+            gtkPhotoCropper = new Cropper(image, {
+                aspectRatio: 4 / 5,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.92,
+                responsive: true,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                background: false,
+                movable: true,
+                zoomable: true,
+                rotatable: true,
+                scalable: false,
+                ready: () => $('#gtkPhotoSave').prop('disabled', false)
+            });
+        };
+        image.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function gtkPhotoCanvasToBlob(canvas, quality = 0.88) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Foto gagal dikompresi.')), 'image/jpeg', quality);
+    });
+}
+
+async function compressedGtkPhotoBlob(canvas) {
+    const targetBytes = 900 * 1024;
+    let quality = 0.88;
+    let blob = await gtkPhotoCanvasToBlob(canvas, quality);
+
+    while (blob.size > targetBytes && quality > 0.6) {
+        quality -= 0.07;
+        blob = await gtkPhotoCanvasToBlob(canvas, quality);
+    }
+
+    return {blob, quality};
+}
+
+async function saveGtkPhoto() {
+    if (!gtkPhotoContext || !gtkPhotoCropper) return;
+
+    const $save = $('#gtkPhotoSave');
+    const $progress = $('#gtkPhotoProgress');
+    const $bar = $('#gtkPhotoProgressBar');
+    const $label = $('#gtkPhotoProgressLabel');
+    const $value = $('#gtkPhotoProgressValue');
+
+    try {
+        $save.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-1"></i>Memproses…');
+        $progress.removeClass('d-none');
+        $label.text('Memotong dan mengompresi foto…');
+        $value.text('0%');
+        $bar.css('width', '0%');
+
+        const canvas = gtkPhotoCropper.getCroppedCanvas({
+            width: 720,
+            height: 900,
+            fillColor: '#ffffff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+        const compressed = await compressedGtkPhotoBlob(canvas);
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('foto_profile', compressed.blob, 'foto-profile-gtk.jpg');
+
+        $label.text(`Mengupload hasil kompresi ${formatGtkPhotoBytes(compressed.blob.size)}…`);
+
+        const response = await $.ajax({
+            url: gtkPhotoContext.uploadUrl,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', event => {
+                    if (!event.lengthComputable) return;
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    $bar.css('width', percent + '%');
+                    $value.text(percent + '%');
+                });
+                return xhr;
+            }
+        });
+
+        $bar.css('width', '100%');
+        $value.text('100%');
+        $label.text('Foto profil berhasil diperbarui.');
+        $('#gtk-table').DataTable().ajax.reload(null, false);
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Foto Profil Diperbarui',
+            html: `${escapeHtml(response.message)}<br><small class="text-muted">Ukuran tersimpan ${response.compressed_size_kb} KB · ${response.width} × ${response.height} px</small>`,
+            timer: 2400,
+            showConfirmButton: false
+        });
+        $('#gtkPhotoModal').modal('hide');
+    } catch (error) {
+        const errors = error?.responseJSON?.errors;
+        const message = errors ? Object.values(errors).flat().join(' · ') : (error?.responseJSON?.message || error?.message || 'Foto gagal disimpan.');
+        $label.text('Upload gagal.');
+        $bar.addClass('bg-danger').css('width', '100%');
+        Swal.fire({icon:'error', title:'Gagal Memperbarui Foto', text:message});
+        $save.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>Crop, Kompres & Simpan');
+    }
+}
+
+$(function() {
+    const $dropzone = $('#gtkPhotoDropzone');
+    const $input = $('#gtkPhotoInput');
+
+    $dropzone.on('click', () => $input.trigger('click'))
+        .on('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                $input.trigger('click');
+            }
+        })
+        .on('dragenter dragover', function(event) {
+            event.preventDefault();
+            $(this).addClass('is-dragging');
+        })
+        .on('dragleave drop', function(event) {
+            event.preventDefault();
+            $(this).removeClass('is-dragging');
+        })
+        .on('drop', event => {
+            const file = event.originalEvent.dataTransfer.files?.[0];
+            if (file) prepareGtkPhoto(file);
+        });
+
+    $input.on('change', function() {
+        if (this.files?.[0]) prepareGtkPhoto(this.files[0]);
+    });
+    $('#gtkPhotoChooseAgain').on('click', () => $input.trigger('click'));
+    $('#gtkPhotoSave').on('click', saveGtkPhoto);
+    $('[data-photo-control]').on('click', function() {
+        if (!gtkPhotoCropper) return;
+        const action = this.dataset.photoControl;
+        if (action === 'zoom-in') gtkPhotoCropper.zoom(0.1);
+        if (action === 'zoom-out') gtkPhotoCropper.zoom(-0.1);
+        if (action === 'rotate-left') gtkPhotoCropper.rotate(-90);
+        if (action === 'rotate-right') gtkPhotoCropper.rotate(90);
+    });
+    $('#gtkPhotoModal').on('hidden.bs.modal', () => {
+        destroyGtkPhotoCropper();
+        gtkPhotoContext = null;
+        $('#gtkPhotoProgressBar').removeClass('bg-danger');
+    });
+});
 
 function showGtk(id) {
     $('#viewGtkModal').modal('show');

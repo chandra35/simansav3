@@ -82,7 +82,7 @@
                             <div id="dropZoneContent">
                                 <i class="fas fa-cloud-upload-alt text-primary gtk-edit-dropzone__icon"></i>
                                 <span>Ganti foto</span>
-                                <small>JPG/PNG, maks. 2 MB</small>
+                                <small>JPG/PNG, maks. 20 MB · otomatis dikompresi</small>
                             </div>
                             <div id="uploadProgress" style="display: none;" class="mt-2">
                                 <div class="progress gtk-edit-upload-progress">
@@ -1038,8 +1038,8 @@
                     Swal.fire({ icon: 'error', title: 'Format Salah', text: 'Hanya file JPG, JPEG, dan PNG yang diizinkan.' });
                     return;
                 }
-                if (file.size > 2 * 1024 * 1024) {
-                    Swal.fire({ icon: 'error', title: 'File Terlalu Besar', text: 'Ukuran file maksimal 2MB.' });
+                if (file.size > 20 * 1024 * 1024) {
+                    Swal.fire({ icon: 'error', title: 'File Terlalu Besar', text: 'Ukuran file asli maksimal 20MB.' });
                     return;
                 }
 

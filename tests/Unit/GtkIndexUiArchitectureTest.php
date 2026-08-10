@@ -107,6 +107,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown', $controller);
         $this->assertStringContainsString('data-action="view"', $controller);
         $this->assertStringContainsString('data-action="edit"', $controller);
+        $this->assertStringContainsString('data-action="update-photo"', $controller);
         $this->assertStringContainsString('data-action="reset-password"', $controller);
         $this->assertStringContainsString('data-action="login-as"', $controller);
         $this->assertStringContainsString('data-action="delete"', $controller);
@@ -118,6 +119,14 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('data-tooltip="true"', $controller);
         $this->assertStringNotContainsString('simansa-gtk-action-select', $controller);
         $this->assertStringContainsString('function handleGtkAction(item)', $view);
+        $this->assertStringContainsString('id="gtkPhotoModal"', $view);
+        $this->assertStringContainsString('new Cropper(image', $view);
+        $this->assertStringContainsString('getCroppedCanvas({', $view);
+        $this->assertStringContainsString('compressedGtkPhotoBlob', $view);
+        $this->assertStringContainsString('20 * 1024 * 1024', $view);
+        $this->assertStringContainsString("->cover(720, 900)", $controller);
+        $this->assertStringContainsString("->toJpeg(82)", $controller);
+        $this->assertStringContainsString("'compressed_size_kb'", $controller);
         $this->assertStringContainsString('refreshGtkTooltips', $view);
         $this->assertStringContainsString(".on('draw.dt'", $view);
     }
