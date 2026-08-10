@@ -188,6 +188,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('pointerdown', $view);
         $this->assertStringNotContainsString('name="password"', $view);
         $this->assertStringContainsString('HTMLFormElement.prototype.submit.call(form)', $view);
+        $this->assertStringNotContainsString('Paket <span id="castingNumber"', $view);
+        $this->assertStringContainsString('id="voteReceiptOverlay"', $view);
+        $this->assertStringContainsString('id="closeVoteReceipt"', $view);
     }
 
     public function test_entire_candidate_card_can_be_used_to_choose_a_package(): void
@@ -268,6 +271,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('#emptyState[hidden]{display:none}', $view);
         $this->assertStringContainsString('@media(max-height:760px) and (min-width:901px)', $view);
         $this->assertStringContainsString('body{overflow-x:hidden;overflow-y:auto}', $view);
+        $this->assertStringContainsString('pageRefreshInterval=300000', $view);
+        $this->assertStringContainsString('window.location.reload()', $view);
         $this->assertStringContainsString('Math.min(Math.max(packages.length,1),6)', $view);
         $this->assertStringContainsString('Identitas pemilih tidak pernah dipublikasikan', $view);
         $this->assertStringContainsString('function renderPackages(packages)', $view);
