@@ -110,6 +110,14 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("->whereNull('siswa_kelas.tanggal_keluar')", $service);
     }
 
+    public function test_dpt_monitoring_uses_the_active_roster_for_student_scope(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/OsisElectionController.php');
+
+        $this->assertStringContainsString("'siswa.kelas' => \$activeRoster", $controller);
+        $this->assertStringContainsString("\$student?->kelas->first()?->nama_kelas", $controller);
+    }
+
     public function test_voter_page_uses_large_portrait_candidate_cards(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/osis-election/index.blade.php');
