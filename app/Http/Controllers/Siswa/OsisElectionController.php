@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Siswa;
 
-use App\Exceptions\InvalidVotePasswordException;
 use App\Http\Controllers\Controller;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
@@ -16,9 +15,9 @@ use RuntimeException;
 
 class OsisElectionController extends Controller
 {
-    private const PASSWORD_ATTEMPTS = 5;
+    private const VOTE_ATTEMPTS = 5;
 
-    private const PASSWORD_DECAY_SECONDS = 60;
+    private const VOTE_DECAY_SECONDS = 60;
 
     public function __construct(private readonly OsisElectionService $service) {}
 
@@ -50,36 +49,28 @@ class OsisElectionController extends Controller
 
     public function vote(Request $request, OsisElection $election): RedirectResponse
     {
-        $data = $request->validate(['package_id' => ['required', 'exists:osis_packages,id'], 'password' => ['required', 'string', 'max:255']]);
+        $data = $request->validate(['package_id' => ['required', 'exists:osis_packages,id'], 'confirmed' => ['accepted']]);
         $siswa = $request->user()->siswa;
         abort_unless($siswa, 403);
         $package = OsisPackage::findOrFail($data['package_id']);
-        $rateLimitKey = "osis-vote-password:{$election->id}:{$request->user()->id}";
+        $rateLimitKey = "osis-vote-submit:{$election->id}:{$request->user()->id}";
 
-        if (RateLimiter::tooManyAttempts($rateLimitKey, self::PASSWORD_ATTEMPTS)) {
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::VOTE_ATTEMPTS)) {
             $seconds = max(1, RateLimiter::availableIn($rateLimitKey));
 
             return back()
-                ->withInput($request->except('password'))
-                ->with('error', "Terlalu banyak percobaan password. Tunggu {$seconds} detik lalu coba kembali.");
+                ->withInput($request->only('package_id'))
+                ->with('error', "Terlalu banyak permintaan pengiriman suara. Tunggu {$seconds} detik lalu coba kembali.");
         }
 
         try {
-            $receipt = $this->service->vote($election, $request->user(), $package, $data['password']);
+            RateLimiter::hit($rateLimitKey, self::VOTE_DECAY_SECONDS);
+            $receipt = $this->service->vote($election, $request->user(), $package);
             RateLimiter::clear($rateLimitKey);
 
             return back()->with('vote_success', $receipt);
-        } catch (InvalidVotePasswordException $e) {
-            RateLimiter::hit($rateLimitKey, self::PASSWORD_DECAY_SECONDS);
-
-            return back()
-                ->withInput($request->except('password'))
-                ->with('error', $e->getMessage());
         } catch (RuntimeException $e) {
-            // Password sudah lolos jika eksekusi mencapai validasi domain di service.
-            RateLimiter::clear($rateLimitKey);
-
-            return back()->with('error', $e->getMessage());
+            return back()->withInput($request->only('package_id'))->with('error', $e->getMessage());
         }
     }
 }

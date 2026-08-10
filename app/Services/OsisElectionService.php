@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Exceptions\InvalidVotePasswordException;
 use App\Models\OsisBallot;
 use App\Models\OsisElection;
 use App\Models\OsisPackage;
 use App\Models\OsisVoter;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -102,14 +100,10 @@ class OsisElectionService
         });
     }
 
-    public function vote(OsisElection $election, User $user, OsisPackage $package, string $password): string
+    public function vote(OsisElection $election, User $user, OsisPackage $package): string
     {
         if (! $election->is_open) throw new RuntimeException('Pemilihan belum dibuka atau sudah berakhir.');
         if ($package->election_id !== $election->id) throw new RuntimeException('Paket kandidat tidak valid.');
-        if (! Hash::check($password, $user->password)) {
-            throw new InvalidVotePasswordException('Password akun tidak sesuai. Suara belum disimpan.');
-        }
-
         return DB::transaction(function () use ($election, $user, $package) {
             $voter = OsisVoter::query()->where('election_id', $election->id)
                 ->where('user_id', $user->id)->lockForUpdate()->first();

@@ -9,11 +9,15 @@ use App\Models\TahunPelajaran;
 use App\Services\OsisElectionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use RuntimeException;
 
 class GtkOsisElectionController extends Controller
 {
+    private const VOTE_ATTEMPTS = 5;
+    private const VOTE_DECAY_SECONDS = 60;
+
     public function __construct(private readonly OsisElectionService $service) {}
 
     public function index(Request $request): View
@@ -49,14 +53,21 @@ class GtkOsisElectionController extends Controller
         abort_unless($request->user()->gtk && $election->include_gtk, 403);
         $data = $request->validate([
             'package_id' => ['required', 'exists:osis_packages,id'],
-            'password' => ['required', 'string', 'max:255'],
+            'confirmed' => ['accepted'],
         ]);
         $package = OsisPackage::findOrFail($data['package_id']);
+        $rateLimitKey = "osis-vote-submit:{$election->id}:{$request->user()->id}";
+        if (RateLimiter::tooManyAttempts($rateLimitKey, self::VOTE_ATTEMPTS)) {
+            $seconds = max(1, RateLimiter::availableIn($rateLimitKey));
+            return back()->withInput($request->only('package_id'))->with('error', "Terlalu banyak permintaan pengiriman suara. Tunggu {$seconds} detik lalu coba kembali.");
+        }
         try {
-            $receipt = $this->service->vote($election, $request->user(), $package, $data['password']);
+            RateLimiter::hit($rateLimitKey, self::VOTE_DECAY_SECONDS);
+            $receipt = $this->service->vote($election, $request->user(), $package);
+            RateLimiter::clear($rateLimitKey);
             return back()->with('vote_success', $receipt);
         } catch (RuntimeException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return back()->withInput($request->only('package_id'))->with('error', $exception->getMessage());
         }
     }
 }

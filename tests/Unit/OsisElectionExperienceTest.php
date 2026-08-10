@@ -165,7 +165,7 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('rgba(0,92,59,.44)', $studentView);
     }
 
-    public function test_student_vote_has_friendly_password_limiter_and_casting_animation(): void
+    public function test_student_vote_uses_consent_and_hold_to_confirm_with_server_limiter(): void
     {
         $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Siswa/OsisElectionController.php');
@@ -178,10 +178,15 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('RateLimiter::tooManyAttempts', $controller);
         $this->assertStringContainsString('RateLimiter::hit', $controller);
         $this->assertStringContainsString('RateLimiter::clear', $controller);
-        $this->assertStringContainsString('Terlalu banyak percobaan password.', $controller);
+        $this->assertStringContainsString("'confirmed' => ['accepted']", $controller);
+        $this->assertStringContainsString('Terlalu banyak permintaan pengiriman suara.', $controller);
         $this->assertStringContainsString('vote-casting-overlay', $view);
         $this->assertStringContainsString('voteStamp', $view);
         $this->assertStringContainsString('voteSubmitting', $view);
+        $this->assertStringContainsString('voteConfirmation', $view);
+        $this->assertStringContainsString('Tahan untuk sahkan suara', $view);
+        $this->assertStringContainsString('pointerdown', $view);
+        $this->assertStringNotContainsString('name="password"', $view);
         $this->assertStringContainsString('HTMLFormElement.prototype.submit.call(form)', $view);
     }
 
