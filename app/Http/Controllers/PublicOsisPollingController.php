@@ -54,14 +54,10 @@ class PublicOsisPollingController extends Controller
 
         return OsisElection::query()
             ->where('tahun_pelajaran_id', $activeYearId)
-            ->where(function ($query) {
-                $query->where('status', 'paused')
-                    ->orWhere(function ($published) {
-                        $published->where('status', 'published')
-                            ->where('ends_at', '>=', now());
-                    });
-            })
+            ->whereIn('status', ['published', 'paused', 'closed'])
+            ->orderByRaw("CASE WHEN status IN ('published', 'paused') THEN 0 ELSE 1 END")
             ->latest('published_at')
+            ->latest('closed_at')
             ->first();
     }
 
@@ -101,6 +97,7 @@ class PublicOsisPollingController extends Controller
         return [
             'active' => true,
             'phase' => $election->phase,
+            'results_visible' => $election->results_visible,
             'title' => $election->title,
             'theme' => $election->theme,
             'starts_at' => $election->starts_at->toIso8601String(),

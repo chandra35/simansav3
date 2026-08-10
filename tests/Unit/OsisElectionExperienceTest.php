@@ -307,8 +307,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString("Route::get('/live-polling-osis'", $routes);
         $this->assertStringContainsString("middleware('throttle:30,1')", $routes);
         $this->assertStringContainsString('TahunPelajaran::active()', $controller);
-        $this->assertStringContainsString("->where('status', 'paused')", $controller);
-        $this->assertStringContainsString("\$published->where('status', 'published')", $controller);
+        $this->assertStringContainsString("->whereIn('status', ['published', 'paused', 'closed'])", $controller);
+        $this->assertStringContainsString("'results_visible' => \$election->results_visible", $controller);
         $this->assertStringNotContainsString("->where('starts_at', '<=', now())", $controller);
         $this->assertStringContainsString("'phase' => \$election->phase", $controller);
         $this->assertStringContainsString("'starts_at' => \$election->starts_at->toIso8601String()", $controller);
@@ -328,6 +328,8 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Logo MAN 1 Metro', $view);
         $this->assertStringContainsString('AppSetting::first()?->logo_sekolah_url', $controller);
         $this->assertStringContainsString("phase==='scheduled'", $view);
+        $this->assertStringContainsString("phase==='closed'&&!resultsVisible", $view);
+        $this->assertStringContainsString('MENUNGGU PENGUMUMAN', $view);
         $this->assertStringContainsString('Pemungutan suara dimulai dalam', $view);
         $this->assertStringContainsString('requestFullscreen?.()', $view);
     }
