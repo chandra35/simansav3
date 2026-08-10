@@ -4,6 +4,18 @@ Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Navigasi slot pada Monitor Jadwal publik
+
+- Slot jam pada `/monitor-jadwal` kini dapat diklik untuk menampilkan daftar kelas, mata pelajaran, dan guru pada jam yang dipilih.
+- Pilihan manual diberi penanda visual tersendiri dan tidak ditimpa oleh pembaruan jam otomatis maupun refresh berkala.
+- Tombol **Jadwal Saat Ini** mengembalikan monitor ke mode live dan memusatkan kembali timeline pada slot yang sedang berlangsung.
+- Slot timeline menggunakan elemen tombol yang mendukung keyboard dan tetap responsif pada layar TV maupun perangkat seluler.
+
+File terkait:
+
+- `resources/views/public/jadwal-monitor.blade.php`
+- `tests/Unit/JadwalWakakurImportServiceTest.php`
+
 ### Kegiatan pembuka pada konfigurasi jam pelajaran
 
 - Generator jam pelajaran kini menyediakan pengaturan **Upacara hari Senin** dengan durasi bawaan 30 menit dan **Religi selain Senin** dengan durasi bawaan 15 menit.

@@ -139,5 +139,9 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString("Route::get('/monitor-jadwal'", $routes);
         $this->assertStringContainsString("name('public.jadwal-monitor')", $routes);
         $this->assertStringContainsString('MONITOR GURU PIKET', $view);
+        $this->assertStringContainsString('currentScheduleButton', $view);
+        $this->assertStringContainsString('data-slot-index', $view);
+        $this->assertStringContainsString('selectedIndex', $view);
+        $this->assertStringContainsString('Kegiatan kelas pada jadwal dipilih', $view);
     }
 }
