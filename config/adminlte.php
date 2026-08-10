@@ -346,7 +346,7 @@ return [
             'text' => 'Polling Aktif',
             'route' => 'admin.gtk.polling.index',
             'icon' => 'fas fa-fw fa-poll-h',
-            'can' => 'sidebar-active-polling',
+            'can' => 'sidebar-gtk-active-polling',
             'active' => ['admin/gtk/polling*'],
         ],
         
@@ -1288,7 +1288,7 @@ return [
             'text' => 'Polling Aktif',
             'route' => 'siswa.polling.index',
             'icon' => 'fas fa-fw fa-poll-h',
-            'can' => 'sidebar-active-polling',
+            'can' => 'sidebar-siswa-active-polling',
             'active' => ['siswa/polling*'],
         ],
         [

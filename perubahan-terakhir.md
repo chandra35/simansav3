@@ -4,6 +4,18 @@ Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan duplikasi Polling Aktif pada akun siswa
+
+- Gate sidebar Polling Aktif kini dipisahkan antara responden GTK dan Siswa.
+- Akun siswa hanya melihat menu polling siswa pada posisi yang benar di bawah **Pemilihan OSIM**; menu polling GTK tidak lagi ikut muncul di bagian atas sidebar.
+- Akun GTK murni tetap memperoleh menu polling GTK apabila memiliki polling yang sedang aktif.
+
+File terkait:
+
+- `app/Providers/AuthServiceProvider.php`
+- `config/adminlte.php`
+- `tests/Unit/PollingSidebarArchitectureTest.php`
+
 ### Navigasi slot pada Monitor Jadwal publik
 
 - Slot jam pada `/monitor-jadwal` kini dapat diklik untuk menampilkan daftar kelas, mata pelajaran, dan guru pada jam yang dipilih.

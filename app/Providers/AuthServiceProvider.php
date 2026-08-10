@@ -126,8 +126,20 @@ class AuthServiceProvider extends ServiceProvider
                    ! $user->siswa()->exists();
         });
 
-        Gate::define('sidebar-active-polling', function ($user) {
-            return app(\App\Services\PollingAudienceService::class)->activeForUser($user)->isNotEmpty();
+        Gate::define('sidebar-gtk-active-polling', function ($user) {
+            $isPureGtk = $user->hasRole('GTK') &&
+                ! $user->hasRole('Siswa') &&
+                ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+                ! $user->siswa()->exists();
+
+            return $isPureGtk && app(\App\Services\PollingAudienceService::class)->activeForUser($user)->isNotEmpty();
+        });
+
+        Gate::define('sidebar-siswa-active-polling', function ($user) {
+            $isStudent = ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK']) &&
+                ($user->hasRole('Siswa') || $user->role === 'siswa' || $user->siswa()->exists());
+
+            return $isStudent && app(\App\Services\PollingAudienceService::class)->activeForUser($user)->isNotEmpty();
         });
 
         // Gate menu Portal Wali Kelas ("Kelas Saya"): GTK murni yang menjadi wali kelas
