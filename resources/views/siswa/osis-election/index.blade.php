@@ -12,13 +12,12 @@
 @if(!$election)
 <section class="vote-empty"><div><i class="fas fa-calendar-check"></i></div><h2>Belum ada pemilihan aktif</h2><p>Informasi dan paket kandidat akan tampil di sini setelah panitia mempublikasikan pemilihan.</p></section>
 @else
-@php($receiptCode = session('vote_success', $voter?->receipt_code))
 <section class="vote-info mb-3"><i class="fas fa-shield-alt"></i><div><h2>Suara Anda rahasia</h2><p>Identitas tidak disimpan pada surat suara dan pilihan tidak dapat diubah.</p></div>@if($voter?->has_voted)<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>Sudah Memilih</span>@endif</section>
 
 @if($previewMode)
 <section class="vote-notice mb-4"><i class="fas fa-eye"></i><div><h2>Mode pratinjau</h2><p>Ini adalah tampilan yang akan dilihat pemilih. Tombol coblos dinonaktifkan sampai pemilihan dipublikasikan.</p></div></section>
 @elseif($voter?->has_voted || session('vote_success'))
-<section class="vote-success mb-3"><div class="success-icon"><i class="fas fa-check"></i></div><div class="success-copy"><span>SUARA BERHASIL DIREKAM</span><h2>Terima kasih, {{ strtok($participantName,' ') }}!</h2><p>Partisipasi Anda telah tercatat dengan aman.</p></div><div class="vote-receipt"><small>Kode bukti partisipasi</small><strong>{{ $receiptCode }}</strong><span>Tidak menunjukkan pilihan</span></div><button type="button" class="btn btn-outline-success btn-sm vote-receipt-trigger" id="showVoteReceipt"><i class="fas fa-receipt mr-1"></i>Lihat Bukti Coblos</button></section>
+<section class="vote-success mb-3"><div class="success-icon"><i class="fas fa-check"></i></div><div class="success-copy"><span>SUARA BERHASIL DIREKAM</span><h2>Terima kasih, {{ strtok($participantName,' ') }}!</h2><p>Partisipasi Anda telah tercatat dengan aman.</p></div><div class="vote-receipt"><small>Kode bukti partisipasi</small><strong>{{ session('vote_success', $voter?->receipt_code) }}</strong><span>Tidak menunjukkan pilihan</span></div><button type="button" class="btn btn-outline-success btn-sm vote-receipt-trigger" id="showVoteReceipt"><i class="fas fa-receipt mr-1"></i>Lihat Bukti Coblos</button></section>
 @elseif(!$voter)
 <section class="vote-notice vote-notice--warning mb-4"><i class="fas fa-user-lock"></i><div><h2>Anda tidak terdaftar sebagai pemilih</h2><p>Kemungkinan tingkat Anda tidak termasuk sasaran pemilih atau kandidat tidak diberi hak pilih pada pengaturan pemilihan ini.</p></div></section>
 @elseif($election->phase==='scheduled')
@@ -95,7 +94,7 @@
         <h2 id="voteReceiptTitle">Terima kasih telah menggunakan hak pilih.</h2>
         <div class="vote-receipt-card__event"><img src="{{ $schoolLogo }}" alt="Logo MAN 1 Metro"><span>di Pemilihan OSIM MAN 1 Metro 2026</span></div>
         <p>Suara Anda telah disimpan secara rahasia. Simpan layar ini bila Anda ingin membagikan bukti partisipasi.</p>
-        <div class="vote-receipt-card__code"><small>Kode bukti partisipasi</small><strong>{{ $receiptCode }}</strong></div>
+        <div class="vote-receipt-card__code"><small>Kode bukti partisipasi</small><strong>{{ session('vote_success', $voter?->receipt_code) }}</strong></div>
         <div class="vote-receipt-card__privacy"><i class="fas fa-user-shield"></i><span>Kerja sama dan pilihan Anda tetap rahasia.</span></div>
         <button type="button" class="btn btn-success vote-receipt-card__close" id="closeVoteReceipt"><i class="fas fa-check-circle mr-1"></i>Selesai</button>
     </section>
