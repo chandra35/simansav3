@@ -104,6 +104,9 @@ class OsisElectionExperienceTest extends TestCase
         $this->assertStringContainsString('Perolehan Suara', $report);
         $this->assertStringContainsString('Partisipasi per Rombel', $report);
         $this->assertStringContainsString('Berkas dicetak langsung dari SIMANSA', $report);
+        $this->assertStringContainsString('data-no-overlay', $report);
+        $this->assertStringContainsString('logoPath', $controller);
+        $this->assertStringContainsString('DOKUMEN RESMI', file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/osis-election/report-pdf.blade.php'));
     }
 
     public function test_admin_can_safely_add_newly_eligible_students_to_a_running_dpt(): void

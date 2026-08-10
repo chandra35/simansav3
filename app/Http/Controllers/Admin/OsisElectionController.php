@@ -9,6 +9,7 @@ use App\Models\OsisVoter;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
+use App\Models\AppSetting;
 use App\Exports\OsisElectionReportExport;
 use App\Exports\OsisPendingVotersExport;
 use App\Services\OsisElectionService;
@@ -278,6 +279,10 @@ class OsisElectionController extends Controller
     /** Keeps ballot choices aggregate-only; individual voter choices never enter the report. */
     private function reportData(OsisElection $election): array
     {
+        $school = AppSetting::first();
+        $defaultLogo = public_path('vendor/adminlte/dist/img/logo-sekolah.png');
+        $logoPath = $school?->logo_sekolah_path ? Storage::disk('public')->path($school->logo_sekolah_path) : $defaultLogo;
+        $logoPath = is_file($logoPath) ? $logoPath : $defaultLogo;
         $election->load(['tahunPelajaran', 'packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
         $voters = $election->voters()->with(['user.gtk:id,user_id,nama_lengkap', 'siswa.kelasSaatIni:id,nama_kelas,tingkat', 'siswa.sekolahAsal:npsn,nama', 'siswa.ortu', 'siswa.kelurahanSiswa', 'siswa.kecamatanSiswa', 'siswa.kabupatenSiswa', 'siswa.provinsiSiswa'])->orderByDesc('has_voted')->orderBy('voted_at')->get();
         $total = $voters->count();
@@ -308,7 +313,7 @@ class OsisElectionController extends Controller
                 'address' => $voter->siswa->getAlamatLengkapSiswa() ?: 'Belum tercatat',
             ]);
 
-        return compact('election', 'total', 'voted', 'packages', 'participation', 'voterRows', 'pendingStudents') + ['pending' => $total - $voted, 'turnout' => $total ? round($voted / $total * 100, 1) : 0, 'studentTotal' => $voters->where('participant_type', 'student')->count(), 'gtkTotal' => $voters->where('participant_type', 'gtk')->count()];
+        return compact('election', 'school', 'logoPath', 'total', 'voted', 'packages', 'participation', 'voterRows', 'pendingStudents') + ['pending' => $total - $voted, 'turnout' => $total ? round($voted / $total * 100, 1) : 0, 'studentTotal' => $voters->where('participant_type', 'student')->count(), 'gtkTotal' => $voters->where('participant_type', 'gtk')->count()];
     }
 
     public function edit(OsisElection $election): View
