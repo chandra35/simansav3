@@ -72,6 +72,8 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString("? 'muslimah' : 'muslim'", $controller);
         $this->assertStringContainsString("'is-female' : 'is-male'", $controller);
         $this->assertStringContainsString('onerror="this.remove()"', $controller);
+        $this->assertStringContainsString('data-gtk-photo-detail', $controller);
+        $this->assertStringContainsString("'foto_profile_url' => \$gtk->foto_profile_url", $controller);
         $this->assertStringContainsString("'kelasWali' => function", $controller);
         $this->assertStringContainsString('tahun_pelajaran_id', $controller);
         $this->assertStringContainsString('simansa-gtk-wali-list', $controller);
@@ -120,6 +122,8 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('simansa-gtk-action-select', $controller);
         $this->assertStringContainsString('function handleGtkAction(item)', $view);
         $this->assertStringContainsString('id="gtkPhotoModal"', $view);
+        $this->assertStringContainsString('gtk-detail-profile', $view);
+        $this->assertStringContainsString("\$gtkTableElement.on('click', '[data-gtk-photo-detail]'", $view);
         $this->assertStringContainsString('new Cropper(image', $view);
         $this->assertStringContainsString('getCroppedCanvas({', $view);
         $this->assertStringContainsString('compressedGtkPhotoBlob', $view);

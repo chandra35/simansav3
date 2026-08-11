@@ -425,6 +425,7 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 <style>
+.simansa-gtk-management .simansa-gtk-avatar-trigger{padding:0;border:0;cursor:pointer}.simansa-gtk-management .simansa-gtk-avatar-trigger:focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}.gtk-detail-profile{display:grid;place-items:center;gap:.65rem;height:100%;padding:1rem;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#eff6ff);text-align:center}.gtk-detail-profile__photo{width:min(100%,180px);aspect-ratio:4/5;overflow:hidden;border:3px solid #fff;border-radius:16px;background:#dbeafe;box-shadow:0 10px 24px rgba(37,99,235,.16)}.gtk-detail-profile__photo img{width:100%;height:100%;object-fit:cover}.gtk-detail-profile__name{font-weight:800;color:#0f172a}.gtk-detail-profile__meta{color:#64748b;font-size:.78rem}
 .gtk-photo-modal{overflow:hidden;border:0;border-radius:18px;box-shadow:0 24px 65px rgba(15,23,42,.3)}
 .gtk-photo-modal__header{align-items:flex-start;border:0;background:linear-gradient(135deg,#2563eb,#0f766e);color:#fff;padding:1rem 1.25rem}.gtk-photo-modal__eyebrow{display:block;font-size:.65rem;font-weight:900;letter-spacing:.1em;opacity:.85}.gtk-photo-modal__header h5{margin:.15rem 0 0;font-weight:900}.gtk-photo-modal__header span{font-size:.78rem;opacity:.8}
 .gtk-photo-layout{display:grid;grid-template-columns:170px minmax(0,1fr);gap:1rem}.gtk-photo-current{padding:.85rem;border:1px solid #dbeafe;border-radius:14px;background:#f8fbff;text-align:center}.gtk-photo-current>span{display:block;margin-bottom:.6rem;color:#475569;font-size:.7rem;font-weight:900;text-transform:uppercase}.gtk-photo-current__frame{display:grid;place-items:center;width:120px;aspect-ratio:4/5;margin:auto;overflow:hidden;border:3px solid #fff;border-radius:16px;background:linear-gradient(145deg,#dbeafe,#e0f2fe);box-shadow:0 8px 20px rgba(37,99,235,.14)}.gtk-photo-current__frame img{width:100%;height:100%;object-fit:cover}.gtk-photo-current__frame i{color:#60a5fa;font-size:2.4rem}.gtk-photo-current>small{display:block;margin-top:.7rem;color:#64748b;font-size:.68rem;line-height:1.45}
@@ -459,6 +460,10 @@ $(document).ready(function() {
             trigger: 'hover focus'
         });
     };
+
+    $gtkTableElement.on('click', '[data-gtk-photo-detail]', function() {
+        showGtk(this.dataset.gtkPhotoDetail);
+    });
 
     $gtkTableElement
         .on('preXhr.dt', function() {
@@ -1196,9 +1201,17 @@ function showGtk(id) {
         type: 'GET',
         success: function(response) {
             const gtk = response.data;
+            const photoUrl = gtk.foto_profile_url || '';
             let html = `
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row align-items-stretch">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <aside class="gtk-detail-profile">
+                            <div class="gtk-detail-profile__photo"><img src="${photoUrl}" alt="Foto ${gtk.nama_lengkap}" onerror="this.closest('.gtk-detail-profile__photo').innerHTML='<i class=\'fas fa-user text-primary fa-3x mt-5\'></i>'"></div>
+                            <div class="gtk-detail-profile__name">${gtk.nama_lengkap}</div>
+                            <div class="gtk-detail-profile__meta">${gtk.jenis_ptk || 'GTK'}${gtk.jabatan ? ' · ' + gtk.jabatan : ''}</div>
+                        </aside>
+                    </div>
+                    <div class="col-md-8">
                         <h5 class="border-bottom pb-2">Data Pribadi</h5>
                         <table class="table table-sm">
                             <tr><th width="150">Nama Lengkap</th><td>${gtk.nama_lengkap}</td></tr>
@@ -1211,6 +1224,8 @@ function showGtk(id) {
                             <tr><th>No HP</th><td>${gtk.nomor_hp || '-'}</td></tr>
                         </table>
                     </div>
+                </div>
+                <div class="row mt-3">
                     <div class="col-md-6">
                         <h5 class="border-bottom pb-2">Data Kepegawaian</h5>
                         <table class="table table-sm">

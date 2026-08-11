@@ -246,9 +246,9 @@ class GtkController extends Controller
             : '';
         $photoClass = $photo !== '' ? ' has-photo' : ' is-placeholder';
 
-        return '<div class="simansa-gtk-avatar '.$toneClass.$photoClass.'" role="img" aria-label="'.$label.'">'
+        return '<button type="button" class="simansa-gtk-avatar simansa-gtk-avatar-trigger '.$toneClass.$photoClass.'" data-gtk-photo-detail="'.e($gtk->id).'" aria-label="Lihat foto dan profil '.$label.'">'
             .$svg.$photo
-            .'</div>';
+            .'</button>';
     }
 
     /**
@@ -419,7 +419,9 @@ class GtkController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $gtk,
+            'data' => array_merge($gtk->toArray(), [
+                'foto_profile_url' => $gtk->foto_profile_url,
+            ]),
         ]);
     }
 
