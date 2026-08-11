@@ -147,5 +147,8 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('piket-guru-photo', $view);
         $this->assertStringContainsString('grid-template-columns:26px minmax(0,1fr) 54px', $view);
         $this->assertStringContainsString('piket-class__content', $view);
+        $this->assertStringContainsString('scheduleDetailModal', $view);
+        $this->assertStringContainsString('data-schedule-detail', $view);
+        $this->assertStringContainsString('detailModal.showModal()', $view);
     }
 }
