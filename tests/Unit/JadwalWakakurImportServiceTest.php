@@ -145,5 +145,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('Kegiatan kelas pada jadwal dipilih', $view);
         $this->assertStringContainsString("'foto_guru' => \$jadwal->gtk?->foto_profile_url", $controller);
         $this->assertStringContainsString('piket-guru-photo', $view);
+        $this->assertStringContainsString('grid-template-columns:26px minmax(0,1fr) 54px', $view);
+        $this->assertStringContainsString('piket-class__content', $view);
     }
 }
