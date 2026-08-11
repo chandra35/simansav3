@@ -97,6 +97,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('.piket-slot{', $publicMonitor);
         $this->assertStringContainsString('.piket-timeline{', $publicMonitor);
         $this->assertStringContainsString('$schoolLogoUrl', $publicMonitor);
+        $this->assertStringContainsString('.piket-footer{', $publicMonitor);
     }
 
     public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void
