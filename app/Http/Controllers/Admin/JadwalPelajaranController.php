@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalPelajaran;
 use App\Models\AbsensiSiswaSession;
+use App\Models\AppSetting;
 use App\Models\JadwalJamConfig;
 use App\Models\JadwalHariJam;
 use App\Models\JadwalGuruAlias;
@@ -450,7 +451,10 @@ class JadwalPelajaranController extends Controller
             ];
         })->values();
 
-        return compact('tahun', 'semester', 'hari', 'slots');
+        $setting = AppSetting::query()->first();
+        $schoolLogoUrl = $setting?->logo_sekolah_url ?? asset('vendor/adminlte/dist/img/logo-sekolah.png');
+
+        return compact('tahun', 'semester', 'hari', 'slots', 'schoolLogoUrl');
     }
 
     public function timetableData(Request $request)

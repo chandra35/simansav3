@@ -18,7 +18,7 @@
 <body>
 <main class="piket-monitor">
     <header class="piket-top">
-        <div class="piket-brand"><img src="{{ asset('favicon.ico') }}" alt="Logo SIMANSA"><div><small><i class="fas fa-circle"></i> MONITOR GURU PIKET</small><strong id="monitorDay">Memuat jadwal…</strong></div></div>
+        <div class="piket-brand"><img src="{{ $schoolLogoUrl }}" alt="Logo sekolah"><div><small><i class="fas fa-circle"></i> MONITOR</small><strong id="monitorDay">Memuat jadwal…</strong></div></div>
         <div class="piket-actions"><div class="piket-clock"><strong id="monitorClock">--:--:--</strong><span>{{ $tahun?->nama ?? 'Tahun pelajaran belum aktif' }} · Semester {{ $semester }} · WIB</span></div><button type="button" class="piket-now" id="currentScheduleButton" title="Kembali ke jadwal saat ini" disabled><i class="fas fa-broadcast-tower"></i><span>Jadwal Saat Ini</span></button><button type="button" class="piket-fullscreen" id="fullscreenButton" title="Layar penuh"><i class="fas fa-expand"></i></button></div>
     </header>
     <section class="piket-focus" id="monitorFocus" aria-live="polite"></section>

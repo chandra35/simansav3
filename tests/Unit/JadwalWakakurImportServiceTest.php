@@ -96,6 +96,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('closeDetailModal', $publicMonitor);
         $this->assertStringContainsString('.piket-slot{', $publicMonitor);
         $this->assertStringContainsString('.piket-timeline{', $publicMonitor);
+        $this->assertStringContainsString('$schoolLogoUrl', $publicMonitor);
     }
 
     public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void
@@ -144,7 +145,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('dataMonitor()', $controller);
         $this->assertStringContainsString("Route::get('/monitor-jadwal'", $routes);
         $this->assertStringContainsString("name('public.jadwal-monitor')", $routes);
-        $this->assertStringContainsString('MONITOR GURU PIKET', $view);
+        $this->assertStringContainsString('> MONITOR</small>', $view);
         $this->assertStringContainsString('currentScheduleButton', $view);
         $this->assertStringContainsString('data-slot-index', $view);
         $this->assertStringContainsString('selectedIndex', $view);
