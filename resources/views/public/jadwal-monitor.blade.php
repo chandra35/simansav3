@@ -34,6 +34,7 @@
     const days = {senin:'Senin',selasa:'Selasa',rabu:'Rabu',kamis:'Kamis',jumat:'Jumat',sabtu:'Sabtu'};
     const timeline = document.getElementById('monitorTimeline');
     const currentButton = document.getElementById('currentScheduleButton');
+    const classes = document.getElementById('monitorClasses');
     const detailModal = document.getElementById('scheduleDetailModal');
     const toMinutes = value => { const [hour, minute] = value.split(':').map(Number); return hour * 60 + minute; };
     const escape = value => String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[character]));
@@ -52,7 +53,6 @@
         const next = slots.find(slot => referenceMinutes < toMinutes(slot.mulai));
         const nextLesson = slots.find(slot => slot.tipe === 'pelajaran' && referenceMinutes <= toMinutes(slot.mulai));
         const focus = document.getElementById('monitorFocus');
-        const classes = document.getElementById('monitorClasses');
         const manualMode = Boolean(selected);
 
         document.getElementById('monitorClock').textContent = `${now.hour}:${now.minute}:${now.second}`;

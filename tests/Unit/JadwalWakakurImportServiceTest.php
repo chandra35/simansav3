@@ -150,5 +150,6 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('scheduleDetailModal', $view);
         $this->assertStringContainsString('data-schedule-detail', $view);
         $this->assertStringContainsString('detailModal.showModal()', $view);
+        $this->assertStringContainsString("const classes = document.getElementById('monitorClasses');", $view);
     }
 }
