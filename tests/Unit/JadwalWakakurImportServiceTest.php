@@ -94,6 +94,8 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('piket-modal-in', $publicMonitor);
         $this->assertStringContainsString('setScheduleCards', $publicMonitor);
         $this->assertStringContainsString('closeDetailModal', $publicMonitor);
+        $this->assertStringContainsString('.piket-slot{', $publicMonitor);
+        $this->assertStringContainsString('.piket-timeline{', $publicMonitor);
     }
 
     public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void
