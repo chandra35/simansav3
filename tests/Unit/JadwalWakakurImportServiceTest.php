@@ -90,6 +90,10 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString("->where('urutan', '>', \$slotTerakhir->urutan)", $controller);
         $this->assertStringContainsString('Jadwal masih kosong', $timetable);
         $this->assertStringContainsString('Jadwal masih kosong pada jam ini.', $publicMonitor);
+        $this->assertStringContainsString('piket-card-in', $publicMonitor);
+        $this->assertStringContainsString('piket-modal-in', $publicMonitor);
+        $this->assertStringContainsString('setScheduleCards', $publicMonitor);
+        $this->assertStringContainsString('closeDetailModal', $publicMonitor);
     }
 
     public function test_generator_accepts_a_sixty_minute_second_break_until_half_past_four(): void
