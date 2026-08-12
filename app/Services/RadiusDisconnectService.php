@@ -15,18 +15,28 @@ class RadiusDisconnectService
             return ['success' => false, 'message' => 'Helper pemutusan RADIUS belum tersedia di server SIMANSA.'];
         }
 
-        $process = new Process([
-            'sudo',
-            '-n',
-            $helper,
-            (string) $session->username,
-            (string) ($session->framedipaddress ?? ''),
-            (string) ($session->callingstationid ?? ''),
-            (string) ($session->acctsessionid ?? ''),
-            $nas->nasname,
-        ]);
-        $process->setTimeout((float) config('hotspot.disconnect_timeout', 8));
-        $process->run();
+        try {
+            $process = new Process([
+                'sudo',
+                '-n',
+                $helper,
+                (string) $session->username,
+                (string) ($session->framedipaddress ?? ''),
+                (string) ($session->callingstationid ?? ''),
+                (string) ($session->acctsessionid ?? ''),
+                $nas->nasname,
+            ]);
+            $process->setTimeout((float) config('hotspot.disconnect_timeout', 8));
+            $process->run();
+        } catch (\Throwable $exception) {
+            Log::error('[Hotspot] RADIUS disconnect process unavailable', [
+                'username' => $session->username,
+                'nas' => $nas->nasname,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return ['success' => false, 'message' => 'Layanan pemutusan sesi belum tersedia di server SIMANSA.'];
+        }
 
         if ($process->isSuccessful()) {
             return ['success' => true, 'message' => 'Sesi berhasil diputus oleh MikroTik.'];

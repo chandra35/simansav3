@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="-1">
+  <meta name="theme-color" content="#16887e">
+  <title>Login Berhasil - Hotspot MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <main class="page login-page">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <section class="result-card result-success" role="alert" aria-live="polite">
+      <div class="result-icon" aria-hidden="true">&#10003;</div>
+      <span class="result-kicker">LOGIN BERHASIL</span>
+      <h1>Internet sudah terhubung</h1>
+      <p>Selamat datang, <strong>$(username)</strong>. Halaman status dibuka pada tab baru.</p>
+      <div class="result-actions">
+        <a class="button primary" href="$(link-status)" target="hotspot_status">Buka Status Hotspot</a>
+        <a class="button" href="$(link-redirect)">Lanjutkan Browsing</a>
+      </div>
+      <small>Jika tab status tidak terbuka otomatis, tekan tombol “Buka Status Hotspot”.</small>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var statusTab = window.open('$(link-status)', 'hotspot_status');
+      if (statusTab) statusTab.focus();
+    }());
+  </script>
+</body>
+</html>

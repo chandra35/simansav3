@@ -81,8 +81,19 @@
     var mapped = friendlyError(raw);
     if (!mapped) return;
 
-    target.classList.add('is-visible');
-    target.innerHTML = '<strong>' + escapeHtml(mapped.title) + '</strong><span>' + escapeHtml(mapped.message) + '</span><small>Informasi router: ' + escapeHtml(raw) + '</small>';
+    target.className = 'hotspot-modal is-visible';
+    target.setAttribute('role', 'alertdialog');
+    target.setAttribute('aria-modal', 'true');
+    target.setAttribute('aria-labelledby', 'hotspot-error-title');
+    target.innerHTML = '<div class="hotspot-modal-card"><div class="result-icon error-icon" aria-hidden="true">!</div><span class="result-kicker error-kicker">LOGIN GAGAL</span><strong id="hotspot-error-title">' + escapeHtml(mapped.title) + '</strong><span>' + escapeHtml(mapped.message) + '</span><small>Informasi router: ' + escapeHtml(raw) + '</small><button type="button" class="button primary" data-error-close>Coba Lagi</button></div>';
+    document.body.classList.add('modal-open');
+    var close = target.querySelector('[data-error-close]');
+    if (close) close.addEventListener('click', function () {
+      target.classList.remove('is-visible');
+      document.body.classList.remove('modal-open');
+      var username = document.getElementById('username');
+      if (username) username.focus();
+    });
   }
 
   function setupPasswordToggle() {

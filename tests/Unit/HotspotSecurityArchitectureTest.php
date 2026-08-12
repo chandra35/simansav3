@@ -159,8 +159,24 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('setInterval(tickDurations,1000)', $view);
         $this->assertStringContainsString('Blokir & putuskan', $view);
         $this->assertStringContainsString("'sudo'", $service);
+        $this->assertStringContainsString('catch (\\Throwable $exception)', $service);
+        $this->assertStringContainsString('Layanan pemutusan sesi belum tersedia', $service);
         $this->assertStringContainsString("'blocked_at'", $migration);
         $this->assertStringContainsString('Received Disconnect-ACK', $bridge);
         $this->assertStringContainsString('[[ "$nas_ip" == "172.16.250.1" ]]', $bridge);
+    }
+
+    public function test_mikrotik_portal_prevents_double_submit_and_opens_status_tab(): void
+    {
+        $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
+        $login = file_get_contents($portal.'login.html');
+        $success = file_get_contents($portal.'alogin.html');
+        $script = file_get_contents($portal.'assets/portal.js');
+
+        $this->assertStringContainsString('if (loginSubmitting) return false', $login);
+        $this->assertStringContainsString('button.disabled = true', $login);
+        $this->assertStringContainsString("setAttribute('role', 'alertdialog')", $script);
+        $this->assertStringContainsString("window.open('$(link-status)', 'hotspot_status')", $success);
+        $this->assertStringContainsString('target="hotspot_status"', $success);
     }
 }

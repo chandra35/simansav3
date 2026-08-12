@@ -18,7 +18,15 @@
   </form>
   <script src="md5.js"></script>
   <script>
+    var loginSubmitting = false;
     function doLogin() {
+      if (loginSubmitting) return false;
+      loginSubmitting = true;
+      var button = document.querySelector('[data-login-submit]');
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Memeriksa akun...';
+      }
       if ('$(chap-id)'.indexOf('$(') === 0 || !'$(chap-id)') {
         return true;
       }
@@ -79,7 +87,7 @@
           </div>
         </div>
 
-        <button class="submit" type="submit">Masuk Internet</button>
+        <button class="submit" type="submit" data-login-submit>Masuk Internet</button>
       </form>
 
       <div class="login-guide" aria-label="Panduan akun">

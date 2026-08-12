@@ -41,8 +41,15 @@ File terkait:
 
 - Halaman login MikroTik memakai portal SIMANSA responsif dengan identitas visual MAN 1 Metro.
 - Panduan username siswa (NISN), guru/GTK (NIK), dan tamu tampil langsung pada form, lengkap dengan tombol tampil/sembunyikan password dan pesan autentikasi yang lebih ramah.
+- Form dikunci setelah submit pertama untuk mencegah login ganda; hasil gagal ditampilkan sebagai modal, sedangkan hasil berhasil membuka Status Hotspot pada tab baru seperti alur bawaan MikroTik.
 - Pesan error dirender dengan HTML escaping; halaman status, logout, dan error menggunakan tampilan yang konsisten.
 - Folder Hotspot lama dibackup sebelum delapan file portal diverifikasi dan diunggah langsung ke direktori `hotspot` MikroTik.
+
+### Perbaikan Putuskan Sesi
+
+- Fungsi PHP `proc_open` yang dibutuhkan Symfony Process diaktifkan khusus pada PHP-FPM 8.3; fungsi eksekusi lain tetap dinonaktifkan dan konfigurasi sebelumnya dibackup.
+- Service pemutusan menangani kegagalan proses secara aman agar UI menerima pesan terkontrol, bukan error server.
+- Uji end-to-end sebagai user web berhasil memutus sesi aktif melalui FreeRADIUS dan menerima konfirmasi dari MikroTik.
 
 ### Pemusatan Setting Hotspot
 
