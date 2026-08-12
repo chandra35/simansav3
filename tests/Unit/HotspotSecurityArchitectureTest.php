@@ -148,6 +148,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $migration = file_get_contents($this->root.'/database/migrations/2026_08_12_163000_add_block_metadata_to_hotspot_users.php');
         $bridge = file_get_contents($this->root.'/deploy/radius-disconnect-from-simansa.sh')
             .file_get_contents($this->root.'/deploy/radius-disconnect-on-radius.sh');
+        $hardening = file_get_contents($this->root.'/deploy/harden-hotspot-disconnect.rsc');
 
         $this->assertStringContainsString("->name('sessions.disconnect')", $routes);
         $this->assertStringContainsString("->name('block')", $routes);
@@ -164,6 +165,14 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("'blocked_at'", $migration);
         $this->assertStringContainsString('Received Disconnect-ACK', $bridge);
         $this->assertStringContainsString('[[ "$nas_ip" == "172.16.250.1" ]]', $bridge);
+        $this->assertStringContainsString("'hotspot_active'", $service);
+        $this->assertStringContainsString("'dhcp_lease'", $service);
+        $this->assertStringContainsString("'reauthentication_required' => true", $service);
+        $this->assertStringContainsString('Sesi berhasil diputus', $view);
+        $this->assertStringContainsString('login-by=http-chap', $hardening);
+        $this->assertStringContainsString('add-mac-cookie=no', $hardening);
+        $this->assertStringContainsString('/ip hotspot cookie remove [find]', $hardening);
+        $this->assertStringNotContainsString('/ip dhcp-server lease remove', $hardening);
     }
 
     public function test_mikrotik_portal_prevents_double_submit_and_opens_status_tab(): void

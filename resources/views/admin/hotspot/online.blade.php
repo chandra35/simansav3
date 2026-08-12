@@ -175,9 +175,14 @@ function showSession(index){
 }
 function disconnectSession(index){
     const s=sessions[index];
-    Swal.fire({title:'Putuskan sesi sekarang?',html:`Koneksi <strong>${esc(s.display_name)}</strong> akan diputus langsung dari MikroTik. Akun tetap dapat login kembali.`,icon:'warning',showCancelButton:true,confirmButtonText:'Putuskan',cancelButtonText:'Batal',confirmButtonColor:'#f59e0b'}).then(result=>{
+    Swal.fire({title:'Putuskan sesi sekarang?',html:`Koneksi <strong>${esc(s.display_name)}</strong> akan dihapus dari Hotspot Active dan dynamic queue MikroTik.<br><small class="text-muted">DHCP lease tetap dipertahankan; pengguna wajib login ulang.</small>`,icon:'warning',showCancelButton:true,confirmButtonText:'Putuskan',cancelButtonText:'Batal',confirmButtonColor:'#f59e0b'}).then(result=>{
         if(!result.isConfirmed)return;
-        $.post(DISCONNECT_URL,{session_id:s.session_id,_token:CSRF_TOKEN}).done(r=>{toastr.success(r.message);setTimeout(loadOnline,800)}).fail(xhr=>toastr.error(xhr.responseJSON?.message||'Sesi gagal diputus.'));
+        Swal.fire({title:'Memutus sesi...',text:'Menunggu konfirmasi dari MikroTik.',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+        $.post(DISCONNECT_URL,{session_id:s.session_id,_token:CSRF_TOKEN}).done(r=>{
+            const steps=(r.steps||[]).map(step=>{const icon=step.status==='success'?'check-circle':step.status==='preserved'?'shield-alt':'times-circle';const color=step.status==='success'?'success':step.status==='preserved'?'primary':'danger';return `<div class="text-left mb-2"><i class="fas fa-${icon} text-${color} mr-2"></i><strong>${esc(step.label)}</strong><div class="text-muted ml-4">${esc(step.detail)}</div></div>`}).join('');
+            Swal.fire({title:'Sesi berhasil diputus',html:`<p>${esc(r.message)}</p>${steps}`,icon:'success',confirmButtonText:'Tutup'});
+            $('#sessionDetailModal').modal('hide');setTimeout(loadOnline,800);
+        }).fail(xhr=>{const r=xhr.responseJSON||{};Swal.fire({title:'Sesi gagal diputus',text:r.message||'MikroTik belum mengonfirmasi pemutusan sesi.',icon:'error'});});
     });
 }
 function blockSession(index){

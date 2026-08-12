@@ -34,13 +34,13 @@ add address=$RADIUS_IP secret=$RADIUS_SECRET service=hotspot timeout=3s
 
 # === 3. Buat Hotspot User Profile per role ===
 /ip hotspot user profile
-add name=profile-guru rate-limit=10M/10M address-pool=pool-guru idle-timeout=30m keepalive-timeout=none
-add name=profile-siswa rate-limit=5M/5M address-pool=pool-siswa idle-timeout=20m keepalive-timeout=none
-add name=profile-tamu rate-limit=2M/2M address-pool=pool-tamu idle-timeout=10m keepalive-timeout=none
+add name=profile-guru rate-limit=10M/10M address-pool=pool-guru idle-timeout=30m keepalive-timeout=none add-mac-cookie=no
+add name=profile-siswa rate-limit=5M/5M address-pool=pool-siswa idle-timeout=20m keepalive-timeout=none add-mac-cookie=no
+add name=profile-tamu rate-limit=2M/2M address-pool=pool-tamu idle-timeout=10m keepalive-timeout=none add-mac-cookie=no
 
 # === 4. Update Hotspot Server Profile (hsprof1) ===
 /ip hotspot profile
-set [find name=hsprof1] use-radius=yes radius-accounting=yes radius-interim-update=10s
+set [find name=hsprof1] use-radius=yes radius-accounting=yes radius-interim-update=10s login-by=http-chap
 
 # === 5. DNS Hotspot: client memakai cache router, router meneruskan ke resolver publik ===
 /ip dns

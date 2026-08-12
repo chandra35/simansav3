@@ -795,7 +795,17 @@ class HotspotController extends Controller
         $result = $this->disconnectRadiusSession($session, $disconnect);
         activity('hotspot')
             ->causedBy($request->user())
-            ->withProperties(['username' => $session->username, 'session_id' => $session->radacctid, 'success' => $result['success']])
+            ->withProperties([
+                'username' => $session->username,
+                'session_id' => $session->radacctid,
+                'acct_session_id' => $session->acctsessionid,
+                'framed_ip' => $session->framedipaddress,
+                'mac' => $session->callingstationid,
+                'nas_ip' => $session->nasipaddress,
+                'success' => $result['success'],
+                'reauthentication_required' => $result['reauthentication_required'] ?? false,
+                'steps' => $result['steps'] ?? [],
+            ])
             ->log('Admin meminta pemutusan sesi Hotspot');
 
         return response()->json($result, $result['success'] ? 200 : 422);

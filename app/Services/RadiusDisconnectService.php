@@ -12,7 +12,7 @@ class RadiusDisconnectService
     {
         $helper = config('hotspot.disconnect_helper');
         if (!$helper || !is_file($helper)) {
-            return ['success' => false, 'message' => 'Helper pemutusan RADIUS belum tersedia di server SIMANSA.'];
+            return $this->failed('Helper pemutusan RADIUS belum tersedia di server SIMANSA.');
         }
 
         try {
@@ -35,11 +35,35 @@ class RadiusDisconnectService
                 'error' => $exception->getMessage(),
             ]);
 
-            return ['success' => false, 'message' => 'Layanan pemutusan sesi belum tersedia di server SIMANSA.'];
+            return $this->failed('Layanan pemutusan sesi belum tersedia di server SIMANSA.');
         }
 
         if ($process->isSuccessful()) {
-            return ['success' => true, 'message' => 'Sesi berhasil diputus oleh MikroTik.'];
+            return [
+                'success' => true,
+                'message' => 'Sesi aktif berhasil dihapus dari MikroTik. Pengguna harus login ulang.',
+                'reauthentication_required' => true,
+                'steps' => [
+                    [
+                        'key' => 'radius_disconnect',
+                        'label' => 'RADIUS Disconnect',
+                        'status' => 'success',
+                        'detail' => 'MikroTik mengirim Disconnect-ACK.',
+                    ],
+                    [
+                        'key' => 'hotspot_active',
+                        'label' => 'Hotspot Active',
+                        'status' => 'success',
+                        'detail' => 'Sesi runtime dan dynamic queue dihapus oleh MikroTik.',
+                    ],
+                    [
+                        'key' => 'dhcp_lease',
+                        'label' => 'DHCP lease',
+                        'status' => 'preserved',
+                        'detail' => 'Lease dipertahankan agar perangkat segera diarahkan ke portal login.',
+                    ],
+                ],
+            ];
         }
 
         $error = trim($process->getErrorOutput()) ?: trim($process->getOutput());
@@ -50,9 +74,21 @@ class RadiusDisconnectService
             'error' => $error,
         ]);
 
+        return $this->failed($this->safeError($error));
+    }
+
+    private function failed(string $message): array
+    {
         return [
             'success' => false,
-            'message' => $this->safeError($error),
+            'message' => $message,
+            'reauthentication_required' => false,
+            'steps' => [[
+                'key' => 'radius_disconnect',
+                'label' => 'RADIUS Disconnect',
+                'status' => 'failed',
+                'detail' => $message,
+            ]],
         ];
     }
 
