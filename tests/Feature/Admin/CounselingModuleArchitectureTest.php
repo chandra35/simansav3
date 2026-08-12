@@ -64,4 +64,19 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js', $view);
         $this->assertStringNotContainsString("asset('vendor/datatables", $view);
     }
+
+    public function test_student_history_exposes_a_compact_bk_profile_summary(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/CatatanKonselingController.php'));
+        $view = file_get_contents(resource_path('views/admin/catatan-konseling/report-siswa.blade.php'));
+
+        $this->assertStringContainsString("'ortu'", $controller);
+        $this->assertStringContainsString("'kelasTahunAktif.waliKelas'", $controller);
+        $this->assertStringContainsString('student-photo', $view);
+        $this->assertStringContainsString('Identitas Pribadi', $view);
+        $this->assertStringContainsString('Informasi Akademik', $view);
+        $this->assertStringContainsString('Orang Tua / Keluarga', $view);
+        $this->assertStringContainsString('ALAMAT DOMISILI', $view);
+        $this->assertStringContainsString('Riwayat Layanan Konseling', $view);
+    }
 }

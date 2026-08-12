@@ -263,7 +263,11 @@ class CatatanKonselingController extends Controller
 
     public function reportSiswa(Request $request)
     {
-        $student = $request->filled('siswa_id') ? Siswa::with('kelasTahunAktif')->findOrFail($request->siswa_id) : null;
+        $student = $request->filled('siswa_id') ? Siswa::with([
+            'user',
+            'kelasTahunAktif.waliKelas',
+            'ortu',
+        ])->findOrFail($request->siswa_id) : null;
         $records = $student
             ? $this->visibleQuery()->with(['konselor', 'tahunPelajaran'])->where('siswa_id', $student->id)->latest('tanggal_konseling')->get()
             : collect();

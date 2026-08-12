@@ -6,6 +6,7 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan modul Bimbingan & Konseling
 
+- Halaman Riwayat Konseling menampilkan foto potret serta ringkasan identitas pribadi, informasi akademik, wali kelas, kontak, data ayah/ibu, kondisi keluarga, dan alamat domisili agar Guru BK memahami konteks siswa sebelum membaca riwayat layanan.
 - Asset DataTables pada direktori siswa dan daftar catatan disamakan dengan sumber yang dipakai halaman Data Siswa; tabel yang sebelumnya berhenti karena file vendor lokal tidak tersedia kini dapat memuat data AJAX.
 - Halaman utama BK kini berupa direktori siswa aktif seperti Data Siswa, dengan foto, NISN/NIS Lokal, jenis kelamin, rombel, jumlah riwayat, status pendampingan, dan aksi cepat untuk mencatat atau membuka riwayat.
 - Filter tingkat, rombel aktif, serta status pendampingan berjalan otomatis; pilihan rombel menyesuaikan tingkat agar Guru BK lebih cepat menemukan siswa.
