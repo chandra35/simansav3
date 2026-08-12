@@ -832,6 +832,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // ==================== BIMBINGAN & KONSELING (BK) ====================
     Route::get('/catatan-konseling/siswa/search', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'searchStudents'])->name('catatan-konseling.students.search');
+    Route::get('/catatan-konseling/catatan', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'records'])->name('catatan-konseling.records');
     Route::get('/catatan-konseling/report/siswa', [App\Http\Controllers\Admin\CatatanKonselingController::class, 'reportSiswa'])->name('catatan-konseling.report-siswa');
     Route::resource('catatan-konseling', App\Http\Controllers\Admin\CatatanKonselingController::class);
     

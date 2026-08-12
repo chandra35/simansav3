@@ -6,6 +6,9 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan modul Bimbingan & Konseling
 
+- Halaman utama BK kini berupa direktori siswa aktif seperti Data Siswa, dengan foto, NISN/NIS Lokal, jenis kelamin, rombel, jumlah riwayat, status pendampingan, dan aksi cepat untuk mencatat atau membuka riwayat.
+- Filter tingkat, rombel aktif, serta status pendampingan berjalan otomatis; pilihan rombel menyesuaikan tingkat agar Guru BK lebih cepat menemukan siswa.
+- Daftar seluruh catatan tetap tersedia sebagai halaman operasional terpisah sehingga monitoring kasus dan pengelolaan siswa sama-sama mudah diakses.
 - Seluruh halaman Konseling menggunakan parent layout AdminLTE yang benar; error 500 akibat referensi `layouts.admin` yang tidak tersedia telah diperbaiki dan dilindungi tes regresi.
 - Kontrak model, controller, validasi, dan form Konseling kini sesuai dengan struktur tabel produksi; ketidaksesuaian field lama seperti `deskripsi_masalah`, `is_rahasia`, dan status yang tidak tersedia telah dihapus.
 - Alur kerja BK mencakup jenis layanan, bidang masalah, asesmen/permasalahan, hasil konseling, rekomendasi, tindak lanjut terjadwal, rujukan, status penanganan, dan penanda kerahasiaan.

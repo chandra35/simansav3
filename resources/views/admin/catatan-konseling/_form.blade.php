@@ -1,6 +1,6 @@
 @php
     $editing = $catatanKonseling->exists;
-    $selectedStudent = $editing ? $catatanKonseling->siswa : null;
+    $selectedStudent = $editing ? $catatanKonseling->siswa : ($selectedStudent ?? null);
     $defaultCounselor = old('konselor_id', $catatanKonseling->konselor_id ?: auth()->user()->gtk?->id);
 @endphp
 <div class="row">

@@ -1,77 +1,23 @@
 @extends('adminlte::page')
-
-@section('title', 'Bimbingan & Konseling')
-
+@section('title','Data Siswa BK')
 @section('content_header')
-<div class="row mb-2">
-    <div class="col-sm-6"><h1><i class="fas fa-comments text-primary"></i> Bimbingan & Konseling</h1></div>
-    <div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item active">Konseling</li></ol></div>
-</div>
+<div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-user-friends text-primary"></i> Data Siswa BK</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item active">Bimbingan & Konseling</li></ol></div></div>
 @stop
-
 @section('content')
-<div class="counseling-page">
-    <div class="card bg-gradient-primary text-white mb-3 counseling-hero">
-        <div class="card-body py-3">
-            <div class="row align-items-center">
-                <div class="col-lg-8"><h4 class="mb-1"><i class="fas fa-user-shield mr-2"></i>Ruang Kerja BK</h4><p class="mb-0">Catat layanan, pantau tindak lanjut, dan jaga kerahasiaan pendampingan siswa dalam satu alur.</p></div>
-                <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
-                    @can('report-catatan-konseling')<a href="{{ route('admin.catatan-konseling.report-siswa') }}" class="btn btn-light btn-sm"><i class="fas fa-file-alt"></i> Riwayat Siswa</a>@endcan
-                    @can('create-catatan-konseling')<a href="{{ route('admin.catatan-konseling.create') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Catatan Baru</a>@endcan
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        @foreach([
-            ['Total Layanan', $stats['total'], 'primary', 'clipboard-list'],
-            ['Sedang Ditangani', $stats['aktif'], 'warning', 'hourglass-half'],
-            ['Perlu Tindak Lanjut', $stats['tindak_lanjut'], 'danger', 'calendar-check'],
-            ['Selesai', $stats['selesai'], 'success', 'check-circle'],
-        ] as [$label, $value, $color, $icon])
-        <div class="col-6 col-lg-3"><div class="info-box"><span class="info-box-icon bg-{{ $color }}"><i class="fas fa-{{ $icon }}"></i></span><div class="info-box-content"><span class="info-box-text">{{ $label }}</span><span class="info-box-number">{{ number_format($value) }}</span></div></div></div>
-        @endforeach
-    </div>
-
-    <div class="card card-outline card-primary">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-list mr-1"></i> Daftar Layanan Konseling</h3></div>
-        <div class="card-body">
-            <div class="counseling-filter rounded mb-3 p-3">
-                <div class="row">
-                    <div class="col-md-4"><div class="form-group mb-md-0"><label>Status</label><select id="filter-status" class="form-control"><option value="">Semua status</option>@foreach($status as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div></div>
-                    <div class="col-md-4"><div class="form-group mb-md-0"><label>Kategori</label><select id="filter-kategori" class="form-control"><option value="">Semua kategori</option>@foreach($kategori as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div></div>
-                    <div class="col-md-4 d-flex align-items-end"><button id="reset-filter" class="btn btn-secondary btn-block"><i class="fas fa-sync-alt"></i> Reset Filter</button></div>
-                </div>
-            </div>
-            <div class="table-responsive"><table id="konseling-table" class="table table-bordered table-hover w-100"><thead><tr><th>No</th><th>Siswa</th><th>Konselor</th><th>Tanggal</th><th>Layanan</th><th>Status</th><th>Akses</th><th>Aksi</th></tr></thead></table></div>
-        </div>
-    </div>
+<div class="counseling-students">
+    <div class="card bg-gradient-primary text-white mb-3 counseling-hero"><div class="card-body py-3"><div class="row align-items-center"><div class="col-lg-8"><h4 class="mb-1"><i class="fas fa-user-shield mr-2"></i>Pusat Pendampingan Siswa</h4><p class="mb-0">Temukan siswa berdasarkan tingkat atau rombel, lihat status pendampingan, lalu buka riwayat maupun catat layanan baru.</p></div><div class="col-lg-4 mt-3 mt-lg-0 text-lg-right"><a href="{{ route('admin.catatan-konseling.records') }}" class="btn btn-light btn-sm"><i class="fas fa-clipboard-list"></i> Semua Catatan</a>@can('create-catatan-konseling') <a href="{{ route('admin.catatan-konseling.create') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Catatan Baru</a>@endcan</div></div></div></div>
+    <div class="row">@foreach([['Siswa Aktif',$stats['siswa_aktif'],'primary','user-graduate','Populasi siswa yang dapat didampingi'],['Pernah Dilayani',$stats['pernah_dilayani'],'info','comments','Memiliki riwayat yang dapat Anda akses'],['Belum Ada Layanan',$stats['belum_dilayani'],'secondary','user-clock','Belum memiliki catatan konseling'],['Perlu Tindak Lanjut',$stats['tindak_lanjut'],'danger','calendar-check','Masih memiliki jadwal tindak lanjut']] as [$label,$value,$color,$icon,$description])<div class="col-sm-6 col-xl-3"><div class="card counseling-stat"><div class="card-body"><div class="d-flex align-items-center"><span class="stat-icon bg-{{ $color }}"><i class="fas fa-{{ $icon }}"></i></span><div><small>{{ $label }}</small><h3>{{ number_format($value) }}</h3></div></div><p>{{ $description }}</p></div></div></div>@endforeach</div>
+    <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title"><i class="fas fa-users mr-1"></i> Daftar Siswa Aktif</h3><div class="card-tools"><span class="text-muted small"><i class="fas fa-info-circle"></i> Gunakan pencarian untuk nama, NISN, atau NIS Lokal</span></div></div><div class="card-body">
+        <div class="counseling-filter p-3 rounded mb-3"><div class="row"><div class="col-md-3"><div class="form-group mb-md-0"><label><i class="fas fa-layer-group"></i> Tingkat</label><select id="filter-tingkat" class="form-control"><option value="">Semua tingkat</option>@foreach([10,11,12] as $level)<option value="{{ $level }}">Kelas {{ $level }}</option>@endforeach</select></div></div><div class="col-md-4"><div class="form-group mb-md-0"><label><i class="fas fa-door-open"></i> Rombel</label><select id="filter-kelas" class="form-control"><option value="">Semua rombel</option>@foreach($activeClasses as $class)<option value="{{ $class->id }}" data-tingkat="{{ $class->tingkat }}">{{ $class->nama_kelas }}</option>@endforeach</select></div></div><div class="col-md-3"><div class="form-group mb-md-0"><label><i class="fas fa-heartbeat"></i> Status Pendampingan</label><select id="filter-status" class="form-control"><option value="">Semua status</option><option value="belum">Belum ada layanan</option><option value="aktif">Sedang ditangani</option><option value="tindak_lanjut">Perlu tindak lanjut</option></select></div></div><div class="col-md-2 d-flex align-items-end"><button id="reset-filter" class="btn btn-secondary btn-block"><i class="fas fa-sync-alt"></i> Reset</button></div></div></div>
+        <div class="table-responsive"><table id="student-table" class="table table-hover table-bordered w-100"><thead><tr><th>No</th><th>Foto</th><th>Nama / Identitas</th><th>JK</th><th>Rombel</th><th>Riwayat BK</th><th>Status BK</th><th>Aksi</th></tr></thead></table></div>
+    </div></div>
 </div>
 @stop
-
 @section('css')
-<link rel="stylesheet" href="{{ asset('vendor/datatables/css/dataTables.bootstrap4.min.css') }}">
-<style>
-.counseling-page .counseling-hero{border-radius:.65rem;box-shadow:0 .4rem 1rem rgba(37,99,235,.14)}
-.counseling-page .counseling-filter{background:#f8fafc;border:1px solid #e2e8f0}
-.counseling-page .info-box{min-height:82px}.counseling-page .info-box-icon{width:66px}
-.counseling-page table td{vertical-align:middle}
-@media(max-width:767.98px){.counseling-page .info-box-icon{width:52px}.counseling-page .info-box-text{white-space:normal;font-size:.75rem}}
-</style>
-@stop
-
+<link rel="stylesheet" href="{{ asset('vendor/datatables/css/dataTables.bootstrap4.min.css') }}"><style>
+.counseling-students .counseling-hero{border-radius:.65rem;box-shadow:0 .4rem 1rem rgba(37,99,235,.14)}.counseling-students .counseling-stat{border:1px solid #e2e8f0;box-shadow:0 .25rem .75rem rgba(15,23,42,.06);min-height:122px}.counseling-students .counseling-stat h3{font-size:1.45rem;margin:0;font-weight:700}.counseling-students .counseling-stat small{font-weight:700;color:#475569}.counseling-students .counseling-stat p{font-size:.76rem;color:#64748b;margin:.65rem 0 0}.counseling-students .stat-icon{width:44px;height:44px;border-radius:.55rem;display:flex;align-items:center;justify-content:center;color:#fff;margin-right:.75rem}.counseling-students .counseling-filter{background:#f8fafc;border:1px solid #dbe3ef}.counseling-students .counseling-avatar{width:46px;height:58px;object-fit:cover;border-radius:.45rem;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1}.counseling-students table td{vertical-align:middle}.counseling-students .counseling-jk{font-size:.78rem}.counseling-students .male{background:#dbeafe;color:#1e40af}.counseling-students .female{background:#fce7f3;color:#be185d}@media(max-width:767.98px){.counseling-students .card-tools{float:none;margin-top:.5rem}.counseling-students .counseling-stat{min-height:auto}}
+</style>@stop
 @section('js')
-<script src="{{ asset('vendor/datatables/js/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('vendor/datatables/js/dataTables.bootstrap4.min.js') }}"></script>
-<script>
-$(function(){
-    const table=$('#konseling-table').DataTable({processing:true,serverSide:true,ajax:{url:@json(route('admin.catatan-konseling.index')),data:d=>{d.status=$('#filter-status').val();d.kategori=$('#filter-kategori').val()}},columns:[
-        {data:'DT_RowIndex',orderable:false,searchable:false},{data:'siswa_nama',name:'siswa_nama'},{data:'konselor_nama',name:'konselor_nama'},{data:'tanggal_konseling',name:'tanggal_konseling'},{data:'layanan',name:'jenis_konseling'},{data:'status_badge',name:'status'},{data:'kerahasiaan',name:'is_confidential',searchable:false},{data:'action',orderable:false,searchable:false}
-    ],order:[[3,'desc']],language:{url:'//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json'}});
-    $('#filter-status,#filter-kategori').on('change',()=>table.ajax.reload());
-    $('#reset-filter').on('click',()=>{$('#filter-status,#filter-kategori').val('');table.search('').ajax.reload()});
-    $(document).on('click','.btn-delete',function(){const id=$(this).data('id');Swal.fire({title:'Hapus catatan?',text:'Catatan yang dihapus tidak tampil lagi pada riwayat.',icon:'warning',showCancelButton:true,confirmButtonColor:'#dc3545',confirmButtonText:'Ya, hapus',cancelButtonText:'Batal'}).then(result=>{if(!result.isConfirmed)return;$.ajax({url:@json(route('admin.catatan-konseling.index'))+'/'+id,type:'DELETE',data:{_token:@json(csrf_token())},success:r=>{table.ajax.reload(null,false);toastr.success(r.message)},error:x=>toastr.error(x.responseJSON?.message||'Catatan gagal dihapus.')})})});
-});
-</script>
+<script src="{{ asset('vendor/datatables/js/jquery.dataTables.min.js') }}"></script><script src="{{ asset('vendor/datatables/js/dataTables.bootstrap4.min.js') }}"></script>
+<script>$(function(){const $class=$('#filter-kelas'),allClasses=$class.find('option[data-tingkat]').clone();const refreshClasses=()=>{const level=$('#filter-tingkat').val(),selected=$class.val();$class.find('option[data-tingkat]').remove();allClasses.filter(function(){return !level||$(this).data('tingkat').toString()===level}).clone().appendTo($class);if($class.find('option[value="'+selected+'"]').length)$class.val(selected);else $class.val('')};const table=$('#student-table').DataTable({processing:true,serverSide:true,pageLength:10,ajax:{url:@json(route('admin.catatan-konseling.index')),data:d=>{d.tingkat=$('#filter-tingkat').val();d.kelas_id=$class.val();d.status_pendampingan=$('#filter-status').val()}},columns:[{data:'DT_RowIndex',orderable:false,searchable:false},{data:'foto',orderable:false,searchable:false},{data:'identitas',name:'nama_lengkap'},{data:'jk',name:'jenis_kelamin',searchable:false},{data:'rombel',orderable:false,searchable:false},{data:'riwayat',orderable:false,searchable:false},{data:'status_bk',orderable:false,searchable:false},{data:'action',orderable:false,searchable:false}],order:[[2,'asc']],language:{url:'//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json'}});$('#filter-tingkat').on('change',()=>{refreshClasses();table.ajax.reload()});$class.add('#filter-status').on('change',()=>table.ajax.reload());$('#reset-filter').on('click',()=>{$('#filter-tingkat,#filter-status').val('');refreshClasses();$class.val('');table.search('').ajax.reload()});});</script>
 @stop

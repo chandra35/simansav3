@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKonseling;
 use App\Models\Gtk;
+use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,7 +17,7 @@ class CatatanKonselingController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view-catatan-konseling')->only(['index', 'show', 'searchStudents']);
+        $this->middleware('permission:view-catatan-konseling')->only(['index', 'records', 'show', 'searchStudents']);
         $this->middleware('permission:create-catatan-konseling')->only(['create', 'store']);
         $this->middleware('permission:edit-catatan-konseling')->only(['edit', 'update']);
         $this->middleware('permission:delete-catatan-konseling')->only('destroy');
@@ -24,6 +25,110 @@ class CatatanKonselingController extends Controller
     }
 
     public function index(Request $request)
+    {
+        $visibleIds = $this->visibleQuery()->select('catatan_konseling.id');
+        $students = Siswa::query()
+            ->where('status_siswa', 'aktif')
+            ->with([
+                'kelasTahunAktif:id,nama_kelas,tingkat',
+                'catatanKonseling' => fn ($q) => $q->whereIn('catatan_konseling.id', clone $visibleIds)
+                    ->latest('tanggal_konseling'),
+            ])
+            ->when($request->filled('tingkat'), fn ($q) => $q->whereHas(
+                'kelasTahunAktif', fn ($kelas) => $kelas->where('kelas.tingkat', $request->integer('tingkat'))
+            ))
+            ->when($request->filled('kelas_id'), fn ($q) => $q->whereHas(
+                'kelasTahunAktif', fn ($kelas) => $kelas->where('kelas.id', $request->kelas_id)
+            ))
+            ->when($request->status_pendampingan === 'belum', fn ($q) => $q->whereDoesntHave(
+                'catatanKonseling', fn ($record) => $record->whereIn('catatan_konseling.id', clone $visibleIds)
+            ))
+            ->when($request->status_pendampingan === 'aktif', fn ($q) => $q->whereHas(
+                'catatanKonseling', fn ($record) => $record->whereIn('catatan_konseling.id', clone $visibleIds)
+                    ->whereIn('status', ['baru', 'dalam_proses', 'perlu_rujukan'])
+            ))
+            ->when($request->status_pendampingan === 'tindak_lanjut', fn ($q) => $q->whereHas(
+                'catatanKonseling', fn ($record) => $record->whereIn('catatan_konseling.id', clone $visibleIds)
+                    ->whereNotNull('tanggal_tindak_lanjut')->where('status', '!=', 'selesai')
+            ));
+
+        if ($request->ajax()) {
+            return DataTables::eloquent($students)
+                ->addIndexColumn()
+                ->filter(function ($query) use ($request) {
+                    $keyword = trim((string) data_get($request->input('search'), 'value'));
+                    if ($keyword !== '') {
+                        $query->where(function ($search) use ($keyword) {
+                            $search->where('nama_lengkap', 'like', "%{$keyword}%")
+                                ->orWhere('nisn', 'like', "%{$keyword}%")
+                                ->orWhere('nis_lokal', 'like', "%{$keyword}%");
+                        });
+                    }
+                })
+                ->addColumn('foto', fn ($student) => '<img src="'.e($student->foto_profile_url).'" alt="Foto '.e($student->nama_lengkap).'" class="counseling-avatar">')
+                ->addColumn('identitas', function ($student) {
+                    $nisLokal = $student->nis_lokal ? '<br><small class="text-info">NIS Lokal '.e($student->nis_lokal).'</small>' : '';
+
+                    return '<strong class="text-dark">'.e($student->nama_lengkap).'</strong><br><small class="text-muted">NISN '.e($student->nisn ?: '-').'</small>'.$nisLokal;
+                })
+                ->addColumn('jk', fn ($student) => $student->jenis_kelamin === 'L'
+                    ? '<span class="badge counseling-jk male"><i class="fas fa-mars"></i> L</span>'
+                    : '<span class="badge counseling-jk female"><i class="fas fa-venus"></i> P</span>')
+                ->addColumn('rombel', function ($student) {
+                    $class = $student->kelasTahunAktif->first();
+                    if (! $class) {
+                        return '<span class="text-muted">Belum ada rombel aktif</span>';
+                    }
+
+                    return '<strong>'.e($class->nama_kelas).'</strong><br><small class="text-muted">Tingkat '.e($class->tingkat).'</small>';
+                })
+                ->addColumn('riwayat', function ($student) {
+                    $records = $student->catatanKonseling;
+                    $last = $records->first();
+                    if (! $last) {
+                        return '<span class="badge badge-light border">Belum ada layanan</span>';
+                    }
+
+                    return '<strong>'.$records->count().' layanan</strong><br><small class="text-muted">Terakhir '.$last->tanggal_konseling?->format('d/m/Y').'</small>';
+                })
+                ->addColumn('status_bk', function ($student) {
+                    $records = $student->catatanKonseling;
+                    $overdue = $records->first(fn ($record) => $record->tindak_lanjut_terlambat);
+                    if ($overdue) {
+                        return '<span class="badge badge-danger"><i class="fas fa-clock"></i> Tindak lanjut terlambat</span>';
+                    }
+                    $active = $records->first(fn ($record) => in_array($record->status, ['baru', 'dalam_proses', 'perlu_rujukan'], true));
+                    if ($active) {
+                        return '<span class="badge badge-'.$active->status_badge.'">'.e($active->status_label).'</span>';
+                    }
+
+                    return $records->isEmpty()
+                        ? '<span class="badge badge-secondary">Belum ditangani</span>'
+                        : '<span class="badge badge-success"><i class="fas fa-check"></i> Selesai</span>';
+                })
+                ->addColumn('action', fn ($student) => $this->studentActionButtons($student))
+                ->rawColumns(['foto', 'identitas', 'jk', 'rombel', 'riwayat', 'status_bk', 'action'])
+                ->toJson();
+        }
+
+        $activeClasses = Kelas::query()->where('is_active', true)
+            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+            ->orderBy('tingkat')->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'tingkat']);
+        $visibleRecords = $this->visibleQuery();
+        $activeStudents = Siswa::query()->where('status_siswa', 'aktif');
+        $handledStudentIds = (clone $visibleRecords)->distinct()->pluck('siswa_id');
+        $followUpStudentIds = (clone $visibleRecords)->perluTindakLanjut()->distinct()->pluck('siswa_id');
+        $stats = [
+            'siswa_aktif' => (clone $activeStudents)->count(),
+            'pernah_dilayani' => $handledStudentIds->count(),
+            'belum_dilayani' => (clone $activeStudents)->whereNotIn('id', $handledStudentIds)->count(),
+            'tindak_lanjut' => $followUpStudentIds->count(),
+        ];
+
+        return view('admin.catatan-konseling.index', compact('activeClasses', 'stats'));
+    }
+
+    public function records(Request $request)
     {
         $query = $this->visibleQuery()->with(['siswa.kelasTahunAktif', 'konselor', 'tahunPelajaran'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
@@ -69,7 +174,7 @@ class CatatanKonselingController extends Controller
             'selesai' => (clone $base)->where('status', 'selesai')->count(),
         ];
 
-        return view('admin.catatan-konseling.index', [
+        return view('admin.catatan-konseling.records', [
             'status' => CatatanKonseling::STATUS,
             'kategori' => CatatanKonseling::KATEGORI_MASALAH,
             'stats' => $stats,
@@ -97,9 +202,13 @@ class CatatanKonselingController extends Controller
         ])]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.catatan-konseling.create', $this->formData(new CatatanKonseling));
+        $selectedStudent = $request->filled('siswa_id')
+            ? Siswa::where('status_siswa', 'aktif')->with('kelasTahunAktif')->findOrFail($request->siswa_id)
+            : null;
+
+        return view('admin.catatan-konseling.create', $this->formData(new CatatanKonseling, $selectedStudent));
     }
 
     public function store(Request $request)
@@ -184,7 +293,7 @@ class CatatanKonselingController extends Controller
         ]);
     }
 
-    private function formData(CatatanKonseling $record): array
+    private function formData(CatatanKonseling $record, ?Siswa $selectedStudent = null): array
     {
         $counselors = Gtk::query()->where('jenis_ptk', 'Guru BK')
             ->whereHas('user', fn ($q) => $q->where('is_active', true))
@@ -198,6 +307,7 @@ class CatatanKonselingController extends Controller
             'jenis' => CatatanKonseling::JENIS_KONSELING,
             'kategori' => CatatanKonseling::KATEGORI_MASALAH,
             'status' => CatatanKonseling::STATUS,
+            'selectedStudent' => $selectedStudent,
         ];
     }
 
@@ -230,6 +340,19 @@ class CatatanKonselingController extends Controller
         }
         if (auth()->user()->can('delete-catatan-konseling')) {
             $buttons .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.e($record->id).'" title="Hapus"><i class="fas fa-trash"></i></button>';
+        }
+
+        return $buttons.'</div>';
+    }
+
+    private function studentActionButtons(Siswa $student): string
+    {
+        $buttons = '<div class="btn-group btn-group-sm">';
+        if (auth()->user()->can('report-catatan-konseling')) {
+            $buttons .= '<a href="'.route('admin.catatan-konseling.report-siswa', ['siswa_id' => $student->id]).'" class="btn btn-info" title="Lihat riwayat"><i class="fas fa-history"></i></a>';
+        }
+        if (auth()->user()->can('create-catatan-konseling')) {
+            $buttons .= '<a href="'.route('admin.catatan-konseling.create', ['siswa_id' => $student->id]).'" class="btn btn-primary" title="Catat konseling"><i class="fas fa-plus"></i> Catat</a>';
         }
 
         return $buttons.'</div>';

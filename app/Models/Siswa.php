@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use App\Helpers\StorageHelper;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasUuid;
 use App\Traits\HasActivityLog;
 use App\Traits\HasCreatedUpdatedBy;
-use Laravolt\Indonesia\Models\Province;
+use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
+use Laravolt\Indonesia\Models\Province;
 use Laravolt\Indonesia\Models\Village;
 
 class Siswa extends Model
 {
-    use HasUuid, HasActivityLog, HasCreatedUpdatedBy, SoftDeletes;
+    use HasActivityLog, HasCreatedUpdatedBy, HasUuid, SoftDeletes;
 
     protected $table = 'siswa';
 
@@ -112,6 +112,11 @@ class Siswa extends Model
         return $this->hasMany(DokumenSiswa::class);
     }
 
+    public function catatanKonseling()
+    {
+        return $this->hasMany(CatatanKonseling::class, 'siswa_id');
+    }
+
     public function nilaiSiswa()
     {
         return $this->hasMany(NilaiSiswa::class);
@@ -203,28 +208,28 @@ class Siswa extends Model
     public function kelas()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
-                    ->whereNull('siswa_kelas.deleted_at')
-                    ->withTimestamps();
+            ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+            ->whereNull('siswa_kelas.deleted_at')
+            ->withTimestamps();
     }
 
     public function kelasHistory()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
-                    ->whereNull('siswa_kelas.deleted_at')
-                    ->withTimestamps()
-                    ->orderByDesc('siswa_kelas.created_at');
+            ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+            ->whereNull('siswa_kelas.deleted_at')
+            ->withTimestamps()
+            ->orderByDesc('siswa_kelas.created_at');
     }
 
     public function kelasAktif()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
-                    ->whereNull('siswa_kelas.deleted_at')
-                    ->where('siswa_kelas.status', 'aktif')
-                    ->withTimestamps()
-                    ->orderByDesc('siswa_kelas.created_at');
+            ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+            ->whereNull('siswa_kelas.deleted_at')
+            ->where('siswa_kelas.status', 'aktif')
+            ->withTimestamps()
+            ->orderByDesc('siswa_kelas.created_at');
     }
 
     /**
@@ -234,14 +239,14 @@ class Siswa extends Model
     public function kelasTahunAktif()
     {
         return $this->belongsToMany(Kelas::class, 'siswa_kelas', 'siswa_id', 'kelas_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
-                    ->whereNull('siswa_kelas.deleted_at')
-                    ->where('siswa_kelas.status', 'aktif')
-                    ->where('kelas.is_active', true)
-                    ->whereIn('kelas.tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
-                    ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
-                    ->withTimestamps()
-                    ->orderByDesc('siswa_kelas.created_at');
+            ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+            ->whereNull('siswa_kelas.deleted_at')
+            ->where('siswa_kelas.status', 'aktif')
+            ->where('kelas.is_active', true)
+            ->whereIn('kelas.tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+            ->whereColumn('siswa_kelas.tahun_pelajaran_id', 'kelas.tahun_pelajaran_id')
+            ->withTimestamps()
+            ->orderByDesc('siswa_kelas.created_at');
     }
 
     public function siswaKelasRecords()
@@ -277,7 +282,7 @@ class Siswa extends Model
 
     public function isMutasi(): bool
     {
-        return in_array($this->asal_siswa, ['mutasi_masuk']) || 
+        return in_array($this->asal_siswa, ['mutasi_masuk']) ||
                $this->status_siswa === 'mutasi_keluar';
     }
 
@@ -342,7 +347,7 @@ class Siswa extends Model
         $bold = true;
         $rounded = false; // Gunakan square untuk konsistensi dengan foto upload
 
-        return "https://ui-avatars.com/api/?name={$name}&size={$size}&background={$background}&color={$color}&font-size={$fontSize}&bold=" . ($bold ? 'true' : 'false') . "&rounded=" . ($rounded ? 'true' : 'false');
+        return "https://ui-avatars.com/api/?name={$name}&size={$size}&background={$background}&color={$color}&font-size={$fontSize}&bold=".($bold ? 'true' : 'false').'&rounded='.($rounded ? 'true' : 'false');
     }
 
     public function getFotoProfilePathAttribute()
@@ -364,19 +369,19 @@ class Siswa extends Model
 
         $alamat = $this->alamat_siswa;
         if ($this->kelurahanSiswa) {
-            $alamat .= ', ' . $this->kelurahanSiswa->name;
+            $alamat .= ', '.$this->kelurahanSiswa->name;
         }
         if ($this->kecamatanSiswa) {
-            $alamat .= ', ' . $this->kecamatanSiswa->name;
+            $alamat .= ', '.$this->kecamatanSiswa->name;
         }
         if ($this->kabupatenSiswa) {
-            $alamat .= ', ' . $this->kabupatenSiswa->name;
+            $alamat .= ', '.$this->kabupatenSiswa->name;
         }
         if ($this->provinsiSiswa) {
-            $alamat .= ', ' . $this->provinsiSiswa->name;
+            $alamat .= ', '.$this->provinsiSiswa->name;
         }
         if ($this->kodepos_siswa) {
-            $alamat .= ' ' . $this->kodepos_siswa;
+            $alamat .= ' '.$this->kodepos_siswa;
         }
 
         return $alamat;
