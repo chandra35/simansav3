@@ -29,6 +29,7 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertContains('permasalahan', $model->getFillable());
         $this->assertContains('tanggal_tindak_lanjut', $model->getFillable());
         $this->assertContains('is_confidential', $model->getFillable());
+        $this->assertContains('teacher_notice', $model->getFillable());
         $this->assertSame(['baru', 'dalam_proses', 'selesai', 'perlu_rujukan'], array_keys(CatatanKonseling::STATUS));
     }
 
@@ -55,6 +56,7 @@ class CounselingModuleArchitectureTest extends TestCase
         $view = file_get_contents(resource_path('views/admin/catatan-konseling/index.blade.php'));
 
         $this->assertStringContainsString("where('status_siswa', 'aktif')", $controller);
+        $this->assertStringContainsString("->whereHas('kelasTahunAktif')", $controller);
         $this->assertStringContainsString("request->filled('tingkat')", $controller);
         $this->assertStringContainsString("request->filled('kelas_id')", $controller);
         $this->assertStringContainsString('filter-tingkat', $view);
@@ -78,5 +80,18 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('Orang Tua / Keluarga', $view);
         $this->assertStringContainsString('ALAMAT DOMISILI', $view);
         $this->assertStringContainsString('Riwayat Layanan Konseling', $view);
+    }
+
+    public function test_teacher_notice_is_separate_and_scoped_to_related_teachers(): void
+    {
+        $counselingForm = file_get_contents(resource_path('views/admin/catatan-konseling/_form.blade.php'));
+        $dashboardController = file_get_contents(app_path('Http/Controllers/Admin/GtkDashboardController.php'));
+        $studentRoutes = file_get_contents(base_path('routes/web.php'));
+
+        $this->assertStringContainsString('share_with_teachers', $counselingForm);
+        $this->assertStringContainsString('teacher_notice', $counselingForm);
+        $this->assertStringContainsString("where('gtk_id', \$gtk->id)", $dashboardController);
+        $this->assertStringContainsString("whereIn('kelas.id', \$relatedClassIds)", $dashboardController);
+        $this->assertStringNotContainsString('siswa/catatan-konseling', $studentRoutes);
     }
 }

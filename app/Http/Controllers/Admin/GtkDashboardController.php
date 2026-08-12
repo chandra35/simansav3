@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CatatanKonseling;
 use App\Models\Gtk;
+use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
@@ -22,7 +24,7 @@ class GtkDashboardController extends Controller
         $gtk = $user->gtk;
 
         // If GTK record doesn't exist, create one
-        if (!$gtk) {
+        if (! $gtk) {
             $gtk = Gtk::create([
                 'user_id' => $user->id,
                 'nama_lengkap' => $user->name,
@@ -39,7 +41,7 @@ class GtkDashboardController extends Controller
         }
 
         // Check if profile is incomplete
-        $needsCompletion = !$gtk->data_diri_completed || !$gtk->data_kepeg_completed;
+        $needsCompletion = ! $gtk->data_diri_completed || ! $gtk->data_kepeg_completed;
 
         // Get statistics for GTK
         $stats = [
@@ -65,6 +67,18 @@ class GtkDashboardController extends Controller
                 ->get()
             : collect();
         $isWaliKelas = $user->hasRole('Wali Kelas') || $waliKelasRombels->isNotEmpty();
+        $relatedClassIds = $waliKelasRombels->pluck('id');
+        if ($tahunAktif) {
+            $relatedClassIds = $relatedClassIds->merge(JadwalPelajaran::query()
+                ->where('tahun_pelajaran_id', $tahunAktif->id)->where('gtk_id', $gtk->id)
+                ->where('is_active', true)->pluck('kelas_id'))->unique()->values();
+        }
+        $teacherNotices = $relatedClassIds->isEmpty() ? collect() : CatatanKonseling::query()
+            ->with(['siswa.kelasTahunAktif'])
+            ->where('tahun_pelajaran_id', $tahunAktif?->id)
+            ->where('share_with_teachers', true)->whereNotNull('teacher_notice')
+            ->whereHas('siswa.kelasTahunAktif', fn ($query) => $query->whereIn('kelas.id', $relatedClassIds))
+            ->latest('tanggal_konseling')->limit(12)->get();
 
         return view('admin.gtk.dashboard', compact(
             'gtk',
@@ -72,7 +86,7 @@ class GtkDashboardController extends Controller
             'needsCompletion',
             'tahunAktif',
             'waliKelasRombels',
-            'isWaliKelas'
+            'isWaliKelas', 'teacherNotices'
         ));
     }
 
@@ -85,11 +99,11 @@ class GtkDashboardController extends Controller
         $completed = 0;
 
         // Data Diri fields (wajib)
-        $dataDiriFields = ['nama_lengkap', 'nik', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 
-                           'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'kelurahan_id', 'alamat'];
+        $dataDiriFields = ['nama_lengkap', 'nik', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
+            'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'kelurahan_id', 'alamat'];
         foreach ($dataDiriFields as $field) {
             $total++;
-            if (!empty($gtk->$field)) {
+            if (! empty($gtk->$field)) {
                 $completed++;
             }
         }
@@ -98,7 +112,7 @@ class GtkDashboardController extends Controller
         $dataKepegFields = ['status_kepegawaian', 'jabatan'];
         foreach ($dataKepegFields as $field) {
             $total++;
-            if (!empty($gtk->$field)) {
+            if (! empty($gtk->$field)) {
                 $completed++;
             }
         }

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKonseling;
+use App\Models\CatatanWaliKelas;
 use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -29,6 +31,7 @@ class CatatanKonselingController extends Controller
         $visibleIds = $this->visibleQuery()->select('catatan_konseling.id');
         $students = Siswa::query()
             ->where('status_siswa', 'aktif')
+            ->whereHas('kelasTahunAktif')
             ->with([
                 'kelasTahunAktif:id,nama_kelas,tingkat',
                 'catatanKonseling' => fn ($q) => $q->whereIn('catatan_konseling.id', clone $visibleIds)
@@ -115,7 +118,7 @@ class CatatanKonselingController extends Controller
             ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
             ->orderBy('tingkat')->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'tingkat']);
         $visibleRecords = $this->visibleQuery();
-        $activeStudents = Siswa::query()->where('status_siswa', 'aktif');
+        $activeStudents = Siswa::query()->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif');
         $handledStudentIds = (clone $visibleRecords)->distinct()->pluck('siswa_id');
         $followUpStudentIds = (clone $visibleRecords)->perluTindakLanjut()->distinct()->pluck('siswa_id');
         $stats = [
@@ -215,6 +218,7 @@ class CatatanKonselingController extends Controller
     {
         $data = $this->validated($request);
         $data['is_confidential'] = $request->boolean('is_confidential');
+        $data['share_with_teachers'] = $request->boolean('share_with_teachers');
         $data['created_by'] = auth()->id();
         $record = CatatanKonseling::create($data);
 
@@ -247,6 +251,7 @@ class CatatanKonselingController extends Controller
         $this->ensureVisible($catatanKonseling);
         $data = $this->validated($request);
         $data['is_confidential'] = $request->boolean('is_confidential');
+        $data['share_with_teachers'] = $request->boolean('share_with_teachers');
         $catatanKonseling->update($data);
 
         return redirect()->route('admin.catatan-konseling.show', $catatanKonseling)
@@ -294,6 +299,8 @@ class CatatanKonselingController extends Controller
             'status' => ['required', Rule::in(array_keys(CatatanKonseling::STATUS))],
             'rujukan_ke' => ['nullable', 'required_if:status,perlu_rujukan', 'string', 'max:255'],
             'is_confidential' => ['nullable', 'boolean'],
+            'share_with_teachers' => ['nullable', 'boolean'],
+            'teacher_notice' => ['nullable', 'required_if:share_with_teachers,1', 'string', 'max:1000'],
         ]);
     }
 
@@ -312,6 +319,7 @@ class CatatanKonselingController extends Controller
             'kategori' => CatatanKonseling::KATEGORI_MASALAH,
             'status' => CatatanKonseling::STATUS,
             'selectedStudent' => $selectedStudent,
+            'studentContext' => $selectedStudent ? $this->studentContext($selectedStudent) : null,
         ];
     }
 
@@ -360,5 +368,29 @@ class CatatanKonselingController extends Controller
         }
 
         return $buttons.'</div>';
+    }
+
+    private function studentContext(Siswa $student): array
+    {
+        $student->loadMissing(['user', 'ortu', 'kelasTahunAktif.waliKelas']);
+        $yearId = TahunPelajaran::query()->active()->value('id');
+        $subject = DB::table('absensi_siswa_records as records')
+            ->join('absensi_siswa_sessions as sessions', 'sessions.id', '=', 'records.session_id')
+            ->whereNull('records.deleted_at')->whereNull('sessions.deleted_at')
+            ->where('sessions.status', 'final')->where('sessions.tahun_pelajaran_id', $yearId)
+            ->where('records.siswa_id', $student->id)
+            ->selectRaw('COUNT(*) total, SUM(records.status = ?) hadir, SUM(records.status = ?) sakit, SUM(records.status = ?) izin, SUM(records.status = ?) alpa, SUM(records.status = ?) terlambat', ['hadir', 'sakit', 'izin', 'alpa', 'terlambat'])
+            ->first();
+        $daily = DB::table('absensis')->whereNull('deleted_at')->where('user_type', 'siswa')
+            ->where('tahun_pelajaran_id', $yearId)->where('user_id', $student->user_id)
+            ->selectRaw('COUNT(*) total, SUM(status = ?) hadir, SUM(status = ?) sakit, SUM(status = ?) izin, SUM(status = ?) alpa, SUM(status = ?) terlambat', ['hadir', 'sakit', 'izin', 'alpa', 'terlambat'])
+            ->first();
+
+        return [
+            'subjectAttendance' => $subject,
+            'dailyAttendance' => $daily,
+            'waliNotes' => CatatanWaliKelas::with(['penulis', 'kelas'])->where('siswa_id', $student->id)
+                ->where('tahun_pelajaran_id', $yearId)->latest('tanggal')->limit(8)->get(),
+        ];
     }
 }

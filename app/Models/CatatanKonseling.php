@@ -19,12 +19,14 @@ class CatatanKonseling extends Model
         'waktu_mulai', 'waktu_selesai', 'jenis_konseling', 'kategori_masalah',
         'permasalahan', 'hasil_konseling', 'rekomendasi', 'tindak_lanjut',
         'tanggal_tindak_lanjut', 'status', 'rujukan_ke', 'is_confidential', 'created_by',
+        'share_with_teachers', 'teacher_notice',
     ];
 
     protected $casts = [
         'tanggal_konseling' => 'date',
         'tanggal_tindak_lanjut' => 'date',
         'is_confidential' => 'boolean',
+        'share_with_teachers' => 'boolean',
     ];
 
     public const JENIS_KONSELING = [

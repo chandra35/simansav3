@@ -6,6 +6,9 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan modul Bimbingan & Konseling
 
+- Populasi “Siswa Aktif” BK disamakan dengan Data Siswa: hanya siswa berstatus aktif yang memiliki rombel aktif pada tahun pelajaran berjalan; siswa aktif tanpa rombel tidak lagi menggelembungkan angka utama.
+- Form catatan baru dilengkapi konteks siswa berupa foto, identitas, rombel/wali kelas, kontak keluarga, rekap absensi harian dan mapel, serta catatan guru/wali kelas tahun aktif.
+- BK dapat menulis notice pendampingan terpisah untuk dibagikan kepada wali kelas dan guru mapel yang benar-benar mengajar rombel siswa. Dashboard GTK hanya menampilkan notice tersebut; detail asesmen dan catatan rahasia tidak dibuka, dan tidak ada jalur notice ke akun siswa.
 - Halaman Riwayat Konseling menampilkan foto potret serta ringkasan identitas pribadi, informasi akademik, wali kelas, kontak, data ayah/ibu, kondisi keluarga, dan alamat domisili agar Guru BK memahami konteks siswa sebelum membaca riwayat layanan.
 - Asset DataTables pada direktori siswa dan daftar catatan disamakan dengan sumber yang dipakai halaman Data Siswa; tabel yang sebelumnya berhenti karena file vendor lokal tidak tersedia kini dapat memuat data AJAX.
 - Halaman utama BK kini berupa direktori siswa aktif seperti Data Siswa, dengan foto, NISN/NIS Lokal, jenis kelamin, rombel, jumlah riwayat, status pendampingan, dan aksi cepat untuk mencatat atau membuka riwayat.

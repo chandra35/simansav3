@@ -52,6 +52,13 @@
         </div>
     @endif
 
+    @if($teacherNotices->isNotEmpty())
+        <div class="card card-outline card-warning gtk-account-dashboard__notices">
+            <div class="card-header"><h3 class="card-title"><i class="fas fa-bell text-warning mr-1"></i> Notice Pendampingan Siswa</h3><div class="card-tools"><span class="badge badge-warning">{{ $teacherNotices->count() }} notice</span></div></div>
+            <div class="card-body"><div class="alert alert-light border py-2"><small><i class="fas fa-shield-alt text-primary mr-1"></i>Informasi internal untuk mendukung pembelajaran. Isi asesmen dan catatan rahasia BK tidak ditampilkan.</small></div><div class="row">@foreach($teacherNotices as $notice)<div class="col-lg-6 mb-3"><div class="gtk-account-dashboard__notice"><div class="d-flex"><img src="{{ $notice->siswa?->foto_profile_url }}" alt="Foto {{ $notice->siswa?->nama_lengkap }}"><div class="ml-2"><strong>{{ $notice->siswa?->nama_lengkap ?? '-' }}</strong><small>{{ $notice->siswa?->kelasTahunAktif->first()?->nama_kelas ?? '-' }} · {{ $notice->tanggal_konseling?->format('d/m/Y') }}</small></div></div><p>{{ $notice->teacher_notice }}</p></div></div>@endforeach</div></div>
+        </div>
+    @endif
+
     <div class="card card-outline card-primary gtk-account-dashboard__profile">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-id-card-alt mr-1"></i> Ringkasan Akun</h3>
@@ -159,6 +166,11 @@
     .gtk-account-dashboard__detail strong, .gtk-account-dashboard__rombel-meta strong { display:block; overflow-wrap:anywhere; color:#0f172a; font-size:.88rem; }
     .gtk-account-dashboard__actions { display:flex; flex-direction:column; gap:.6rem; min-width:172px; }
     .gtk-account-dashboard__rombel { padding:1rem; border:1px solid #e2e8f0; border-radius:12px; }
+    .gtk-account-dashboard__notice { height:100%; padding:.75rem; border:1px solid #fde68a; border-radius:10px; background:#fffbeb; }
+    .gtk-account-dashboard__notice img { width:42px; height:52px; object-fit:cover; border-radius:6px; }
+    .gtk-account-dashboard__notice strong, .gtk-account-dashboard__notice small { display:block; }
+    .gtk-account-dashboard__notice small { color:#64748b; font-size:.72rem; }
+    .gtk-account-dashboard__notice p { margin:.6rem 0 0; color:#334155; font-size:.82rem; white-space:pre-line; }
     .gtk-account-dashboard__alert { border-radius:12px; }
     @media (max-width:991.98px) {
         .gtk-account-dashboard__details { grid-template-columns:repeat(2,minmax(0,1fr)); }
