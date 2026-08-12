@@ -13,6 +13,9 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 - Perubahan dokumentasi atau test saja diterapkan tanpa maintenance, dan deploy bersamaan dicegah menggunakan file lock di `/tmp` agar worktree tetap bersih.
 - Setiap tahap, total deploy, dan durasi maintenance kini dicatat agar bottleneck mudah ditemukan.
 - Script berjalan dari snapshot sementara agar aman saat `update-simansa.sh` sendiri ikut diperbarui.
+- Deklarasi `mbstring` ganda pada PHP 8.3 produksi dinonaktifkan dengan backup konfigurasi; ekstensi tetap aktif satu kali dan konfigurasi PHP-FPM tervalidasi.
+- Ekstensi SNMP pada PHP lokal dinonaktifkan karena tidak digunakan SIMANSA, sehingga warning pencarian MIB tidak lagi memenuhi output pengujian.
+- Pengukuran produksi setelah optimasi mencatat `optimize:clear` 1,146 detik, pembuatan cache 1,963 detik, dan total maintenance 5,239 detik.
 
 File terkait:
 
