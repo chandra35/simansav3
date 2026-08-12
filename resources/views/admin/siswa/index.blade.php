@@ -1354,6 +1354,16 @@ $(document).ready(function() {
             });
     });
 
+    // Pembungkus tabel perlu menjadi visible sementara agar dropdown baris terakhir
+    // tidak terpotong oleh area horizontal-scroll DataTables.
+    $('#siswa-table')
+        .on('show.bs.dropdown', '.simansa-siswa-action-group', function() {
+            $(this).closest('.simansa-table-scroll').addClass('simansa-action-dropdown-open');
+        })
+        .on('hidden.bs.dropdown', '.simansa-siswa-action-group', function() {
+            $(this).closest('.simansa-table-scroll').removeClass('simansa-action-dropdown-open');
+        });
+
     // Toggle status siswa sudah masuk EMIS
     $(document).on('click', '.btn-toggle-emis', function() {
         const btn = $(this);

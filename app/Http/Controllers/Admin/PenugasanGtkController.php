@@ -7,12 +7,11 @@ use App\Models\Gtk;
 use App\Models\JenisPenugasanGtk;
 use App\Models\Kelas;
 use App\Models\PenugasanGtk;
-use App\Models\TugasTambahan;
 use App\Models\TahunPelajaran;
+use App\Models\TugasTambahan;
 use App\Services\GtkWorkloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -35,8 +34,7 @@ class PenugasanGtkController extends Controller
                 $term = trim($request->q);
                 $q->where(fn ($search) => $search
                     ->whereHas('gtk', fn ($gtk) => $gtk->where('nama_lengkap', 'like', "%{$term}%")->orWhere('nip', 'like', "%{$term}%"))
-                    ->orWhere('unit_nama', 'like', "%{$term}%")
-                    ->orWhere('nomor_sk', 'like', "%{$term}%"));
+                    ->orWhere('unit_nama', 'like', "%{$term}%"));
             })
             ->latest('mulai_tugas');
 
@@ -45,14 +43,17 @@ class PenugasanGtkController extends Controller
         $gtks = Gtk::query()->with('user')
             ->whereHas('user', fn ($q) => $q->where('is_active', true))
             ->where(fn ($q) => $q->where('jenis_ptk', 'like', '%Guru%')->orWhere('kategori_ptk', 'like', '%Guru%'))
-            ->orderBy('nama_lengkap')->get(['id', 'user_id', 'nama_lengkap', 'nip', 'jenis_ptk']);
+            ->orderBy('nama_lengkap')->get([
+                'id', 'user_id', 'nama_lengkap', 'nip', 'jenis_ptk', 'kategori_ptk',
+                'jenis_kelamin', 'foto_profile',
+            ]);
 
         $base = PenugasanGtk::query()->when($year, fn ($q) => $q->where('tahun_pelajaran_id', $year->id));
         $stats = [
             'aktif' => (clone $base)->where('status', 'active')->count(),
             'gtk' => (clone $base)->where('status', 'active')->distinct('gtk_id')->count('gtk_id'),
             'utama' => (clone $base)->where('status', 'active')->whereHas('jenis', fn ($q) => $q->whereIn('kategori', ['utama', 'penuh']))->count(),
-            'perlu_sk' => (clone $base)->where('status', 'active')->where(fn ($q) => $q->whereNull('nomor_sk')->orWhereNull('tanggal_sk'))->count(),
+            'jtm' => (clone $base)->where('status', 'active')->sum('ekuivalensi_jtm'),
         ];
 
         return view('admin.penugasan-gtk.index', compact('assignments', 'types', 'gtks', 'years', 'year', 'stats'));
@@ -87,10 +88,7 @@ class PenugasanGtkController extends Controller
         $gtk = Gtk::with('user')->findOrFail($data['gtk_id']);
         $this->guardAssignmentRules($data, $type, $gtk);
 
-        DB::transaction(function () use ($request, $data, $type, $gtk) {
-            if ($request->hasFile('file_sk')) {
-                $data['file_sk'] = $request->file('file_sk')->store('penugasan-gtk/sk', 'public');
-            }
+        DB::transaction(function () use ($data, $type, $gtk) {
             $data['ekuivalensi_jtm'] = $type->ekuivalensi_jtm;
             $data['status'] = 'active';
             $data['role_diberikan_otomatis'] = false;
@@ -116,13 +114,7 @@ class PenugasanGtkController extends Controller
         $gtk = Gtk::with('user')->findOrFail($data['gtk_id']);
         $this->guardAssignmentRules($data, $type, $gtk, $penugasanGtk);
 
-        DB::transaction(function () use ($request, $data, $type, $gtk, $penugasanGtk) {
-            if ($request->hasFile('file_sk')) {
-                if ($penugasanGtk->file_sk) {
-                    Storage::disk('public')->delete($penugasanGtk->file_sk);
-                }
-                $data['file_sk'] = $request->file('file_sk')->store('penugasan-gtk/sk', 'public');
-            }
+        DB::transaction(function () use ($data, $type, $gtk, $penugasanGtk) {
             $data['ekuivalensi_jtm'] = $penugasanGtk->ekuivalensi_jtm;
             if ($type->role && $gtk->user && ! $gtk->user->hasRole($type->role)) {
                 $gtk->user->assignRole($type->role);
@@ -138,7 +130,6 @@ class PenugasanGtkController extends Controller
     {
         $this->authorize('end-penugasan-gtk');
         $data = $request->validate([
-            'selesai_tugas' => ['required', 'date', 'after_or_equal:'.$penugasanGtk->mulai_tugas->toDateString()],
             'alasan' => ['required', 'string', 'max:500'],
         ]);
 
@@ -146,13 +137,13 @@ class PenugasanGtkController extends Controller
             $penugasanGtk->load(['jenis.role', 'gtk.user']);
             $penugasanGtk->update([
                 'status' => 'ended',
-                'selesai_tugas' => $data['selesai_tugas'],
+                'selesai_tugas' => today()->lt($penugasanGtk->mulai_tugas) ? $penugasanGtk->mulai_tugas : today(),
                 'keterangan' => trim(($penugasanGtk->keterangan ? $penugasanGtk->keterangan."\n" : '').'Diakhiri: '.$data['alasan']),
             ]);
             $this->removeAutomaticallyGrantedRole($penugasanGtk);
         });
 
-        return back()->with('success', 'Penugasan telah diakhiri. Histori dan SK tetap tersimpan.');
+        return back()->with('success', 'Penugasan telah diakhiri dan historinya tetap tersimpan.');
     }
 
     public function destroy(PenugasanGtk $penugasanGtk)
@@ -199,17 +190,17 @@ class PenugasanGtkController extends Controller
             'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id', ...($assignment ? [Rule::in([$assignment->tahun_pelajaran_id])] : [])],
             'semester' => ['nullable', 'integer', Rule::in([1, 2])],
             'unit_nama' => [$type?->jenis_unit ? 'required' : 'nullable', 'nullable', 'string', 'max:150'],
-            'mulai_tugas' => ['required', 'date'],
-            'selesai_tugas' => ['nullable', 'date', 'after_or_equal:mulai_tugas'],
-            'nomor_sk' => [$type?->wajib_sk ? 'required' : 'nullable', 'nullable', 'string', 'max:150'],
-            'tanggal_sk' => [$type?->wajib_sk ? 'required' : 'nullable', 'nullable', 'date'],
-            'file_sk' => [$type?->wajib_sk && ! $assignment?->file_sk ? 'required' : 'nullable', 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
             'keterangan' => ['nullable', 'string', 'max:1000'],
         ]);
         if ($assignment && $data['gtk_id'] !== $assignment->gtk_id) {
             throw ValidationException::withMessages(['gtk_id' => 'GTK pada histori penugasan tidak dapat diganti. Akhiri penugasan lama dan buat penugasan baru.']);
         }
         $data['semester'] = $data['semester'] ?? null;
+        $year = TahunPelajaran::findOrFail($data['tahun_pelajaran_id']);
+        $data['mulai_tugas'] = $assignment?->mulai_tugas
+            ?? $year->tanggal_mulai
+            ?? now()->setDate((int) $year->tahun_mulai, 7, 1)->startOfDay();
+        $data['selesai_tugas'] = $assignment?->selesai_tugas;
 
         return $data;
     }
@@ -291,7 +282,6 @@ class PenugasanGtkController extends Controller
             'minimal_jtm_mengajar' => ['required', 'integer', 'min:0', 'max:40'],
             'jenis_unit' => ['nullable', 'string', 'max:40'],
             'maks_pemegang' => ['nullable', 'integer', 'min:1', 'max:99'],
-            'wajib_sk' => ['nullable', 'boolean'],
             'dapat_dirangkap' => ['nullable', 'boolean'],
             'dasar_hukum' => ['nullable', 'string', 'max:255'],
             'berlaku_mulai' => ['nullable', 'date'],

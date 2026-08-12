@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('minimal_jtm_mengajar')->default(0);
             $table->string('jenis_unit', 40)->nullable();
             $table->unsignedTinyInteger('maks_pemegang')->nullable();
-            $table->boolean('wajib_sk')->default(true);
+            $table->boolean('wajib_sk')->default(false);
             $table->boolean('dapat_dirangkap')->default(false);
             $table->unsignedBigInteger('role_id')->nullable();
             $table->string('dasar_hukum')->nullable();
@@ -96,7 +96,7 @@ return new class extends Migration
                 'minimal_jtm_mengajar' => $minimum,
                 'jenis_unit' => $unit,
                 'maks_pemegang' => $maximum,
-                'wajib_sk' => $requiresSk,
+                'wajib_sk' => false,
                 'dapat_dirangkap' => $stackable,
                 'role_id' => $roleId,
                 'dasar_hukum' => 'KMA Nomor 736 Tahun 2026',

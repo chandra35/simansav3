@@ -2579,6 +2579,11 @@ a {
     transition: opacity .18s ease;
 }
 
+/* Izinkan menu aksi tabel keluar dari area scroll saat sedang dibuka. */
+.simansa-action-dropdown-open {
+    overflow: visible !important;
+}
+
 .simansa-gtk-management .simansa-gtk-table-wrap .dataTables_wrapper {
     width: 100%;
 }

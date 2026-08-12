@@ -48,4 +48,29 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
         $this->assertStringContainsString("'route' => 'admin.penugasan-gtk.index'", $menu);
         $this->assertStringContainsString("'route' => 'admin.penugasan-gtk.workload'", $menu);
     }
+
+    public function test_assignment_form_is_period_based_without_sk_inputs(): void
+    {
+        $view = file_get_contents(resource_path('views/admin/penugasan-gtk/index.blade.php'));
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/PenugasanGtkController.php'));
+
+        $this->assertStringContainsString('id="assignmentTeacher"', $view);
+        $this->assertStringContainsString('templateResult:teacherOption', $view);
+        $this->assertStringNotContainsString('name="nomor_sk"', $view);
+        $this->assertStringNotContainsString('name="tanggal_sk"', $view);
+        $this->assertStringNotContainsString('name="file_sk"', $view);
+        $this->assertStringNotContainsString("'nomor_sk' => [", $controller);
+        $this->assertStringNotContainsString("'file_sk' => [", $controller);
+    }
+
+    public function test_student_and_gtk_action_dropdowns_escape_scroll_wrappers(): void
+    {
+        $studentView = file_get_contents(resource_path('views/admin/siswa/index.blade.php'));
+        $gtkView = file_get_contents(resource_path('views/admin/gtk/index.blade.php'));
+        $styles = file_get_contents(public_path('css/custom-compact.css'));
+
+        $this->assertStringContainsString('simansa-action-dropdown-open', $studentView);
+        $this->assertStringContainsString('simansa-action-dropdown-open', $gtkView);
+        $this->assertStringContainsString('.simansa-action-dropdown-open', $styles);
+    }
 }

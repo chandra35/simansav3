@@ -9,12 +9,14 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 - Penugasan kepegawaian kini dipisahkan dari role akses aplikasi melalui master `jenis_penugasan_gtk` dan histori `penugasan_gtk`; tabel tugas tambahan lama tetap dipertahankan sebagai lapisan kompatibilitas.
 - Modul **Manajemen Data > GTK & Penugasan** berisi Data GTK, Penugasan GTK, dan Beban Kerja GTK sehingga sidebar serta permission matrix mengikuti substansi modul.
 - Penugasan mendukung Kepala Madrasah, Waka per bidang, Kepala Laboratorium, Kepala Perpustakaan, Wali Kelas, Pembina OSIM/ekstrakurikuler, koordinator, dan guru piket; standar dapat diubah untuk penugasan baru tanpa mengubah snapshot JTM histori.
-- Form penugasan menyimpan guru, unit/bidang, tahun pelajaran, semester, periode, nomor/tanggal/dokumen SK, dasar hukum, ekuivalensi, status, dan audit pengguna.
+- Form penugasan kini ringkas: guru, jenis tugas, unit/bidang, tahun pelajaran, semester, dan keterangan. Nomor SK, tanggal SK, tanggal mulai/selesai, serta dokumen SK tidak lagi diminta; periode internal mengikuti tahun pelajaran agar kompatibilitas histori tetap aman.
+- Pemilih guru menggunakan Select2 yang dapat dicari serta menampilkan foto, nama, NIP, dan jenis PTK. Daftarnya tetap dibatasi pada guru dengan akun aktif.
 - Validasi mencegah duplikasi unit, rangkap tugas utama, penugasan guru nonaktif, serta kelebihan jumlah Waka berdasarkan jumlah rombel.
 - Rekap beban kerja memisahkan JTM mengajar aktual dari jadwal dan JTM ekuivalensi. Deteksi lama berdasarkan teks bebas kolom `jabatan` sudah dihapus.
 - Kepala Madrasah lama dimigrasikan tanpa mengubah role atau data sumber; pengelolaannya tidak lagi tampil di Pengaturan Aplikasi dan helper tanda tangan tetap membaca modul baru dengan fallback aman ke data lama.
 - Permission granular tersedia untuk melihat, membuat, mengubah, mengakhiri, mengarsipkan penugasan, mengelola master standar, dan melihat beban kerja. Super Admin/Admin mendapat akses awal; Operator mendapat akses baca.
 - Aksi Data GTK sekarang menyediakan pintasan **Beban kerja & penugasan**.
+- Dropdown aksi pada Data GTK dan Data Siswa tidak lagi terpotong pembungkus tabel ketika hasil pencarian hanya memuat sedikit baris.
 
 File terkait:
 
@@ -25,6 +27,7 @@ File terkait:
 - `resources/views/admin/penugasan-gtk/`
 - `database/migrations/2026_08_12_170000_create_gtk_assignment_module.php`
 - `database/migrations/2026_08_12_170100_register_gtk_assignment_permissions.php`
+- `database/migrations/2026_08_12_173000_disable_sk_requirement_for_gtk_assignments.php`
 - `config/adminlte.php`
 - `tests/Feature/Admin/GtkAssignmentModuleArchitectureTest.php`
 

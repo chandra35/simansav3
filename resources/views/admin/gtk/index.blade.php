@@ -492,6 +492,10 @@ $(document).ready(function() {
         })
         .on('show.bs.dropdown', '.simansa-gtk-action-menu', function() {
             $(this).find('[data-tooltip="true"]').tooltip('hide');
+            $gtkTableWrap.addClass('simansa-action-dropdown-open');
+        })
+        .on('hidden.bs.dropdown', '.simansa-gtk-action-menu', function() {
+            $gtkTableWrap.removeClass('simansa-action-dropdown-open');
         });
 
     let gtkTable = $('#gtk-table').DataTable({

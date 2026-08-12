@@ -336,7 +336,7 @@ class GtkController extends Controller
             .' data-workload-url="'.e(route('admin.penugasan-gtk.workload', ['gtk_id' => $item->id])).'"'
             .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
-            .' data-toggle="dropdown" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
+            .' data-toggle="dropdown" data-boundary="viewport" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
             .' aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>'
             .'<div class="dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown">'
             .implode('<div class="dropdown-divider"></div>', array_map(fn ($group) => implode('', $group), $menus))
