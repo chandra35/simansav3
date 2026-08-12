@@ -4,7 +4,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=cookie,htt
 
 ## Isi Paket
 
-- `login.html` - halaman login profesional, responsif, dengan panduan akun siswa/GTK/tamu, toggle password, avatar, dan animasi ringan.
+- `login.html` - halaman login profesional dan responsif dengan toggle password, avatar, serta animasi sambutan ringan.
 - `alogin.html` - notifikasi login berhasil dan pembuka halaman status pada tab baru.
 - `status.html` - halaman status setelah login.
 - `logout.html` - halaman logout.

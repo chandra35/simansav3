@@ -198,6 +198,8 @@ body {
   backdrop-filter: blur(20px);
   position: relative;
   z-index: 1;
+  transform-origin: center;
+  animation: portalWelcomeShake .72s cubic-bezier(.22,.8,.36,1) both;
 }
 
 .portal-top {
@@ -548,7 +550,7 @@ body {
 }
 
 .input-shell span {
-  width: 62px;
+  width: 92px;
   margin-left: 6px;
   border-radius: 12px;
   padding: 8px 0;
@@ -645,39 +647,6 @@ body {
   color: #3150a8;
   font-size: .78rem;
   font-weight: 850;
-}
-
-.login-guide {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-  margin-top: 14px;
-}
-
-.login-guide div {
-  min-width: 0;
-  border: 1px solid #dce8fb;
-  border-radius: 13px;
-  padding: 9px 7px;
-  text-align: center;
-  background: #f7faff;
-}
-
-.login-guide strong,
-.login-guide span {
-  display: block;
-}
-
-.login-guide strong {
-  color: #2749a3;
-  font-size: .73rem;
-}
-
-.login-guide span {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: .65rem;
-  line-height: 1.25;
 }
 
 .security-note {
@@ -826,6 +795,15 @@ body {
 }
 
 @keyframes buttonSpin { to { transform: rotate(360deg); } }
+
+@keyframes portalWelcomeShake {
+  0% { opacity: 0; transform: translateY(18px) scale(.97) rotate(0); }
+  34% { opacity: 1; transform: translateY(0) scale(1) rotate(-1.3deg); }
+  54% { transform: rotate(1deg); }
+  72% { transform: rotate(-.45deg); }
+  88% { transform: rotate(.2deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
 
 .help-box span {
   display: block;
@@ -1112,9 +1090,6 @@ body {
     text-align: center;
   }
 
-  .login-guide {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
