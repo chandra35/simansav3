@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CatatanKonseling;
 use App\Models\CatatanWaliKelas;
 use App\Models\Gtk;
+use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
 
 class CatatanKonselingController extends Controller
@@ -188,7 +190,7 @@ class CatatanKonselingController extends Controller
     {
         $term = trim((string) $request->input('q'));
 
-        $students = Siswa::query()->where('status_siswa', 'aktif')
+        $students = $this->availableStudentsQuery()
             ->with('kelasTahunAktif:id,nama_kelas')
             ->when($term !== '', fn ($q) => $q->where(function ($sub) use ($term) {
                 $sub->where('nama_lengkap', 'like', "%{$term}%")
@@ -208,7 +210,7 @@ class CatatanKonselingController extends Controller
     public function create(Request $request)
     {
         $selectedStudent = $request->filled('siswa_id')
-            ? Siswa::where('status_siswa', 'aktif')->with('kelasTahunAktif')->findOrFail($request->siswa_id)
+            ? $this->availableStudentsQuery()->with('kelasTahunAktif')->findOrFail($request->siswa_id)
             : null;
 
         return view('admin.catatan-konseling.create', $this->formData(new CatatanKonseling, $selectedStudent));
@@ -249,7 +251,7 @@ class CatatanKonselingController extends Controller
     public function update(Request $request, CatatanKonseling $catatanKonseling)
     {
         $this->ensureVisible($catatanKonseling);
-        $data = $this->validated($request);
+        $data = $this->validated($request, $catatanKonseling);
         $data['is_confidential'] = $request->boolean('is_confidential');
         $data['share_with_teachers'] = $request->boolean('share_with_teachers');
         $catatanKonseling->update($data);
@@ -280,16 +282,14 @@ class CatatanKonselingController extends Controller
         return view('admin.catatan-konseling.report-siswa', compact('student', 'records'));
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?CatatanKonseling $record = null): array
     {
-        return $request->validate([
+        $isAdmin = $this->isCounselingAdmin();
+        $data = $request->validate([
             'siswa_id' => ['required', Rule::exists('siswa', 'id')->where('status_siswa', 'aktif')],
             'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
-            'konselor_id' => ['required', Rule::exists('gtks', 'id')->where('jenis_ptk', 'Guru BK')],
+            'konselor_id' => [$isAdmin ? 'required' : 'nullable', 'exists:gtks,id'],
             'tanggal_konseling' => ['required', 'date'],
-            'waktu_mulai' => ['nullable', 'date_format:H:i'],
-            'waktu_selesai' => ['nullable', 'date_format:H:i', 'after:waktu_mulai'],
-            'jenis_konseling' => ['required', Rule::in(array_keys(CatatanKonseling::JENIS_KONSELING))],
             'kategori_masalah' => ['required', Rule::in(array_keys(CatatanKonseling::KATEGORI_MASALAH))],
             'permasalahan' => ['required', 'string', 'max:10000'],
             'hasil_konseling' => ['nullable', 'string', 'max:10000'],
@@ -302,25 +302,93 @@ class CatatanKonselingController extends Controller
             'share_with_teachers' => ['nullable', 'boolean'],
             'teacher_notice' => ['nullable', 'required_if:share_with_teachers,1', 'string', 'max:1000'],
         ]);
+
+        if (! $record || $data['siswa_id'] !== $record->siswa_id) {
+            if (! $this->availableStudentsQuery()->whereKey($data['siswa_id'])->exists()) {
+                throw ValidationException::withMessages([
+                    'siswa_id' => 'Siswa tidak termasuk dalam rombel aktif yang Anda ampu pada jadwal pelajaran.',
+                ]);
+            }
+        }
+
+        if ($isAdmin) {
+            if (! $this->counselorsQuery()->whereKey($request->konselor_id)->exists()) {
+                throw ValidationException::withMessages([
+                    'konselor_id' => 'Konselor harus memiliki role BK atau profil GTK berjenis Guru BK.',
+                ]);
+            }
+            $data['konselor_id'] = $request->konselor_id;
+        } elseif ($record) {
+            $data['konselor_id'] = $record->konselor_id;
+        } else {
+            $gtk = $request->user()->gtk;
+            if (! $gtk || (! $request->user()->hasRole('BK') && $gtk->jenis_ptk !== 'Guru BK')) {
+                throw ValidationException::withMessages([
+                    'konselor_id' => 'Akun BK belum terhubung dengan profil GTK berjenis Guru BK.',
+                ]);
+            }
+            $data['konselor_id'] = $gtk->id;
+        }
+
+        if (! $record) {
+            $data['jenis_konseling'] = 'individual';
+            $data['waktu_mulai'] = null;
+            $data['waktu_selesai'] = null;
+        }
+
+        return $data;
     }
 
     private function formData(CatatanKonseling $record, ?Siswa $selectedStudent = null): array
     {
-        $counselors = Gtk::query()->where('jenis_ptk', 'Guru BK')
-            ->whereHas('user', fn ($q) => $q->where('is_active', true))
-            ->when($record->konselor_id, fn ($q) => $q->orWhereKey($record->konselor_id))
+        $isAdmin = $this->isCounselingAdmin();
+        $counselors = $this->counselorsQuery()
+            ->when(! $isAdmin, fn ($q) => $q->whereKey($record->konselor_id ?: auth()->user()->gtk?->id))
             ->orderBy('nama_lengkap')->get();
 
         return [
             'catatanKonseling' => $record,
             'tahunPelajaran' => TahunPelajaran::latest('tahun_mulai')->get(),
             'konselor' => $counselors,
-            'jenis' => CatatanKonseling::JENIS_KONSELING,
             'kategori' => CatatanKonseling::KATEGORI_MASALAH,
             'status' => CatatanKonseling::STATUS,
             'selectedStudent' => $selectedStudent,
             'studentContext' => $selectedStudent ? $this->studentContext($selectedStudent) : null,
+            'isCounselingAdmin' => $isAdmin,
         ];
+    }
+
+    private function availableStudentsQuery(): Builder
+    {
+        $query = Siswa::query()->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif');
+        if ($this->isCounselingAdmin()) {
+            return $query;
+        }
+
+        $classIds = JadwalPelajaran::query()
+            ->where('gtk_id', auth()->user()->gtk?->id)
+            ->where('is_active', true)
+            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+            ->select('kelas_id');
+
+        return $query->whereHas('kelasTahunAktif', fn ($classes) => $classes->whereIn('kelas.id', $classIds));
+    }
+
+    private function counselorsQuery(): Builder
+    {
+        return Gtk::query()
+            ->whereHas('user', fn ($users) => $users->where('is_active', true))
+            ->where(fn ($counselors) => $counselors
+                ->where('jenis_ptk', 'Guru BK')
+                ->orWhereHas('user.roles', fn ($roles) => $roles->where('name', 'BK')));
+    }
+
+    private function isCounselingAdmin(): bool
+    {
+        $user = auth()->user();
+
+        return $user->hasAnyRole(['Super Admin', 'Admin'])
+            || in_array($user->role, ['super_admin', 'admin'], true);
     }
 
     private function visibleQuery(): Builder

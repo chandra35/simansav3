@@ -5,7 +5,7 @@
 <script>
 $(function(){
     $('.select2').select2({theme:'bootstrap4',width:'100%'});
-    $('#siswa_id').select2({theme:'bootstrap4',width:'100%',placeholder:'Ketik nama, NISN, atau NIS Lokal',minimumInputLength:2,ajax:{url:@json(route('admin.catatan-konseling.students.search')),dataType:'json',delay:300,data:p=>({q:p.term}),processResults:d=>d},templateResult:item=>item.loading?item.text:$('<div><strong></strong><br><small class="text-muted"></small></div>').find('strong').text(item.text).end().find('small').text('NISN '+(item.nisn||'-')+' · '+item.kelas).end()});
+    $('#siswa_id').select2({theme:'bootstrap4',width:'100%',placeholder:'Pilih atau cari siswa yang diampu',minimumInputLength:0,ajax:{url:@json(route('admin.catatan-konseling.students.search')),dataType:'json',delay:300,data:p=>({q:p.term||''}),processResults:d=>d},templateResult:item=>item.loading?item.text:$('<div><strong></strong><br><small class="text-muted"></small></div>').find('strong').text(item.text).end().find('small').text('NISN '+(item.nisn||'-')+' · '+item.kelas).end()});
     const toggleReferral=()=>$('#rujukan_ke').prop('required',$('#status').val()==='perlu_rujukan');$('#status').on('change',toggleReferral);toggleReferral();
     const toggleNotice=()=>$('#teacher_notice').prop('required',$('#share_with_teachers').is(':checked')).prop('disabled',!$('#share_with_teachers').is(':checked'));$('#share_with_teachers').on('change',toggleNotice);toggleNotice();
 });

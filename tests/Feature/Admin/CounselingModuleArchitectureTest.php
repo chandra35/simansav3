@@ -94,4 +94,35 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString("whereIn('kelas.id', \$relatedClassIds)", $dashboardController);
         $this->assertStringNotContainsString('siswa/catatan-konseling', $studentRoutes);
     }
+
+    public function test_bk_assignment_form_uses_schedule_caseload_and_own_counselor(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/CatatanKonselingController.php'));
+        $form = file_get_contents(resource_path('views/admin/catatan-konseling/_form.blade.php'));
+        $assets = file_get_contents(resource_path('views/admin/catatan-konseling/_form-assets.blade.php'));
+
+        $this->assertStringContainsString('private function availableStudentsQuery()', $controller);
+        $this->assertStringContainsString("->where('gtk_id', auth()->user()->gtk?->id)", $controller);
+        $this->assertStringContainsString("->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))", $controller);
+        $this->assertStringContainsString("whereIn('kelas.id', \$classIds)", $controller);
+        $this->assertStringContainsString("hasAnyRole(['Super Admin', 'Admin'])", $controller);
+        $this->assertStringContainsString("orWhereHas('user.roles'", $controller);
+        $this->assertStringContainsString("\$request->user()->hasRole('BK')", $controller);
+        $this->assertStringContainsString("\$data['konselor_id'] = \$gtk->id", $controller);
+        $this->assertStringContainsString('Konselor otomatis mengikuti akun BK', $form);
+        $this->assertStringContainsString('minimumInputLength:0', $assets);
+    }
+
+    public function test_compact_counseling_form_omits_time_and_service_type_inputs(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/CatatanKonselingController.php'));
+        $form = file_get_contents(resource_path('views/admin/catatan-konseling/_form.blade.php'));
+
+        $this->assertStringNotContainsString('name="waktu_mulai"', $form);
+        $this->assertStringNotContainsString('name="waktu_selesai"', $form);
+        $this->assertStringNotContainsString('name="jenis_konseling"', $form);
+        $this->assertStringNotContainsString("'waktu_mulai' => [", $controller);
+        $this->assertStringNotContainsString("'jenis_konseling' => ['required'", $controller);
+        $this->assertStringContainsString("\$data['jenis_konseling'] = 'individual'", $controller);
+    }
 }

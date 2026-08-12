@@ -1,6 +1,6 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
@@ -47,6 +47,10 @@ File terkait:
 - `tests/Feature/Admin/GtkTeachingScheduleArchitectureTest.php`
 
 ### Penyempurnaan modul Bimbingan & Konseling
+
+- Pada form catatan, akun BK hanya dapat memilih siswa aktif dari rombel yang benar-benar diampunya melalui jadwal pelajaran tahun aktif; admin tetap dapat memilih seluruh siswa aktif berombel. Scope yang sama divalidasi kembali di server agar tidak dapat dilewati lewat request manual.
+- Konselor otomatis menggunakan profil GTK milik akun BK dan pilihan dikunci. Super Admin/Admin tetap dapat memilih konselor; kandidat konselor dikenali melalui role BK atau jenis PTK Guru BK agar data GTK lama yang masih bertipe Guru Mapel tetap kompatibel.
+- Field Mulai, Selesai, dan Jenis Layanan dihapus dari form serta validasi. Catatan baru memakai tipe internal individual dan waktu kosong untuk menjaga kontrak tabel lama.
 
 - Populasi “Siswa Aktif” BK disamakan dengan Data Siswa: hanya siswa berstatus aktif yang memiliki rombel aktif pada tahun pelajaran berjalan; siswa aktif tanpa rombel tidak lagi menggelembungkan angka utama.
 - Form catatan baru dilengkapi konteks siswa berupa foto, identitas, rombel/wali kelas, kontak keluarga, rekap absensi harian dan mapel, serta catatan guru/wali kelas tahun aktif.
