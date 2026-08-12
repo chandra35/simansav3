@@ -201,6 +201,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/online-users', [\App\Http\Controllers\Admin\HotspotController::class, 'onlineUsers'])->name('online-users');
         Route::get('/auth-logs', [\App\Http\Controllers\Admin\HotspotController::class, 'authLogsPage'])->name('auth-logs');
         Route::get('/auth-logs/data', [\App\Http\Controllers\Admin\HotspotController::class, 'authLogs'])->name('auth-logs.data');
+        Route::get('/settings', [\App\Http\Controllers\Admin\HotspotController::class, 'settingsPage'])->middleware('permission:manage-hotspot')->name('settings');
         Route::get('/radius-profiles', [\App\Http\Controllers\Admin\HotspotController::class, 'profilesPage'])->name('profiles.page');
         Route::get('/filter-options', [\App\Http\Controllers\Admin\HotspotController::class, 'filterOptions'])->name('filter-options');
         Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');

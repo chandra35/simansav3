@@ -78,6 +78,26 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('sessionDetailModal', $online);
     }
 
+    public function test_hotspot_settings_centralizes_radius_and_nas_configuration(): void
+    {
+        $routes = file_get_contents($this->root.'/routes/web.php');
+        $menu = file_get_contents($this->root.'/config/adminlte.php');
+        $account = file_get_contents($this->root.'/resources/views/admin/hotspot/index.blade.php');
+        $settings = file_get_contents($this->root.'/resources/views/admin/hotspot/settings.blade.php');
+
+        $this->assertStringContainsString("'settingsPage'])->middleware('permission:manage-hotspot')->name('settings')", $routes);
+        $this->assertStringContainsString("'route' => 'admin.hotspot.settings'", $menu);
+        $this->assertStringContainsString("'can' => 'manage-hotspot'", $menu);
+        $this->assertStringContainsString('Manajemen Akun Hotspot', $account);
+        $this->assertStringNotContainsString('id="mikrotikScript"', $account);
+        $this->assertStringNotContainsString('id="btnAddNas"', $account);
+        $this->assertStringNotContainsString('id="radiusStatusPanel"', $account);
+        $this->assertStringContainsString('Detail Server FreeRADIUS', $settings);
+        $this->assertStringContainsString('MikroTik / NAS', $settings);
+        $this->assertStringContainsString("route('admin.hotspot.profiles.page')", $settings);
+        $this->assertStringContainsString('$radiusDashboardUrl', $settings);
+    }
+
     public function test_radius_auth_log_never_exposes_or_persists_attempted_password(): void
     {
         $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');

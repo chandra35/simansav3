@@ -20,8 +20,7 @@
         <a href="{{ route('admin.hotspot.index') }}" class="btn btn-light"><i class="fas fa-users mr-1"></i>Akun</a>
         <a href="{{ route('admin.hotspot.online') }}" class="btn btn-outline-light"><i class="fas fa-satellite-dish mr-1"></i>Monitoring</a>
         <a href="{{ route('admin.hotspot.auth-logs') }}" class="btn btn-warning"><i class="fas fa-clipboard-list mr-1"></i>Log Auth</a>
-        <a href="{{ route('admin.hotspot.profiles.page') }}" class="btn btn-outline-light"><i class="fas fa-sliders-h mr-1"></i>Profile RADIUS</a>
-        @if($radiusDashboardUrl)<a href="{{ $radiusDashboardUrl }}" target="_blank" rel="noopener" class="btn btn-outline-light"><i class="fas fa-external-link-alt mr-1"></i>Dashboard FreeRADIUS</a>@endif
+        @can('manage-hotspot')<a href="{{ route('admin.hotspot.settings') }}" class="btn btn-outline-light"><i class="fas fa-cogs mr-1"></i>Setting</a>@endcan
     </div>
 </div>
 @endsection

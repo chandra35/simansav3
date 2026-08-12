@@ -21,13 +21,20 @@ class HotspotController extends Controller
     public function index()
     {
         $stats = $this->getStats(false);
-        $radiusConnected = null;
         $profiles = HotspotRadiusProfile::query()->orderBy('role')->orderBy('priority')->orderBy('name')->get();
+
+        return view('admin.hotspot.index', compact('stats', 'profiles'));
+    }
+
+    public function settingsPage()
+    {
+        $radiusConnected = $this->checkRadiusConnection();
+        $profiles = HotspotRadiusProfile::query()->withCount('users')->orderBy('role')->orderBy('priority')->orderBy('name')->get();
         $nasList = HotspotRadiusNas::query()->orderBy('name')->get();
         $serverInfo = $this->getRadiusServerInfo();
         $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
 
-        return view('admin.hotspot.index', compact('stats', 'radiusConnected', 'profiles', 'nasList', 'serverInfo', 'radiusDashboardUrl'));
+        return view('admin.hotspot.settings', compact('radiusConnected', 'profiles', 'nasList', 'serverInfo', 'radiusDashboardUrl'));
     }
 
     public function data(Request $request)
@@ -536,23 +543,20 @@ class HotspotController extends Controller
     public function onlinePage()
     {
         $radiusConnected = $this->checkRadiusConnection();
-        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
 
-        return view('admin.hotspot.online', compact('radiusConnected', 'radiusDashboardUrl'));
+        return view('admin.hotspot.online', compact('radiusConnected'));
     }
 
     public function authLogsPage()
     {
         $radiusConnected = $this->checkRadiusConnection();
-        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
 
-        return view('admin.hotspot.auth-logs', compact('radiusConnected', 'radiusDashboardUrl'));
+        return view('admin.hotspot.auth-logs', compact('radiusConnected'));
     }
 
     public function profilesPage()
     {
         $radiusConnected = $this->checkRadiusConnection();
-        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
         $profiles = HotspotRadiusProfile::query()
             ->withCount('users')
             ->orderBy('role')
@@ -563,7 +567,6 @@ class HotspotController extends Controller
 
         return view('admin.hotspot.profiles', compact(
             'radiusConnected',
-            'radiusDashboardUrl',
             'profiles',
             'radiusState'
         ));

@@ -4,6 +4,13 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pemusatan Setting Hotspot
+
+- Halaman **Akun Hotspot** kini difokuskan pada statistik akun, daftar akun, sinkronisasi, profile akun, serta akun tamu.
+- Detail server FreeRADIUS, status RADIUS, Profile RADIUS, MikroTik/NAS, script konfigurasi, dan tautan dashboard FreeRADIUS dipusatkan pada halaman **Hotspot > Setting**.
+- Menu Profile RADIUS pada sidebar digantikan oleh Setting; halaman Profile RADIUS tetap tersedia dari pusat Setting.
+- Akses Setting dibatasi dengan permission `manage-hotspot`, sedangkan Monitoring dan Log Autentikasi tetap memakai akses baca `view-hotspot`.
+
 ### Audit dan hardening Hotspot
 
 - Endpoint Hotspot dipisahkan menjadi akses baca `view-hotspot` dan akses perubahan `manage-hotspot`.
