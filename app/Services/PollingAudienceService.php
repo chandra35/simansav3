@@ -116,6 +116,8 @@ class PollingAudienceService
                 return array_merge($context, [
                     'user_id' => $user->id,
                     'username' => $user->username,
+                    'student_phone' => $context['type'] === 'siswa' ? $user->siswa?->nomor_hp : null,
+                    'student_email' => $context['type'] === 'siswa' ? $user->email : null,
                 ]);
             })
             ->sortBy(fn ($row) => ($row['class_name'] ?? 'ZZZ').'|'.$row['name'])

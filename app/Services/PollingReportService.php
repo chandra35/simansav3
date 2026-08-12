@@ -40,7 +40,7 @@ class PollingReportService
             'targets',
             'responses.answers.options',
             'responses.answers.question',
-            'responses.user',
+            'responses.user.siswa',
         ]);
 
         $targets = $this->audience->targetRespondents($polling);
@@ -57,6 +57,12 @@ class PollingReportService
                 'roles' => [],
                 'user_id' => $historicalResponse->user_id,
                 'username' => $historicalResponse->user?->username ?: '-',
+                'student_phone' => $historicalResponse->respondent_type === 'siswa'
+                    ? $historicalResponse->user?->siswa?->nomor_hp
+                    : null,
+                'student_email' => $historicalResponse->respondent_type === 'siswa'
+                    ? $historicalResponse->user?->email
+                    : null,
             ]);
         }
         $targets = $targets->sortBy(fn ($row) => ($row['class_name'] ?? 'ZZZ').'|'.$row['name'])->values();

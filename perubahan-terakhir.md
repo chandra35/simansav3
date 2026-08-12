@@ -4,6 +4,22 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perlindungan data pada export Excel polling
+
+- Export hasil polling kini menyertakan kolom **No. HP Siswa** dan **Email Siswa**; kolom kontak hanya diisi untuk responden siswa.
+- Data kontak responden aktif maupun respons historis diambil dari profil siswa dan akun SIMANSA dengan eager loading untuk menghindari query berulang.
+- Bagian akhir workbook memuat pernyataan kerahasiaan, tanggung jawab kebocoran/penyalahgunaan, ketentuan izin sekolah, identitas pengekspor, waktu export, dan signature unik SIMANSA.
+- Setiap export Excel yang memuat data kontak dicatat pada activity log beserta signature untuk kebutuhan audit.
+- Kolom NISN, nomor HP, dan email diformat sebagai teks agar angka nol di depan tidak berubah.
+
+File terkait:
+
+- `app/Exports/PollingReportExport.php`
+- `app/Http/Controllers/Admin/PollingController.php`
+- `app/Services/PollingAudienceService.php`
+- `app/Services/PollingReportService.php`
+- `tests/Unit/PollingReportExportTest.php`
+
 ### Optimasi deploy produksi
 
 - Git fetch kini berjalan sebelum maintenance sehingga waktu jaringan tidak menjadi downtime.

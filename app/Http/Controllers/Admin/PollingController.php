@@ -231,8 +231,31 @@ class PollingController extends Controller
     {
         abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
         $report = $this->reports->build($polling);
+        $exportedAt = now();
+        $exportedBy = auth()->user();
+        $signaturePayload = implode('|', [
+            $polling->id,
+            $exportedBy->id,
+            $exportedAt->toIso8601String(),
+            $report['rows']->count(),
+        ]);
+        $signature = 'SIMANSA-'.strtoupper(implode('-', str_split(
+            substr(hash_hmac('sha256', $signaturePayload, (string) config('app.key')), 0, 20),
+            5
+        )));
+
+        $this->log(
+            $polling,
+            'export_polling_excel',
+            'Mengekspor hasil polling yang memuat data kontak siswa. Signature: '.$signature
+        );
+
         return Excel::download(
-            new PollingReportExport($polling, $report['rows']),
+            new PollingReportExport($polling, $report['rows'], [
+                'exported_by' => $exportedBy->name ?: $exportedBy->username,
+                'exported_at' => $exportedAt->format('d/m/Y H:i:s').' WIB',
+                'signature' => $signature,
+            ]),
             'hasil-polling-'.$polling->slug.'.xlsx'
         );
     }
