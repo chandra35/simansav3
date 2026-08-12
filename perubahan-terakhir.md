@@ -64,6 +64,14 @@ File terkait:
 - Service pemutusan menangani kegagalan proses secara aman agar UI menerima pesan terkontrol, bukan error server.
 - Uji end-to-end sebagai user web berhasil memutus sesi aktif melalui FreeRADIUS dan menerima konfirmasi dari MikroTik.
 
+### Perbaikan DNS Hotspot
+
+- DNS upstream MikroTik diperbaiki dari `8.8.8.8,10.10.0.1` menjadi `8.8.8.8,1.1.1.1` agar router tidak meneruskan query kepada dirinya sendiri.
+- DHCP network Hotspot `10.10.0.0/22` kini membagikan `10.10.0.1` secara eksplisit sebagai DNS klien; `allow-remote-requests` tetap aktif dan port DNS dari kedua WAN tetap diblokir.
+- Alamat lama `10.10.0.1/21` pada `vlan-hotspot` dihapus karena tumpang tindih dengan network Hotspot `/22` dan rute VPN `10.10.4.0/22`.
+- Backup konfigurasi DNS, DHCP network, dan IP address sebelum perubahan disimpan pada Files MikroTik dengan awalan `before-hotspot-*`.
+- Record lokal `hotspot.man1metro.net` berfungsi melalui DNS MikroTik; domain tersebut tetap NXDOMAIN pada resolver publik sehingga Brave Secure DNS memerlukan record DNS publik atau penggunaan resolver sistem.
+
 ### Pemusatan Setting Hotspot
 
 - Monitoring Online memiliki aksi **Putuskan sesi** melalui RADIUS Disconnect-Request dan **Blokir & putuskan**; daftar blokir manual menyediakan aksi Unblokir.

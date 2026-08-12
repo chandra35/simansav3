@@ -42,7 +42,13 @@ add name=profile-tamu rate-limit=2M/2M address-pool=pool-tamu idle-timeout=10m k
 /ip hotspot profile
 set [find name=hsprof1] use-radius=yes radius-accounting=yes radius-interim-update=10s
 
-# === 5. Enable Hotspot ===
+# === 5. DNS Hotspot: client memakai cache router, router meneruskan ke resolver publik ===
+/ip dns
+set servers=8.8.8.8,1.1.1.1 allow-remote-requests=yes
+/ip dhcp-server network
+set [find where address=10.10.0.0/22] dns-server=10.10.0.1
+
+# === 6. Enable Hotspot ===
 /ip hotspot enable hotspot1
 
 ROUTEROS_END
