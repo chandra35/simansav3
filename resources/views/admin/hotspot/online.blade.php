@@ -19,7 +19,7 @@
             <h1><i class="fas fa-satellite-dish mr-2"></i>Monitoring Hotspot</h1>
             <p>Sesi online, pemakaian data, perangkat, identitas pengguna, dan histori koneksi FreeRADIUS.</p>
         </div>
-        <span class="badge badge-{{ $radiusConnected ? 'success' : 'danger' }} px-3 py-2">
+        <span class="badge badge-light text-{{ $radiusConnected ? 'success' : 'danger' }} border px-3 py-2">
             {{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}
         </span>
     </div>

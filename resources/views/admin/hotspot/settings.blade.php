@@ -26,7 +26,7 @@
                     <p class="mb-0 text-white-75">Kelola koneksi server, profile akses, dan NAS tanpa mencampurkannya dengan data akun Hotspot.</p>
                 </div>
                 <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
-                    <span class="badge badge-{{ $radiusConnected ? 'success' : 'danger' }} px-3 py-2">
+                    <span class="badge badge-light text-{{ $radiusConnected ? 'success' : 'danger' }} border px-3 py-2">
                         <i class="fas fa-circle mr-1"></i>{{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}
                     </span>
                 </div>

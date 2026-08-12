@@ -14,7 +14,7 @@
 <div class="profile-hero">
     <div class="d-flex justify-content-between align-items-start flex-wrap">
         <div><h1><i class="fas fa-sliders-h mr-2"></i>Profile RADIUS</h1><p>Kelola group FreeRADIUS yang mengirim profile MikroTik, bandwidth, pool, timeout, dan batas sesi.</p></div>
-        <span class="badge badge-{{ $radiusConnected ? 'success' : 'danger' }} px-3 py-2">{{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}</span>
+        <span class="badge badge-light text-{{ $radiusConnected ? 'success' : 'danger' }} border px-3 py-2">{{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}</span>
     </div>
     <div class="profile-nav">
         <a href="{{ route('admin.hotspot.index') }}" class="btn btn-light"><i class="fas fa-users mr-1"></i>Akun</a>

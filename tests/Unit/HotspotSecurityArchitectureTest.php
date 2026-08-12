@@ -96,6 +96,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('MikroTik / NAS', $settings);
         $this->assertStringContainsString("route('admin.hotspot.profiles.page')", $settings);
         $this->assertStringContainsString('$radiusDashboardUrl', $settings);
+        $this->assertStringContainsString("badge-light text-{{ \$radiusConnected ? 'success' : 'danger' }}", $settings);
     }
 
     public function test_radius_auth_log_never_exposes_or_persists_attempted_password(): void

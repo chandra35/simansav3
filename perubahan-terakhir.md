@@ -6,6 +6,7 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Pemusatan Setting Hotspot
 
+- Badge status FreeRADIUS pada seluruh hero Hotspot memakai latar terang dengan teks hijau/merah berkontras tinggi agar tidak tenggelam oleh warna gradient.
 - Halaman **Akun Hotspot** kini difokuskan pada statistik akun, daftar akun, sinkronisasi, profile akun, serta akun tamu.
 - Detail server FreeRADIUS, status RADIUS, Profile RADIUS, MikroTik/NAS, script konfigurasi, dan tautan dashboard FreeRADIUS dipusatkan pada halaman **Hotspot > Setting**.
 - Menu Profile RADIUS pada sidebar digantikan oleh Setting; halaman Profile RADIUS tetap tersedia dari pusat Setting.

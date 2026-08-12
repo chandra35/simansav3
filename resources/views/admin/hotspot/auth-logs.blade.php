@@ -14,7 +14,7 @@
 <div class="auth-hero">
     <div class="d-flex justify-content-between align-items-start flex-wrap">
         <div><h1><i class="fas fa-clipboard-check mr-2"></i>Log Autentikasi Hotspot</h1><p>Login berhasil, password salah, akun nonaktif, username tidak dikenal, dan respons lain dari FreeRADIUS.</p></div>
-        <span class="badge badge-{{ $radiusConnected ? 'success' : 'danger' }} px-3 py-2">{{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}</span>
+        <span class="badge badge-light text-{{ $radiusConnected ? 'success' : 'danger' }} border px-3 py-2">{{ $radiusConnected ? 'FreeRADIUS terhubung' : 'FreeRADIUS offline' }}</span>
     </div>
     <div class="auth-nav">
         <a href="{{ route('admin.hotspot.index') }}" class="btn btn-light"><i class="fas fa-users mr-1"></i>Akun</a>
