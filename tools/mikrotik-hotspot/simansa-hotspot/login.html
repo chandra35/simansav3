@@ -10,6 +10,24 @@
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+  <script>
+    var loginSubmitting = false;
+    function prepareLogin() {
+      if (loginSubmitting) return false;
+      loginSubmitting = true;
+      var button = document.querySelector('[data-login-submit]');
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Memeriksa akun...';
+      }
+      return true;
+    }
+    function doLogin() {
+      return prepareLogin();
+    }
+  </script>
+
+  $(if chap-id)
   <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
     <input type="hidden" name="username">
     <input type="hidden" name="password">
@@ -18,24 +36,17 @@
   </form>
   <script src="md5.js"></script>
   <script>
-    var loginSubmitting = false;
     function doLogin() {
-      if (loginSubmitting) return false;
-      loginSubmitting = true;
-      var button = document.querySelector('[data-login-submit]');
-      if (button) {
-        button.disabled = true;
-        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Memeriksa akun...';
-      }
-      if ('$(chap-id)'.indexOf('$(') === 0 || !'$(chap-id)') {
-        return true;
-      }
-      document.sendin.username.value = document.login.username.value;
-      document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
-      document.sendin.submit();
+      if (!prepareLogin()) return false;
+      var source = document.forms['login'];
+      var target = document.forms['sendin'];
+      target.elements['username'].value = source.elements['username'].value;
+      target.elements['password'].value = hexMD5('$(chap-id)' + source.elements['password'].value + '$(chap-challenge)');
+      target.submit();
       return false;
     }
   </script>
+  $(endif)
 
   <main class="page login-page">
     <div class="ambient ambient-one"></div>

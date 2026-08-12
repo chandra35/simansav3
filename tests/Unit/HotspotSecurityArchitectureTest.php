@@ -175,7 +175,11 @@ class HotspotSecurityArchitectureTest extends TestCase
 
         $this->assertStringContainsString('if (loginSubmitting) return false', $login);
         $this->assertStringContainsString('button.disabled = true', $login);
+        $this->assertStringContainsString('$(if chap-id)', $login);
+        $this->assertStringContainsString("document.forms['sendin']", $login);
+        $this->assertStringNotContainsString("'$(chap-id)'.indexOf", $login);
         $this->assertStringContainsString("setAttribute('role', 'alertdialog')", $script);
+        $this->assertStringContainsString('window.location.reload()', $script);
         $this->assertStringContainsString("window.open('$(link-status)', 'hotspot_status')", $success);
         $this->assertStringContainsString('target="hotspot_status"', $success);
     }

@@ -56,6 +56,7 @@ File terkait:
 - Form login disederhanakan tanpa kartu panduan role; penanda input menjadi **Username** dan **Password**, serta kartu bergoyang singkat satu kali saat pertama dimuat.
 - Panduan username siswa (NISN), guru/GTK (NIK), dan tamu tampil langsung pada form, lengkap dengan tombol tampil/sembunyikan password dan pesan autentikasi yang lebih ramah.
 - Form dikunci setelah submit pertama untuk mencegah login ganda; hasil gagal ditampilkan sebagai modal, sedangkan hasil berhasil membuka Status Hotspot pada tab baru seperti alur bawaan MikroTik.
+- Proses HTTP-CHAP mengikuti blok kondisional `$(if chap-id)` bawaan RouterOS agar Android Captive Portal selalu mengirim challenge-response, bukan password biasa; error challenge memuat ulang token sebelum percobaan berikutnya.
 - Pesan error dirender dengan HTML escaping; halaman status, logout, dan error menggunakan tampilan yang konsisten.
 - Folder Hotspot lama dibackup sebelum delapan file portal diverifikasi dan diunggah langsung ke direktori `hotspot` MikroTik.
 

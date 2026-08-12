@@ -55,7 +55,8 @@
       {
         match: ['chap missing', 'web browser did not send challenge response'],
         title: 'Sesi login kedaluwarsa',
-        message: 'Muat ulang halaman login, lalu coba masuk kembali.'
+        message: 'Muat ulang halaman login, lalu coba masuk kembali.',
+        reload: true
       }
     ];
 
@@ -89,6 +90,10 @@
     document.body.classList.add('modal-open');
     var close = target.querySelector('[data-error-close]');
     if (close) close.addEventListener('click', function () {
+      if (mapped.reload) {
+        window.location.reload();
+        return;
+      }
       target.classList.remove('is-visible');
       document.body.classList.remove('modal-open');
       var username = document.getElementById('username');
