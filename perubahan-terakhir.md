@@ -4,6 +4,19 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sinkronisasi mutasi keluar dan assign rombel
+
+- Daftar dan pencarian AJAX assign rombel kini hanya mengambil siswa dengan `status_siswa = aktif` yang belum memiliki rombel aktif pada tahun pelajaran tujuan.
+- Siswa lulus, alumni, keluar, atau mutasi keluar tidak lagi muncul pada pilihan dan ditolak kembali oleh validasi server pada input NISN bulk.
+- Alur mutasi keluar telah diverifikasi: persetujuan menutup seluruh membership kelas aktif, mengisi tanggal keluar, mengubah status siswa menjadi `mutasi_keluar`, mengosongkan cache kelas saat ini, dan menonaktifkan akun.
+- Assign dibuat idempotent: apabila kombinasi siswa-rombel-tahun pernah ada sebagai riwayat keluar atau soft-delete, record lama dipulihkan/diperbarui alih-alih melakukan insert duplikat.
+- Detail SQL/internal tidak lagi dikirim ke browser; error lengkap tetap dicatat pada log server dengan pesan aman untuk admin.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/KelasController.php`
+- `tests/Unit/ClassAssignmentEligibilityTest.php`
+
 ### Perlindungan data pada export Excel polling
 
 - Export hasil polling kini menyertakan kolom **No. HP Siswa** dan **Email Siswa**; kolom kontak hanya diisi untuk responden siswa.
