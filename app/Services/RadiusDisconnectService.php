@@ -11,7 +11,7 @@ class RadiusDisconnectService
     public function disconnect(HotspotRadiusNas $nas, object $session): array
     {
         $helper = config('hotspot.disconnect_helper');
-        if (!$helper || !is_executable($helper)) {
+        if (!$helper || !is_file($helper)) {
             return ['success' => false, 'message' => 'Helper pemutusan RADIUS belum tersedia di server SIMANSA.'];
         }
 
