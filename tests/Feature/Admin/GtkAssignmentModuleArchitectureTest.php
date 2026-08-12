@@ -73,4 +73,27 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('simansa-action-dropdown-open', $gtkView);
         $this->assertStringContainsString('.simansa-action-dropdown-open', $styles);
     }
+
+    public function test_workload_supports_search_and_expandable_schedule_details(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/PenugasanGtkController.php'));
+        $service = file_get_contents(app_path('Services/GtkWorkloadService.php'));
+        $view = file_get_contents(resource_path('views/admin/penugasan-gtk/workload.blade.php'));
+
+        $this->assertStringContainsString('$search = trim((string) $request->q)', $controller);
+        $this->assertStringContainsString("->with(['mataPelajaran:id,nama_mapel', 'kelas:id,nama_kelas,tingkat'])", $service);
+        $this->assertStringContainsString("'jadwal' =>", $service);
+        $this->assertStringContainsString('name="q"', $view);
+        $this->assertStringContainsString('workload-detail-toggle', $view);
+        $this->assertStringContainsString('Tugas Tambahan & Ekuivalensi', $view);
+    }
+
+    public function test_global_select2_highlight_has_readable_foreground(): void
+    {
+        $styles = file_get_contents(public_path('css/custom-compact.css'));
+
+        $this->assertStringContainsString('.select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected]', $styles);
+        $this->assertStringContainsString('.select2-results__option--highlighted[aria-selected] *', $styles);
+        $this->assertStringContainsString('color: #fff !important;', $styles);
+    }
 }

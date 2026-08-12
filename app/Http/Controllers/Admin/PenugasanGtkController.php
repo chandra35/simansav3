@@ -69,7 +69,8 @@ class PenugasanGtkController extends Controller
         $year ??= $years->first();
         $semester = (int) ($request->semester ?: ($year?->semester_aktif === 'Genap' ? 2 : 1));
         $gtk = $request->filled('gtk_id') ? Gtk::findOrFail($request->gtk_id) : null;
-        $rows = $year ? $service->summarize($year, $semester, $gtk?->id) : collect();
+        $search = trim((string) $request->q);
+        $rows = $year ? $service->summarize($year, $semester, $gtk?->id, $search ?: null) : collect();
         $stats = [
             'gtk' => $rows->count(),
             'memenuhi' => $rows->where('status', 'memenuhi')->count(),
@@ -77,7 +78,7 @@ class PenugasanGtkController extends Controller
             'review' => $rows->whereIn('status', ['review', 'lebih'])->count(),
         ];
 
-        return view('admin.penugasan-gtk.workload', compact('rows', 'stats', 'years', 'year', 'semester', 'gtk'));
+        return view('admin.penugasan-gtk.workload', compact('rows', 'stats', 'years', 'year', 'semester', 'gtk', 'search'));
     }
 
     public function store(Request $request)

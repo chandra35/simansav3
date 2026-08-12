@@ -1500,8 +1500,24 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     box-shadow: var(--shadow-lg) !important;
 }
 
+.select2-container--default .select2-results__option[aria-selected=true]:not(.select2-results__option--highlighted),
+.select2-container--bootstrap4 .select2-results__option[aria-selected=true]:not(.select2-results__option--highlighted) {
+    background-color: #eff6ff !important;
+    color: #1e3a8a !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected],
 .select2-results__option--highlighted {
-    background-color: var(--primary) !important;
+    background-color: #2563eb !important;
+    color: #fff !important;
+}
+
+/* Template Select2 sering memberi warna sendiri pada strong/small. Saat opsi
+   aktif, seluruh metadata harus mengikuti foreground agar tetap terbaca. */
+.select2-results__option--highlighted[aria-selected] *,
+.select2-results__option--highlighted * {
+    color: #fff !important;
 }
 
 /* ===============================================

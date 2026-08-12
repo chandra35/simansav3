@@ -6,6 +6,8 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Modul Penugasan dan Beban Kerja GTK
 
+- Beban Kerja GTK kini memiliki pencarian nama/NIP/NUPTK serta rincian yang dapat dibuka per GTK. Rincian menampilkan jadwal lengkap per hari/jam/mapel/rombel/ruang, tugas tambahan, ekuivalensi yang diakui, peringatan, dan formula total JTM.
+- Styling opsi Select2 dinormalisasi secara global: opsi terpilih memakai latar biru lembut, sedangkan opsi yang sedang disorot memakai biru solid dengan seluruh teks dan metadata putih agar kontras konsisten di semua modul.
 - Penugasan kepegawaian kini dipisahkan dari role akses aplikasi melalui master `jenis_penugasan_gtk` dan histori `penugasan_gtk`; tabel tugas tambahan lama tetap dipertahankan sebagai lapisan kompatibilitas.
 - Modul **Manajemen Data > GTK & Penugasan** berisi Data GTK, Penugasan GTK, dan Beban Kerja GTK sehingga sidebar serta permission matrix mengikuti substansi modul.
 - Penugasan mendukung Kepala Madrasah, Waka per bidang, Kepala Laboratorium, Kepala Perpustakaan, Wali Kelas, Pembina OSIM/ekstrakurikuler, koordinator, dan guru piket; standar dapat diubah untuk penugasan baru tanpa mengubah snapshot JTM histori.

@@ -11,15 +11,19 @@ use Illuminate\Support\Collection;
 
 class GtkWorkloadService
 {
-    public function summarize(TahunPelajaran $year, int $semester, ?string $gtkId = null): Collection
+    public function summarize(TahunPelajaran $year, int $semester, ?string $gtkId = null, ?string $search = null): Collection
     {
-        $teaching = JadwalPelajaran::query()
+        $schedules = JadwalPelajaran::query()
+            ->with(['mataPelajaran:id,nama_mapel', 'kelas:id,nama_kelas,tingkat'])
             ->where('tahun_pelajaran_id', $year->id)
             ->where('semester', $semester)
             ->where('is_active', true)
-            ->selectRaw('gtk_id, COUNT(*) AS total')
-            ->groupBy('gtk_id')
-            ->pluck('total', 'gtk_id');
+            ->when($gtkId, fn ($query) => $query->where('gtk_id', $gtkId))
+            ->orderByRaw("FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu')")
+            ->orderBy('jam_ke')
+            ->get()
+            ->groupBy('gtk_id');
+        $teaching = $schedules->map->count();
 
         $assignments = PenugasanGtk::query()
             ->with('jenis')
@@ -48,9 +52,13 @@ class GtkWorkloadService
         return Gtk::query()
             ->with('user')
             ->whereIn('id', $gtkIds)
+            ->when($search, fn ($query, $term) => $query->where(fn ($filtered) => $filtered
+                ->where('nama_lengkap', 'like', "%{$term}%")
+                ->orWhere('nip', 'like', "%{$term}%")
+                ->orWhere('nuptk', 'like', "%{$term}%")))
             ->orderBy('nama_lengkap')
             ->get()
-            ->map(function (Gtk $gtk) use ($teaching, $assignments, $homeroomUsers) {
+            ->map(function (Gtk $gtk) use ($teaching, $schedules, $assignments, $homeroomUsers) {
                 $teachingJtm = (int) ($teaching[$gtk->id] ?? 0);
                 $records = $assignments->get($gtk->id, collect())->sortBy(fn ($item) => [
                     $item->jenis?->kategori === 'lain' ? 1 : 0,
@@ -98,6 +106,7 @@ class GtkWorkloadService
                     'jtm_mengajar' => $teachingJtm,
                     'jtm_ekuivalensi' => $recognized,
                     'jtm_total' => $total,
+                    'jadwal' => $schedules->get($gtk->id, collect())->values(),
                     'tugas_tambahan' => $tasks->values(),
                     'warnings' => $warnings->values(),
                     'status' => $warnings->isNotEmpty() ? 'review' : ($total < 24 ? 'kurang' : ($total > 40 ? 'lebih' : 'memenuhi')),
