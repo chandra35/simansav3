@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\HotspotUser;
 use PHPUnit\Framework\TestCase;
 
 class HotspotSecurityArchitectureTest extends TestCase
@@ -95,5 +96,23 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("'Mikrotik-Group' => \$this->mikrotik_group", $profile);
         $this->assertStringContainsString('MikroTik Group', $view);
         $this->assertStringContainsString('Sync semua', $view);
+    }
+
+    public function test_legacy_nik_password_is_accepted_only_for_gtk(): void
+    {
+        $model = file_get_contents($this->root.'/app/Models/HotspotUser.php');
+        $command = file_get_contents($this->root.'/app/Console/Commands/HotspotSync.php');
+
+        $this->assertStringContainsString("\$this->role === 'guru'", $model);
+        $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$this->username)", $model);
+        $this->assertStringContainsString("\$role === 'guru'", $command);
+        $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$username)", $command);
+
+        $guru = new HotspotUser(['username' => '1872041185770001', 'role' => 'guru']);
+        $siswa = new HotspotUser(['username' => '1234567890', 'role' => 'siswa']);
+
+        $this->assertTrue($guru->isSecurePassword('1872041185770001'));
+        $this->assertFalse($siswa->isSecurePassword('1234567890'));
+        $this->assertFalse($guru->isSecurePassword('short'));
     }
 }

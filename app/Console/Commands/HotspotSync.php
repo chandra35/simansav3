@@ -156,7 +156,7 @@ class HotspotSync extends Command
             return;
         }
 
-        $plainPassword = $this->getPlainPassword($user, $username);
+        $plainPassword = $this->getPlainPassword($user, $username, $role);
 
         $existing = HotspotUser::where('username', $username)->first();
         $isNew = $existing === null;
@@ -266,13 +266,21 @@ class HotspotSync extends Command
         }
     }
 
-    private function getPlainPassword(User $user, string $username): ?string
+    private function getPlainPassword(User $user, string $username, string $role): ?string
     {
         if (!empty($user->encrypted_password)) {
             try {
                 $password = Crypt::decryptString($user->encrypted_password);
 
-                return mb_strlen($password) >= 8 && !hash_equals($username, $password)
+                if (mb_strlen($password) < 8) {
+                    return null;
+                }
+
+                if (!hash_equals($username, $password)) {
+                    return $password;
+                }
+
+                return $role === 'guru' && preg_match('/^\d{16}$/', $username) === 1
                     ? $password
                     : null;
             } catch (\Exception) {

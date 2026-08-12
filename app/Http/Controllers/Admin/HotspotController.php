@@ -925,7 +925,9 @@ class HotspotController extends Controller
         }
 
         if ($disabledSet->has($log->username)) {
-            return ['status' => 'reject', 'reason' => 'Password Hotspot belum aman/tersedia; pengguna harus reset password SIMANSA.'];
+            return ['status' => 'reject', 'reason' => $hotspot?->role === 'guru'
+                ? 'Akun GTK belum disinkronkan ulang atau password tidak tersedia di SIMANSA.'
+                : 'Password Hotspot belum aman/tersedia; pengguna harus reset password SIMANSA.'];
         }
 
         if ($rejectSet->has($log->username) || !$hotspot->is_active) {

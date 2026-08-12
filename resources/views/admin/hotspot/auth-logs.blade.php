@@ -41,7 +41,7 @@
         <input id="filterSearch" class="form-control form-control-sm" placeholder="Cari username" style="max-width:220px">
         <select id="filterPerPage" class="form-control form-control-sm" style="max-width:110px"><option value="25">25/baris</option><option value="50">50/baris</option><option value="100">100/baris</option></select>
         <button id="btnLoadLogs" class="btn btn-sm btn-primary"><i class="fas fa-search mr-1"></i>Tampilkan</button>
-        <span class="small text-muted ml-auto"><i class="fas fa-shield-alt mr-1"></i>Password percobaan tidak pernah ditampilkan.</span>
+        <span class="small text-muted ml-auto"><i class="fas fa-shield-alt mr-1"></i>Password percobaan tidak disimpan. Penjelasan penolakan disimpulkan dari status akun saat ini.</span>
     </div>
     <div class="table-responsive" id="logWrap"><div class="empty"><i class="fas fa-spinner fa-spin mr-1"></i>Memuat log...</div></div>
     <div class="pagination-wrap"><span class="small text-muted" id="pageInfo">-</span><div><button id="prevPage" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button><button id="nextPage" class="btn btn-sm btn-outline-secondary ml-1"><i class="fas fa-chevron-right"></i></button></div></div>

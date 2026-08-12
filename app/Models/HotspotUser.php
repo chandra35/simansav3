@@ -166,7 +166,16 @@ class HotspotUser extends Model
 
     public function isSecurePassword(string $password): bool
     {
-        return mb_strlen($password) >= 8 && !hash_equals($this->username, $password);
+        if (mb_strlen($password) < 8) {
+            return false;
+        }
+
+        if (!hash_equals($this->username, $password)) {
+            return true;
+        }
+
+        // Kebijakan sekolah: akun GTK lama tetap boleh memakai NIK 16 digit.
+        return $this->role === 'guru' && preg_match('/^\d{16}$/', $this->username) === 1;
     }
 
     public function isEligibleForRadius(): bool

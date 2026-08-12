@@ -18,6 +18,7 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 - Profile RADIUS dipindahkan ke halaman khusus dengan pemeriksaan drift terhadap `radgroupreply`/`radgroupcheck`, atribut `Mikrotik-Group`, dan tombol sinkronisasi.
 - Dashboard daloRADIUS dapat dibuka langsung dari navigasi modul Hotspot.
 - Dynamic Simple Queue Hotspot tetap dipertahankan. RouterOS menolak komentar pada objek dinamis, sehingga nama lengkap ditampilkan di monitoring SIMANSA tanpa membuat queue statis yang berisiko bentrok.
+- Kebijakan login mempertahankan kompatibilitas akun GTK lama: password yang sama dengan NIK 16 digit tetap diterima khusus role guru; password siswa yang sama dengan NISN tetap ditolak.
 
 File terkait:
 
