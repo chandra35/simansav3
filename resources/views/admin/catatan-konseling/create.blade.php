@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('adminlte::page')
 @section('title','Catatan Konseling Baru')
 @section('plugins.Select2',true)
 @section('content_header')<div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-plus-circle text-primary"></i> Catatan Konseling Baru</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.catatan-konseling.index') }}">Konseling</a></li><li class="breadcrumb-item active">Tambah</li></ol></div></div>@stop

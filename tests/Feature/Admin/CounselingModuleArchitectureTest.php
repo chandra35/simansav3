@@ -37,4 +37,14 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertSame('/admin/catatan-konseling/siswa/search', route('admin.catatan-konseling.students.search', absolute: false));
         $this->assertSame('/admin/catatan-konseling/report/siswa', route('admin.catatan-konseling.report-siswa', absolute: false));
     }
+
+    public function test_every_counseling_page_uses_the_installed_adminlte_layout(): void
+    {
+        foreach (['index', 'create', 'edit', 'show', 'report-siswa'] as $page) {
+            $view = file_get_contents(resource_path("views/admin/catatan-konseling/{$page}.blade.php"));
+
+            $this->assertStringContainsString("@extends('adminlte::page')", $view, "Layout halaman {$page} tidak valid.");
+            $this->assertStringNotContainsString("@extends('layouts.admin')", $view);
+        }
+    }
 }

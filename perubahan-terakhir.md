@@ -6,6 +6,7 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan modul Bimbingan & Konseling
 
+- Seluruh halaman Konseling menggunakan parent layout AdminLTE yang benar; error 500 akibat referensi `layouts.admin` yang tidak tersedia telah diperbaiki dan dilindungi tes regresi.
 - Kontrak model, controller, validasi, dan form Konseling kini sesuai dengan struktur tabel produksi; ketidaksesuaian field lama seperti `deskripsi_masalah`, `is_rahasia`, dan status yang tidak tersedia telah dihapus.
 - Alur kerja BK mencakup jenis layanan, bidang masalah, asesmen/permasalahan, hasil konseling, rekomendasi, tindak lanjut terjadwal, rujukan, status penanganan, dan penanda kerahasiaan.
 - Dashboard ringkas menampilkan jumlah seluruh layanan, kasus aktif, kebutuhan tindak lanjut, dan layanan selesai; jadwal tindak lanjut yang terlambat diberi penanda.
