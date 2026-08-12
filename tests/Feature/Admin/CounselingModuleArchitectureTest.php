@@ -61,5 +61,7 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('filter-kelas', $view);
         $this->assertStringContainsString('status_pendampingan', $view);
         $this->assertStringContainsString('Catat', $view);
+        $this->assertStringContainsString('//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js', $view);
+        $this->assertStringNotContainsString("asset('vendor/datatables", $view);
     }
 }
