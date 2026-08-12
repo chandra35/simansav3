@@ -25,8 +25,9 @@ class HotspotController extends Controller
         $profiles = HotspotRadiusProfile::query()->orderBy('role')->orderBy('priority')->orderBy('name')->get();
         $nasList = HotspotRadiusNas::query()->orderBy('name')->get();
         $serverInfo = $this->getRadiusServerInfo();
+        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
 
-        return view('admin.hotspot.index', compact('stats', 'radiusConnected', 'profiles', 'nasList', 'serverInfo'));
+        return view('admin.hotspot.index', compact('stats', 'radiusConnected', 'profiles', 'nasList', 'serverInfo', 'radiusDashboardUrl'));
     }
 
     public function data(Request $request)
@@ -358,6 +359,7 @@ class HotspotController extends Controller
                 'name' => $profile->name,
                 'role' => $profile->role,
                 'rate_limit' => $profile->rate_limit,
+                'mikrotik_group' => $profile->mikrotik_group,
                 'session_timeout' => $profile->session_timeout,
                 'idle_timeout' => $profile->idle_timeout,
                 'simultaneous_use' => $profile->simultaneous_use,
@@ -421,6 +423,24 @@ class HotspotController extends Controller
             'success' => $ok,
             'message' => $ok ? 'Profile berhasil disinkronkan ke FreeRADIUS.' : 'Sync profile gagal: '.$profile->sync_error,
         ], $ok ? 200 : 422);
+    }
+
+    public function syncAllProfiles()
+    {
+        $profiles = HotspotRadiusProfile::query()->where('is_active', true)->get();
+        $synced = 0;
+        $failed = 0;
+
+        foreach ($profiles as $profile) {
+            $profile->syncToRadius() ? $synced++ : $failed++;
+        }
+
+        return response()->json([
+            'success' => $failed === 0,
+            'message' => "{$synced} profile tersinkron, {$failed} gagal.",
+            'synced' => $synced,
+            'failed' => $failed,
+        ], $failed === 0 ? 200 : 422);
     }
 
     public function destroyProfile(HotspotRadiusProfile $profile)
@@ -522,7 +542,37 @@ class HotspotController extends Controller
     public function onlinePage()
     {
         $radiusConnected = $this->checkRadiusConnection();
-        return view('admin.hotspot.online', compact('radiusConnected'));
+        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
+
+        return view('admin.hotspot.online', compact('radiusConnected', 'radiusDashboardUrl'));
+    }
+
+    public function authLogsPage()
+    {
+        $radiusConnected = $this->checkRadiusConnection();
+        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
+
+        return view('admin.hotspot.auth-logs', compact('radiusConnected', 'radiusDashboardUrl'));
+    }
+
+    public function profilesPage()
+    {
+        $radiusConnected = $this->checkRadiusConnection();
+        $radiusDashboardUrl = config('hotspot.radius_dashboard_url');
+        $profiles = HotspotRadiusProfile::query()
+            ->withCount('users')
+            ->orderBy('role')
+            ->orderBy('priority')
+            ->orderBy('name')
+            ->get();
+        $radiusState = $this->radiusProfileState($profiles);
+
+        return view('admin.hotspot.profiles', compact(
+            'radiusConnected',
+            'radiusDashboardUrl',
+            'profiles',
+            'radiusState'
+        ));
     }
 
     public function onlineUsers()
@@ -533,31 +583,51 @@ class HotspotController extends Controller
                 ->whereNull('acctstoptime')
                 ->orderByDesc('acctstarttime')
                 ->get();
+            $recentRaw = DB::connection('mysql_radius')->table('radacct')
+                ->whereNotNull('acctstoptime')
+                ->orderByDesc('acctstoptime')
+                ->limit(15)
+                ->get();
 
-            $usernames  = $sessions->pluck('username')->unique()->values();
+            $usernames = $sessions->pluck('username')
+                ->merge($recentRaw->pluck('username'))
+                ->unique()
+                ->values();
             $hotspotMap = HotspotUser::whereIn('username', $usernames)
-                ->with('user.siswa.kelasAktif')
+                ->with(['radiusProfile', 'user.siswa.kelasAktif', 'user.gtk'])
                 ->get()
                 ->keyBy('username');
+            $defaultProfiles = HotspotRadiusProfile::query()
+                ->where('is_active', true)
+                ->where('is_default', true)
+                ->get()
+                ->keyBy('role');
 
-            $result = $sessions->map(function ($s) use ($hotspotMap) {
-                $hs    = $hotspotMap->get($s->username);
-                $kelas = null;
-                if ($hs && $hs->role === 'siswa' && $hs->user?->siswa) {
-                    $kelas = optional($hs->user->siswa->kelasAktif->first())->nama_kelas;
-                }
+            $result = $sessions->map(function ($s) use ($hotspotMap, $defaultProfiles) {
+                $hs = $hotspotMap->get($s->username);
+                $identity = $this->hotspotIdentity($hs);
 
                 return [
                     'session_id'   => $s->radacctid,
                     'username'     => $s->username,
                     'display_name' => $hs?->display_name ?? $s->username,
                     'role'         => $hs?->role ?? 'unknown',
-                    'kelas'        => $kelas,
+                    'kelas'        => $identity['kelas'],
+                    'kelas_id'     => $identity['kelas_id'],
+                    'kelas_url'    => $identity['kelas_url'],
+                    'photo_url'    => $identity['photo_url'],
+                    'detail_url'   => $identity['detail_url'],
+                    'identity'     => $identity['identity'],
+                    'profile'      => $hs?->radiusProfile?->name
+                        ?? $defaultProfiles->get($hs?->role)?->name,
+                    'queue_name'   => '<hotspot-'.$s->username.'>',
                     'hotspot_id'   => $hs?->id,
                     'is_active'    => $hs?->is_active ?? true,
                     'framed_ip'    => $s->framedipaddress,
                     'mac'          => $s->callingstationid,
                     'nas_ip'       => $s->nasipaddress,
+                    'nas_port'     => $s->nasportid ?? $s->nasport ?? null,
+                    'terminate_cause' => $s->acctterminatecause,
                     'started_at'   => $s->acctstarttime,
                     'session_time' => (int) ($s->acctsessiontime ?? 0),
                     'bytes_in'     => (int) ($s->acctinputoctets ?? 0),
@@ -565,10 +635,35 @@ class HotspotController extends Controller
                 ];
             });
 
+            $today = now()->startOfDay();
+            $accounting = DB::connection('mysql_radius')->table('radacct');
+            $summary = [
+                'sessions_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->count(),
+                'unique_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->distinct('username')->count('username'),
+                'download_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctoutputoctets'),
+                'upload_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctinputoctets'),
+            ];
+
+            $recentSessions = $recentRaw->map(function ($session) use ($hotspotMap) {
+                    $hotspot = $hotspotMap->get($session->username);
+
+                    return [
+                        'username' => $session->username,
+                        'display_name' => $hotspot?->display_name ?? $session->username,
+                        'stopped_at' => $session->acctstoptime,
+                        'session_time' => (int) ($session->acctsessiontime ?? 0),
+                        'terminate_cause' => $session->acctterminatecause ?: 'Tidak diketahui',
+                        'framed_ip' => $session->framedipaddress,
+                        'mac' => $session->callingstationid,
+                    ];
+                });
+
             return response()->json([
                 'success'  => true,
                 'count'    => $result->count(),
                 'sessions' => $result->values(),
+                'summary' => $summary,
+                'recent_sessions' => $recentSessions,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -699,6 +794,7 @@ class HotspotController extends Controller
             'name' => 'required|string|max:120',
             'role' => 'nullable|in:guru,siswa,tamu',
             'rate_limit' => 'nullable|string|max:80',
+            'mikrotik_group' => ['nullable', 'string', 'max:80', 'regex:/^[a-zA-Z0-9_.-]+$/'],
             'session_timeout' => 'nullable|integer|min:60|max:31536000',
             'idle_timeout' => 'nullable|integer|min:60|max:86400',
             'simultaneous_use' => 'nullable|integer|min:1|max:50',
@@ -755,6 +851,138 @@ class HotspotController extends Controller
         return null;
     }
 
+    private function hotspotIdentity(?HotspotUser $hotspot): array
+    {
+        $fallbackName = $hotspot?->display_name ?: $hotspot?->username ?: 'User Hotspot';
+        $fallbackPhoto = 'https://ui-avatars.com/api/?name='.urlencode($fallbackName).'&size=160&background=475569&color=ffffff';
+        $payload = [
+            'photo_url' => $fallbackPhoto,
+            'detail_url' => null,
+            'kelas' => null,
+            'kelas_id' => null,
+            'kelas_url' => null,
+            'identity' => null,
+        ];
+
+        if (!$hotspot?->user) {
+            return $payload;
+        }
+
+        if ($hotspot->role === 'siswa' && $hotspot->user->siswa) {
+            $siswa = $hotspot->user->siswa;
+            $kelas = $siswa->kelasAktif->first();
+
+            return [
+                'photo_url' => $siswa->foto_profile_url,
+                'detail_url' => route('admin.siswa.show', $siswa),
+                'kelas' => $kelas?->nama_kelas,
+                'kelas_id' => $kelas?->id,
+                'kelas_url' => $kelas ? route('admin.kelas.show', $kelas) : null,
+                'identity' => [
+                    'label' => 'NISN',
+                    'value' => $siswa->nisn,
+                    'secondary_label' => 'NIS Lokal',
+                    'secondary_value' => $siswa->nis_lokal,
+                    'status' => $siswa->status_siswa,
+                ],
+            ];
+        }
+
+        if ($hotspot->role === 'guru' && $hotspot->user->gtk) {
+            $gtk = $hotspot->user->gtk;
+
+            return [
+                'photo_url' => $gtk->foto_profile_url,
+                'detail_url' => route('admin.gtk.show', $gtk),
+                'kelas' => null,
+                'kelas_id' => null,
+                'kelas_url' => null,
+                'identity' => [
+                    'label' => 'NIK',
+                    'value' => $gtk->nik,
+                    'secondary_label' => 'NIP/NUPTK',
+                    'secondary_value' => $gtk->nip ?: $gtk->nuptk,
+                    'status' => $gtk->status_kepegawaian ?: $gtk->jenis_ptk,
+                ],
+            ];
+        }
+
+        return $payload;
+    }
+
+    private function classifyAuthResult(object $log, ?HotspotUser $hotspot, $rejectSet, $disabledSet): array
+    {
+        if ($log->reply === 'Access-Accept') {
+            return ['status' => 'success', 'reason' => 'Login berhasil dan akses diberikan.'];
+        }
+
+        if ($log->reply !== 'Access-Reject') {
+            return ['status' => 'other', 'reason' => 'Respons RADIUS: '.$log->reply.'.'];
+        }
+
+        if (!$hotspot) {
+            return ['status' => 'reject', 'reason' => 'Username tidak terdaftar di SIMANSA/Hotspot.'];
+        }
+
+        if ($disabledSet->has($log->username)) {
+            return ['status' => 'reject', 'reason' => 'Password Hotspot belum aman/tersedia; pengguna harus reset password SIMANSA.'];
+        }
+
+        if ($rejectSet->has($log->username) || !$hotspot->is_active) {
+            return ['status' => 'reject', 'reason' => $hotspot->isExpired()
+                ? 'Masa berlaku akun telah berakhir.'
+                : 'Akun Hotspot sedang nonaktif atau tidak memenuhi syarat akses.'];
+        }
+
+        return ['status' => 'reject', 'reason' => 'Password salah atau autentikasi ditolak oleh kebijakan RADIUS.'];
+    }
+
+    private function radiusProfileState($profiles): array
+    {
+        try {
+            $codes = $profiles->pluck('code');
+            $replyRows = DB::connection('mysql_radius')->table('radgroupreply')
+                ->whereIn('groupname', $codes)
+                ->get();
+            $checkRows = DB::connection('mysql_radius')->table('radgroupcheck')
+                ->whereIn('groupname', $codes)
+                ->get();
+
+            return $profiles->mapWithKeys(function (HotspotRadiusProfile $profile) use ($replyRows, $checkRows) {
+                $actual = $replyRows->where('groupname', $profile->code)
+                    ->pluck('value', 'attribute')
+                    ->merge($checkRows->where('groupname', $profile->code)->pluck('value', 'attribute'))
+                    ->all();
+                $expected = array_filter([
+                    'Mikrotik-Rate-Limit' => $profile->rate_limit,
+                    'Mikrotik-Group' => $profile->mikrotik_group,
+                    'Session-Timeout' => $profile->session_timeout,
+                    'Idle-Timeout' => $profile->idle_timeout,
+                    'Framed-Pool' => $profile->framed_pool,
+                    'Mikrotik-Address-List' => $profile->address_list,
+                    'Simultaneous-Use' => $profile->simultaneous_use,
+                ], fn ($value) => $value !== null && $value !== '');
+                $normalizedActual = array_map('strval', $actual);
+                $normalizedExpected = array_map('strval', $expected);
+                $status = empty($actual) ? 'missing' : ($normalizedActual == $normalizedExpected ? 'synced' : 'drift');
+
+                return [$profile->id => [
+                    'status' => $status,
+                    'actual' => $actual,
+                    'expected' => $expected,
+                ]];
+            })->all();
+        } catch (\Throwable $e) {
+            Log::warning('[Hotspot] Unable to read RADIUS profile state', ['error' => $e->getMessage()]);
+
+            return $profiles->mapWithKeys(fn ($profile) => [$profile->id => [
+                'status' => 'offline',
+                'actual' => [],
+                'expected' => [],
+            ]])->all();
+        }
+    }
+
     private function getRadiusServerInfo(): array
     {
         $host = config('database.connections.mysql_radius.host');
@@ -778,6 +1006,103 @@ class HotspotController extends Controller
             return $db->getSchemaBuilder()->hasTable($table);
         } catch (\Throwable) {
             return false;
+        }
+    }
+
+    public function authLogs(Request $request)
+    {
+        $validated = $request->validate([
+            'result' => 'nullable|in:success,reject,other',
+            'search' => 'nullable|string|max:100',
+            'date' => 'nullable|date_format:Y-m-d',
+            'per_page' => 'nullable|integer|min:10|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        try {
+            $db = DB::connection('mysql_radius');
+            $date = $validated['date'] ?? now()->toDateString();
+            $perPage = (int) ($validated['per_page'] ?? 25);
+            $query = $db->table('radpostauth')
+                ->select(['id', 'username', 'reply', 'authdate', 'class'])
+                ->whereDate('authdate', $date);
+
+            if (!empty($validated['search'])) {
+                $query->where('username', 'like', '%'.$validated['search'].'%');
+            }
+
+            if (($validated['result'] ?? null) === 'success') {
+                $query->where('reply', 'Access-Accept');
+            } elseif (($validated['result'] ?? null) === 'reject') {
+                $query->where('reply', 'Access-Reject');
+            } elseif (($validated['result'] ?? null) === 'other') {
+                $query->whereNotIn('reply', ['Access-Accept', 'Access-Reject']);
+            }
+
+            $page = $query->orderByDesc('authdate')->paginate($perPage);
+            $usernames = collect($page->items())->pluck('username')->unique()->values();
+            $hotspotMap = HotspotUser::whereIn('username', $usernames)
+                ->with(['user.siswa.kelasAktif', 'user.gtk'])
+                ->get()
+                ->keyBy('username');
+            $rejectSet = $db->table('radcheck')
+                ->whereIn('username', $usernames)
+                ->where('attribute', 'Auth-Type')
+                ->where('value', 'Reject')
+                ->pluck('username')
+                ->flip();
+            $disabledSet = $db->table('radcheck')
+                ->whereIn('username', $usernames)
+                ->where('attribute', 'Cleartext-Password')
+                ->where('value', '__DISABLED__')
+                ->pluck('username')
+                ->flip();
+
+            $items = collect($page->items())->map(function ($log) use ($hotspotMap, $rejectSet, $disabledSet) {
+                $hotspot = $hotspotMap->get($log->username);
+                $classification = $this->classifyAuthResult($log, $hotspot, $rejectSet, $disabledSet);
+                $identity = $this->hotspotIdentity($hotspot);
+
+                return [
+                    'id' => $log->id,
+                    'username' => $log->username,
+                    'display_name' => $hotspot?->display_name ?? $log->username,
+                    'role' => $hotspot?->role ?? 'unknown',
+                    'reply' => $log->reply,
+                    'status' => $classification['status'],
+                    'reason' => $classification['reason'],
+                    'authdate' => $log->authdate,
+                    'photo_url' => $identity['photo_url'],
+                    'detail_url' => $identity['detail_url'],
+                    'kelas' => $identity['kelas'],
+                ];
+            });
+
+            $daily = $db->table('radpostauth')
+                ->whereDate('authdate', $date)
+                ->selectRaw("COUNT(*) total, SUM(reply = 'Access-Accept') accepted, SUM(reply = 'Access-Reject') rejected, SUM(reply NOT IN ('Access-Accept','Access-Reject')) other")
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'logs' => $items,
+                'summary' => [
+                    'total' => (int) ($daily->total ?? 0),
+                    'accepted' => (int) ($daily->accepted ?? 0),
+                    'rejected' => (int) ($daily->rejected ?? 0),
+                    'other' => (int) ($daily->other ?? 0),
+                ],
+                'pagination' => [
+                    'current_page' => $page->currentPage(),
+                    'last_page' => $page->lastPage(),
+                    'per_page' => $page->perPage(),
+                    'total' => $page->total(),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[Hotspot] Failed to load authentication logs', ['error' => $e->getMessage()]);
+
+            return response()->json(['success' => false, 'message' => 'Log autentikasi tidak dapat dimuat.'], 500);
         }
     }
 }

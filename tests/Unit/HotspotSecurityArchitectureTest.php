@@ -60,4 +60,40 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringNotContainsString('MIKROTIK_PASS="vscode"', $scripts);
         $this->assertStringNotContainsString('echo " MikroTik secret: ${RADIUS_SECRET}"', $scripts);
     }
+
+    public function test_hotspot_has_dedicated_monitoring_auth_log_and_radius_profile_pages(): void
+    {
+        $routes = file_get_contents($this->root.'/routes/web.php');
+        $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');
+        $online = file_get_contents($this->root.'/resources/views/admin/hotspot/online.blade.php');
+
+        $this->assertStringContainsString("->name('auth-logs')", $routes);
+        $this->assertStringContainsString("->name('profiles.page')", $routes);
+        $this->assertStringContainsString('classifyAuthResult', $controller);
+        $this->assertStringContainsString("'photo_url'", $controller);
+        $this->assertStringContainsString("'detail_url'", $controller);
+        $this->assertStringContainsString("'kelas_url'", $controller);
+        $this->assertStringContainsString('sessionDetailModal', $online);
+    }
+
+    public function test_radius_auth_log_never_exposes_or_persists_attempted_password(): void
+    {
+        $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');
+        $hardening = file_get_contents($this->root.'/deploy/harden-radius-postauth.sh');
+
+        $this->assertStringContainsString("->select(['id', 'username', 'reply', 'authdate', 'class'])", $controller);
+        $this->assertStringNotContainsString("'pass'", $controller);
+        $this->assertStringContainsString("UPDATE radpostauth SET pass = ''", $hardening);
+        $this->assertStringContainsString("replacement = \"'', \"", $hardening);
+    }
+
+    public function test_radius_profile_models_the_mikrotik_group_attribute(): void
+    {
+        $profile = file_get_contents($this->root.'/app/Models/HotspotRadiusProfile.php');
+        $view = file_get_contents($this->root.'/resources/views/admin/hotspot/profiles.blade.php');
+
+        $this->assertStringContainsString("'Mikrotik-Group' => \$this->mikrotik_group", $profile);
+        $this->assertStringContainsString('MikroTik Group', $view);
+        $this->assertStringContainsString('Sync semua', $view);
+    }
 }

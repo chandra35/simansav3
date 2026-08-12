@@ -928,7 +928,32 @@ return [
             'icon' => 'fas fa-fw fa-wifi',
             'can' => 'view-hotspot',
             'active' => ['admin/hotspot*'],
-            'route' => 'admin.hotspot.index',
+            'submenu' => [
+                [
+                    'text' => 'Akun Hotspot',
+                    'route' => 'admin.hotspot.index',
+                    'icon' => 'fas fa-fw fa-users',
+                    'active' => ['admin/hotspot'],
+                ],
+                [
+                    'text' => 'Monitoring Online',
+                    'route' => 'admin.hotspot.online',
+                    'icon' => 'fas fa-fw fa-satellite-dish',
+                    'active' => ['admin/hotspot/online*'],
+                ],
+                [
+                    'text' => 'Log Autentikasi',
+                    'route' => 'admin.hotspot.auth-logs',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                    'active' => ['admin/hotspot/auth-logs*'],
+                ],
+                [
+                    'text' => 'Profile RADIUS',
+                    'route' => 'admin.hotspot.profiles.page',
+                    'icon' => 'fas fa-fw fa-sliders-h',
+                    'active' => ['admin/hotspot/radius-profiles*'],
+                ],
+            ],
         ],
 
         // KEUANGAN - Collapsible

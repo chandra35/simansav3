@@ -12,6 +12,12 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 - Sinkronisasi berkala menonaktifkan akun tamu yang kedaluwarsa.
 - Kredensial produksi dihapus dari script deployment dan dokumentasi publik, wajib diberikan melalui environment atau secret store saat provisioning.
 - Infrastruktur MikroTik, FreeRADIUS, MariaDB, scheduler, NAS, profile, accounting, serta rekonsiliasi akun telah diaudit langsung.
+- Monitoring Hotspot kini menampilkan foto, identitas, rombel, profile, perangkat, pemakaian data, histori sesi, modal detail, serta link ke halaman siswa/GTK dan rombel.
+- Log autentikasi memiliki halaman khusus dengan klasifikasi login berhasil, username tidak dikenal, akun nonaktif/expired, password belum aman, dan dugaan password salah.
+- Password percobaan tidak lagi disimpan pada `radpostauth`; nilai historisnya sudah dikosongkan.
+- Profile RADIUS dipindahkan ke halaman khusus dengan pemeriksaan drift terhadap `radgroupreply`/`radgroupcheck`, atribut `Mikrotik-Group`, dan tombol sinkronisasi.
+- Dashboard daloRADIUS dapat dibuka langsung dari navigasi modul Hotspot.
+- Dynamic Simple Queue Hotspot tetap dipertahankan. RouterOS menolak komentar pada objek dinamis, sehingga nama lengkap ditampilkan di monitoring SIMANSA tanpa membuat queue statis yang berisiko bentrok.
 
 File terkait:
 

@@ -351,6 +351,10 @@
             </span>
         @endif
         <div class="d-flex gap-2">
+            <a class="btn btn-outline-light btn-sm" href="{{ route('admin.hotspot.online') }}"><i class="fas fa-satellite-dish mr-1"></i>Monitoring</a>
+            <a class="btn btn-outline-light btn-sm" href="{{ route('admin.hotspot.auth-logs') }}"><i class="fas fa-clipboard-list mr-1"></i>Log Auth</a>
+            <a class="btn btn-outline-light btn-sm" href="{{ route('admin.hotspot.profiles.page') }}"><i class="fas fa-sliders-h mr-1"></i>Profile</a>
+            @if($radiusDashboardUrl)<a class="btn btn-outline-light btn-sm" href="{{ $radiusDashboardUrl }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt mr-1"></i>FreeRADIUS</a>@endif
             <button class="btn btn-light btn-sm" id="btnSyncAll">
                 <i class="fas fa-sync mr-1"></i> Sync Semua
             </button>
@@ -460,9 +464,7 @@
                 <h2 class="net-card__title"><i class="fas fa-sliders-h text-info mr-1"></i>Profile RADIUS</h2>
                 <p class="net-card__sub">Bandwidth, timeout, pool, dan batas login dikirim sebagai group FreeRADIUS.</p>
             </div>
-            <button class="btn btn-primary btn-sm" id="btnAddProfile">
-                <i class="fas fa-plus mr-1"></i>Profile
-            </button>
+            <a class="btn btn-primary btn-sm" href="{{ route('admin.hotspot.profiles.page') }}"><i class="fas fa-external-link-alt mr-1"></i>Buka Halaman</a>
         </div>
         <div class="net-card__body profile-list" id="profileList">
             @forelse($profiles as $profile)
@@ -477,11 +479,7 @@
                         </span>
                     </div>
                     <div class="small text-muted mt-2">{{ $profile->description ?: 'Belum ada catatan profile.' }}</div>
-                    <div class="net-action-row">
-                        <button class="btn btn-xs btn-outline-primary btn-edit-profile"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-xs btn-outline-info btn-sync-profile" data-id="{{ $profile->id }}"><i class="fas fa-sync"></i> Sync</button>
-                        <button class="btn btn-xs btn-outline-danger btn-delete-profile" data-id="{{ $profile->id }}"><i class="fas fa-trash"></i></button>
-                    </div>
+                    <div class="net-action-row"><a class="btn btn-xs btn-outline-primary" href="{{ route('admin.hotspot.profiles.page') }}"><i class="fas fa-sliders-h mr-1"></i>Kelola di halaman profile</a></div>
                 </div>
             @empty
                 <div class="text-muted small">Belum ada profile RADIUS.</div>

@@ -199,6 +199,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/data', [\App\Http\Controllers\Admin\HotspotController::class, 'data'])->name('data');
         Route::get('/online', [\App\Http\Controllers\Admin\HotspotController::class, 'onlinePage'])->name('online');
         Route::get('/online-users', [\App\Http\Controllers\Admin\HotspotController::class, 'onlineUsers'])->name('online-users');
+        Route::get('/auth-logs', [\App\Http\Controllers\Admin\HotspotController::class, 'authLogsPage'])->name('auth-logs');
+        Route::get('/auth-logs/data', [\App\Http\Controllers\Admin\HotspotController::class, 'authLogs'])->name('auth-logs.data');
+        Route::get('/radius-profiles', [\App\Http\Controllers\Admin\HotspotController::class, 'profilesPage'])->name('profiles.page');
         Route::get('/filter-options', [\App\Http\Controllers\Admin\HotspotController::class, 'filterOptions'])->name('filter-options');
         Route::get('/radius-status', [\App\Http\Controllers\Admin\HotspotController::class, 'radiusStatus'])->name('radius-status');
         Route::get('/stats', [\App\Http\Controllers\Admin\HotspotController::class, 'stats'])->name('stats');
@@ -213,6 +216,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::post('/profiles', [\App\Http\Controllers\Admin\HotspotController::class, 'storeProfile'])->name('profiles.store');
             Route::put('/profiles/{profile}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateProfile'])->name('profiles.update');
             Route::post('/profiles/{profile}/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'syncProfile'])->name('profiles.sync');
+            Route::post('/profiles-sync-all', [\App\Http\Controllers\Admin\HotspotController::class, 'syncAllProfiles'])->name('profiles.sync-all');
             Route::delete('/profiles/{profile}', [\App\Http\Controllers\Admin\HotspotController::class, 'destroyProfile'])->name('profiles.destroy');
             Route::post('/nas', [\App\Http\Controllers\Admin\HotspotController::class, 'storeNas'])->name('nas.store');
             Route::put('/nas/{nas}', [\App\Http\Controllers\Admin\HotspotController::class, 'updateNas'])->name('nas.update');

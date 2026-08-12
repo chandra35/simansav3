@@ -172,6 +172,11 @@ systemctl enable freeradius
 systemctl restart freeradius
 systemctl status freeradius --no-pager -l | head -20
 
+# Jangan simpan password percobaan autentikasi pada tabel radpostauth.
+if [[ -f "$(dirname "$0")/harden-radius-postauth.sh" ]]; then
+    bash "$(dirname "$0")/harden-radius-postauth.sh"
+fi
+
 # Allow MariaDB from Simansa
 ufw allow from "${SIMANSA_IP}" to any port 3306 proto tcp comment "SIMANSA radius DB" 2>/dev/null || true
 ufw allow from "${MIKROTIK_IP}" to any port 1812 proto udp comment "MikroTik RADIUS auth" 2>/dev/null || true

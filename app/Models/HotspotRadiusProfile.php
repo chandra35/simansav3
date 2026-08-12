@@ -13,6 +13,7 @@ class HotspotRadiusProfile extends Model
         'name',
         'role',
         'rate_limit',
+        'mikrotik_group',
         'session_timeout',
         'idle_timeout',
         'simultaneous_use',
@@ -50,6 +51,7 @@ class HotspotRadiusProfile extends Model
 
             $replyAttributes = [
                 'Mikrotik-Rate-Limit' => $this->rate_limit,
+                'Mikrotik-Group' => $this->mikrotik_group,
                 'Session-Timeout' => $this->session_timeout,
                 'Idle-Timeout' => $this->idle_timeout,
                 'Framed-Pool' => $this->framed_pool,
