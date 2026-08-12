@@ -23,6 +23,7 @@ class DeploymentScriptArchitectureTest extends TestCase
         $this->assertStringNotContainsString('chown -R', $script);
         $this->assertStringNotContainsString('find storage bootstrap/cache', $script);
         $this->assertStringContainsString('flock -n 9', $script);
+        $this->assertStringContainsString('9>/tmp/simansa-production-deploy.lock', $script);
         $this->assertStringContainsString('Maintenance berlangsung', $script);
         $this->assertStringContainsString('SIMANSA_DEPLOY_SNAPSHOT', $script);
     }

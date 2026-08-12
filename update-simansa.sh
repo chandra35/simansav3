@@ -74,7 +74,7 @@ echo -e "==============================================${NC}"
 cd "$APP_DIR"
 print_success "Direktori: $(pwd)"
 
-exec 9>storage/framework/simansa-deploy.lock
+exec 9>/tmp/simansa-production-deploy.lock
 if ! flock -n 9; then print_error "Deploy lain masih berjalan."; exit 1; fi
 
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -90,7 +90,9 @@ OLD_HEAD="$(git rev-parse HEAD)"
 TARGET_HEAD="$(git rev-parse FETCH_HEAD)"
 
 if [[ "$OLD_HEAD" == "$TARGET_HEAD" ]]; then
+    TOTAL_ELAPSED=$(( $(now_ms) - DEPLOY_STARTED ))
     print_success "Aplikasi sudah menggunakan commit terbaru. Tidak ada downtime."
+    print_success "Pemeriksaan selesai dalam $((TOTAL_ELAPSED / 1000)).$(printf '%03d' $((TOTAL_ELAPSED % 1000))) detik"
     exit 0
 fi
 

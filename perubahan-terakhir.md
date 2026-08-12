@@ -10,7 +10,7 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 - Composer dan migrasi hanya dijalankan apabila manifest dependency atau file migration berubah.
 - Pembersihan serta pembuatan cache disederhanakan menjadi `optimize:clear` dan `optimize` tanpa pekerjaan ganda.
 - Traversal permission rekursif pada seluruh storage dihapus; script hanya memastikan direktori runtime utama tetap writable.
-- Perubahan dokumentasi atau test saja diterapkan tanpa maintenance, dan deploy bersamaan dicegah menggunakan file lock.
+- Perubahan dokumentasi atau test saja diterapkan tanpa maintenance, dan deploy bersamaan dicegah menggunakan file lock di `/tmp` agar worktree tetap bersih.
 - Setiap tahap, total deploy, dan durasi maintenance kini dicatat agar bottleneck mudah ditemukan.
 - Script berjalan dari snapshot sementara agar aman saat `update-simansa.sh` sendiri ikut diperbarui.
 
