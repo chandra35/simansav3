@@ -40,7 +40,7 @@ add name=profile-tamu rate-limit=2M/2M address-pool=pool-tamu idle-timeout=10m k
 
 # === 4. Update Hotspot Server Profile (hsprof1) ===
 /ip hotspot profile
-set [find name=hsprof1] use-radius=yes radius-accounting=yes
+set [find name=hsprof1] use-radius=yes radius-accounting=yes radius-interim-update=10s
 
 # === 5. Enable Hotspot ===
 /ip hotspot enable hotspot1

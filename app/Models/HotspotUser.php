@@ -18,6 +18,9 @@ class HotspotUser extends Model
         'hotspot_radius_profile_id',
         'display_name',
         'is_active',
+        'blocked_at',
+        'blocked_by',
+        'block_reason',
         'expired_at',
         'keterangan',
         'last_synced_at',
@@ -28,6 +31,7 @@ class HotspotUser extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'blocked_at' => 'datetime',
         'expired_at' => 'datetime',
         'last_synced_at' => 'datetime',
         'password_secret' => 'encrypted',

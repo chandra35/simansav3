@@ -211,6 +211,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::middleware('permission:manage-hotspot')->group(function () {
             Route::post('/sync', [\App\Http\Controllers\Admin\HotspotController::class, 'sync'])->name('sync');
             Route::post('/sync/{hotspot}', [\App\Http\Controllers\Admin\HotspotController::class, 'syncSingle'])->name('sync-single');
+            Route::post('/sessions/disconnect', [\App\Http\Controllers\Admin\HotspotController::class, 'disconnectSession'])->name('sessions.disconnect');
+            Route::post('/{hotspot}/block', [\App\Http\Controllers\Admin\HotspotController::class, 'blockUser'])->name('block');
+            Route::post('/{hotspot}/unblock', [\App\Http\Controllers\Admin\HotspotController::class, 'unblockUser'])->name('unblock');
             Route::post('/{hotspot}/toggle-active', [\App\Http\Controllers\Admin\HotspotController::class, 'toggleActive'])->name('toggle-active');
             Route::post('/bulk-toggle', [\App\Http\Controllers\Admin\HotspotController::class, 'bulkToggle'])->name('bulk-toggle');
             Route::post('/assign-profile', [\App\Http\Controllers\Admin\HotspotController::class, 'assignProfile'])->name('assign-profile');

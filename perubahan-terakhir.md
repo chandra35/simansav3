@@ -6,6 +6,9 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Pemusatan Setting Hotspot
 
+- Monitoring Online memiliki aksi **Putuskan sesi** melalui RADIUS Disconnect-Request dan **Blokir & putuskan**; daftar blokir manual menyediakan aksi Unblokir.
+- Durasi sesi bergerak setiap detik, sedangkan pemakaian dan kecepatan trafik diperbarui setiap 5 detik dari accounting interim MikroTik 10 detik.
+- Bridge pemutusan dibatasi ke helper khusus dari SIMANSA menuju FreeRADIUS dan hanya mengizinkan NAS MikroTik Hotspot `172.16.250.1`; proses web tidak memperoleh shell umum maupun shared secret.
 - Badge status FreeRADIUS pada seluruh hero Hotspot memakai latar terang dengan teks hijau/merah berkontras tinggi agar tidak tenggelam oleh warna gradient.
 - Halaman **Akun Hotspot** kini difokuskan pada statistik akun, daftar akun, sinkronisasi, profile akun, serta akun tamu.
 - Detail server FreeRADIUS, status RADIUS, Profile RADIUS, MikroTik/NAS, script konfigurasi, dan tautan dashboard FreeRADIUS dipusatkan pada halaman **Hotspot > Setting**.

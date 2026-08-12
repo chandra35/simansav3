@@ -9,6 +9,7 @@ use App\Models\HotspotUser;
 use App\Models\Siswa;
 use App\Models\Gtk;
 use App\Models\User;
+use App\Services\RadiusDisconnectService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Crypt;
@@ -214,7 +215,14 @@ class HotspotController extends Controller
             ], 422);
         }
 
-        $hotspot->update(['is_active' => $willActivate]);
+        $hotspot->update(array_merge(
+            ['is_active' => $willActivate],
+            $willActivate ? [
+                'blocked_at' => null,
+                'blocked_by' => null,
+                'block_reason' => null,
+            ] : []
+        ));
 
         // Sync status ke RADIUS
         if (!$hotspot->is_active) {
@@ -603,9 +611,13 @@ class HotspotController extends Controller
             $result = $sessions->map(function ($s) use ($hotspotMap, $defaultProfiles) {
                 $hs = $hotspotMap->get($s->username);
                 $identity = $this->hotspotIdentity($hs);
+                $elapsed = $s->acctstarttime ? now()->diffInSeconds($s->acctstarttime) : 0;
+                $download = (int) ($s->acctinputoctets ?? 0);
+                $upload = (int) ($s->acctoutputoctets ?? 0);
 
                 return [
                     'session_id'   => $s->radacctid,
+                    'acct_session_id' => $s->acctsessionid,
                     'username'     => $s->username,
                     'display_name' => $hs?->display_name ?? $s->username,
                     'role'         => $hs?->role ?? 'unknown',
@@ -626,9 +638,11 @@ class HotspotController extends Controller
                     'nas_port'     => $s->nasportid ?? $s->nasport ?? null,
                     'terminate_cause' => $s->acctterminatecause,
                     'started_at'   => $s->acctstarttime,
-                    'session_time' => (int) ($s->acctsessiontime ?? 0),
+                    'session_time' => max((int) ($s->acctsessiontime ?? 0), $elapsed),
                     'bytes_in'     => (int) ($s->acctinputoctets ?? 0),
                     'bytes_out'    => (int) ($s->acctoutputoctets ?? 0),
+                    'bytes_download' => $download,
+                    'bytes_upload' => $upload,
                 ];
             });
 
@@ -637,9 +651,24 @@ class HotspotController extends Controller
             $summary = [
                 'sessions_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->count(),
                 'unique_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->distinct('username')->count('username'),
-                'download_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctoutputoctets'),
-                'upload_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctinputoctets'),
+                'download_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctinputoctets'),
+                'upload_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctoutputoctets'),
             ];
+
+            $blockedUsers = HotspotUser::query()
+                ->whereNotNull('blocked_at')
+                ->where('is_active', false)
+                ->orderByDesc('blocked_at')
+                ->limit(25)
+                ->get(['id', 'username', 'display_name', 'role', 'blocked_at', 'block_reason'])
+                ->map(fn (HotspotUser $user) => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'display_name' => $user->display_name,
+                    'role' => $user->role,
+                    'blocked_at' => $user->blocked_at?->toIso8601String(),
+                    'block_reason' => $user->block_reason,
+                ]);
 
             $recentSessions = $recentRaw->map(function ($session) use ($hotspotMap) {
                     $hotspot = $hotspotMap->get($session->username);
@@ -661,6 +690,8 @@ class HotspotController extends Controller
                 'sessions' => $result->values(),
                 'summary' => $summary,
                 'recent_sessions' => $recentSessions,
+                'blocked_users' => $blockedUsers,
+                'server_time' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -711,7 +742,14 @@ class HotspotController extends Controller
                 continue;
             }
 
-            $hotspot->update(['is_active' => $isActive]);
+            $hotspot->update(array_merge(
+                ['is_active' => $isActive],
+                $isActive ? [
+                    'blocked_at' => null,
+                    'blocked_by' => null,
+                    'block_reason' => null,
+                ] : []
+            ));
 
             // Sync status ke RADIUS
             if ($isActive) {
@@ -740,6 +778,104 @@ class HotspotController extends Controller
             'message' => "{$count} akun berhasil {$label}.{$extra}",
             'stats'   => $this->getStats(false),
         ]);
+    }
+
+    public function disconnectSession(Request $request, RadiusDisconnectService $disconnect): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate(['session_id' => 'required|integer|min:1']);
+        $session = DB::connection('mysql_radius')->table('radacct')
+            ->where('radacctid', $validated['session_id'])
+            ->whereNull('acctstoptime')
+            ->first();
+
+        if (!$session) {
+            return response()->json(['success' => false, 'message' => 'Sesi sudah berakhir atau tidak ditemukan.'], 404);
+        }
+
+        $result = $this->disconnectRadiusSession($session, $disconnect);
+        activity('hotspot')
+            ->causedBy($request->user())
+            ->withProperties(['username' => $session->username, 'session_id' => $session->radacctid, 'success' => $result['success']])
+            ->log('Admin meminta pemutusan sesi Hotspot');
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    public function blockUser(Request $request, HotspotUser $hotspot, RadiusDisconnectService $disconnect): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate(['reason' => 'nullable|string|max:255']);
+        $hotspot->update([
+            'is_active' => false,
+            'blocked_at' => now(),
+            'blocked_by' => $request->user()->getKey(),
+            'block_reason' => $validated['reason'] ?? 'Diblokir dari Monitoring Hotspot',
+            'sync_status' => 'synced',
+            'last_synced_at' => now(),
+        ]);
+        DB::connection('mysql_radius')->table('radcheck')->updateOrInsert(
+            ['username' => $hotspot->username, 'attribute' => 'Auth-Type'],
+            ['op' => ':=', 'value' => 'Reject']
+        );
+
+        $sessions = DB::connection('mysql_radius')->table('radacct')
+            ->where('username', $hotspot->username)
+            ->whereNull('acctstoptime')
+            ->get();
+        $disconnected = 0;
+        $failed = 0;
+        foreach ($sessions as $session) {
+            $this->disconnectRadiusSession($session, $disconnect)['success'] ? $disconnected++ : $failed++;
+        }
+
+        activity('hotspot')->performedOn($hotspot)->causedBy($request->user())
+            ->withProperties(['disconnected' => $disconnected, 'disconnect_failed' => $failed, 'reason' => $hotspot->block_reason])
+            ->log('Akun Hotspot diblokir');
+
+        $message = "Akun diblokir. {$disconnected} sesi aktif diputus.";
+        if ($failed > 0) {
+            $message .= " {$failed} sesi belum mendapat konfirmasi dari MikroTik.";
+        }
+
+        return response()->json(['success' => $failed === 0, 'blocked' => true, 'message' => $message], $failed === 0 ? 200 : 422);
+    }
+
+    public function unblockUser(Request $request, HotspotUser $hotspot): \Illuminate\Http\JsonResponse
+    {
+        $hotspot->loadMissing('user.siswa');
+        if (!$hotspot->isEligibleForRadius()) {
+            return response()->json(['success' => false, 'message' => 'Akun tidak memenuhi syarat untuk diaktifkan kembali.'], 422);
+        }
+
+        $hotspot->update([
+            'is_active' => true,
+            'blocked_at' => null,
+            'blocked_by' => null,
+            'block_reason' => null,
+            'sync_status' => 'synced',
+            'last_synced_at' => now(),
+        ]);
+        DB::connection('mysql_radius')->table('radcheck')
+            ->where('username', $hotspot->username)
+            ->where('attribute', 'Auth-Type')
+            ->delete();
+
+        activity('hotspot')->performedOn($hotspot)->causedBy($request->user())->log('Blokir akun Hotspot dibuka');
+
+        return response()->json(['success' => true, 'message' => 'Blokir dibuka. Pengguna dapat login kembali.']);
+    }
+
+    private function disconnectRadiusSession(object $session, RadiusDisconnectService $disconnect): array
+    {
+        $nas = HotspotRadiusNas::query()
+            ->where('is_active', true)
+            ->where('nasname', $session->nasipaddress)
+            ->first();
+
+        if (!$nas) {
+            return ['success' => false, 'message' => 'NAS sesi ini belum terdaftar pada Setting Hotspot.'];
+        }
+
+        return $disconnect->disconnect($nas, $session);
     }
 
     private function getStats(bool $includeRadius = false): array

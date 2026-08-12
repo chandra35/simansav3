@@ -138,4 +138,29 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertFalse($siswa->isSecurePassword('1234567890'));
         $this->assertFalse($guru->isSecurePassword('short'));
     }
+
+    public function test_monitoring_supports_live_traffic_disconnect_and_blocking(): void
+    {
+        $routes = file_get_contents($this->root.'/routes/web.php');
+        $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');
+        $view = file_get_contents($this->root.'/resources/views/admin/hotspot/online.blade.php');
+        $service = file_get_contents($this->root.'/app/Services/RadiusDisconnectService.php');
+        $migration = file_get_contents($this->root.'/database/migrations/2026_08_12_163000_add_block_metadata_to_hotspot_users.php');
+        $bridge = file_get_contents($this->root.'/deploy/radius-disconnect-from-simansa.sh')
+            .file_get_contents($this->root.'/deploy/radius-disconnect-on-radius.sh');
+
+        $this->assertStringContainsString("->name('sessions.disconnect')", $routes);
+        $this->assertStringContainsString("->name('block')", $routes);
+        $this->assertStringContainsString("->name('unblock')", $routes);
+        $this->assertStringContainsString('disconnectRadiusSession', $controller);
+        $this->assertStringContainsString("'blocked_users'", $controller);
+        $this->assertStringContainsString("'bytes_download'", $controller);
+        $this->assertStringContainsString('setInterval(loadOnline,5000)', $view);
+        $this->assertStringContainsString('setInterval(tickDurations,1000)', $view);
+        $this->assertStringContainsString('Blokir & putuskan', $view);
+        $this->assertStringContainsString("'sudo'", $service);
+        $this->assertStringContainsString("'blocked_at'", $migration);
+        $this->assertStringContainsString('Received Disconnect-ACK', $bridge);
+        $this->assertStringContainsString('[[ "$nas_ip" == "172.16.250.1" ]]', $bridge);
+    }
 }

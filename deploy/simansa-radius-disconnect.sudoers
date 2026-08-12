@@ -1,0 +1,1 @@
+www ALL=(root) NOPASSWD: /usr/local/sbin/simansa-radius-disconnect *
