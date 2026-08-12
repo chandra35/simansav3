@@ -458,7 +458,7 @@ class UserController extends Controller
 
         // Get roles that can be assigned as tugas tambahan
         // Exclude base roles: Super Admin, GTK, Siswa
-        $tugasTambahanRoles = Role::whereNotIn('name', ['Super Admin', 'GTK', 'Siswa', 'Guru', 'Staff TU'])
+        $tugasTambahanRoles = Role::whereNotIn('name', ['Super Admin', 'GTK', 'Siswa', 'Guru', 'Staff TU', 'Kepala Madrasah', 'WAKA'])
             ->orderBy('name')
             ->get();
 
@@ -927,6 +927,13 @@ class UserController extends Controller
         try {
             // Get role name
             $role = Role::findOrFail($validated['role_id']);
+
+            if (in_array($role->name, ['Kepala Madrasah', 'WAKA'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Penugasan Kepala Madrasah dan WAKA dikelola melalui modul Penugasan GTK.',
+                ], 422);
+            }
 
             // Check if user has GTK role (only GTK can have tugas tambahan)
             if (!$user->hasRole('GTK')) {

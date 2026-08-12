@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 class AppSetting extends Model
 {
@@ -227,6 +228,19 @@ class AppSetting extends Model
      */
     public function getKepalaSekolah()
     {
+        if (Schema::hasTable('penugasan_gtk')) {
+            $assignment = PenugasanGtk::query()
+                ->with('gtk.user')
+                ->active()
+                ->whereHas('jenis', fn ($query) => $query->where('kode', 'kepala_madrasah'))
+                ->latest('mulai_tugas')
+                ->first();
+
+            if ($assignment?->gtk?->user) {
+                return $assignment->gtk->user;
+            }
+        }
+
         return User::role('Kepala Madrasah')
             ->whereHas('tugasTambahan', function($query) {
                 $query->where('is_active', true)
@@ -242,6 +256,19 @@ class AppSetting extends Model
      */
     public function getKepalaSekolahWithTugas()
     {
+        if (Schema::hasTable('penugasan_gtk')) {
+            $assignment = PenugasanGtk::query()
+                ->with('gtk.user')
+                ->active()
+                ->whereHas('jenis', fn ($query) => $query->where('kode', 'kepala_madrasah'))
+                ->latest('mulai_tugas')
+                ->first();
+
+            if ($assignment?->gtk?->user) {
+                return ['user' => $assignment->gtk->user, 'tugas' => $assignment];
+            }
+        }
+
         $kepala = $this->getKepalaSekolah();
         
         if (!$kepala) {

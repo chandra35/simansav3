@@ -16,6 +16,7 @@ use App\Models\Gtk;
 use App\Models\TahunPelajaran;
 use App\Services\JadwalWakakurImportService;
 use App\Services\JadwalAliasMappingService;
+use App\Services\GtkWorkloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -812,7 +813,7 @@ class JadwalPelajaranController extends Controller
      * Min sertifikasi: 24 JTM/minggu, Maks: 40 JTM/minggu.
      * Tugas tambahan dihitung ekuivalensi: Wali Kelas +6, Wakasek +12, Ka.Lab/Perpus +12.
      */
-    public function guruJtmSummary(Request $request)
+    public function guruJtmSummary(Request $request, GtkWorkloadService $workloadService)
     {
         $this->authorize('view-jadwal-pelajaran');
 
@@ -821,72 +822,19 @@ class JadwalPelajaranController extends Controller
             'semester'           => 'required|integer|in:1,2',
         ]);
 
-        $tahunId  = $request->tahun_pelajaran_id;
-        $semester = (int) $request->semester;
-
-        // JTM mengajar per guru (lintas semua kelas)
-        $jtmRows = JadwalPelajaran::where('tahun_pelajaran_id', $tahunId)
-            ->where('semester', $semester)
-            ->where('is_active', true)
-            ->select('gtk_id', DB::raw('count(*) as jtm_mengajar'))
-            ->groupBy('gtk_id')
-            ->get()
-            ->keyBy('gtk_id');
-
-        if ($jtmRows->isEmpty()) {
-            return response()->json(['success' => true, 'data' => []]);
-        }
-
-        $gtkIds = $jtmRows->keys()->toArray();
-        $gtks   = Gtk::whereIn('id', $gtkIds)
-            ->orderBy('nama_lengkap')
-            ->get(['id', 'user_id', 'nama_lengkap', 'kode_gtk', 'jabatan']);
-
-        // Guru yang menjadi wali kelas di tahun pelajaran ini
-        $waliKelasUserIds = Kelas::where('tahun_pelajaran_id', $tahunId)
-            ->whereNotNull('wali_kelas_id')
-            ->pluck('wali_kelas_id')
-            ->toArray();
-
-        $result = $gtks->map(function ($gtk) use ($jtmRows, $waliKelasUserIds, $tahunId) {
-            $jtmMengajar    = (int) ($jtmRows[$gtk->id]->jtm_mengajar ?? 0);
-            $jtmEkuivalensi = 0;
-            $tugasTambahan  = [];
-
-            // Ekuivalensi Wali Kelas: +6 JTM
-            if (in_array($gtk->user_id, $waliKelasUserIds)) {
-                $jtmEkuivalensi += 6;
-                $tugasTambahan[] = ['label' => 'Wali Kelas', 'jtm' => 6];
-            }
-
-            // Ekuivalensi dari jabatan struktural
-            $jabatan = strtolower($gtk->jabatan ?? '');
-            if (str_contains($jabatan, 'wakil kepala') || str_contains($jabatan, 'waka') || str_contains($jabatan, 'wakasek')) {
-                $jtmEkuivalensi += 12;
-                $tugasTambahan[] = ['label' => 'Wakasek', 'jtm' => 12];
-            } elseif (str_contains($jabatan, 'kepala lab')) {
-                $jtmEkuivalensi += 12;
-                $tugasTambahan[] = ['label' => 'Ka. Laboratorium', 'jtm' => 12];
-            } elseif (str_contains($jabatan, 'kepala perpus')) {
-                $jtmEkuivalensi += 12;
-                $tugasTambahan[] = ['label' => 'Ka. Perpustakaan', 'jtm' => 12];
-            }
-
-            $jtmTotal = $jtmMengajar + $jtmEkuivalensi;
-
-            return [
-                'gtk_id'          => $gtk->id,
-                'nama'            => $gtk->nama_lengkap,
-                'kode'            => $gtk->kode_gtk ?? '',
-                'jabatan'         => $gtk->jabatan ?? '',
-                'jtm_mengajar'    => $jtmMengajar,
-                'jtm_ekuivalensi' => $jtmEkuivalensi,
-                'jtm_total'       => $jtmTotal,
-                'tugas_tambahan'  => $tugasTambahan,
-                // Status: kurang (<24), normal (24-40), lebih (>40)
-                'status'          => $jtmTotal < 24 ? 'kurang' : ($jtmTotal > 40 ? 'lebih' : 'normal'),
-            ];
-        })->sortByDesc('jtm_total')->values();
+        $year = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
+        $result = $workloadService->summarize($year, (int) $request->semester)
+            ->map(fn ($row) => [
+                'gtk_id' => $row['gtk']->id,
+                'nama' => $row['gtk']->nama_lengkap,
+                'kode' => $row['gtk']->kode_gtk ?? '',
+                'jabatan' => $row['gtk']->jabatan ?? '',
+                'jtm_mengajar' => $row['jtm_mengajar'],
+                'jtm_ekuivalensi' => $row['jtm_ekuivalensi'],
+                'jtm_total' => $row['jtm_total'],
+                'tugas_tambahan' => $row['tugas_tambahan']->map(fn ($task) => $task['label'].' ('.$task['jtm_diakui'].' JTM)')->all(),
+                'status' => $row['status'] === 'memenuhi' ? 'normal' : $row['status'],
+            ]);
 
         return response()->json(['success' => true, 'data' => $result]);
     }

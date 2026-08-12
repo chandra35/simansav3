@@ -60,6 +60,13 @@ class PermissionSeeder extends Seeder
                 'view-all-data' => 'Lihat Semua Data (Bypass Ownership)',
                 'view-emis-comparison' => 'Lihat Pembanding Data Siswa EMIS',
                 'sync-emis-comparison' => 'Sinkronkan Data Siswa dari EMIS',
+                'view-penugasan-gtk' => 'Lihat Penugasan GTK',
+                'create-penugasan-gtk' => 'Tambah Penugasan GTK',
+                'edit-penugasan-gtk' => 'Edit Penugasan GTK',
+                'end-penugasan-gtk' => 'Akhiri Penugasan GTK',
+                'delete-penugasan-gtk' => 'Arsipkan Penugasan GTK',
+                'manage-jenis-penugasan-gtk' => 'Kelola Standar Jenis Penugasan GTK',
+                'view-beban-kerja-gtk' => 'Lihat Beban Kerja GTK',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {
@@ -100,6 +107,8 @@ class PermissionSeeder extends Seeder
                 'view-dashboard',
                 'import-data',
                 'export-data',
+                'view-penugasan-gtk',
+                'view-beban-kerja-gtk',
             ])->pluck('name')->toArray();
             $operator->syncPermissions($operatorPermissions);
 

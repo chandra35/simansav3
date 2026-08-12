@@ -229,4 +229,9 @@ class Gtk extends Model
     {
         return $this->hasMany(Kelas::class, 'wali_kelas_id', 'user_id');
     }
+
+    public function penugasan()
+    {
+        return $this->hasMany(PenugasanGtk::class, 'gtk_id');
+    }
 }

@@ -47,6 +47,7 @@ class PermissionSyncService
         'change-password' => 'Ubah Password',
         'verifikasi' => 'Verifikasi',
         'cetak' => 'Cetak',
+        'end' => 'Akhiri',
     ];
 
     /**
@@ -82,6 +83,21 @@ class PermissionSyncService
                     'edit-gtk',
                     'delete-gtk',
                     'reset-password-gtk',
+                ],
+            ],
+            'penugasan-gtk' => [
+                'label' => 'Penugasan & Beban Kerja GTK',
+                'icon' => 'user-tie',
+                'color' => 'primary',
+                'description' => 'SK penugasan, standar ekuivalensi, dan perhitungan beban kerja GTK',
+                'permissions' => [
+                    'view-penugasan-gtk',
+                    'create-penugasan-gtk',
+                    'edit-penugasan-gtk',
+                    'end-penugasan-gtk',
+                    'delete-penugasan-gtk',
+                    'manage-jenis-penugasan-gtk',
+                    'view-beban-kerja-gtk',
                 ],
             ],
             'gtk-personal' => [

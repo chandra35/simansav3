@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -30,12 +29,7 @@ class AppSettingController extends Controller
         // Load provinsi list untuk dropdown
         $provinsiList = \Laravolt\Indonesia\Models\Province::orderBy('name')->get();
         
-        // Get Kepala Sekolah aktif dengan tugas tambahan
-        $kepalaSekolahData = $setting->getKepalaSekolahWithTugas();
-        $kepalaSekolah = $kepalaSekolahData['user'] ?? null;
-        $tugasTambahan = $kepalaSekolahData['tugas'] ?? null;
-        
-        return view('admin.settings.edit', compact('setting', 'provinsiList', 'kepalaSekolah', 'tugasTambahan'));
+        return view('admin.settings.edit', compact('setting', 'provinsiList'));
     }
 
     /**

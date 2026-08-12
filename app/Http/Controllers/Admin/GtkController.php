@@ -299,6 +299,9 @@ class GtkController extends Controller
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view" onclick="handleGtkAction(this)"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="schedule" onclick="handleGtkAction(this)"><i class="fas fa-calendar-alt text-success"></i><span>Lihat jadwal</span></button>';
         }
+        if ($user->can('view-beban-kerja-gtk')) {
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="workload" onclick="handleGtkAction(this)"><i class="fas fa-balance-scale text-primary"></i><span>Beban kerja & penugasan</span></button>';
+        }
 
         if ($user->can('edit-gtk')) {
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="edit" onclick="handleGtkAction(this)"><i class="fas fa-edit text-primary"></i><span>Edit data</span></button>';
@@ -330,6 +333,7 @@ class GtkController extends Controller
             .' data-upload-url="'.e(route('admin.gtk.upload-foto', $item->id)).'"'
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
             .' data-schedule-url="'.e(route('admin.gtk.schedule', $item->id)).'"'
+            .' data-workload-url="'.e(route('admin.penugasan-gtk.workload', ['gtk_id' => $item->id])).'"'
             .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
             .' data-toggle="dropdown" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'

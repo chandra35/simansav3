@@ -647,6 +647,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/import/template', [App\Http\Controllers\Admin\GtkImportController::class, 'downloadTemplate'])->name('gtk.import.template');
         Route::post('/gtk/import/process', [App\Http\Controllers\Admin\GtkImportController::class, 'import'])->name('gtk.import.process');
     });
+
+    // Penugasan dan beban kerja GTK (data kepegawaian, terpisah dari role akses)
+    Route::middleware(['permission:view-penugasan-gtk'])->group(function () {
+        Route::get('/penugasan-gtk', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'index'])->name('penugasan-gtk.index');
+    });
+    Route::middleware(['permission:view-beban-kerja-gtk'])->group(function () {
+        Route::get('/beban-kerja-gtk', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'workload'])->name('penugasan-gtk.workload');
+    });
+    Route::middleware(['permission:create-penugasan-gtk'])->group(function () {
+        Route::post('/penugasan-gtk', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'store'])->name('penugasan-gtk.store');
+    });
+    Route::middleware(['permission:edit-penugasan-gtk'])->group(function () {
+        Route::put('/penugasan-gtk/{penugasanGtk}', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'update'])->name('penugasan-gtk.update');
+    });
+    Route::middleware(['permission:end-penugasan-gtk'])->group(function () {
+        Route::post('/penugasan-gtk/{penugasanGtk}/akhiri', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'end'])->name('penugasan-gtk.end');
+    });
+    Route::middleware(['permission:delete-penugasan-gtk'])->group(function () {
+        Route::delete('/penugasan-gtk/{penugasanGtk}', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'destroy'])->name('penugasan-gtk.destroy');
+    });
+    Route::middleware(['permission:manage-jenis-penugasan-gtk'])->group(function () {
+        Route::get('/penugasan-gtk-jenis', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'types'])->name('penugasan-gtk.types');
+        Route::post('/penugasan-gtk-jenis', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'storeType'])->name('penugasan-gtk.types.store');
+        Route::put('/penugasan-gtk-jenis/{jenisPenugasanGtk}', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'updateType'])->name('penugasan-gtk.types.update');
+    });
     
     // User Management
     Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');

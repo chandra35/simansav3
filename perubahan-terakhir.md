@@ -4,6 +4,30 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Modul Penugasan dan Beban Kerja GTK
+
+- Penugasan kepegawaian kini dipisahkan dari role akses aplikasi melalui master `jenis_penugasan_gtk` dan histori `penugasan_gtk`; tabel tugas tambahan lama tetap dipertahankan sebagai lapisan kompatibilitas.
+- Modul **Manajemen Data > GTK & Penugasan** berisi Data GTK, Penugasan GTK, dan Beban Kerja GTK sehingga sidebar serta permission matrix mengikuti substansi modul.
+- Penugasan mendukung Kepala Madrasah, Waka per bidang, Kepala Laboratorium, Kepala Perpustakaan, Wali Kelas, Pembina OSIM/ekstrakurikuler, koordinator, dan guru piket; standar dapat diubah untuk penugasan baru tanpa mengubah snapshot JTM histori.
+- Form penugasan menyimpan guru, unit/bidang, tahun pelajaran, semester, periode, nomor/tanggal/dokumen SK, dasar hukum, ekuivalensi, status, dan audit pengguna.
+- Validasi mencegah duplikasi unit, rangkap tugas utama, penugasan guru nonaktif, serta kelebihan jumlah Waka berdasarkan jumlah rombel.
+- Rekap beban kerja memisahkan JTM mengajar aktual dari jadwal dan JTM ekuivalensi. Deteksi lama berdasarkan teks bebas kolom `jabatan` sudah dihapus.
+- Kepala Madrasah lama dimigrasikan tanpa mengubah role atau data sumber; pengelolaannya tidak lagi tampil di Pengaturan Aplikasi dan helper tanda tangan tetap membaca modul baru dengan fallback aman ke data lama.
+- Permission granular tersedia untuk melihat, membuat, mengubah, mengakhiri, mengarsipkan penugasan, mengelola master standar, dan melihat beban kerja. Super Admin/Admin mendapat akses awal; Operator mendapat akses baca.
+- Aksi Data GTK sekarang menyediakan pintasan **Beban kerja & penugasan**.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/PenugasanGtkController.php`
+- `app/Services/GtkWorkloadService.php`
+- `app/Models/JenisPenugasanGtk.php`
+- `app/Models/PenugasanGtk.php`
+- `resources/views/admin/penugasan-gtk/`
+- `database/migrations/2026_08_12_170000_create_gtk_assignment_module.php`
+- `database/migrations/2026_08_12_170100_register_gtk_assignment_permissions.php`
+- `config/adminlte.php`
+- `tests/Feature/Admin/GtkAssignmentModuleArchitectureTest.php`
+
 ### Jadwal mengajar pada Data GTK
 
 - Dropdown aksi setiap GTK memiliki menu **Lihat jadwal** yang dilindungi permission `view-gtk`.

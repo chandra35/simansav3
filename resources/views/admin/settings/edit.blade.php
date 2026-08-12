@@ -1501,6 +1501,8 @@
             </div>
         </div>
 
+        {{-- Pengelolaan Kepala Madrasah dipindahkan ke modul Penugasan GTK. --}}
+        @if(false)
         {{-- Card 5: Kepala Sekolah (READ ONLY) --}}
         <div class="card settings-card school-data-card" id="principalSchoolCard">
             <div class="card-header">
@@ -1562,6 +1564,7 @@
                 @endif
             </div>
         </div>
+        @endif
         </div>
 
         {{-- Card 6: Kop Surat Builder --}}
