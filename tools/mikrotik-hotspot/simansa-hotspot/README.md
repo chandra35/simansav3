@@ -4,7 +4,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=cookie,htt
 
 ## Isi Paket
 
-- `login.html` - halaman login satu form, compact, responsif, dengan avatar dan animasi ringan.
+- `login.html` - halaman login profesional, responsif, dengan panduan akun siswa/GTK/tamu, toggle password, avatar, dan animasi ringan.
 - `status.html` - halaman status setelah login.
 - `logout.html` - halaman logout.
 - `error.html` - halaman error umum.
@@ -25,7 +25,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=cookie,htt
 ## Catatan Operasional
 
 - Siswa login memakai NISN.
-- Guru dan tamu tetap memakai akun hotspot yang dibuat di SIMANSA/RADIUS.
+- Guru/GTK login memakai NIK, sedangkan tamu memakai akun yang dibuat admin di SIMANSA/RADIUS.
 - Bantuan diarahkan ke `admin@man1metro.sch.id`.
 - Jika Kampus 2 memakai router berbeda, salin paket yang sama ke router Kampus 2. Akun tetap sama karena RADIUS terpusat, tetapi sesi hotspot tetap dikelola per router.
 - Untuk roaming tanpa login ulang lintas router, opsi paling stabil adalah Wi-Fi WPA2/WPA3 Enterprise berbasis RADIUS. Hotspot captive portal lebih cocok untuk akses tamu atau jaringan yang masih satu gateway/session domain.

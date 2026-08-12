@@ -4,6 +4,13 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Portal Login Hotspot Profesional
+
+- Halaman login MikroTik memakai portal SIMANSA responsif dengan identitas visual MAN 1 Metro.
+- Panduan username siswa (NISN), guru/GTK (NIK), dan tamu tampil langsung pada form, lengkap dengan tombol tampil/sembunyikan password dan pesan autentikasi yang lebih ramah.
+- Pesan error dirender dengan HTML escaping; halaman status, logout, dan error menggunakan tampilan yang konsisten.
+- Folder Hotspot lama dibackup sebelum delapan file portal diverifikasi dan diunggah langsung ke direktori `hotspot` MikroTik.
+
 ### Pemusatan Setting Hotspot
 
 - Monitoring Online memiliki aksi **Putuskan sesi** melalui RADIUS Disconnect-Request dan **Blokir & putuskan**; daftar blokir manual menyediakan aksi Unblokir.

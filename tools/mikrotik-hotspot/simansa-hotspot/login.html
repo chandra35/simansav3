@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="-1">
+  <meta name="theme-color" content="#285de7">
   <title>Login Hotspot MAN 1 Metro</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -39,7 +42,7 @@
             <strong>MAN 1 Metro</strong>
           </div>
         </div>
-        <div class="status-dot">Online</div>
+        <div class="status-dot">Jaringan aktif</div>
       </div>
 
       <div class="portal-avatar" aria-hidden="true">
@@ -50,7 +53,7 @@
 
       <div class="portal-title">
         <h1>Login Hotspot</h1>
-        <p>Akses internet madrasah dengan akun resmi.</p>
+        <p>Masuk menggunakan akun resmi warga MAN 1 Metro.</p>
       </div>
 
       <div class="alert" data-hotspot-error="$(error)"></div>
@@ -60,9 +63,9 @@
         <input type="hidden" name="popup" value="true">
 
         <div class="field">
-          <label for="username">Username</label>
+          <label for="username">Username / Identitas</label>
           <div class="input-shell">
-            <span>NISN</span>
+            <span>ID</span>
             <input class="input" id="username" name="username" type="text" autocomplete="username" inputmode="text" placeholder="Masukkan NISN / akun" required autofocus>
           </div>
         </div>
@@ -72,21 +75,26 @@
           <div class="input-shell">
             <span>KEY</span>
             <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
+            <button class="password-toggle" type="button" data-password-toggle aria-label="Tampilkan password" aria-pressed="false">Lihat</button>
           </div>
         </div>
 
         <button class="submit" type="submit">Masuk Internet</button>
       </form>
 
-      <div class="portal-meta">
-        <span>Siswa menggunakan NISN</span>
-        <span>RADIUS terpusat</span>
+      <div class="login-guide" aria-label="Panduan akun">
+        <div><strong>Siswa</strong><span>Username NISN</span></div>
+        <div><strong>Guru / GTK</strong><span>Username NIK</span></div>
+        <div><strong>Tamu</strong><span>Akun dari admin</span></div>
       </div>
+
+      <p class="security-note">Jangan membagikan password. Pastikan nama jaringan Wi-Fi sesuai informasi resmi madrasah.</p>
 
       <div class="help-box compact-help">
         <span>Bantuan</span>
         <a href="mailto:admin@man1metro.sch.id">admin@man1metro.sch.id</a>
       </div>
+      <div class="portal-footer">SIMANSA &middot; Sistem Informasi MAN 1 Metro</div>
     </section>
   </main>
 

@@ -3,11 +3,25 @@
     return String(text || '').toLowerCase().trim();
   }
 
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function friendlyError(raw) {
     var text = normalize(raw);
     if (!text) return null;
 
     var rules = [
+      {
+        match: ['password hotspot belum aman', 'reset password simansa'],
+        title: 'Password perlu diperbarui',
+        message: 'Silakan atur ulang password Hotspot melalui SIMANSA sebelum mencoba kembali.'
+      },
       {
         match: ['simultaneous session limit', 'no more sessions', 'already logged in'],
         title: 'Akun sedang dipakai',
@@ -68,8 +82,26 @@
     if (!mapped) return;
 
     target.classList.add('is-visible');
-    target.innerHTML = '<strong>' + mapped.title + '</strong><span>' + mapped.message + '</span><small>Detail teknis: ' + raw + '</small>';
+    target.innerHTML = '<strong>' + escapeHtml(mapped.title) + '</strong><span>' + escapeHtml(mapped.message) + '</span><small>Informasi router: ' + escapeHtml(raw) + '</small>';
   }
 
-  document.addEventListener('DOMContentLoaded', renderError);
+  function setupPasswordToggle() {
+    var button = document.querySelector('[data-password-toggle]');
+    var input = document.getElementById('password');
+    if (!button || !input) return;
+
+    button.addEventListener('click', function () {
+      var visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      button.textContent = visible ? 'Lihat' : 'Tutup';
+      button.setAttribute('aria-label', visible ? 'Tampilkan password' : 'Sembunyikan password');
+      button.setAttribute('aria-pressed', visible ? 'false' : 'true');
+      input.focus();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    renderError();
+    setupPasswordToggle();
+  });
 }());
