@@ -1,8 +1,26 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 10 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Modul Alumni Kesiswaan
+
+- Menu **Kesiswaan > Alumni** menjadi arsip khusus siswa yang sudah lulus dan tidak bercampur dengan siswa aktif.
+- Daftar alumni menyediakan pencarian identitas, filter tahun kelulusan dan jenis kelamin, statistik ringkas, serta grafik jumlah alumni lintas angkatan.
+- Halaman detail menyajikan identitas, data kelulusan, histori kelas, catatan perpindahan, dan riwayat tujuan perguruan tinggi.
+- Finalisasi kelulusan kelas XII sekarang selalu mengubah status siswa menjadi `lulus`, mengosongkan referensi kelas aktif, dan mempertahankan seluruh histori kelas.
+- Migrasi koreksi mengarsipkan data kelulusan lama yang masih berstatus siswa aktif.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/AlumniController.php`
+- `resources/views/admin/alumni/index.blade.php`
+- `resources/views/admin/alumni/show.blade.php`
+- `app/Http/Controllers/Admin/KenaikanKelasController.php`
+- `resources/views/admin/kenaikan-kelas/index.blade.php`
+- `database/migrations/2026_08_12_120000_archive_graduated_students_as_alumni.php`
+- `tests/Unit/AlumniModuleArchitectureTest.php`
 
 ### Perbaikan tombol browse foto profil GTK
 

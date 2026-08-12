@@ -95,11 +95,8 @@
             <i class="fas fa-external-link-alt mr-1"></i> Buka Halaman Pengumuman Kelulusan
         </a>
 
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="tandai-siswa-lulus" checked>
-            <label class="form-check-label" for="tandai-siswa-lulus">
-                Update <code>status_siswa</code> siswa menjadi <strong>lulus</strong>
-            </label>
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-archive mr-1"></i> Siswa yang difinalisasi lulus otomatis dipindahkan dari daftar siswa aktif ke <strong>Modul Alumni</strong>, sedangkan seluruh histori kelasnya tetap tersimpan.
         </div>
 
         <button id="btn-proses-kelulusan" class="btn btn-danger" disabled>
@@ -704,14 +701,13 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
             body: JSON.stringify({
                 tahun_pelajaran_id: tahunAktifId,
-                tandai_siswa_lulus: document.getElementById('tandai-siswa-lulus').checked,
             })
         })
         .then(parseJsonResponse)
         .then(d => {
             const type = d.success ? 'success' : 'warning';
             setProcessStep(1, 'done', `${d.diproses_lulus || 0} lulus, ${d.diproses_tinggal || 0} tinggal kelas.`);
-            setProcessStep(2, 'done', document.getElementById('tandai-siswa-lulus').checked ? 'Status siswa ikut diperbarui.' : 'Update status siswa dilewati sesuai pilihan.');
+            setProcessStep(2, 'done', 'Status siswa dipindahkan ke arsip alumni.');
             setProcessStep(3, 'active', 'Mengambil ulang statistik halaman.');
             setProcessProgress(85, 'Memuat ulang ringkasan...');
             document.getElementById('result-kelulusan').innerHTML = alertBox(

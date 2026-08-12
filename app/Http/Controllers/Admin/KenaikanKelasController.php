@@ -167,11 +167,9 @@ class KenaikanKelasController extends Controller
     {
         $request->validate([
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
-            'tandai_siswa_lulus' => 'boolean',
         ]);
 
         $tahun       = TahunPelajaran::findOrFail($request->tahun_pelajaran_id);
-        $tandaiLulus = (bool) $request->input('tandai_siswa_lulus', true);
 
         $kelas12Ids = Kelas::where('tahun_pelajaran_id', $tahun->id)
             ->where('tingkat', 12)
@@ -209,7 +207,7 @@ class KenaikanKelasController extends Controller
         $tanggalKeluar    = now()->toDateString();
 
         // Batch update menjaga transaksi singkat dan menghindari lock wait timeout saat data kelas XII banyak.
-        DB::transaction(function () use ($tahun, $lulusRows, $tinggalRows, $tandaiLulus, $tanggalKeluar) {
+        DB::transaction(function () use ($tahun, $lulusRows, $tinggalRows, $tanggalKeluar) {
             if ($lulusRows->isNotEmpty()) {
                 SiswaKelas::whereIn('id', $lulusRows->pluck('id'))->update([
                     'status'              => 'lulus',
@@ -218,12 +216,11 @@ class KenaikanKelasController extends Controller
                     'updated_at'          => now(),
                 ]);
 
-                if ($tandaiLulus) {
-                    Siswa::whereIn('id', $lulusRows->pluck('siswa_id'))->update([
-                        'status_siswa' => 'lulus',
-                        'updated_at'   => now(),
-                    ]);
-                }
+                Siswa::whereIn('id', $lulusRows->pluck('siswa_id'))->update([
+                    'status_siswa'      => 'lulus',
+                    'kelas_saat_ini_id' => null,
+                    'updated_at'        => now(),
+                ]);
             }
 
             if ($tinggalRows->isNotEmpty()) {

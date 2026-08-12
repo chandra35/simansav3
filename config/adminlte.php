@@ -788,6 +788,13 @@ return [
                     'active' => ['admin/lulusan*'],
                 ],
                 [
+                    'text' => 'Alumni',
+                    'route' => 'admin.alumni.index',
+                    'icon' => 'fas fa-fw fa-user-friends',
+                    'can' => 'kesiswaan-lulusan-access',
+                    'active' => ['admin/alumni*'],
+                ],
+                [
                     'text' => 'Pengumuman Kelulusan',
                     'route' => 'admin.kelulusan-pengumuman.index',
                     'icon' => 'fas fa-fw fa-envelope-open-text',

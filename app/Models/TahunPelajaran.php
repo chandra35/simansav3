@@ -73,6 +73,11 @@ class TahunPelajaran extends Model
                     ->withTimestamps();
     }
 
+    public function siswaKelas(): HasMany
+    {
+        return $this->hasMany(SiswaKelas::class, 'tahun_pelajaran_id');
+    }
+
     /**
      * Relationship: Mutasi Masuk
      */

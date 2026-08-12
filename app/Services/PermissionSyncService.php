@@ -362,7 +362,7 @@ class PermissionSyncService
                 'label' => 'Kesiswaan',
                 'icon' => 'users',
                 'color' => 'purple',
-                'description' => 'Prestasi, ekstrakurikuler, konseling, dan lulusan',
+                'description' => 'Prestasi, ekstrakurikuler, konseling, lulusan, dan alumni',
                 'permissions' => [
                     'view-prestasi-siswa',
                     'view-ekstrakurikuler',
