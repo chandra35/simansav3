@@ -4,6 +4,26 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Audit dan hardening Hotspot
+
+- Endpoint Hotspot dipisahkan menjadi akses baca `view-hotspot` dan akses perubahan `manage-hotspot`.
+- Fallback password berupa username/NISN/NIK dihapus; akun tanpa password aman ditolak sampai password SIMANSA di-reset.
+- Password akun tamu disimpan terenkripsi agar perubahan status dan masa berlaku selalu tersinkron ke FreeRADIUS.
+- Sinkronisasi berkala menonaktifkan akun tamu yang kedaluwarsa.
+- Kredensial produksi dihapus dari script deployment dan dokumentasi publik, wajib diberikan melalui environment atau secret store saat provisioning.
+- Infrastruktur MikroTik, FreeRADIUS, MariaDB, scheduler, NAS, profile, accounting, serta rekonsiliasi akun telah diaudit langsung.
+
+File terkait:
+
+- `routes/web.php`
+- `app/Console/Commands/HotspotSync.php`
+- `app/Http/Controllers/Admin/HotspotController.php`
+- `app/Models/HotspotUser.php`
+- `database/migrations/2026_08_12_140000_harden_hotspot_access_and_guest_credentials.php`
+- `deploy/setup_mikrotik.sh`
+- `deploy/install-radius.sh`
+- `tests/Unit/HotspotSecurityArchitectureTest.php`
+
 ### Modul Alumni Kesiswaan
 
 - Menu **Kesiswaan > Alumni** menjadi arsip khusus siswa yang sudah lulus dan tidak bercampur dengan siswa aktif.

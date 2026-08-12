@@ -408,6 +408,7 @@ class PermissionSyncService
                 'description' => 'Akses modul hotspot',
                 'permissions' => [
                     'view-hotspot',
+                    'manage-hotspot',
                 ],
             ],
             'keuangan' => [

@@ -23,12 +23,14 @@ class HotspotUser extends Model
         'last_synced_at',
         'sync_status',
         'sync_error',
+        'password_secret',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'expired_at' => 'datetime',
         'last_synced_at' => 'datetime',
+        'password_secret' => 'encrypted',
     ];
 
     public function user()
@@ -48,6 +50,14 @@ class HotspotUser extends Model
     public function syncToRadius(string $plainPassword): bool
     {
         try {
+            if ($this->role !== 'tamu' && $plainPassword !== '__DISABLED__' && !$this->isSecurePassword($plainPassword)) {
+                $this->forceFill([
+                    'is_active' => false,
+                    'sync_error' => 'Password hotspot tidak aman. Reset password akun SIMANSA untuk mengaktifkan kembali.',
+                ])->save();
+                $plainPassword = '__DISABLED__';
+            }
+
             $db = DB::connection('mysql_radius');
 
             // 1. Update atau insert radcheck (password)
@@ -152,6 +162,11 @@ class HotspotUser extends Model
     public function scopeTamu($query)
     {
         return $query->where('role', 'tamu');
+    }
+
+    public function isSecurePassword(string $password): bool
+    {
+        return mb_strlen($password) >= 8 && !hash_equals($this->username, $password);
     }
 
     public function isEligibleForRadius(): bool

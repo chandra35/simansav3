@@ -60,6 +60,7 @@ class HotspotSync extends Command
 
         // Deactivate user yang sudah tidak aktif
         $this->deactivateInactive($dryRun);
+        $this->deactivateExpiredGuests($dryRun);
 
         $this->info('');
         $this->info('╔══════════════════════════════════════╗');
@@ -161,8 +162,22 @@ class HotspotSync extends Command
         $isNew = $existing === null;
 
         if ($dryRun) {
-            $action = $isNew ? 'CREATE' : ($force ? 'UPDATE' : 'SKIP');
+            $action = $plainPassword === null ? 'REJECT-INSECURE' : ($isNew ? 'CREATE' : ($force ? 'UPDATE' : 'SKIP'));
             $this->line("  [{$action}] {$username} ({$role}) - {$displayName}");
+            return;
+        }
+
+        if ($plainPassword === null) {
+            $hotspot = $existing ?: HotspotUser::create([
+                'user_id' => $user->id,
+                'username' => $username,
+                'role' => $role,
+                'display_name' => $displayName,
+                'is_active' => false,
+                'sync_status' => 'pending',
+            ]);
+            $hotspot->rejectFromRadius('Password hotspot tidak aman atau tidak tersedia. Reset password akun SIMANSA untuk mengaktifkan kembali.');
+            $this->deactivated++;
             return;
         }
 
@@ -231,16 +246,40 @@ class HotspotSync extends Command
         }
     }
 
-    private function getPlainPassword(User $user, string $fallbackPassword = 'man1metro'): string
+    private function deactivateExpiredGuests(bool $dryRun): void
+    {
+        $expiredGuests = HotspotUser::query()
+            ->where('role', 'tamu')
+            ->where('is_active', true)
+            ->whereNotNull('expired_at')
+            ->where('expired_at', '<=', now())
+            ->get();
+
+        foreach ($expiredGuests as $hotspot) {
+            if ($dryRun) {
+                $this->line("  [DEACTIVATE] {$hotspot->username} (tamu expired)");
+                continue;
+            }
+
+            $hotspot->rejectFromRadius('Masa berlaku akun tamu telah berakhir.');
+            $this->deactivated++;
+        }
+    }
+
+    private function getPlainPassword(User $user, string $username): ?string
     {
         if (!empty($user->encrypted_password)) {
             try {
-                return Crypt::decryptString($user->encrypted_password);
+                $password = Crypt::decryptString($user->encrypted_password);
+
+                return mb_strlen($password) >= 8 && !hash_equals($username, $password)
+                    ? $password
+                    : null;
             } catch (\Exception) {
                 // Fallback jika decrypt gagal
             }
         }
 
-        return $fallbackPassword;
+        return null;
     }
 }

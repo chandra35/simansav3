@@ -31,6 +31,15 @@ class UserObserver
             return;
         }
 
+        $hotspotUser->loadMissing('user.siswa');
+        if ($hotspotUser->isEligibleForRadius() && $hotspotUser->isSecurePassword($plainPassword)) {
+            $hotspotUser->update([
+                'is_active' => true,
+                'sync_status' => 'pending',
+                'sync_error' => null,
+            ]);
+        }
+
         Log::info('[UserObserver] Password changed, syncing to RADIUS', [
             'user_id' => $user->id,
             'hotspot_username' => $hotspotUser->username,

@@ -1,26 +1,27 @@
 #!/bin/bash
 # Script konfigurasi MikroTik untuk FreeRADIUS Hotspot
 # Jalankan dengan: bash setup_mikrotik.sh
-# Atau via SSH: ssh vscode@172.16.250.1 < setup_mikrotik.sh
+# Mengirim konfigurasi melalui SSH port yang ditentukan oleh MIKROTIK_SSH_PORT
 
-MIKROTIK="172.16.250.1"
-MIKROTIK_USER="vscode"
-MIKROTIK_PASS="vscode"
-RADIUS_IP="172.16.250.8"
-RADIUS_SECRET="HotspotMAN1Metro2026"
+: "${MIKROTIK:?Set MIKROTIK ke alamat router}"
+: "${MIKROTIK_USER:?Set MIKROTIK_USER}"
+: "${MIKROTIK_PASS:=}"
+: "${RADIUS_IP:?Set RADIUS_IP}"
+: "${RADIUS_SECRET:?Set RADIUS_SECRET melalui environment aman}"
+MIKROTIK_SSH_PORT="${MIKROTIK_SSH_PORT:-3522}"
 
 echo "=== Setup MikroTik untuk RADIUS Hotspot ==="
 echo "Koneksi ke MikroTik $MIKROTIK..."
 
 # Gunakan sshpass jika ada, atau ssh biasa
-if command -v sshpass &> /dev/null; then
-    SSH_CMD="sshpass -p $MIKROTIK_PASS ssh -o StrictHostKeyChecking=no $MIKROTIK_USER@$MIKROTIK"
+if [[ -n "$MIKROTIK_PASS" ]] && command -v sshpass &> /dev/null; then
+    SSH_CMD=(sshpass -p "$MIKROTIK_PASS" ssh -p "$MIKROTIK_SSH_PORT" "$MIKROTIK_USER@$MIKROTIK")
 else
-    SSH_CMD="ssh -o StrictHostKeyChecking=no $MIKROTIK_USER@$MIKROTIK"
+    SSH_CMD=(ssh -p "$MIKROTIK_SSH_PORT" "$MIKROTIK_USER@$MIKROTIK")
 fi
 
 # Buat semua perintah RouterOS dalam satu script
-cat << 'ROUTEROS_END'
+cat << ROUTEROS_END | "${SSH_CMD[@]}"
 # === 1. Buat IP Pool untuk masing-masing role ===
 /ip pool
 add name=pool-guru ranges=172.16.201.10-172.16.201.254
@@ -29,7 +30,7 @@ add name=pool-tamu ranges=172.16.203.10-172.16.203.254
 
 # === 2. Tambah RADIUS server ===
 /radius
-add address=172.16.250.8 secret=HotspotMAN1Metro2026 service=hotspot timeout=3s
+add address=$RADIUS_IP secret=$RADIUS_SECRET service=hotspot timeout=3s
 
 # === 3. Buat Hotspot User Profile per role ===
 /ip hotspot user profile

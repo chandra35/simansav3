@@ -5,10 +5,10 @@
 set -e
 export DEBIAN_FRONTEND=noninteractive
 
-RADIUS_DB_PASS="Radius@Simansa2026"
-SIMANSA_IP="172.16.250.7"
-MIKROTIK_IP="172.16.250.1"
-RADIUS_SECRET="HotspotMAN1Metro2026"
+: "${RADIUS_DB_PASS:?Set RADIUS_DB_PASS melalui environment aman}"
+SIMANSA_IP="${SIMANSA_IP:-172.16.250.7}"
+MIKROTIK_IP="${MIKROTIK_IP:-172.16.250.1}"
+: "${RADIUS_LOCAL_SECRET:?Set RADIUS_LOCAL_SECRET melalui environment aman}"
 
 echo "============================================="
 echo " FreeRADIUS + MariaDB Installer"
@@ -76,7 +76,7 @@ sql {
     server = "localhost"
     port = 3306
     login = "radius"
-    password = "Radius@Simansa2026"
+    password = "__RADIUS_DB_PASSWORD__"
     radius_db = "radius"
 
     acct_table1 = "radacct"
@@ -107,6 +107,15 @@ sql {
 }
 SQLCONF
 
+RADIUS_DB_PASS="$RADIUS_DB_PASS" python3 - << 'PYEOF'
+import os
+from pathlib import Path
+
+path = Path('/etc/freeradius/3.0/mods-available/sql')
+secret = os.environ['RADIUS_DB_PASS'].replace('\\', '\\\\').replace('"', '\\"')
+path.write_text(path.read_text().replace('__RADIUS_DB_PASSWORD__', secret))
+PYEOF
+
 # Enable SQL module
 ln -sf /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql 2>/dev/null || true
 
@@ -117,19 +126,22 @@ cat > /etc/freeradius/3.0/clients.conf << CLIENTCONF
 
 client localhost {
     ipaddr = 127.0.0.1
-    secret = testing123
-    require_message_authenticator = no
+    secret = __RADIUS_LOCAL_SECRET__
+    require_message_authenticator = yes
     shortname = localhost
 }
 
-client mikrotik-kampus1 {
-    ipaddr = ${MIKROTIK_IP}
-    secret = ${RADIUS_SECRET}
-    require_message_authenticator = no
-    shortname = mikrotik-kampus1
-    nas_type = other
-}
+# NAS MikroTik dikelola dari tabel SQL `nas` oleh SIMANSA.
 CLIENTCONF
+
+RADIUS_LOCAL_SECRET="$RADIUS_LOCAL_SECRET" python3 - << 'PYEOF'
+import os
+from pathlib import Path
+
+path = Path('/etc/freeradius/3.0/clients.conf')
+secret = os.environ['RADIUS_LOCAL_SECRET'].replace('\\', '\\\\').replace('"', '\\"')
+path.write_text(path.read_text().replace('__RADIUS_LOCAL_SECRET__', secret))
+PYEOF
 
 # Konfigurasi default site - enable sql
 sed -i 's/#\s*-sql/\t-sql/' /etc/freeradius/3.0/sites-available/default 2>/dev/null || true
@@ -161,17 +173,17 @@ systemctl restart freeradius
 systemctl status freeradius --no-pager -l | head -20
 
 # Allow MariaDB from Simansa
-ufw allow from ${SIMANSA_IP} to any port 3306 comment "Simansa radius DB" 2>/dev/null || true
-ufw allow 1812/udp comment "RADIUS auth" 2>/dev/null || true
-ufw allow 1813/udp comment "RADIUS acct" 2>/dev/null || true
+ufw allow from "${SIMANSA_IP}" to any port 3306 proto tcp comment "SIMANSA radius DB" 2>/dev/null || true
+ufw allow from "${MIKROTIK_IP}" to any port 1812 proto udp comment "MikroTik RADIUS auth" 2>/dev/null || true
+ufw allow from "${MIKROTIK_IP}" to any port 1813 proto udp comment "MikroTik RADIUS acct" 2>/dev/null || true
 
 echo ""
 echo "============================================="
 echo " INSTALASI SELESAI!"
 echo "============================================="
 echo " RADIUS Server  : $(hostname -I | awk '{print $1}'):1812"
-echo " DB radius      : localhost:3306 / radius / ${RADIUS_DB_PASS}"
-echo " MikroTik secret: ${RADIUS_SECRET}"
+echo " DB radius      : localhost:3306 / radius (secret store)"
+echo " MikroTik secret: configured (not displayed)"
 echo " Simansa DB user: radius@${SIMANSA_IP}"
 echo "============================================="
 

@@ -255,6 +255,7 @@ class HotspotController extends Controller
             'is_active' => true,
             'expired_at' => $request->expired_at,
             'sync_status' => 'pending',
+            'password_secret' => $request->password,
         ]);
 
         $ok = $hotspot->syncToRadius($request->password);
@@ -289,16 +290,10 @@ class HotspotController extends Controller
         ]);
 
         if ($request->filled('password')) {
+            $hotspot->update(['password_secret' => $request->password]);
             $hotspot->syncToRadius($request->password);
         } else {
-            // Sync status saja (aktif/nonaktif)
-            $user = $hotspot->user;
-            if ($user) {
-                try {
-                    $plain = Crypt::decryptString($user->encrypted_password);
-                    $hotspot->syncToRadius($plain);
-                } catch (\Exception) {}
-            }
+            $hotspot->syncToRadius($hotspot->password_secret ?: '__DISABLED__');
         }
 
         return response()->json(['success' => true, 'message' => 'Akun tamu diupdate.']);
@@ -750,12 +745,14 @@ class HotspotController extends Controller
 
         if (!empty($user->encrypted_password)) {
             try {
-                return Crypt::decryptString($user->encrypted_password);
+                $password = Crypt::decryptString($user->encrypted_password);
+
+                return $hotspot->isSecurePassword($password) ? $password : null;
             } catch (\Throwable) {
             }
         }
 
-        return $hotspot->username;
+        return null;
     }
 
     private function getRadiusServerInfo(): array
