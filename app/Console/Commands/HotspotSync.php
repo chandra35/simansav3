@@ -288,6 +288,13 @@ class HotspotSync extends Command
             }
         }
 
+        // Akun GTK lama tidak selalu memiliki encrypted_password. Sesuai
+        // kebijakan kompatibilitas hotspot, NIK 16 digit tetap menjadi
+        // password awal/fallback khusus GTK.
+        if ($role === 'guru' && preg_match('/^\d{16}$/', $username) === 1) {
+            return $username;
+        }
+
         return null;
     }
 }

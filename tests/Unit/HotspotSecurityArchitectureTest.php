@@ -29,7 +29,8 @@ class HotspotSecurityArchitectureTest extends TestCase
         $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');
 
         $this->assertStringNotContainsString("fallbackPassword = 'man1metro'", $command);
-        $this->assertStringNotContainsString('return $hotspot->username;', $controller);
+        $this->assertStringContainsString("\$hotspot->role === 'guru'", $controller);
+        $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$hotspot->username)", $controller);
         $this->assertStringContainsString('REJECT-INSECURE', $command);
     }
 
@@ -107,6 +108,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$this->username)", $model);
         $this->assertStringContainsString("\$role === 'guru'", $command);
         $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$username)", $command);
+        $this->assertStringContainsString('return $username;', $command);
 
         $guru = new HotspotUser(['username' => '1872041185770001', 'role' => 'guru']);
         $siswa = new HotspotUser(['username' => '1234567890', 'role' => 'siswa']);

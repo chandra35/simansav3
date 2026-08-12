@@ -180,15 +180,9 @@ class HotspotController extends Controller
             ], 422);
         }
 
-        $user = $hotspot->user;
-        if (!$user || empty($user->encrypted_password)) {
-            return response()->json(['success' => false, 'message' => 'Password tidak ditemukan di Simansa.'], 422);
-        }
-
-        try {
-            $plain = Crypt::decryptString($user->encrypted_password);
-        } catch (\Exception) {
-            return response()->json(['success' => false, 'message' => 'Gagal decrypt password.'], 422);
+        $plain = $this->resolveHotspotPassword($hotspot);
+        if ($plain === null) {
+            return response()->json(['success' => false, 'message' => 'Password Hotspot tidak tersedia atau tidak memenuhi kebijakan.'], 422);
         }
 
         $ok = $hotspot->syncToRadius($plain);
@@ -846,6 +840,10 @@ class HotspotController extends Controller
                 return $hotspot->isSecurePassword($password) ? $password : null;
             } catch (\Throwable) {
             }
+        }
+
+        if ($hotspot->role === 'guru' && preg_match('/^\d{16}$/', $hotspot->username) === 1) {
+            return $hotspot->username;
         }
 
         return null;

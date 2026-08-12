@@ -1157,3 +1157,9 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
  - Ditambahkan Monitor Jadwal Belajar real-time: layar penuh, jam WIB, status sesi berlangsung/berikutnya, dan daftar kelas-mapel-guru aktif.
  - Tampilan Monitor Jadwal kini memakai kartu mapel beraksen warna konsisten, ikon kontekstual, hero lebih hidup, serta timeline sesi aktif yang kontras untuk layar besar.
  - Monitor Jadwal kini menampilkan slot istirahat dari konfigurasi jam, progres waktu jeda, dan informasi jam pelajaran berikutnya.
+## Hotspot GTK: kompatibilitas password NIK (12 Agustus 2026)
+
+- Login pada Log Autentikasi Hotspot berasal dari captive portal MikroTik yang diautentikasi FreeRADIUS, bukan login web SIMANSA.
+- Password yang sama dengan username tetap ditolak untuk siswa, tetapi diterima khusus GTK bila username berupa NIK 16 digit.
+- NIK menjadi fallback password hotspot untuk akun GTK lama yang belum memiliki `encrypted_password`, sehingga akun dapat disinkronkan kembali ke FreeRADIUS.
+- Password percobaan tidak disimpan atau ditampilkan pada log autentikasi.
