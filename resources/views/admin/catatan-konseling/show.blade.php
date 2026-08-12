@@ -1,143 +1,18 @@
-@extends('adminlte::page')
-
-@section('title', 'Detail Catatan Konseling')
-
+@extends('layouts.admin')
+@section('title','Detail Konseling')
 @section('content_header')
-    <h1><i class="fas fa-clipboard-list mr-2"></i>Detail Catatan Konseling</h1>
+<div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-clipboard-list text-primary"></i> Detail Konseling</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.catatan-konseling.index') }}">Konseling</a></li><li class="breadcrumb-item active">Detail</li></ol></div></div>
 @stop
-
 @section('content')
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Catatan Konseling</h3>
-                    <div class="card-tools">
-                        @if($catatanKonseling->is_rahasia)
-                            <span class="badge badge-dark"><i class="fas fa-lock"></i> Rahasia</span>
-                        @endif
-                        <span class="badge badge-{{ $catatanKonseling->status_badge }}">
-                            {{ $catatanKonseling->status_label }}
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <table class="table table-borderless table-sm">
-                                <tr>
-                                    <th width="40%">Siswa</th>
-                                    <td>{{ $catatanKonseling->siswa?->nama ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>NIS</th>
-                                    <td>{{ $catatanKonseling->siswa?->nis ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Kelas</th>
-                                    <td>{{ $catatanKonseling->siswa?->kelasSaatIni?->nama ?? '-' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless table-sm">
-                                <tr>
-                                    <th width="40%">Konselor</th>
-                                    <td>{{ $catatanKonseling->konselor?->nama ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <td>{{ $catatanKonseling->tanggal_konseling?->format('d F Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Jenis</th>
-                                    <td>{{ $catatanKonseling->jenis_label }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="callout callout-info">
-                        <h5><i class="fas fa-tag mr-2"></i>Kategori Masalah</h5>
-                        <p class="mb-0">{{ $catatanKonseling->kategori_label }}</p>
-                    </div>
-                    
-                    <div class="callout callout-warning">
-                        <h5><i class="fas fa-exclamation-triangle mr-2"></i>Permasalahan</h5>
-                        <p class="mb-0">{{ $catatanKonseling->deskripsi_masalah }}</p>
-                    </div>
-                    
-                    @if($catatanKonseling->hasil_konseling)
-                        <div class="callout callout-success">
-                            <h5><i class="fas fa-check-circle mr-2"></i>Hasil Konseling</h5>
-                            <p class="mb-0">{{ $catatanKonseling->hasil_konseling }}</p>
-                        </div>
-                    @endif
-                    
-                    @if($catatanKonseling->tindak_lanjut)
-                        <div class="callout callout-primary">
-                            <h5><i class="fas fa-lightbulb mr-2"></i>Tindak Lanjut / Rekomendasi</h5>
-                            <p class="mb-0">{{ $catatanKonseling->tindak_lanjut }}</p>
-                        </div>
-                    @endif
-                    
-                    @if($catatanKonseling->jadwal_tindak_lanjut)
-                        <div class="alert alert-info">
-                            <i class="fas fa-calendar-alt mr-2"></i>
-                            <strong>Jadwal Tindak Lanjut:</strong> {{ $catatanKonseling->jadwal_tindak_lanjut->format('d F Y') }}
-                        </div>
-                    @endif
-                </div>
-                <div class="card-footer">
-                    <a href="{{ route('admin.catatan-konseling.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
-                    </a>
-                    <a href="{{ route('admin.catatan-konseling.edit', $catatanKonseling->id) }}" class="btn btn-warning float-right">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card card-primary card-outline">
-                <div class="card-header">
-                    <h5 class="card-title"><i class="fas fa-user-graduate"></i> Profil Siswa</h5>
-                </div>
-                <div class="card-body box-profile">
-                    <div class="text-center">
-                        <img class="profile-user-img img-fluid img-circle" 
-                            src="{{ $catatanKonseling->siswa?->foto_url ?? asset('vendor/adminlte/dist/img/user4-128x128.jpg') }}" 
-                            alt="User profile picture">
-                    </div>
-                    <h3 class="profile-username text-center">{{ $catatanKonseling->siswa?->nama ?? '-' }}</h3>
-                    <p class="text-muted text-center">{{ $catatanKonseling->siswa?->kelasSaatIni?->nama ?? '-' }}</p>
-                </div>
-            </div>
-            
-            @if($riwayatKonseling->count() > 0)
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title"><i class="fas fa-history"></i> Riwayat Konseling</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush">
-                            @foreach($riwayatKonseling as $riwayat)
-                                <li class="list-group-item">
-                                    <a href="{{ route('admin.catatan-konseling.show', $riwayat->id) }}">
-                                        {{ $riwayat->tanggal_konseling->format('d M Y') }}
-                                    </a>
-                                    <span class="badge badge-{{ $riwayat->status_badge }} float-right">
-                                        {{ $riwayat->status_label }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">{{ $riwayat->kategori_label }}</small>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
+<div class="counseling-detail">
+    <div class="card bg-gradient-primary text-white mb-3"><div class="card-body py-3"><div class="row align-items-center"><div class="col-md-8"><small>LAYANAN {{ strtoupper($catatanKonseling->jenis_label) }}</small><h4 class="mb-1">{{ $catatanKonseling->siswa?->nama_lengkap ?? 'Siswa tidak tersedia' }}</h4><span>NISN {{ $catatanKonseling->siswa?->nisn ?? '-' }} · {{ $catatanKonseling->siswa?->kelasTahunAktif->first()?->nama_kelas ?? 'Tanpa rombel aktif' }}</span></div><div class="col-md-4 mt-2 mt-md-0 text-md-right"><span class="badge badge-light p-2">{{ $catatanKonseling->status_label }}</span>@if($catatanKonseling->is_confidential)<span class="badge badge-dark p-2"><i class="fas fa-lock"></i> Rahasia</span>@endif</div></div></div></div>
+    <div class="row"><div class="col-lg-8"><div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title"><i class="fas fa-notes-medical mr-1"></i> Catatan Layanan</h3><div class="card-tools">@can('edit-catatan-konseling')<a href="{{ route('admin.catatan-konseling.edit',$catatanKonseling) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>@endcan</div></div><div class="card-body">
+        <div class="row mb-3"><div class="col-sm-6"><dl class="row mb-0"><dt class="col-5">Tanggal</dt><dd class="col-7">{{ $catatanKonseling->tanggal_konseling?->translatedFormat('d F Y') }}</dd><dt class="col-5">Waktu</dt><dd class="col-7">{{ $catatanKonseling->waktu_mulai ? substr($catatanKonseling->waktu_mulai,0,5) : '-' }}{{ $catatanKonseling->waktu_selesai ? '–'.substr($catatanKonseling->waktu_selesai,0,5) : '' }}</dd><dt class="col-5">Konselor</dt><dd class="col-7">{{ $catatanKonseling->konselor?->nama_lengkap ?? '-' }}</dd></dl></div><div class="col-sm-6"><dl class="row mb-0"><dt class="col-5">Jenis</dt><dd class="col-7">{{ $catatanKonseling->jenis_label }}</dd><dt class="col-5">Bidang</dt><dd class="col-7">{{ $catatanKonseling->kategori_label }}</dd><dt class="col-5">Tahun</dt><dd class="col-7">{{ $catatanKonseling->tahunPelajaran?->nama ?? '-' }}</dd></dl></div></div>
+        @foreach([['Permasalahan / Hasil Asesmen',$catatanKonseling->permasalahan,'info'],['Hasil Konseling',$catatanKonseling->hasil_konseling,'success'],['Rekomendasi',$catatanKonseling->rekomendasi,'primary'],['Tindak Lanjut',$catatanKonseling->tindak_lanjut,'warning']] as [$label,$value,$type])@if($value)<div class="callout callout-{{ $type }}"><h6>{{ $label }}</h6><div class="text-preline">{{ $value }}</div></div>@endif @endforeach
+        @if($catatanKonseling->tanggal_tindak_lanjut)<div class="alert {{ $catatanKonseling->tindak_lanjut_terlambat ? 'alert-danger' : 'alert-info' }} mb-0"><i class="fas fa-calendar-check mr-1"></i> Tindak lanjut: <strong>{{ $catatanKonseling->tanggal_tindak_lanjut->translatedFormat('d F Y') }}</strong>@if($catatanKonseling->tindak_lanjut_terlambat) — sudah melewati jadwal.@endif</div>@endif
+        @if($catatanKonseling->rujukan_ke)<div class="alert alert-warning mt-3 mb-0"><i class="fas fa-share-square mr-1"></i> Rujukan ke: <strong>{{ $catatanKonseling->rujukan_ke }}</strong></div>@endif
+    </div><div class="card-footer"><a href="{{ route('admin.catatan-konseling.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a></div></div></div>
+    <div class="col-lg-4"><div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title"><i class="fas fa-history mr-1"></i> Riwayat Terakhir</h3></div><div class="card-body p-0">@forelse($riwayatKonseling as $item)<a href="{{ route('admin.catatan-konseling.show',$item) }}" class="d-block border-bottom p-3 text-dark"><strong>{{ $item->tanggal_konseling?->format('d/m/Y') }}</strong><span class="badge badge-{{ $item->status_badge }} float-right">{{ $item->status_label }}</span><br><small class="text-muted">{{ $item->kategori_label }} · {{ $item->konselor?->nama_lengkap ?? '-' }}</small></a>@empty<div class="text-center text-muted p-4"><i class="fas fa-inbox fa-2x mb-2"></i><br>Belum ada riwayat lain.</div>@endforelse</div></div><div class="alert alert-light border"><i class="fas fa-shield-alt text-primary mr-1"></i><small>Data konseling adalah dokumen internal. Gunakan hanya untuk kepentingan pendampingan siswa.</small></div></div></div>
+</div>
 @stop
+@section('css')<style>.counseling-detail .card.bg-gradient-primary{border-radius:.65rem}.counseling-detail .text-preline{white-space:pre-line}.counseling-detail dl dt{color:#64748b;font-weight:600}</style>@stop

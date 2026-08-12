@@ -2,114 +2,117 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CatatanKonseling extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasActivityLog, HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'catatan_konseling';
 
     protected $fillable = [
-        'siswa_id',
-        'konselor_id',
-        'tahun_pelajaran_id',
-        'tanggal_konseling',
-        'jenis_konseling',
-        'kategori_masalah',
-        'deskripsi_masalah',
-        'hasil_konseling',
-        'tindak_lanjut',
-        'status',
-        'jadwal_tindak_lanjut',
-        'is_rahasia',
+        'siswa_id', 'konselor_id', 'tahun_pelajaran_id', 'tanggal_konseling',
+        'waktu_mulai', 'waktu_selesai', 'jenis_konseling', 'kategori_masalah',
+        'permasalahan', 'hasil_konseling', 'rekomendasi', 'tindak_lanjut',
+        'tanggal_tindak_lanjut', 'status', 'rujukan_ke', 'is_confidential', 'created_by',
     ];
 
     protected $casts = [
         'tanggal_konseling' => 'date',
-        'jadwal_tindak_lanjut' => 'date',
-        'is_rahasia' => 'boolean',
+        'tanggal_tindak_lanjut' => 'date',
+        'is_confidential' => 'boolean',
     ];
 
-    const JENIS_KONSELING = [
+    public const JENIS_KONSELING = [
         'individual' => 'Individual',
         'kelompok' => 'Kelompok',
         'klasikal' => 'Klasikal',
+        'konsultasi_orangtua' => 'Konsultasi Orang Tua',
+        'home_visit' => 'Kunjungan Rumah',
     ];
 
-    const KATEGORI_MASALAH = [
-        'akademik' => 'Akademik',
+    public const KATEGORI_MASALAH = [
         'pribadi' => 'Pribadi',
         'sosial' => 'Sosial',
-        'karir' => 'Karir',
+        'belajar' => 'Belajar / Akademik',
+        'karir' => 'Karier',
         'keluarga' => 'Keluarga',
+        'perilaku' => 'Perilaku',
+        'kesehatan' => 'Kesehatan',
         'lainnya' => 'Lainnya',
     ];
 
-    const STATUS = [
-        'proses' => 'Dalam Proses',
+    public const STATUS = [
+        'baru' => 'Baru',
+        'dalam_proses' => 'Dalam Proses',
         'selesai' => 'Selesai',
-        'perlu_tindak_lanjut' => 'Perlu Tindak Lanjut',
+        'perlu_rujukan' => 'Perlu Rujukan',
     ];
 
-    // Relations
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'siswa_id');
+        return $this->belongsTo(Siswa::class, 'siswa_id')->withTrashed();
     }
 
     public function konselor()
     {
-        return $this->belongsTo(Gtk::class, 'konselor_id');
+        return $this->belongsTo(Gtk::class, 'konselor_id')->withTrashed();
     }
 
     public function tahunPelajaran()
     {
-        return $this->belongsTo(TahunPelajaran::class, 'tahun_pelajaran_id');
+        return $this->belongsTo(TahunPelajaran::class, 'tahun_pelajaran_id')->withTrashed();
     }
 
-    // Scopes
-    public function scopeRahasia($query, $rahasia = true)
+    public function pembuat()
     {
-        return $query->where('is_rahasia', $rahasia);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function scopeStatus($query, $status)
+    public function scopeStatus($query, ?string $status)
     {
-        return $query->where('status', $status);
+        return $query->when($status, fn ($q) => $q->where('status', $status));
     }
 
     public function scopePerluTindakLanjut($query)
     {
-        return $query->where('status', 'perlu_tindak_lanjut');
+        return $query->whereNotNull('tanggal_tindak_lanjut')->where('status', '!=', 'selesai');
     }
 
-    // Accessors
-    public function getJenisLabelAttribute()
+    public function getJenisLabelAttribute(): string
     {
         return self::JENIS_KONSELING[$this->jenis_konseling] ?? $this->jenis_konseling;
     }
 
-    public function getKategoriLabelAttribute()
+    public function getKategoriLabelAttribute(): string
     {
         return self::KATEGORI_MASALAH[$this->kategori_masalah] ?? $this->kategori_masalah;
     }
 
-    public function getStatusLabelAttribute()
+    public function getStatusLabelAttribute(): string
     {
         return self::STATUS[$this->status] ?? $this->status;
     }
 
-    public function getStatusBadgeAttribute()
+    public function getStatusBadgeAttribute(): string
     {
-        $badges = [
-            'proses' => 'warning',
+        return match ($this->status) {
+            'baru' => 'info',
+            'dalam_proses' => 'warning',
             'selesai' => 'success',
-            'perlu_tindak_lanjut' => 'danger',
-        ];
-        return $badges[$this->status] ?? 'secondary';
+            'perlu_rujukan' => 'danger',
+            default => 'secondary',
+        };
+    }
+
+    public function getTindakLanjutTerlambatAttribute(): bool
+    {
+        return $this->status !== 'selesai'
+            && $this->tanggal_tindak_lanjut
+            && $this->tanggal_tindak_lanjut->isPast();
     }
 }

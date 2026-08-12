@@ -4,6 +4,26 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyempurnaan modul Bimbingan & Konseling
+
+- Kontrak model, controller, validasi, dan form Konseling kini sesuai dengan struktur tabel produksi; ketidaksesuaian field lama seperti `deskripsi_masalah`, `is_rahasia`, dan status yang tidak tersedia telah dihapus.
+- Alur kerja BK mencakup jenis layanan, bidang masalah, asesmen/permasalahan, hasil konseling, rekomendasi, tindak lanjut terjadwal, rujukan, status penanganan, dan penanda kerahasiaan.
+- Dashboard ringkas menampilkan jumlah seluruh layanan, kasus aktif, kebutuhan tindak lanjut, dan layanan selesai; jadwal tindak lanjut yang terlambat diberi penanda.
+- Pemilihan siswa memakai pencarian AJAX dan hanya menampilkan siswa aktif beserta NISN/rombel; pilihan konselor dibatasi pada GTK aktif berjenis Guru BK.
+- Riwayat layanan per siswa dan detail catatan telah dirapikan mengikuti baseline UI SIMANSA serta responsif untuk desktop dan perangkat kecil.
+- Catatan rahasia hanya dapat dibaca oleh pengguna dengan permission khusus, pembuat catatan, atau konselor yang ditugaskan.
+- Permission Konseling kini granular dan tersedia pada Role Management: lihat, tambah, edit, hapus, lihat catatan rahasia, dan laporan. Role Super Admin, Admin, serta BK mendapat akses awal melalui migrasi; selanjutnya akses dapat diubah melalui matrix role.
+- Aktivitas tambah, ubah, dan hapus catatan tercatat pada activity log.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/CatatanKonselingController.php`
+- `app/Models/CatatanKonseling.php`
+- `app/Services/PermissionSyncService.php`
+- `resources/views/admin/catatan-konseling/`
+- `database/migrations/2026_08_12_150000_register_counseling_permissions.php`
+- `tests/Feature/Admin/CounselingModuleArchitectureTest.php`
+
 ### Sinkronisasi mutasi keluar dan assign rombel
 
 - Daftar dan pencarian AJAX assign rombel kini hanya mengambil siswa dengan `status_siswa = aktif` yang belum memiliki rombel aktif pada tahun pelajaran tujuan.

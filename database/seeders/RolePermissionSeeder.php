@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -20,11 +20,11 @@ class RolePermissionSeeder extends Seeder
         // ============================================
         // PERMISSIONS
         // ============================================
-        
+
         $permissions = [
             // Dashboard
             'view-dashboard',
-            
+
             // Siswa Management
             'view-siswa',
             'create-siswa',
@@ -33,7 +33,7 @@ class RolePermissionSeeder extends Seeder
             'reset-password-siswa',
             'view-dokumen-siswa',
             'view-pip',
-            
+
             // Tahun Pelajaran Management
             'view-tahun-pelajaran',
             'create-tahun-pelajaran',
@@ -41,7 +41,7 @@ class RolePermissionSeeder extends Seeder
             'delete-tahun-pelajaran',
             'set-active-tahun-pelajaran',
             'change-semester-tahun-pelajaran',
-            
+
             // Kurikulum Management
             'view-kurikulum',
             'create-kurikulum',
@@ -49,7 +49,7 @@ class RolePermissionSeeder extends Seeder
             'delete-kurikulum',
             'manage-jurusan',
             'activate-kurikulum',
-            
+
             // Kelas Management
             'view-kelas',           // View kelas data (for reports, dashboards)
             'manage-kelas',         // Access to kelas management menu (CRUD kelas)
@@ -61,7 +61,7 @@ class RolePermissionSeeder extends Seeder
             'transfer-siswa-kelas',
             'assign-wali-kelas',
             'view-detail-kelas',
-            
+
             // Mutasi Siswa
             'view-mutasi',
             'create-mutasi',
@@ -70,7 +70,7 @@ class RolePermissionSeeder extends Seeder
             'approve-mutasi',
             'reject-mutasi',
             'upload-dokumen-mutasi',
-            
+
             // User Management
             'view-users',
             'create-users',
@@ -78,37 +78,37 @@ class RolePermissionSeeder extends Seeder
             'delete-users',
             'assign-roles',
             'assign-permissions',
-            
+
             // GTK Management
             'view-gtk',
             'create-gtk',
             'edit-gtk',
             'delete-gtk',
             'reset-password-gtk',
-            
+
             // GTK Personal (Dashboard & Profile)
             'view-gtk-dashboard',
             'edit-gtk-profile',
             'change-password-gtk',
-            
+
             // Nilai & Rapor (Future)
             'view-nilai',
             'input-nilai',
             'edit-nilai',
             'delete-nilai',
             'cetak-rapor',
-            
+
             // Absensi (Future)
             'view-absensi',
             'input-absensi',
             'edit-absensi',
             'rekap-absensi',
-            
+
             // Laporan
             'view-laporan',
             'export-laporan',
             'view-activity-log',
-            
+
             // Settings
             'manage-settings',
             'view-profile',
@@ -134,40 +134,40 @@ class RolePermissionSeeder extends Seeder
         $kepalaMadrasah = Role::firstOrCreate(['name' => 'Kepala Madrasah']);
         $kepalaMadrasah->givePermissionTo([
             'view-dashboard',
-            
+
             // Full Siswa Access
             'view-siswa', 'create-siswa', 'edit-siswa', 'delete-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip',
-            
+
             // Full Tahun Pelajaran Access
-            'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran', 'delete-tahun-pelajaran', 
+            'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran', 'delete-tahun-pelajaran',
             'set-active-tahun-pelajaran', 'change-semester-tahun-pelajaran',
-            
+
             // Full Kurikulum Access
             'view-kurikulum', 'create-kurikulum', 'edit-kurikulum', 'delete-kurikulum', 'manage-jurusan', 'activate-kurikulum',
-            
+
             // Full Kelas Access
-            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'delete-kelas', 
+            'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'delete-kelas',
             'assign-siswa-kelas', 'remove-siswa-kelas', 'assign-wali-kelas', 'view-detail-kelas',
-            
+
             // Full Mutasi Access
-            'view-mutasi', 'create-mutasi', 'edit-mutasi', 'delete-mutasi', 
+            'view-mutasi', 'create-mutasi', 'edit-mutasi', 'delete-mutasi',
             'approve-mutasi', 'reject-mutasi', 'upload-dokumen-mutasi',
-            
+
             // GTK Management Access
             'view-gtk', 'create-gtk', 'edit-gtk', 'delete-gtk', 'reset-password-gtk',
-            
+
             // GTK Personal Access
             'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
-            
+
             // Nilai & Rapor
             'view-nilai', 'input-nilai', 'edit-nilai', 'delete-nilai', 'cetak-rapor',
-            
+
             // Absensi
             'view-absensi', 'input-absensi', 'edit-absensi', 'rekap-absensi',
-            
+
             // Laporan
             'view-laporan', 'export-laporan', 'view-activity-log',
-            
+
             // Settings & Profile
             'manage-settings', 'view-profile', 'edit-profile',
         ]);
@@ -202,6 +202,8 @@ class RolePermissionSeeder extends Seeder
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'upload-dokumen-mutasi',
             'view-gtk', 'create-gtk', 'edit-gtk', 'reset-password-gtk',
             'view-laporan', 'export-laporan',
+            'view-catatan-konseling', 'create-catatan-konseling', 'edit-catatan-konseling', 'delete-catatan-konseling',
+            'view-confidential-catatan-konseling', 'report-catatan-konseling',
             'manage-settings', 'view-profile', 'edit-profile',
         ]);
         $this->command->info('✅ Admin role created');
@@ -227,6 +229,8 @@ class RolePermissionSeeder extends Seeder
             'view-kelas', 'view-detail-kelas',
             'view-mutasi',
             'view-absensi', 'rekap-absensi',
+            'view-catatan-konseling', 'create-catatan-konseling', 'edit-catatan-konseling', 'delete-catatan-konseling',
+            'view-confidential-catatan-konseling', 'report-catatan-konseling',
             'view-laporan',
             'view-profile', 'edit-profile',
         ]);
@@ -266,18 +270,18 @@ class RolePermissionSeeder extends Seeder
         $gtk = Role::firstOrCreate(['name' => 'GTK']);
         $gtk->syncPermissions([
             // GTK Personal Dashboard & Profile (MANDATORY for all GTK)
-            'view-gtk-dashboard', 
-            'edit-gtk-profile', 
+            'view-gtk-dashboard',
+            'edit-gtk-profile',
             'change-password-gtk',
             // Basic Profile Access
-            'view-profile', 
+            'view-profile',
             'edit-profile',
         ]);
         $this->command->info('✅ GTK role created (Minimal base role - additional permissions can be assigned per user)');
 
         // 8a. GURU role has been REMOVED - Migrated to GTK + Tugas Tambahan system
         // Run "php artisan cleanup:guru-role" if old Guru role still exists
-        
+
         // 9. STAFF TU role has been REMOVED - Migrated to GTK + Tugas Tambahan system
         // Staff TU users should be migrated to GTK role with appropriate permissions
 
@@ -309,8 +313,8 @@ class RolePermissionSeeder extends Seeder
         $this->command->info('🎉 RBAC System setup completed!');
         $this->command->line('');
         $this->command->info('📋 Summary:');
-        $this->command->info('   - Total Permissions: ' . Permission::count());
-        $this->command->info('   - Total Roles: ' . Role::count());
+        $this->command->info('   - Total Permissions: '.Permission::count());
+        $this->command->info('   - Total Roles: '.Role::count());
         $this->command->line('');
         $this->command->info('👥 Roles created:');
         $this->command->info('   1. Super Admin (All Permissions)');

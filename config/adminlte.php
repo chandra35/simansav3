@@ -767,7 +767,7 @@ return [
                     'active' => ['admin/ekstrakurikuler*'],
                 ],
                 [
-                    'text' => 'Catatan Konseling',
+                    'text' => 'Bimbingan & Konseling',
                     'route' => 'admin.catatan-konseling.index',
                     'icon' => 'fas fa-fw fa-comments',
                     'can' => 'view-catatan-konseling',

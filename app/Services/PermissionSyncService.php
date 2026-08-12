@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -366,8 +365,21 @@ class PermissionSyncService
                 'permissions' => [
                     'view-prestasi-siswa',
                     'view-ekstrakurikuler',
-                    'view-catatan-konseling',
                     'kesiswaan-lulusan-access',
+                ],
+            ],
+            'catatan-konseling' => [
+                'label' => 'Bimbingan & Konseling',
+                'icon' => 'comments',
+                'color' => 'info',
+                'description' => 'Pencatatan layanan BK, tindak lanjut, rujukan, dan riwayat siswa',
+                'permissions' => [
+                    'view-catatan-konseling',
+                    'create-catatan-konseling',
+                    'edit-catatan-konseling',
+                    'delete-catatan-konseling',
+                    'view-confidential-catatan-konseling',
+                    'report-catatan-konseling',
                 ],
             ],
             'pemilihan-osis' => [
@@ -533,7 +545,7 @@ class PermissionSyncService
             $items = [];
             foreach ($module['permissions'] as $permissionName) {
                 $entry = $permissionItems->firstWhere('name', $permissionName);
-                if (!$entry) {
+                if (! $entry) {
                     continue;
                 }
 
@@ -542,7 +554,7 @@ class PermissionSyncService
                 ]);
             }
 
-            if (!empty($items)) {
+            if (! empty($items)) {
                 $catalog[$moduleKey] = [
                     'key' => $moduleKey,
                     'label' => $module['label'],
@@ -555,7 +567,7 @@ class PermissionSyncService
         }
 
         $registeredNames = collect($catalog)->flatMap(fn ($module) => collect($module['items'])->pluck('name'))->values()->all();
-        $uncategorized = $permissionItems->filter(fn ($entry) => !in_array($entry['name'], $registeredNames, true))->values();
+        $uncategorized = $permissionItems->filter(fn ($entry) => ! in_array($entry['name'], $registeredNames, true))->values();
 
         if ($uncategorized->isNotEmpty()) {
             $catalog['lainnya'] = [
@@ -676,12 +688,12 @@ class PermissionSyncService
     public function scanRoutesForPermissions(): array
     {
         $foundPermissions = [];
-        
+
         foreach (Route::getRoutes() as $route) {
             $middlewares = $route->gatherMiddleware();
-            
+
             foreach ($middlewares as $middleware) {
-                if (!is_string($middleware)) {
+                if (! is_string($middleware)) {
                     continue;
                 }
 
@@ -697,7 +709,7 @@ class PermissionSyncService
                 }
             }
         }
-        
+
         return $foundPermissions;
     }
 
@@ -708,9 +720,9 @@ class PermissionSyncService
     {
         $foundPermissions = [];
         $menu = config('adminlte.menu', []);
-        
+
         $this->extractPermissionsFromMenu($menu, $foundPermissions);
-        
+
         return $foundPermissions;
     }
 
@@ -727,7 +739,7 @@ class PermissionSyncService
                 $permissionNames = is_array($item['can']) ? $item['can'] : [$item['can']];
 
                 foreach ($permissionNames as $permissionName) {
-                    if (!is_string($permissionName) || trim($permissionName) === '') {
+                    if (! is_string($permissionName) || trim($permissionName) === '') {
                         continue;
                     }
 
@@ -739,7 +751,7 @@ class PermissionSyncService
                     ];
                 }
             }
-            
+
             if (isset($item['submenu']) && is_array($item['submenu'])) {
                 $this->extractPermissionsFromMenu($item['submenu'], $permissions, $currentPath);
             }
@@ -754,14 +766,14 @@ class PermissionSyncService
         $modules = $this->getModuleDefinitions();
         $created = 0;
         $existing = 0;
-        
+
         foreach ($modules as $moduleKey => $module) {
             foreach ($module['permissions'] as $permName) {
                 $permission = Permission::firstOrCreate(
                     ['name' => $permName, 'guard_name' => 'web'],
                     ['name' => $permName, 'guard_name' => 'web']
                 );
-                
+
                 if ($permission->wasRecentlyCreated) {
                     $created++;
                 } else {
@@ -769,7 +781,7 @@ class PermissionSyncService
                 }
             }
         }
-        
+
         return [
             'created' => $created,
             'existing' => $existing,
@@ -796,6 +808,7 @@ class PermissionSyncService
         foreach ($names as $name) {
             $results[$name] = $this->registerPermission($name);
         }
+
         return $results;
     }
 
@@ -806,7 +819,7 @@ class PermissionSyncService
     {
         $modules = $this->getModuleDefinitions();
         $allPermissions = Permission::all()->keyBy('name');
-        
+
         $result = [];
         foreach ($modules as $moduleKey => $module) {
             $moduleData = [
@@ -817,7 +830,7 @@ class PermissionSyncService
                 'description' => $module['description'],
                 'permissions' => [],
             ];
-            
+
             foreach ($module['permissions'] as $permName) {
                 $permission = $allPermissions->get($permName);
                 $moduleData['permissions'][] = [
@@ -826,10 +839,10 @@ class PermissionSyncService
                     'exists' => $permission !== null,
                 ];
             }
-            
+
             $result[$moduleKey] = $moduleData;
         }
-        
+
         return $result;
     }
 
@@ -840,12 +853,12 @@ class PermissionSyncService
     public function getRolePermissionMatrix(): array
     {
         $roles = Role::with('permissions')->get();
-        
+
         $matrix = [];
         foreach ($roles as $role) {
             $rolePermissions = $role->permissions->pluck('name')->toArray();
             $matrix[$role->id] = [];
-            
+
             // Get all permissions from modules
             $modules = $this->getModuleDefinitions();
             foreach ($modules as $module) {
@@ -854,7 +867,7 @@ class PermissionSyncService
                 }
             }
         }
-        
+
         return $matrix;
     }
 
@@ -865,16 +878,16 @@ class PermissionSyncService
     {
         $modules = $this->getModuleDefinitions();
         $existingPermissions = Permission::pluck('name')->toArray();
-        
+
         $unregistered = [];
         foreach ($modules as $module) {
             foreach ($module['permissions'] as $permName) {
-                if (!in_array($permName, $existingPermissions)) {
+                if (! in_array($permName, $existingPermissions)) {
                     $unregistered[] = $permName;
                 }
             }
         }
-        
+
         return $unregistered;
     }
 
