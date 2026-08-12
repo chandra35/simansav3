@@ -4,6 +4,21 @@ Tanggal pembaruan: 12 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Jadwal mengajar pada Data GTK
+
+- Dropdown aksi setiap GTK memiliki menu **Lihat jadwal** yang dilindungi permission `view-gtk`.
+- Halaman jadwal bersifat read-only dan menampilkan seluruh jadwal aktif GTK untuk tahun pelajaran yang dipilih, dikelompokkan Senin–Sabtu.
+- Informasi setiap slot mencakup jam ke, rentang waktu, mata pelajaran, rombel, ruang, dan semester.
+- Ringkasan menampilkan jumlah slot, jam pelajaran, mata pelajaran, dan rombel yang diampu; admin juga dapat memilih tahun pelajaran lain yang memiliki riwayat jadwal.
+
+File terkait:
+
+- `app/Http/Controllers/Admin/GtkController.php`
+- `resources/views/admin/gtk/index.blade.php`
+- `resources/views/admin/gtk/schedule.blade.php`
+- `routes/web.php`
+- `tests/Feature/Admin/GtkTeachingScheduleArchitectureTest.php`
+
 ### Penyempurnaan modul Bimbingan & Konseling
 
 - Populasi “Siswa Aktif” BK disamakan dengan Data Siswa: hanya siswa berstatus aktif yang memiliki rombel aktif pada tahun pelajaran berjalan; siswa aktif tanpa rombel tidak lagi menggelembungkan angka utama.

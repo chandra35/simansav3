@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
+use App\Models\JadwalPelajaran;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\GtkKemenagSyncService;
@@ -296,6 +297,7 @@ class GtkController extends Controller
 
         if ($user->can('view-gtk')) {
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view" onclick="handleGtkAction(this)"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="schedule" onclick="handleGtkAction(this)"><i class="fas fa-calendar-alt text-success"></i><span>Lihat jadwal</span></button>';
         }
 
         if ($user->can('edit-gtk')) {
@@ -327,6 +329,7 @@ class GtkController extends Controller
             .' data-photo-url="'.($item->foto_profile ? e($item->foto_profile_url) : '').'"'
             .' data-upload-url="'.e(route('admin.gtk.upload-foto', $item->id)).'"'
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
+            .' data-schedule-url="'.e(route('admin.gtk.schedule', $item->id)).'"'
             .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
             .' data-toggle="dropdown" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
@@ -334,6 +337,43 @@ class GtkController extends Controller
             .'<div class="dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown">'
             .implode('<div class="dropdown-divider"></div>', array_map(fn ($group) => implode('', $group), $menus))
             .'</div></div>';
+    }
+
+    public function schedule(Request $request, Gtk $gtk)
+    {
+        $yearIds = JadwalPelajaran::query()->where('gtk_id', $gtk->id)
+            ->where('is_active', true)->distinct()->pluck('tahun_pelajaran_id');
+        $years = TahunPelajaran::query()->whereIn('id', $yearIds)
+            ->orWhere('is_active', true)->orderByDesc('tahun_mulai')->get();
+        $selectedYear = $request->filled('tahun_pelajaran_id')
+            ? $years->firstWhere('id', $request->tahun_pelajaran_id)
+            : $years->firstWhere('is_active', true);
+        $selectedYear ??= $years->first();
+
+        $schedules = $selectedYear
+            ? JadwalPelajaran::query()->with(['mataPelajaran', 'kelas'])
+                ->where('gtk_id', $gtk->id)
+                ->where('tahun_pelajaran_id', $selectedYear->id)
+                ->where('is_active', true)
+                ->orderByRaw("FIELD(hari, 'senin','selasa','rabu','kamis','jumat','sabtu')")
+                ->orderBy('jam_ke')->get()
+            : collect();
+
+        $stats = [
+            'slots' => $schedules->count(),
+            'periods' => $schedules->sum(fn ($schedule) => count(array_filter(array_map('trim', explode(',', (string) $schedule->jam_ke)))) ?: 1),
+            'subjects' => $schedules->pluck('mapel_id')->filter()->unique()->count(),
+            'classes' => $schedules->pluck('kelas_id')->filter()->unique()->count(),
+        ];
+
+        return view('admin.gtk.schedule', [
+            'gtk' => $gtk,
+            'years' => $years,
+            'selectedYear' => $selectedYear,
+            'schedulesByDay' => $schedules->groupBy('hari'),
+            'dayLabels' => JadwalPelajaran::HARI,
+            'stats' => $stats,
+        ]);
     }
 
     /**

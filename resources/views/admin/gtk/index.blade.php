@@ -942,6 +942,8 @@ function handleGtkAction(item) {
 
     if (action === 'view') {
         showGtk(gtkId);
+    } else if (action === 'schedule') {
+        window.location.href = menu.dataset.scheduleUrl;
     } else if (action === 'edit') {
         window.location.href = menu.dataset.editUrl;
     } else if (action === 'update-photo') {

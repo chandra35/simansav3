@@ -607,6 +607,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:view-gtk'])->group(function () {
         Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');
         Route::get('/gtk', [App\Http\Controllers\Admin\GtkController::class, 'index'])->name('gtk.index');
+        Route::get('/gtk/{gtk}/jadwal', [App\Http\Controllers\Admin\GtkController::class, 'schedule'])->name('gtk.schedule');
         Route::get('/gtk/{gtk}', [App\Http\Controllers\Admin\GtkController::class, 'show'])->name('gtk.show');
     });
     
