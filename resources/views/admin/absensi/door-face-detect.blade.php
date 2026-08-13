@@ -149,9 +149,24 @@
         return best && distance < CONFIG.threshold ? { person: best, distance } : null;
     }
 
+    const INDONESIAN_LETTER_NAMES = Object.freeze({
+        A: 'a', B: 'be', C: 'ce', D: 'de', E: 'e', F: 'ef', G: 'ge', H: 'ha', I: 'i',
+        J: 'je', K: 'ka', L: 'el', M: 'em', N: 'en', O: 'o', P: 'pe', Q: 'ki', R: 'er',
+        S: 'es', T: 'te', U: 'u', V: 've', W: 'we', X: 'eks', Y: 'ye', Z: 'zet',
+    });
+
+    function normalizeNameForSpeech(name) {
+        return String(name || '').replace(/\b(?:[A-Za-z]{1,3}\.)+[A-Za-z]{1,3}\.?/g, title =>
+            Array.from(title.replaceAll('.', ''))
+                .map(letter => INDONESIAN_LETTER_NAMES[letter.toUpperCase()] || letter)
+                .join(' ')
+        );
+    }
+
     function speakWelcome(person) {
         if (!voiceEnabled || !('speechSynthesis' in window)) return;
-        const utterance = new SpeechSynthesisUtterance(`Selamat datang, ${person.name}`);
+        const spokenName = normalizeNameForSpeech(person.name);
+        const utterance = new SpeechSynthesisUtterance(`Selamat datang, ${spokenName}`);
         utterance.lang = 'id-ID';
         utterance.rate = .92;
         utterance.pitch = 1;

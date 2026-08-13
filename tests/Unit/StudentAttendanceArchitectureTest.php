@@ -189,7 +189,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'text' => 'Face Detect (Uji)'", $menu);
         $this->assertStringContainsString("['type' => 'gtk', 'verified_only' => 1]", $view);
         $this->assertStringContainsString("['type' => 'siswa', 'verified_only' => 1]", $view);
-        $this->assertStringContainsString('Selamat datang, ${person.name}', $view);
+        $this->assertStringContainsString('normalizeNameForSpeech(person.name)', $view);
+        $this->assertStringContainsString("A: 'a', B: 'be', C: 'ce', D: 'de'", $view);
+        $this->assertStringContainsString('Selamat datang, ${spokenName}', $view);
         $this->assertStringContainsString('confirmations: 3', $view);
         $this->assertStringContainsString('Tidak ada presensi yang dicatat', $view);
         $this->assertStringNotContainsString('absensi.record-face', $view);

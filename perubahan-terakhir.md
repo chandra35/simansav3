@@ -11,6 +11,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Kecocokan harus konsisten selama tiga frame dan setiap orang memiliki cooldown sapaan 20 detik agar suara tidak berulang terus-menerus.
 - Tersedia pemilih kamera, kontrol suara, layar penuh, indikator jumlah wajah/database, confidence terakhir, dan jumlah sapaan sesi.
 - Fitur bersifat read-only: tidak mencatat presensi, tidak mengambil snapshot, dan tidak menyimpan histori. Akses dilindungi permission admin data wajah agar cocok untuk tahap uji sebelum integrasi Python/edge AI.
+- Mesin sapaan menormalisasi gelar akademik bertitik menjadi ejaan huruf Bahasa Indonesia tanpa mengubah nama yang tampil. Contohnya `Candra Huda Buana, A.Md` dilafalkan “Candra Huda Buana, a em de”, `S.Pd` menjadi “es pe de”, dan `M.Pd.I` menjadi “em pe de i”.
 
 ### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
 
