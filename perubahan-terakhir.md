@@ -4,6 +4,13 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Standar Global Tabel Compact & Adaptif (13 Agustus 2026)
+
+- Semua DataTables kini memperoleh standar global untuk padding compact, tipografi header/body, filter, jumlah baris, informasi, pagination, scrollbar, serta susunan kontrol pada layar ponsel.
+- Lebar kolom dihitung ulang otomatis setelah gambar selesai dimuat, tab/collapse/modal dibuka, sidebar berubah, DataTables menggambar ulang, dan ukuran wrapper atau viewport berubah. Ini mencegah header dan isi bergeser ke kolom yang berbeda.
+- Bahasa kontrol dasar dinormalisasi ke Bahasa Indonesia dan tabel tetap memakai horizontal scroll saat konten memang lebih lebar daripada perangkat.
+- Tabel **Approval & Data Wajah** diringkas dari sebelas menjadi tujuh kolom substantif: Identitas, Foto Wajah, Data Capture, Verifikasi, Registrasi, dan Aksi. NIP/NISN, frame/quality/angle, serta verifier/waktu verifikasi kini menjadi metadata vertikal di kelompok yang benar.
+
 ### Perbaikan Global Dropdown Aksi Tabel (13 Agustus 2026)
 
 - Dropdown aksi di dalam tabel kini memakai portal global yang memindahkan menu sementara ke layer `body`, sehingga tidak lagi terpotong oleh `table-responsive`, DataTables `scrollX`, pagination, atau tinggi tabel yang hanya berisi satu baris.

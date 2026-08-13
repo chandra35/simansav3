@@ -802,6 +802,9 @@
     {{-- Extra Configured Plugins Scripts --}}
     @include('adminlte::plugins', ['type' => 'js'])
 
+    {{-- Shared density, alignment, and width synchronization for every DataTable. --}}
+    @include('adminlte::partials.table-ui-standards')
+
     {{-- Global table action dropdown portal: prevents menus being clipped by responsive/DataTables overflow. --}}
     @include('adminlte::partials.table-action-dropdown-portal')
 

@@ -163,20 +163,16 @@
 
             <div class="tab-pane {{ $unlockRequests->isEmpty() && $pending->count() === 0 ? 'active' : '' }}" id="tabAll">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped table-sm" id="tabelWajah">
+                    <table class="table table-hover table-sm simansa-smart-table" id="tabelWajah">
                         <thead>
                             <tr>
                                 <th width="40">No</th>
-                                <th>Nama</th>
-                                <th>{{ $identifierLabel }}</th>
+                                <th>Identitas</th>
                                 <th>Foto Wajah</th>
-                                <th>Capture</th>
-                                <th>Angle</th>
-                                <th>Quality</th>
-                                <th>Status</th>
-                                <th>Diverifikasi</th>
-                                <th>Tgl Registrasi</th>
-                                <th width="140">Aksi</th>
+                                <th>Data Capture</th>
+                                <th>Verifikasi</th>
+                                <th>Registrasi</th>
+                                <th width="90">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -189,16 +185,16 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <img src="{{ $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-2" width="32" height="32" style="object-fit:cover;" alt="Foto profil {{ $name }}">
-                                            <div>
-                                                <div>{{ $name }}</div>
-                                                <small class="text-muted">{{ strtoupper($face->user_type) }} · foto profil</small>
+                                    <td class="face-identity-cell">
+                                        <div class="face-identity">
+                                            <img src="{{ $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="face-profile-thumb" alt="Foto profil {{ $name }}">
+                                            <div class="face-identity__copy">
+                                                <strong>{{ $name }}</strong>
+                                                <span>{{ $identifierLabel }} {{ $identifier }}</span>
+                                                <small><i class="fas fa-user-tag mr-1"></i>{{ strtoupper($face->user_type) }} · foto profil</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{ $identifier }}</td>
                                     <td class="text-center">
                                         @if($photoUrls->isNotEmpty())
                                             <button type="button" class="btn btn-link p-0 border-0 js-face-preview"
@@ -219,10 +215,18 @@
                                             <span class="badge badge-light border text-muted p-2"><i class="fas fa-image mr-1"></i>Belum tersimpan</span>
                                         @endif
                                     </td>
-                                    <td><span class="badge badge-info">{{ $face->total_captures }}</span></td>
-                                    <td>@foreach($face->capture_angles ?? [] as $angle)<span class="badge badge-light">{{ $angle }}</span>@endforeach</td>
-                                    <td>@php $q = $face->quality_score ?? 0; @endphp <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span></td>
                                     <td>
+                                        @php $q = $face->quality_score ?? 0; @endphp
+                                        <div class="face-capture-meta">
+                                            <div class="face-capture-meta__summary">
+                                                <span><i class="fas fa-camera mr-1"></i>{{ $face->total_captures }} frame</span>
+                                                <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">Quality {{ number_format($q, 0) }}%</span>
+                                            </div>
+                                            <div class="face-angle-list">@foreach($face->capture_angles ?? [] as $angle)<span>{{ $angle }}</span>@endforeach</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="face-verification-meta">
                                         @if(! $face->is_active)
                                             <span class="badge badge-danger"><i class="fas fa-ban"></i> Ditolak</span>
                                         @elseif($face->is_verified)
@@ -230,15 +234,15 @@
                                         @else
                                             <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
                                         @endif
-                                    </td>
-                                    <td>
                                         @if($face->is_verified)
-                                            {{ $face->verifier->name ?? '-' }}<br><small class="text-muted">{{ $face->verified_at?->format('d/m/Y H:i') }}</small>
+                                            <small><i class="fas fa-user-check mr-1"></i>{{ $face->verifier->name ?? '-' }}</small>
+                                            <small><i class="far fa-clock mr-1"></i>{{ $face->verified_at?->format('d/m/Y H:i') }}</small>
                                         @else
-                                            <span class="text-muted">-</span>
+                                            <small class="text-muted">Belum diverifikasi admin</small>
                                         @endif
+                                        </div>
                                     </td>
-                                    <td>{{ $face->created_at->format('d/m/Y H:i') }}</td>
+                                    <td class="face-registration-date"><strong>{{ $face->created_at->format('d/m/Y') }}</strong><small>{{ $face->created_at->format('H:i') }} WIB</small></td>
                                     <td>
                                         <div class="dropdown face-action-dropdown">
                                             <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>
@@ -284,7 +288,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="11" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -325,9 +329,12 @@ $(function() {
     $('#tabelWajah').DataTable({
         language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
         pageLength: 25,
-        order: [[9, 'desc']],
+        order: [[5, 'desc']],
         scrollX: true,
-        autoWidth: false,
+        autoWidth: true,
+        columnDefs: [
+            { targets: [0, 2, 6], orderable: false, searchable: false },
+        ],
     });
 
     $(document).on('click', '.js-face-preview', function() {
@@ -378,6 +385,7 @@ $(function() {
 
 @section('css')
 <style>
+.face-recognition-verification #tabelWajah{width:100%!important}.face-recognition-verification #tabelWajah th,.face-recognition-verification #tabelWajah td{vertical-align:middle}.face-identity-cell{min-width:235px}.face-identity{display:flex;align-items:center;gap:10px}.face-profile-thumb{width:40px;height:48px;flex:0 0 40px;object-fit:cover;border:2px solid #fff;border-radius:9px;box-shadow:0 0 0 1px #dbe4ef}.face-identity__copy{min-width:0}.face-identity__copy strong,.face-identity__copy span,.face-identity__copy small{display:block}.face-identity__copy strong{color:#172033;font-size:.82rem;line-height:1.25}.face-identity__copy span{margin-top:2px;color:#475569;font-size:.7rem;white-space:nowrap}.face-identity__copy small{margin-top:3px;color:#8492a6;font-size:.64rem}.face-capture-meta{min-width:170px}.face-capture-meta__summary{display:flex;align-items:center;gap:6px;white-space:nowrap}.face-capture-meta__summary>span:first-child{color:#475569;font-size:.7rem;font-weight:700}.face-angle-list{display:flex;max-width:190px;flex-wrap:wrap;gap:3px;margin-top:6px}.face-angle-list span{padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.62rem;font-weight:700}.face-verification-meta{display:flex;min-width:145px;flex-direction:column;align-items:flex-start;gap:4px}.face-verification-meta small{color:#64748b;font-size:.64rem;line-height:1.25}.face-registration-date{min-width:92px}.face-registration-date strong,.face-registration-date small{display:block}.face-registration-date strong{font-size:.72rem}.face-registration-date small{color:#64748b;font-size:.64rem}.face-action-dropdown{white-space:nowrap}
 .face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.face-preview-gallery__item{padding:5px;border:2px solid transparent;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:.72rem;transition:.2s}.face-preview-gallery__item img{display:block;width:100%;height:66px;object-fit:cover;border-radius:6px;margin-bottom:4px}.face-preview-gallery__item.is-active{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}.face-action-dropdown .dropdown-menu{min-width:245px}.face-action-dropdown .dropdown-item{font-size:.875rem;padding:.55rem .9rem}.face-action-dropdown form{display:block;width:100%}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}.face-preview-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 @stop
