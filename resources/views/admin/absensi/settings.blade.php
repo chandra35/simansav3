@@ -9,23 +9,62 @@
 @stop
 
 @section('content')
+@if(session('success'))<div class="alert alert-success alert-dismissible"><button class="close" data-dismiss="alert">&times;</button><i class="fas fa-check-circle mr-1"></i>{{ session('success') }}</div>@endif
+@if($errors->any())<div class="alert alert-danger"><strong>Pengaturan belum dapat disimpan.</strong><ul class="mb-0 mt-1">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div class="card bg-gradient-primary text-white border-0 shadow-sm mb-3 settings-hero">
     <div class="card-body">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
             <div class="pr-lg-4 mb-3 mb-lg-0">
-                <div class="text-uppercase small font-weight-bold mb-1">Presensi GTK</div>
+                <div class="text-uppercase small font-weight-bold mb-1">Pusat Modul Presensi</div>
                 <h2 class="h4 mb-2">Pengaturan Operasional Registrasi dan Kiosk</h2>
                 <p class="text-muted mb-0">
-                    Atur jam kerja GTK, ketelitian pengenalan wajah, lokasi presensi, dan kesiapan kiosk dari satu halaman operasional.
+                    Atur jadwal mingguan GTK dan siswa, ketelitian pengenalan wajah, lokasi, hari libur, dan kesiapan kiosk dari satu halaman.
                 </p>
             </div>
             <div class="settings-hero-note">
-                <i class="fas fa-user-tie mr-1"></i>
-                Kiosk dan registrasi pada modul ini khusus untuk GTK.
+                <i class="fas fa-layer-group mr-1"></i>
+                Jadwal diproses berdasarkan waktu server Asia/Jakarta.
             </div>
         </div>
     </div>
 </div>
+
+<form method="POST" action="{{ route('admin.absensi.settings.operational-schedules.update') }}" class="card card-primary card-outline operational-schedule-card mb-3">
+    @csrf @method('PUT')
+    <div class="card-header schedule-header">
+        <div><h3 class="card-title"><i class="fas fa-calendar-alt mr-1"></i> Jadwal Operasional Kiosk</h3><small>Mode masuk dan pulang dipilih otomatis. Di luar jendela ini backend menolak pencatatan.</small></div>
+        <div class="schedule-legend"><span><i class="fas fa-circle text-success"></i> Tepat waktu</span><span><i class="fas fa-circle text-warning"></i> Terlambat</span><span><i class="fas fa-circle text-info"></i> Pulang</span></div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info py-2"><i class="fas fa-shield-alt mr-1"></i>Hari libur menutup kiosk secara otomatis. Absensi siswa dari kiosk merupakan presensi kedatangan harian dan tidak menggantikan absensi mapel.</div>
+        <ul class="nav nav-pills schedule-tabs mb-3" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#scheduleGtk"><i class="fas fa-user-tie mr-1"></i>GTK</a></li>
+            <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#scheduleSiswa"><i class="fas fa-user-graduate mr-1"></i>Siswa</a></li>
+        </ul>
+        <div class="tab-content">
+            @foreach(['gtk' => 'GTK', 'siswa' => 'Siswa'] as $type => $typeLabel)
+            <div class="tab-pane fade {{ $type === 'gtk' ? 'show active' : '' }}" id="schedule{{ ucfirst($type) }}">
+                <div class="table-responsive schedule-table-wrap"><table class="table table-sm schedule-table mb-0">
+                    <thead><tr><th>Hari</th><th class="text-center">Aktif</th><th>Masuk dibuka</th><th>Tepat waktu s.d.</th><th>Masuk ditutup</th><th>Pulang dibuka</th><th>Pulang ditutup</th></tr></thead>
+                    <tbody>
+                    @foreach(range(1, 7) as $day)
+                        @php $schedule = $operationalSchedules->get($type)?->get($day); @endphp
+                        <tr class="{{ $schedule?->is_active ? '' : 'is-inactive' }}">
+                            <td><strong>{{ [1=>'Senin',2=>'Selasa',3=>'Rabu',4=>'Kamis',5=>'Jumat',6=>'Sabtu',7=>'Minggu'][$day] }}</strong></td>
+                            <td class="text-center"><input type="hidden" name="schedules[{{ $type }}][{{ $day }}][active]" value="0"><div class="custom-control custom-switch"><input type="checkbox" class="custom-control-input schedule-active" id="active-{{ $type }}-{{ $day }}" name="schedules[{{ $type }}][{{ $day }}][active]" value="1" @checked($schedule?->is_active)><label class="custom-control-label" for="active-{{ $type }}-{{ $day }}"></label></div></td>
+                            @foreach(['check_in_open'=>'06:00','on_time_until'=>'07:00','check_in_close'=>'08:00','check_out_open'=>'15:00','check_out_close'=>'23:59'] as $field => $fallback)
+                            <td><input type="time" class="form-control form-control-sm" name="schedules[{{ $type }}][{{ $day }}][{{ $field }}]" value="{{ old("schedules.{$type}.{$day}.{$field}", $schedule?->shortTime($field) ?? $fallback) }}" required></td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table></div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center flex-wrap"><small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Urutan wajib: buka masuk ≤ tepat waktu ≤ tutup masuk &lt; buka pulang ≤ tutup pulang.</small><button class="btn btn-primary"><i class="fas fa-save mr-1"></i>Simpan Jadwal Operasional</button></div>
+</form>
 
 <div class="row">
     {{-- SETTINGS --}}
@@ -281,13 +320,20 @@
 @section('css')
 <style>
 .settings-hero{border-radius:18px}.settings-hero .text-muted{color:rgba(255,255,255,.9)!important}.settings-hero-note{max-width:340px;padding:12px 15px;border:1px solid rgba(255,255,255,.32);border-radius:12px;background:rgba(255,255,255,.13)}
-@media(max-width:991px){.settings-hero-note{max-width:none;width:100%}}
+.operational-schedule-card{border-radius:.65rem;box-shadow:0 5px 18px rgba(15,23,42,.06)}.schedule-header{display:flex;justify-content:space-between;align-items:center;gap:.75rem}.schedule-header h3{float:none;margin:0}.schedule-header small{display:block;color:#64748b;margin-top:.2rem}.schedule-legend{display:flex;gap:.75rem;flex-wrap:wrap;font-size:.72rem;color:#64748b}.schedule-tabs{gap:.35rem}.schedule-tabs .nav-link{padding:.45rem 1rem;border:1px solid #dbe4ef}.schedule-table-wrap{border:1px solid #e2e8f0;border-radius:.5rem}.schedule-table{min-width:900px}.schedule-table th{background:#f8fafc;border-top:0;color:#475569;font-size:.68rem;text-transform:uppercase;vertical-align:middle}.schedule-table td{vertical-align:middle}.schedule-table tr.is-inactive{background:#f8fafc}.schedule-table tr.is-inactive td:not(:first-child):not(:nth-child(2)){opacity:.55}.schedule-table .form-control{min-width:105px}.schedule-table .custom-switch{padding-left:2.7rem}.operational-schedule-card .card-footer{gap:.75rem}
+@media(max-width:991px){.settings-hero-note{max-width:none;width:100%}.schedule-header{align-items:flex-start;flex-direction:column}}
+@media(max-width:575px){.operational-schedule-card .card-footer .btn{width:100%}}
 </style>
 @stop
 
 @section('js')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.schedule-active').forEach(function (toggle) {
+        const sync = function () { toggle.closest('tr').classList.toggle('is-inactive', !toggle.checked); };
+        toggle.addEventListener('change', sync);
+        sync();
+    });
     document.querySelectorAll('.js-confirm-form').forEach(function (form) {
         form.addEventListener('submit', async function (event) {
             event.preventDefault();

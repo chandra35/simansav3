@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Absensi Wajah - SIMANSA</title>
+    <title>Kiosk {{ $userType === 'siswa' ? 'Siswa' : 'GTK' }} - SIMANSA</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -182,6 +182,7 @@
         }
         .status-hadir { background: #00e676; color: #000; }
         .status-terlambat { background: #ffab00; color: #000; }
+        .status-tepat_waktu { background: #29b6f6; color: #001b2a; }
 
         /* Attendance list */
         .attendance-list {
@@ -274,25 +275,6 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Manual fallback modal */
-        .manual-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .manual-modal.show { display: flex; }
-        .manual-modal .modal-content {
-            background: #1a1a4e;
-            border-radius: 12px;
-            padding: 30px;
-            width: 500px;
-            max-width: 90%;
-        }
-
         /* Animations */
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-border {
@@ -325,18 +307,21 @@
             fill: #00e5ff;
             opacity: 0.7;
         }
+        .kiosk-type-switch{display:flex;gap:5px}.kiosk-type-switch a{padding:6px 11px;border:1px solid #2a2a6e;border-radius:7px;color:#a5b4fc;text-decoration:none;font-size:.75rem;font-weight:700}.kiosk-type-switch a.active{background:#4f46e5;color:#fff;border-color:#6366f1}.automatic-mode{margin:10px;padding:12px;border:1px solid #2a2a6e;border-radius:10px;background:rgba(255,255,255,.04)}.automatic-mode__top{display:flex;align-items:center;justify-content:space-between;gap:8px}.automatic-mode__badge{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:800;text-transform:uppercase}.automatic-mode__badge.masuk{background:#00e676;color:#032b18}.automatic-mode__badge.pulang{background:#29b6f6;color:#041d2c}.automatic-mode__badge.closed{background:#ffab00;color:#2c1c00}.automatic-mode strong,.automatic-mode small{display:block}.automatic-mode small{color:#94a3b8;margin-top:5px}.operational-overlay{position:absolute;inset:0;z-index:90;background:radial-gradient(circle at center,rgba(30,41,100,.96),rgba(3,7,30,.99));display:flex;align-items:center;justify-content:center;text-align:center;padding:30px}.operational-overlay__card{max-width:540px}.operational-overlay__icon{width:82px;height:82px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,171,0,.12);color:#ffab00;font-size:2rem;margin-bottom:18px}.operational-overlay h2{font-size:1.6rem}.operational-countdown{font-size:2.3rem;font-weight:800;color:#00e5ff;font-variant-numeric:tabular-nums;margin:14px 0}.operational-schedule-text{font-size:.82rem;color:#94a3b8}.camera-section.is-closed video,.camera-section.is-closed canvas,.camera-section.is-closed .face-guide,.camera-section.is-closed .camera-status{visibility:hidden}
+        @media(max-width:900px){.kiosk-header{padding:8px 12px}.kiosk-header h1{font-size:1rem}.kiosk-header .date{display:none}.kiosk-header .clock{font-size:1.25rem}.kiosk-type-switch{display:none}.kiosk-body{grid-template-columns:1fr 310px}}
     </style>
 </head>
 <body>
     <!-- HEADER -->
     <div class="kiosk-header">
         <div>
-            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Presensi Wajah GTK</h1>
+            <h1><i class="fas fa-fingerprint"></i> SIMANSA - Kiosk {{ $userType === 'siswa' ? 'Siswa' : 'GTK' }}</h1>
             <div class="date" id="currentDate"></div>
         </div>
         <div style="display:flex; align-items:center; gap:15px;">
-            <div>
-                <span class="badge bg-primary px-3 py-2"><i class="fas fa-user-tie"></i> Mode GTK</span>
+            <div class="kiosk-type-switch">
+                <a href="{{ route('admin.absensi.kiosk', array_filter(['type' => 'gtk', 'location' => $location?->id])) }}" class="{{ $userType === 'gtk' ? 'active' : '' }}"><i class="fas fa-user-tie"></i> GTK</a>
+                <a href="{{ route('admin.absensi.kiosk', array_filter(['type' => 'siswa', 'location' => $location?->id])) }}" class="{{ $userType === 'siswa' ? 'active' : '' }}"><i class="fas fa-user-graduate"></i> SISWA</a>
             </div>
             <div>
                 <select id="locationSelect" class="form-select form-select-sm" style="background:#1a1a4e; color:#fff; border-color:#2a2a6e; width:200px;">
@@ -381,6 +366,10 @@
                 <i class="fas fa-video"></i> Menunggu wajah...
             </div>
 
+            <div class="operational-overlay" id="operationalOverlay" style="{{ $operationalState['is_open'] ? 'display:none' : '' }}">
+                <div class="operational-overlay__card"><span class="operational-overlay__icon"><i class="fas fa-clock"></i></span><h2 id="closedTitle">Presensi sedang ditutup</h2><p id="closedReason">{{ $operationalState['reason'] }}</p><div class="operational-countdown" id="operationalCountdown">--:--:--</div><div class="operational-schedule-text" id="operationalScheduleText"></div></div>
+            </div>
+
             <!-- Camera error fallback -->
             <div id="cameraError" style="display:none; text-align:center; padding:40px;">
                 <i class="fas fa-video-slash fa-3x text-danger mb-3"></i>
@@ -389,22 +378,15 @@
                 <button class="btn btn-outline-info mt-3" onclick="initCamera()">
                     <i class="fas fa-redo"></i> Coba Lagi
                 </button>
-                <button class="btn btn-outline-warning mt-3" onclick="openManualModal()">
-                    <i class="fas fa-keyboard"></i> Input Manual
-                </button>
             </div>
         </div>
 
         <!-- SIDEBAR -->
         <div class="sidebar">
-            <!-- Tab Switch -->
-            <div class="tab-switch">
-                <button id="tabMasuk" class="active" onclick="switchTab('masuk')">
-                    <i class="fas fa-sign-in-alt"></i> MASUK
-                </button>
-                <button id="tabPulang" onclick="switchTab('pulang')">
-                    <i class="fas fa-sign-out-alt"></i> PULANG
-                </button>
+            <div class="automatic-mode">
+                <div class="automatic-mode__top"><strong><i class="fas fa-magic mr-1"></i>Mode Otomatis</strong><span class="automatic-mode__badge {{ $operationalState['mode'] }}" id="operationalMode">{{ $operationalState['mode'] === 'masuk' ? 'Masuk' : ($operationalState['mode'] === 'pulang' ? 'Pulang' : 'Ditutup') }}</span></div>
+                <small id="operationalReason">{{ $operationalState['reason'] }}</small>
+                @if($operationalState['schedule'])<small>{{ $operationalState['schedule']['check_in_open'] }}–{{ $operationalState['schedule']['check_in_close'] }} masuk · {{ $operationalState['schedule']['check_out_open'] }} pulang</small>@endif
             </div>
 
             <!-- Stats -->
@@ -444,9 +426,6 @@
 
             <!-- Settings Bar -->
             <div class="settings-bar">
-                <button onclick="openManualModal()">
-                    <i class="fas fa-keyboard"></i> Manual
-                </button>
                 <button onclick="refreshData()">
                     <i class="fas fa-sync"></i> Refresh
                 </button>
@@ -454,65 +433,6 @@
                     <i class="fas fa-expand"></i> Fullscreen
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- MANUAL INPUT MODAL -->
-    <div class="manual-modal" id="manualModal">
-        <div class="modal-content">
-            <h4 class="mb-3"><i class="fas fa-keyboard"></i> Input Absensi Manual</h4>
-            <p class="text-muted mb-3">Gunakan jika kamera bermasalah atau perlu input khusus.</p>
-            <form id="manualForm" method="POST" action="{{ route('admin.absensi.manual') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-3">
-                    <label class="form-label">Cari GTK</label>
-                    <input type="text" id="manualSearchGtk" class="form-control bg-dark text-white border-secondary"
-                           placeholder="Ketik nama atau NIP..." autocomplete="off">
-                    <div id="manualSearchResults" class="mt-1"></div>
-                    <input type="hidden" name="user_id" id="manualUserId">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Tanggal</label>
-                    <input type="date" name="tanggal" class="form-control bg-dark text-white border-secondary"
-                           value="{{ now()->format('Y-m-d') }}">
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Jam Masuk</label>
-                        <input type="time" name="waktu_masuk" class="form-control bg-dark text-white border-secondary">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Jam Pulang</label>
-                        <input type="time" name="waktu_pulang" class="form-control bg-dark text-white border-secondary">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select bg-dark text-white border-secondary">
-                        <option value="hadir">Hadir</option>
-                        <option value="terlambat">Terlambat</option>
-                        <option value="izin">Izin</option>
-                        <option value="sakit">Sakit</option>
-                        <option value="dinas_luar">Dinas Luar</option>
-                        <option value="cuti">Cuti</option>
-                        <option value="alpa">Alpa</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Catatan</label>
-                    <textarea name="catatan" class="form-control bg-dark text-white border-secondary" rows="2"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Bukti (opsional)</label>
-                    <input type="file" name="file_bukti" class="form-control bg-dark text-white border-secondary" accept=".jpg,.jpeg,.png,.pdf">
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success flex-fill">
-                        <i class="fas fa-save"></i> Simpan
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="closeManualModal()">Batal</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -532,12 +452,11 @@
             livenessEnabled: {{ $settings['liveness_enabled'] ? 'true' : 'false' }},
             autoDetect: {{ $settings['auto_detect'] ? 'true' : 'false' }},
             detectionInterval: {{ $settings['detection_interval'] ?? 200 }},
-            jamMasuk: '{{ $settings['jam_masuk'] ?? '07:00' }}',
-            jamPulang: '{{ $settings['jam_pulang'] ?? '16:00' }}',
         };
 
-        let currentTab = 'masuk';
-        const currentUserType = 'gtk';
+        let operationalState = @json($operationalState);
+        const currentUserType = @json($userType);
+        let serverOffset = new Date(operationalState.server_time).getTime() - Date.now();
         let faceDatabase = [];
         let isProcessing = false;
         let detectionLoop = null;
@@ -708,15 +627,6 @@
         });
 
         // ============================================
-        // TAB SWITCHING
-        // ============================================
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tabMasuk').classList.toggle('active', tab === 'masuk');
-            document.getElementById('tabPulang').classList.toggle('active', tab === 'pulang');
-        }
-
-        // ============================================
         // CAMERA INITIALIZATION
         // ============================================
         async function initCamera() {
@@ -834,6 +744,10 @@
             });
 
             async function detect() {
+                if (!operationalState.is_open) {
+                    detectionLoop = requestAnimationFrame(() => setTimeout(detect, 1000));
+                    return;
+                }
                 if (video.paused || video.ended) {
                     console.warn('Video paused or ended, retrying...');
                     detectionLoop = requestAnimationFrame(() => setTimeout(detect, 1000));
@@ -1017,14 +931,14 @@
                         confidence: confidence,
                         location_id: locationId || null,
                         photo: photoData,
-                        type: currentTab,
                     }),
                 });
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => null);
-                    const msg = errData?.message || errData?.errors ? Object.values(errData.errors).flat().join(', ') : `Error ${response.status}`;
+                    const msg = errData?.message || (errData?.errors ? Object.values(errData.errors).flat().join(', ') : `Error ${response.status}`);
                     console.error('Record error:', response.status, errData);
+                    if (errData?.window) applyOperationalState(errData.window);
                     showNotification(msg, 'error');
                     return;
                 }
@@ -1116,7 +1030,7 @@
         // ============================================
         async function refreshAttendanceList() {
             try {
-                const response = await fetch(`{{ route("admin.absensi.today-data") }}?type=${currentUserType}`, {
+                const response = await fetch(`{{ route("admin.absensi.kiosk-today-data") }}?type=${currentUserType}`, {
                     headers: { 'Accept': 'application/json' }
                 });
                 const result = await response.json();
@@ -1161,29 +1075,55 @@
             showNotification('Data berhasil diperbarui', 'info');
         }
 
-        // ============================================
-        // MANUAL MODAL
-        // ============================================
-        function openManualModal() {
-            document.getElementById('manualModal').classList.add('show');
+        function formatCountdown(target) {
+            if (!target) return 'Jadwal berikutnya belum ditentukan';
+            const distance = new Date(target).getTime() - (Date.now() + serverOffset);
+            if (distance <= 0) return '00:00:00';
+            const total = Math.floor(distance / 1000), days = Math.floor(total / 86400), hours = Math.floor((total % 86400) / 3600), minutes = Math.floor((total % 3600) / 60), seconds = total % 60;
+            return `${days ? days + ' hari ' : ''}${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
         }
-        function closeManualModal() {
-            document.getElementById('manualModal').classList.remove('show');
+
+        function applyOperationalState(state) {
+            const changed = state.mode !== operationalState.mode || state.is_open !== operationalState.is_open;
+            operationalState = state;
+            serverOffset = new Date(state.server_time).getTime() - Date.now();
+            const mode = document.getElementById('operationalMode');
+            mode.className = 'automatic-mode__badge ' + state.mode;
+            mode.textContent = state.mode === 'masuk' ? 'Masuk' : (state.mode === 'pulang' ? 'Pulang' : 'Ditutup');
+            document.getElementById('operationalReason').textContent = state.reason;
+            document.getElementById('closedReason').textContent = state.reason;
+            document.getElementById('operationalOverlay').style.display = state.is_open ? 'none' : 'flex';
+            document.querySelector('.camera-section').classList.toggle('is-closed', !state.is_open);
+            if (changed) window.location.reload();
+        }
+
+        async function refreshOperationalState() {
+            try {
+                const response = await fetch(`{{ route('admin.absensi.kiosk-state') }}?type=${currentUserType}`, {headers:{'Accept':'application/json'}});
+                const result = await response.json();
+                if (result.success) applyOperationalState(result.state);
+            } catch (error) { console.error('Gagal memperbarui jadwal kiosk:', error); }
+        }
+
+        function renderOperationalCountdown() {
+            document.getElementById('operationalCountdown').textContent = formatCountdown(operationalState.next_at);
+            if (operationalState.schedule) {
+                const schedule = operationalState.schedule;
+                document.getElementById('operationalScheduleText').textContent = `${schedule.day} · Masuk ${schedule.check_in_open}–${schedule.check_in_close} · Pulang mulai ${schedule.check_out_open}`;
+            }
         }
 
         // ============================================
         // INIT
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
-            loadModels();
+            document.querySelector('.camera-section').classList.toggle('is-closed', !operationalState.is_open);
+            if (operationalState.is_open) loadModels(); else document.getElementById('loadingOverlay').style.display = 'none';
             refreshAttendanceList();
-            // Auto refresh every 60 seconds
             setInterval(refreshAttendanceList, 60000);
-        });
-
-        // ESC to close manual modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeManualModal();
+            setInterval(refreshOperationalState, 30000);
+            setInterval(renderOperationalCountdown, 1000);
+            renderOperationalCountdown();
         });
     </script>
 </body>

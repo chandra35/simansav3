@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AbsensiLocation;
+use App\Models\AbsensiOperationalSchedule;
 use App\Models\AbsensiSetting;
 use App\Models\HariLibur;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AbsensiSettingController extends Controller
 {
@@ -17,12 +20,65 @@ class AbsensiSettingController extends Controller
     {
         $this->ensureDefaultSettings();
         $settings = AbsensiSetting::query()
-            ->whereNotIn('key', ['jam_masuk_siswa', 'jam_pulang_siswa'])
+            ->where('group', '!=', 'waktu')
             ->orderBy('group')->orderBy('key')->get()->groupBy('group');
         $locations = AbsensiLocation::orderBy('nama')->get();
         $hariLibur = HariLibur::orderBy('tanggal', 'desc')->get();
+        $operationalSchedules = AbsensiOperationalSchedule::query()
+            ->orderBy('user_type')->orderBy('day_of_week')->get()
+            ->groupBy('user_type')->map(fn ($items) => $items->keyBy('day_of_week'));
 
-        return view('admin.absensi.settings', compact('settings', 'locations', 'hariLibur'));
+        return view('admin.absensi.settings', compact('settings', 'locations', 'hariLibur', 'operationalSchedules'));
+    }
+
+    public function updateOperationalSchedules(Request $request)
+    {
+        $validated = $request->validate([
+            'schedules' => ['required', 'array'],
+            'schedules.*.*.active' => ['required', 'boolean'],
+            'schedules.*.*.check_in_open' => ['required', 'date_format:H:i'],
+            'schedules.*.*.on_time_until' => ['required', 'date_format:H:i'],
+            'schedules.*.*.check_in_close' => ['required', 'date_format:H:i'],
+            'schedules.*.*.check_out_open' => ['required', 'date_format:H:i'],
+            'schedules.*.*.check_out_close' => ['required', 'date_format:H:i'],
+        ]);
+
+        foreach (['gtk', 'siswa'] as $type) {
+            foreach (range(1, 7) as $day) {
+                $row = $validated['schedules'][$type][$day] ?? null;
+                if (! $row) {
+                    throw ValidationException::withMessages(["schedules.{$type}.{$day}" => 'Jadwal harian tidak lengkap.']);
+                }
+                if (! ($row['check_in_open'] <= $row['on_time_until']
+                    && $row['on_time_until'] <= $row['check_in_close']
+                    && $row['check_in_close'] < $row['check_out_open']
+                    && $row['check_out_open'] <= $row['check_out_close'])) {
+                    throw ValidationException::withMessages(["schedules.{$type}.{$day}.check_in_open" => "Urutan waktu {$type} hari ke-{$day} tidak valid."]);
+                }
+            }
+        }
+
+        DB::transaction(function () use ($validated) {
+            foreach (['gtk', 'siswa'] as $type) {
+                foreach (range(1, 7) as $day) {
+                    $row = $validated['schedules'][$type][$day];
+                    AbsensiOperationalSchedule::updateOrCreate(
+                        ['user_type' => $type, 'day_of_week' => $day],
+                        [
+                            'is_active' => (bool) $row['active'],
+                            'check_in_open' => $row['check_in_open'],
+                            'on_time_until' => $row['on_time_until'],
+                            'check_in_close' => $row['check_in_close'],
+                            'check_out_open' => $row['check_out_open'],
+                            'check_out_close' => $row['check_out_close'],
+                        ]
+                    );
+                }
+            }
+        });
+
+        return redirect()->route('admin.absensi.settings')
+            ->with('success', 'Jadwal operasional kiosk GTK dan siswa berhasil diperbarui.');
     }
 
     /**
@@ -36,8 +92,9 @@ class AbsensiSettingController extends Controller
             'settings.*' => 'nullable|string|max:500',
         ]);
 
+        $allowedKeys = AbsensiSetting::query()->where('group', '!=', 'waktu')->pluck('key');
         foreach ($request->settings as $key => $value) {
-            if (in_array($key, ['jam_masuk_siswa', 'jam_pulang_siswa'], true)) {
+            if (! $allowedKeys->contains($key)) {
                 continue;
             }
             AbsensiSetting::setValue($key, $value);

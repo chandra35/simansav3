@@ -83,9 +83,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'route' => 'admin.absensi-siswa.index'", $menu);
         $this->assertStringContainsString("'can' => 'sidebar-student-attendance-global'", $menu);
         $this->assertStringContainsString("Gate::define('sidebar-student-attendance-global'", file_get_contents($root.'/app/Providers/AuthServiceProvider.php'));
-        $gtkMenuPosition = strpos($menu, "'text' => 'Absensi GTK'");
+        $gtkMenuPosition = strpos($menu, "'text' => 'Presensi Terpusat'");
         $faceMenuPosition = strpos($menu, "'text' => 'Face Recognition'");
-        $gtkTodayPosition = strpos($menu, "'text' => 'Presensi Hari Ini'", $gtkMenuPosition);
+        $gtkTodayPosition = strpos($menu, "'text' => 'Dashboard GTK'", $gtkMenuPosition);
         $studentMenuPosition = strpos($menu, "'text' => 'Absensi Siswa'", $gtkMenuPosition);
         $this->assertNotFalse($faceMenuPosition);
         $this->assertNotFalse($gtkMenuPosition);
@@ -107,7 +107,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringNotContainsString('!important', $view);
     }
 
-    public function test_presensi_admin_is_gtk_only_and_personally_scoped_for_regular_gtk(): void
+    public function test_presensi_dashboard_is_personally_scoped_while_kiosk_supports_both_types(): void
     {
         $root = dirname(__DIR__, 2);
         $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiController.php');
@@ -119,15 +119,15 @@ class StudentAttendanceArchitectureTest extends TestCase
 
         $this->assertStringContainsString('private function isPersonalGtkScope', $controller);
         $this->assertStringContainsString("->where('user_id', \$request->user()->id)", $controller);
-        $this->assertStringContainsString("\$userType = 'gtk';", $controller);
+        $this->assertStringContainsString("\$userType = \$this->normalizeUserType(\$request->query('type'));", $controller);
         $this->assertStringContainsString('streamDownload', $controller);
         $this->assertStringContainsString("\$selectedType = \$this->normalizeUserType(\$request->query('type'));", $faceController);
         $this->assertStringContainsString("'typeOptions' => \$this->typeOptions()", $faceController);
         $this->assertStringContainsString('abort_unless($this->canManageAllRegistrations($request->user()), 403);', $faceController);
-        $this->assertStringNotContainsString('Mode Siswa', $kiosk);
+        $this->assertStringContainsString("'type' => 'siswa'", $kiosk);
         $this->assertStringContainsString('Unduh CSV', $recap);
-        $this->assertStringContainsString("->whereNotIn('key', ['jam_masuk_siswa', 'jam_pulang_siswa'])", $settingController);
-        $this->assertStringContainsString('khusus untuk GTK', $settings);
+        $this->assertStringContainsString("->where('group', '!=', 'waktu')", $settingController);
+        $this->assertStringContainsString('Jadwal Operasional Kiosk', $settings);
     }
 
     public function test_gtk_attendance_dashboard_uses_active_population_and_smart_filters(): void
@@ -150,6 +150,29 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("@can('edit-absensi')", $view);
         $this->assertStringContainsString('foto_profile_url', $view);
         $this->assertStringContainsString("$('#editStatus').val(record.status)", $view);
+    }
+
+    public function test_face_kiosk_uses_server_controlled_operational_windows_for_gtk_and_students(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiController.php');
+        $kiosk = file_get_contents($root.'/resources/views/admin/absensi/kiosk.blade.php');
+        $settings = file_get_contents($root.'/resources/views/admin/absensi/settings.blade.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+
+        $this->assertStringContainsString('AttendanceWindowService $windowService', $controller);
+        $this->assertStringContainsString("if (! \$operationalState['is_open'])", $controller);
+        $this->assertStringContainsString("\$operationalState['mode'] === 'masuk'", $controller);
+        $this->assertStringNotContainsString("\$request->type === 'masuk'", $controller);
+        $this->assertStringContainsString("'user_type' => 'required|in:gtk,siswa'", $controller);
+        $this->assertStringContainsString("'type' => 'siswa'", $kiosk);
+        $this->assertStringContainsString('Mode Otomatis', $kiosk);
+        $this->assertStringContainsString('refreshOperationalState', $kiosk);
+        $this->assertStringContainsString('operationalCountdown', $kiosk);
+        $this->assertStringNotContainsString("type: currentTab", $kiosk);
+        $this->assertStringContainsString('Jadwal Operasional Kiosk', $settings);
+        $this->assertStringContainsString('settings.operational-schedules.update', $settings);
+        $this->assertStringContainsString("name('absensi.kiosk-state')", $routes);
     }
 
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void

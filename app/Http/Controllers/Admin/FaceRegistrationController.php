@@ -415,7 +415,12 @@ class FaceRegistrationController extends Controller
         $verifiedOnly = $request->boolean('verified_only', false);
 
         $query = FaceEncoding::where('user_type', $userType)
-            ->where('is_active', true);
+            ->where('is_active', true)
+            ->whereHas('user', function ($user) use ($userType) {
+                $user->where('is_active', true)
+                    ->when($userType === 'gtk', fn ($query) => $query->whereHas('gtk', fn ($gtk) => $gtk->where('status_aktif', true)))
+                    ->when($userType === 'siswa', fn ($query) => $query->whereHas('siswa', fn ($siswa) => $siswa->where('status_siswa', 'aktif')));
+            });
 
         if ($verifiedOnly) {
             $query->where('is_verified', true);

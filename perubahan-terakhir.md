@@ -4,6 +4,16 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Kiosk Otomatis dan Jadwal Operasional Presensi Terpusat
+
+- Modul Presensi kini memiliki jadwal operasional mingguan terpusat untuk kiosk GTK dan siswa. Jadwal dapat diedit per hari dari Pengaturan Presensi tanpa mengikuti atau mengubah konfigurasi jam pelajaran.
+- Default masuk dibuka pukul 06:00–08:00 WIB; sampai 07:00 berstatus hadir dan mulai 07:01 berstatus terlambat. Pulang dibuka Senin 15:00, Selasa–Kamis 16:30, serta Jumat 14:30. Sabtu, Minggu, dan hari libur tertutup secara default.
+- Mode kiosk tidak lagi dipilih manual: server otomatis menentukan masuk, terlambat, pulang, atau ditutup. Ketika tertutup, kamera berhenti memproses wajah dan layar menampilkan alasan beserta countdown menuju jendela berikutnya.
+- Disediakan kiosk terpisah untuk GTK dan siswa dalam satu UI yang dapat berpindah mode. Presensi siswa kiosk disimpan sebagai kedatangan harian dan tetap terpisah dari absensi mapel/wali kelas.
+- Backend memvalidasi jendela waktu menggunakan waktu server Asia/Jakarta, sehingga request yang dimanipulasi browser tetap ditolak. Database wajah kiosk hanya memuat GTK/siswa dengan akun dan profil aktif serta wajah yang sudah diverifikasi.
+- Menu Presensi dirapikan menjadi **Presensi Terpusat**, dengan Dashboard GTK, Kiosk GTK, Kiosk Siswa, Rekap GTK, dan Pengaturan Presensi dalam kelompok operasional yang sama.
+- Ditambahkan tes transisi waktu, jadwal per jenis pengguna, hari nonaktif, penolakan endpoint di luar jam, render kedua kiosk, serta perlindungan permission.
+
 ### Rebuild Pusat Presensi GTK
 
 - Halaman `/admin/absensi` dibangun ulang mengikuti UI operasional SIMANSA terbaru: hero lebih ringkas, empat metrik utama, indikator kelengkapan, ringkasan status, serta tabel profil GTK yang lebih mudah dipindai dan responsif pada desktop maupun ponsel.

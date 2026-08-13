@@ -1111,6 +1111,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Absensi Kiosk Mode (Fullscreen) hanya dijalankan oleh perangkat/admin tepercaya.
     Route::middleware(['can:face-registration-admin'])->group(function () {
         Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
+        Route::get('/absensi/kiosk-state', [App\Http\Controllers\Admin\AbsensiController::class, 'kioskState'])->name('absensi.kiosk-state');
+        Route::get('/absensi/kiosk-today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.kiosk-today-data');
         Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');
         Route::get('/absensi/face-descriptors', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'getDescriptors'])->name('absensi.face-descriptors');
     });
@@ -1143,6 +1145,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/absensi/settings', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'index'])->name('absensi.settings');
         Route::post('/absensi/settings', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'updateSettings'])->name('absensi.settings.update');
+        Route::put('/absensi/settings/operational-schedules', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'updateOperationalSchedules'])->name('absensi.settings.operational-schedules.update');
         Route::post('/absensi/location', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'storeLocation'])->name('absensi.location.store');
         Route::put('/absensi/location/{location}', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'updateLocation'])->name('absensi.location.update');
         Route::post('/absensi/location/{location}/toggle', [App\Http\Controllers\Admin\AbsensiSettingController::class, 'toggleLocation'])->name('absensi.location.toggle');
