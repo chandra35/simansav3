@@ -187,8 +187,8 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("name('absensi.face-detect')", $routes);
         $this->assertStringContainsString("Route::middleware(['can:face-registration-admin'])", $routes);
         $this->assertStringContainsString("'text' => 'Face Detect (Uji)'", $menu);
-        $this->assertStringContainsString("['type' => 'gtk', 'verified_only' => 1]", $view);
-        $this->assertStringContainsString("['type' => 'siswa', 'verified_only' => 1]", $view);
+        $this->assertStringContainsString("['type' => 'gtk', 'verified_only' => 1]", $controller);
+        $this->assertStringContainsString("['type' => 'siswa', 'verified_only' => 1]", $controller);
         $this->assertStringContainsString('function normalizeNameForSpeech(name)', $view);
         $this->assertStringContainsString("A: 'a', B: 'be', C: 'ce', D: 'de'", $view);
         $this->assertStringContainsString('speakText(buildGreeting(person.name))', $view);
@@ -206,8 +206,19 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('INTONATION_PROFILES', $view);
         $this->assertStringContainsString("enthusiastic: { rate: 1.05, pitchOffset: .14 }", $view);
         $this->assertStringContainsString('function applyIntonationPreset()', $view);
+        $this->assertStringContainsString('id="publicAccessModal"', $view);
+        $this->assertStringContainsString('$descriptorEndpoints', $view);
         $this->assertStringNotContainsString('absensi.record-face', $view);
         $this->assertStringNotContainsString('alert(error.message)', $view);
+
+        $publicController = file_get_contents($root.'/app/Http/Controllers/PublicFaceDetectController.php');
+        $descriptorService = file_get_contents($root.'/app/Services/FaceDescriptorService.php');
+        $this->assertStringContainsString("hash_equals(\$expected, \$token)", $publicController);
+        $this->assertStringContainsString("'X-Robots-Tag', 'noindex, nofollow, noarchive'", $publicController);
+        $this->assertStringContainsString("'Cache-Control', 'no-store, private, max-age=0'", $publicController);
+        $this->assertStringContainsString('public function forType(string $userType, bool $verifiedOnly = true)', $descriptorService);
+        $this->assertStringContainsString("name('public.face-detect.show')", $routes);
+        $this->assertStringContainsString("name('absensi.face-detect.rotate-token')", $routes);
     }
 
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void

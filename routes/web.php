@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\MatrikulasiPpdbController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 use App\Http\Controllers\PublicOsisPollingController;
+use App\Http\Controllers\PublicFaceDetectController;
 
 // Redirect root: if logged in go to appropriate dashboard, else go to login
 Route::get('/', function () {
@@ -60,6 +61,14 @@ Route::get('/live-polling-osis/data', [PublicOsisPollingController::class, 'data
 Route::get('/monitor-jadwal', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'publicMonitor'])
     ->middleware('throttle:60,1')
     ->name('public.jadwal-monitor');
+
+// Perangkat Face Detect tidak memerlukan login, tetapi wajib membawa token rahasia yang dapat dirotasi admin.
+Route::get('/face-detect-publik/{token}', [PublicFaceDetectController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('public.face-detect.show');
+Route::get('/face-detect-publik/{token}/descriptors', [PublicFaceDetectController::class, 'descriptors'])
+    ->middleware('throttle:10,1')
+    ->name('public.face-detect.descriptors');
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -1112,6 +1121,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['can:face-registration-admin'])->group(function () {
         Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
         Route::get('/absensi/deteksi-pintu', [App\Http\Controllers\Admin\AbsensiController::class, 'doorFaceDetect'])->name('absensi.face-detect');
+        Route::post('/absensi/deteksi-pintu/rotate-token', [App\Http\Controllers\Admin\AbsensiController::class, 'rotateDoorFaceDetectToken'])->name('absensi.face-detect.rotate-token');
         Route::get('/absensi/kiosk-state', [App\Http\Controllers\Admin\AbsensiController::class, 'kioskState'])->name('absensi.kiosk-state');
         Route::get('/absensi/kiosk-today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.kiosk-today-data');
         Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');

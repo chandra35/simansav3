@@ -16,6 +16,8 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Pola ucapan dapat memakai sapaan otomatis berdasarkan waktu (pagi pukul 04–10, siang 11–14, sore 15–17, dan malam di luar rentang tersebut), “Selamat datang”, “Halo”, atau teks kustom dengan variabel `{nama}` dan `{waktu}`.
 - Pengaturan voice disimpan di `localStorage`, sehingga bersifat per browser/perangkat kamera dan tidak mengubah konfigurasi perangkat gerbang lain.
 - Pengaturan suara dilengkapi gaya intonasi **Natural, Ramah, Formal, Semangat, Tenang**, dan kustom. Setiap preset mengombinasikan pitch, tempo, serta penekanan tanda baca; perubahan manual pada slider otomatis ditandai sebagai intonasi kustom.
+- Face Detect kini menyediakan tautan perangkat tanpa login yang dilindungi token acak 64 karakter. Admin dapat menyalin, membuka, atau merotasi token dari modal **Akses Publik**; rotasi langsung menonaktifkan seluruh tautan lama.
+- Endpoint biometrik publik hanya menerima token aktif, dibatasi rate limit, selalu memakai `no-store`, `no-referrer`, serta `noindex`. Halaman tanpa token atau dengan token salah mengembalikan 404 agar descriptor wajah tidak menjadi API publik terbuka.
 
 ### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
 

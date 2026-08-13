@@ -3,16 +3,41 @@
 namespace Tests\Feature;
 
 use App\Models\FaceEncoding;
+use App\Models\AbsensiSetting;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class FaceRecognitionAdminTest extends TestCase
 {
     use DatabaseTransactions;
+
+    public function test_public_face_detect_requires_valid_rotatable_device_token_without_login(): void
+    {
+        $token = Str::random(64);
+        AbsensiSetting::updateOrCreate(
+            ['key' => 'face_detect_public_token'],
+            ['value' => $token, 'type' => 'string', 'group' => 'kiosk', 'label' => 'Token Publik Face Detect']
+        );
+
+        $this->get(route('public.face-detect.show', ['token' => 'token-tidak-valid']))
+            ->assertNotFound();
+
+        $this->get(route('public.face-detect.show', ['token' => $token]))
+            ->assertOk()
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+            ->assertSee('Perangkat publik')
+            ->assertSee('Aktifkan Kamera &amp; Suara', false);
+
+        $this->getJson(route('public.face-detect.descriptors', ['token' => $token, 'type' => 'gtk']))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'max-age=0, no-store, private')
+            ->assertJsonPath('success', true);
+    }
 
     public function test_admin_can_manage_and_verify_student_face_data(): void
     {

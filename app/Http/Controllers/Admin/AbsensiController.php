@@ -16,6 +16,7 @@ use App\Services\AttendanceWindowService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AbsensiController extends Controller
 {
@@ -147,9 +148,29 @@ class AbsensiController extends Controller
      */
     public function doorFaceDetect()
     {
+        $publicToken = $this->ensurePublicFaceDetectToken();
+
         return view('admin.absensi.door-face-detect', [
             'faceThreshold' => (float) AbsensiSetting::getValue('face_match_threshold', 0.45),
+            'descriptorEndpoints' => [
+                route('admin.absensi.face-descriptors', ['type' => 'gtk', 'verified_only' => 1]),
+                route('admin.absensi.face-descriptors', ['type' => 'siswa', 'verified_only' => 1]),
+            ],
+            'isPublicMode' => false,
+            'publicFaceDetectUrl' => route('public.face-detect.show', ['token' => $publicToken]),
         ]);
+    }
+
+    public function rotateDoorFaceDetectToken()
+    {
+        $setting = AbsensiSetting::firstOrCreate(
+            ['key' => 'face_detect_public_token'],
+            $this->publicFaceDetectSetting(Str::random(64))
+        );
+        $setting->update(['value' => Str::random(64)]);
+
+        return redirect()->route('admin.absensi.face-detect')
+            ->with('success', 'Tautan publik Face Detect berhasil dirotasi. Tautan lama langsung tidak berlaku.');
     }
 
     public function kioskState(Request $request, AttendanceWindowService $windowService)
@@ -503,6 +524,31 @@ class AbsensiController extends Controller
     private function normalizeUserType(?string $userType): string
     {
         return $userType === 'siswa' ? 'siswa' : 'gtk';
+    }
+
+    private function ensurePublicFaceDetectToken(): string
+    {
+        $setting = AbsensiSetting::firstOrCreate(
+            ['key' => 'face_detect_public_token'],
+            $this->publicFaceDetectSetting(Str::random(64))
+        );
+
+        if (strlen((string) $setting->value) < 32) {
+            $setting->update(['value' => Str::random(64)]);
+        }
+
+        return (string) $setting->fresh()->value;
+    }
+
+    private function publicFaceDetectSetting(string $token): array
+    {
+        return [
+            'value' => $token,
+            'type' => 'string',
+            'group' => 'kiosk',
+            'label' => 'Token Publik Face Detect',
+            'description' => 'Token rahasia dan dapat dirotasi untuk perangkat Face Detect tanpa login.',
+        ];
     }
 
     private function isPersonalGtkScope(Request $request): bool
