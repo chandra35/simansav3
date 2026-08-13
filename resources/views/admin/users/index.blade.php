@@ -1,7 +1,6 @@
 @extends('adminlte::page')
 
 @section('title', 'Data User - SIMANSA')
-@section('plugins.Select2', true)
 
 @section('content_header')
     <div class="row mb-2">
@@ -109,30 +108,30 @@
                 {{-- Filter Section --}}
                 <div class="simansa-filter-panel simansa-user-filter mb-3">
                     <form id="filterForm">
-                        <div class="row align-items-end">
-                            <div class="col-md-4 col-xl-3">
+                        <div class="form-row align-items-end">
+                            <div class="col-md-4 col-xl-3 mb-2 mb-md-0">
                                 <label class="simansa-filter-label"><i class="fas fa-user-tag mr-1"></i> Role</label>
-                                <select id="filterRole" class="form-control form-control-sm">
+                                <select id="filterRole" class="custom-select custom-select-sm">
                                     <option value="">Semua Role</option>
                                     @foreach($roles as $role)
                                         <option value="{{ $role->name }}">{{ $role->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4 col-xl-3 mt-2 mt-md-0">
+                            <div class="col-md-4 col-xl-3 mb-2 mb-md-0">
                                 <label class="simansa-filter-label"><i class="fas fa-users mr-1"></i> Tipe Akun</label>
-                                <select id="filterAccountType" class="form-control form-control-sm">
+                                <select id="filterAccountType" class="custom-select custom-select-sm">
                                     <option value="">Semua Tipe</option>
                                     <option value="gtk">GTK</option>
                                     <option value="siswa">Siswa</option>
                                     <option value="lainnya">Admin / Akun Lainnya</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="d-flex justify-content-end mt-2">
-                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-redo"></i> Reset Filter
-                            </button>
+                            <div class="col-md-auto ml-md-auto">
+                                <button type="button" id="btnResetFilter" class="btn btn-sm btn-light border simansa-reset-filter">
+                                    <i class="fas fa-undo-alt mr-1"></i> Reset Filter
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -341,9 +340,9 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
 <style>
-    .simansa-users-operation-hero{overflow:hidden;border:0;border-radius:12px;box-shadow:0 8px 20px rgba(37,99,235,.16)}.simansa-users-operation-hero .card-body{padding:1rem 1.2rem}.simansa-users-operation-hero h3,.simansa-users-operation-hero p{color:#fff!important}.simansa-users-operation-hero p{font-size:.78rem}.simansa-users-page .simansa-stat-card{min-height:88px;padding:.75rem}.simansa-users-page .simansa-stat-card__icon{width:38px;height:38px;font-size:1rem}.simansa-users-page .simansa-stat-card__value{font-size:1.3rem}.simansa-users-page .simansa-stat-card__desc{display:none}.simansa-users-page .simansa-management-card .card-body{padding:.85rem}.simansa-user-filter{padding:.65rem}.simansa-user-filter label{margin-bottom:.2rem;font-size:.72rem}
+    .simansa-users-operation-hero{overflow:hidden;border:0;border-radius:12px;box-shadow:0 8px 20px rgba(37,99,235,.16)}.simansa-users-operation-hero .card-body{padding:1rem 1.2rem}.simansa-users-operation-hero h3,.simansa-users-operation-hero p{color:#fff!important}.simansa-users-operation-hero p{font-size:.78rem}.simansa-users-page .simansa-stat-card{min-height:88px;padding:.75rem}.simansa-users-page .simansa-stat-card__icon{width:38px;height:38px;font-size:1rem}.simansa-users-page .simansa-stat-card__value{font-size:1.3rem}.simansa-users-page .simansa-stat-card__desc{display:none}.simansa-users-page .simansa-management-card .card-body{padding:.85rem}.simansa-user-filter{padding:.7rem .8rem;background:#f8fafc}.simansa-user-filter label{margin-bottom:.25rem;font-size:.72rem}.simansa-user-filter .custom-select{height:34px;border-color:#cbd5e1;border-radius:7px;background-color:#fff;color:#334155;font-size:.76rem;font-weight:600}.simansa-user-filter .custom-select:focus{border-color:#60a5fa;box-shadow:0 0 0 .15rem rgba(37,99,235,.12)}.simansa-user-filter .simansa-reset-filter{height:34px;padding:.35rem .75rem;border-color:#cbd5e1!important;border-radius:7px;background:#fff;color:#475569;font-size:.74rem;font-weight:700;white-space:nowrap}.simansa-user-filter .simansa-reset-filter:hover{border-color:#94a3b8!important;background:#f1f5f9;color:#1e293b}
     .simansa-users-table-wrap{position:relative;overflow:visible}.simansa-users-page #usersTable{margin:0!important;font-size:.78rem}.simansa-users-page #usersTable thead th{padding:.58rem .65rem;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:.66rem;letter-spacing:.04em;text-transform:uppercase}.simansa-users-page #usersTable tbody td{padding:.58rem .65rem;border-top:0;border-bottom:1px solid #edf2f7;vertical-align:middle}.simansa-user-identity{display:flex;align-items:center;gap:.65rem;min-width:230px}.simansa-user-avatar{position:relative;display:grid;width:42px;height:50px;flex:0 0 42px;overflow:hidden;place-items:center;border:2px solid #fff;border-radius:9px;background:linear-gradient(145deg,#4f46e5,#2563eb);box-shadow:0 0 0 1px #dbeafe;color:#fff;font-size:.72rem;font-weight:900}.simansa-user-avatar b{font:inherit}.simansa-user-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#eef2ff}.simansa-user-identity strong,.simansa-user-identity span,.simansa-user-identity small{display:block}.simansa-user-identity strong{color:#0f172a;font-size:.8rem}.simansa-user-identity span{color:#475569;font-size:.69rem}.simansa-user-identity span i{margin-right:.25rem;color:#94a3b8}.simansa-user-identity small{color:#64748b;font-size:.62rem}.simansa-user-contact{display:flex;min-width:190px;flex-direction:column;gap:.25rem}.simansa-user-contact span{max-width:230px;overflow:hidden;color:#475569;font-size:.69rem;text-overflow:ellipsis;white-space:nowrap}.simansa-user-contact i{width:16px;color:#94a3b8}.simansa-users-page .roles-badges{max-width:220px}.simansa-user-status{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;gap:.25rem .6rem;min-width:160px}.simansa-user-status small{grid-column:1/-1;color:#64748b;font-size:.62rem}.simansa-user-presence{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:800}.simansa-user-presence i{width:7px;height:7px;border-radius:50%}.simansa-user-presence.is-online{color:#047857}.simansa-user-presence.is-online i{background:#22c55e}.simansa-user-presence.is-offline{color:#64748b}.simansa-user-presence.is-offline i{background:#94a3b8}.simansa-user-status .custom-switch{min-height:1rem;padding-left:2.25rem}.simansa-user-actions .btn{font-size:.7rem;font-weight:800}.simansa-user-actions .dropdown-menu{min-width:190px;padding:.35rem;z-index:1070}.simansa-user-actions .dropdown-item{display:flex;align-items:center;gap:.55rem;padding:.45rem .55rem;border-radius:6px;font-size:.72rem;font-weight:700}.simansa-user-actions .dropdown-item i{width:16px;text-align:center}.simansa-users-page .dataTables_wrapper>.row{margin-bottom:.35rem}.simansa-users-page .dataTables_length,.simansa-users-page .dataTables_filter{margin-bottom:.35rem}.simansa-users-page .dataTables_filter input{width:210px!important}
-    @media(max-width:767.98px){.simansa-users-operation-hero .card-body{padding:.9rem}.simansa-users-page .simansa-stat-card{min-height:76px}.simansa-users-table-wrap{overflow-x:auto}.simansa-users-page #usersTable{min-width:850px}.simansa-users-page .dataTables_filter input{width:auto!important}}
+    @media(max-width:767.98px){.simansa-users-operation-hero .card-body{padding:.9rem}.simansa-users-page .simansa-stat-card{min-height:76px}.simansa-user-filter .simansa-reset-filter{width:100%}.simansa-users-table-wrap{overflow-x:auto}.simansa-users-page #usersTable{min-width:850px}.simansa-users-page .dataTables_filter input{width:auto!important}}
     .custom-control-label {
         cursor: pointer;
     }
@@ -480,13 +479,6 @@
 
 <script>
 $(document).ready(function() {
-    if ($.fn.select2) {
-        $('#filterRole, #filterAccountType').select2({
-            width: '100%',
-            minimumResultsForSearch: 8
-        });
-    }
-
     // Debug log
     console.log('Initializing DataTable...');
     console.log('AJAX URL:', '{{ route("admin.users.index") }}');
@@ -985,7 +977,7 @@ $(document).ready(function() {
     });
     
     $('#btnResetFilter').on('click', function() {
-        $('#filterRole, #filterAccountType').val('').trigger('change.select2');
+        $('#filterRole, #filterAccountType').val('');
         applyFilters();
     });
     

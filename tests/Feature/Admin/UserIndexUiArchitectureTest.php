@@ -26,7 +26,9 @@ class UserIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString('drawCallback: function()', $view);
         $this->assertStringContainsString(".addClass('dropup')", $view);
         $this->assertStringContainsString('id="filterAccountType"', $view);
-        $this->assertStringContainsString("$('#filterRole, #filterAccountType').select2", $view);
+        $this->assertStringContainsString('class="custom-select custom-select-sm"', $view);
+        $this->assertStringNotContainsString("$('#filterRole, #filterAccountType').select2", $view);
+        $this->assertStringContainsString('simansa-reset-filter', $view);
         $this->assertStringContainsString('simansa-users-operation-hero', $view);
         $this->assertStringContainsString('card bg-gradient-primary text-white', $view);
         $this->assertStringContainsString('<div class="col-lg-8">', $view);
