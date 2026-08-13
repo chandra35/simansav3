@@ -9,7 +9,8 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Hero Approval Data Wajah dibuat lebih compact dengan hierarki teks Bahasa Indonesia yang jelas: label konteks, judul utama, dan deskripsi operasional singkat.
 - Pemilih GTK/Siswa diganti menjadi segmented control dengan status aktif yang tegas, ukuran tombol seragam, target klik luas, dan state aksesibilitas `aria-current`.
 - Pada layar sempit, pemilih jenis pengguna turun menjadi satu baris penuh tanpa memotong judul atau deskripsi.
-- Styling custom segmented control dilepas dan pemilih GTK/Siswa dikembalikan ke komponen native Bootstrap/AdminLTE `btn-group-sm`, `btn-light`, dan `btn-outline-light` agar konsisten dengan tema serta state hover/focus bawaan aplikasi.
+- Styling custom segmented control dilepas dan pemilih GTK/Siswa dikembalikan ke komponen native Bootstrap/AdminLTE `btn-sm`, `btn-light`, dan `btn-outline-light` agar konsisten dengan tema serta state hover/focus bawaan aplikasi.
+- Mengikuti pola tombol aksi Jadwal Pelajaran, GTK/Siswa kini menjadi tombol Bootstrap kecil yang berdiri sendiri dengan jarak 8px: pilihan aktif solid terang dan pilihan lain outline. Keduanya tidak lagi menyatu sebagai segmented button.
 
 ### Standar Global Tabel Compact & Adaptif (13 Agustus 2026)
 
