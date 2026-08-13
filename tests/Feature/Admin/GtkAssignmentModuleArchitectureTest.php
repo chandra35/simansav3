@@ -153,4 +153,16 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
             ->assertSee('Penugasan GTK')
             ->assertSee('Lepas / selesai');
     }
+
+    public function test_assignment_picker_excludes_the_latest_outgoing_mutation(): void
+    {
+        $gtk = file_get_contents(app_path('Models/Gtk.php'));
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/PenugasanGtkController.php'));
+
+        $this->assertStringContainsString('scopeEligibleForAssignment', $gtk);
+        $this->assertStringContainsString("latest_gtk_mutation.status_baru', false", $gtk);
+        $this->assertStringContainsString('ORDER BY checked_gtk_mutation.created_at DESC', $gtk);
+        $this->assertStringContainsString('->eligibleForAssignment()', $controller);
+        $this->assertStringContainsString('$latestMutation?->status_baru === false', $controller);
+    }
 }

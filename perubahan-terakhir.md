@@ -6,6 +6,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Sinkronisasi mutasi keluar dengan Penugasan GTK
 
+- Select2 Penugasan GTK kini memakai filter kelayakan terpusat: hanya guru dengan profil aktif, akun aktif, dan histori mutasi terakhir berstatus aktif yang ditampilkan. Validasi yang sama dijalankan ulang saat penyimpanan untuk mencegah bypass form.
 - Audit produksi memastikan mutasi keluar Kepala Madrasah sudah mengakhiri penugasan aktif secara atomik; histori tidak dihapus dan kini ditampilkan dengan status **Lepas / selesai**.
 - Daftar Penugasan GTK sekarang default hanya menampilkan penugasan aktif. Histori lama dapat dibuka melalui filter **Lepas / selesai** atau **Semua histori**, sehingga pejabat yang telah keluar tidak lagi tampak seolah masih menjabat.
 - Jabatan Kepala Madrasah/Waka yang belum memiliki pemegang aktif ditampilkan sebagai **Jabatan aktif belum terisi** agar kekosongan mudah diketahui admin.

@@ -250,4 +250,26 @@ class Gtk extends Model
     {
         return $query->where('status_aktif', true);
     }
+
+    /**
+     * GTK yang aman ditawarkan pada pemilih penugasan.
+     *
+     * Selain status profil dan akun, histori mutasi terakhir ikut diperiksa
+     * sebagai pertahanan terhadap data lama yang mungkin belum sinkron.
+     */
+    public function scopeEligibleForAssignment($query)
+    {
+        return $query->active()
+            ->whereHas('user', fn ($user) => $user->where('is_active', true))
+            ->where(fn ($gtk) => $gtk
+                ->where('jenis_ptk', 'like', '%Guru%')
+                ->orWhere('kategori_ptk', 'like', '%Guru%'))
+            ->whereNotExists(function ($mutation) {
+                $mutation->selectRaw('1')
+                    ->from('mutasi_gtk as latest_gtk_mutation')
+                    ->whereColumn('latest_gtk_mutation.gtk_id', 'gtks.id')
+                    ->where('latest_gtk_mutation.status_baru', false)
+                    ->whereRaw('latest_gtk_mutation.id = (SELECT checked_gtk_mutation.id FROM mutasi_gtk AS checked_gtk_mutation WHERE checked_gtk_mutation.gtk_id = gtks.id ORDER BY checked_gtk_mutation.created_at DESC, checked_gtk_mutation.id DESC LIMIT 1)');
+            });
+    }
 }
