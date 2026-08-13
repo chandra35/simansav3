@@ -12,6 +12,9 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Tersedia pemilih kamera, kontrol suara, layar penuh, indikator jumlah wajah/database, confidence terakhir, dan jumlah sapaan sesi.
 - Fitur bersifat read-only: tidak mencatat presensi, tidak mengambil snapshot, dan tidak menyimpan histori. Akses dilindungi permission admin data wajah agar cocok untuk tahap uji sebelum integrasi Python/edge AI.
 - Mesin sapaan menormalisasi gelar akademik bertitik menjadi ejaan huruf Bahasa Indonesia tanpa mengubah nama yang tampil. Contohnya `Candra Huda Buana, A.Md` dilafalkan “Candra Huda Buana, a em de”, `S.Pd` menjadi “es pe de”, dan `M.Pd.I` menjadi “em pe de i”.
+- Modal **Pengaturan Suara** ditambahkan langsung pada Face Detect. Operator dapat memilih karakter pria/wanita/otomatis, voice yang tersedia di perangkat, pitch, kecepatan, volume, jeda pengulangan, serta melakukan tes suara sebelum menyimpan.
+- Pola ucapan dapat memakai sapaan otomatis berdasarkan waktu (pagi pukul 04–10, siang 11–14, sore 15–17, dan malam di luar rentang tersebut), “Selamat datang”, “Halo”, atau teks kustom dengan variabel `{nama}` dan `{waktu}`.
+- Pengaturan voice disimpan di `localStorage`, sehingga bersifat per browser/perangkat kamera dan tidak mengubah konfigurasi perangkat gerbang lain.
 
 ### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
 

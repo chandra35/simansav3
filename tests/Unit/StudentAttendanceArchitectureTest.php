@@ -189,11 +189,19 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'text' => 'Face Detect (Uji)'", $menu);
         $this->assertStringContainsString("['type' => 'gtk', 'verified_only' => 1]", $view);
         $this->assertStringContainsString("['type' => 'siswa', 'verified_only' => 1]", $view);
-        $this->assertStringContainsString('normalizeNameForSpeech(person.name)', $view);
+        $this->assertStringContainsString('function normalizeNameForSpeech(name)', $view);
         $this->assertStringContainsString("A: 'a', B: 'be', C: 'ce', D: 'de'", $view);
-        $this->assertStringContainsString('Selamat datang, ${spokenName}', $view);
+        $this->assertStringContainsString('speakText(buildGreeting(person.name))', $view);
         $this->assertStringContainsString('confirmations: 3', $view);
         $this->assertStringContainsString('Tidak ada presensi yang dicatat', $view);
+        $this->assertStringContainsString('id="voiceSettingsModal"', $view);
+        $this->assertStringContainsString("VOICE_SETTINGS_KEY = 'simansa.face-detect.voice.v1'", $view);
+        $this->assertStringContainsString("greetingMode: 'time'", $view);
+        $this->assertStringContainsString("if (hour >= 4 && hour < 11) return 'pagi'", $view);
+        $this->assertStringContainsString("replaceAll('{nama}', spokenName).replaceAll('{waktu}', period)", $view);
+        $this->assertStringContainsString('utterance.pitch = settings.pitch', $view);
+        $this->assertStringContainsString('utterance.rate = settings.rate', $view);
+        $this->assertStringContainsString('utterance.volume = settings.volume', $view);
         $this->assertStringNotContainsString('absensi.record-face', $view);
         $this->assertStringNotContainsString('alert(error.message)', $view);
     }
