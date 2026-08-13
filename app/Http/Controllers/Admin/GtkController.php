@@ -25,12 +25,14 @@ class GtkController extends Controller
     public function index()
     {
         // Statistics
+        $activeGtk = Gtk::query()->active();
         $stats = [
-            'total_gtk' => Gtk::count(),
-            'gtk_with_nip' => Gtk::whereNotNull('nip')->where('nip', '!=', '')->count(),
-            'laki_laki' => Gtk::where('jenis_kelamin', 'L')->count(),
-            'perempuan' => Gtk::where('jenis_kelamin', 'P')->count(),
-            'data_lengkap' => Gtk::where('data_diri_completed', true)
+            'total_gtk' => (clone $activeGtk)->count(),
+            'nonaktif' => Gtk::where('status_aktif', false)->count(),
+            'gtk_with_nip' => (clone $activeGtk)->whereNotNull('nip')->where('nip', '!=', '')->count(),
+            'laki_laki' => (clone $activeGtk)->where('jenis_kelamin', 'L')->count(),
+            'perempuan' => (clone $activeGtk)->where('jenis_kelamin', 'P')->count(),
+            'data_lengkap' => (clone $activeGtk)->where('data_diri_completed', true)
                 ->where('data_kepegawaian_completed', true)
                 ->count(),
         ];
@@ -66,7 +68,11 @@ class GtkController extends Controller
                     ->orderBy('tingkat')
                     ->orderBy('nama_kelas');
             },
-        ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'peg_id', 'status_inpassing', 'status_sertifikasi', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+        ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'peg_id', 'status_inpassing', 'status_sertifikasi', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'status_aktif', 'alasan_nonaktif', 'tanggal_status', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
+
+        if ($request->filled('status_aktif')) {
+            $gtk->where('status_aktif', $request->status_aktif === '1');
+        }
 
         // Filter by Kategori PTK
         if ($request->filled('kategori_ptk')) {
@@ -168,6 +174,8 @@ class GtkController extends Controller
                 : (filled($item->status_sertifikasi) ? 'is-warning' : 'is-muted');
             $dataDiriClass = $item->data_diri_completed ? 'is-success' : 'is-danger';
             $dataKepegClass = $item->data_kepegawaian_completed ? 'is-success' : 'is-danger';
+            $operationalClass = $item->status_aktif ? 'is-success' : 'is-danger';
+            $operationalText = $item->status_aktif ? 'Aktif' : 'Nonaktif';
 
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
@@ -194,6 +202,7 @@ class GtkController extends Controller
                         <span class="simansa-gtk-status-badge '.$sertifikasiClass.'" data-tooltip="true" title="Status sertifikasi: '.$sertifikasiText.'"><i class="fas fa-certificate"></i><span>Sertifikasi</span><strong>'.$sertifikasiText.'</strong></span>
                         <span class="simansa-gtk-status-badge '.$dataDiriClass.'" data-tooltip="true" title="Kelengkapan data diri"><i class="fas fa-id-card"></i><span>Data diri</span><strong>'.($item->data_diri_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
                         <span class="simansa-gtk-status-badge '.$dataKepegClass.'" data-tooltip="true" title="Kelengkapan data kepegawaian"><i class="fas fa-briefcase"></i><span>Kepegawaian</span><strong>'.($item->data_kepegawaian_completed ? 'Lengkap' : 'Belum lengkap').'</strong></span>
+                        <span class="simansa-gtk-status-badge '.$operationalClass.'" data-tooltip="true" title="Status operasional GTK"><i class="fas fa-user-check"></i><span>Keaktifan</span><strong>'.$operationalText.'</strong></span>
                     </div>',
                 'nuptk' => $item->nuptk ?? '-',
                 'nip' => $item->nip ?? '-',
@@ -266,6 +275,7 @@ class GtkController extends Controller
         }
 
         $candidates = Gtk::query()
+            ->active()
             ->select(['id', 'nama_lengkap', 'nip'])
             ->whereNotNull('nip')
             ->where('nip', '!=', '')
@@ -308,6 +318,10 @@ class GtkController extends Controller
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="update-photo" onclick="handleGtkAction(this)"><i class="fas fa-camera text-success"></i><span>Update foto profil</span></button>';
         }
 
+        if ($user->can('manage-status-gtk')) {
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="mutation" onclick="handleGtkAction(this)"><i class="fas fa-user-clock text-info"></i><span>Mutasi / ubah status</span></button>';
+        }
+
         if ($user->can('reset-password-gtk')) {
             $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="reset-password" onclick="handleGtkAction(this)"><i class="fas fa-key text-warning"></i><span>Reset password</span></button>';
         }
@@ -334,6 +348,7 @@ class GtkController extends Controller
             .' data-edit-url="'.e(route('admin.gtk.edit', $item->id)).'"'
             .' data-schedule-url="'.e(route('admin.gtk.schedule', $item->id)).'"'
             .' data-workload-url="'.e(route('admin.penugasan-gtk.workload', ['gtk_id' => $item->id])).'"'
+            .' data-mutation-url="'.e(route('admin.mutasi-gtk.index', ['gtk_id' => $item->id])).'"'
             .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
             .' data-toggle="dropdown" data-boundary="viewport" data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
@@ -579,7 +594,6 @@ class GtkController extends Controller
                     'name' => 'required|string|max:255',
                     'username' => 'required|string|max:255|unique:users,username,'.$gtk->user->id,
                     'email' => 'required|email|max:255|unique:users,email,'.$gtk->user->id,
-                    'is_active' => 'required|boolean',
                     'role' => 'required|exists:roles,name',
                 ]);
 
@@ -587,7 +601,6 @@ class GtkController extends Controller
                     'name' => $validated['name'],
                     'username' => $validated['username'],
                     'email' => $validated['email'],
-                    'is_active' => $validated['is_active'],
                 ]);
 
                 // Sync role

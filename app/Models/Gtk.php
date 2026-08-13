@@ -54,6 +54,10 @@ class Gtk extends Model
         'status_kepegawaian',
         'jabatan',
         'tmt_kerja',
+        'status_aktif',
+        'alasan_nonaktif',
+        'tanggal_status',
+        'status_keterangan',
         'data_diri_completed',
         'data_kepegawaian_completed',
         'created_by',
@@ -63,6 +67,8 @@ class Gtk extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tmt_kerja' => 'date',
+        'status_aktif' => 'boolean',
+        'tanggal_status' => 'date',
         'data_diri_completed' => 'boolean',
         'data_kepegawaian_completed' => 'boolean',
     ];
@@ -233,5 +239,15 @@ class Gtk extends Model
     public function penugasan()
     {
         return $this->hasMany(PenugasanGtk::class, 'gtk_id');
+    }
+
+    public function mutasi()
+    {
+        return $this->hasMany(MutasiGtk::class)->latest('tanggal_efektif');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status_aktif', true);
     }
 }

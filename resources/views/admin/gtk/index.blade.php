@@ -50,7 +50,7 @@
             <div class="card-body">
                 <div class="text-muted small text-uppercase font-weight-bold">Total GTK</div>
                 <h3 class="text-primary mb-1">{{ number_format($stats['total_gtk']) }}</h3>
-                <div class="text-muted">Semua guru dan tenaga kependidikan yang tercatat di SIMANSA.</div>
+                <div class="text-muted">Guru dan tenaga kependidikan berstatus aktif. {{ number_format($stats['nonaktif']) }} GTK nonaktif tetap tersimpan pada histori.</div>
             </div>
         </div>
     </div>
@@ -113,7 +113,7 @@
         <div class="simansa-filter-panel simansa-gtk-filter">
             <form id="filterForm">
                 <div class="row">
-                            <div class="col-md-6 col-xl-3 mb-3">
+                            <div class="col-md-6 col-xl-2 mb-3">
                                 <label for="filterKategoriPtk" class="simansa-filter-label">
                                     <i class="fas fa-users mr-1"></i> Kategori PTK
                                 </label>
@@ -123,7 +123,7 @@
                                     <option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 col-xl-3 mb-3">
+                            <div class="col-md-6 col-xl-2 mb-3">
                                 <label for="filterJenisPtk" class="simansa-filter-label">
                                     <i class="fas fa-user-tag mr-1"></i> Jenis PTK
                                 </label>
@@ -150,6 +150,10 @@
                                     <option value="L">Laki-laki</option>
                                     <option value="P">Perempuan</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6 col-xl-2 mb-3">
+                                <label for="filterStatusAktif" class="simansa-filter-label"><i class="fas fa-user-check mr-1"></i> Keaktifan</label>
+                                <select id="filterStatusAktif" class="form-control form-control-sm"><option value="1">Aktif</option><option value="">Semua</option><option value="0">Nonaktif</option></select>
                             </div>
                             <div class="col-md-6 col-xl-2 mb-3">
                                 <label for="filterStatusKepegawaian" class="simansa-filter-label">
@@ -511,6 +515,7 @@ $(document).ready(function() {
                 d.jenis_kelamin = $('#filterJenisKelamin').val();
                 d.status_kepegawaian = $('#filterStatusKepegawaian').val();
                 d.status = $('#filterStatus').val();
+                d.status_aktif = $('#filterStatusAktif').val();
             }
         },
         autoWidth: true,
@@ -589,7 +594,7 @@ $(document).ready(function() {
         reloadGtkTable();
     });
 
-    $('#filterJenisPtk, #filterJenisKelamin, #filterStatusKepegawaian, #filterStatus').on('change', function() {
+    $('#filterJenisPtk, #filterJenisKelamin, #filterStatusKepegawaian, #filterStatus, #filterStatusAktif').on('change', function() {
         reloadGtkTable();
     });
 
@@ -603,6 +608,7 @@ $(document).ready(function() {
         $('#filterJenisKelamin').val('');
         $('#filterStatusKepegawaian').val('');
         $('#filterStatus').val('');
+        $('#filterStatusAktif').val('1');
         reloadGtkTable();
     });
 
@@ -950,6 +956,8 @@ function handleGtkAction(item) {
         window.location.href = menu.dataset.scheduleUrl;
     } else if (action === 'workload') {
         window.location.href = menu.dataset.workloadUrl;
+    } else if (action === 'mutation') {
+        window.location.href = menu.dataset.mutationUrl;
     } else if (action === 'edit') {
         window.location.href = menu.dataset.editUrl;
     } else if (action === 'update-photo') {

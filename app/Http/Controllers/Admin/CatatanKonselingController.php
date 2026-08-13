@@ -377,6 +377,7 @@ class CatatanKonselingController extends Controller
     private function counselorsQuery(): Builder
     {
         return Gtk::query()
+            ->active()
             ->whereHas('user', fn ($users) => $users->where('is_active', true))
             ->where(fn ($counselors) => $counselors
                 ->where('jenis_ptk', 'Guru BK')

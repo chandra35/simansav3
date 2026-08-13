@@ -633,6 +633,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:reset-password-gtk'])->group(function () {
         Route::put('/gtk/{gtk}/reset-password', [App\Http\Controllers\Admin\GtkController::class, 'resetPassword'])->name('gtk.reset-password');
     });
+
+    Route::middleware(['permission:view-mutasi-gtk'])->group(function () {
+        Route::get('/mutasi-gtk', [App\Http\Controllers\Admin\GtkMutationController::class, 'index'])->name('mutasi-gtk.index');
+    });
+    Route::middleware(['permission:manage-status-gtk'])->group(function () {
+        Route::post('/mutasi-gtk', [App\Http\Controllers\Admin\GtkMutationController::class, 'store'])->name('mutasi-gtk.store');
+    });
     
     // GTK Kemenag Sync
     Route::middleware(['permission:edit-gtk'])->group(function () {

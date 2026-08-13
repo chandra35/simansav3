@@ -473,7 +473,7 @@ return [
                 [
                     'text' => 'GTK & Penugasan',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
-                    'active' => ['admin/gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*'],
+                    'active' => ['admin/gtk*', 'admin/mutasi-gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*'],
                     'submenu' => [
                         [
                             'text' => 'Data GTK',
@@ -481,6 +481,13 @@ return [
                             'icon' => 'fas fa-fw fa-users',
                             'can' => 'view-gtk',
                             'active' => ['admin/gtk*'],
+                        ],
+                        [
+                            'text' => 'Mutasi & Status GTK',
+                            'route' => 'admin.mutasi-gtk.index',
+                            'icon' => 'fas fa-fw fa-user-clock',
+                            'can' => 'view-mutasi-gtk',
+                            'active' => ['admin/mutasi-gtk*'],
                         ],
                         [
                             'text' => 'Penugasan GTK',

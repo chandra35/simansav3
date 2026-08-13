@@ -59,7 +59,7 @@ class JadwalPelajaranController extends Controller
             return back()->withInput()->with('error', 'Template tidak dapat dibaca: '.$exception->getMessage());
         }
 
-        $gtkByCode = Gtk::query()->whereIn('kode_gtk', array_keys($parsed['gtk_references']))
+        $gtkByCode = Gtk::query()->active()->whereIn('kode_gtk', array_keys($parsed['gtk_references']))
             ->get(['id', 'kode_gtk'])
             ->keyBy('kode_gtk');
         $gtkAliases = JadwalGuruAlias::query()
@@ -68,7 +68,7 @@ class JadwalPelajaranController extends Controller
             ->where('status', 'verified')
             ->whereNotNull('gtk_id')
             ->pluck('gtk_id', 'external_code')->all();
-        $gtkByExactName = Gtk::query()
+        $gtkByExactName = Gtk::query()->active()
             ->get(['id', 'nama_lengkap'])
             ->groupBy(fn (Gtk $gtk) => $mappingService->normalizePersonName($gtk->nama_lengkap))
             ->map(fn ($matches) => $matches->count() === 1 ? $matches->first()->id : null)

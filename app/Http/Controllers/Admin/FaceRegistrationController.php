@@ -520,7 +520,7 @@ class FaceRegistrationController extends Controller
                 ->values();
         }
 
-        return Gtk::whereNotNull('user_id')
+        return Gtk::active()->whereNotNull('user_id')
             ->whereHas('user')
             ->orderBy('nama_lengkap')
             ->get(['id', 'user_id', 'nama_lengkap', 'nip', 'foto_profile'])

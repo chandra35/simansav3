@@ -41,6 +41,7 @@ class JadwalMappingController extends Controller
         }
 
         $gtkOptions = Gtk::query()
+            ->active()
             ->orderBy('nama_lengkap')
             ->get(['id', 'nama_lengkap', 'nip', 'nuptk', 'jenis_ptk', 'jabatan', 'foto_profile', 'kode_gtk'])
             ->map(fn (Gtk $gtk) => [

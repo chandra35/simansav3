@@ -535,6 +535,13 @@ class UserController extends Controller
     {
         $this->authorize('edit-user');
 
+        if ($user->gtk()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status akun GTK harus diubah melalui modul Mutasi & Status GTK agar alasan dan dampak operasional tercatat.',
+            ], 422);
+        }
+
         try {
             $user->is_active = !$user->is_active;
             $user->save();

@@ -83,6 +83,8 @@ class PermissionSyncService
                     'edit-gtk',
                     'delete-gtk',
                     'reset-password-gtk',
+                    'view-mutasi-gtk',
+                    'manage-status-gtk',
                 ],
             ],
             'penugasan-gtk' => [

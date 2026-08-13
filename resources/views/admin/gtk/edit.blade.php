@@ -447,10 +447,8 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="is_active">Status Akun <span class="text-danger">*</span></label>
-                                                <select class="form-control" id="is_active" name="is_active" required>
-                                                    <option value="1" {{ $gtk->user->is_active ? 'selected' : '' }}>Aktif</option>
-                                                    <option value="0" {{ !$gtk->user->is_active ? 'selected' : '' }}>Nonaktif</option>
-                                                </select>
+                                                <input class="form-control" value="{{ $gtk->status_aktif ? 'Aktif' : 'Nonaktif' }}" readonly>
+                                                @can('manage-status-gtk')<small class="form-text"><a href="{{ route('admin.mutasi-gtk.index', ['gtk_id' => $gtk->id]) }}"><i class="fas fa-user-clock mr-1"></i>Kelola melalui Mutasi & Status GTK</a></small>@endcan
                                             </div>
                                         </div>
                                     </div>

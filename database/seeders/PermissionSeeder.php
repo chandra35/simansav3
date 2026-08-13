@@ -67,6 +67,8 @@ class PermissionSeeder extends Seeder
                 'delete-penugasan-gtk' => 'Arsipkan Penugasan GTK',
                 'manage-jenis-penugasan-gtk' => 'Kelola Standar Jenis Penugasan GTK',
                 'view-beban-kerja-gtk' => 'Lihat Beban Kerja GTK',
+                'view-mutasi-gtk' => 'Lihat Riwayat Mutasi dan Status GTK',
+                'manage-status-gtk' => 'Kelola Mutasi dan Status Aktif GTK',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {
@@ -109,6 +111,7 @@ class PermissionSeeder extends Seeder
                 'export-data',
                 'view-penugasan-gtk',
                 'view-beban-kerja-gtk',
+                'view-mutasi-gtk',
             ])->pluck('name')->toArray();
             $operator->syncPermissions($operatorPermissions);
 

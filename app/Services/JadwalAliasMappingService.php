@@ -40,7 +40,7 @@ class JadwalAliasMappingService
             throw new \DomainException('Referensi Excel ini khusus untuk tahun pelajaran 2026/2027.');
         }
         $source = $reference['source'] ?? 'jadwal_excel';
-        $gtks = Gtk::query()->orderBy('nama_lengkap')->get();
+        $gtks = Gtk::query()->active()->orderBy('nama_lengkap')->get();
 
         return DB::transaction(function () use ($year, $actor, $reference, $source, $gtks) {
             $this->ensureOperationalMapels($year);

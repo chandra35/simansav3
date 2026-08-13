@@ -1329,3 +1329,10 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Tombol hero dapat membungkus secara teratur, sedangkan pada ponsel disusun vertikal selebar area konten.
 - Tabel diberi lebar minimum dan tetap berada dalam pembungkus scroll internal agar struktur halaman tidak bergeser.
 - Header daftar, filter, dan kartu statistik dipadatkan secara bertahap tanpa mengubah tampilan desktop lebar.
+## Modul Mutasi & Status GTK (13 Agustus 2026)
+
+- Ditambahkan riwayat permanen perubahan status GTK untuk mutasi masuk/keluar, aktif kembali, pensiun, meninggal dunia, mengundurkan diri, PHK, kontrak selesai, dan alasan lainnya.
+- Penonaktifan GTK dilakukan atomik: status GTK dan akun disinkronkan, penugasan aktif diakhiri, tugas tambahan lama ditutup, serta jabatan wali kelas aktif dilepas.
+- Jadwal mengajar dan histori lama tidak dihapus; aktivasi kembali tidak otomatis memulihkan penugasan lama.
+- Data GTK default menampilkan GTK aktif dan menyediakan filter keaktifan, sedangkan status akun tidak lagi dapat diubah tanpa histori dari form edit GTK.
+- Permission `view-mutasi-gtk` dan `manage-status-gtk` ditambahkan ke katalog role.

@@ -41,6 +41,7 @@ class PenugasanGtkController extends Controller
         $assignments = $query->paginate(25)->withQueryString();
         $types = JenisPenugasanGtk::query()->with('role')->orderBy('kategori')->orderBy('nama')->get();
         $gtks = Gtk::query()->with('user')
+            ->active()
             ->whereHas('user', fn ($q) => $q->where('is_active', true))
             ->where(fn ($q) => $q->where('jenis_ptk', 'like', '%Guru%')->orWhere('kategori_ptk', 'like', '%Guru%'))
             ->orderBy('nama_lengkap')->get([
@@ -208,7 +209,7 @@ class PenugasanGtkController extends Controller
 
     private function guardAssignmentRules(array $data, JenisPenugasanGtk $type, Gtk $gtk, ?PenugasanGtk $except = null): void
     {
-        if (! $gtk->user || ! $gtk->user->is_active) {
+        if (! $gtk->status_aktif || ! $gtk->user || ! $gtk->user->is_active) {
             throw ValidationException::withMessages(['gtk_id' => 'Penugasan hanya dapat diberikan kepada guru dengan akun aktif.']);
         }
 
