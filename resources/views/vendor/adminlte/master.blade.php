@@ -802,6 +802,9 @@
     {{-- Extra Configured Plugins Scripts --}}
     @include('adminlte::plugins', ['type' => 'js'])
 
+    {{-- Global table action dropdown portal: prevents menus being clipped by responsive/DataTables overflow. --}}
+    @include('adminlte::partials.table-action-dropdown-portal')
+
     {{-- Livewire Script --}}
     @if(config('adminlte.livewire'))
         @if(intval(app()->version()) >= 7)

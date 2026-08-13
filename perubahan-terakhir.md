@@ -4,6 +4,12 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan Global Dropdown Aksi Tabel (13 Agustus 2026)
+
+- Dropdown aksi di dalam tabel kini memakai portal global yang memindahkan menu sementara ke layer `body`, sehingga tidak lagi terpotong oleh `table-responsive`, DataTables `scrollX`, pagination, atau tinggi tabel yang hanya berisi satu baris.
+- Posisi menu dihitung terhadap viewport, otomatis membuka ke atas bila ruang bawah tidak cukup, mengikuti scroll/resize, memiliki scroll internal untuk menu panjang, dan dikembalikan ke DOM asal ketika ditutup.
+- Perbaikan dipasang pada layout utama AdminLTE sehingga berlaku konsisten untuk Data Wajah dan seluruh tabel modul lain tanpa perlu menambahkan workaround per halaman.
+
 ### Preview Data Wajah pada Approval (13 Agustus 2026)
 
 - Tabel **Approval & Data Wajah** kini memisahkan foto profil dari foto hasil capture registrasi agar sumber gambar tidak ambigu.
