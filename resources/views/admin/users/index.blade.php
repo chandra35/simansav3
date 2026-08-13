@@ -96,7 +96,7 @@
                         <i class="fas fa-shield-alt"></i> Permission Matrix
                     </a>
                     @endcan
-                    @can('create-user')
+                    @can('create-users')
                     <a href="{{ route('admin.users.create') }}" class="btn btn-sm simansa-btn-strong">
                         <i class="fas fa-plus"></i> Tambah User
                     </a>

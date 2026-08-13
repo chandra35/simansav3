@@ -233,26 +233,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Siswa Management (edit method tidak ada — semua edit via modal AJAX)
-    Route::get('/siswa/export', [AdminSiswaController::class, 'export'])->name('siswa.export');
-    Route::resource('siswa', AdminSiswaController::class)->except(['edit']);
-    Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
-    Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
+    Route::middleware('permission:view-siswa')->group(function () {
+        Route::get('/siswa/export', [AdminSiswaController::class, 'export'])->name('siswa.export');
+        Route::resource('siswa', AdminSiswaController::class)->only(['index', 'show']);
+        Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
+        Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
+        Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');
+        Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
+        Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
+    });
+    Route::resource('siswa', AdminSiswaController::class)->only(['create', 'store'])->middleware('permission:create-siswa');
+    Route::resource('siswa', AdminSiswaController::class)->only(['update'])->middleware('permission:edit-siswa');
+    Route::resource('siswa', AdminSiswaController::class)->only(['destroy'])->middleware('permission:delete-siswa');
     Route::middleware('permission:view-statistik-siswa')->group(function () {
         Route::get('/siswa-statistik', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'index'])->name('siswa.statistics');
         Route::get('/siswa-statistik/sekolah/{sekolah}/belum-emis', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'studentsMissingEmis'])->name('siswa.statistics.school-missing-emis');
         Route::post('/siswa-statistik/sekolah/{sekolah}/check-nsm', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'checkSchoolNsm'])->name('siswa.statistics.check-school-nsm');
         Route::post('/siswa-statistik/{siswa}/check-npsn-ppdb', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'checkNpsnFromPpdb'])->name('siswa.statistics.check-npsn-ppdb');
     });
-    Route::put('/siswa/{siswa}/reset-password', [AdminSiswaController::class, 'resetPassword'])->name('siswa.reset-password');
-    Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen');
-    Route::get('/siswa/{siswaId}/dokumen/{dokumenId}/download-jpg', [AdminSiswaController::class, 'downloadDokumenAsJpg'])->name('siswa.dokumen.download-jpg');
-    Route::post('/siswa/{siswa}/toggle-verval-ijazah', [AdminSiswaController::class, 'toggleVervalIjazah'])->name('siswa.toggle-verval-ijazah');
+    Route::put('/siswa/{siswa}/reset-password', [AdminSiswaController::class, 'resetPassword'])->name('siswa.reset-password')->middleware('permission:reset-password-siswa');
+    Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen')->middleware('permission:view-dokumen-siswa');
+    Route::get('/siswa/{siswaId}/dokumen/{dokumenId}/download-jpg', [AdminSiswaController::class, 'downloadDokumenAsJpg'])->name('siswa.dokumen.download-jpg')->middleware('permission:view-dokumen-siswa');
+    Route::post('/siswa/{siswa}/toggle-verval-ijazah', [AdminSiswaController::class, 'toggleVervalIjazah'])->name('siswa.toggle-verval-ijazah')->middleware('permission:edit-siswa');
     Route::post('/siswa/{siswa}/toggle-emis-registered', [AdminSiswaController::class, 'toggleEmisRegistered'])
         ->middleware('can:super-admin-access')
         ->name('siswa.toggle-emis-registered');
-    Route::get('/siswa/{siswa}/quick-detail', [AdminSiswaController::class, 'quickDetail'])->name('siswa.quick-detail');
-    Route::get('/siswa/{siswa}/download-foto', [AdminSiswaController::class, 'downloadFoto'])->name('siswa.download-foto');
-    Route::get('/siswa-kelas-by-tingkat', [AdminSiswaController::class, 'getKelasByTingkat'])->name('siswa.kelas-by-tingkat');
     Route::middleware('permission:impersonate-users')->prefix('impersonation')->name('impersonation.')->group(function () {
         Route::post('/siswa/{siswa}', [App\Http\Controllers\Admin\UserImpersonationController::class, 'startSiswa'])
             ->name('siswa.start');
@@ -352,21 +357,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     // Siswa Import
-    Route::get('/siswa/import/form', [SiswaImportController::class, 'index'])->name('siswa.import');
-    Route::get('/siswa/import/template', [SiswaImportController::class, 'downloadTemplate'])->name('siswa.import.template');
-    Route::post('/siswa/import/process', [SiswaImportController::class, 'import'])->name('siswa.import.process');
+    Route::middleware('permission:create-siswa')->group(function () {
+        Route::get('/siswa/import/form', [SiswaImportController::class, 'index'])->name('siswa.import');
+        Route::get('/siswa/import/template', [SiswaImportController::class, 'downloadTemplate'])->name('siswa.import.template');
+        Route::post('/siswa/import/process', [SiswaImportController::class, 'import'])->name('siswa.import.process');
     
     // EMIS Import (fitur baru - beda dari import biasa)
-    Route::get('/siswa/import-emis/form', [App\Http\Controllers\Admin\EmisImportController::class, 'form'])->name('emis-import.form');
-    Route::post('/siswa/import-emis/parse', [App\Http\Controllers\Admin\EmisImportController::class, 'parse'])->name('emis-import.parse');
-    Route::post('/siswa/import-emis/execute', [App\Http\Controllers\Admin\EmisImportController::class, 'execute'])->name('emis-import.execute');
+        Route::get('/siswa/import-emis/form', [App\Http\Controllers\Admin\EmisImportController::class, 'form'])->name('emis-import.form');
+        Route::post('/siswa/import-emis/parse', [App\Http\Controllers\Admin\EmisImportController::class, 'parse'])->name('emis-import.parse');
+        Route::post('/siswa/import-emis/execute', [App\Http\Controllers\Admin\EmisImportController::class, 'execute'])->name('emis-import.execute');
 
     // NPSN Import
-    Route::get('/siswa/import-npsn/form', [App\Http\Controllers\Admin\NpsnImportController::class, 'index'])->name('siswa.import-npsn');
-    Route::get('/siswa/import-npsn/template', [App\Http\Controllers\Admin\NpsnImportController::class, 'downloadTemplate'])->name('siswa.import-npsn.template');
-    Route::post('/siswa/import-npsn/process', [App\Http\Controllers\Admin\NpsnImportController::class, 'import'])->name('siswa.import-npsn.process');
+        Route::get('/siswa/import-npsn/form', [App\Http\Controllers\Admin\NpsnImportController::class, 'index'])->name('siswa.import-npsn');
+        Route::get('/siswa/import-npsn/template', [App\Http\Controllers\Admin\NpsnImportController::class, 'downloadTemplate'])->name('siswa.import-npsn.template');
+        Route::post('/siswa/import-npsn/process', [App\Http\Controllers\Admin\NpsnImportController::class, 'import'])->name('siswa.import-npsn.process');
+    });
     
     // Custom Menu Management
+    Route::middleware('permission:manage-tools')->group(function () {
     Route::resource('custom-menu', App\Http\Controllers\Admin\CustomMenuController::class);
     Route::post('/custom-menu/{customMenu}/toggle-status', [App\Http\Controllers\Admin\CustomMenuController::class, 'toggleStatus'])->name('custom-menu.toggle-status');
     Route::get('/custom-menu/{customMenu}/assign', [App\Http\Controllers\Admin\CustomMenuController::class, 'assign'])->name('custom-menu.assign');
@@ -377,14 +385,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/custom-menu/{customMenu}/template', [App\Http\Controllers\Admin\CustomMenuController::class, 'downloadTemplate'])->name('custom-menu.template');
     Route::get('/custom-menu/{customMenu}/get-siswa', [App\Http\Controllers\Admin\CustomMenuController::class, 'getSiswaList'])->name('custom-menu.get-siswa');
     Route::get('/custom-menu/{customMenu}/get-siswa-by-kelas', [App\Http\Controllers\Admin\CustomMenuController::class, 'getSiswaByKelas'])->name('custom-menu.get-siswa-by-kelas');
+    });
     
     // User Monitoring
-    Route::get('/monitoring/users', [App\Http\Controllers\Admin\UserMonitoringController::class, 'index'])->name('monitoring.users');
-    Route::get('/monitoring/users/{user}', [App\Http\Controllers\Admin\UserMonitoringController::class, 'show'])->name('monitoring.users.show');
-    Route::get('/monitoring/online-count', [App\Http\Controllers\Admin\UserMonitoringController::class, 'getOnlineCount'])->name('monitoring.online-count');
-    Route::post('/monitoring/users/{user}/force-logout', [App\Http\Controllers\Admin\UserMonitoringController::class, 'forceLogout'])->name('monitoring.users.force-logout');
+    Route::get('/monitoring/users', [App\Http\Controllers\Admin\UserMonitoringController::class, 'index'])->name('monitoring.users')->middleware('permission:view-monitoring-users');
+    Route::get('/monitoring/users/{user}', [App\Http\Controllers\Admin\UserMonitoringController::class, 'show'])->name('monitoring.users.show')->middleware('permission:view-monitoring-users');
+    Route::get('/monitoring/online-count', [App\Http\Controllers\Admin\UserMonitoringController::class, 'getOnlineCount'])->name('monitoring.online-count')->middleware('permission:view-monitoring-users');
+    Route::post('/monitoring/users/{user}/force-logout', [App\Http\Controllers\Admin\UserMonitoringController::class, 'forceLogout'])->name('monitoring.users.force-logout')->middleware('permission:manage-monitoring-users');
     
     // Pengaturan - Cek NIP (Super Admin Only)
+    Route::middleware('permission:manage-tools')->group(function () {
     Route::get('/pengaturan/cek-nip', [App\Http\Controllers\Admin\NipCheckerController::class, 'index'])->name('pengaturan.cek-nip.index');
     Route::post('/pengaturan/cek-nip/check', [App\Http\Controllers\Admin\NipCheckerController::class, 'check'])->name('pengaturan.cek-nip.check');
 
@@ -411,6 +421,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pengaturan/reset-system/download-backup/{filename}', [App\Http\Controllers\Admin\SystemResetController::class, 'downloadBackup'])->name('reset-system.download-backup');
     Route::delete('/pengaturan/reset-system/delete-backup/{filename}', [App\Http\Controllers\Admin\SystemResetController::class, 'deleteBackup'])->name('reset-system.delete-backup');
     Route::post('/pengaturan/reset-system/restore-backup', [App\Http\Controllers\Admin\SystemResetController::class, 'restoreBackup'])->name('reset-system.restore-backup');
+    });
     
     // Tahun Pelajaran Management
     Route::resource('tahun-pelajaran', TahunPelajaranController::class)->only(['index', 'show'])->middleware('permission:view-tahun-pelajaran');
@@ -513,22 +524,27 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Mutasi Siswa
     Route::prefix('mutasi-siswa')->name('mutasi-siswa.')->group(function () {
-        Route::get('/', [MutasiSiswaController::class, 'index'])->name('index');
-        Route::get('/create', [MutasiSiswaController::class, 'create'])->name('create');
-        Route::post('/', [MutasiSiswaController::class, 'store'])->name('store');
-        Route::get('/search-siswa', [MutasiSiswaController::class, 'searchSiswa'])->name('search-siswa');
-        Route::get('/lookup-npsn', [MutasiSiswaController::class, 'lookupNpsn'])->name('lookup-npsn');
-        Route::get('/{mutasiSiswa}', [MutasiSiswaController::class, 'show'])->name('show');
-        Route::get('/{mutasiSiswa}/edit', [MutasiSiswaController::class, 'edit'])->name('edit');
-        Route::put('/{mutasiSiswa}', [MutasiSiswaController::class, 'update'])->name('update');
-        Route::delete('/{mutasiSiswa}', [MutasiSiswaController::class, 'destroy'])->name('destroy');
-        Route::post('/{mutasiSiswa}/approve', [MutasiSiswaController::class, 'approve'])->name('approve');
-        Route::post('/{mutasiSiswa}/reject', [MutasiSiswaController::class, 'reject'])->name('reject');
-        Route::post('/{mutasiSiswa}/upload-dokumen', [MutasiSiswaController::class, 'uploadDokumen'])->name('upload-dokumen');
+        Route::get('/', [MutasiSiswaController::class, 'index'])->name('index')->middleware('permission:view-mutasi');
+        Route::middleware('permission:create-mutasi')->group(function () {
+            Route::get('/create', [MutasiSiswaController::class, 'create'])->name('create');
+            Route::post('/', [MutasiSiswaController::class, 'store'])->name('store');
+            Route::get('/search-siswa', [MutasiSiswaController::class, 'searchSiswa'])->name('search-siswa');
+            Route::get('/lookup-npsn', [MutasiSiswaController::class, 'lookupNpsn'])->name('lookup-npsn');
+        });
+        Route::get('/{mutasiSiswa}', [MutasiSiswaController::class, 'show'])->name('show')->middleware('permission:view-mutasi');
+        Route::get('/{mutasiSiswa}/edit', [MutasiSiswaController::class, 'edit'])->name('edit')->middleware('permission:edit-mutasi');
+        Route::put('/{mutasiSiswa}', [MutasiSiswaController::class, 'update'])->name('update')->middleware('permission:edit-mutasi');
+        Route::delete('/{mutasiSiswa}', [MutasiSiswaController::class, 'destroy'])->name('destroy')->middleware('permission:delete-mutasi');
+        Route::post('/{mutasiSiswa}/approve', [MutasiSiswaController::class, 'approve'])->name('approve')->middleware('permission:approve-mutasi');
+        Route::post('/{mutasiSiswa}/reject', [MutasiSiswaController::class, 'reject'])->name('reject')->middleware('permission:reject-mutasi');
+        Route::post('/{mutasiSiswa}/upload-dokumen', [MutasiSiswaController::class, 'uploadDokumen'])->name('upload-dokumen')->middleware('permission:upload-dokumen-mutasi');
     });
 
     // Kelas Management
-    Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
+    Route::resource('kelas', KelasController::class)->only(['index', 'show'])->parameters(['kelas' => 'kelas'])->middleware('permission:view-kelas');
+    Route::resource('kelas', KelasController::class)->only(['create', 'store'])->parameters(['kelas' => 'kelas'])->middleware('permission:create-kelas');
+    Route::resource('kelas', KelasController::class)->only(['edit', 'update'])->parameters(['kelas' => 'kelas'])->middleware('permission:edit-kelas');
+    Route::resource('kelas', KelasController::class)->only(['destroy'])->parameters(['kelas' => 'kelas'])->middleware('permission:delete-kelas');
     Route::post('/kelas/{id}/restore', [KelasController::class, 'restore'])->name('kelas.restore')->middleware('permission:create-kelas');
     Route::get('/kelas/{kelas}/assign-siswa', [KelasController::class, 'assignSiswa'])->name('kelas.assign-siswa')->middleware('permission:assign-siswa-kelas');
     Route::get('/kelas/{kelas}/siswa/available', [KelasController::class, 'getAvailableSiswa'])->name('kelas.siswa.available')->middleware('permission:assign-siswa-kelas');
@@ -542,7 +558,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/ketua-kelas', [KelasController::class, 'assignKetuaKelas'])->name('kelas.ketua-kelas')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/toggle-asrama', [KelasController::class, 'toggleAsrama'])->name('kelas.toggle-asrama')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
-    Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi');
+    Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi')->middleware('permission:print-kelas|view-kelas');
     
     // GTK Personal (Dashboard & Profile for GTK users)
     Route::post('/gtk/impersonation/stop', [App\Http\Controllers\Admin\UserImpersonationController::class, 'stopGtk'])
@@ -696,21 +712,28 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     // User Management
-    Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
-    Route::put('/users/{user}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password');
-    Route::resource('users', App\Http\Controllers\Admin\UserController::class);
-    Route::get('/users/{user}/assign-role-form', [App\Http\Controllers\Admin\UserController::class, 'assignRoleForm'])->name('users.assign-role-form');
-    Route::post('/users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');
-    Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::middleware('permission:view-users')->group(function () {
+        Route::get('/users-data', [App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
+        Route::resource('users', App\Http\Controllers\Admin\UserController::class)->only(['index', 'show']);
+    });
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class)->only(['create', 'store'])->middleware('permission:create-users');
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class)->only(['edit', 'update'])->middleware('permission:edit-users');
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class)->only(['destroy'])->middleware('permission:delete-users');
+    Route::put('/users/{user}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])->name('users.reset-password')->middleware('permission:edit-users');
+    Route::get('/users/{user}/assign-role-form', [App\Http\Controllers\Admin\UserController::class, 'assignRoleForm'])->name('users.assign-role-form')->middleware('permission:assign-roles');
+    Route::post('/users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role')->middleware('permission:assign-roles');
+    Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:edit-users');
     
     // Permission Matrix (Enhanced RBAC UI)
-    Route::get('/permission-matrix', [App\Http\Controllers\Admin\UserController::class, 'permissionMatrix'])->name('users.permission-matrix');
-    Route::post('/permission-matrix/update', [App\Http\Controllers\Admin\UserController::class, 'updatePermissionMatrix'])->name('permission-matrix.update');
-    Route::get('/permission-matrix/scan', [App\Http\Controllers\Admin\UserController::class, 'scanPermissions'])->name('permission-matrix.scan');
-    Route::post('/permission-matrix/sync', [App\Http\Controllers\Admin\UserController::class, 'syncPermissions'])->name('permission-matrix.sync');
-    Route::post('/permission-matrix/role/store', [App\Http\Controllers\Admin\UserController::class, 'storeRole'])->name('permission-matrix.role.store');
-    Route::post('/permission-matrix/role/bulk', [App\Http\Controllers\Admin\UserController::class, 'bulkUpdateRolePermissions'])->name('permission-matrix.role.bulk');
-    Route::delete('/permission-matrix/role/{role}', [App\Http\Controllers\Admin\UserController::class, 'destroyRole'])->name('permission-matrix.role.destroy');
+    Route::get('/permission-matrix', [App\Http\Controllers\Admin\UserController::class, 'permissionMatrix'])->name('users.permission-matrix')->middleware('permission:view-permission');
+    Route::middleware('permission:manage-permission')->group(function () {
+        Route::post('/permission-matrix/update', [App\Http\Controllers\Admin\UserController::class, 'updatePermissionMatrix'])->name('permission-matrix.update');
+        Route::get('/permission-matrix/scan', [App\Http\Controllers\Admin\UserController::class, 'scanPermissions'])->name('permission-matrix.scan');
+        Route::post('/permission-matrix/sync', [App\Http\Controllers\Admin\UserController::class, 'syncPermissions'])->name('permission-matrix.sync');
+        Route::post('/permission-matrix/role/bulk', [App\Http\Controllers\Admin\UserController::class, 'bulkUpdateRolePermissions'])->name('permission-matrix.role.bulk');
+    });
+    Route::post('/permission-matrix/role/store', [App\Http\Controllers\Admin\UserController::class, 'storeRole'])->name('permission-matrix.role.store')->middleware('permission:create-role');
+    Route::delete('/permission-matrix/role/{role}', [App\Http\Controllers\Admin\UserController::class, 'destroyRole'])->name('permission-matrix.role.destroy')->middleware('permission:delete-role');
     
     // Role & Permission Management (RBAC)
     Route::middleware(['permission:assign-roles'])->group(function () {
@@ -725,17 +748,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     // Tugas Tambahan Management
-    Route::post('/users/{user}/tugas-tambahan', [App\Http\Controllers\Admin\UserController::class, 'assignTugasTambahan'])->name('users.tugas-tambahan.assign');
-    Route::post('/tugas-tambahan/{tugasTambahan}/deactivate', [App\Http\Controllers\Admin\UserController::class, 'deactivateTugasTambahan'])->name('tugas-tambahan.deactivate');
-    Route::post('/tugas-tambahan/{tugasTambahan}/activate', [App\Http\Controllers\Admin\UserController::class, 'activateTugasTambahan'])->name('tugas-tambahan.activate');
-    Route::delete('/tugas-tambahan/{tugasTambahan}', [App\Http\Controllers\Admin\UserController::class, 'deleteTugasTambahan'])->name('tugas-tambahan.delete');
+    Route::middleware('permission:edit-users')->group(function () {
+        Route::post('/users/{user}/tugas-tambahan', [App\Http\Controllers\Admin\UserController::class, 'assignTugasTambahan'])->name('users.tugas-tambahan.assign');
+        Route::post('/tugas-tambahan/{tugasTambahan}/deactivate', [App\Http\Controllers\Admin\UserController::class, 'deactivateTugasTambahan'])->name('tugas-tambahan.deactivate');
+        Route::post('/tugas-tambahan/{tugasTambahan}/activate', [App\Http\Controllers\Admin\UserController::class, 'activateTugasTambahan'])->name('tugas-tambahan.activate');
+        Route::delete('/tugas-tambahan/{tugasTambahan}', [App\Http\Controllers\Admin\UserController::class, 'deleteTugasTambahan'])->name('tugas-tambahan.delete');
+    });
     
     // Activity Logs
-    Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
-    Route::get('/activity-logs/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'getData'])->name('activity-logs.data');
-    Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
-    Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
-    Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+    Route::middleware('permission:view-activity-log')->group(function () {
+        Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'getData'])->name('activity-logs.data');
+        Route::get('/activity-logs/{id}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
+        Route::get('/activity-logs/statistics/data', [App\Http\Controllers\Admin\ActivityLogController::class, 'statistics'])->name('activity-logs.statistics');
+        Route::get('/activity-logs/export/csv', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
+    });
     
     // App Settings
     Route::middleware(['permission:manage-settings'])->group(function () {
@@ -831,15 +858,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     // ==================== FITUR BARU: PRESTASI SISWA ====================
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);
-    Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify');
+    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['index', 'show'])->middleware('permission:view-prestasi-siswa');
+    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['create', 'store'])->middleware('permission:create-prestasi-siswa');
+    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['edit', 'update'])->middleware('permission:edit-prestasi-siswa');
+    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['destroy'])->middleware('permission:delete-prestasi-siswa');
+    Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify')->middleware('permission:verify-prestasi-siswa');
     
     // ==================== FITUR BARU: EKSTRAKURIKULER ====================
-    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class);
-    Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota');
-    Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
-    Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
-    Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class)->only(['index', 'show'])->middleware('permission:view-ekstrakurikuler');
+    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class)->only(['create', 'store'])->middleware('permission:create-ekstrakurikuler');
+    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class)->only(['edit', 'update'])->middleware('permission:edit-ekstrakurikuler');
+    Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class)->only(['destroy'])->middleware('permission:delete-ekstrakurikuler');
+    Route::get('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'anggota'])->name('ekstrakurikuler.anggota')->middleware('permission:view-ekstrakurikuler');
+    Route::middleware('permission:manage-anggota-ekstrakurikuler')->group(function () {
+        Route::post('/ekstrakurikuler/{ekstrakurikuler}/anggota', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'storeAnggota'])->name('ekstrakurikuler.anggota.store');
+        Route::put('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'updateAnggota'])->name('ekstrakurikuler.anggota.update');
+        Route::delete('/ekstrakurikuler/anggota/{anggota}', [App\Http\Controllers\Admin\EkstrakurikulerController::class, 'destroyAnggota'])->name('ekstrakurikuler.anggota.destroy');
+    });
     
 // ==================== FITUR BARU: JADWAL PELAJARAN ====================
     Route::middleware(['permission:view-jadwal-pelajaran'])->group(function () {
@@ -893,40 +928,41 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // ==================== FITUR BARU: PEMBAYARAN (SPP) ====================
     // Jenis Pembayaran
-    Route::get('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'jenisPembayaran'])->name('pembayaran.jenis');
-    Route::post('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'storeJenisPembayaran'])->name('pembayaran.jenis.store');
-    Route::get('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'showJenisPembayaran'])->name('pembayaran.jenis.show');
-    Route::put('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'updateJenisPembayaran'])->name('pembayaran.jenis.update');
-    Route::delete('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyJenisPembayaran'])->name('pembayaran.jenis.destroy');
+    Route::get('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'jenisPembayaran'])->name('pembayaran.jenis')->middleware('permission:view-keuangan');
+    Route::post('/pembayaran/jenis', [App\Http\Controllers\Admin\PembayaranController::class, 'storeJenisPembayaran'])->name('pembayaran.jenis.store')->middleware('permission:manage-keuangan');
+    Route::get('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'showJenisPembayaran'])->name('pembayaran.jenis.show')->middleware('permission:view-keuangan');
+    Route::put('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'updateJenisPembayaran'])->name('pembayaran.jenis.update')->middleware('permission:manage-keuangan');
+    Route::delete('/pembayaran/jenis/{jenisPembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyJenisPembayaran'])->name('pembayaran.jenis.destroy')->middleware('permission:manage-keuangan');
     
     // Tagihan
-    Route::get('/pembayaran/tagihan', [App\Http\Controllers\Admin\PembayaranController::class, 'tagihan'])->name('pembayaran.tagihan');
-    Route::post('/pembayaran/tagihan/generate', [App\Http\Controllers\Admin\PembayaranController::class, 'generateTagihan'])->name('pembayaran.tagihan.generate');
-    Route::get('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'showTagihan'])->name('pembayaran.tagihan.show');
-    Route::delete('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyTagihan'])->name('pembayaran.tagihan.destroy');
+    Route::get('/pembayaran/tagihan', [App\Http\Controllers\Admin\PembayaranController::class, 'tagihan'])->name('pembayaran.tagihan')->middleware('permission:view-keuangan');
+    Route::post('/pembayaran/tagihan/generate', [App\Http\Controllers\Admin\PembayaranController::class, 'generateTagihan'])->name('pembayaran.tagihan.generate')->middleware('permission:manage-keuangan');
+    Route::get('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'showTagihan'])->name('pembayaran.tagihan.show')->middleware('permission:view-keuangan');
+    Route::delete('/pembayaran/tagihan/{tagihan}', [App\Http\Controllers\Admin\PembayaranController::class, 'destroyTagihan'])->name('pembayaran.tagihan.destroy')->middleware('permission:manage-keuangan');
     
     // Pembayaran
-    Route::get('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('pembayaran.index');
-    Route::post('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'store'])->name('pembayaran.store');
-    Route::get('/pembayaran/laporan', [App\Http\Controllers\Admin\PembayaranController::class, 'laporan'])->name('pembayaran.laporan');
-    Route::get('/pembayaran/{pembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'show'])->name('pembayaran.show');
-    Route::post('/pembayaran/{pembayaran}/verify', [App\Http\Controllers\Admin\PembayaranController::class, 'verify'])->name('pembayaran.verify');
-    Route::post('/pembayaran/{pembayaran}/reject', [App\Http\Controllers\Admin\PembayaranController::class, 'reject'])->name('pembayaran.reject');
+    Route::get('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'index'])->name('pembayaran.index')->middleware('permission:view-keuangan');
+    Route::post('/pembayaran', [App\Http\Controllers\Admin\PembayaranController::class, 'store'])->name('pembayaran.store')->middleware('permission:manage-keuangan');
+    Route::get('/pembayaran/laporan', [App\Http\Controllers\Admin\PembayaranController::class, 'laporan'])->name('pembayaran.laporan')->middleware('permission:view-keuangan');
+    Route::get('/pembayaran/{pembayaran}', [App\Http\Controllers\Admin\PembayaranController::class, 'show'])->name('pembayaran.show')->middleware('permission:view-keuangan');
+    Route::post('/pembayaran/{pembayaran}/verify', [App\Http\Controllers\Admin\PembayaranController::class, 'verify'])->name('pembayaran.verify')->middleware('permission:manage-keuangan');
+    Route::post('/pembayaran/{pembayaran}/reject', [App\Http\Controllers\Admin\PembayaranController::class, 'reject'])->name('pembayaran.reject')->middleware('permission:manage-keuangan');
     
     // ==================== FITUR BARU: SURAT KETERANGAN ====================
     // Template Surat
-    Route::get('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'template'])->name('surat-keterangan.template');
-    Route::get('/surat-keterangan/template/create', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'createTemplate'])->name('surat-keterangan.template.create');
-    Route::post('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'storeTemplate'])->name('surat-keterangan.template.store');
-    Route::get('/surat-keterangan/template/{template}/edit', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'editTemplate'])->name('surat-keterangan.template.edit');
-    Route::put('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'updateTemplate'])->name('surat-keterangan.template.update');
-    Route::delete('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroyTemplate'])->name('surat-keterangan.template.destroy');
+    Route::get('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'template'])->name('surat-keterangan.template')->middleware('permission:view-layanan-surat');
+    Route::get('/surat-keterangan/template/create', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'createTemplate'])->name('surat-keterangan.template.create')->middleware('permission:manage-layanan-surat');
+    Route::post('/surat-keterangan/template', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'storeTemplate'])->name('surat-keterangan.template.store')->middleware('permission:manage-layanan-surat');
+    Route::get('/surat-keterangan/template/{template}/edit', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'editTemplate'])->name('surat-keterangan.template.edit')->middleware('permission:manage-layanan-surat');
+    Route::put('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'updateTemplate'])->name('surat-keterangan.template.update')->middleware('permission:manage-layanan-surat');
+    Route::delete('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroyTemplate'])->name('surat-keterangan.template.destroy')->middleware('permission:manage-layanan-surat');
     
     // Surat Keterangan
-    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class);
-    Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve');
-    Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject');
-    Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print');
+    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['index', 'show'])->middleware('permission:view-layanan-surat');
+    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-layanan-surat');
+    Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve')->middleware('permission:manage-layanan-surat');
+    Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject')->middleware('permission:manage-layanan-surat');
+    Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print')->middleware('permission:view-layanan-surat');
     
     // ==================== FITUR BARU: MENU SNBP (Eligibility Kelas 12) ====================
     Route::resource('snbp-menu', App\Http\Controllers\Admin\SnbpMenuController::class);
@@ -943,6 +979,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/span-ptkin-menu/{spanPtkinMenu}/registrations/{registration}/check-announcement', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'checkAnnouncement'])->name('span-ptkin-menu.check-announcement');
     
     // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================
+    Route::middleware('permission:manage-cbt')->group(function () {
     Route::get('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'index'])->name('exam-browser.index');
     Route::put('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'update'])->name('exam-browser.update');
     Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
@@ -995,6 +1032,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             'message' => 'Monitoring ujian dinonaktifkan sementara.',
         ], 503);
     })->name('exam-monitoring.violations');
+    });
 });
 
 // Laravolt Indonesia API (untuk semua yang authenticated)
@@ -1045,7 +1083,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         $html .= '</table>';
         
         return $html;
-    })->name('debug.users');
+    })->name('debug.users')->middleware('permission:manage-tools');
     
     // Debug users-data route
     Route::get('/debug-users-data', function() {
@@ -1056,7 +1094,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         $response = $controller->data($request);
         
         return '<pre>' . json_encode($response->getData(), JSON_PRETTY_PRINT) . '</pre>';
-    })->name('debug.users.data');
+    })->name('debug.users.data')->middleware('permission:manage-tools');
 
     // ============================================
     // ABSENSI WAJAH (Face Attendance System)

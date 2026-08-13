@@ -5,9 +5,11 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-file-signature mr-2"></i>Surat Keterangan</h1>
-        <a href="{{ route('admin.surat-keterangan.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i> Buat Surat
-        </a>
+        @can('manage-layanan-surat')
+            <a href="{{ route('admin.surat-keterangan.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Buat Surat
+            </a>
+        @endcan
     </div>
 @stop
 

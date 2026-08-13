@@ -80,9 +80,11 @@
                     <a href="{{ route('admin.prestasi-siswa.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left mr-1"></i> Kembali
                     </a>
-                    <a href="{{ route('admin.prestasi-siswa.edit', $prestasiSiswa->id) }}" class="btn btn-warning float-right">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
+                    @can('edit-prestasi-siswa')
+                        <a href="{{ route('admin.prestasi-siswa.edit', $prestasiSiswa->id) }}" class="btn btn-warning float-right">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>

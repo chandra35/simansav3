@@ -23,7 +23,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        // $this->authorize('view-user'); // Uncomment after testing
+        $this->authorize('view-users');
 
         // Statistik dan tabel memakai populasi akun operasional yang sama.
         $directoryUsers = $this->accountDirectoryQuery();
@@ -142,30 +142,31 @@ class UserController extends Controller
 
             // Generate status toggle
             $checked = $user->is_active ? 'checked' : '';
+            $statusToggle = auth()->user()->can('edit-users')
+                ? "<div class='custom-control custom-switch d-inline-block'><input type='checkbox' class='custom-control-input toggle-status' id='status{$user->id}' data-id='{$user->id}' {$checked}><label class='custom-control-label' for='status{$user->id}'></label></div>"
+                : '';
             $statusHtml = "<div class='simansa-user-status'>
                 <span class='simansa-user-presence ".($isOnline ? 'is-online' : 'is-offline')."'><i></i>".($isOnline ? 'Online' : 'Offline')."</span>
-                <div class='custom-control custom-switch d-inline-block'>
-                    <input type='checkbox' class='custom-control-input toggle-status' id='status{$user->id}' data-id='{$user->id}' {$checked}>
-                    <label class='custom-control-label' for='status{$user->id}'></label>
-                </div>
+                {$statusToggle}
                 <small>".($user->is_active ? 'Akun aktif' : 'Akun nonaktif').' · '.e($lastSeen ?: 'Belum ada sesi')."</small>
             </div>";
 
             // Satu dropdown menjaga tabel tetap ringkas tanpa menghilangkan aksi lama.
-            $actions = "<div class='dropdown simansa-user-actions'>
-                <button type='button' class='btn btn-sm btn-outline-primary dropdown-toggle' data-toggle='dropdown' data-boundary='viewport' aria-haspopup='true' aria-expanded='false'><i class='fas fa-ellipsis-v mr-1'></i>Aksi</button>
-                <div class='dropdown-menu dropdown-menu-right'>
-                    <button type='button' class='dropdown-item btn-assign-role' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-user-tag text-warning'></i>Role & permission</button>";
-            if (!$user->isSiswa() && $user->id !== auth()->id()) {
+            $actionItems = '';
+            if (auth()->user()->can('assign-roles')) {
+                $actionItems .= "<button type='button' class='dropdown-item btn-assign-role' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-user-tag text-warning'></i>Role & permission</button>";
+            }
+            if (auth()->user()->can('edit-users') && !$user->isSiswa() && $user->id !== auth()->id()) {
                 $resetUrl = route('admin.users.reset-password', $user->id);
-                $actions .= "<button type='button' class='dropdown-item btn-reset-password' data-url='".e($resetUrl)."' data-name='{$name}' data-username='{$username}'><i class='fas fa-key text-secondary'></i>Reset password</button>";
+                $actionItems .= "<button type='button' class='dropdown-item btn-reset-password' data-url='".e($resetUrl)."' data-name='{$name}' data-username='{$username}'><i class='fas fa-key text-secondary'></i>Reset password</button>";
             }
-            $actions .= "<a href='".e(route('admin.users.edit', $user->id))."' class='dropdown-item'><i class='fas fa-edit text-primary'></i>Edit akun</a>";
-            
-            if ($user->id !== auth()->id()) {
-                $actions .= "<div class='dropdown-divider'></div><button type='button' class='dropdown-item text-danger btn-delete' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-trash'></i>Hapus akun</button>";
+            if (auth()->user()->can('edit-users')) {
+                $actionItems .= "<a href='".e(route('admin.users.edit', $user->id))."' class='dropdown-item'><i class='fas fa-edit text-primary'></i>Edit akun</a>";
             }
-            $actions .= '</div></div>';
+            if (auth()->user()->can('delete-users') && $user->id !== auth()->id()) {
+                $actionItems .= "<div class='dropdown-divider'></div><button type='button' class='dropdown-item text-danger btn-delete' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-trash'></i>Hapus akun</button>";
+            }
+            $actions = $actionItems === '' ? '<span class="text-muted">—</span>' : "<div class='dropdown simansa-user-actions'><button type='button' class='btn btn-sm btn-outline-primary dropdown-toggle' data-toggle='dropdown' data-boundary='viewport' aria-haspopup='true' aria-expanded='false'><i class='fas fa-ellipsis-v mr-1'></i>Aksi</button><div class='dropdown-menu dropdown-menu-right'>{$actionItems}</div></div>";
 
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
@@ -215,7 +216,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $this->authorize('create-user');
+        $this->authorize('create-users');
 
         $roles = Role::all();
         return view('admin.users.create', compact('roles'));
@@ -226,7 +227,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create-user');
+        $this->authorize('create-users');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -289,7 +290,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $this->authorize('view-user');
+        $this->authorize('view-users');
 
         $user->load(['roles.permissions', 'permissions']);
         return view('admin.users.show', compact('user'));
@@ -300,7 +301,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $this->authorize('edit-user');
+        $this->authorize('edit-users');
 
         $roles = Role::all();
         $userRoles = $user->roles->pluck('id')->toArray();
@@ -313,7 +314,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $this->authorize('edit-user');
+        $this->authorize('edit-users');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -387,7 +388,7 @@ class UserController extends Controller
      */
     public function resetPassword(User $user)
     {
-        $this->authorize('edit-user');
+        $this->authorize('edit-users');
 
         if ($user->isSiswa()) {
             return response()->json([
@@ -428,7 +429,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $this->authorize('delete-user');
+        $this->authorize('delete-users');
 
         // Prevent deleting own account
         if ($user->id === auth()->id()) {
@@ -488,7 +489,7 @@ class UserController extends Controller
      */
     public function assignRoleForm(User $user)
     {
-        $this->authorize('assign-role');
+        $this->authorize('assign-roles');
 
         $roles = Role::withCount('permissions')->get();
         $permissions = Permission::all()->groupBy(function ($permission) {
@@ -538,7 +539,7 @@ class UserController extends Controller
      */
     public function assignRole(Request $request, User $user)
     {
-        $this->authorize('assign-role');
+        $this->authorize('assign-roles');
 
         $validated = $request->validate([
             'roles' => 'nullable|array',
@@ -588,7 +589,7 @@ class UserController extends Controller
      */
     public function toggleStatus(User $user)
     {
-        $this->authorize('edit-user');
+        $this->authorize('edit-users');
 
         if ($user->gtk()->exists()) {
             return response()->json([
@@ -659,7 +660,7 @@ class UserController extends Controller
      */
     public function updatePermissionMatrix(Request $request)
     {
-        $this->authorize('assign-permissions');
+        $this->authorize('manage-permission');
 
         $validated = $request->validate([
             'changes' => 'required|array',
@@ -728,7 +729,7 @@ class UserController extends Controller
      */
     public function scanPermissions()
     {
-        $this->authorize('assign-permissions');
+        $this->authorize('manage-permission');
 
         $permissionService = new PermissionSyncService();
         
@@ -762,7 +763,7 @@ class UserController extends Controller
      */
     public function syncPermissions()
     {
-        $this->authorize('assign-permissions');
+        $this->authorize('manage-permission');
 
         $permissionService = new PermissionSyncService();
         
@@ -798,7 +799,7 @@ class UserController extends Controller
      */
     public function bulkUpdateRolePermissions(Request $request)
     {
-        $this->authorize('assign-permissions');
+        $this->authorize('manage-permission');
 
         $validated = $request->validate([
             'role_id' => 'required|integer|exists:roles,id',
@@ -974,7 +975,7 @@ class UserController extends Controller
      */
     public function assignTugasTambahan(Request $request, User $user)
     {
-        $this->authorize('assign-role');
+        $this->authorize('edit-users');
 
         $validated = $request->validate([
             'role_id' => 'required|exists:roles,id',
@@ -1060,7 +1061,7 @@ class UserController extends Controller
      */
     public function deactivateTugasTambahan(TugasTambahan $tugasTambahan)
     {
-        $this->authorize('assign-role');
+        $this->authorize('edit-users');
 
         DB::beginTransaction();
         try {
@@ -1103,7 +1104,7 @@ class UserController extends Controller
      */
     public function activateTugasTambahan(TugasTambahan $tugasTambahan)
     {
-        $this->authorize('assign-role');
+        $this->authorize('edit-users');
 
         DB::beginTransaction();
         try {
@@ -1154,7 +1155,7 @@ class UserController extends Controller
      */
     public function deleteTugasTambahan(TugasTambahan $tugasTambahan)
     {
-        $this->authorize('assign-role');
+        $this->authorize('edit-users');
 
         DB::beginTransaction();
         try {

@@ -31,9 +31,11 @@ class SuratKeteranganController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
-                    $btn .= '<a href="' . route('admin.surat-keterangan.template.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
                     $btn .= '<button type="button" class="btn btn-sm btn-info btn-preview" data-id="' . $row->id . '" title="Preview"><i class="fas fa-eye"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    if (auth()->user()->can('manage-layanan-surat')) {
+                        $btn .= '<a href="' . route('admin.surat-keterangan.template.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
+                        $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -141,14 +143,16 @@ class SuratKeteranganController extends Controller
                     if ($row->status === 'approved' || $row->status === 'printed') {
                         $btn .= '<a href="' . route('admin.surat-keterangan.print', $row->id) . '" class="btn btn-sm btn-primary" target="_blank" title="Cetak"><i class="fas fa-print"></i></a>';
                     }
-                    if ($row->status === 'pending') {
+                    if (auth()->user()->can('manage-layanan-surat') && $row->status === 'pending') {
                         $btn .= '<button type="button" class="btn btn-sm btn-success btn-approve" data-id="' . $row->id . '" title="Setujui"><i class="fas fa-check"></i></button>';
                         $btn .= '<button type="button" class="btn btn-sm btn-danger btn-reject" data-id="' . $row->id . '" title="Tolak"><i class="fas fa-times"></i></button>';
                     }
-                    if ($row->status === 'draft') {
+                    if (auth()->user()->can('manage-layanan-surat') && $row->status === 'draft') {
                         $btn .= '<a href="' . route('admin.surat-keterangan.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
                     }
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    if (auth()->user()->can('manage-layanan-surat')) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })

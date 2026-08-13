@@ -5,9 +5,9 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-file-alt mr-2"></i>Template Surat</h1>
-        <a href="{{ route('admin.surat-keterangan.template.create') }}" class="btn btn-primary">
+        @can('manage-layanan-surat')<a href="{{ route('admin.surat-keterangan.template.create') }}" class="btn btn-primary">
             <i class="fas fa-plus mr-1"></i> Tambah Template
-        </a>
+        </a>@endcan
     </div>
 @stop
 

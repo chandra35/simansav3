@@ -80,21 +80,22 @@
                     </a>
                     
                     <div class="float-right">
+                        @if($suratKeterangan->status == 'approved')
+                            <a href="{{ route('admin.surat-keterangan.print', $suratKeterangan->id) }}" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-print mr-1"></i> Cetak PDF
+                            </a>
+                        @endif
+                        @can('manage-layanan-surat')
                         @if($suratKeterangan->status == 'pending')
                             <button type="button" class="btn btn-success btn-approve" data-id="{{ $suratKeterangan->id }}">
                                 <i class="fas fa-check mr-1"></i> Setujui
                             </button>
                         @endif
                         
-                        @if($suratKeterangan->status == 'approved')
-                            <a href="{{ route('admin.surat-keterangan.print', $suratKeterangan->id) }}" target="_blank" class="btn btn-primary">
-                                <i class="fas fa-print mr-1"></i> Cetak PDF
-                            </a>
-                        @endif
-                        
                         <a href="{{ route('admin.surat-keterangan.edit', $suratKeterangan->id) }}" class="btn btn-warning">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </a>
+                        @endcan
                     </div>
                 </div>
             </div>

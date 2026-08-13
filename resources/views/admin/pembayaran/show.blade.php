@@ -150,6 +150,7 @@
                 </div>
             @endif
             
+            @can('manage-keuangan')
             @if($pembayaran->status === 'pending')
                 <div class="card card-warning">
                     <div class="card-header">
@@ -166,6 +167,7 @@
                     </div>
                 </div>
             @endif
+            @endcan
             
             <div class="card">
                 <div class="card-header bg-secondary">

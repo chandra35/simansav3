@@ -38,6 +38,9 @@ class PembayaranController extends Controller
                     return implode(' ', $badges);
                 })
                 ->addColumn('action', function ($row) {
+                    if (! auth()->user()->can('manage-keuangan')) {
+                        return '<span class="text-muted">—</span>';
+                    }
                     $btn = '<div class="btn-group">';
                     $btn .= '<button type="button" class="btn btn-sm btn-warning btn-edit" data-id="' . $row->id . '" title="Edit"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
@@ -167,10 +170,12 @@ class PembayaranController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
                     $btn .= '<a href="' . route('admin.pembayaran.tagihan.show', $row->id) . '" class="btn btn-sm btn-info" title="Lihat"><i class="fas fa-eye"></i></a>';
-                    if ($row->status !== 'lunas') {
+                    if (auth()->user()->can('manage-keuangan') && $row->status !== 'lunas') {
                         $btn .= '<button type="button" class="btn btn-sm btn-success btn-bayar" data-id="' . $row->id . '" title="Bayar"><i class="fas fa-money-bill"></i></button>';
                     }
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    if (auth()->user()->can('manage-keuangan')) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -293,7 +298,7 @@ class PembayaranController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
                     $btn .= '<a href="' . route('admin.pembayaran.show', $row->id) . '" class="btn btn-sm btn-info" title="Lihat"><i class="fas fa-eye"></i></a>';
-                    if ($row->status === 'pending') {
+                    if (auth()->user()->can('manage-keuangan') && $row->status === 'pending') {
                         $btn .= '<button type="button" class="btn btn-sm btn-success btn-verify" data-id="' . $row->id . '" title="Verifikasi"><i class="fas fa-check"></i></button>';
                         $btn .= '<button type="button" class="btn btn-sm btn-danger btn-reject" data-id="' . $row->id . '" title="Tolak"><i class="fas fa-times"></i></button>';
                     }

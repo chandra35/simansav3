@@ -11,7 +11,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-8">
+        <div class="{{ auth()->user()->can('manage-anggota-ekstrakurikuler') ? 'col-md-8' : 'col-12' }}">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Daftar Anggota</h3>
@@ -44,6 +44,7 @@
             </div>
         </div>
         
+        @can('manage-anggota-ekstrakurikuler')
         <div class="col-md-4">
             <div class="card card-primary">
                 <div class="card-header">
@@ -134,6 +135,7 @@
                 </form>
             </div>
         </div>
+        @endcan
     </div>
 @stop
 

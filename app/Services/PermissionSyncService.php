@@ -382,7 +382,15 @@ class PermissionSyncService
                 'description' => 'Prestasi, ekstrakurikuler, konseling, lulusan, dan alumni',
                 'permissions' => [
                     'view-prestasi-siswa',
+                    'create-prestasi-siswa',
+                    'edit-prestasi-siswa',
+                    'delete-prestasi-siswa',
+                    'verify-prestasi-siswa',
                     'view-ekstrakurikuler',
+                    'create-ekstrakurikuler',
+                    'edit-ekstrakurikuler',
+                    'delete-ekstrakurikuler',
+                    'manage-anggota-ekstrakurikuler',
                     'kesiswaan-lulusan-access',
                 ],
             ],
@@ -490,6 +498,7 @@ class PermissionSyncService
                 'description' => 'Monitoring user dan log aktivitas',
                 'permissions' => [
                     'view-monitoring-users',
+                    'manage-monitoring-users',
                     'view-activity-log',
                 ],
             ],

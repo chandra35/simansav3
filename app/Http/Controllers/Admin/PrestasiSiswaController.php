@@ -37,11 +37,15 @@ class PrestasiSiswaController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
                     $btn .= '<a href="' . route('admin.prestasi-siswa.show', $row->id) . '" class="btn btn-sm btn-info" title="Lihat"><i class="fas fa-eye"></i></a>';
-                    $btn .= '<a href="' . route('admin.prestasi-siswa.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
-                    if (!$row->is_verified) {
+                    if (auth()->user()->can('edit-prestasi-siswa')) {
+                        $btn .= '<a href="' . route('admin.prestasi-siswa.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
+                    }
+                    if (auth()->user()->can('verify-prestasi-siswa') && !$row->is_verified) {
                         $btn .= '<button type="button" class="btn btn-sm btn-success btn-verify" data-id="' . $row->id . '" title="Verifikasi"><i class="fas fa-check"></i></button>';
                     }
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    if (auth()->user()->can('delete-prestasi-siswa')) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })

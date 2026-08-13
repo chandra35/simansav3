@@ -5,9 +5,11 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-trophy mr-2"></i>Prestasi Siswa</h1>
-        <a href="{{ route('admin.prestasi-siswa.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i> Tambah Prestasi
-        </a>
+        @can('create-prestasi-siswa')
+            <a href="{{ route('admin.prestasi-siswa.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Tambah Prestasi
+            </a>
+        @endcan
     </div>
 @stop
 

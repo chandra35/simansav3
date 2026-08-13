@@ -66,11 +66,13 @@
                         <i class="fas fa-arrow-left mr-1"></i> Kembali
                     </a>
                     <a href="{{ route('admin.ekstrakurikuler.anggota', $ekstrakurikuler->id) }}" class="btn btn-primary float-right ml-2">
-                        <i class="fas fa-users mr-1"></i> Kelola Anggota
+                        <i class="fas fa-users mr-1"></i> Lihat Anggota
                     </a>
-                    <a href="{{ route('admin.ekstrakurikuler.edit', $ekstrakurikuler->id) }}" class="btn btn-warning float-right">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
+                    @can('edit-ekstrakurikuler')
+                        <a href="{{ route('admin.ekstrakurikuler.edit', $ekstrakurikuler->id) }}" class="btn btn-warning float-right">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>

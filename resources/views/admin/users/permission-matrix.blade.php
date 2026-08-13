@@ -11,12 +11,16 @@
         </div>
         <div class="simansa-hero__side">
             <div class="simansa-toolbar__group">
+                @can('manage-permission')
                 <button type="button" class="btn simansa-btn-contrast" id="btnScan" title="Scan Permission">
                     <i class="fas fa-search mr-1"></i> Scan
                 </button>
+                @endcan
+                @can('create-role')
                 <button type="button" class="btn simansa-btn-strong" id="btnAddRole" title="Tambah Role">
                     <i class="fas fa-plus mr-1"></i> Tambah Role
                 </button>
+                @endcan
             </div>
         </div>
     </div>
@@ -239,8 +243,9 @@
                                                         <input type="checkbox" 
                                                                class="custom-control-input permission-checkbox" 
                                                                id="perm_{{ $role->id }}_{{ md5($permName) }}"
-                                                               data-role-id="{{ $role->id }}"
+                                                        data-role-id="{{ $role->id }}"
                                                                data-permission="{{ $permName }}"
+                                                               @cannot('manage-permission') disabled @endcannot
                                                                {{ $hasPermission ? 'checked' : '' }}>
                                                         <label class="custom-control-label" for="perm_{{ $role->id }}_{{ md5($permName) }}"></label>
                                                     </div>
@@ -265,12 +270,14 @@
 </div>
 
 <!-- Floating Save Button -->
+@can('manage-permission')
 <div id="floatingSaveBtn" class="floating-save-btn d-none">
     <button type="button" class="btn btn-lg btn-success shadow-lg" id="btnSaveChanges">
         <i class="fas fa-save mr-2"></i> Simpan Perubahan
         <span class="badge badge-light ml-2" id="changeCount">0</span>
     </button>
 </div>
+@endcan
 
 <!-- Scan Modal -->
 <div class="modal fade" id="scanModal" tabindex="-1" role="dialog">

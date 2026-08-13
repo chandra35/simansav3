@@ -38,9 +38,13 @@ class EkstrakurikulerController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="btn-group">';
                     $btn .= '<a href="' . route('admin.ekstrakurikuler.show', $row->id) . '" class="btn btn-sm btn-info" title="Lihat"><i class="fas fa-eye"></i></a>';
-                    $btn .= '<a href="' . route('admin.ekstrakurikuler.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
+                    if (auth()->user()->can('edit-ekstrakurikuler')) {
+                        $btn .= '<a href="' . route('admin.ekstrakurikuler.edit', $row->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
+                    }
                     $btn .= '<a href="' . route('admin.ekstrakurikuler.anggota', $row->id) . '" class="btn btn-sm btn-primary" title="Anggota"><i class="fas fa-users"></i></a>';
-                    $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    if (auth()->user()->can('delete-ekstrakurikuler')) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -162,6 +166,9 @@ class EkstrakurikulerController extends Controller
                     return '-';
                 })
                 ->addColumn('action', function ($row) {
+                    if (! auth()->user()->can('manage-anggota-ekstrakurikuler')) {
+                        return '<span class="text-muted">—</span>';
+                    }
                     $btn = '<div class="btn-group">';
                     $btn .= '<button type="button" class="btn btn-sm btn-warning btn-edit-anggota" data-id="' . $row->id . '" title="Edit"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-sm btn-danger btn-delete-anggota" data-id="' . $row->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';

@@ -5,9 +5,11 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1><i class="fas fa-file-invoice mr-2"></i>Tagihan</h1>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-generate">
-            <i class="fas fa-magic mr-1"></i> Generate Tagihan
-        </button>
+        @can('manage-keuangan')
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-generate">
+                <i class="fas fa-magic mr-1"></i> Generate Tagihan
+            </button>
+        @endcan
     </div>
 @stop
 

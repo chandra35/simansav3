@@ -4,6 +4,13 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penegakan Permission Matrix Lintas Modul
+
+- Route backend Data Siswa, Kelas, User, Mutasi Siswa, Prestasi, Ekstrakurikuler, Keuangan, Layanan Surat, Monitoring, Activity Log, Tools, dan CBT kini memakai permission modulnya; izin lihat tidak lagi dapat dipakai untuk request tambah/edit/hapus melalui URL langsung.
+- Aksi tabel User, Prestasi, dan Ekstrakurikuler hanya dirender jika pengguna memiliki permission tulis yang sesuai. Nama permission User dinormalisasi ke katalog resmi jamak: `view/create/edit/delete-users`.
+- Prestasi dan Ekstrakurikuler kini memiliki permission granular create/edit/delete, verifikasi prestasi, serta pengelolaan anggota. Permission baru hanya didaftarkan dan tidak otomatis diberikan kepada role mana pun, sehingga admin dapat mengaturnya eksplisit dari Permission Matrix.
+- Ditambahkan tes regresi lintas modul untuk memeriksa pasangan route baca/tulis dan pelindung tombol UI agar pola Permission Matrix tetap konsisten pada perubahan berikutnya.
+
 ### Sinkronisasi Konselor dengan Jadwal BK
 
 - Dropdown Konselor kini mengambil GTK dan akun aktif yang mengampu mata pelajaran Bimbingan Konseling pada jadwal tahun aktif; `jenis_ptk` Guru BK dan role BK tetap menjadi fallback untuk koordinator/konselor tanpa slot jadwal.
