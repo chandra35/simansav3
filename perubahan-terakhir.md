@@ -15,6 +15,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Modal **Pengaturan Suara** ditambahkan langsung pada Face Detect. Operator dapat memilih karakter pria/wanita/otomatis, voice yang tersedia di perangkat, pitch, kecepatan, volume, jeda pengulangan, serta melakukan tes suara sebelum menyimpan.
 - Pola ucapan dapat memakai sapaan otomatis berdasarkan waktu (pagi pukul 04–10, siang 11–14, sore 15–17, dan malam di luar rentang tersebut), “Selamat datang”, “Halo”, atau teks kustom dengan variabel `{nama}` dan `{waktu}`.
 - Pengaturan voice disimpan di `localStorage`, sehingga bersifat per browser/perangkat kamera dan tidak mengubah konfigurasi perangkat gerbang lain.
+- Pengaturan suara dilengkapi gaya intonasi **Natural, Ramah, Formal, Semangat, Tenang**, dan kustom. Setiap preset mengombinasikan pitch, tempo, serta penekanan tanda baca; perubahan manual pada slider otomatis ditandai sebagai intonasi kustom.
 
 ### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
 

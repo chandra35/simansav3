@@ -202,6 +202,10 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('utterance.pitch = settings.pitch', $view);
         $this->assertStringContainsString('utterance.rate = settings.rate', $view);
         $this->assertStringContainsString('utterance.volume = settings.volume', $view);
+        $this->assertStringContainsString('id="voiceIntonation"', $view);
+        $this->assertStringContainsString('INTONATION_PROFILES', $view);
+        $this->assertStringContainsString("enthusiastic: { rate: 1.05, pitchOffset: .14 }", $view);
+        $this->assertStringContainsString('function applyIntonationPreset()', $view);
         $this->assertStringNotContainsString('absensi.record-face', $view);
         $this->assertStringNotContainsString('alert(error.message)', $view);
     }

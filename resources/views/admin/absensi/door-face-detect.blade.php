@@ -81,6 +81,18 @@
                 <small>Voice Bahasa Indonesia ditampilkan paling atas bila tersedia.</small>
             </div>
             <div class="setting-field is-wide">
+                <label for="voiceIntonation">Gaya intonasi</label>
+                <select id="voiceIntonation">
+                    <option value="natural">Natural</option>
+                    <option value="friendly">Ramah</option>
+                    <option value="formal">Formal</option>
+                    <option value="enthusiastic">Semangat</option>
+                    <option value="calm">Tenang</option>
+                    <option value="custom">Kustom dari slider</option>
+                </select>
+                <small>Preset intonasi mengatur kombinasi pitch, tempo, dan penekanan tanda baca. Slider tetap dapat disesuaikan setelah memilih preset.</small>
+            </div>
+            <div class="setting-field is-wide">
                 <label for="voiceTestName">Nama untuk tes suara</label>
                 <input id="voiceTestName" type="text" maxlength="100" value="{{ auth()->user()->name ?? 'Pengguna SIMANSA' }}">
             </div>
@@ -143,8 +155,15 @@
     const VOICE_SETTINGS_KEY = 'simansa.face-detect.voice.v1';
     const DEFAULT_VOICE_SETTINGS = Object.freeze({
         character: 'auto', voiceUri: '', pitch: 1, rate: .92, volume: 1,
-        cooldown: 20, greetingMode: 'time', customGreeting: 'Selamat {waktu}, {nama}',
+        intonation: 'natural', cooldown: 20, greetingMode: 'time', customGreeting: 'Selamat {waktu}, {nama}',
         includeAcademicTitle: true,
+    });
+    const INTONATION_PROFILES = Object.freeze({
+        natural: { rate: .92, pitchOffset: 0 },
+        friendly: { rate: .95, pitchOffset: .08 },
+        formal: { rate: .84, pitchOffset: -.04 },
+        enthusiastic: { rate: 1.05, pitchOffset: .14 },
+        calm: { rate: .76, pitchOffset: -.08 },
     });
     const endpoints = [
         @json(route('admin.absensi.face-descriptors', ['type' => 'gtk', 'verified_only' => 1])),
@@ -175,9 +194,11 @@
     function sanitizeVoiceSettings(value = {}) {
         const character = ['auto', 'male', 'female'].includes(value.character) ? value.character : DEFAULT_VOICE_SETTINGS.character;
         const greetingMode = ['time', 'welcome', 'hello', 'custom'].includes(value.greetingMode) ? value.greetingMode : DEFAULT_VOICE_SETTINGS.greetingMode;
+        const intonation = ['natural', 'friendly', 'formal', 'enthusiastic', 'calm', 'custom'].includes(value.intonation) ? value.intonation : DEFAULT_VOICE_SETTINGS.intonation;
         return {
             character,
             greetingMode,
+            intonation,
             voiceUri: String(value.voiceUri || ''),
             pitch: clamp(value.pitch, .5, 2, DEFAULT_VOICE_SETTINGS.pitch),
             rate: clamp(value.rate, .5, 1.5, DEFAULT_VOICE_SETTINGS.rate),
@@ -288,7 +309,10 @@
         if (settings.greetingMode === 'welcome') template = 'Selamat datang, {nama}';
         if (settings.greetingMode === 'hello') template = 'Halo {nama}, selamat datang';
         if (settings.greetingMode === 'custom') template = settings.customGreeting.trim() || DEFAULT_VOICE_SETTINGS.customGreeting;
-        return template.replaceAll('{nama}', spokenName).replaceAll('{waktu}', period);
+        const greeting = template.replaceAll('{nama}', spokenName).replaceAll('{waktu}', period).trim();
+        if (settings.intonation === 'enthusiastic' || settings.intonation === 'friendly') return greeting.replace(/[.!?]+$/, '') + '!';
+        if (settings.intonation === 'formal' || settings.intonation === 'calm') return greeting.replace(/[.!?]+$/, '') + '.';
+        return greeting;
     }
 
     function resolveVoice(settings = voiceSettings) {
@@ -399,6 +423,7 @@
         return sanitizeVoiceSettings({
             character: document.getElementById('voiceCharacter').value,
             voiceUri: document.getElementById('voiceSelect').value,
+            intonation: document.getElementById('voiceIntonation').value,
             pitch: document.getElementById('voicePitch').value,
             rate: document.getElementById('voiceRate').value,
             volume: document.getElementById('voiceVolume').value,
@@ -423,6 +448,7 @@
     function fillVoiceSettingsForm(settings) {
         document.getElementById('voiceCharacter').value = settings.character;
         document.getElementById('voiceSelect').value = settings.voiceUri;
+        document.getElementById('voiceIntonation').value = settings.intonation;
         document.getElementById('voicePitch').value = settings.pitch;
         document.getElementById('voiceRate').value = settings.rate;
         document.getElementById('voiceVolume').value = settings.volume;
@@ -454,11 +480,23 @@
         const testName = document.getElementById('voiceTestName').value.trim() || 'Candra Huda Buana, A.Md';
         speakText(buildGreeting(testName, draft), draft, true);
     });
-    document.getElementById('voiceCharacter').addEventListener('change', event => {
-        document.getElementById('voicePitch').value = event.target.value === 'male' ? .82 : (event.target.value === 'female' ? 1.15 : 1);
+    function applyIntonationPreset() {
+        const character = document.getElementById('voiceCharacter').value;
+        const intonation = document.getElementById('voiceIntonation').value;
+        const profile = INTONATION_PROFILES[intonation];
+        if (!profile) { updateVoiceSettingsPreview(); return; }
+        const basePitch = character === 'male' ? .82 : (character === 'female' ? 1.15 : 1);
+        document.getElementById('voicePitch').value = clamp(basePitch + profile.pitchOffset, .5, 2, 1);
+        document.getElementById('voiceRate').value = profile.rate;
         updateVoiceSettingsPreview();
-    });
-    ['voiceSelect', 'voicePitch', 'voiceRate', 'voiceVolume', 'greetingCooldown', 'greetingMode', 'customGreeting', 'includeAcademicTitle', 'voiceTestName']
+    }
+    document.getElementById('voiceCharacter').addEventListener('change', applyIntonationPreset);
+    document.getElementById('voiceIntonation').addEventListener('change', applyIntonationPreset);
+    ['voicePitch', 'voiceRate'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+        document.getElementById('voiceIntonation').value = 'custom';
+        updateVoiceSettingsPreview();
+    }));
+    ['voiceSelect', 'voiceVolume', 'greetingCooldown', 'greetingMode', 'customGreeting', 'includeAcademicTitle', 'voiceTestName']
         .forEach(id => document.getElementById(id).addEventListener('input', updateVoiceSettingsPreview));
     if ('speechSynthesis' in window) {
         populateVoiceOptions();
