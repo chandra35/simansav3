@@ -26,11 +26,18 @@
         @endforeach
     </div>
 
+    @if($vacantLeadershipTypes->isNotEmpty())
+    <div class="alert alert-warning assignment-vacancy d-flex align-items-start mb-3">
+        <i class="fas fa-user-clock fa-lg mr-3 mt-1"></i>
+        <div><strong>Jabatan aktif belum terisi</strong><div class="small mt-1">{{ $vacantLeadershipTypes->pluck('nama')->join(', ') }}. Histori pejabat sebelumnya tetap tersimpan pada filter <strong>Lepas / selesai</strong>.</div></div>
+    </div>
+    @endif
+
     <div class="card card-outline card-primary"><div class="card-header assignment-list-header"><h3 class="card-title"><i class="fas fa-list mr-1"></i> Daftar Penugasan</h3><div class="card-tools text-muted small">Ekuivalensi disimpan sebagai snapshot saat penugasan dibuat</div></div><div class="card-body">
         <form method="GET" class="assignment-filter mb-3"><div class="row">
             <div class="col-md-3"><label>Tahun Pelajaran</label><select name="tahun_pelajaran_id" class="form-control">@foreach($years as $item)<option value="{{ $item->id }}" @selected($year?->id===$item->id)>{{ $item->nama }}</option>@endforeach</select></div>
             <div class="col-md-3"><label>Jenis Penugasan</label><select name="jenis_penugasan_id" class="form-control"><option value="">Semua jenis</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected(request('jenis_penugasan_id')===$type->id)>{{ $type->nama }}</option>@endforeach</select></div>
-            <div class="col-md-2"><label>Status</label><select name="status" class="form-control"><option value="">Semua status</option>@foreach(['active'=>'Aktif','ended'=>'Selesai','draft'=>'Draft','cancelled'=>'Dibatalkan'] as $value=>$label)<option value="{{ $value }}" @selected(request('status')===$value)>{{ $label }}</option>@endforeach</select></div>
+            <div class="col-md-2"><label>Status</label><select name="status" class="form-control"><option value="active" @selected($statusFilter==='active')>Aktif</option><option value="ended" @selected($statusFilter==='ended')>Lepas / selesai</option><option value="draft" @selected($statusFilter==='draft')>Draft</option><option value="cancelled" @selected($statusFilter==='cancelled')>Dibatalkan</option><option value="all" @selected($statusFilter==='all')>Semua histori</option></select></div>
             <div class="col-md-3"><label>Pencarian</label><input name="q" class="form-control" value="{{ request('q') }}" placeholder="Nama, NIP, atau unit"></div>
             <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary btn-block" title="Terapkan filter"><i class="fas fa-search"></i></button></div>
         </div></form>
@@ -39,6 +46,7 @@
         @forelse($assignments as $assignment)
             @php
                 $badge = ['active'=>'success','ended'=>'secondary','draft'=>'warning','cancelled'=>'danger'][$assignment->status] ?? 'secondary';
+                $statusLabel = ['active'=>'Aktif','ended'=>'Lepas / selesai','draft'=>'Draft','cancelled'=>'Dibatalkan'][$assignment->status] ?? ucfirst($assignment->status);
                 $assignmentRecord = [
                     'gtk_id' => $assignment->gtk_id,
                     'jenis_penugasan_id' => $assignment->jenis_penugasan_id,
@@ -53,7 +61,15 @@
                 <td><strong>{{ $assignment->jenis->nama }}</strong>@if($assignment->unit_nama)<small class="d-block text-muted"><i class="fas fa-map-marker-alt mr-1"></i>{{ $assignment->unit_nama }}</small>@endif<small class="d-block text-muted">{{ $assignment->jenis->dasar_hukum ?: 'Standar internal' }}</small></td>
                 <td><strong>{{ $assignment->tahunPelajaran?->nama ?: '-' }}</strong><small class="d-block text-muted">{{ $assignment->semester ? 'Semester '.$assignment->semester : 'Sepanjang tahun' }}</small></td>
                 <td class="text-center"><span class="badge badge-primary p-2">{{ $assignment->ekuivalensi_jtm }} JTM</span></td>
-                <td><span class="badge badge-{{ $badge }}">{{ ucfirst($assignment->status) }}</span>@if($assignment->legacy_tugas_tambahan_id)<small class="d-block text-muted">Migrasi data lama</small>@endif</td>
+                <td>
+                    <span class="badge badge-{{ $badge }}">{{ $statusLabel }}</span>
+                    @if($assignment->selesai_tugas && $assignment->status === 'ended')
+                        <small class="d-block text-muted">Sejak {{ $assignment->selesai_tugas->translatedFormat('d M Y') }}</small>
+                    @endif
+                    @if($assignment->legacy_tugas_tambahan_id)
+                        <small class="d-block text-muted">Migrasi data lama</small>
+                    @endif
+                </td>
                 <td class="text-right text-nowrap">
                     @if($assignment->status==='active')
                         @can('edit-penugasan-gtk')<button class="btn btn-sm btn-primary edit-assignment" data-toggle="modal" data-target="#assignmentModal" data-url="{{ route('admin.penugasan-gtk.update',$assignment) }}" data-record='@json($assignmentRecord)' title="Edit"><i class="fas fa-edit"></i></button>@endcan
@@ -63,7 +79,7 @@
                     @endif
                 </td>
             </tr>
-        @empty<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>Belum ada penugasan pada filter ini.</td></tr>@endforelse
+        @empty<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ $statusFilter === 'active' ? 'Belum ada penugasan aktif pada filter ini.' : 'Belum ada histori penugasan pada filter ini.' }}</td></tr>@endforelse
         </tbody></table></div>{{ $assignments->links() }}
     </div></div>
 </div>

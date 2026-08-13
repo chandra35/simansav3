@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Gtk;
+use App\Models\PenugasanGtk;
 use App\Models\User;
 use App\Services\GtkOnboardingService;
 use App\Services\GtkStatusService;
@@ -59,9 +60,14 @@ class GtkMutationModuleArchitectureTest extends TestCase
     public function test_deactivation_and_reactivation_keep_status_and_account_in_sync(): void
     {
         $admin = User::role('Super Admin')->first();
-        $gtk = Gtk::query()->where('status_aktif', true)->whereHas('user', fn ($query) => $query->where('is_active', true))->first();
-        if (! $admin || ! $gtk) {
-            $this->markTestSkipped('Data GTK aktif atau Super Admin tidak tersedia untuk simulasi transaksi.');
+        $assignment = PenugasanGtk::query()->where('status', 'active')
+            ->whereHas('gtk', fn ($query) => $query->where('status_aktif', true)
+                ->when($admin, fn ($gtk) => $gtk->where('user_id', '!=', $admin->id))
+                ->whereHas('user', fn ($user) => $user->where('is_active', true)))
+            ->with('gtk.user')->first();
+        $gtk = $assignment?->gtk;
+        if (! $admin || ! $gtk || ! $assignment) {
+            $this->markTestSkipped('Penugasan GTK aktif atau Super Admin tidak tersedia untuk simulasi transaksi.');
         }
 
         $this->withSession([])->actingAs($admin);
@@ -72,6 +78,8 @@ class GtkMutationModuleArchitectureTest extends TestCase
 
         $this->assertFalse($gtk->fresh()->status_aktif);
         $this->assertFalse($gtk->user->fresh()->is_active);
+        $this->assertSame('ended', $assignment->fresh()->status);
+        $this->assertNotNull($assignment->fresh()->selesai_tugas);
         $this->assertDatabaseHas('mutasi_gtk', ['gtk_id' => $gtk->id, 'status_baru' => false, 'alasan' => 'pensiun']);
 
         $service->change($gtk->fresh(), ['status_baru' => true, 'alasan' => 'aktif_kembali', 'tanggal_efektif' => today()->toDateString()]);

@@ -4,6 +4,15 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sinkronisasi mutasi keluar dengan Penugasan GTK
+
+- Audit produksi memastikan mutasi keluar Kepala Madrasah sudah mengakhiri penugasan aktif secara atomik; histori tidak dihapus dan kini ditampilkan dengan status **Lepas / selesai**.
+- Daftar Penugasan GTK sekarang default hanya menampilkan penugasan aktif. Histori lama dapat dibuka melalui filter **Lepas / selesai** atau **Semua histori**, sehingga pejabat yang telah keluar tidak lagi tampak seolah masih menjabat.
+- Jabatan Kepala Madrasah/Waka yang belum memiliki pemegang aktif ditampilkan sebagai **Jabatan aktif belum terisi** agar kekosongan mudah diketahui admin.
+- Setiap jenis Waka hanya boleh mempunyai satu GTK aktif pada tahun pelajaran yang sama. Batas total Waka berdasarkan jumlah rombel tetap berlaku sebagai validasi tambahan.
+- Penyimpanan penugasan mengunci jenis jabatan di dalam transaksi database agar penyimpanan bersamaan tidak menghasilkan dua pemegang aktif untuk jabatan yang sama.
+- GTK nonaktif tetap tidak dapat dipilih untuk penugasan baru; aktivasi kembali GTK tidak memulihkan jabatan lama secara otomatis.
+
 ### Modul Penugasan dan Beban Kerja GTK
 
 - Beban Kerja GTK kini memiliki pencarian nama/NIP/NUPTK serta rincian yang dapat dibuka per GTK. Rincian menampilkan jadwal lengkap per hari/jam/mapel/rombel/ruang, tugas tambahan, ekuivalensi yang diakui, peringatan, dan formula total JTM.

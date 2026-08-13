@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\User;
 use App\Services\PermissionSyncService;
 use Tests\TestCase;
 
@@ -117,5 +118,39 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('col-lg-5 mt-3 mt-lg-0 assignment-hero-actions', $view);
         $this->assertStringContainsString('@media(min-width:992px) and (max-width:1439.98px)', $view);
         $this->assertStringContainsString('min-width:820px', $view);
+    }
+
+    public function test_active_assignments_are_the_default_and_vacancies_are_visible(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/PenugasanGtkController.php'));
+        $view = file_get_contents(resource_path('views/admin/penugasan-gtk/index.blade.php'));
+
+        $this->assertStringContainsString(": 'active';", $controller);
+        $this->assertStringContainsString("\$statusFilter !== 'all'", $controller);
+        $this->assertStringContainsString('Jabatan aktif belum terisi', $view);
+        $this->assertStringContainsString('Lepas / selesai', $view);
+    }
+
+    public function test_each_waka_type_has_one_active_holder_and_assignment_is_locked_atomically(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/PenugasanGtkController.php'));
+
+        $this->assertStringContainsString("\$type->kelompok === 'waka' ? 1 : null", $controller);
+        $this->assertStringContainsString('Jabatan {$type->nama} sudah dipegang GTK lain', $controller);
+        $this->assertStringContainsString('JenisPenugasanGtk::query()->lockForUpdate()', $controller);
+        $this->assertStringContainsString('$this->guardAssignmentRules($data, $type, $gtk);', $controller);
+    }
+
+    public function test_super_admin_can_open_the_active_assignment_workspace(): void
+    {
+        $admin = User::role('Super Admin')->first();
+        if (! $admin) {
+            $this->markTestSkipped('Super Admin tidak tersedia.');
+        }
+
+        $this->actingAs($admin)->get(route('admin.penugasan-gtk.index'))
+            ->assertOk()
+            ->assertSee('Penugasan GTK')
+            ->assertSee('Lepas / selesai');
     }
 }

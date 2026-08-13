@@ -25,10 +25,13 @@ class PenugasanGtkController extends Controller
             ? $years->firstWhere('id', $request->tahun_pelajaran_id)
             : $years->firstWhere('is_active', true);
         $year ??= $years->first();
+        $statusFilter = in_array($request->input('status'), ['all', 'active', 'ended', 'draft', 'cancelled'], true)
+            ? $request->input('status')
+            : 'active';
 
         $query = PenugasanGtk::query()->with(['gtk.user', 'jenis', 'tahunPelajaran'])
             ->when($year, fn ($q) => $q->where('tahun_pelajaran_id', $year->id))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when($statusFilter !== 'all', fn ($q) => $q->where('status', $statusFilter))
             ->when($request->filled('jenis_penugasan_id'), fn ($q) => $q->where('jenis_penugasan_id', $request->jenis_penugasan_id))
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = trim($request->q);
@@ -56,8 +59,18 @@ class PenugasanGtkController extends Controller
             'utama' => (clone $base)->where('status', 'active')->whereHas('jenis', fn ($q) => $q->whereIn('kategori', ['utama', 'penuh']))->count(),
             'jtm' => (clone $base)->where('status', 'active')->sum('ekuivalensi_jtm'),
         ];
+        $occupiedLeadershipTypeIds = (clone $base)->where('status', 'active')
+            ->whereHas('jenis', fn ($q) => $q->whereIn('kelompok', ['kepala_madrasah', 'waka']))
+            ->pluck('jenis_penugasan_id');
+        $vacantLeadershipTypes = $types->where('is_active', true)
+            ->whereIn('kelompok', ['kepala_madrasah', 'waka'])
+            ->filter(fn ($type) => (int) $type->maks_pemegang > 0)
+            ->whereNotIn('id', $occupiedLeadershipTypeIds->all())
+            ->values();
 
-        return view('admin.penugasan-gtk.index', compact('assignments', 'types', 'gtks', 'years', 'year', 'stats'));
+        return view('admin.penugasan-gtk.index', compact(
+            'assignments', 'types', 'gtks', 'years', 'year', 'stats', 'statusFilter', 'vacantLeadershipTypes'
+        ));
     }
 
     public function workload(Request $request, GtkWorkloadService $service)
@@ -86,11 +99,12 @@ class PenugasanGtkController extends Controller
     {
         $this->authorize('create-penugasan-gtk');
         $data = $this->validatedAssignment($request);
-        $type = JenisPenugasanGtk::findOrFail($data['jenis_penugasan_id']);
-        $gtk = Gtk::with('user')->findOrFail($data['gtk_id']);
-        $this->guardAssignmentRules($data, $type, $gtk);
 
-        DB::transaction(function () use ($data, $type, $gtk) {
+        DB::transaction(function () use ($data) {
+            $type = JenisPenugasanGtk::query()->lockForUpdate()->findOrFail($data['jenis_penugasan_id']);
+            $type->load('role');
+            $gtk = Gtk::query()->with('user')->lockForUpdate()->findOrFail($data['gtk_id']);
+            $this->guardAssignmentRules($data, $type, $gtk);
             $data['ekuivalensi_jtm'] = $type->ekuivalensi_jtm;
             $data['status'] = 'active';
             $data['role_diberikan_otomatis'] = false;
@@ -112,11 +126,13 @@ class PenugasanGtkController extends Controller
         }
 
         $data = $this->validatedAssignment($request, $penugasanGtk);
-        $type = JenisPenugasanGtk::findOrFail($data['jenis_penugasan_id']);
-        $gtk = Gtk::with('user')->findOrFail($data['gtk_id']);
-        $this->guardAssignmentRules($data, $type, $gtk, $penugasanGtk);
 
-        DB::transaction(function () use ($data, $type, $gtk, $penugasanGtk) {
+        DB::transaction(function () use ($data, $penugasanGtk) {
+            $penugasanGtk = PenugasanGtk::query()->lockForUpdate()->findOrFail($penugasanGtk->id);
+            $type = JenisPenugasanGtk::query()->lockForUpdate()->findOrFail($data['jenis_penugasan_id']);
+            $type->load('role');
+            $gtk = Gtk::query()->with('user')->lockForUpdate()->findOrFail($data['gtk_id']);
+            $this->guardAssignmentRules($data, $type, $gtk, $penugasanGtk);
             $data['ekuivalensi_jtm'] = $penugasanGtk->ekuivalensi_jtm;
             if ($type->role && $gtk->user && ! $gtk->user->hasRole($type->role)) {
                 $gtk->user->assignRole($type->role);
@@ -237,17 +253,20 @@ class PenugasanGtkController extends Controller
         $periodQuery = PenugasanGtk::query()->where('status', 'active')
             ->where('tahun_pelajaran_id', $data['tahun_pelajaran_id'])
             ->when($except, fn ($q) => $q->whereKeyNot($except->id));
+        $holderLimit = $type->maks_pemegang ?: ($type->kelompok === 'waka' ? 1 : null);
+        if ($holderLimit) {
+            $holders = (clone $periodQuery)->where('jenis_penugasan_id', $type->id)->count();
+            if ($holders >= $holderLimit) {
+                throw ValidationException::withMessages(['jenis_penugasan_id' => "Jabatan {$type->nama} sudah dipegang GTK lain pada periode ini."]);
+            }
+        }
+
         if ($type->kelompok === 'waka') {
             $rombel = Kelas::query()->where('tahun_pelajaran_id', $data['tahun_pelajaran_id'])->where('is_active', true)->count();
             $limit = $rombel <= 3 ? 1 : ($rombel <= 6 ? 2 : ($rombel <= 9 ? 3 : 4));
             $holders = (clone $periodQuery)->whereHas('jenis', fn ($q) => $q->where('kelompok', 'waka'))->count();
             if ($holders >= $limit) {
                 throw ValidationException::withMessages(['jenis_penugasan_id' => "Jumlah Waka telah mencapai batas {$limit} orang untuk {$rombel} rombel."]);
-            }
-        } elseif ($type->maks_pemegang) {
-            $holders = (clone $periodQuery)->where('jenis_penugasan_id', $type->id)->count();
-            if ($holders >= $type->maks_pemegang) {
-                throw ValidationException::withMessages(['jenis_penugasan_id' => "Jumlah pemegang {$type->nama} telah mencapai batas {$type->maks_pemegang} orang."]);
             }
         }
 
