@@ -6,6 +6,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Face Python Edge Agent (13 Agustus 2026)
 
+- Unduhan agent diperbaiki setelah BOM konfigurasi lama dapat menyisipkan byte sebelum signature ZIP. Endpoint kini menetapkan MIME ZIP/no-store, memeriksa `ZipArchive::CHECKCONS`, memastikan empat file wajib tersedia, dan membatalkan unduhan jika integritas arsip gagal.
 - Ditambahkan menu **Presensi > Presensi Gerbang > Face Python (Uji)** tanpa mengubah eksperimen Face Detect berbasis browser yang sudah ada.
 - Halaman admin menampilkan pairing PC kamera, token perangkat terpisah yang dapat dirotasi, unduhan paket agent, status online/offline, FPS, jumlah wajah/profil, dan hasil pengenalan terakhir.
 - Python berjalan pada PC kamera, bukan VM produksi. Agent memakai InsightFace `buffalo_l`, ONNX Runtime, deteksi multi-wajah, tracking ID sederhana, konfirmasi beberapa frame, cooldown, serta antrean voice offline.

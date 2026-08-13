@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
 
@@ -59,15 +60,36 @@ class FacePythonController extends Controller
         $zip = new ZipArchive();
         abort_unless($zip->open($target, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true, 500, 'Paket agent gagal dibuat.');
 
-        foreach (['agent.py', 'requirements.txt', 'config.example.json', 'PANDUAN.txt'] as $filename) {
+        $filenames = ['agent.py', 'requirements.txt', 'config.example.json', 'PANDUAN.txt'];
+        foreach ($filenames as $filename) {
             $path = $source.DIRECTORY_SEPARATOR.$filename;
-            if (is_file($path)) {
-                $zip->addFile($path, 'simansa-face-python/'.$filename);
+            if (! is_file($path) || ! $zip->addFile($path, 'simansa-face-python/'.$filename)) {
+                $zip->close();
+                @unlink($target);
+                throw new RuntimeException("File paket {$filename} gagal ditambahkan.");
             }
         }
-        $zip->close();
+        if (! $zip->close()) {
+            @unlink($target);
+            throw new RuntimeException('Paket Face Python gagal disimpan.');
+        }
 
-        return response()->download($target, 'simansa-face-python-agent.zip')->deleteFileAfterSend(true);
+        $check = new ZipArchive();
+        $checkResult = $check->open($target, ZipArchive::CHECKCONS);
+        if ($checkResult !== true || $check->numFiles !== count($filenames)) {
+            if ($checkResult === true) {
+                $check->close();
+            }
+            @unlink($target);
+            throw new RuntimeException('Paket Face Python gagal melewati pemeriksaan integritas.');
+        }
+        $check->close();
+
+        return response()->download($target, 'simansa-face-python-agent.zip', [
+            'Content-Type' => 'application/zip',
+            'Cache-Control' => 'no-store, private, max-age=0',
+            'X-Content-Type-Options' => 'nosniff',
+        ])->deleteFileAfterSend(true);
     }
 
     private function ensureToken(): string

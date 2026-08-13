@@ -62,9 +62,19 @@ class FaceRecognitionAdminTest extends TestCase
                 ->assertOk()
                 ->assertSee('Face Python')
                 ->assertSee('Mode simulasi');
-            $this->actingAs($admin)->get(route('admin.absensi.face-python.download'))
+            $download = $this->actingAs($admin)->get(route('admin.absensi.face-python.download'))
                 ->assertOk()
-                ->assertDownload('simansa-face-python-agent.zip');
+                ->assertDownload('simansa-face-python-agent.zip')
+                ->assertHeader('Content-Type', 'application/zip');
+
+            $archivePath = $download->baseResponse->getFile()->getPathname();
+            $this->assertSame('504b0304', bin2hex((string) file_get_contents($archivePath, false, null, 0, 4)));
+            $archive = new \ZipArchive();
+            $this->assertTrue($archive->open($archivePath, \ZipArchive::CHECKCONS) === true);
+            $this->assertSame(4, $archive->numFiles);
+            $this->assertNotFalse($archive->locateName('simansa-face-python/agent.py'));
+            $this->assertNotFalse($archive->locateName('simansa-face-python/requirements.txt'));
+            $archive->close();
         }
     }
 

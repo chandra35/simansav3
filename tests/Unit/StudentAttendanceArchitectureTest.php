@@ -229,6 +229,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $controller = file_get_contents($root.'/app/Http/Controllers/PublicFacePythonController.php');
         $view = file_get_contents($root.'/resources/views/admin/absensi/face-python.blade.php');
         $agent = file_get_contents($root.'/tools/face-python-agent/agent.py');
+        $menuBytes = file_get_contents($root.'/config/adminlte.php', false, null, 0, 3);
 
         $this->assertStringContainsString("'text' => 'Face Python (Uji)'", $menu);
         $this->assertStringContainsString("name('absensi.face-python')", $routes);
@@ -240,6 +241,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('FaceAnalysis(name="buffalo_l"', $agent);
         $this->assertStringContainsString('class Tracker:', $agent);
         $this->assertStringContainsString('attendance is deliberately not recorded', $agent);
+        $this->assertSame('<?p', $menuBytes, 'Konfigurasi menu tidak boleh memiliki BOM yang merusak respons biner/JSON.');
     }
 
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
