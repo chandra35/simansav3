@@ -3,6 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\CatatanKonseling;
+use App\Models\Gtk;
+use App\Models\JadwalPelajaran;
 use App\Services\PermissionSyncService;
 use Tests\TestCase;
 
@@ -106,8 +108,7 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString("->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))", $controller);
         $this->assertStringContainsString("whereIn('kelas.id', \$classIds)", $controller);
         $this->assertStringContainsString("hasAnyRole(['Super Admin', 'Admin'])", $controller);
-        $this->assertStringContainsString("orWhereHas('user.roles'", $controller);
-        $this->assertStringContainsString("\$request->user()->hasRole('BK')", $controller);
+        $this->assertStringContainsString('eligibleCounselor()', $controller);
         $this->assertStringContainsString("\$data['konselor_id'] = \$gtk->id", $controller);
         $this->assertStringContainsString('Konselor otomatis mengikuti akun BK', $form);
         $this->assertStringContainsString('minimumInputLength:0', $assets);
@@ -124,5 +125,27 @@ class CounselingModuleArchitectureTest extends TestCase
         $this->assertStringNotContainsString("'waktu_mulai' => [", $controller);
         $this->assertStringNotContainsString("'jenis_konseling' => ['required'", $controller);
         $this->assertStringContainsString("\$data['jenis_konseling'] = 'individual'", $controller);
+    }
+
+    public function test_active_bk_schedule_teachers_are_eligible_counselors(): void
+    {
+        $scheduledGtkIds = JadwalPelajaran::query()
+            ->where('is_active', true)
+            ->whereHas('tahunPelajaran', fn ($year) => $year->active())
+            ->whereHas('mataPelajaran', fn ($subjects) => $subjects->where(function ($bk) {
+                $bk->where(function ($name) {
+                    $name->where('nama_mapel', 'like', '%Bimbingan%')
+                        ->where('nama_mapel', 'like', '%Konseling%');
+                })->orWhere('kode_mapel', 'like', 'BK%');
+            }))
+            ->pluck('gtk_id')->filter()->unique()->values();
+
+        if ($scheduledGtkIds->isEmpty()) {
+            $this->markTestSkipped('Jadwal Bimbingan Konseling aktif tidak tersedia.');
+        }
+
+        $eligibleIds = Gtk::query()->eligibleCounselor()->whereKey($scheduledGtkIds)->pluck('id');
+
+        $this->assertEqualsCanonicalizing($scheduledGtkIds->all(), $eligibleIds->all());
     }
 }

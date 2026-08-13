@@ -97,6 +97,11 @@ class Gtk extends Model
         return $this->hasMany(AsramaAsatidz::class, 'gtk_id');
     }
 
+    public function jadwalPelajaran()
+    {
+        return $this->hasMany(JadwalPelajaran::class, 'gtk_id');
+    }
+
     /**
      * Relasi dengan wilayah
      */
@@ -249,6 +254,38 @@ class Gtk extends Model
     public function scopeActive($query)
     {
         return $query->where('status_aktif', true);
+    }
+
+    /**
+     * GTK aktif yang dapat bertindak sebagai konselor.
+     *
+     * Jadwal BK tahun aktif menjadi sumber operasional utama. Jenis PTK Guru
+     * BK dan role BK tetap diterima untuk konselor yang belum memperoleh slot
+     * jadwal, misalnya koordinator BK.
+     */
+    public function scopeEligibleCounselor($query)
+    {
+        return $query
+            ->active()
+            ->whereHas('user', fn ($user) => $user->where('is_active', true))
+            ->where(function ($counselors) {
+                $counselors
+                    ->where('jenis_ptk', 'Guru BK')
+                    ->orWhereHas('user.roles', fn ($roles) => $roles->where('name', 'BK'))
+                    ->orWhereHas('jadwalPelajaran', function ($schedules) {
+                        $schedules
+                            ->where('is_active', true)
+                            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
+                            ->whereHas('mataPelajaran', function ($subjects) {
+                                $subjects->where(function ($bk) {
+                                    $bk->where(function ($name) {
+                                        $name->where('nama_mapel', 'like', '%Bimbingan%')
+                                            ->where('nama_mapel', 'like', '%Konseling%');
+                                    })->orWhere('kode_mapel', 'like', 'BK%');
+                                });
+                            });
+                    });
+            });
     }
 
     /**

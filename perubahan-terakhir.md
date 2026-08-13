@@ -4,6 +4,11 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sinkronisasi Konselor dengan Jadwal BK
+
+- Dropdown Konselor kini mengambil GTK dan akun aktif yang mengampu mata pelajaran Bimbingan Konseling pada jadwal tahun aktif; `jenis_ptk` Guru BK dan role BK tetap menjadi fallback untuk koordinator/konselor tanpa slot jadwal.
+- Validasi create catatan memakai sumber kelayakan yang sama, sehingga konselor yang muncul pada pilihan admin dapat disimpan dan akun pengampu BK tetap otomatis menggunakan profilnya sendiri.
+
 ### Permission Informasi dan Polling
 
 - Permission Matrix kini menjadi pengaman backend untuk Tahun Pelajaran, Kurikulum, Mata Pelajaran, Nilai, RDM, Kalender Akademik, dan Pengumuman: route baca memakai `view-*`, sedangkan tambah/edit/hapus/input/sinkronisasi memakai permission tulis masing-masing. WAKA dengan checklist **Lihat** saja tetap dapat membaca, tetapi mendapat 403 bila mencoba aksi tulis melalui URL atau request langsung.

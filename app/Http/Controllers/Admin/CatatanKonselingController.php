@@ -322,9 +322,9 @@ class CatatanKonselingController extends Controller
             $data['konselor_id'] = $record->konselor_id;
         } else {
             $gtk = $request->user()->gtk;
-            if (! $gtk || (! $request->user()->hasRole('BK') && $gtk->jenis_ptk !== 'Guru BK')) {
+            if (! $gtk || ! $this->counselorsQuery()->whereKey($gtk->id)->exists()) {
                 throw ValidationException::withMessages([
-                    'konselor_id' => 'Akun BK belum terhubung dengan profil GTK berjenis Guru BK.',
+                    'konselor_id' => 'Akun belum terhubung dengan GTK aktif yang menjadi pengampu Bimbingan Konseling.',
                 ]);
             }
             $data['konselor_id'] = $gtk->id;
@@ -376,12 +376,7 @@ class CatatanKonselingController extends Controller
 
     private function counselorsQuery(): Builder
     {
-        return Gtk::query()
-            ->active()
-            ->whereHas('user', fn ($users) => $users->where('is_active', true))
-            ->where(fn ($counselors) => $counselors
-                ->where('jenis_ptk', 'Guru BK')
-                ->orWhereHas('user.roles', fn ($roles) => $roles->where('name', 'BK')));
+        return Gtk::query()->eligibleCounselor();
     }
 
     private function isCounselingAdmin(): bool
