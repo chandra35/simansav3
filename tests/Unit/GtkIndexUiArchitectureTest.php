@@ -33,7 +33,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<strong>Username</strong>', $controller);
         $this->assertStringContainsString("'role_summary' => '", $controller);
         $this->assertStringContainsString("'status_summary' => '", $controller);
-        $this->assertSame(4, substr_count($controller, 'simansa-gtk-status-badge'));
+        $this->assertSame(5, substr_count($controller, 'simansa-gtk-status-badge'));
     }
 
     public function test_filters_reload_smoothly_and_styles_are_scoped_to_gtk_page(): void
@@ -77,10 +77,14 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString("'kelasWali' => function", $controller);
         $this->assertStringContainsString('tahun_pelajaran_id', $controller);
         $this->assertStringContainsString('simansa-gtk-wali-list', $controller);
+        $this->assertStringContainsString("'penugasan' => function", $controller);
+        $this->assertStringContainsString('simansa-gtk-assignment-list', $controller);
+        $this->assertStringContainsString('Penugasan aktif', $controller);
         $this->assertStringContainsString('public function kelasWali()', $model);
         $this->assertStringContainsString("hasMany(Kelas::class, 'wali_kelas_id', 'user_id')", $model);
         $this->assertStringContainsString('@keyframes simansa-gtk-avatar-breathe', $css);
         $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $css);
+        $this->assertStringContainsString('.simansa-gtk-management .simansa-gtk-assignment-badge', $css);
     }
 
     public function test_table_columns_use_balanced_professional_proportions(): void
@@ -136,5 +140,7 @@ class GtkIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString("'compressed_size_kb'", $controller);
         $this->assertStringContainsString('refreshGtkTooltips', $view);
         $this->assertStringContainsString(".on('draw.dt'", $view);
+        $this->assertStringContainsString('positionGtkActionMenus', $view);
+        $this->assertStringContainsString(".addClass('dropup')", $view);
     }
 }

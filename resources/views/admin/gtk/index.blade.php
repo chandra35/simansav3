@@ -472,6 +472,12 @@ $(document).ready(function() {
         });
     };
 
+    const positionGtkActionMenus = function() {
+        const $rows = $gtkTableElement.find('tbody tr');
+        $rows.find('.simansa-gtk-action-menu').removeClass('dropup');
+        $rows.slice(-3).find('.simansa-gtk-action-menu').addClass('dropup');
+    };
+
     $gtkTableElement.on('click', '[data-gtk-photo-detail]', function() {
         showGtk(this.dataset.gtkPhotoDetail);
     });
@@ -500,6 +506,7 @@ $(document).ready(function() {
         })
         .on('draw.dt', function() {
             refreshGtkTooltips();
+            positionGtkActionMenus();
         })
         .on('show.bs.dropdown', '.simansa-gtk-action-menu', function() {
             $(this).find('[data-tooltip="true"]').tooltip('hide');

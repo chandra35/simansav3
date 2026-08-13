@@ -69,6 +69,17 @@ class GtkController extends Controller
                     ->orderBy('tingkat')
                     ->orderBy('nama_kelas');
             },
+            'penugasan' => function ($query) use ($activeYearId) {
+                $query->select(['id', 'gtk_id', 'jenis_penugasan_id', 'tahun_pelajaran_id', 'unit_nama'])
+                    ->with('jenis:id,nama')
+                    ->where('status', 'active')
+                    ->when(
+                        $activeYearId,
+                        fn ($assignmentQuery) => $assignmentQuery->where('tahun_pelajaran_id', $activeYearId),
+                        fn ($assignmentQuery) => $assignmentQuery->whereRaw('1 = 0')
+                    )
+                    ->orderBy('created_at');
+            },
         ])->select(['id', 'nama_lengkap', 'nik', 'nuptk', 'nip', 'peg_id', 'status_inpassing', 'status_sertifikasi', 'kode_gtk', 'jenis_kelamin', 'foto_profile', 'kategori_ptk', 'jenis_ptk', 'status_kepegawaian', 'jabatan', 'user_id', 'status_aktif', 'alasan_nonaktif', 'tanggal_status', 'data_diri_completed', 'data_kepegawaian_completed', 'created_at']);
 
         if ($request->filled('status_aktif')) {
@@ -167,6 +178,16 @@ class GtkController extends Controller
                 : $waliKelasNames
                     ->map(fn ($className) => '<span class="simansa-gtk-wali-badge">'.e($className).'</span>')
                     ->implode('');
+            $assignmentNames = $item->penugasan
+                ->map(fn ($assignment) => trim(($assignment->jenis?->nama ?: '').($assignment->unit_nama ? ' · '.$assignment->unit_nama : '')))
+                ->filter()
+                ->unique()
+                ->values();
+            $assignmentBadges = $assignmentNames->isEmpty()
+                ? '<span class="simansa-gtk-role-empty">Tidak ada penugasan aktif</span>'
+                : $assignmentNames
+                    ->map(fn ($assignmentName) => '<span class="simansa-gtk-assignment-badge"><i class="fas fa-briefcase"></i>'.e($assignmentName).'</span>')
+                    ->implode('');
             $inpassingText = e($item->status_inpassing ?: 'Belum tercatat');
             $inpassingClass = filled($item->status_inpassing) ? 'is-success' : 'is-muted';
             $sertifikasiText = e($item->status_sertifikasi ?: 'Belum tercatat');
@@ -194,6 +215,8 @@ class GtkController extends Controller
                 'role_summary' => '
                     <div class="simansa-gtk-role-cell">
                         <span class="simansa-gtk-meta-badge '.$jenisPtkClass.'"><i class="fas fa-user-tag"></i>'.$jenisPtk.'</span>
+                        <div class="simansa-gtk-role-label">Penugasan aktif</div>
+                        <div class="simansa-gtk-assignment-list">'.$assignmentBadges.'</div>
                         <div class="simansa-gtk-role-label">Wali kelas</div>
                         <div class="simansa-gtk-wali-list">'.$waliKelasBadges.'</div>
                     </div>',

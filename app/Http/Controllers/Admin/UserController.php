@@ -27,8 +27,10 @@ class UserController extends Controller
         // Get statistics
         $stats = [
             'total_users' => User::count(),
+            'active' => User::where('is_active', true)->count(),
+            'inactive' => User::where('is_active', false)->count(),
             'admin' => User::role(['Super Admin', 'Admin'])->count(),
-            'gtk' => User::whereHas('roles', function($q) {
+            'gtk' => User::where('is_active', true)->whereHas('roles', function($q) {
                 $q->whereIn('name', ['GTK', 'Wali Kelas', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
             })->count(),
             'siswa' => User::role('Siswa')->count(),
@@ -60,7 +62,8 @@ class UserController extends Controller
             $users->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -77,7 +80,7 @@ class UserController extends Controller
 
         // Ordering
         if ($request->has('order')) {
-            $columns = ['id', 'name', 'username', 'email', 'phone'];
+            $columns = [null, 'name', 'email', null, 'is_active', null];
             $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
             $orderDirection = $request->order[0]['dir'];
             $users->orderBy($orderColumn, $orderDirection);
@@ -96,54 +99,63 @@ class UserController extends Controller
                     'Siswa' => 'secondary',
                 ];
                 $color = $colors[$role->name] ?? 'secondary';
-                return "<span class='badge badge-{$color}'>{$role->name}</span>";
+                return "<span class='badge badge-{$color}'>".e($role->name).'</span>';
             })->implode(' ');
 
             $isOnline = $user->latestSession?->isStillOnline() ?? false;
             $lastSeen = $user->latestSession?->last_activity?->diffForHumans();
+            $name = e($user->name);
+            $username = e($user->username);
+            $email = e($user->email ?: 'Email belum diisi');
+            $phone = e($user->phone ?: 'Telepon belum diisi');
+            $initials = collect(preg_split('/\s+/', trim((string) $user->name)))
+                ->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
+            $primaryRole = $user->roles->first()?->name ?: 'Tanpa role';
+            $identityHtml = "<div class='simansa-user-identity'>
+                <span class='simansa-user-avatar'>".e($initials ?: 'U')."</span>
+                <div><strong>{$name}</strong><span><i class='fas fa-at'></i>{$username}</span><small>".e($primaryRole)."</small></div>
+            </div>";
+            $contactHtml = "<div class='simansa-user-contact'>
+                <span title='{$email}'><i class='fas fa-envelope'></i>{$email}</span>
+                <span title='{$phone}'><i class='fas fa-phone'></i>{$phone}</span>
+            </div>";
 
             // Generate status toggle
             $checked = $user->is_active ? 'checked' : '';
-            $statusHtml = "<div class='text-center'>
-                <div class='mb-2'>
-                    <span class='badge badge-" . ($isOnline ? "success" : "secondary") . "'>" . ($isOnline ? "Online" : "Offline") . "</span>
-                </div>
-                <div class='custom-control custom-switch d-inline-block' style='padding-left: 2.25rem;'>
+            $statusHtml = "<div class='simansa-user-status'>
+                <span class='simansa-user-presence ".($isOnline ? 'is-online' : 'is-offline')."'><i></i>".($isOnline ? 'Online' : 'Offline')."</span>
+                <div class='custom-control custom-switch d-inline-block'>
                     <input type='checkbox' class='custom-control-input toggle-status' id='status{$user->id}' data-id='{$user->id}' {$checked}>
                     <label class='custom-control-label' for='status{$user->id}'></label>
                 </div>
-                <div class='small text-muted mt-1'>" . ($lastSeen ?: '-') . "</div>
+                <small>".($user->is_active ? 'Akun aktif' : 'Akun nonaktif').' · '.e($lastSeen ?: 'Belum ada sesi')."</small>
             </div>";
 
-            // Generate action buttons with button group
-            $actions = "<div class='btn-group' role='group'>";
-            $actions .= "<button class='btn btn-sm btn-warning btn-assign-role' data-id='{$user->id}' data-name='{$user->name}' title='Assign Role'>
-                            <i class='fas fa-user-tag'></i>
-                        </button>";
+            // Satu dropdown menjaga tabel tetap ringkas tanpa menghilangkan aksi lama.
+            $actions = "<div class='dropdown simansa-user-actions'>
+                <button type='button' class='btn btn-sm btn-outline-primary dropdown-toggle' data-toggle='dropdown' data-boundary='viewport' aria-haspopup='true' aria-expanded='false'><i class='fas fa-ellipsis-v mr-1'></i>Aksi</button>
+                <div class='dropdown-menu dropdown-menu-right'>
+                    <button type='button' class='dropdown-item btn-assign-role' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-user-tag text-warning'></i>Role & permission</button>";
             if (!$user->isSiswa() && $user->id !== auth()->id()) {
                 $resetUrl = route('admin.users.reset-password', $user->id);
-                $actions .= "<button class='btn btn-sm btn-secondary btn-reset-password' data-url='{$resetUrl}' data-name='{$user->name}' data-username='{$user->username}' title='Reset Password'>
-                                <i class='fas fa-key'></i>
-                            </button>";
+                $actions .= "<button type='button' class='dropdown-item btn-reset-password' data-url='".e($resetUrl)."' data-name='{$name}' data-username='{$username}'><i class='fas fa-key text-secondary'></i>Reset password</button>";
             }
-            $actions .= "<a href='" . route('admin.users.edit', $user->id) . "' class='btn btn-sm btn-primary' title='Edit'>
-                            <i class='fas fa-edit'></i>
-                        </a>";
+            $actions .= "<a href='".e(route('admin.users.edit', $user->id))."' class='dropdown-item'><i class='fas fa-edit text-primary'></i>Edit akun</a>";
             
             if ($user->id !== auth()->id()) {
-                $actions .= "<button class='btn btn-sm btn-danger btn-delete' data-id='{$user->id}' data-name='{$user->name}' title='Hapus'>
-                                <i class='fas fa-trash'></i>
-                            </button>";
+                $actions .= "<div class='dropdown-divider'></div><button type='button' class='dropdown-item text-danger btn-delete' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-trash'></i>Hapus akun</button>";
             }
-            $actions .= "</div>";
+            $actions .= '</div></div>';
 
             return [
                 'DT_RowIndex' => $request->start + $index + 1,
+                'identity' => $identityHtml,
+                'contact' => $contactHtml,
                 'name' => $user->name,
                 'username' => $user->username,
                 'email' => $user->email,
                 'phone' => $user->phone ?? '-',
-                'roles' => $rolesBadges ?: '<span class="badge badge-secondary">No Role</span>',
+                'roles' => '<div class="roles-badges">'.($rolesBadges ?: '<span class="badge badge-secondary">Tanpa role</span>').'</div>',
                 'status' => $statusHtml,
                 'action' => $actions
             ];

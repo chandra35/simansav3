@@ -2811,8 +2811,9 @@ a {
 
 .simansa-gtk-management .simansa-gtk-profile__identifiers {
     display: flex;
-    flex-wrap: wrap;
-    gap: .3rem .45rem;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .25rem;
 }
 
 .simansa-gtk-management .simansa-gtk-identifier {
@@ -2886,6 +2887,26 @@ a {
     border-radius: 999px;
     font-size: .7rem;
     font-weight: 800;
+}
+
+.simansa-gtk-management .simansa-gtk-assignment-list {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .22rem;
+}
+
+.simansa-gtk-management .simansa-gtk-assignment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .14rem .42rem;
+    border-radius: 6px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .68rem;
+    font-weight: 800;
+    line-height: 1.25;
 }
 
 .simansa-gtk-management .simansa-gtk-meta-badge--primary {

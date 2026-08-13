@@ -4,7 +4,7 @@
 @section('plugins.Select2', true)
 
 @section('content_header')
-    <div class="simansa-hero">
+    <div class="simansa-hero simansa-users-hero">
         <div class="simansa-hero__main">
             <div class="simansa-hero__eyebrow">
                 <i class="fas fa-users-cog"></i>
@@ -29,9 +29,10 @@
 @stop
 
 @section('content')
+<div class="simansa-users-page">
 {{-- Stat Cards --}}
-<div class="row mb-4">
-    <div class="col-md-6 col-xl-3 mb-4">
+<div class="row simansa-users-stats mb-2">
+    <div class="col-6 col-xl-3 mb-2">
         <div class="simansa-stat-card simansa-stat-card--blue">
             <div class="simansa-stat-card__icon"><i class="fas fa-users"></i></div>
             <div class="simansa-stat-card__body">
@@ -41,17 +42,17 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-6 col-xl-3 mb-2">
         <div class="simansa-stat-card simansa-stat-card--rose">
             <div class="simansa-stat-card__icon"><i class="fas fa-user-shield"></i></div>
             <div class="simansa-stat-card__body">
-                <div class="simansa-stat-card__label">Admin</div>
-                <div class="simansa-stat-card__value">{{ number_format($stats['admin']) }}</div>
-                <div class="simansa-stat-card__desc">Akun dengan role admin dan operator.</div>
+                <div class="simansa-stat-card__label">Akun Aktif</div>
+                <div class="simansa-stat-card__value">{{ number_format($stats['active']) }}</div>
+                <div class="simansa-stat-card__desc">{{ number_format($stats['inactive']) }} akun nonaktif · {{ number_format($stats['admin']) }} administrator.</div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-6 col-xl-3 mb-2">
         <div class="simansa-stat-card simansa-stat-card--teal">
             <div class="simansa-stat-card__icon"><i class="fas fa-chalkboard-teacher"></i></div>
             <div class="simansa-stat-card__body">
@@ -61,7 +62,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3 mb-4">
+    <div class="col-6 col-xl-3 mb-2">
         <div class="simansa-stat-card simansa-stat-card--green">
             <div class="simansa-stat-card__icon"><i class="fas fa-user-graduate"></i></div>
             <div class="simansa-stat-card__body">
@@ -80,7 +81,7 @@
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                     <h3 class="card-title mb-3 mb-lg-0">
                         <i class="fas fa-users mr-2"></i>
-                        Manajemen Data User
+                        Daftar Akun Pengguna
                     </h3>
                     <div class="card-tools ml-0">
                     @can('view-permission')
@@ -98,10 +99,10 @@
             </div>
             <div class="card-body">
                 {{-- Filter Section --}}
-                <div class="simansa-filter-panel mb-3">
+                <div class="simansa-filter-panel simansa-user-filter mb-3">
                     <form id="filterForm">
-                        <div class="row">
-                            <div class="col-md-4 col-xl-3 mb-3">
+                        <div class="row align-items-end">
+                            <div class="col-md-5 col-xl-4">
                                 <label class="simansa-filter-label"><i class="fas fa-user-tag mr-1"></i> Role</label>
                                 <select id="filterRole" class="form-control form-control-sm">
                                     <option value="">Semua Role</option>
@@ -111,26 +112,24 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="button" id="btnResetFilter" class="btn btn-sm simansa-btn-contrast">
+                        <div class="d-flex justify-content-end mt-2">
+                            <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-redo"></i> Reset Filter
                             </button>
                         </div>
                     </form>
                 </div>
                 
-                <div class="table-responsive">
-                    <table id="usersTable" class="table table-bordered table-striped table-hover" style="width: 100%">
+                <div class="simansa-users-table-wrap">
+                    <table id="usersTable" class="table table-hover" style="width: 100%">
                         <thead class="bg-light">
                             <tr>
                                 <th style="width: 40px; text-align: center;">No</th>
-                                <th style="width: 150px;">Nama</th>
-                                <th style="width: 120px;">Username</th>
-                                <th style="width: 180px;">Email</th>
-                                <th style="width: 110px;">Telepon</th>
-                                <th style="width: 150px;">Roles</th>
-                                <th style="width: 80px; text-align: center;">Status</th>
-                                <th style="width: 120px; text-align: center;">Aksi</th>
+                                <th>Akun</th>
+                                <th>Kontak</th>
+                                <th>Akses</th>
+                                <th>Status & Aktivitas</th>
+                                <th style="width: 90px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                     </table>
@@ -138,6 +137,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Modal Assign Role -->
@@ -324,6 +324,9 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
 <style>
+    .simansa-users-hero{min-height:auto;padding:1rem 1.25rem}.simansa-users-hero .simansa-hero__title{font-size:1.35rem}.simansa-users-hero .simansa-hero__subtitle{margin-top:.2rem;font-size:.78rem}.simansa-users-page .simansa-stat-card{min-height:88px;padding:.75rem}.simansa-users-page .simansa-stat-card__icon{width:38px;height:38px;font-size:1rem}.simansa-users-page .simansa-stat-card__value{font-size:1.3rem}.simansa-users-page .simansa-stat-card__desc{display:none}.simansa-users-page .simansa-management-card .card-body{padding:.85rem}.simansa-user-filter{padding:.65rem}.simansa-user-filter label{margin-bottom:.2rem;font-size:.72rem}
+    .simansa-users-table-wrap{position:relative;overflow:visible}.simansa-users-page #usersTable{margin:0!important;font-size:.78rem}.simansa-users-page #usersTable thead th{padding:.58rem .65rem;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:.66rem;letter-spacing:.04em;text-transform:uppercase}.simansa-users-page #usersTable tbody td{padding:.58rem .65rem;border-top:0;border-bottom:1px solid #edf2f7;vertical-align:middle}.simansa-user-identity{display:flex;align-items:center;gap:.65rem;min-width:230px}.simansa-user-avatar{display:grid;width:38px;height:38px;flex:0 0 38px;place-items:center;border-radius:10px;background:linear-gradient(145deg,#4f46e5,#2563eb);color:#fff;font-size:.72rem;font-weight:900}.simansa-user-identity strong,.simansa-user-identity span,.simansa-user-identity small{display:block}.simansa-user-identity strong{color:#0f172a;font-size:.8rem}.simansa-user-identity span{color:#475569;font-size:.69rem}.simansa-user-identity span i{margin-right:.25rem;color:#94a3b8}.simansa-user-identity small{color:#64748b;font-size:.62rem}.simansa-user-contact{display:flex;min-width:190px;flex-direction:column;gap:.25rem}.simansa-user-contact span{max-width:230px;overflow:hidden;color:#475569;font-size:.69rem;text-overflow:ellipsis;white-space:nowrap}.simansa-user-contact i{width:16px;color:#94a3b8}.simansa-users-page .roles-badges{max-width:220px}.simansa-user-status{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;gap:.25rem .6rem;min-width:160px}.simansa-user-status small{grid-column:1/-1;color:#64748b;font-size:.62rem}.simansa-user-presence{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:800}.simansa-user-presence i{width:7px;height:7px;border-radius:50%}.simansa-user-presence.is-online{color:#047857}.simansa-user-presence.is-online i{background:#22c55e}.simansa-user-presence.is-offline{color:#64748b}.simansa-user-presence.is-offline i{background:#94a3b8}.simansa-user-status .custom-switch{min-height:1rem;padding-left:2.25rem}.simansa-user-actions .btn{font-size:.7rem;font-weight:800}.simansa-user-actions .dropdown-menu{min-width:190px;padding:.35rem;z-index:1070}.simansa-user-actions .dropdown-item{display:flex;align-items:center;gap:.55rem;padding:.45rem .55rem;border-radius:6px;font-size:.72rem;font-weight:700}.simansa-user-actions .dropdown-item i{width:16px;text-align:center}.simansa-users-page .dataTables_wrapper>.row{margin-bottom:.35rem}.simansa-users-page .dataTables_length,.simansa-users-page .dataTables_filter{margin-bottom:.35rem}.simansa-users-page .dataTables_filter input{width:210px!important}
+    @media(max-width:767.98px){.simansa-users-hero .simansa-hero__side{display:none}.simansa-users-page .simansa-stat-card{min-height:76px}.simansa-users-table-wrap{overflow-x:auto}.simansa-users-page #usersTable{min-width:850px}.simansa-users-page .dataTables_filter input{width:auto!important}}
     .custom-control-label {
         cursor: pointer;
     }
@@ -476,7 +479,6 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         responsive: false,
-        scrollX: true,
         autoWidth: false,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
         pageLength: 10,
@@ -492,29 +494,21 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '40px' },
-            { data: 'name', name: 'name', width: '150px' },
-            { data: 'username', name: 'username', width: '120px' },
-            { data: 'email', name: 'email', width: '180px' },
-            { data: 'phone', name: 'phone', defaultContent: '-', width: '110px' },
-            { data: 'roles', name: 'roles', orderable: false, searchable: false, width: '150px' },
-            { data: 'status', name: 'is_active', orderable: false, width: '80px' },
-            { data: 'action', name: 'action', orderable: false, searchable: false, width: '120px' }
+            { data: 'identity', name: 'name' },
+            { data: 'contact', name: 'email' },
+            { data: 'roles', name: 'roles', orderable: false, searchable: false },
+            { data: 'status', name: 'is_active', orderable: false },
+            { data: 'action', name: 'action', orderable: false, searchable: false, width: '90px' }
         ],
         columnDefs: [
             { 
-                targets: [0, 6, 7],
+                targets: [0, 4],
                 className: 'text-center'
             },
             {
-                targets: 5,
+                targets: 3,
                 render: function(data) {
                     return '<div style="white-space: normal; word-wrap: break-word;">' + data + '</div>';
-                }
-            },
-            {
-                targets: 7,
-                render: function(data) {
-                    return '<div style="white-space: nowrap;">' + data + '</div>';
                 }
             }
         ],
@@ -532,6 +526,11 @@ $(document).ready(function() {
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             }
+        },
+        drawCallback: function() {
+            const $rows = $('#usersTable tbody tr');
+            $rows.find('.simansa-user-actions').removeClass('dropup');
+            $rows.slice(-3).find('.simansa-user-actions').addClass('dropup');
         }
     });
 

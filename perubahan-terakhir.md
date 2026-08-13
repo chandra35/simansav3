@@ -4,6 +4,14 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyempurnaan tabel GTK dan User & Role
+
+- NIK dan ID PTK pada profil tabel GTK kini disusun vertikal agar identitas lebih mudah dipindai.
+- Kolom Peran GTK menampilkan penugasan aktif tahun pelajaran berjalan beserta unitnya, selain jenis PTK dan wali kelas.
+- Dropdown aksi pada tiga baris terbawah tabel GTK dan User otomatis membuka ke atas agar seluruh pilihan tetap terlihat.
+- Halaman User & Role dipadatkan: statistik lebih ringkas, identitas digabung dengan username/role utama, email digabung dengan telepon, status aktif digabung dengan kehadiran/aktivitas terakhir, dan seluruh aksi lama ditempatkan dalam satu dropdown.
+- Pencarian user kini juga mencakup nomor telepon.
+
 ### Sinkronisasi mutasi keluar dengan Penugasan GTK
 
 - Select2 Penugasan GTK kini memakai filter kelayakan terpusat: hanya guru dengan profil aktif, akun aktif, dan histori mutasi terakhir berstatus aktif yang ditampilkan. Validasi yang sama dijalankan ulang saat penyimpanan untuk mencegah bypass form.
