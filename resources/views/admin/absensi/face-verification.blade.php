@@ -169,6 +169,7 @@
                                 <th width="40">No</th>
                                 <th>Nama</th>
                                 <th>{{ $identifierLabel }}</th>
+                                <th>Foto Wajah</th>
                                 <th>Capture</th>
                                 <th>Angle</th>
                                 <th>Quality</th>
@@ -189,14 +190,33 @@
                                     <td>{{ $i + 1 }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ $face->registration_photo_url ?? $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-2" width="32" height="32" style="object-fit:cover;" alt="Hasil registrasi {{ $name }}">
+                                            <img src="{{ $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-2" width="32" height="32" style="object-fit:cover;" alt="Foto profil {{ $name }}">
                                             <div>
                                                 <div>{{ $name }}</div>
-                                                <small class="text-muted">{{ strtoupper($face->user_type) }}</small>
+                                                <small class="text-muted">{{ strtoupper($face->user_type) }} · foto profil</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>{{ $identifier }}</td>
+                                    <td class="text-center">
+                                        @if($face->registration_photo_url)
+                                            <button type="button" class="btn btn-link p-0 border-0 js-face-preview"
+                                                    data-toggle="modal" data-target="#facePreviewModal"
+                                                    data-image="{{ $face->registration_photo_url }}"
+                                                    data-name="{{ $name }}"
+                                                    data-identifier="{{ $identifierLabel }}: {{ $identifier }}"
+                                                    data-captures="{{ $face->total_captures }} frame"
+                                                    data-quality="{{ number_format($face->quality_score ?? 0, 0) }}%"
+                                                    data-angles="{{ implode(', ', $face->capture_angles ?? []) }}"
+                                                    data-registered="{{ $face->created_at->format('d/m/Y H:i') }}"
+                                                    title="Lihat foto hasil registrasi {{ $name }}">
+                                                <img src="{{ $face->registration_photo_url }}" class="face-capture-thumb" alt="Foto wajah terdaftar {{ $name }}">
+                                                <small class="d-block mt-1"><i class="fas fa-search-plus mr-1"></i>Preview</small>
+                                            </button>
+                                        @else
+                                            <span class="badge badge-light border text-muted p-2"><i class="fas fa-image mr-1"></i>Belum tersimpan</span>
+                                        @endif
+                                    </td>
                                     <td><span class="badge badge-info">{{ $face->total_captures }}</span></td>
                                     <td>@foreach($face->capture_angles ?? [] as $angle)<span class="badge badge-light">{{ $angle }}</span>@endforeach</td>
                                     <td>@php $q = $face->quality_score ?? 0; @endphp <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">{{ number_format($q, 0) }}%</span></td>
@@ -248,7 +268,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
+                                <tr><td colspan="11" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -258,6 +278,28 @@
     </div>
 </div>
 </div>
+
+<div class="modal fade" id="facePreviewModal" tabindex="-1" role="dialog" aria-labelledby="facePreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div><h5 class="modal-title mb-0" id="facePreviewTitle"><i class="fas fa-user-check text-primary mr-1"></i>Data Wajah Terdaftar</h5><small class="text-muted">Foto capture yang menjadi referensi verifikasi pengguna.</small></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="face-preview-stage"><img id="facePreviewImage" src="" alt="Preview data wajah"></div>
+                <div class="mt-3"><h5 class="font-weight-bold mb-0" id="facePreviewName">-</h5><div class="text-muted" id="facePreviewIdentifier">-</div></div>
+                <div class="row mt-3 face-preview-metrics">
+                    <div class="col-6"><small>Jumlah Capture</small><strong id="facePreviewCaptures">-</strong></div>
+                    <div class="col-6"><small>Quality</small><strong id="facePreviewQuality">-</strong></div>
+                    <div class="col-12 mt-2"><small>Sudut Terekam</small><strong id="facePreviewAngles">-</strong></div>
+                    <div class="col-12 mt-2"><small>Tanggal Registrasi</small><strong id="facePreviewRegistered">-</strong></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button></div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('js')
@@ -266,9 +308,20 @@ $(function() {
     $('#tabelWajah').DataTable({
         language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
         pageLength: 25,
-        order: [[8, 'desc']],
+        order: [[9, 'desc']],
         scrollX: true,
         autoWidth: false,
+    });
+
+    $(document).on('click', '.js-face-preview', function() {
+        const button = this;
+        $('#facePreviewImage').attr('src', button.dataset.image).attr('alt', `Foto wajah terdaftar ${button.dataset.name}`);
+        $('#facePreviewName').text(button.dataset.name);
+        $('#facePreviewIdentifier').text(button.dataset.identifier);
+        $('#facePreviewCaptures').text(button.dataset.captures);
+        $('#facePreviewQuality').text(button.dataset.quality);
+        $('#facePreviewAngles').text(button.dataset.angles || '-');
+        $('#facePreviewRegistered').text(button.dataset.registered);
     });
 
     $(document).on('click', '.js-face-confirm', function() {
@@ -287,4 +340,10 @@ $(function() {
     });
 });
 </script>
+@stop
+
+@section('css')
+<style>
+.face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}}
+</style>
 @stop

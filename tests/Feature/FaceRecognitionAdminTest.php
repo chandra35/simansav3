@@ -43,7 +43,9 @@ class FaceRecognitionAdminTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.absensi.face-verification', ['type' => 'siswa']))
             ->assertOk()
-            ->assertSee('Verifikasi Wajah Siswa');
+            ->assertSee('Verifikasi Wajah Siswa')
+            ->assertSee('Foto Wajah')
+            ->assertSee('Data Wajah Terdaftar');
 
         $this->actingAs($admin)
             ->withSession(['_token' => 'verify-student-face'])

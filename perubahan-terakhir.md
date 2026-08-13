@@ -4,6 +4,12 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Preview Data Wajah pada Approval (13 Agustus 2026)
+
+- Tabel **Approval & Data Wajah** kini memisahkan foto profil dari foto hasil capture registrasi agar sumber gambar tidak ambigu.
+- Foto wajah terdaftar ditampilkan dalam rasio potret dan dapat diklik untuk membuka preview besar tanpa crop.
+- Modal preview menampilkan identitas, jumlah frame, quality, sudut wajah yang terekam, dan waktu registrasi. Data lama yang tidak memiliki foto capture diberi status `Belum tersimpan` tanpa menyamarkannya sebagai foto profil.
+
 ### Pemisahan Presensi Gerbang, Kehadiran Kelas, dan Layanan Wajah Pribadi
 
 - Nomenklatur sidebar diperjelas: **Presensi Gerbang** adalah presensi masuk/pulang berbasis kamera kiosk, sedangkan **Kehadiran Kelas** adalah absensi siswa yang diinput guru/wali kelas. Data dan fungsi keduanya tetap dipertahankan karena substansinya berbeda.
