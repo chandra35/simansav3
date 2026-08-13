@@ -47,13 +47,26 @@ class UserController extends Controller
      */
     public function data(Request $request)
     {
-        $users = User::with(['roles', 'latestSession'])->select('users.*');
+        $users = User::with([
+            'roles', 'latestSession',
+            'gtk:id,user_id,nama_lengkap,jenis_kelamin,foto_profile',
+            'siswa:id,user_id,nama_lengkap,jenis_kelamin,foto_profile',
+        ])->select('users.*');
 
         // Filter by Role
         if ($request->filled('role')) {
             $users->whereHas('roles', function($q) use ($request) {
                 $q->where('name', $request->role);
             });
+        }
+
+        if ($request->filled('account_type')) {
+            match ($request->account_type) {
+                'gtk' => $users->whereHas('gtk'),
+                'siswa' => $users->whereHas('siswa'),
+                'lainnya' => $users->whereDoesntHave('gtk')->whereDoesntHave('siswa'),
+                default => null,
+            };
         }
 
         // Search functionality
@@ -110,10 +123,17 @@ class UserController extends Controller
             $phone = e($user->phone ?: 'Telepon belum diisi');
             $initials = collect(preg_split('/\s+/', trim((string) $user->name)))
                 ->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
+            $accountType = $user->gtk ? 'GTK' : ($user->siswa ? 'Siswa' : 'Akun sistem');
+            $photoUrl = $user->gtk?->foto_profile_url
+                ?? $user->siswa?->foto_profile_url
+                ?? ($user->avatar ? $user->avatar_url : null);
+            $photo = $photoUrl
+                ? "<img src='".e($photoUrl)."' alt='Foto {$name}' loading='lazy' onerror='this.remove()'>"
+                : '';
             $primaryRole = $user->roles->first()?->name ?: 'Tanpa role';
             $identityHtml = "<div class='simansa-user-identity'>
-                <span class='simansa-user-avatar'>".e($initials ?: 'U')."</span>
-                <div><strong>{$name}</strong><span><i class='fas fa-at'></i>{$username}</span><small>".e($primaryRole)."</small></div>
+                <span class='simansa-user-avatar'><b>".e($initials ?: 'U')."</b>{$photo}</span>
+                <div><strong>{$name}</strong><span><i class='fas fa-at'></i>{$username}</span><small>".e($accountType).' · '.e($primaryRole)."</small></div>
             </div>";
             $contactHtml = "<div class='simansa-user-contact'>
                 <span title='{$email}'><i class='fas fa-envelope'></i>{$email}</span>

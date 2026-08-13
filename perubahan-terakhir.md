@@ -6,6 +6,9 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan tabel GTK dan User & Role
 
+- Header/hero User & Role disesuaikan menjadi lebih rendah dan proporsional, dengan ringkasan akun aktif/nonaktif yang tidak menduplikasi kartu utama.
+- Filter tipe akun dapat memisahkan GTK, Siswa, dan Admin/akun lainnya berdasarkan relasi profil aktual.
+- Tabel User menampilkan foto profil GTK/Siswa dalam rasio potret; akun tanpa profil foto memakai fallback inisial.
 - NIK dan ID PTK pada profil tabel GTK kini disusun vertikal agar identitas lebih mudah dipindai.
 - Kolom Peran GTK menampilkan penugasan aktif tahun pelajaran berjalan beserta unitnya, selain jenis PTK dan wali kelas.
 - Dropdown aksi pada tiga baris terbawah tabel GTK dan User otomatis membuka ke atas agar seluruh pilihan tetap terlihat.
