@@ -1111,6 +1111,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Absensi Kiosk Mode (Fullscreen) hanya dijalankan oleh perangkat/admin tepercaya.
     Route::middleware(['can:face-registration-admin'])->group(function () {
         Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
+        Route::get('/absensi/deteksi-pintu', [App\Http\Controllers\Admin\AbsensiController::class, 'doorFaceDetect'])->name('absensi.face-detect');
         Route::get('/absensi/kiosk-state', [App\Http\Controllers\Admin\AbsensiController::class, 'kioskState'])->name('absensi.kiosk-state');
         Route::get('/absensi/kiosk-today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.kiosk-today-data');
         Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');

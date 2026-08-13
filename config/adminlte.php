@@ -918,6 +918,13 @@ return [
                             'active' => [],
                         ],
                         [
+                            'text' => 'Face Detect (Uji)',
+                            'route' => 'admin.absensi.face-detect',
+                            'icon' => 'fas fa-fw fa-eye',
+                            'can' => 'face-registration-admin',
+                            'active' => ['admin/absensi/deteksi-pintu*'],
+                        ],
+                        [
                             'text' => 'Rekap GTK',
                             'route' => 'admin.absensi.rekap',
                             'icon' => 'fas fa-fw fa-chart-bar',

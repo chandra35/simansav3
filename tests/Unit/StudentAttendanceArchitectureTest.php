@@ -175,6 +175,27 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("name('absensi.kiosk-state')", $routes);
     }
 
+    public function test_experimental_door_face_detect_is_read_only_and_admin_protected(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $menu = file_get_contents($root.'/config/adminlte.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/door-face-detect.blade.php');
+
+        $this->assertStringContainsString('public function doorFaceDetect()', $controller);
+        $this->assertStringContainsString("name('absensi.face-detect')", $routes);
+        $this->assertStringContainsString("Route::middleware(['can:face-registration-admin'])", $routes);
+        $this->assertStringContainsString("'text' => 'Face Detect (Uji)'", $menu);
+        $this->assertStringContainsString("['type' => 'gtk', 'verified_only' => 1]", $view);
+        $this->assertStringContainsString("['type' => 'siswa', 'verified_only' => 1]", $view);
+        $this->assertStringContainsString('Selamat datang, ${person.name}', $view);
+        $this->assertStringContainsString('confirmations: 3', $view);
+        $this->assertStringContainsString('Tidak ada presensi yang dicatat', $view);
+        $this->assertStringNotContainsString('absensi.record-face', $view);
+        $this->assertStringNotContainsString('alert(error.message)', $view);
+    }
+
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
     {
         $root = dirname(__DIR__, 2);

@@ -4,6 +4,14 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Face Detect Percobaan Pintu (13 Agustus 2026)
+
+- Modul Presensi memperoleh menu admin **Face Detect (Uji)** untuk percobaan kamera yang diarahkan ke pintu.
+- Mode ini memuat data wajah GTK dan siswa aktif yang sudah diverifikasi, mendeteksi beberapa wajah otomatis, menampilkan kotak serta nama, dan memberi sapaan suara Bahasa Indonesia “Selamat datang, [nama]”.
+- Kecocokan harus konsisten selama tiga frame dan setiap orang memiliki cooldown sapaan 20 detik agar suara tidak berulang terus-menerus.
+- Tersedia pemilih kamera, kontrol suara, layar penuh, indikator jumlah wajah/database, confidence terakhir, dan jumlah sapaan sesi.
+- Fitur bersifat read-only: tidak mencatat presensi, tidak mengambil snapshot, dan tidak menyimpan histori. Akses dilindungi permission admin data wajah agar cocok untuk tahap uji sebelum integrasi Python/edge AI.
+
 ### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
 
 - Hero Approval Data Wajah dibuat lebih compact dengan hierarki teks Bahasa Indonesia yang jelas: label konteks, judul utama, dan deskripsi operasional singkat.

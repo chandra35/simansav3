@@ -141,6 +141,17 @@ class AbsensiController extends Controller
         return view('admin.absensi.kiosk', compact('location', 'locations', 'settings', 'userType', 'operationalState'));
     }
 
+    /**
+     * Experimental door monitor. Recognizes approved faces and greets them,
+     * but deliberately does not create attendance records.
+     */
+    public function doorFaceDetect()
+    {
+        return view('admin.absensi.door-face-detect', [
+            'faceThreshold' => (float) AbsensiSetting::getValue('face_match_threshold', 0.45),
+        ]);
+    }
+
     public function kioskState(Request $request, AttendanceWindowService $windowService)
     {
         return response()->json([
