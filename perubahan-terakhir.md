@@ -6,6 +6,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan tabel GTK dan User & Role
 
+- Direktori User & Role kini hanya memuat akun sistem, GTK aktif, dan siswa berstatus aktif. Akun GTK nonaktif serta siswa alumni/lulus/keluar/mutasi keluar tetap tersimpan sebagai histori pada modul asal, tetapi tidak lagi masuk statistik, total DataTable, pencarian, maupun daftar akun operasional.
 - Seluruh dropdown tunggal di layout SIMANSA kini otomatis memakai gaya native Bootstrap `custom-select`, termasuk dropdown yang dimuat dinamis. Select2 untuk pencarian kompleks tetap dipertahankan, sementara dropdown native, Select2, dan menu Bootstrap tetap memiliki scrolling untuk daftar panjang.
 - Filter Role dan Tipe Akun kini memakai `custom-select` Bootstrap native; panel dipadatkan dan tombol Reset disejajarkan pada baris yang sama, serta menjadi selebar konten pada layar ponsel.
 - Struktur header dan hero User & Role kini mengikuti referensi Data GTK: judul halaman/breadcrumb berada pada header standar, sedangkan hero operasional memakai banner penuh dengan komposisi teks 8/12 dan statistik 4/12.

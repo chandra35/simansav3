@@ -19,6 +19,9 @@ class UserIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString("'siswa:id,user_id,nama_lengkap,jenis_kelamin,foto_profile'", $controller);
         $this->assertStringContainsString('$user->gtk?->foto_profile_url', $controller);
         $this->assertStringContainsString("\$request->account_type", $controller);
+        $this->assertStringContainsString('$this->accountDirectoryQuery()->with([', $controller);
+        $this->assertStringContainsString("\$gtk->where('status_aktif', true)", $controller);
+        $this->assertStringContainsString("\$siswa->where('status_siswa', 'aktif')", $controller);
         $this->assertStringContainsString('dropdown simansa-user-actions', $controller);
         $this->assertStringContainsString("{ data: 'identity', name: 'name' }", $view);
         $this->assertStringContainsString("{ data: 'contact', name: 'email' }", $view);
@@ -79,6 +82,51 @@ class UserIndexUiArchitectureTest extends TestCase
             $identities = collect($response->json('data'))->pluck('identity');
             $this->assertNotEmpty($identities);
             $this->assertTrue($identities->every(fn ($html) => str_contains($html, '<img ') && str_contains($html, $label)));
+        }
+    }
+
+    public function test_account_directory_excludes_inactive_gtk_alumni_and_outgoing_students(): void
+    {
+        $admin = User::role('Super Admin')->first();
+        if (! $admin) {
+            $this->markTestSkipped('Super Admin tidak tersedia.');
+        }
+
+        $expectedTotal = User::query()->where(function ($query): void {
+            $query->where(function ($systemAccount): void {
+                $systemAccount->whereDoesntHave('gtk')->whereDoesntHave('siswa');
+            })->orWhereHas('gtk', fn ($gtk) => $gtk->where('status_aktif', true))
+                ->orWhereHas('siswa', fn ($siswa) => $siswa->where('status_siswa', 'aktif'));
+        })->count();
+        $expectedStudents = User::query()
+            ->whereHas('siswa', fn ($siswa) => $siswa->where('status_siswa', 'aktif'))
+            ->count();
+
+        $all = $this->actingAs($admin)->getJson(route('admin.users.data', [
+            'draw' => 1, 'start' => 0, 'length' => 1,
+        ]))->assertOk();
+        $students = $this->actingAs($admin)->getJson(route('admin.users.data', [
+            'draw' => 2, 'start' => 0, 'length' => 1, 'account_type' => 'siswa',
+        ]))->assertOk();
+
+        $this->assertSame($expectedTotal, $all->json('recordsTotal'));
+        $this->assertSame($expectedStudents, $students->json('recordsFiltered'));
+
+        $inactiveStudent = User::query()
+            ->whereHas('siswa', fn ($siswa) => $siswa->where('status_siswa', '!=', 'aktif'))
+            ->first();
+
+        if ($inactiveStudent) {
+            $hidden = $this->actingAs($admin)->getJson(route('admin.users.data', [
+                'draw' => 3,
+                'start' => 0,
+                'length' => 10,
+                'account_type' => 'siswa',
+                'search' => ['value' => $inactiveStudent->username],
+            ]))->assertOk();
+
+            $this->assertSame(0, $hidden->json('recordsFiltered'));
+            $this->assertSame([], $hidden->json('data'));
         }
     }
 }

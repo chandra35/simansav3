@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\TugasTambahan;
 use App\Services\PermissionSyncService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -24,16 +25,15 @@ class UserController extends Controller
     {
         // $this->authorize('view-user'); // Uncomment after testing
 
-        // Get statistics
+        // Statistik dan tabel memakai populasi akun operasional yang sama.
+        $directoryUsers = $this->accountDirectoryQuery();
         $stats = [
-            'total_users' => User::count(),
-            'active' => User::where('is_active', true)->count(),
-            'inactive' => User::where('is_active', false)->count(),
-            'admin' => User::role(['Super Admin', 'Admin'])->count(),
-            'gtk' => User::where('is_active', true)->whereHas('roles', function($q) {
-                $q->whereIn('name', ['GTK', 'Wali Kelas', 'Kepala Sekolah', 'Wakil Kepala Sekolah']);
-            })->count(),
-            'siswa' => User::role('Siswa')->count(),
+            'total_users' => (clone $directoryUsers)->count(),
+            'active' => (clone $directoryUsers)->where('is_active', true)->count(),
+            'inactive' => (clone $directoryUsers)->where('is_active', false)->count(),
+            'admin' => (clone $directoryUsers)->role(['Super Admin', 'Admin'])->count(),
+            'gtk' => (clone $directoryUsers)->whereHas('gtk', fn ($gtk) => $gtk->where('status_aktif', true))->count(),
+            'siswa' => (clone $directoryUsers)->whereHas('siswa', fn ($siswa) => $siswa->where('status_siswa', 'aktif'))->count(),
         ];
 
         // Get all roles for filter
@@ -47,7 +47,7 @@ class UserController extends Controller
      */
     public function data(Request $request)
     {
-        $users = User::with([
+        $users = $this->accountDirectoryQuery()->with([
             'roles', 'latestSession',
             'gtk:id,user_id,nama_lengkap,jenis_kelamin,foto_profile',
             'siswa:id,user_id,nama_lengkap,jenis_kelamin,foto_profile',
@@ -80,7 +80,7 @@ class UserController extends Controller
             });
         }
 
-        $totalRecords = User::count();
+        $totalRecords = $this->accountDirectoryQuery()->count();
         $filteredRecords = $users->count();
         
         // Pagination - Handle "All" option
@@ -187,7 +187,30 @@ class UserController extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $data
         ]);
-    }    /**
+    }
+
+    /**
+     * Akun yang relevan untuk direktori operasional.
+     *
+     * Akun sistem tetap tersedia. Akun yang terhubung ke GTK hanya dimuat
+     * ketika GTK aktif, sedangkan akun siswa hanya dimuat ketika siswa aktif.
+     * Histori alumni, lulus, keluar, dan mutasi keluar tetap tersimpan pada
+     * modul asalnya tanpa membebani daftar akun aktif.
+     */
+    private function accountDirectoryQuery(): Builder
+    {
+        return User::query()->where(function (Builder $query): void {
+            $query->where(function (Builder $systemAccount): void {
+                $systemAccount->whereDoesntHave('gtk')->whereDoesntHave('siswa');
+            })->orWhereHas('gtk', function (Builder $gtk): void {
+                $gtk->where('status_aktif', true);
+            })->orWhereHas('siswa', function (Builder $siswa): void {
+                $siswa->where('status_siswa', 'aktif');
+            });
+        });
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

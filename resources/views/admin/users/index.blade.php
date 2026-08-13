@@ -26,7 +26,7 @@
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h3 class="mb-1"><i class="fas fa-user-shield mr-1"></i> Manajemen User & Role</h3>
-                <p class="mb-0 text-white-75">Kelola akun admin, GTK, dan siswa beserta role, status akses, serta aktivitasnya dari satu halaman operasional.</p>
+                <p class="mb-0 text-white-75">Kelola akun sistem, GTK aktif, dan siswa aktif beserta role, status akses, serta aktivitasnya dari satu halaman operasional.</p>
             </div>
             <div class="col-lg-4 mt-3 mt-lg-0">
                 <div class="row text-center">
@@ -45,7 +45,7 @@
             <div class="simansa-stat-card__body">
                 <div class="simansa-stat-card__label">Total User</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['total_users']) }}</div>
-                <div class="simansa-stat-card__desc">Semua akun yang terdaftar di SIMANSA.</div>
+                <div class="simansa-stat-card__desc">Akun operasional; histori alumni dan mutasi tidak dimuat.</div>
             </div>
         </div>
     </div>
@@ -75,7 +75,7 @@
             <div class="simansa-stat-card__body">
                 <div class="simansa-stat-card__label">Siswa</div>
                 <div class="simansa-stat-card__value">{{ number_format($stats['siswa']) }}</div>
-                <div class="simansa-stat-card__desc">Akun siswa yang sudah terdaftar di sistem.</div>
+                <div class="simansa-stat-card__desc">Akun siswa aktif; alumni dan mutasi keluar dikecualikan.</div>
             </div>
         </div>
     </div>
