@@ -11,6 +11,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Python berjalan pada PC kamera, bukan VM produksi. Agent memakai InsightFace `buffalo_l`, ONNX Runtime, deteksi multi-wajah, tracking ID sederhana, konfirmasi beberapa frame, cooldown, serta antrean voice offline.
 - Descriptor `face-api.js` tidak dipakai silang karena tidak kompatibel. Agent membentuk embedding InsightFace lokal dari frame registrasi terverifikasi, dengan foto profil sebagai fallback untuk data registrasi lama yang belum memiliki file frame.
 - Kanal agent memakai Bearer token acak terpisah, HTTPS, rate limit, respons `no-store`, dan hanya mengirim heartbeat/telemetri simulasi. NIP/NISN, frame kamera, serta token tidak dicatat dalam heartbeat.
+- BOM UTF-8 lama pada `config/adminlte.php` dibersihkan agar respons JSON API benar-benar dimulai dari `{`; parser agent tetap memakai `utf-8-sig` sebagai kompatibilitas defensif terhadap node yang belum diperbarui.
 - Mode ini tetap read-only: tidak mencatat presensi, tidak mengunggah frame kamera, dan tidak mengubah data Face Detect lama. Cache embedding serta `config.json` diabaikan Git dan hanya boleh berada pada PC kamera tepercaya.
 - Paket awal tersedia dari tombol **Unduh Agent** dan berisi `agent.py`, `requirements.txt`, contoh konfigurasi, serta panduan instalasi Windows. Sintaks Python sudah divalidasi; pengujian InsightFace dan kamera sesungguhnya dilakukan pada PC gerbang karena dependency AI belum dipasang pada lingkungan pengembangan dan tidak tersedia perangkat kamera.
 

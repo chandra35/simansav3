@@ -59,7 +59,8 @@ class SimansaApi:
     def bootstrap(self) -> dict[str, Any]:
         response = self.session.get(f"{self.base_url}/bootstrap", timeout=30, verify=self.verify_ssl)
         response.raise_for_status()
-        return response.json()
+        # Tolerate a legacy UTF-8 BOM while older SIMANSA deployments are upgraded.
+        return json.loads(response.content.decode("utf-8-sig"))
 
     def heartbeat(self, payload: dict[str, Any]) -> None:
         try:
