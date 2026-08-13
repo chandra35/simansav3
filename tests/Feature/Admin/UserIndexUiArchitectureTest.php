@@ -27,7 +27,10 @@ class UserIndexUiArchitectureTest extends TestCase
         $this->assertStringContainsString(".addClass('dropup')", $view);
         $this->assertStringContainsString('id="filterAccountType"', $view);
         $this->assertStringContainsString("$('#filterRole, #filterAccountType').select2", $view);
-        $this->assertStringContainsString('Manajemen User & Role', $view);
+        $this->assertStringContainsString('simansa-users-operation-hero', $view);
+        $this->assertStringContainsString('card bg-gradient-primary text-white', $view);
+        $this->assertStringContainsString('<div class="col-lg-8">', $view);
+        $this->assertStringContainsString('<i class="fas fa-users-cog text-primary mr-1"></i> User & Role', $view);
     }
 
     public function test_user_page_renders_for_super_admin(): void

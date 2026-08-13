@@ -6,6 +6,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan tabel GTK dan User & Role
 
+- Struktur header dan hero User & Role kini mengikuti referensi Data GTK: judul halaman/breadcrumb berada pada header standar, sedangkan hero operasional memakai banner penuh dengan komposisi teks 8/12 dan statistik 4/12.
 - Header/hero User & Role disesuaikan menjadi lebih rendah dan proporsional, dengan ringkasan akun aktif/nonaktif yang tidak menduplikasi kartu utama.
 - Filter tipe akun dapat memisahkan GTK, Siswa, dan Admin/akun lainnya berdasarkan relasi profil aktual.
 - Tabel User menampilkan foto profil GTK/Siswa dalam rasio potret; akun tanpa profil foto memakai fallback inisial.
