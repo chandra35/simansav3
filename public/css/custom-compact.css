@@ -295,6 +295,7 @@ h6, .h6 { font-size: 0.875rem !important; font-weight: 600 !important; }
 
 .form-control,
 .form-select,
+.custom-select,
 select.form-control {
     padding: 0.4rem 0.75rem !important;
     font-size: 0.875rem !important;
@@ -308,6 +309,7 @@ select.form-control {
 
 input.form-control,
 .form-select,
+.custom-select,
 select.form-control {
     height: auto !important;
 }
@@ -318,6 +320,7 @@ textarea.form-control {
 
 .form-control:focus,
 .form-select:focus,
+.custom-select:focus,
 select.form-control:focus {
     border-color: var(--primary-light) !important;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
@@ -327,6 +330,30 @@ select.form-control:focus {
 .form-control-sm {
     padding: 0.25rem 0.5rem !important;
     font-size: 0.8125rem !important;
+}
+
+/* Dropdown tunggal memakai tampilan native Bootstrap secara konsisten.
+   Daftar opsinya tetap menggunakan scrolling native browser saat panjang. */
+select.custom-select:not([multiple]) {
+    min-height: 36px;
+    padding-right: 2rem !important;
+    background-color: #fff !important;
+    color: var(--text-primary) !important;
+    cursor: pointer;
+}
+
+select.custom-select.custom-select-sm:not([multiple]),
+select.custom-select.form-control-sm:not([multiple]),
+select.custom-select.form-select-sm:not([multiple]) {
+    min-height: 31px;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.8125rem !important;
+}
+
+select.custom-select:disabled {
+    cursor: not-allowed;
+    background-color: #e9ecef !important;
 }
 
 /* Form Labels */

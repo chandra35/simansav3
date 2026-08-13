@@ -101,13 +101,19 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
     public function test_global_dropdowns_scroll_inside_the_viewport(): void
     {
         $styles = file_get_contents(public_path('css/custom-compact.css'));
+        $layout = file_get_contents(resource_path('views/vendor/adminlte/master.blade.php'));
 
         $this->assertStringContainsString('.select2-results__options {', $styles);
         $this->assertStringContainsString('.dropdown-menu {', $styles);
+        $this->assertStringContainsString('select.custom-select:not([multiple])', $styles);
         $this->assertStringContainsString('max-height: min(45vh, 360px) !important;', $styles);
         $this->assertStringContainsString('max-height: min(60vh, 420px);', $styles);
         $this->assertStringContainsString('overscroll-behavior: contain;', $styles);
         $this->assertStringContainsString('scrollbar-width: thin;', $styles);
+        $this->assertStringContainsString('normalizeNativeBootstrapSelects(document);', $layout);
+        $this->assertStringContainsString("select.classList.add('custom-select');", $layout);
+        $this->assertStringContainsString("select.classList.contains('select2')", $layout);
+        $this->assertStringContainsString('new MutationObserver', $layout);
     }
 
     public function test_assignment_page_has_a_dedicated_laptop_layout(): void

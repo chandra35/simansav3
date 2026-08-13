@@ -1028,6 +1028,48 @@
             }
 
             document.addEventListener('DOMContentLoaded', function () {
+                const normalizeNativeBootstrapSelects = function (root) {
+                    const selects = [];
+
+                    if (root instanceof HTMLSelectElement) {
+                        selects.push(root);
+                    } else if (root && root.querySelectorAll) {
+                        selects.push(...root.querySelectorAll('select'));
+                    }
+
+                    selects.forEach(function (select) {
+                        const visibleRows = Number(select.getAttribute('size') || 1);
+                        const preserveStyle = select.dataset.nativeSelect === 'off';
+                        const usesSelect2 = select.classList.contains('select2')
+                            || select.classList.contains('select2-hidden-accessible');
+
+                        if (select.multiple || visibleRows > 1 || preserveStyle || usesSelect2) {
+                            return;
+                        }
+
+                        select.classList.add('custom-select');
+
+                        if (select.classList.contains('form-control-sm') || select.classList.contains('form-select-sm')) {
+                            select.classList.add('custom-select-sm');
+                        }
+                    });
+                };
+
+                normalizeNativeBootstrapSelects(document);
+
+                const nativeSelectObserver = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        mutation.addedNodes.forEach(function (node) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                normalizeNativeBootstrapSelects(node);
+                            }
+                        });
+                    });
+                });
+
+                nativeSelectObserver.observe(document.body, { childList: true, subtree: true });
+                window.normalizeNativeBootstrapSelects = normalizeNativeBootstrapSelects;
+
                 currentDeviceLocation = loadStoredDeviceLocation();
                 applyDeviceLocationHeaders();
                 detectDeviceLocation();

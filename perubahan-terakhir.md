@@ -6,6 +6,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Penyempurnaan tabel GTK dan User & Role
 
+- Seluruh dropdown tunggal di layout SIMANSA kini otomatis memakai gaya native Bootstrap `custom-select`, termasuk dropdown yang dimuat dinamis. Select2 untuk pencarian kompleks tetap dipertahankan, sementara dropdown native, Select2, dan menu Bootstrap tetap memiliki scrolling untuk daftar panjang.
 - Filter Role dan Tipe Akun kini memakai `custom-select` Bootstrap native; panel dipadatkan dan tombol Reset disejajarkan pada baris yang sama, serta menjadi selebar konten pada layar ponsel.
 - Struktur header dan hero User & Role kini mengikuti referensi Data GTK: judul halaman/breadcrumb berada pada header standar, sedangkan hero operasional memakai banner penuh dengan komposisi teks 8/12 dan statistik 4/12.
 - Header/hero User & Role disesuaikan menjadi lebih rendah dan proporsional, dengan ringkasan akun aktif/nonaktif yang tidak menduplikasi kartu utama.
