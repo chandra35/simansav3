@@ -25,10 +25,6 @@ class FaceRegistrationController extends Controller
         $selfFace = null;
         $selfHistory = collect();
         $selfCanRegister = false;
-        $selfAttendance = null;
-        $selfAttendanceYears = collect();
-        $attendanceMonth = (int) now()->month;
-        $attendanceYear = (int) now()->year;
 
         if ($canManageAll) {
             $selectedType = $this->normalizeUserType($request->query('type'));
@@ -64,29 +60,6 @@ class FaceRegistrationController extends Controller
                     ->get();
             }
 
-            $attendanceMonth = min(max((int) $request->query('attendance_month', now()->month), 1), 12);
-            $attendanceYear = min(max((int) $request->query('attendance_year', now()->year), 2000), (int) now()->year + 1);
-            $selfAttendanceYears = Absensi::query()
-                ->where('user_id', $authUser->id)
-                ->where('user_type', $selectedType)
-                ->selectRaw('YEAR(tanggal) as year')
-                ->distinct()
-                ->orderByDesc('year')
-                ->pluck('year');
-
-            if ($selfAttendanceYears->isEmpty()) {
-                $selfAttendanceYears = collect([(int) now()->year]);
-            }
-
-            $selfAttendance = Absensi::query()
-                ->where('user_id', $authUser->id)
-                ->where('user_type', $selectedType)
-                ->whereYear('tanggal', $attendanceYear)
-                ->whereMonth('tanggal', $attendanceMonth)
-                ->with('location:id,nama')
-                ->latest('tanggal')
-                ->paginate(31, ['*'], 'attendance_page')
-                ->withQueryString();
         }
 
         $faceMap = FaceEncoding::where('user_type', $selectedType)
@@ -119,15 +92,79 @@ class FaceRegistrationController extends Controller
             'selfFace' => $selfFace,
             'selfHistory' => $selfHistory,
             'selfCanRegister' => $selfCanRegister,
-            'selfAttendance' => $selfAttendance,
-            'selfAttendanceYears' => $selfAttendanceYears,
-            'attendanceMonth' => $attendanceMonth,
-            'attendanceYear' => $attendanceYear,
             'registeredCount' => $registeredCount,
             'verifiedCount' => $verifiedCount,
             'pendingCount' => max($registeredCount - $verifiedCount, 0),
             'duplicateThreshold' => (float) AbsensiSetting::getValue('face_duplicate_threshold', 0.55),
         ]);
+    }
+
+    public function selfAttendanceHistory(Request $request)
+    {
+        $context = $this->getSelfRegistrationContext($request->user());
+        abort_unless($context, 403, 'Riwayat presensi hanya tersedia untuk akun GTK atau siswa.');
+
+        $month = min(max((int) $request->query('month', now()->month), 1), 12);
+        $year = min(max((int) $request->query('year', now()->year), 2000), (int) now()->year + 1);
+        $baseQuery = Absensi::query()
+            ->where('user_id', $request->user()->id)
+            ->where('user_type', $context['user_type']);
+        $years = (clone $baseQuery)->selectRaw('YEAR(tanggal) as year')
+            ->distinct()->orderByDesc('year')->pluck('year');
+        if ($years->isEmpty()) {
+            $years = collect([(int) now()->year]);
+        }
+
+        $monthlyQuery = (clone $baseQuery)
+            ->whereYear('tanggal', $year)
+            ->whereMonth('tanggal', $month);
+        $summaryRows = (clone $monthlyQuery)->get(['status', 'waktu_masuk', 'waktu_pulang']);
+        $attendances = $monthlyQuery->with('location:id,nama')
+            ->latest('tanggal')->paginate(31)->withQueryString();
+
+        return view('admin.absensi.face-history-self', [
+            'registrant' => $context['registrant'],
+            'userType' => $context['user_type'],
+            'month' => $month,
+            'year' => $year,
+            'years' => $years,
+            'attendances' => $attendances,
+            'summary' => [
+                'recorded' => $summaryRows->count(),
+                'present' => $summaryRows->where('status', 'hadir')->count(),
+                'late' => $summaryRows->where('status', 'terlambat')->count(),
+                'checked_out' => $summaryRows->whereNotNull('waktu_pulang')->count(),
+            ],
+        ]);
+    }
+
+    public function requestSelfRegistrationUnlock(Request $request)
+    {
+        $validated = $request->validate([
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+        $context = $this->getSelfRegistrationContext($request->user());
+        abort_unless($context, 403, 'Permintaan ini hanya tersedia untuk akun GTK atau siswa.');
+
+        $face = FaceEncoding::query()
+            ->where('user_id', $request->user()->id)
+            ->where('user_type', $context['user_type'])
+            ->firstOrFail();
+
+        if ($face->self_registration_unlocked_at) {
+            return back()->with('info', 'Izin registrasi ulang sudah dibuka oleh admin.');
+        }
+        if ($face->self_registration_requested_at) {
+            return back()->with('info', 'Permintaan registrasi ulang masih menunggu persetujuan admin.');
+        }
+
+        $face->update([
+            'self_registration_requested_at' => now(),
+            'self_registration_request_note' => trim((string) ($validated['note'] ?? '')) ?: null,
+        ]);
+        $this->logFaceActivity($face, 'self_registration_requested', 'self', 'Pengguna meminta izin registrasi ulang.');
+
+        return back()->with('success', 'Permintaan registrasi ulang sudah dikirim dan menunggu persetujuan admin.');
     }
 
     public function store(Request $request)
@@ -193,6 +230,8 @@ class FaceRegistrationController extends Controller
                 'quality_score' => $request->input('quality_score', $request->input('liveness_score')),
                 'registration_photo' => $photoPath,
                 'self_registration_unlocked_at' => null,
+                'self_registration_requested_at' => null,
+                'self_registration_request_note' => null,
                 'is_active' => true,
                 'is_verified' => false,
                 'verified_by' => null,
@@ -308,10 +347,17 @@ class FaceRegistrationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $unlockRequests = (clone $baseQuery)
+            ->whereNotNull('self_registration_requested_at')
+            ->whereNull('self_registration_unlocked_at')
+            ->orderBy('self_registration_requested_at')
+            ->get();
+
         return view('admin.absensi.face-verification', [
             'pending' => $pending,
             'verified' => $verified,
             'allFaces' => $allFaces,
+            'unlockRequests' => $unlockRequests,
             'selectedType' => $selectedType,
             'subjectLabel' => $this->typeLabel($selectedType),
             'identifierLabel' => $selectedType === 'gtk' ? 'NIP' : 'NISN',
@@ -387,7 +433,11 @@ class FaceRegistrationController extends Controller
 
         $validated = $request->validate(['action' => 'required|in:unlock,lock']);
         $isUnlock = $validated['action'] === 'unlock';
-        $faceEncoding->update(['self_registration_unlocked_at' => $isUnlock ? now() : null]);
+        $faceEncoding->update([
+            'self_registration_unlocked_at' => $isUnlock ? now() : null,
+            'self_registration_requested_at' => null,
+            'self_registration_request_note' => null,
+        ]);
         $this->logFaceActivity(
             $faceEncoding,
             $isUnlock ? 'self_registration_unlocked' : 'self_registration_locked',
@@ -518,7 +568,8 @@ class FaceRegistrationController extends Controller
     {
         if ($userType === 'siswa') {
             return Siswa::whereNotNull('user_id')
-                ->whereHas('user')
+                ->where('status_siswa', 'aktif')
+                ->whereHas('user', fn ($user) => $user->where('is_active', true))
                 ->orderBy('nama_lengkap')
                 ->get(['id', 'user_id', 'nama_lengkap', 'nisn', 'foto_profile'])
                 ->map(fn (Siswa $siswa) => $this->mapSiswaRegistrant($siswa))

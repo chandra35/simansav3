@@ -1130,6 +1130,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['can:face-registration-access'])->group(function () {
         Route::get('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('absensi.face-register');
         Route::post('/absensi/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('absensi.face-register.store');
+        Route::post('/absensi/face-register/request-unlock', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'requestSelfRegistrationUnlock'])->name('absensi.face-register.request-unlock');
+        Route::get('/absensi/riwayat-saya', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'selfAttendanceHistory'])->middleware('can:face-self-service')->name('absensi.history-self');
     });
 
     // Face Verification (Admin only)
@@ -1301,6 +1303,8 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     // Registrasi wajah mandiri siswa
     Route::get('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'index'])->name('face-register');
     Route::post('/face-register', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'store'])->name('face-register.store');
+    Route::post('/face-register/request-unlock', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'requestSelfRegistrationUnlock'])->name('face-register.request-unlock');
+    Route::get('/riwayat-presensi-wajah', [App\Http\Controllers\Admin\FaceRegistrationController::class, 'selfAttendanceHistory'])->name('face-attendance-history');
 
     // SMART-Q Pengumuman Kelulusan
     Route::get('/smartq', [App\Http\Controllers\Siswa\SmartqController::class, 'index'])->name('smartq.index');

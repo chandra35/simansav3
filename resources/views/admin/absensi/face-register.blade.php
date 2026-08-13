@@ -6,8 +6,8 @@
 
 @php
     $approvedDescription = $selectedType === 'siswa'
-        ? 'Data wajah aktif dan siap digunakan saat kiosk Absensi Siswa diaktifkan.'
-        : 'Data wajah aktif dan siap dipakai untuk absensi kamera otomatis.';
+        ? 'Data wajah aktif dan siap digunakan pada kiosk Presensi Gerbang siswa.'
+        : 'Data wajah aktif dan siap digunakan pada kiosk Presensi Gerbang GTK.';
     $selfStatus = 'belum';
     if ($selfFace) {
         $selfStatus = $selfFace->is_verified ? 'approved' : ($selfFace->is_active ? 'pending' : 'belum');
@@ -26,7 +26,7 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ request()->routeIs('siswa.*') ? route('siswa.dashboard') : route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Face Recognition</li>
+                <li class="breadcrumb-item active">Data Wajah</li>
             </ol>
         </div>
     </div>
@@ -127,10 +127,27 @@
                                     </button>
                                 </div>
                             @else
-                                <div class="alert alert-success mt-4 mb-0">
+                                <div class="alert alert-success mt-4 mb-3">
                                     <i class="fas fa-lock mr-1"></i>
-                                    <strong>Registrasi terkunci.</strong> Data wajah tidak dapat diubah dari akun ini. Jika deteksi gagal, hubungi admin untuk registrasi ulang atau pembukaan izin sementara.
+                                    <strong>Registrasi terkunci.</strong> Data wajah tidak dapat diubah sampai admin menyetujui permintaan registrasi ulang.
                                 </div>
+                                @if($selfFace && $selfFace->self_registration_requested_at)
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-hourglass-half mr-1"></i>
+                                        <strong>Permintaan sedang ditinjau admin.</strong>
+                                        Dikirim {{ $selfFace->self_registration_requested_at->diffForHumans() }}.
+                                    </div>
+                                @elseif($selfFace)
+                                    <form method="POST" action="{{ request()->routeIs('siswa.*') ? route('siswa.face-register.request-unlock') : route('admin.absensi.face-register.request-unlock') }}" class="border rounded p-3">
+                                        @csrf
+                                        <label for="unlockNote" class="font-weight-bold mb-1">Perlu registrasi ulang?</label>
+                                        <div class="text-muted small mb-2">Jelaskan singkat kendalanya. Admin akan meninjau dan membuka akses satu kali.</div>
+                                        <div class="input-group">
+                                            <input id="unlockNote" name="note" class="form-control" maxlength="500" placeholder="Contoh: wajah sulit terdeteksi setelah mengganti kacamata">
+                                            <div class="input-group-append"><button class="btn btn-outline-warning"><i class="fas fa-paper-plane mr-1"></i>Minta Unlock</button></div>
+                                        </div>
+                                    </form>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -181,6 +198,7 @@
                                         'approved' => ['success', 'check-circle', 'Disetujui admin'],
                                         'rejected' => ['danger', 'times-circle', 'Ditolak admin'],
                                         'verification_reset' => ['warning', 'undo', 'Verifikasi di-reset'],
+                                        'self_registration_requested' => ['info', 'paper-plane', 'Meminta registrasi ulang'],
                                         'self_registration_unlocked' => ['warning', 'lock-open', 'Izin registrasi ulang dibuka'],
                                         'self_registration_locked' => ['secondary', 'lock', 'Izin registrasi ulang dibatalkan'],
                                         default => ['secondary', 'history', $activity->description],
@@ -209,62 +227,6 @@
         </div>
     @endif
 
-    <div class="card card-outline card-primary mt-4">
-        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
-            <h3 class="card-title mb-2 mb-md-0"><i class="fas fa-calendar-check mr-1"></i> Rekap Presensi Pribadi</h3>
-            <form method="GET" class="form-inline">
-                <label class="sr-only" for="attendanceMonth">Bulan</label>
-                <select name="attendance_month" id="attendanceMonth" class="form-control form-control-sm mr-2 mb-2 mb-md-0">
-                    @foreach(range(1, 12) as $month)
-                        <option value="{{ $month }}" @selected($attendanceMonth === $month)>{{ \Carbon\Carbon::create(2000, $month, 1)->translatedFormat('F') }}</option>
-                    @endforeach
-                </select>
-                <label class="sr-only" for="attendanceYear">Tahun</label>
-                <select name="attendance_year" id="attendanceYear" class="form-control form-control-sm mr-2 mb-2 mb-md-0">
-                    @foreach($selfAttendanceYears as $year)
-                        <option value="{{ $year }}" @selected($attendanceYear === (int) $year)>{{ $year }}</option>
-                    @endforeach
-                    @if(!$selfAttendanceYears->contains($attendanceYear))
-                        <option value="{{ $attendanceYear }}" selected>{{ $attendanceYear }}</option>
-                    @endif
-                </select>
-                <button class="btn btn-sm btn-primary"><i class="fas fa-filter mr-1"></i>Tampilkan</button>
-            </form>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th>Masuk</th>
-                            <th>Pulang</th>
-                            <th>Metode</th>
-                            <th>Lokasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($selfAttendance as $attendance)
-                            <tr>
-                                <td>{{ $attendance->tanggal->translatedFormat('l, d F Y') }}</td>
-                                <td><span class="badge badge-{{ $attendance->status_badge }}">{{ ucfirst(str_replace('_', ' ', $attendance->status)) }}</span></td>
-                                <td>{{ $attendance->waktu_masuk_formatted }}</td>
-                                <td>{{ $attendance->waktu_pulang_formatted }}</td>
-                                <td>{{ ucfirst(str_replace('_', ' ', $attendance->metode_masuk ?? '-')) }}</td>
-                                <td>{{ $attendance->location?->nama ?? '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="text-center text-muted py-4">Belum ada rekaman presensi pada {{ \Carbon\Carbon::create($attendanceYear, $attendanceMonth, 1)->translatedFormat('F Y') }}.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        @if($selfAttendance->hasPages())
-            <div class="card-footer">{{ $selfAttendance->links() }}</div>
-        @endif
-    </div>
 @else
     <div class="row mb-4">
         <div class="col-md-4 mb-3 mb-md-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total {{ $subjectLabel }}</div><h3 class="text-info mb-0">{{ $registrants->count() }}</h3><small class="text-muted">Akun yang dapat diregistrasi.</small></div></div></div>

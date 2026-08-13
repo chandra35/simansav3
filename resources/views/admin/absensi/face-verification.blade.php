@@ -11,7 +11,7 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item">Face Recognition</li>
+                <li class="breadcrumb-item">Data Wajah</li>
                 <li class="breadcrumb-item active">Verifikasi</li>
             </ol>
         </div>
@@ -48,7 +48,7 @@
     <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total Terdaftar</div><h3 class="text-info mb-0">{{ $allFaces->count() }}</h3><small class="text-muted">Data wajah {{ strtolower($subjectLabel) }} aktif.</small></div></div></div>
     <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-success h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Terverifikasi</div><h3 class="text-success mb-0">{{ $verified->total() }}</h3><small class="text-muted">Identitas biometrik sudah aktif.</small></div></div></div>
     <div class="col-md-6 col-xl-3 mb-3 mb-md-0"><div class="card card-outline card-warning h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Menunggu</div><h3 class="text-warning mb-0">{{ $pending->count() }}</h3><small class="text-muted">Perlu ditinjau admin.</small></div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card card-outline card-primary h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Rata-rata Quality</div><h3 class="text-primary mb-0">{{ $allFaces->avg('quality_score') ? number_format($allFaces->avg('quality_score'), 0) : 0 }}%</h3><small class="text-muted">Kualitas seluruh capture aktif.</small></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card card-outline card-primary h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Permintaan Unlock</div><h3 class="text-primary mb-0">{{ $unlockRequests->count() }}</h3><small class="text-muted">Menunggu persetujuan registrasi ulang.</small></div></div></div>
 </div>
 
 <div class="card card-primary card-outline">
@@ -56,7 +56,13 @@
         <div class="mb-3">
             <ul class="nav nav-pills">
                 <li class="nav-item">
-                    <a class="nav-link {{ $pending->count() > 0 ? 'active' : '' }}" data-toggle="tab" href="#tabPending">
+                    <a class="nav-link {{ $unlockRequests->count() > 0 ? 'active' : '' }}" data-toggle="tab" href="#tabUnlock">
+                        <i class="fas fa-user-lock text-primary"></i> Permintaan Unlock
+                        @if($unlockRequests->count() > 0)<span class="badge badge-primary">{{ $unlockRequests->count() }}</span>@endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $unlockRequests->isEmpty() && $pending->count() > 0 ? 'active' : '' }}" data-toggle="tab" href="#tabPending">
                         <i class="fas fa-clock text-warning"></i> Menunggu Verifikasi
                         @if($pending->count() > 0)
                             <span class="badge badge-warning">{{ $pending->count() }}</span>
@@ -64,7 +70,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ $pending->count() === 0 ? 'active' : '' }}" data-toggle="tab" href="#tabAll">
+                    <a class="nav-link {{ $unlockRequests->isEmpty() && $pending->count() === 0 ? 'active' : '' }}" data-toggle="tab" href="#tabAll">
                         <i class="fas fa-list text-primary"></i> Semua Data Wajah
                     </a>
                 </li>
@@ -72,7 +78,33 @@
         </div>
 
         <div class="tab-content">
-            <div class="tab-pane {{ $pending->count() > 0 ? 'active' : '' }}" id="tabPending">
+            <div class="tab-pane {{ $unlockRequests->count() > 0 ? 'active' : '' }}" id="tabUnlock">
+                @forelse($unlockRequests as $face)
+                    @php
+                        $profile = $face->user_type === 'gtk' ? $face->user->gtk : $face->user->siswa;
+                        $name = $profile->nama_lengkap ?? $face->user->name ?? '-';
+                    @endphp
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between border rounded p-3 mb-2">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ $face->registration_photo_url ?? $profile?->foto_profile_url ?? asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle mr-3" width="48" height="48" style="object-fit:cover" alt="{{ $name }}">
+                            <div><strong>{{ $name }}</strong><small class="d-block text-muted">{{ strtoupper($face->user_type) }} · Diajukan {{ $face->self_registration_requested_at?->diffForHumans() }}</small>@if($face->self_registration_request_note)<div class="mt-1"><i class="fas fa-comment-alt text-muted mr-1"></i>{{ $face->self_registration_request_note }}</div>@endif</div>
+                        </div>
+                        <div class="d-flex mt-3 mt-md-0">
+                            <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}">
+                                @csrf<input type="hidden" name="action" value="unlock">
+                                <button type="button" class="btn btn-primary js-face-confirm" data-title="Setujui registrasi ulang?" data-text="{{ $name }} memperoleh satu kali kesempatan registrasi ulang. Akses terkunci otomatis setelah berhasil." data-confirm="Ya, setujui"><i class="fas fa-unlock mr-1"></i>Setujui</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="ml-2">
+                                @csrf<input type="hidden" name="action" value="lock">
+                                <button type="button" class="btn btn-outline-danger js-face-confirm" data-title="Tolak permintaan unlock?" data-text="Permintaan {{ $name }} akan ditutup dan registrasi tetap terkunci." data-confirm="Ya, tolak"><i class="fas fa-times mr-1"></i>Tolak</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-muted py-4"><i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>Tidak ada permintaan unlock yang menunggu persetujuan.</div>
+                @endforelse
+            </div>
+            <div class="tab-pane {{ $unlockRequests->isEmpty() && $pending->count() > 0 ? 'active' : '' }}" id="tabPending">
                 @if($pending->count() > 0)
                     <div class="row">
                         @foreach($pending as $face)
@@ -129,7 +161,7 @@
                 @endif
             </div>
 
-            <div class="tab-pane {{ $pending->count() === 0 ? 'active' : '' }}" id="tabAll">
+            <div class="tab-pane {{ $unlockRequests->isEmpty() && $pending->count() === 0 ? 'active' : '' }}" id="tabAll">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped table-sm" id="tabelWajah">
                         <thead>

@@ -4,6 +4,15 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pemisahan Presensi Gerbang, Kehadiran Kelas, dan Layanan Wajah Pribadi
+
+- Nomenklatur sidebar diperjelas: **Presensi Gerbang** adalah presensi masuk/pulang berbasis kamera kiosk, sedangkan **Kehadiran Kelas** adalah absensi siswa yang diinput guru/wali kelas. Data dan fungsi keduanya tetap dipertahankan karena substansinya berbeda.
+- Kiosk GTK/siswa, dashboard operasional, dan pengaturan gerbang tidak lagi ditampilkan pada akun GTK biasa maupun siswa. Kiosk tetap dilindungi gate admin/perangkat tepercaya.
+- Akun GTK dan siswa memperoleh dua layanan pribadi: **Registrasi & Status** untuk enrollment/review wajah serta **Riwayat Presensi Saya** untuk melihat rekaman masuk/pulang sendiri per bulan.
+- Riwayat pribadi menampilkan identitas, foto, ringkasan tercatat/tepat waktu/terlambat/sudah pulang, lokasi, metode, dan catatan tanpa menyediakan tombol absen dari akun.
+- Registrasi otomatis terkunci setelah berhasil. Pengguna dapat mengirim permintaan unlock beserta catatan; admin menerima antrean approval, dapat menyetujui atau menolak, dan izin kembali terkunci otomatis setelah registrasi ulang berhasil.
+- Registrasi dan descriptor kiosk hanya memuat akun/profil GTK atau siswa yang aktif. Alur approval wajah sebelum dapat digunakan kiosk tetap diwajibkan.
+
 ### Kiosk Otomatis dan Jadwal Operasional Presensi Terpusat
 
 - Modul Presensi kini memiliki jadwal operasional mingguan terpusat untuk kiosk GTK dan siswa. Jadwal dapat diedit per hari dari Pengaturan Presensi tanpa mengikuti atau mengubah konfigurasi jam pelajaran.

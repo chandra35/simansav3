@@ -862,20 +862,27 @@ return [
             'active' => ['admin/absensi', 'admin/absensi/*', 'admin/absensi-siswa*'],
             'submenu' => [
                 [
-                    'text' => 'Face Recognition',
+                    'text' => 'Data Wajah',
                     'icon' => 'fas fa-fw fa-id-card-alt',
                     'can' => 'face-registration-access',
                     'active' => ['admin/absensi/face-*'],
                     'submenu' => [
                         [
-                            'text' => 'Registrasi Wajah',
+                            'text' => 'Registrasi & Status',
                             'route' => 'admin.absensi.face-register',
                             'icon' => 'fas fa-fw fa-camera',
                             'can' => 'face-registration-access',
                             'active' => ['admin/absensi/face-register*'],
                         ],
                         [
-                            'text' => 'Verifikasi & Data',
+                            'text' => 'Riwayat Presensi Saya',
+                            'route' => 'admin.absensi.history-self',
+                            'icon' => 'fas fa-fw fa-history',
+                            'can' => 'face-self-service',
+                            'active' => ['admin/absensi/riwayat-saya*'],
+                        ],
+                        [
+                            'text' => 'Approval & Data Wajah',
                             'route' => 'admin.absensi.face-verification',
                             'icon' => 'fas fa-fw fa-user-check',
                             'can' => 'face-registration-admin',
@@ -884,8 +891,9 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Presensi Terpusat',
+                    'text' => 'Presensi Gerbang',
                     'icon' => 'fas fa-fw fa-clock',
+                    'can' => 'face-registration-admin',
                     'active' => ['admin/absensi', 'admin/absensi/kiosk*', 'admin/absensi/rekap*', 'admin/absensi/settings*'],
                     'submenu' => [
                         [
@@ -926,7 +934,7 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Absensi Siswa',
+                    'text' => 'Kehadiran Kelas',
                     'icon' => 'fas fa-fw fa-user-check',
                     'can' => 'sidebar-student-attendance-global',
                     'active' => ['admin/absensi-siswa*'],
@@ -1325,19 +1333,27 @@ return [
         ],
 
         [
-            'text' => 'Presensi',
+            'text' => 'Wajah & Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
             'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-presensi',
-            'active' => ['siswa/face-register*'],
+            'active' => ['siswa/face-register*', 'siswa/riwayat-presensi-wajah*'],
             'submenu' => [
                 [
                     'key' => 'siswa-face-register',
-                    'text' => 'Registrasi Wajah',
+                    'text' => 'Registrasi & Status',
                     'route' => 'siswa.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
                     'can' => 'sidebar-siswa-menu-only',
                     'active' => ['siswa/face-register*'],
+                ],
+                [
+                    'key' => 'siswa-face-attendance-history',
+                    'text' => 'Riwayat Presensi Saya',
+                    'route' => 'siswa.face-attendance-history',
+                    'icon' => 'fas fa-fw fa-history',
+                    'can' => 'sidebar-siswa-menu-only',
+                    'active' => ['siswa/riwayat-presensi-wajah*'],
                 ],
             ],
         ],

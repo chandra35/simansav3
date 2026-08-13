@@ -106,8 +106,13 @@ class FaceRecognitionAdminTest extends TestCase
             ->get(route('siswa.face-register'))
             ->assertOk()
             ->assertSee('Registrasi terkunci')
-            ->assertSee('Rekap Presensi Pribadi')
+            ->assertSee('Minta Unlock')
             ->assertDontSee('Edit / Registrasi Ulang');
+
+        $this->actingAs($student->user)
+            ->get(route('siswa.face-attendance-history'))
+            ->assertOk()
+            ->assertSee('Riwayat Presensi Saya');
     }
 
     public function test_admin_can_unlock_one_self_reregistration_and_it_locks_after_save(): void
@@ -126,10 +131,22 @@ class FaceRecognitionAdminTest extends TestCase
                 'total_captures' => 5,
                 'quality_score' => 80,
                 'self_registration_unlocked_at' => null,
+                'self_registration_requested_at' => null,
+                'self_registration_request_note' => null,
                 'is_active' => true,
                 'is_verified' => false,
             ]
         );
+
+        $this->actingAs($student->user)
+            ->withSession(['_token' => 'student-face-request'])
+            ->post(route('siswa.face-register.request-unlock'), [
+                '_token' => 'student-face-request',
+                'note' => 'Wajah tidak lagi terdeteksi.',
+            ])
+            ->assertSessionHas('success');
+        $this->assertNotNull($face->fresh()->self_registration_requested_at);
+        $this->assertSame('Wajah tidak lagi terdeteksi.', $face->fresh()->self_registration_request_note);
 
         $this->actingAs($admin)
             ->withSession(['_token' => 'admin-face-unlock'])
@@ -140,6 +157,7 @@ class FaceRecognitionAdminTest extends TestCase
             ->assertRedirect(route('admin.absensi.face-verification', ['type' => 'siswa']));
 
         $this->assertNotNull($face->fresh()->self_registration_unlocked_at);
+        $this->assertNull($face->fresh()->self_registration_requested_at);
 
         $this->actingAs($admin)
             ->withSession(['_token' => 'admin-face-lock'])

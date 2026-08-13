@@ -193,8 +193,13 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('face-registration-access', function ($user) {
-            return $user->hasAnyRole(['Super Admin', 'Admin', 'GTK']) ||
-                in_array($user->role, ['super_admin', 'admin', 'gtk']);
+            return $user->hasAnyRole(['Super Admin', 'Admin']) ||
+                in_array($user->role, ['super_admin', 'admin']) ||
+                (bool) $user->gtk;
+        });
+
+        Gate::define('face-self-service', function ($user) {
+            return (bool) ($user->gtk || $user->siswa);
         });
 
         Gate::define('staff-presensi-menu', function ($user) {
