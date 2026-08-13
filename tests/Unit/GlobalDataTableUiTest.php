@@ -43,9 +43,10 @@ class GlobalDataTableUiTest extends TestCase
 
         $this->assertStringContainsString('face-approval-hero__eyebrow', $view);
         $this->assertStringContainsString('Kontrol Identitas Biometrik', $view);
-        $this->assertStringContainsString('face-type-switch__item', $view);
+        $this->assertStringContainsString('btn-group btn-group-sm', $view);
+        $this->assertStringContainsString("'btn-light' : 'btn-outline-light'", $view);
         $this->assertStringContainsString('aria-current="page"', $view);
         $this->assertStringNotContainsString('Face Approval', $view);
-        $this->assertStringNotContainsString("btn btn-{{ \$selectedType", $view);
+        $this->assertStringNotContainsString('face-type-switch__item', $view);
     }
 }
