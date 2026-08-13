@@ -182,6 +182,8 @@
                                     $name = $profile->nama_lengkap ?? $face->user->name ?? '-';
                                     $identifier = $face->user_type === 'gtk' ? ($profile->nip ?? '-') : ($profile->nisn ?? '-');
                                     $photoUrls = $face->registration_photo_urls;
+                                    $storedPhotoCount = $photoUrls->count();
+                                    $isLegacyPhoto = empty($face->registration_photos);
                                 @endphp
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
@@ -203,13 +205,15 @@
                                                     data-photo-angles='@json($face->capture_angles ?? [])'
                                                     data-name="{{ $name }}"
                                                     data-identifier="{{ $identifierLabel }}: {{ $identifier }}"
-                                                    data-captures="{{ $face->total_captures }} frame"
+                                                    data-captures="{{ $face->total_captures }} descriptor"
+                                                    data-photos="{{ $storedPhotoCount }} foto"
                                                     data-quality="{{ number_format($face->quality_score ?? 0, 0) }}%"
                                                     data-angles="{{ implode(', ', $face->capture_angles ?? []) }}"
                                                     data-registered="{{ $face->created_at->format('d/m/Y H:i') }}"
                                                     title="Lihat foto hasil registrasi {{ $name }}">
                                                 <img src="{{ $photoUrls->first() }}" class="face-capture-thumb" alt="Foto wajah terdaftar {{ $name }}">
-                                                <small class="d-block mt-1"><i class="fas fa-images mr-1"></i>{{ $photoUrls->count() }} frame</small>
+                                                <small class="d-block mt-1"><i class="fas fa-images mr-1"></i>{{ $storedPhotoCount }} foto</small>
+                                                @if($isLegacyPhoto)<small class="d-block text-warning">Data lama</small>@endif
                                             </button>
                                         @else
                                             <span class="badge badge-light border text-muted p-2"><i class="fas fa-image mr-1"></i>Belum tersimpan</span>
@@ -219,9 +223,10 @@
                                         @php $q = $face->quality_score ?? 0; @endphp
                                         <div class="face-capture-meta">
                                             <div class="face-capture-meta__summary">
-                                                <span><i class="fas fa-camera mr-1"></i>{{ $face->total_captures }} frame</span>
+                                                <span><i class="fas fa-fingerprint mr-1"></i>{{ $face->total_captures }} descriptor</span>
                                                 <span class="badge badge-{{ $q >= 80 ? 'success' : ($q >= 50 ? 'warning' : 'danger') }}">Quality {{ number_format($q, 0) }}%</span>
                                             </div>
+                                            <small class="face-photo-count"><i class="fas fa-images mr-1"></i>{{ $storedPhotoCount }} foto tersimpan @if($isLegacyPhoto)· registrasi format lama @endif</small>
                                             <div class="face-angle-list">@foreach($face->capture_angles ?? [] as $angle)<span>{{ $angle }}</span>@endforeach</div>
                                         </div>
                                     </td>
@@ -251,7 +256,7 @@
                                                 <button type="button" class="dropdown-item js-face-preview" data-toggle="modal" data-target="#facePreviewModal"
                                                         data-images='@json($photoUrls)' data-photo-angles='@json($face->capture_angles ?? [])'
                                                         data-name="{{ $name }}" data-identifier="{{ $identifierLabel }}: {{ $identifier }}"
-                                                        data-captures="{{ $face->total_captures }} frame" data-quality="{{ number_format($face->quality_score ?? 0, 0) }}%"
+                                                        data-captures="{{ $face->total_captures }} descriptor" data-photos="{{ $storedPhotoCount }} foto" data-quality="{{ number_format($face->quality_score ?? 0, 0) }}%"
                                                         data-angles="{{ implode(', ', $face->capture_angles ?? []) }}" data-registered="{{ $face->created_at->format('d/m/Y H:i') }}">
                                                     <i class="fas fa-images text-info mr-2"></i>Lihat Semua Frame
                                                 </button>
@@ -311,8 +316,9 @@
                 <div class="face-preview-gallery mt-3" id="facePreviewGallery"></div>
                 <div class="mt-3"><h5 class="font-weight-bold mb-0" id="facePreviewName">-</h5><div class="text-muted" id="facePreviewIdentifier">-</div></div>
                 <div class="row mt-3 face-preview-metrics">
-                    <div class="col-6"><small>Jumlah Capture</small><strong id="facePreviewCaptures">-</strong></div>
-                    <div class="col-6"><small>Quality</small><strong id="facePreviewQuality">-</strong></div>
+                    <div class="col-4"><small>Descriptor Biometrik</small><strong id="facePreviewCaptures">-</strong></div>
+                    <div class="col-4"><small>Foto Tersimpan</small><strong id="facePreviewPhotos">-</strong></div>
+                    <div class="col-4"><small>Quality</small><strong id="facePreviewQuality">-</strong></div>
                     <div class="col-12 mt-2"><small>Sudut Terekam</small><strong id="facePreviewAngles">-</strong></div>
                     <div class="col-12 mt-2"><small>Tanggal Registrasi</small><strong id="facePreviewRegistered">-</strong></div>
                 </div>
@@ -360,6 +366,7 @@ $(function() {
         $('#facePreviewName').text(button.dataset.name);
         $('#facePreviewIdentifier').text(button.dataset.identifier);
         $('#facePreviewCaptures').text(button.dataset.captures);
+        $('#facePreviewPhotos').text(button.dataset.photos || `${images.length} foto`);
         $('#facePreviewQuality').text(button.dataset.quality);
         $('#facePreviewAngles').text(button.dataset.angles || '-');
         $('#facePreviewRegistered').text(button.dataset.registered);
@@ -385,7 +392,7 @@ $(function() {
 
 @section('css')
 <style>
-.face-recognition-verification #tabelWajah{width:100%!important}.face-recognition-verification #tabelWajah th,.face-recognition-verification #tabelWajah td{vertical-align:middle}.face-identity-cell{min-width:235px}.face-identity{display:flex;align-items:center;gap:10px}.face-profile-thumb{width:40px;height:48px;flex:0 0 40px;object-fit:cover;border:2px solid #fff;border-radius:9px;box-shadow:0 0 0 1px #dbe4ef}.face-identity__copy{min-width:0}.face-identity__copy strong,.face-identity__copy span,.face-identity__copy small{display:block}.face-identity__copy strong{color:#172033;font-size:.82rem;line-height:1.25}.face-identity__copy span{margin-top:2px;color:#475569;font-size:.7rem;white-space:nowrap}.face-identity__copy small{margin-top:3px;color:#8492a6;font-size:.64rem}.face-capture-meta{min-width:170px}.face-capture-meta__summary{display:flex;align-items:center;gap:6px;white-space:nowrap}.face-capture-meta__summary>span:first-child{color:#475569;font-size:.7rem;font-weight:700}.face-angle-list{display:flex;max-width:190px;flex-wrap:wrap;gap:3px;margin-top:6px}.face-angle-list span{padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.62rem;font-weight:700}.face-verification-meta{display:flex;min-width:145px;flex-direction:column;align-items:flex-start;gap:4px}.face-verification-meta small{color:#64748b;font-size:.64rem;line-height:1.25}.face-registration-date{min-width:92px}.face-registration-date strong,.face-registration-date small{display:block}.face-registration-date strong{font-size:.72rem}.face-registration-date small{color:#64748b;font-size:.64rem}.face-action-dropdown{white-space:nowrap}
+.face-recognition-verification #tabelWajah{width:100%!important}.face-recognition-verification #tabelWajah th,.face-recognition-verification #tabelWajah td{vertical-align:middle}.face-identity-cell{min-width:235px}.face-identity{display:flex;align-items:center;gap:10px}.face-profile-thumb{width:40px;height:48px;flex:0 0 40px;object-fit:cover;border:2px solid #fff;border-radius:9px;box-shadow:0 0 0 1px #dbe4ef}.face-identity__copy{min-width:0}.face-identity__copy strong,.face-identity__copy span,.face-identity__copy small{display:block}.face-identity__copy strong{color:#172033;font-size:.82rem;line-height:1.25}.face-identity__copy span{margin-top:2px;color:#475569;font-size:.7rem;white-space:nowrap}.face-identity__copy small{margin-top:3px;color:#8492a6;font-size:.64rem}.face-capture-meta{min-width:180px}.face-capture-meta__summary{display:flex;align-items:center;gap:6px;white-space:nowrap}.face-capture-meta__summary>span:first-child{color:#475569;font-size:.7rem;font-weight:700}.face-photo-count{display:block;margin-top:4px;color:#64748b;font-size:.62rem}.face-angle-list{display:flex;max-width:190px;flex-wrap:wrap;gap:3px;margin-top:6px}.face-angle-list span{padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.62rem;font-weight:700}.face-verification-meta{display:flex;min-width:145px;flex-direction:column;align-items:flex-start;gap:4px}.face-verification-meta small{color:#64748b;font-size:.64rem;line-height:1.25}.face-registration-date{min-width:92px}.face-registration-date strong,.face-registration-date small{display:block}.face-registration-date strong{font-size:.72rem}.face-registration-date small{color:#64748b;font-size:.64rem}.face-action-dropdown{white-space:nowrap}
 .face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.face-preview-gallery__item{padding:5px;border:2px solid transparent;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:.72rem;transition:.2s}.face-preview-gallery__item img{display:block;width:100%;height:66px;object-fit:cover;border-radius:6px;margin-bottom:4px}.face-preview-gallery__item.is-active{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}.face-action-dropdown .dropdown-menu{min-width:245px}.face-action-dropdown .dropdown-item{font-size:.875rem;padding:.55rem .9rem}.face-action-dropdown form{display:block;width:100%}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}.face-preview-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 @stop

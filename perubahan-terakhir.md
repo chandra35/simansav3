@@ -10,6 +10,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Lebar kolom dihitung ulang otomatis setelah gambar selesai dimuat, tab/collapse/modal dibuka, sidebar berubah, DataTables menggambar ulang, dan ukuran wrapper atau viewport berubah. Ini mencegah header dan isi bergeser ke kolom yang berbeda.
 - Bahasa kontrol dasar dinormalisasi ke Bahasa Indonesia dan tabel tetap memakai horizontal scroll saat konten memang lebih lebar daripada perangkat.
 - Tabel **Approval & Data Wajah** diringkas dari sebelas menjadi tujuh kolom substantif: Identitas, Foto Wajah, Data Capture, Verifikasi, Registrasi, dan Aksi. NIP/NISN, frame/quality/angle, serta verifier/waktu verifikasi kini menjadi metadata vertikal di kelompok yang benar.
+- Jumlah descriptor biometrik dan jumlah file foto kini ditampilkan terpisah. Registrasi lama dapat memiliki lima descriptor tetapi hanya satu foto; UI menandainya sebagai `Data lama` dan tidak lagi menyebut lima descriptor sebagai lima foto.
 
 ### Perbaikan Global Dropdown Aksi Tabel (13 Agustus 2026)
 

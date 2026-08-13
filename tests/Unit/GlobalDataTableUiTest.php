@@ -31,6 +31,9 @@ class GlobalDataTableUiTest extends TestCase
         $this->assertStringContainsString('face-identity__copy', $view);
         $this->assertStringContainsString('face-capture-meta', $view);
         $this->assertStringContainsString('face-verification-meta', $view);
+        $this->assertStringContainsString('Descriptor Biometrik', $view);
+        $this->assertStringContainsString('Foto Tersimpan', $view);
+        $this->assertStringContainsString('registrasi format lama', $view);
         $this->assertStringNotContainsString('<th>Angle</th>', $view);
     }
 }
