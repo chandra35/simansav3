@@ -4,6 +4,10 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Permission Informasi dan Polling
+
+- Katalog Permission Matrix kini menampilkan modul **Informasi** (`view-pengumuman`) dan **Polling & Survei** (`view-polling-results`, `manage-polling`) sebagai kelompok terpisah. Role seperti WAKA dapat diberi akses melihat hasil tanpa harus mendapat kewenangan membuat, mengubah, membuka, atau menutup polling.
+
 ### Penyempurnaan tabel GTK dan User & Role
 
 - Direktori User & Role kini hanya memuat akun sistem, GTK aktif, dan siswa berstatus aktif. Akun GTK nonaktif serta siswa alumni/lulus/keluar/mutasi keluar tetap tersimpan sebagai histori pada modul asal, tetapi tidak lagi masuk statistik, total DataTable, pencarian, maupun daftar akun operasional.

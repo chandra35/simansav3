@@ -465,9 +465,19 @@ class PermissionSyncService
                 'label' => 'Informasi',
                 'icon' => 'bullhorn',
                 'color' => 'info',
-                'description' => 'Pengumuman dan informasi sekolah',
+                'description' => 'Melihat pengumuman dan informasi sekolah',
                 'permissions' => [
                     'view-pengumuman',
+                ],
+            ],
+            'polling-survei' => [
+                'label' => 'Polling & Survei',
+                'icon' => 'poll-h',
+                'color' => 'primary',
+                'description' => 'Melihat hasil serta mengelola polling dan survei sekolah',
+                'permissions' => [
+                    'view-polling-results',
+                    'manage-polling',
                 ],
             ],
             'monitoring' => [

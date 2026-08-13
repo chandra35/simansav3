@@ -3,7 +3,9 @@
 namespace Tests\Unit;
 
 use App\Models\Polling;
+use App\Models\User;
 use App\Services\PollingAudienceService;
+use App\Services\PermissionSyncService;
 use Carbon\Carbon;
 use Tests\TestCase;
 
@@ -13,6 +15,42 @@ class PollingModuleArchitectureTest extends TestCase
     {
         Carbon::setTestNow();
         parent::tearDown();
+    }
+
+    public function test_information_and_polling_permissions_are_catalogued_for_role_matrix(): void
+    {
+        $modules = app(PermissionSyncService::class)->getModuleDefinitions();
+
+        $this->assertSame(['view-pengumuman'], $modules['informasi']['permissions']);
+        $this->assertSame(
+            ['view-polling-results', 'manage-polling'],
+            $modules['polling-survei']['permissions']
+        );
+
+        $registered = \Spatie\Permission\Models\Permission::query()
+            ->whereIn('name', $modules['polling-survei']['permissions'])
+            ->pluck('name')
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame(['manage-polling', 'view-polling-results'], $registered);
+    }
+
+    public function test_information_and_polling_modules_render_in_permission_matrix(): void
+    {
+        $admin = User::role('Super Admin')->first();
+        if (! $admin) {
+            $this->markTestSkipped('Super Admin tidak tersedia.');
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.permission-matrix'))
+            ->assertOk()
+            ->assertSee('Informasi')
+            ->assertSee('Polling &amp; Survei', false)
+            ->assertSee('view-polling-results')
+            ->assertSee('manage-polling');
     }
 
     public function test_published_polling_follows_its_schedule(): void
@@ -88,7 +126,7 @@ class PollingModuleArchitectureTest extends TestCase
         $this->assertStringContainsString("contains('id', \$optionId)", $controller);
         $this->assertStringContainsString('PollingReportExport', $adminController);
         $this->assertStringContainsString("Pdf::loadView('admin.polling.pdf'", $adminController);
-        $this->assertStringContainsString("'can' => 'sidebar-active-polling'", $menu);
+        $this->assertStringContainsString("'can' => 'sidebar-siswa-active-polling'", $menu);
         $this->assertStringContainsString('Swal.fire', $reminder);
         $this->assertStringContainsString('snooze_url', $reminder);
         $this->assertStringContainsString('studentElectionOverlay', $reminder);
