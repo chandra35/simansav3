@@ -108,4 +108,14 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('overscroll-behavior: contain;', $styles);
         $this->assertStringContainsString('scrollbar-width: thin;', $styles);
     }
+
+    public function test_assignment_page_has_a_dedicated_laptop_layout(): void
+    {
+        $view = file_get_contents(resource_path('views/admin/penugasan-gtk/index.blade.php'));
+
+        $this->assertStringContainsString('assignment-hero-actions', $view);
+        $this->assertStringContainsString('@media(min-width:992px) and (max-width:1439.98px)', $view);
+        $this->assertStringContainsString('flex:0 0 41.666667%', $view);
+        $this->assertStringContainsString('min-width:820px', $view);
+    }
 }

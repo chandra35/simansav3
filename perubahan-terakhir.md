@@ -1322,3 +1322,10 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Password yang sama dengan username tetap ditolak untuk siswa, tetapi diterima khusus GTK bila username berupa NIK 16 digit.
 - NIK menjadi fallback password hotspot untuk akun GTK lama yang belum memiliki `encrypted_password`, sehingga akun dapat disinkronkan kembali ke FreeRADIUS.
 - Password percobaan tidak disimpan atau ditampilkan pada log autentikasi.
+## Penyempurnaan responsive layar laptop (13 Agustus 2026)
+
+- Halaman Penugasan GTK kini memiliki breakpoint khusus layar laptop 992–1439px.
+- Area deskripsi dan tombol hero dibagi 7/5 pada layar laptop agar tiga tombol aksi tetap rapi tanpa saling mendesak.
+- Tombol hero dapat membungkus secara teratur, sedangkan pada ponsel disusun vertikal selebar area konten.
+- Tabel diberi lebar minimum dan tetap berada dalam pembungkus scroll internal agar struktur halaman tidak bergeser.
+- Header daftar, filter, dan kartu statistik dipadatkan secara bertahap tanpa mengubah tampilan desktop lebar.
