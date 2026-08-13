@@ -4,6 +4,16 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Face Python Edge Agent (13 Agustus 2026)
+
+- Ditambahkan menu **Presensi > Presensi Gerbang > Face Python (Uji)** tanpa mengubah eksperimen Face Detect berbasis browser yang sudah ada.
+- Halaman admin menampilkan pairing PC kamera, token perangkat terpisah yang dapat dirotasi, unduhan paket agent, status online/offline, FPS, jumlah wajah/profil, dan hasil pengenalan terakhir.
+- Python berjalan pada PC kamera, bukan VM produksi. Agent memakai InsightFace `buffalo_l`, ONNX Runtime, deteksi multi-wajah, tracking ID sederhana, konfirmasi beberapa frame, cooldown, serta antrean voice offline.
+- Descriptor `face-api.js` tidak dipakai silang karena tidak kompatibel. Agent membentuk embedding InsightFace lokal dari frame registrasi terverifikasi, dengan foto profil sebagai fallback untuk data registrasi lama yang belum memiliki file frame.
+- Kanal agent memakai Bearer token acak terpisah, HTTPS, rate limit, respons `no-store`, dan hanya mengirim heartbeat/telemetri simulasi. NIP/NISN, frame kamera, serta token tidak dicatat dalam heartbeat.
+- Mode ini tetap read-only: tidak mencatat presensi, tidak mengunggah frame kamera, dan tidak mengubah data Face Detect lama. Cache embedding serta `config.json` diabaikan Git dan hanya boleh berada pada PC kamera tepercaya.
+- Paket awal tersedia dari tombol **Unduh Agent** dan berisi `agent.py`, `requirements.txt`, contoh konfigurasi, serta panduan instalasi Windows. Sintaks Python sudah divalidasi; pengujian InsightFace dan kamera sesungguhnya dilakukan pada PC gerbang karena dependency AI belum dipasang pada lingkungan pengembangan dan tidak tersedia perangkat kamera.
+
 ### Face Detect Percobaan Pintu (13 Agustus 2026)
 
 - Modul Presensi memperoleh menu admin **Face Detect (Uji)** untuk percobaan kamera yang diarahkan ke pintu.

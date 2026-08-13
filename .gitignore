@@ -27,6 +27,12 @@ yarn-error.log
 /.vscode
 /.zed
 
+# Face Python Edge Agent - kredensial dan cache biometrik hanya boleh ada di PC kamera
+/tools/face-python-agent/config.json
+/tools/face-python-agent/face_embeddings.npz
+/tools/face-python-agent/face_embeddings.meta.json
+/tools/face-python-agent/__pycache__/
+
 # Dokumen Siswa - Jangan push ke git (file upload)
 /dokumen-siswa/*
 !/dokumen-siswa/.gitkeep

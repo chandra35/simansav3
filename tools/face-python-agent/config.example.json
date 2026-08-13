@@ -1,0 +1,16 @@
+{
+  "api_base_url": "https://simansa.man1metro.sch.id/face-python-api",
+  "device_token": "PASTE_TOKEN_DARI_HALAMAN_ADMIN",
+  "device_name": "Gerbang Utama",
+  "camera_index": 0,
+  "camera_width": 1280,
+  "camera_height": 720,
+  "process_every_n_frames": 2,
+  "detector_size": 640,
+  "match_threshold": 0.42,
+  "confirm_frames": 3,
+  "cooldown_seconds": 20,
+  "voice_enabled": true,
+  "show_fullscreen": false,
+  "verify_ssl": true
+}

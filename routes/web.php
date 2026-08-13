@@ -19,6 +19,7 @@ use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ProfileController as SiswaProfileController;
 use App\Http\Controllers\PublicOsisPollingController;
 use App\Http\Controllers\PublicFaceDetectController;
+use App\Http\Controllers\PublicFacePythonController;
 
 // Redirect root: if logged in go to appropriate dashboard, else go to login
 Route::get('/', function () {
@@ -69,6 +70,12 @@ Route::get('/face-detect-publik/{token}', [PublicFaceDetectController::class, 's
 Route::get('/face-detect-publik/{token}/descriptors', [PublicFaceDetectController::class, 'descriptors'])
     ->middleware('throttle:10,1')
     ->name('public.face-detect.descriptors');
+
+// Python Edge Agent memakai Bearer token terpisah dan tidak pernah membuka sesi admin.
+Route::prefix('face-python-api')->middleware('throttle:60,1')->group(function () {
+    Route::get('/bootstrap', [PublicFacePythonController::class, 'bootstrap'])->name('public.face-python.bootstrap');
+    Route::post('/heartbeat', [PublicFacePythonController::class, 'heartbeat'])->name('public.face-python.heartbeat');
+});
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -1122,6 +1129,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/absensi/kiosk', [App\Http\Controllers\Admin\AbsensiController::class, 'kiosk'])->name('absensi.kiosk');
         Route::get('/absensi/deteksi-pintu', [App\Http\Controllers\Admin\AbsensiController::class, 'doorFaceDetect'])->name('absensi.face-detect');
         Route::post('/absensi/deteksi-pintu/rotate-token', [App\Http\Controllers\Admin\AbsensiController::class, 'rotateDoorFaceDetectToken'])->name('absensi.face-detect.rotate-token');
+        Route::get('/absensi/face-python', [App\Http\Controllers\Admin\FacePythonController::class, 'index'])->name('absensi.face-python');
+        Route::get('/absensi/face-python/status', [App\Http\Controllers\Admin\FacePythonController::class, 'status'])->name('absensi.face-python.status');
+        Route::get('/absensi/face-python/download', [App\Http\Controllers\Admin\FacePythonController::class, 'downloadAgent'])->name('absensi.face-python.download');
+        Route::post('/absensi/face-python/rotate-token', [App\Http\Controllers\Admin\FacePythonController::class, 'rotateToken'])->name('absensi.face-python.rotate-token');
         Route::get('/absensi/kiosk-state', [App\Http\Controllers\Admin\AbsensiController::class, 'kioskState'])->name('absensi.kiosk-state');
         Route::get('/absensi/kiosk-today-data', [App\Http\Controllers\Admin\AbsensiController::class, 'todayData'])->name('absensi.kiosk-today-data');
         Route::post('/absensi/record-face', [App\Http\Controllers\Admin\AbsensiController::class, 'recordFace'])->name('absensi.record-face');

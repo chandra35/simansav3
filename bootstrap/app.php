@@ -26,10 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'impersonation' => \App\Http\Middleware\ApplyUserImpersonation::class,
         ]);
         
-        // Exclude ExaManmet API routes from CSRF verification
-        // These are called from the Flutter mobile app (no browser session/cookies)
+        // Device API routes authenticate without browser sessions/cookies.
         $middleware->validateCsrfTokens(except: [
             'api/exam-browser/*',
+            'face-python-api/*',
         ]);
         
         // Track user activity untuk authenticated users

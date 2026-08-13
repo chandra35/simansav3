@@ -894,7 +894,7 @@ return [
                     'text' => 'Presensi Gerbang',
                     'icon' => 'fas fa-fw fa-clock',
                     'can' => 'face-registration-admin',
-                    'active' => ['admin/absensi', 'admin/absensi/kiosk*', 'admin/absensi/rekap*', 'admin/absensi/settings*'],
+                    'active' => ['admin/absensi', 'admin/absensi/kiosk*', 'admin/absensi/deteksi-pintu*', 'admin/absensi/face-python*', 'admin/absensi/rekap*', 'admin/absensi/settings*'],
                     'submenu' => [
                         [
                             'text' => 'Dashboard GTK',
@@ -923,6 +923,13 @@ return [
                             'icon' => 'fas fa-fw fa-eye',
                             'can' => 'face-registration-admin',
                             'active' => ['admin/absensi/deteksi-pintu*'],
+                        ],
+                        [
+                            'text' => 'Face Python (Uji)',
+                            'route' => 'admin.absensi.face-python',
+                            'icon' => 'fab fa-fw fa-python',
+                            'can' => 'face-registration-admin',
+                            'active' => ['admin/absensi/face-python*'],
                         ],
                         [
                             'text' => 'Rekap GTK',

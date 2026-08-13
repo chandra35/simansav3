@@ -221,6 +221,27 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("name('absensi.face-detect.rotate-token')", $routes);
     }
 
+    public function test_python_face_agent_is_isolated_as_a_tokenized_simulation_module(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $routes = file_get_contents($root.'/routes/web.php');
+        $menu = file_get_contents($root.'/config/adminlte.php');
+        $controller = file_get_contents($root.'/app/Http/Controllers/PublicFacePythonController.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/face-python.blade.php');
+        $agent = file_get_contents($root.'/tools/face-python-agent/agent.py');
+
+        $this->assertStringContainsString("'text' => 'Face Python (Uji)'", $menu);
+        $this->assertStringContainsString("name('absensi.face-python')", $routes);
+        $this->assertStringContainsString("name('public.face-python.bootstrap')", $routes);
+        $this->assertStringContainsString('bearerToken()', $controller);
+        $this->assertStringContainsString("'mode' => 'simulation'", $controller);
+        $this->assertStringNotContainsString('Absensi::', $controller);
+        $this->assertStringContainsString('belum mencatat presensi', $view);
+        $this->assertStringContainsString('FaceAnalysis(name="buffalo_l"', $agent);
+        $this->assertStringContainsString('class Tracker:', $agent);
+        $this->assertStringContainsString('attendance is deliberately not recorded', $agent);
+    }
+
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
     {
         $root = dirname(__DIR__, 2);

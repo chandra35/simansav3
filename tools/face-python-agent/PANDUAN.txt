@@ -1,0 +1,32 @@
+SIMANSA FACE PYTHON - MODE UJI COBA
+====================================
+
+Persyaratan:
+- Windows 10/11 64-bit
+- Python 3.10 atau 3.11
+- Kamera USB/IP yang dikenali Windows sebagai kamera
+- PC tepercaya karena embedding wajah disimpan lokal
+
+Instalasi:
+1. Ekstrak paket ke folder khusus, misalnya C:\SIMANSA-Face-Python.
+2. Buka PowerShell pada folder tersebut.
+3. Buat virtual environment:
+   py -3.11 -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+4. Instal library:
+   pip install -r requirements.txt
+5. Salin config.example.json menjadi config.json.
+6. Isi api_base_url dan device_token dari menu Presensi > Presensi Gerbang > Face Python.
+7. Jalankan:
+   python agent.py
+
+Tombol:
+- Q atau ESC: keluar
+- F: aktif/nonaktif layar penuh
+- R: sinkron ulang referensi wajah
+
+Catatan:
+- Proses pertama lebih lama karena model InsightFace buffalo_l diunduh ke PC.
+- Agent hanya simulasi: tidak membuat presensi dan tidak mengunggah frame kamera.
+- Jangan mengirim config.json karena berisi token rahasia perangkat.
+- Rotasi token dari SIMANSA jika token diduga bocor.

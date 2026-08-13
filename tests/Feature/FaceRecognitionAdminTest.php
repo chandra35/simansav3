@@ -6,7 +6,9 @@ use App\Models\FaceEncoding;
 use App\Models\AbsensiSetting;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\FaceDescriptorService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
@@ -15,6 +17,56 @@ use Tests\TestCase;
 class FaceRecognitionAdminTest extends TestCase
 {
     use DatabaseTransactions;
+
+    public function test_python_edge_agent_uses_a_separate_bearer_token_and_reports_simulation_status(): void
+    {
+        $token = Str::random(64);
+        AbsensiSetting::updateOrCreate(
+            ['key' => 'face_python_device_token'],
+            ['value' => $token, 'type' => 'string', 'group' => 'kiosk', 'label' => 'Token Perangkat Face Python']
+        );
+        $this->mock(FaceDescriptorService::class, function ($mock) {
+            $mock->shouldReceive('forPython')->once()->andReturn(collect());
+        });
+
+        $this->getJson(route('public.face-python.bootstrap'))->assertNotFound();
+        $this->withToken($token)->getJson(route('public.face-python.bootstrap'))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'max-age=0, no-store, private')
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('mode', 'simulation')
+            ->assertJsonPath('people', [])
+            ->assertJsonMissingPath('identifier');
+
+        $payload = [
+            'device_name' => 'PC Gerbang Test',
+            'agent_version' => '0.1.0',
+            'state' => 'running',
+            'fps' => 18.5,
+            'faces_in_frame' => 2,
+            'profiles' => 10,
+            'recognized_name' => 'Pengguna Uji',
+            'confidence' => 0.87,
+        ];
+        $this->withToken($token)->postJson(route('public.face-python.heartbeat'), $payload)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $cached = Cache::get('face-python:device:'.hash('sha256', $token));
+        $this->assertSame('PC Gerbang Test', $cached['device_name']);
+        $this->assertSame('running', $cached['state']);
+
+        $admin = User::role('Super Admin')->first() ?: User::role('Admin')->first();
+        if ($admin) {
+            $this->actingAs($admin)->get(route('admin.absensi.face-python'))
+                ->assertOk()
+                ->assertSee('Face Python')
+                ->assertSee('Mode simulasi');
+            $this->actingAs($admin)->get(route('admin.absensi.face-python.download'))
+                ->assertOk()
+                ->assertDownload('simansa-face-python-agent.zip');
+        }
+    }
 
     public function test_public_face_detect_requires_valid_rotatable_device_token_without_login(): void
     {
