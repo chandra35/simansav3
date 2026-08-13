@@ -581,7 +581,7 @@ return [
                     'text' => 'Mata Pelajaran',
                     'route' => 'admin.mapel.index',
                     'icon' => 'fas fa-fw fa-book',
-                    'can' => 'view-kurikulum',
+                    'can' => 'view-mapel',
                     'active' => ['admin/mapel*'],
                 ],
                 [
@@ -602,7 +602,7 @@ return [
                     'text' => 'Nilai Siswa',
                     'route' => 'admin.nilai.index',
                     'icon' => 'fas fa-fw fa-chart-line',
-                    'can' => 'view-kurikulum',
+                    'can' => 'view-nilai',
                     'active' => ['admin/nilai*'],
                 ],
                 [
@@ -630,28 +630,28 @@ return [
                 [
                     'text' => 'RDM',
                     'icon' => 'fas fa-fw fa-database',
-                    'can' => 'view-kurikulum',
+                    'can' => 'view-rdm',
                     'active' => ['admin/rdm-sync*', 'admin/rdm-mapel-mapping*', 'admin/rdm-matching*'],
                     'submenu' => [
                         [
                             'text' => 'Integrasi RDM',
                             'route' => 'admin.rdm-sync.index',
                             'icon' => 'fas fa-fw fa-sync-alt',
-                            'can' => 'view-kurikulum',
+                            'can' => 'view-rdm',
                             'active' => ['admin/rdm-sync*'],
                         ],
                         [
                             'text' => 'Mapping Mapel RDM',
                             'route' => 'admin.rdm-mapel-mapping.index',
                             'icon' => 'fas fa-fw fa-exchange-alt',
-                            'can' => 'view-kurikulum',
+                            'can' => 'view-rdm',
                             'active' => ['admin/rdm-mapel-mapping*'],
                         ],
                         [
                             'text' => 'Matching Siswa RDM',
                             'route' => 'admin.rdm-matching.index',
                             'icon' => 'fas fa-fw fa-random',
-                            'can' => 'view-kurikulum',
+                            'can' => 'view-rdm',
                             'active' => ['admin/rdm-matching*'],
                         ],
                     ],

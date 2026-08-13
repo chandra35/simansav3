@@ -26,11 +26,12 @@
                         </select>
                     </div>
                     
-                    <hr>
-                    
-                    <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modal-event">
-                        <i class="fas fa-plus mr-1"></i> Tambah Kegiatan
-                    </button>
+                    @can('manage-kalender-akademik')
+                        <hr>
+                        <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#modal-event">
+                            <i class="fas fa-plus mr-1"></i> Tambah Kegiatan
+                        </button>
+                    @endcan
                 </div>
             </div>
             
@@ -60,6 +61,7 @@
         </div>
     </div>
     
+    @can('manage-kalender-akademik')
     <!-- Modal Event -->
     <div class="modal fade" id="modal-event" tabindex="-1">
         <div class="modal-dialog">
@@ -130,6 +132,7 @@
             </div>
         </div>
     </div>
+    @endcan
 @stop
 
 @section('css')
@@ -141,6 +144,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/id.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const canManageCalendar = @json(auth()->user()->can('manage-kalender-akademik'));
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'id',
@@ -164,6 +168,7 @@
                     });
                 },
                 eventClick: function(info) {
+                    if (!canManageCalendar) return;
                     var event = info.event;
                     $('#event-id').val(event.id);
                     $('#event-nama').val(event.title);
@@ -177,11 +182,12 @@
                     $('#modal-event').modal('show');
                 },
                 dateClick: function(info) {
+                    if (!canManageCalendar) return;
                     resetForm();
                     $('#event-mulai').val(info.dateStr);
                     $('#modal-event').modal('show');
                 },
-                editable: true,
+                editable: canManageCalendar,
                 eventDrop: function(info) {
                     updateEventDates(info.event);
                 },

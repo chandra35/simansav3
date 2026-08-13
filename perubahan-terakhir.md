@@ -6,6 +6,9 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Permission Informasi dan Polling
 
+- Permission Matrix kini menjadi pengaman backend untuk Tahun Pelajaran, Kurikulum, Mata Pelajaran, Nilai, RDM, Kalender Akademik, dan Pengumuman: route baca memakai `view-*`, sedangkan tambah/edit/hapus/input/sinkronisasi memakai permission tulis masing-masing. WAKA dengan checklist **Lihat** saja tetap dapat membaca, tetapi mendapat 403 bila mencoba aksi tulis melalui URL atau request langsung.
+- Tombol aksi tulis pada Tahun Pelajaran, Mata Pelajaran, Nilai, dan Kalender Akademik kini ikut disembunyikan bila pengguna hanya memiliki izin lihat; tombol detail dan fitur baca tetap tersedia.
+- Modul Informasi sekarang memiliki permission terpisah `view-pengumuman`, `create-pengumuman`, `edit-pengumuman`, dan `delete-pengumuman`; sidebar Mata Pelajaran, Nilai, dan RDM juga tidak lagi menumpang pada `view-kurikulum`.
 - Katalog Permission Matrix kini menampilkan modul **Informasi** (`view-pengumuman`) dan **Polling & Survei** (`view-polling-results`, `manage-polling`) sebagai kelompok terpisah. Role seperti WAKA dapat diberi akses melihat hasil tanpa harus mendapat kewenangan membuat, mengubah, membuka, atau menutup polling.
 
 ### Penyempurnaan tabel GTK dan User & Role

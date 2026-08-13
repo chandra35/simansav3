@@ -21,7 +21,12 @@ class PollingModuleArchitectureTest extends TestCase
     {
         $modules = app(PermissionSyncService::class)->getModuleDefinitions();
 
-        $this->assertSame(['view-pengumuman'], $modules['informasi']['permissions']);
+        $this->assertSame([
+            'view-pengumuman',
+            'create-pengumuman',
+            'edit-pengumuman',
+            'delete-pengumuman',
+        ], $modules['informasi']['permissions']);
         $this->assertSame(
             ['view-polling-results', 'manage-polling'],
             $modules['polling-survei']['permissions']

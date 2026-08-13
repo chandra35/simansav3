@@ -180,9 +180,15 @@ class MataPelajaranController extends Controller
             })
             ->addColumn('action', function ($mapel) {
                 $showBtn = '<a href="' . route('admin.mapel.show', $mapel->id) . '" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i></a>';
-                $editBtn = '<a href="' . route('admin.mapel.edit', $mapel->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>';
-                $deleteBtn = '<button class="btn btn-sm btn-danger delete-btn" data-id="' . $mapel->id . '" title="Hapus"><i class="fas fa-trash"></i></button>';
-                $duplicateBtn = '<button class="btn btn-sm btn-success duplicate-btn" data-id="' . $mapel->id . '" title="Duplikat"><i class="fas fa-copy"></i></button>';
+                $editBtn = auth()->user()->can('edit-mapel')
+                    ? '<a href="' . route('admin.mapel.edit', $mapel->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>'
+                    : '';
+                $deleteBtn = auth()->user()->can('delete-mapel')
+                    ? '<button class="btn btn-sm btn-danger delete-btn" data-id="' . $mapel->id . '" title="Hapus"><i class="fas fa-trash"></i></button>'
+                    : '';
+                $duplicateBtn = auth()->user()->can('create-mapel')
+                    ? '<button class="btn btn-sm btn-success duplicate-btn" data-id="' . $mapel->id . '" title="Duplikat"><i class="fas fa-copy"></i></button>'
+                    : '';
                 
                 return $showBtn . ' ' . $editBtn . ' ' . $duplicateBtn . ' ' . $deleteBtn;
             })

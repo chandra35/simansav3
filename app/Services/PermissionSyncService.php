@@ -468,6 +468,9 @@ class PermissionSyncService
                 'description' => 'Melihat pengumuman dan informasi sekolah',
                 'permissions' => [
                     'view-pengumuman',
+                    'create-pengumuman',
+                    'edit-pengumuman',
+                    'delete-pengumuman',
                 ],
             ],
             'polling-survei' => [

@@ -96,12 +96,14 @@
             </div>
         </div>
         <div class="simansa-nilai-panel__body">
-            <a href="{{ route('admin.nilai.upload-form') }}?tingkat={{ request('tingkat') }}" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Upload Nilai Legger
-            </a>
-            <a href="{{ route('admin.nilai.upload-form', ['tingkat' => request('tingkat')]) }}" class="btn btn-info">
-                <i class="fas fa-download"></i> Template Excel Dinamis
-            </a>
+            @can('input-nilai')
+                <a href="{{ route('admin.nilai.upload-form') }}?tingkat={{ request('tingkat') }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Upload Nilai Legger
+                </a>
+                <a href="{{ route('admin.nilai.upload-form', ['tingkat' => request('tingkat')]) }}" class="btn btn-info">
+                    <i class="fas fa-download"></i> Template Excel Dinamis
+                </a>
+            @endcan
             <a href="{{ route('admin.nilai.ranking', ['tingkat' => request('tingkat')]) }}" class="btn btn-primary">
                 <i class="fas fa-trophy"></i> Perangkingan Nilai
             </a>

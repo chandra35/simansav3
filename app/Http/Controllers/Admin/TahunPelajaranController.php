@@ -46,14 +46,14 @@ class TahunPelajaranController extends Controller
                     $buttons = '';
                     
                     // Button Set Active (only if not active)
-                    if (!$row->is_active && $row->status !== 'selesai') {
+                    if (auth()->user()->can('set-active-tahun-pelajaran') && !$row->is_active && $row->status !== 'selesai') {
                         $buttons .= '<button type="button" class="btn btn-sm btn-success btn-set-active" data-id="' . $row->id . '" title="Set Aktif">
                             <i class="fas fa-check-circle"></i>
                         </button> ';
                     }
                     
                     // Button Change Semester (only if active)
-                    if ($row->is_active) {
+                    if (auth()->user()->can('change-semester-tahun-pelajaran') && $row->is_active) {
                         $nextSemester = $row->semester_aktif === 'Ganjil' ? 'Genap' : 'Ganjil';
                         $buttons .= '<button type="button" class="btn btn-sm btn-info btn-change-semester" data-id="' . $row->id . '" data-semester="' . $nextSemester . '" title="Ganti ke Semester ' . $nextSemester . '">
                             <i class="fas fa-sync-alt"></i>
@@ -66,12 +66,14 @@ class TahunPelajaranController extends Controller
                     </a> ';
 
                     // Button Edit
-                    $buttons .= '<a href="' . route('admin.tahun-pelajaran.edit', $row->id) . '" class="btn btn-sm btn-primary" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </a> ';
+                    if (auth()->user()->can('edit-tahun-pelajaran')) {
+                        $buttons .= '<a href="' . route('admin.tahun-pelajaran.edit', $row->id) . '" class="btn btn-sm btn-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a> ';
+                    }
                     
                     // Button Delete (only if not active and not selesai)
-                    if (!$row->is_active && $row->status !== 'selesai') {
+                    if (auth()->user()->can('delete-tahun-pelajaran') && !$row->is_active && $row->status !== 'selesai') {
                         $buttons .= '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>';

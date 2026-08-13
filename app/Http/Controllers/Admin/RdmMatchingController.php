@@ -16,7 +16,7 @@ class RdmMatchingController extends Controller
 
     public function index(): View
     {
-        $this->authorize('view-kurikulum');
+        $this->authorize('view-rdm');
 
         $activeTahun = $this->service->getActiveTahunAjaran();
 
@@ -37,7 +37,7 @@ class RdmMatchingController extends Controller
      */
     public function run(Request $request): JsonResponse
     {
-        $this->authorize('view-kurikulum');
+        $this->authorize('manage-rdm');
 
         $tingkatId = $request->filled('tingkat_id')
             ? (int) $request->input('tingkat_id')

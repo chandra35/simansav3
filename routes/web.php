@@ -413,14 +413,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/pengaturan/reset-system/restore-backup', [App\Http\Controllers\Admin\SystemResetController::class, 'restoreBackup'])->name('reset-system.restore-backup');
     
     // Tahun Pelajaran Management
-    Route::resource('tahun-pelajaran', TahunPelajaranController::class);
-    Route::post('/tahun-pelajaran/{tahunPelajaran}/set-active', [TahunPelajaranController::class, 'setActive'])->name('tahun-pelajaran.set-active');
-    Route::post('/tahun-pelajaran/{tahunPelajaran}/change-semester', [TahunPelajaranController::class, 'changeSemester'])->name('tahun-pelajaran.change-semester');
+    Route::resource('tahun-pelajaran', TahunPelajaranController::class)->only(['index', 'show'])->middleware('permission:view-tahun-pelajaran');
+    Route::resource('tahun-pelajaran', TahunPelajaranController::class)->only(['create', 'store'])->middleware('permission:create-tahun-pelajaran');
+    Route::resource('tahun-pelajaran', TahunPelajaranController::class)->only(['edit', 'update'])->middleware('permission:edit-tahun-pelajaran');
+    Route::resource('tahun-pelajaran', TahunPelajaranController::class)->only(['destroy'])->middleware('permission:delete-tahun-pelajaran');
+    Route::post('/tahun-pelajaran/{tahunPelajaran}/set-active', [TahunPelajaranController::class, 'setActive'])->name('tahun-pelajaran.set-active')->middleware('permission:set-active-tahun-pelajaran');
+    Route::post('/tahun-pelajaran/{tahunPelajaran}/change-semester', [TahunPelajaranController::class, 'changeSemester'])->name('tahun-pelajaran.change-semester')->middleware('permission:change-semester-tahun-pelajaran');
     
     // Kurikulum Management
-    Route::resource('kurikulum', KurikulumController::class);
-    Route::post('/kurikulum/{kurikulum}/activate', [KurikulumController::class, 'activate'])->name('kurikulum.activate');
-    Route::post('/kurikulum/{kurikulum}/deactivate', [KurikulumController::class, 'deactivate'])->name('kurikulum.deactivate');
+    Route::resource('kurikulum', KurikulumController::class)->only(['index', 'show'])->middleware('permission:view-kurikulum');
+    Route::resource('kurikulum', KurikulumController::class)->only(['create', 'store'])->middleware('permission:create-kurikulum');
+    Route::resource('kurikulum', KurikulumController::class)->only(['edit', 'update'])->middleware('permission:edit-kurikulum');
+    Route::resource('kurikulum', KurikulumController::class)->only(['destroy'])->middleware('permission:delete-kurikulum');
+    Route::post('/kurikulum/{kurikulum}/activate', [KurikulumController::class, 'activate'])->name('kurikulum.activate')->middleware('permission:activate-kurikulum');
+    Route::post('/kurikulum/{kurikulum}/deactivate', [KurikulumController::class, 'deactivate'])->name('kurikulum.deactivate')->middleware('permission:activate-kurikulum');
     
     // Jurusan Management (nested in Kurikulum)
     Route::post('/kurikulum/{kurikulum}/jurusan', [KurikulumController::class, 'storeJurusan'])->name('kurikulum.jurusan.store')->middleware('permission:manage-jurusan');
@@ -428,47 +434,54 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/kurikulum/{kurikulum}/jurusan/{jurusan}', [KurikulumController::class, 'deleteJurusan'])->name('kurikulum.jurusan.delete')->middleware('permission:manage-jurusan');
     
     // Mata Pelajaran Management
-    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class);
-    Route::get('/mapel-data', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'data'])->name('mapel.data');
-    Route::post('/mapel-bulk-store', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'bulkStore'])->name('mapel.bulk-store');
-    Route::post('/mapel/{mapel}/toggle-status', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'toggleStatus'])->name('mapel.toggle-status');
-    Route::post('/mapel/{mapel}/duplicate', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'duplicate'])->name('mapel.duplicate');
+    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class)->only(['index', 'show'])->middleware('permission:view-mapel');
+    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class)->only(['create', 'store'])->middleware('permission:create-mapel');
+    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class)->only(['edit', 'update'])->middleware('permission:edit-mapel');
+    Route::resource('mapel', \App\Http\Controllers\Admin\MataPelajaranController::class)->only(['destroy'])->middleware('permission:delete-mapel');
+    Route::get('/mapel-data', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'data'])->name('mapel.data')->middleware('permission:view-mapel');
+    Route::post('/mapel-bulk-store', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'bulkStore'])->name('mapel.bulk-store')->middleware('permission:create-mapel');
+    Route::post('/mapel/{mapel}/toggle-status', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'toggleStatus'])->name('mapel.toggle-status')->middleware('permission:edit-mapel');
+    Route::post('/mapel/{mapel}/duplicate', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'duplicate'])->name('mapel.duplicate')->middleware('permission:create-mapel');
     
     // Nilai Siswa Management (Legger untuk SPAN-PTKIN)
-    Route::get('/nilai', [\App\Http\Controllers\Admin\NilaiController::class, 'index'])->name('nilai.index');
-    Route::get('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'semester'])->name('nilai.semester');
-    Route::get('/nilai/upload', [\App\Http\Controllers\Admin\NilaiController::class, 'uploadForm'])->name('nilai.upload-form');
-    Route::post('/nilai/upload', [\App\Http\Controllers\Admin\NilaiController::class, 'upload'])->name('nilai.upload');
-    Route::get('/nilai/preview', [\App\Http\Controllers\Admin\NilaiController::class, 'preview'])->name('nilai.preview');
-    Route::post('/nilai/confirm-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'confirmUpload'])->name('nilai.confirm-upload');
-    Route::get('/nilai/cancel-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'cancelUpload'])->name('nilai.cancel-upload');
-    Route::get('/nilai/template', [\App\Http\Controllers\Admin\NilaiController::class, 'downloadTemplate'])->name('nilai.template');
-    Route::get('/nilai/export-legger', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLeggerForm'])->name('nilai.export-legger-form');
-    Route::get('/nilai/export-legger/download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLegger'])->name('nilai.export-legger');
-    Route::get('/nilai/export-span', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSpan'])->name('nilai.export-span');
-    Route::get('/nilai/perangkingan', [\App\Http\Controllers\Admin\NilaiController::class, 'ranking'])->name('nilai.ranking');
-    Route::get('/nilai/perangkingan/export', [\App\Http\Controllers\Admin\NilaiController::class, 'exportRanking'])->name('nilai.ranking-export');
-    Route::get('/nilai/siswa/{siswa}', [\App\Http\Controllers\Admin\NilaiController::class, 'siswa'])->name('nilai.siswa');
-    Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester');
-    Route::post('/nilai/semester/{semester}/export-preview', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterPreview'])->name('nilai.export-semester-preview');
-    Route::get('/nilai/semester/{semester}/export-download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterDownload'])->name('nilai.export-semester-download');
+    Route::middleware('permission:view-nilai')->group(function () {
+        Route::get('/nilai', [\App\Http\Controllers\Admin\NilaiController::class, 'index'])->name('nilai.index');
+        Route::get('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'semester'])->name('nilai.semester');
+        Route::get('/nilai/template', [\App\Http\Controllers\Admin\NilaiController::class, 'downloadTemplate'])->name('nilai.template');
+        Route::get('/nilai/export-legger', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLeggerForm'])->name('nilai.export-legger-form');
+        Route::get('/nilai/export-legger/download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportLegger'])->name('nilai.export-legger');
+        Route::get('/nilai/export-span', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSpan'])->name('nilai.export-span');
+        Route::get('/nilai/perangkingan', [\App\Http\Controllers\Admin\NilaiController::class, 'ranking'])->name('nilai.ranking');
+        Route::get('/nilai/perangkingan/export', [\App\Http\Controllers\Admin\NilaiController::class, 'exportRanking'])->name('nilai.ranking-export');
+        Route::get('/nilai/siswa/{siswa}', [\App\Http\Controllers\Admin\NilaiController::class, 'siswa'])->name('nilai.siswa');
+        Route::post('/nilai/semester/{semester}/export-preview', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterPreview'])->name('nilai.export-semester-preview');
+        Route::get('/nilai/semester/{semester}/export-download', [\App\Http\Controllers\Admin\NilaiController::class, 'exportSemesterDownload'])->name('nilai.export-semester-download');
+    });
+    Route::middleware('permission:input-nilai')->group(function () {
+        Route::get('/nilai/upload', [\App\Http\Controllers\Admin\NilaiController::class, 'uploadForm'])->name('nilai.upload-form');
+        Route::post('/nilai/upload', [\App\Http\Controllers\Admin\NilaiController::class, 'upload'])->name('nilai.upload');
+        Route::get('/nilai/preview', [\App\Http\Controllers\Admin\NilaiController::class, 'preview'])->name('nilai.preview');
+        Route::post('/nilai/confirm-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'confirmUpload'])->name('nilai.confirm-upload');
+        Route::get('/nilai/cancel-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'cancelUpload'])->name('nilai.cancel-upload');
+    });
+    Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester')->middleware('permission:delete-nilai');
 
     // Integrasi RDM
-    Route::middleware(['permission:view-kurikulum'])->group(function () {
+    Route::middleware(['permission:view-rdm'])->group(function () {
         Route::get('/rdm-sync', [RdmSyncController::class, 'index'])->name('rdm-sync.index');
+        Route::get('/rdm-mapel-mapping', [RdmMapelMappingController::class, 'index'])->name('rdm-mapel-mapping.index');
+        Route::get('/rdm-matching', [RdmMatchingController::class, 'index'])->name('rdm-matching.index');
+    });
+    Route::middleware(['permission:manage-rdm'])->group(function () {
         Route::post('/rdm-sync/preview', [RdmSyncController::class, 'preview'])->name('rdm-sync.preview');
         Route::post('/rdm-sync/{run}/apply', [RdmSyncController::class, 'apply'])->name('rdm-sync.apply');
-
-        // Mapping Mapel RDM
-        Route::get('/rdm-mapel-mapping', [RdmMapelMappingController::class, 'index'])->name('rdm-mapel-mapping.index');
+        Route::post('/rdm-matching/run', [RdmMatchingController::class, 'run'])->name('rdm-matching.run');
+    });
+    Route::middleware(['permission:manage-rdm-mapping'])->group(function () {
         Route::post('/rdm-mapel-mapping', [RdmMapelMappingController::class, 'store'])->name('rdm-mapel-mapping.store');
         Route::post('/rdm-mapel-mapping/auto-map', [RdmMapelMappingController::class, 'autoMap'])->name('rdm-mapel-mapping.auto-map');
         Route::post('/rdm-mapel-mapping/bulk', [RdmMapelMappingController::class, 'bulkStore'])->name('rdm-mapel-mapping.bulk-store');
         Route::delete('/rdm-mapel-mapping/{mapping}', [RdmMapelMappingController::class, 'destroy'])->name('rdm-mapel-mapping.destroy');
-
-        // Matching Siswa RDM vs SIMANSA
-        Route::get('/rdm-matching', [RdmMatchingController::class, 'index'])->name('rdm-matching.index');
-        Route::post('/rdm-matching/run', [RdmMatchingController::class, 'run'])->name('rdm-matching.run');
     });
     
     // Proses Akhir Tahun (Naik Kelas & Kelulusan)
@@ -799,16 +812,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // ==================== FITUR BARU: PENGUMUMAN ====================
-    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class);
+    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class)->only(['index', 'show'])->middleware('permission:view-pengumuman');
+    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class)->only(['create', 'store'])->middleware('permission:create-pengumuman');
+    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class)->only(['edit', 'update'])->middleware('permission:edit-pengumuman');
+    Route::resource('pengumuman', App\Http\Controllers\Admin\PengumumanController::class)->only(['destroy'])->middleware('permission:delete-pengumuman');
     
     // ==================== FITUR BARU: KALENDER AKADEMIK ====================
-    Route::get('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'index'])->name('kalender-akademik.index');
-    Route::get('/kalender-akademik/events', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'getEvents'])->name('kalender-akademik.events');
-    Route::post('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'store'])->name('kalender-akademik.store');
-    Route::get('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'show'])->name('kalender-akademik.show');
-    Route::put('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'update'])->name('kalender-akademik.update');
-    Route::patch('/kalender-akademik/{kalenderAkademik}/dates', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'updateDates'])->name('kalender-akademik.update-dates');
-    Route::delete('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'destroy'])->name('kalender-akademik.destroy');
+    Route::middleware('permission:view-kalender-akademik')->group(function () {
+        Route::get('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'index'])->name('kalender-akademik.index');
+        Route::get('/kalender-akademik/events', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'getEvents'])->name('kalender-akademik.events');
+        Route::get('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'show'])->name('kalender-akademik.show');
+    });
+    Route::middleware('permission:manage-kalender-akademik')->group(function () {
+        Route::post('/kalender-akademik', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'store'])->name('kalender-akademik.store');
+        Route::put('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'update'])->name('kalender-akademik.update');
+        Route::patch('/kalender-akademik/{kalenderAkademik}/dates', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'updateDates'])->name('kalender-akademik.update-dates');
+        Route::delete('/kalender-akademik/{kalenderAkademik}', [App\Http\Controllers\Admin\KalenderAkademikController::class, 'destroy'])->name('kalender-akademik.destroy');
+    });
     
     // ==================== FITUR BARU: PRESTASI SISWA ====================
     Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class);

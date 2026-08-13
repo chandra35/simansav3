@@ -24,9 +24,11 @@
             <p>Pastikan struktur, fase, JP, dan mapping RDM siap sebelum menyusun jadwal mengajar.</p>
         </div>
         <div class="mapel-hero__actions">
-            <a href="{{ route('admin.rdm-mapel-mapping.index') }}" class="btn btn-light">
-                <i class="fas fa-exchange-alt"></i> Mapping RDM
-            </a>
+            @can('view-rdm')
+                <a href="{{ route('admin.rdm-mapel-mapping.index') }}" class="btn btn-light">
+                    <i class="fas fa-exchange-alt"></i> Mapping RDM
+                </a>
+            @endcan
             @can('view-jadwal-pelajaran')
                 <a href="{{ route('admin.jadwal-pelajaran.index') }}" class="btn btn-warning">
                     <i class="fas fa-calendar-alt"></i> Isi Jadwal Mengajar
@@ -165,9 +167,11 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Mata Pelajaran Aktif</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.mapel.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-magic"></i> Siapkan dari Template MAN
-                </a>
+                @can('create-mapel')
+                    <a href="{{ route('admin.mapel.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-magic"></i> Siapkan dari Template MAN
+                    </a>
+                @endcan
             </div>
         </div>
         <div class="card-body">
