@@ -8,6 +8,7 @@ use App\Models\AbsensiLocation;
 use App\Models\AbsensiLog;
 use App\Models\AbsensiSetting;
 use App\Models\FaceEncoding;
+use App\Models\Gtk;
 use App\Models\HariLibur;
 use App\Models\TahunPelajaran;
 use App\Models\User;
@@ -22,33 +23,74 @@ class AbsensiController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+            'status' => ['nullable', 'in:hadir,terlambat,izin,sakit,alpa,dinas_luar,cuti'],
+            'metode' => ['nullable', 'in:face,manual'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $tanggal = $request->get('tanggal', now()->format('Y-m-d'));
         $isHoliday = HariLibur::isHoliday($tanggal);
         $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
+        $isPersonalScope = $this->isPersonalGtkScope($request);
 
-        $absensis = Absensi::gtk()
+        $baseQuery = Absensi::gtk()
             ->tanggal($tanggal)
-            ->when($this->isPersonalGtkScope($request), fn ($query) => $query->where('user_id', $request->user()->id))
-            ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap,nip,foto_profile', 'location:id,nama'])
+            ->when($isPersonalScope, fn ($query) => $query->where('user_id', $request->user()->id));
+
+        $dailyAttendances = (clone $baseQuery)->get();
+        $absensis = $baseQuery
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('metode'), fn ($query) => $query->where('metode_masuk', $request->metode))
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $keyword = trim($request->q);
+                $query->whereHas('user', function ($user) use ($keyword) {
+                    $user->where('name', 'like', "%{$keyword}%")
+                        ->orWhereHas('gtk', fn ($gtk) => $gtk
+                            ->where('nama_lengkap', 'like', "%{$keyword}%")
+                            ->orWhere('nip', 'like', "%{$keyword}%"));
+                });
+            })
+            ->with(['user:id,name', 'user.gtk:id,user_id,nama_lengkap,nip,foto_profile,jenis_kelamin', 'location:id,nama'])
             ->orderBy('waktu_masuk')
             ->get();
 
-        // Stats
+        $totalGtk = $isPersonalScope
+            ? 1
+            : Gtk::active()
+                ->whereNotNull('user_id')
+                ->whereHas('user', fn ($user) => $user->where('is_active', true))
+                ->count();
+        $recorded = $dailyAttendances->count();
+
         $stats = [
-            'hadir' => $absensis->where('status', 'hadir')->count(),
-            'terlambat' => $absensis->where('status', 'terlambat')->count(),
-            'izin' => $absensis->where('status', 'izin')->count(),
-            'sakit' => $absensis->where('status', 'sakit')->count(),
-            'alpa' => $absensis->where('status', 'alpa')->count(),
-            'dinas_luar' => $absensis->where('status', 'dinas_luar')->count(),
-            'cuti' => $absensis->where('status', 'cuti')->count(),
+            'total_gtk' => $totalGtk,
+            'tercatat' => $recorded,
+            'belum' => max($totalGtk - $recorded, 0),
+            'persentase' => $totalGtk > 0 ? round(($recorded / $totalGtk) * 100, 1) : 0,
+            'hadir' => $dailyAttendances->where('status', 'hadir')->count(),
+            'terlambat' => $dailyAttendances->where('status', 'terlambat')->count(),
+            'izin' => $dailyAttendances->where('status', 'izin')->count(),
+            'sakit' => $dailyAttendances->where('status', 'sakit')->count(),
+            'alpa' => $dailyAttendances->where('status', 'alpa')->count(),
+            'dinas_luar' => $dailyAttendances->where('status', 'dinas_luar')->count(),
+            'cuti' => $dailyAttendances->where('status', 'cuti')->count(),
+            'sudah_pulang' => $dailyAttendances->whereNotNull('waktu_pulang')->count(),
         ];
 
         $locations = AbsensiLocation::where('is_active', true)->get();
-        $isPersonalScope = $this->isPersonalGtkScope($request);
+        $gtkOptions = collect();
+        if (! $isPersonalScope && $request->user()->can('create-absensi')) {
+            $gtkOptions = Gtk::active()
+                ->whereNotNull('user_id')
+                ->whereHas('user', fn ($user) => $user->where('is_active', true))
+                ->orderBy('nama_lengkap')
+                ->get(['id', 'user_id', 'nama_lengkap', 'nip', 'foto_profile', 'jenis_kelamin']);
+        }
 
         return view('admin.absensi.index', compact(
-            'absensis', 'tanggal', 'isHoliday', 'stats', 'locations', 'tahunPelajaran', 'isPersonalScope'
+            'absensis', 'tanggal', 'isHoliday', 'stats', 'locations', 'tahunPelajaran', 'isPersonalScope', 'gtkOptions'
         ));
     }
 

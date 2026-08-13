@@ -4,6 +4,14 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Rebuild Pusat Presensi GTK
+
+- Halaman `/admin/absensi` dibangun ulang mengikuti UI operasional SIMANSA terbaru: hero lebih ringkas, empat metrik utama, indikator kelengkapan, ringkasan status, serta tabel profil GTK yang lebih mudah dipindai dan responsif pada desktop maupun ponsel.
+- Statistik kini memakai populasi GTK dan akun yang benar-benar aktif. Sistem menampilkan jumlah sudah tercatat, belum presensi, sudah pulang, dan persentase kelengkapan tanpa menganggap seluruh histori GTK masih aktif.
+- Ditambahkan filter tanggal, nama/NIP, status, dan metode presensi; tersedia pintasan kembali ke hari ini, status cepat, foto profil, detail jam kerja, sumber/lokasi, confidence wajah, catatan, dan penanda data yang pernah dikoreksi.
+- Modal input manual menggunakan pencarian GTK aktif dengan foto, sedangkan modal koreksi otomatis memuat status dan catatan lama. Tombol input, koreksi, serta mode kiosk tetap dilindungi permission backend dan hanya dirender untuk pengguna berwenang.
+- Ditambahkan tes regresi khusus dashboard Presensi GTK untuk menjaga perhitungan populasi aktif, filter smart, foto, pengisian koreksi, dan pelindung tombol tetap konsisten.
+
 ### Penegakan Permission Matrix Lintas Modul
 
 - Route backend Data Siswa, Kelas, User, Mutasi Siswa, Prestasi, Ekstrakurikuler, Keuangan, Layanan Surat, Monitoring, Activity Log, Tools, dan CBT kini memakai permission modulnya; izin lihat tidak lagi dapat dipakai untuk request tambah/edit/hapus melalui URL langsung.

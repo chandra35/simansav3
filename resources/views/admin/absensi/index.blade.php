@@ -1,615 +1,170 @@
 @extends('adminlte::page')
 
-@section('title', 'Absensi GTK')
-
-@section('css')
-<style>
-    .attendance-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr);
-        gap: 1.1rem;
-        align-items: stretch;
-        margin-bottom: 1.1rem;
-    }
-
-    .attendance-hero__main {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .16), rgba(13, 148, 136, .10));
-        border: 1px solid rgba(148, 163, 184, .16);
-        border-radius: 26px;
-        padding: 1.35rem 1.45rem;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, .06);
-    }
-
-    .attendance-hero__eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        color: #334155;
-        font-size: .82rem;
-        font-weight: 700;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        margin-bottom: .65rem;
-    }
-
-    .attendance-hero__title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.1;
-        margin: 0 0 .55rem 0;
-    }
-
-    .attendance-hero__subtitle {
-        color: #475569;
-        font-size: 1rem;
-        line-height: 1.7;
-        margin: 0;
-        max-width: 760px;
-    }
-
-    .attendance-hero__side {
-        display: grid;
-        gap: .9rem;
-    }
-
-    .attendance-hero-chip {
-        background: rgba(255, 255, 255, .92);
-        border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 20px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 16px 35px rgba(15, 23, 42, .06);
-    }
-
-    .attendance-hero-chip__label {
-        display: block;
-        color: #64748b;
-        font-size: .78rem;
-        font-weight: 700;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-        margin-bottom: .35rem;
-    }
-
-    .attendance-hero-chip__value {
-        display: block;
-        color: #0f172a;
-        font-size: 1.45rem;
-        font-weight: 800;
-        line-height: 1.2;
-    }
-
-    .attendance-kiosk-btn {
-        align-self: start;
-        justify-self: end;
-    }
-
-    .attendance-filter-panel {
-        background: linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(255, 255, 255, .98));
-        border: 1px solid rgba(148, 163, 184, .18);
-        border-radius: 20px;
-        padding: 1rem 1rem .85rem;
-        margin-bottom: 1rem;
-    }
-
-    .attendance-filter-label {
-        display: block;
-        font-size: .82rem;
-        font-weight: 700;
-        color: #475569;
-        margin-bottom: .4rem;
-    }
-
-    .attendance-filter-meta {
-        display: flex;
-        justify-content: flex-end;
-        gap: .6rem;
-        flex-wrap: wrap;
-    }
-
-    .attendance-stat-card {
-        position: relative;
-        overflow: hidden;
-        min-height: 166px;
-        border: 0;
-        border-radius: 22px;
-        padding: 1.2rem 1.2rem 1rem;
-        color: #fff;
-        box-shadow: 0 24px 50px rgba(15, 23, 42, .10);
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .attendance-stat-card::after {
-        content: "";
-        position: absolute;
-        right: -32px;
-        bottom: -40px;
-        width: 132px;
-        height: 132px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .12);
-    }
-
-    .attendance-stat-card--success { background: linear-gradient(135deg, #10b981, #34d399); }
-    .attendance-stat-card--warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    .attendance-stat-card--info { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
-    .attendance-stat-card--primary { background: linear-gradient(135deg, #4f46e5, #6366f1); }
-    .attendance-stat-card--danger { background: linear-gradient(135deg, #ef4444, #f87171); }
-    .attendance-stat-card--secondary { background: linear-gradient(135deg, #475569, #64748b); }
-
-    .attendance-stat-card__icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, .16);
-        font-size: 1.25rem;
-        position: relative;
-        z-index: 1;
-        flex: 0 0 56px;
-    }
-
-    .attendance-stat-card__body {
-        position: relative;
-        z-index: 1;
-        flex: 1 1 auto;
-        min-width: 0;
-    }
-
-    .attendance-stat-card__label {
-        font-size: .78rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        opacity: .9;
-        margin-bottom: .55rem;
-    }
-
-    .attendance-stat-card__value {
-        font-size: 2rem;
-        font-weight: 800;
-        line-height: 1;
-        margin-bottom: .7rem;
-    }
-
-    .attendance-stat-card__desc {
-        opacity: .92;
-        line-height: 1.5;
-        font-size: .92rem;
-    }
-
-    .attendance-management-card {
-        border: 0;
-        border-radius: 24px;
-        box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
-        overflow: hidden;
-    }
-
-    .attendance-management-card .card-header {
-        background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
-        color: #fff;
-        border-bottom: 0;
-        padding: 1rem 1.25rem;
-    }
-
-    .attendance-table-note {
-        color: #64748b;
-        font-size: .92rem;
-        line-height: 1.5;
-        margin-bottom: 1rem;
-    }
-
-    .attendance-empty-state {
-        color: #64748b;
-        padding: 2rem 1rem !important;
-    }
-
-    @media (max-width: 991.98px) {
-        .attendance-hero {
-            grid-template-columns: 1fr;
-        }
-
-        .attendance-hero__side {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .attendance-filter-meta {
-            justify-content: flex-start;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .attendance-hero__title {
-            font-size: 1.7rem;
-        }
-
-        .attendance-hero__side {
-            grid-template-columns: 1fr;
-        }
-
-        .attendance-stat-card {
-            flex-direction: column;
-            gap: .9rem;
-        }
-
-        .attendance-kiosk-btn {
-            justify-self: stretch;
-        }
-    }
-.gtk-attendance-page .attendance-hero{padding:0;background:linear-gradient(135deg,#4776f4 0%,#4d76e7 52%,#49a49a 100%)!important}.gtk-attendance-page .attendance-hero__main{background:transparent;border:0;box-shadow:none}.gtk-attendance-page .attendance-hero__eyebrow,.gtk-attendance-page .attendance-hero__title,.gtk-attendance-page .attendance-hero__subtitle{color:#fff}.gtk-attendance-page .attendance-hero__side{padding:1.25rem}.gtk-attendance-page .attendance-hero-chip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);box-shadow:none}.gtk-attendance-page .attendance-hero-chip__label,.gtk-attendance-page .attendance-hero-chip__value{color:#fff}
-</style>
-@stop
+@section('title', 'Presensi GTK')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <div><h1 class="m-0">Presensi GTK</h1><small class="text-muted">Presensi / Kehadiran GTK</small></div>
-        <a href="{{ route('admin.absensi.rekap', ['bulan' => \Carbon\Carbon::parse($tanggal)->month, 'tahun' => \Carbon\Carbon::parse($tanggal)->year]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-chart-bar mr-1"></i> Rekap Bulanan</a>
-    </div>
+<div class="row align-items-center">
+    <div class="col-sm-7"><h1 class="m-0"><i class="fas fa-user-clock text-primary mr-1"></i> Presensi GTK</h1></div>
+    <div class="col-sm-5"><ol class="breadcrumb float-sm-right mb-0"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item">Presensi</li><li class="breadcrumb-item active">GTK</li></ol></div>
+</div>
 @stop
 
 @section('content')
-<div class="gtk-attendance-page pb-4">
-    <div class="attendance-hero card bg-gradient-primary text-white border-0">
-        <div class="attendance-hero__main">
-            <div class="attendance-hero__eyebrow">
-                <i class="fas fa-clipboard-check"></i>
-                Presensi GTK
-            </div>
-            <h1 class="attendance-hero__title">Absensi GTK</h1>
-            <p class="attendance-hero__subtitle">
-                {{ $isPersonalScope ? 'Pantau status masuk, pulang, dan riwayat presensi Anda.' : 'Pantau kehadiran harian GTK, status masuk dan pulang, serta tindak lanjut data operasional.' }}
-            </p>
-        </div>
-        <div class="attendance-hero__side">
-            <div class="attendance-hero-chip">
-                <span class="attendance-hero-chip__label">Tanggal Presensi</span>
-                <span class="attendance-hero-chip__value">{{ \Carbon\Carbon::parse($tanggal)->isoFormat('D MMMM YYYY') }}</span>
-            </div>
-            <div class="attendance-hero-chip">
-                <span class="attendance-hero-chip__label">Kondisi Hari Ini</span>
-                <span class="attendance-hero-chip__value">{{ $isHoliday ? 'Libur / Weekend' : 'Hari Kerja Aktif' }}</span>
-            </div>
-            <a href="{{ route('admin.absensi.kiosk') }}" class="btn btn-dark attendance-kiosk-btn" target="_blank">
-                <i class="fas fa-desktop"></i> Buka Mode Kiosk
-            </a>
-        </div>
-    </div>
-    {{-- Filter Tanggal --}}
-    <div class="attendance-filter-panel">
-        <div class="row align-items-end">
-            <div class="col-md-4 mb-3">
-                <label class="attendance-filter-label">
-                    <i class="fas fa-calendar-alt mr-1"></i> Pilih Tanggal
-                </label>
-                <form method="GET" action="{{ route('admin.absensi.index') }}" class="input-group">
-                    <input type="date" name="tanggal" class="form-control" value="{{ $tanggal }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Tampilkan</button>
+@php
+    $selectedDate = \Carbon\Carbon::parse($tanggal);
+    $isToday = $selectedDate->isToday();
+    $hasFilter = request()->filled('q') || request()->filled('status') || request()->filled('metode');
+    $statusMeta = [
+        'hadir' => ['Hadir', 'success', 'check-circle'],
+        'terlambat' => ['Terlambat', 'warning', 'clock'],
+        'izin' => ['Izin', 'info', 'envelope-open-text'],
+        'sakit' => ['Sakit', 'primary', 'briefcase-medical'],
+        'alpa' => ['Alpa', 'danger', 'times-circle'],
+        'dinas_luar' => ['Dinas luar', 'secondary', 'briefcase'],
+        'cuti' => ['Cuti', 'dark', 'calendar-minus'],
+    ];
+@endphp
+<div class="attendance-page pb-4">
+    @if(session('success'))<div class="alert alert-success alert-dismissible"><button class="close" data-dismiss="alert">&times;</button><i class="fas fa-check-circle mr-1"></i>{{ session('success') }}</div>@endif
+    @if($errors->any())<div class="alert alert-danger"><strong>Data presensi belum dapat diproses.</strong><ul class="mb-0 mt-1">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+
+    <div class="card bg-gradient-primary text-white attendance-hero mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="attendance-hero__eyebrow"><i class="fas fa-satellite-dish mr-1"></i> Monitoring kehadiran GTK</div>
+                    <h4 class="mb-1">{{ $isPersonalScope ? 'Presensi Saya' : 'Pusat Presensi GTK' }}</h4>
+                    <p class="mb-0">{{ $isPersonalScope ? 'Lihat status masuk, pulang, dan riwayat presensi Anda secara ringkas.' : 'Pantau kehadiran, keterlambatan, kepulangan, serta kelengkapan data GTK dalam satu tampilan.' }}</p>
+                </div>
+                <div class="col-lg-5 mt-3 mt-lg-0">
+                    <div class="attendance-hero__date">
+                        <span>{{ $selectedDate->translatedFormat('l') }}</span>
+                        <strong>{{ $selectedDate->translatedFormat('d F Y') }}</strong>
+                        <small><i class="fas fa-circle mr-1 {{ $isHoliday ? 'text-warning' : 'text-success' }}"></i>{{ $isHoliday ? 'Hari libur / nonaktif' : ($isToday ? 'Hari kerja · hari ini' : 'Hari kerja terpilih') }}</small>
                     </div>
-                </form>
-            </div>
-            <div class="col-md-8 mb-3">
-                <div class="attendance-filter-meta">
-                    @if($isHoliday)
-                        <span class="badge badge-danger p-2"><i class="fas fa-calendar-times"></i> Hari Libur / Weekend</span>
-                    @endif
-                    <span class="badge badge-light p-2"><i class="fas fa-calendar"></i> {{ \Carbon\Carbon::parse($tanggal)->isoFormat('dddd, D MMMM YYYY') }}</span>
+                    <div class="attendance-hero__actions mt-2">
+                        <a href="{{ route('admin.absensi.rekap', ['bulan' => $selectedDate->month, 'tahun' => $selectedDate->year]) }}" class="btn btn-light btn-sm"><i class="fas fa-chart-bar mr-1"></i>Rekap Bulanan</a>
+                        @can('face-registration-admin')<a href="{{ route('admin.absensi.kiosk') }}" target="_blank" rel="noopener" class="btn btn-dark btn-sm"><i class="fas fa-desktop mr-1"></i>Mode Kiosk</a>@endcan
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Stats Cards --}}
-    <div class="row mb-4">
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--success">
-                <div class="attendance-stat-card__icon"><i class="fas fa-check"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Hadir</div>
-                    <div class="attendance-stat-card__value">{{ $stats['hadir'] }}</div>
-                    <div class="attendance-stat-card__desc">GTK yang hadir normal pada tanggal terpilih.</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--warning">
-                <div class="attendance-stat-card__icon"><i class="fas fa-clock"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Terlambat</div>
-                    <div class="attendance-stat-card__value">{{ $stats['terlambat'] }}</div>
-                    <div class="attendance-stat-card__desc">GTK yang check-in melewati batas waktu hadir.</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--info">
-                <div class="attendance-stat-card__icon"><i class="fas fa-envelope"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Izin</div>
-                    <div class="attendance-stat-card__value">{{ $stats['izin'] }}</div>
-                    <div class="attendance-stat-card__desc">GTK yang tercatat izin pada hari ini.</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--primary">
-                <div class="attendance-stat-card__icon"><i class="fas fa-medkit"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Sakit</div>
-                    <div class="attendance-stat-card__value">{{ $stats['sakit'] }}</div>
-                    <div class="attendance-stat-card__desc">GTK yang tercatat sakit pada hari ini.</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--danger">
-                <div class="attendance-stat-card__icon"><i class="fas fa-times"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Alpa</div>
-                    <div class="attendance-stat-card__value">{{ $stats['alpa'] }}</div>
-                    <div class="attendance-stat-card__desc">GTK yang belum memiliki presensi tanpa keterangan.</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-xl-2 mb-4">
-            <div class="attendance-stat-card attendance-stat-card--secondary">
-                <div class="attendance-stat-card__icon"><i class="fas fa-briefcase"></i></div>
-                <div class="attendance-stat-card__body">
-                    <div class="attendance-stat-card__label">Dinas / Cuti</div>
-                    <div class="attendance-stat-card__value">{{ $stats['dinas_luar'] + $stats['cuti'] }}</div>
-                    <div class="attendance-stat-card__desc">Akumulasi dinas luar dan cuti pada tanggal ini.</div>
-                </div>
-            </div>
-        </div>
+    <div class="row attendance-metrics">
+        @foreach([
+            ['Populasi GTK', $stats['total_gtk'], 'GTK aktif', 'primary', 'users'],
+            ['Sudah tercatat', $stats['tercatat'], $stats['persentase'].'% kelengkapan', 'success', 'clipboard-check'],
+            ['Belum presensi', $stats['belum'], 'Belum memiliki rekaman', 'warning', 'user-clock'],
+            ['Sudah pulang', $stats['sudah_pulang'], 'Check-out selesai', 'info', 'sign-out-alt'],
+        ] as [$label, $value, $caption, $color, $icon])
+        <div class="col-6 col-xl-3 mb-3"><div class="card attendance-metric h-100"><div class="card-body">
+            <span class="attendance-metric__icon bg-{{ $color }}"><i class="fas fa-{{ $icon }}"></i></span>
+            <div><small>{{ $label }}</small><strong>{{ number_format($value) }}</strong><span>{{ $caption }}</span></div>
+        </div></div></div>
+        @endforeach
     </div>
 
-    {{-- Data Table --}}
-    <div class="card attendance-management-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3 class="card-title"><i class="fas fa-table"></i> Data Absensi Harian</h3>
-            <div>
-                @can('create-absensi')<button class="btn btn-sm btn-success" data-toggle="modal" data-target="#modalManual">
-                    <i class="fas fa-plus"></i> Input Manual
-                </button>@endcan
-                <a href="{{ route('admin.absensi.rekap', ['bulan' => \Carbon\Carbon::parse($tanggal)->month, 'tahun' => \Carbon\Carbon::parse($tanggal)->year]) }}" class="btn btn-sm btn-info">
-                    <i class="fas fa-chart-bar"></i> Rekap Bulan Ini
-                </a>
+    <div class="card card-outline card-primary attendance-workspace">
+        <div class="card-header attendance-card-header">
+            <div><h3 class="card-title"><i class="fas fa-calendar-check mr-1"></i> Kehadiran Harian</h3><small>Gunakan filter untuk menemukan data tanpa mengubah rekap tanggal terpilih.</small></div>
+            <div class="attendance-card-actions">
+                @can('create-absensi')@if(!$isPersonalScope)<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalManual"><i class="fas fa-plus mr-1"></i>Input Manual</button>@endif@endcan
+                <a href="{{ route('admin.absensi.export', ['bulan' => $selectedDate->month, 'tahun' => $selectedDate->year]) }}" class="btn btn-outline-success btn-sm"><i class="fas fa-file-excel mr-1"></i>Export Bulan Ini</a>
             </div>
         </div>
         <div class="card-body">
-            <p class="attendance-table-note">
-                Tabel ini menampilkan status presensi masuk dan pulang GTK pada tanggal yang dipilih, termasuk metode presensi dan confidence pengenalan wajah bila tersedia.
-            </p>
-        <div class="table-responsive p-0">
-            <table class="table table-hover table-striped">
-                <thead class="thead-dark">
-                    <tr>
-                        <th width="40">No</th>
-                        <th>Nama</th>
-                        <th>NIP</th>
-                        <th>Masuk</th>
-                        <th>Pulang</th>
-                        <th>Status</th>
-                        <th>Metode</th>
-                        <th>Lokasi</th>
-                        <th>Confidence</th>
-                        <th width="80">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($absensis as $i => $absensi)
+            <form method="GET" action="{{ route('admin.absensi.index') }}" class="attendance-filter mb-3">
+                <div class="row align-items-end">
+                    <div class="col-sm-6 col-lg-2"><div class="form-group"><label>Tanggal</label><input type="date" name="tanggal" class="form-control" value="{{ $tanggal }}"></div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="form-group"><label>Pencarian GTK</label><div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input name="q" class="form-control" value="{{ request('q') }}" placeholder="Nama atau NIP"></div></div></div>
+                    <div class="col-sm-6 col-lg-2"><div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="">Semua status</option>@foreach($statusMeta as $key => $meta)<option value="{{ $key }}" @selected(request('status') === $key)>{{ $meta[0] }}</option>@endforeach</select></div></div>
+                    <div class="col-sm-6 col-lg-2"><div class="form-group"><label>Metode</label><select name="metode" class="form-control"><option value="">Semua metode</option><option value="face" @selected(request('metode') === 'face')>Pengenalan wajah</option><option value="manual" @selected(request('metode') === 'manual')>Input manual</option></select></div></div>
+                    <div class="col-lg-3"><div class="form-group attendance-filter__actions"><button class="btn btn-primary"><i class="fas fa-filter mr-1"></i>Terapkan</button><a href="{{ route('admin.absensi.index', ['tanggal' => $tanggal]) }}" class="btn btn-outline-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>@unless($isToday)<a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-primary" title="Kembali ke hari ini"><i class="fas fa-calendar-day"></i></a>@endunless</div></div>
+                </div>
+            </form>
+
+            <div class="attendance-status-strip mb-3">
+                @foreach($statusMeta as $key => $meta)
+                    <a href="{{ route('admin.absensi.index', array_filter(['tanggal' => $tanggal, 'status' => $key, 'q' => request('q'), 'metode' => request('metode')])) }}" class="attendance-status-pill {{ request('status') === $key ? 'is-active' : '' }}"><i class="fas fa-{{ $meta[2] }} text-{{ $meta[1] }}"></i><span>{{ $meta[0] }}</span><strong>{{ $stats[$key] }}</strong></a>
+                @endforeach
+            </div>
+
+            <div class="attendance-progress mb-3">
+                <div><span>Kelengkapan presensi</span><strong>{{ $stats['tercatat'] }} dari {{ $stats['total_gtk'] }} GTK</strong></div>
+                <div class="progress"><div class="progress-bar bg-success" role="progressbar" style="width: {{ min($stats['persentase'], 100) }}%" aria-valuenow="{{ $stats['persentase'] }}" aria-valuemin="0" aria-valuemax="100"></div></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                <p class="text-muted small mb-1">Menampilkan <strong>{{ $absensis->count() }}</strong> rekaman{{ $hasFilter ? ' sesuai filter' : '' }}.</p>
+                @if($isHoliday)<span class="badge badge-warning p-2"><i class="fas fa-calendar-times mr-1"></i>Tanggal terpilih adalah hari libur</span>@endif
+            </div>
+            <div class="table-responsive attendance-table-wrap">
+                <table class="table table-hover attendance-table mb-0">
+                    <thead><tr><th>GTK</th><th>Waktu Kerja</th><th>Status</th><th>Sumber Presensi</th><th>Catatan</th><th class="text-right">Aksi</th></tr></thead>
+                    <tbody>
+                    @forelse($absensis as $absensi)
+                        @php $meta = $statusMeta[$absensi->status] ?? [ucfirst($absensi->status), 'secondary', 'info-circle']; @endphp
                         <tr>
-                            <td>{{ $i + 1 }}</td>
-                            <td>
-                                @if($absensi->foto_masuk)
-                                    <img src="{{ asset('storage/' . $absensi->foto_masuk) }}" class="img-circle mr-1" width="25" height="25" style="object-fit:cover;">
-                                @endif
-                                {{ $absensi->user->gtk->nama_lengkap ?? $absensi->user->name }}
-                            </td>
-                            <td><small>{{ $absensi->user->gtk->nip ?? '-' }}</small></td>
-                            <td>
-                                <span class="text-success font-weight-bold">{{ $absensi->waktu_masuk_formatted }}</span>
-                            </td>
-                            <td>
-                                <span class="text-info">{{ $absensi->waktu_pulang_formatted }}</span>
-                                @if($absensi->durasi_kerja)
-                                    <br><small class="text-muted">{{ $absensi->durasi_kerja }}</small>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="badge badge-{{ $absensi->status_badge }}">{{ ucfirst(str_replace('_', ' ', $absensi->status)) }}</span>
-                                @if($absensi->status_pulang)
-                                    <br><small class="badge badge-light">{{ ucfirst(str_replace('_', ' ', $absensi->status_pulang)) }}</small>
-                                @endif
-                            </td>
-                            <td>
-                                <small>
-                                    <i class="fas fa-{{ $absensi->metode_masuk === 'face' ? 'user-shield' : 'keyboard' }}"></i>
-                                    {{ ucfirst($absensi->metode_masuk) }}
-                                </small>
-                            </td>
-                            <td><small>{{ $absensi->location->nama ?? '-' }}</small></td>
-                            <td>
-                                @if($absensi->face_confidence_masuk)
-                                    <small>{{ number_format($absensi->face_confidence_masuk * 100, 1) }}%</small>
-                                @else
-                                    <small class="text-muted">-</small>
-                                @endif
-                            </td>
-                            <td>
-                                @can('edit-absensi')
-                                <button class="btn btn-xs btn-warning" onclick="editAbsensi('{{ $absensi->id }}')" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                @else<span class="text-muted">—</span>@endcan
-                            </td>
+                            <td><div class="attendance-person"><img src="{{ $absensi->user?->gtk?->foto_profile_url }}" alt=""><div><strong>{{ $absensi->user?->gtk?->nama_lengkap ?? $absensi->user?->name ?? 'GTK tidak ditemukan' }}</strong><span>NIP {{ $absensi->user?->gtk?->nip ?: 'belum tersedia' }}</span></div></div></td>
+                            <td><div class="attendance-time"><span><i class="fas fa-sign-in-alt text-success"></i><strong>{{ $absensi->waktu_masuk_formatted }}</strong></span><span><i class="fas fa-sign-out-alt text-info"></i><strong>{{ $absensi->waktu_pulang_formatted }}</strong></span></div>@if($absensi->durasi_kerja)<small class="text-muted d-block mt-1">Durasi {{ $absensi->durasi_kerja }}</small>@endif</td>
+                            <td><span class="badge badge-{{ $meta[1] }} attendance-badge"><i class="fas fa-{{ $meta[2] }} mr-1"></i>{{ $meta[0] }}</span>@if($absensi->status_pulang)<small class="d-block text-muted mt-1">Pulang: {{ ucfirst(str_replace('_', ' ', $absensi->status_pulang)) }}</small>@endif</td>
+                            <td><div class="attendance-source"><strong><i class="fas fa-{{ $absensi->metode_masuk === 'face' ? 'user-shield' : 'keyboard' }} mr-1"></i>{{ $absensi->metode_masuk === 'face' ? 'Wajah' : 'Manual' }}</strong><span><i class="fas fa-map-marker-alt mr-1"></i>{{ $absensi->location?->nama ?: 'Lokasi tidak dicatat' }}</span>@if($absensi->face_confidence_masuk)<span>Confidence {{ number_format($absensi->face_confidence_masuk * 100, 1) }}%</span>@endif</div></td>
+                            <td><span class="attendance-note">{{ $absensi->catatan ?: 'Tidak ada catatan' }}</span>@if($absensi->edited_at)<small class="d-block text-warning mt-1"><i class="fas fa-history mr-1"></i>Pernah dikoreksi</small>@endif</td>
+                            <td class="text-right">@can('edit-absensi')<button type="button" class="btn btn-outline-primary btn-sm edit-attendance" data-id="{{ $absensi->id }}" title="Koreksi presensi"><i class="fas fa-edit"></i><span class="d-none d-xl-inline ml-1">Koreksi</span></button>@else<span class="text-muted">—</span>@endcan</td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="10" class="text-center attendance-empty-state">
-                                @if($isHoliday)
-                                    <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
-                                    Hari libur - tidak ada data absensi
-                                @else
-                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                    Belum ada data absensi untuk tanggal ini
-                                @endif
-                            </td>
-                        </tr>
+                        <tr><td colspan="6"><div class="attendance-empty"><span><i class="fas fa-{{ $isHoliday ? 'calendar-times' : 'clipboard' }}"></i></span><strong>{{ $hasFilter ? 'Data tidak ditemukan' : ($isHoliday ? 'Tidak ada presensi pada hari libur' : 'Belum ada rekaman presensi') }}</strong><p>{{ $hasFilter ? 'Ubah atau reset filter untuk melihat data lainnya.' : 'Data akan tampil setelah GTK melakukan presensi atau operator membuat input manual.' }}</p></div></td></tr>
                     @endforelse
-                </tbody>
-            </table>
-        </div>
-        </div>
-    </div>
-
-    @can('create-absensi')
-    {{-- Manual Input Modal --}}
-    <div class="modal fade" id="modalManual" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('admin.absensi.manual') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header bg-success">
-                        <h5 class="modal-title"><i class="fas fa-keyboard"></i> Input Absensi Manual</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="callout callout-warning">
-                            <small><i class="fas fa-exclamation-triangle"></i> Input manual dicatat dalam audit log. Gunakan jika kamera/kiosk bermasalah.</small>
-                        </div>
-                        <div class="form-group">
-                            <label>GTK <span class="text-danger">*</span></label>
-                            <select name="user_id" class="form-control select2" required>
-                                <option value="">-- Pilih GTK --</option>
-                            </select>
-                        </div>
-                        <input type="hidden" name="tanggal" value="{{ $tanggal }}">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label>Jam Masuk</label>
-                                    <input type="time" name="waktu_masuk" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label>Jam Pulang</label>
-                                    <input type="time" name="waktu_pulang" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Status <span class="text-danger">*</span></label>
-                            <select name="status" class="form-control" required>
-                                <option value="hadir">Hadir</option>
-                                <option value="terlambat">Terlambat</option>
-                                <option value="izin">Izin</option>
-                                <option value="sakit">Sakit</option>
-                                <option value="dinas_luar">Dinas Luar</option>
-                                <option value="cuti">Cuti</option>
-                                <option value="alpa">Alpa</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Catatan</label>
-                            <textarea name="catatan" class="form-control" rows="2" maxlength="500"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Bukti (opsional)</label>
-                            <input type="file" name="file_bukti" class="form-control-file" accept=".jpg,.jpeg,.png,.pdf">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
-                    </div>
-                </form>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    @endcan
+
+    @can('create-absensi')@if(!$isPersonalScope)
+    <div class="modal fade" id="modalManual" tabindex="-1"><div class="modal-dialog modal-lg"><form method="POST" action="{{ route('admin.absensi.manual') }}" enctype="multipart/form-data" class="modal-content">@csrf
+        <div class="modal-header"><div><h5 class="modal-title"><i class="fas fa-keyboard text-success mr-1"></i>Input Presensi Manual</h5><small class="text-muted">Setiap input tersimpan dalam audit log.</small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+        <div class="modal-body"><input type="hidden" name="tanggal" value="{{ $tanggal }}"><div class="alert alert-warning py-2"><i class="fas fa-shield-alt mr-1"></i>Gunakan hanya untuk koreksi operasional, izin, sakit, atau ketika perangkat kiosk bermasalah.</div>
+            <div class="form-group"><label>GTK <span class="text-danger">*</span></label><select name="user_id" id="manualGtk" class="form-control" required><option value="">Cari nama atau NIP GTK</option>@foreach($gtkOptions as $gtk)<option value="{{ $gtk->user_id }}" data-name="{{ $gtk->nama_lengkap }}" data-nip="{{ $gtk->nip ?: 'NIP belum tersedia' }}" data-photo="{{ $gtk->foto_profile_url }}" @selected(old('user_id') === $gtk->user_id)>{{ $gtk->nama_lengkap }} · {{ $gtk->nip ?: 'tanpa NIP' }}</option>@endforeach</select></div>
+            <div class="row"><div class="col-md-4"><div class="form-group"><label>Status <span class="text-danger">*</span></label><select name="status" class="form-control" required>@foreach($statusMeta as $key => $meta)<option value="{{ $key }}" @selected(old('status', 'hadir') === $key)>{{ $meta[0] }}</option>@endforeach</select></div></div><div class="col-6 col-md-4"><div class="form-group"><label>Jam Masuk</label><input type="time" name="waktu_masuk" value="{{ old('waktu_masuk') }}" class="form-control"></div></div><div class="col-6 col-md-4"><div class="form-group"><label>Jam Pulang</label><input type="time" name="waktu_pulang" value="{{ old('waktu_pulang') }}" class="form-control"></div></div></div>
+            <div class="form-group"><label>Catatan</label><textarea name="catatan" class="form-control" rows="3" maxlength="500" placeholder="Tuliskan keterangan yang relevan">{{ old('catatan') }}</textarea></div>
+            <div class="form-group mb-0"><label>Bukti pendukung <small class="text-muted">(opsional, maks. 2 MB)</small></label><div class="custom-file"><input type="file" name="file_bukti" class="custom-file-input" id="manualEvidence" accept=".jpg,.jpeg,.png,.pdf"><label class="custom-file-label" for="manualEvidence">Pilih JPG, PNG, atau PDF</label></div></div>
+        </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-success"><i class="fas fa-save mr-1"></i>Simpan Presensi</button></div>
+    </form></div></div>
+    @endif@endcan
 
     @can('edit-absensi')
-    {{-- Edit Modal --}}
-    <div class="modal fade" id="modalEdit" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="formEdit" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-header bg-warning">
-                        <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Absensi</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Status <span class="text-danger">*</span></label>
-                            <select name="status" id="editStatus" class="form-control" required>
-                                <option value="hadir">Hadir</option>
-                                <option value="terlambat">Terlambat</option>
-                                <option value="izin">Izin</option>
-                                <option value="sakit">Sakit</option>
-                                <option value="dinas_luar">Dinas Luar</option>
-                                <option value="cuti">Cuti</option>
-                                <option value="alpa">Alpa</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Catatan</label>
-                            <textarea name="catatan" id="editCatatan" class="form-control" rows="2"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Alasan Edit <span class="text-danger">*</span></label>
-                            <input type="text" name="edit_reason" class="form-control" required placeholder="Wajib isi alasan perubahan">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="modalEdit" tabindex="-1"><div class="modal-dialog"><form id="formEdit" method="POST" class="modal-content">@csrf @method('PUT')
+        <div class="modal-header"><div><h5 class="modal-title"><i class="fas fa-edit text-primary mr-1"></i>Koreksi Presensi</h5><small class="text-muted" id="editGtkName"></small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+        <div class="modal-body"><div class="alert alert-info py-2"><i class="fas fa-history mr-1"></i>Nilai lama dan alasan perubahan akan disimpan dalam audit log.</div>
+            <div class="form-group"><label>Status <span class="text-danger">*</span></label><select name="status" id="editStatus" class="form-control" required>@foreach($statusMeta as $key => $meta)<option value="{{ $key }}">{{ $meta[0] }}</option>@endforeach</select></div>
+            <div class="form-group"><label>Catatan</label><textarea name="catatan" id="editCatatan" class="form-control" rows="3" maxlength="500"></textarea></div>
+            <div class="form-group mb-0"><label>Alasan koreksi <span class="text-danger">*</span></label><input name="edit_reason" class="form-control" maxlength="255" required placeholder="Contoh: verifikasi surat izin dari GTK"></div>
+        </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-save mr-1"></i>Simpan Koreksi</button></div>
+    </form></div></div>
     @endcan
 </div>
 @stop
 
+@section('css')
+<style>
+.attendance-page .attendance-hero{border:0;border-radius:.75rem;overflow:hidden;box-shadow:0 8px 24px rgba(37,99,235,.16)}.attendance-page .attendance-hero .card-body{padding:1.15rem 1.25rem}.attendance-hero__eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;opacity:.9}.attendance-hero p{font-size:.87rem;opacity:.92}.attendance-hero__date{display:flex;flex-direction:column;align-items:flex-end}.attendance-hero__date span{font-size:.72rem;text-transform:uppercase;opacity:.85}.attendance-hero__date strong{font-size:1.2rem}.attendance-hero__date small{font-size:.72rem}.attendance-hero__actions{display:flex;justify-content:flex-end;gap:.35rem;flex-wrap:wrap}.attendance-metric{border:1px solid #e2e8f0;box-shadow:0 4px 14px rgba(15,23,42,.05)}.attendance-metric .card-body{padding:.8rem;display:flex;align-items:center;gap:.7rem}.attendance-metric__icon{width:42px;height:42px;border-radius:.55rem;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px}.attendance-metric small,.attendance-metric strong,.attendance-metric span{display:block}.attendance-metric small{font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase}.attendance-metric strong{font-size:1.35rem;line-height:1.15;color:#0f172a}.attendance-metric span{font-size:.7rem;color:#64748b}.attendance-workspace{border-radius:.65rem;box-shadow:0 5px 18px rgba(15,23,42,.06)}.attendance-card-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem}.attendance-card-header h3{float:none;margin:0}.attendance-card-header small{display:block;color:#64748b;margin-top:.2rem}.attendance-card-actions{display:flex;gap:.35rem;flex-wrap:wrap}.attendance-filter{padding:.8rem;background:#f8fafc;border:1px solid #dbe4ef;border-radius:.55rem}.attendance-filter .form-group{margin-bottom:0}.attendance-filter label{font-size:.7rem;color:#475569;margin-bottom:.25rem;text-transform:uppercase}.attendance-filter__actions{display:flex;gap:.35rem}.attendance-status-strip{display:grid;grid-template-columns:repeat(7,minmax(105px,1fr));gap:.4rem;overflow-x:auto;padding-bottom:.2rem}.attendance-status-pill{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.35rem;padding:.55rem .6rem;border:1px solid #e2e8f0;border-radius:.5rem;color:#475569;background:#fff;white-space:nowrap}.attendance-status-pill:hover,.attendance-status-pill.is-active{border-color:#6366f1;background:#eef2ff;color:#312e81;text-decoration:none}.attendance-status-pill span{font-size:.72rem}.attendance-status-pill strong{font-size:.9rem}.attendance-progress{padding:.65rem .75rem;border:1px solid #dcfce7;background:#f0fdf4;border-radius:.5rem}.attendance-progress>div:first-child{display:flex;justify-content:space-between;font-size:.72rem;color:#166534;margin-bottom:.35rem}.attendance-progress .progress{height:7px;background:#dcfce7}.attendance-table-wrap{border:1px solid #e2e8f0;border-radius:.5rem}.attendance-table{min-width:920px;font-size:.78rem}.attendance-table thead th{border-top:0;background:#f8fafc;color:#475569;font-size:.68rem;text-transform:uppercase;letter-spacing:.03em}.attendance-table td{vertical-align:middle}.attendance-person{display:flex;align-items:center;gap:.55rem;min-width:210px}.attendance-person img{width:38px;height:48px;object-fit:cover;border-radius:.4rem;border:1px solid #dbeafe;background:#eff6ff}.attendance-person strong,.attendance-person span{display:block}.attendance-person strong{color:#0f172a}.attendance-person span,.attendance-source span{font-size:.68rem;color:#64748b}.attendance-time{display:flex;gap:.65rem}.attendance-time span{display:flex;align-items:center;gap:.25rem}.attendance-source strong,.attendance-source span{display:block}.attendance-badge{padding:.35rem .5rem}.attendance-note{display:block;max-width:190px;color:#475569;white-space:normal}.attendance-empty{text-align:center;padding:2.5rem 1rem;color:#64748b}.attendance-empty>span{width:52px;height:52px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#eef2ff;color:#4f46e5;font-size:1.2rem;margin-bottom:.65rem}.attendance-empty strong{display:block;color:#334155}.attendance-empty p{margin:.25rem 0 0}.manual-gtk-option{display:flex;align-items:center;gap:.6rem;min-height:48px}.manual-gtk-option img{width:34px;height:42px;object-fit:cover;border-radius:.35rem}.manual-gtk-option strong,.manual-gtk-option small{display:block}.manual-gtk-option small{color:#64748b}.select2-results__options{max-height:260px!important;overflow-y:auto!important}
+@media(min-width:992px) and (max-width:1439.98px){.attendance-page .card-body{padding:.85rem}.attendance-status-strip{grid-template-columns:repeat(7,120px)}.attendance-filter>.row>[class*="col-"]{padding-left:.3rem;padding-right:.3rem}.attendance-filter__actions .btn{padding-left:.55rem;padding-right:.55rem}}
+@media(max-width:991.98px){.attendance-hero__date{align-items:flex-start}.attendance-hero__actions{justify-content:flex-start}.attendance-filter .form-group{margin-bottom:.6rem}.attendance-filter__actions{margin-bottom:0}.attendance-card-header{align-items:flex-start;flex-wrap:wrap}}
+@media(max-width:575.98px){.attendance-card-actions,.attendance-card-actions .btn{width:100%}.attendance-hero__actions{display:grid;grid-template-columns:1fr 1fr}.attendance-filter__actions{display:grid;grid-template-columns:1fr 1fr}.attendance-filter__actions .btn:last-child:nth-child(3){grid-column:1/-1}.attendance-progress>div:first-child{align-items:flex-start;flex-direction:column}.attendance-page .modal-dialog{margin:.5rem}}
+</style>
+@stop
+
 @section('js')
 <script>
-    // Load GTK list for manual input
-    async function loadGtkList() {
-        try {
-            const response = await fetch('{{ route("admin.gtk.data") }}', {
-                headers: { 'Accept': 'application/json' }
-            });
-            const result = await response.json();
-            const select = document.querySelector('select[name="user_id"]');
-            if (select && result.data) {
-                result.data.forEach(gtk => {
-                    const opt = document.createElement('option');
-                    opt.value = gtk.user_id;
-                    opt.textContent = `${gtk.nama_lengkap} ${gtk.nip ? '(' + gtk.nip + ')' : ''}`;
-                    select.appendChild(opt);
-                });
-            }
-        } catch(e) {
-            console.error('Error loading GTK:', e);
-        }
-    }
-
-    function editAbsensi(id) {
-        document.getElementById('formEdit').action = '{{ url("admin/absensi") }}/' + id;
-        $('#modalEdit').modal('show');
-    }
-
-    document.addEventListener('DOMContentLoaded', loadGtkList);
+$(function(){
+    const records = {{ Illuminate\Support\Js::from($absensis->mapWithKeys(fn($item) => [$item->id => ['status' => $item->status, 'catatan' => $item->catatan, 'nama' => $item->user?->gtk?->nama_lengkap ?? $item->user?->name]])) }};
+    $('.edit-attendance').on('click',function(){const record=records[$(this).data('id')];if(!record)return;$('#formEdit').attr('action',@json(url('admin/absensi'))+'/'+$(this).data('id'));$('#editStatus').val(record.status);$('#editCatatan').val(record.catatan||'');$('#editGtkName').text(record.nama||'GTK');$('#modalEdit').modal('show');});
+    const optionTemplate=function(option){if(!option.id)return option.text;const source=option.element.dataset,wrap=$('<div class="manual-gtk-option">');return wrap.append($('<img>',{src:source.photo,alt:''}),$('<div>').append($('<strong>').text(source.name),$('<small>').text(source.nip)));};
+    if($.fn.select2&&$('#manualGtk').length){$('#manualGtk').select2({theme:'bootstrap4',width:'100%',dropdownParent:$('#modalManual'),placeholder:'Cari nama atau NIP GTK',allowClear:true,templateResult:optionTemplate});}
+    $('.custom-file-input').on('change',function(){const file=this.files&&this.files[0];$(this).next('.custom-file-label').text(file?file.name:'Pilih JPG, PNG, atau PDF');});
+    @if($errors->any() && old('user_id')) $('#modalManual').modal('show'); @endif
+});
 </script>
 @stop

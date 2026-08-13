@@ -130,6 +130,28 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('khusus untuk GTK', $settings);
     }
 
+    public function test_gtk_attendance_dashboard_uses_active_population_and_smart_filters(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiController.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/index.blade.php');
+
+        $this->assertStringContainsString('Gtk::active()', $controller);
+        $this->assertStringContainsString("'belum' => max(\$totalGtk - \$recorded, 0)", $controller);
+        $this->assertStringContainsString("'persentase' => \$totalGtk > 0", $controller);
+        $this->assertStringContainsString("->when(\$request->filled('status')", $controller);
+        $this->assertStringContainsString("->when(\$request->filled('metode')", $controller);
+        $this->assertStringContainsString("->when(\$request->filled('q')", $controller);
+        $this->assertStringContainsString('Pusat Presensi GTK', $view);
+        $this->assertStringContainsString('Kelengkapan presensi', $view);
+        $this->assertStringContainsString('Belum presensi', $view);
+        $this->assertStringContainsString("@can('face-registration-admin')", $view);
+        $this->assertStringContainsString("@can('create-absensi')", $view);
+        $this->assertStringContainsString("@can('edit-absensi')", $view);
+        $this->assertStringContainsString('foto_profile_url', $view);
+        $this->assertStringContainsString("$('#editStatus').val(record.status)", $view);
+    }
+
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
     {
         $root = dirname(__DIR__, 2);
