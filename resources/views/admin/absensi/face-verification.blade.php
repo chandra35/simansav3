@@ -185,6 +185,7 @@
                                     $profile = $face->user_type === 'gtk' ? $face->user->gtk : $face->user->siswa;
                                     $name = $profile->nama_lengkap ?? $face->user->name ?? '-';
                                     $identifier = $face->user_type === 'gtk' ? ($profile->nip ?? '-') : ($profile->nisn ?? '-');
+                                    $photoUrls = $face->registration_photo_urls;
                                 @endphp
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
@@ -199,10 +200,11 @@
                                     </td>
                                     <td>{{ $identifier }}</td>
                                     <td class="text-center">
-                                        @if($face->registration_photo_url)
+                                        @if($photoUrls->isNotEmpty())
                                             <button type="button" class="btn btn-link p-0 border-0 js-face-preview"
                                                     data-toggle="modal" data-target="#facePreviewModal"
-                                                    data-image="{{ $face->registration_photo_url }}"
+                                                    data-images='@json($photoUrls)'
+                                                    data-photo-angles='@json($face->capture_angles ?? [])'
                                                     data-name="{{ $name }}"
                                                     data-identifier="{{ $identifierLabel }}: {{ $identifier }}"
                                                     data-captures="{{ $face->total_captures }} frame"
@@ -210,8 +212,8 @@
                                                     data-angles="{{ implode(', ', $face->capture_angles ?? []) }}"
                                                     data-registered="{{ $face->created_at->format('d/m/Y H:i') }}"
                                                     title="Lihat foto hasil registrasi {{ $name }}">
-                                                <img src="{{ $face->registration_photo_url }}" class="face-capture-thumb" alt="Foto wajah terdaftar {{ $name }}">
-                                                <small class="d-block mt-1"><i class="fas fa-search-plus mr-1"></i>Preview</small>
+                                                <img src="{{ $photoUrls->first() }}" class="face-capture-thumb" alt="Foto wajah terdaftar {{ $name }}">
+                                                <small class="d-block mt-1"><i class="fas fa-images mr-1"></i>{{ $photoUrls->count() }} frame</small>
                                             </button>
                                         @else
                                             <span class="badge badge-light border text-muted p-2"><i class="fas fa-image mr-1"></i>Belum tersimpan</span>
@@ -238,32 +240,46 @@
                                     </td>
                                     <td>{{ $face->created_at->format('d/m/Y H:i') }}</td>
                                     <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('admin.absensi.face-register', ['type' => $face->user_type, 'user_id' => $face->user_id]) }}" class="btn btn-info" title="Registrasi Ulang"><i class="fas fa-redo"></i></a>
+                                        <div class="dropdown face-action-dropdown">
+                                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                            @if($photoUrls->isNotEmpty())
+                                                <button type="button" class="dropdown-item js-face-preview" data-toggle="modal" data-target="#facePreviewModal"
+                                                        data-images='@json($photoUrls)' data-photo-angles='@json($face->capture_angles ?? [])'
+                                                        data-name="{{ $name }}" data-identifier="{{ $identifierLabel }}: {{ $identifier }}"
+                                                        data-captures="{{ $face->total_captures }} frame" data-quality="{{ number_format($face->quality_score ?? 0, 0) }}%"
+                                                        data-angles="{{ implode(', ', $face->capture_angles ?? []) }}" data-registered="{{ $face->created_at->format('d/m/Y H:i') }}">
+                                                    <i class="fas fa-images text-info mr-2"></i>Lihat Semua Frame
+                                                </button>
+                                            @endif
+                                            <a href="{{ route('admin.absensi.face-register', ['type' => $face->user_type, 'user_id' => $face->user_id]) }}" class="dropdown-item"><i class="fas fa-redo text-info mr-2"></i>Registrasi Ulang</a>
+                                            <div class="dropdown-divider"></div>
                                             @if(! $face->self_registration_unlocked_at)
-                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="d-inline">
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="mb-0">
                                                     @csrf
                                                     <input type="hidden" name="action" value="unlock">
-                                                    <button type="button" class="btn btn-primary js-face-confirm" title="Izinkan Registrasi Ulang dari Akun Pengguna" data-title="Buka izin registrasi ulang?" data-text="Pengguna dapat merekam ulang satu kali dari akunnya. Setelah berhasil, akses otomatis terkunci kembali." data-confirm="Ya, izinkan"><i class="fas fa-user-lock"></i></button>
+                                                    <button type="button" class="dropdown-item js-face-confirm" data-title="Buka izin registrasi ulang?" data-text="Pengguna dapat merekam ulang satu kali dari akunnya. Setelah berhasil, akses otomatis terkunci kembali." data-confirm="Ya, izinkan"><i class="fas fa-user-lock text-primary mr-2"></i>Izinkan Registrasi Mandiri</button>
                                                 </form>
                                             @else
-                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="d-inline">
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.self-access', $face) }}" class="mb-0">
                                                     @csrf
                                                     <input type="hidden" name="action" value="lock">
-                                                    <button type="button" class="btn btn-success js-face-confirm" title="Batalkan Izin Registrasi Ulang" data-title="Batalkan izin registrasi ulang?" data-text="Akun pengguna akan kembali terkunci dan tidak dapat merekam ulang." data-confirm="Ya, kunci"><i class="fas fa-lock-open"></i></button>
+                                                    <button type="button" class="dropdown-item js-face-confirm" data-title="Batalkan izin registrasi ulang?" data-text="Akun pengguna akan kembali terkunci dan tidak dapat merekam ulang." data-confirm="Ya, kunci"><i class="fas fa-lock text-success mr-2"></i>Kunci Registrasi Mandiri</button>
                                                 </form>
                                             @endif
                                             @if($face->is_verified)
-                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.reset', $face) }}" class="d-inline">
+                                                <form method="POST" action="{{ route('admin.absensi.face-encoding.reset', $face) }}" class="mb-0">
                                                     @csrf
-                                                    <button type="button" class="btn btn-warning js-face-confirm" title="Reset ke Pending" data-title="Reset status verifikasi?" data-text="Data wajah kembali ke antrean verifikasi." data-confirm="Ya, reset"><i class="fas fa-undo"></i></button>
+                                                    <button type="button" class="dropdown-item js-face-confirm" data-title="Reset status verifikasi?" data-text="Data wajah kembali ke antrean verifikasi." data-confirm="Ya, reset"><i class="fas fa-undo text-warning mr-2"></i>Reset ke Pending</button>
                                                 </form>
                                             @endif
-                                            <form method="POST" action="{{ route('admin.absensi.face-encoding.destroy', $face) }}" class="d-inline">
+                                            <div class="dropdown-divider"></div>
+                                            <form method="POST" action="{{ route('admin.absensi.face-encoding.destroy', $face) }}" class="mb-0">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="btn btn-danger js-face-confirm" title="Hapus Data Wajah" data-title="Hapus data wajah?" data-text="Data wajah {{ $name }} akan dihapus dan perlu diregistrasi ulang." data-confirm="Ya, hapus"><i class="fas fa-trash"></i></button>
+                                                <button type="button" class="dropdown-item text-danger js-face-confirm" data-title="Hapus data wajah?" data-text="Data wajah {{ $name }} akan dihapus dan perlu diregistrasi ulang." data-confirm="Ya, hapus"><i class="fas fa-trash mr-2"></i>Hapus Data Wajah</button>
                                             </form>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -288,6 +304,7 @@
             </div>
             <div class="modal-body">
                 <div class="face-preview-stage"><img id="facePreviewImage" src="" alt="Preview data wajah"></div>
+                <div class="face-preview-gallery mt-3" id="facePreviewGallery"></div>
                 <div class="mt-3"><h5 class="font-weight-bold mb-0" id="facePreviewName">-</h5><div class="text-muted" id="facePreviewIdentifier">-</div></div>
                 <div class="row mt-3 face-preview-metrics">
                     <div class="col-6"><small>Jumlah Capture</small><strong id="facePreviewCaptures">-</strong></div>
@@ -315,7 +332,24 @@ $(function() {
 
     $(document).on('click', '.js-face-preview', function() {
         const button = this;
-        $('#facePreviewImage').attr('src', button.dataset.image).attr('alt', `Foto wajah terdaftar ${button.dataset.name}`);
+        let images = [];
+        let photoAngles = [];
+        try { images = JSON.parse(button.dataset.images || '[]'); } catch (error) { images = []; }
+        try { photoAngles = JSON.parse(button.dataset.photoAngles || '[]'); } catch (error) { photoAngles = []; }
+        const gallery = $('#facePreviewGallery').empty();
+        const showFrame = (index) => {
+            $('#facePreviewImage').attr('src', images[index] || '').attr('alt', `Frame ${index + 1} data wajah ${button.dataset.name}`);
+            gallery.find('button').removeClass('is-active').eq(index).addClass('is-active');
+        };
+        images.forEach((image, index) => {
+            const angle = photoAngles[index] || `Frame ${index + 1}`;
+            $('<button>', { type: 'button', class: 'face-preview-gallery__item', title: `Lihat ${angle}` })
+                .append($('<img>', { src: image, alt: `${angle} ${button.dataset.name}` }))
+                .append($('<span>').text(angle))
+                .on('click', () => showFrame(index))
+                .appendTo(gallery);
+        });
+        showFrame(0);
         $('#facePreviewName').text(button.dataset.name);
         $('#facePreviewIdentifier').text(button.dataset.identifier);
         $('#facePreviewCaptures').text(button.dataset.captures);
@@ -344,6 +378,6 @@ $(function() {
 
 @section('css')
 <style>
-.face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}}
+.face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.face-preview-gallery__item{padding:5px;border:2px solid transparent;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:.72rem;transition:.2s}.face-preview-gallery__item img{display:block;width:100%;height:66px;object-fit:cover;border-radius:6px;margin-bottom:4px}.face-preview-gallery__item.is-active{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}.face-action-dropdown .dropdown-menu{min-width:245px}.face-action-dropdown .dropdown-item{font-size:.875rem;padding:.55rem .9rem}.face-action-dropdown form{display:block;width:100%}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}.face-preview-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 @stop

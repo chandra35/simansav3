@@ -711,7 +711,7 @@
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
 const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), descriptorUrl = @json($descriptorUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll), duplicateThreshold = @json($duplicateThreshold);
-let capturedDescriptors = [], capturedAngles = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false, duplicateFaceDatabase = [];
+let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false, duplicateFaceDatabase = [];
 let STEPS = [];
 let livenessSummary = {};
 let passiveSamples = [];
@@ -848,6 +848,7 @@ function beginAutoRegistration() {
     renderStepList();
     capturedDescriptors = [];
     capturedAngles = [];
+    capturedPhotos = [];
     currentStep = 0;
     blinkCount = 0;
     blinkCloseFrames = 0;
@@ -1024,6 +1025,20 @@ function detectBlink(landmarks) {
 }
 function eyeAspectRatio(eye) { const d = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2); return (d(eye[1], eye[5]) + d(eye[2], eye[4])) / (2 * d(eye[0], eye[3])); }
 async function doCaptureWithRetry(maxRetries = 3) { for (let i = 0; i < maxRetries; i++) { const ok = await doCapture(); if (ok) return; await new Promise(r => setTimeout(r, 300)); } setFaceStatus('Gagal capture, silakan kedipkan lagi', false); blinkCount = 0; eyeWasClosed = false; earHistory = []; }
+function captureVideoFrame(video) {
+    const sourceWidth = video.videoWidth || 640;
+    const sourceHeight = video.videoHeight || 480;
+    const width = 480;
+    const height = Math.round(width * (sourceHeight / sourceWidth));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    context.translate(width, 0);
+    context.scale(-1, 1);
+    context.drawImage(video, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', 0.78);
+}
 async function doCapture() {
     if (currentStep >= totalSteps) return;
     const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
@@ -1057,7 +1072,7 @@ async function doCapture() {
         duration_ms: Date.now() - stepStartedAt,
     });
     livenessSummary.completed_steps.push(STEPS[currentStep].angle);
-    capturedDescriptors.push(Array.from(det.descriptor)); capturedAngles.push(STEPS[currentStep].angle);
+    capturedDescriptors.push(Array.from(det.descriptor)); capturedAngles.push(STEPS[currentStep].angle); capturedPhotos.push(captureVideoFrame(video));
     const stepEl = document.getElementById('step-' + currentStep); stepEl.classList.remove('active', 'capturing'); stepEl.classList.add('done'); stepEl.querySelector('.step-check').style.display = 'block'; hideCountdownRing();
     const video2 = document.getElementById('videoElement'); video2.style.outline = '4px solid #00e676'; setTimeout(() => { video2.style.outline = ''; }, 400);
     currentStep++; document.getElementById('progressBar').style.width = ((currentStep / totalSteps) * 100) + '%'; document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps} selesai`;
@@ -1109,7 +1124,6 @@ function hideDuplicateFaceModal() {
     if (duplicateModalText) duplicateModalText.textContent = '';
 }
 async function saveRegistration() {
-    const video = document.getElementById('videoElement'), c = document.createElement('canvas'); c.width = 320; c.height = 240; c.getContext('2d').drawImage(video, 0, 0, 320, 240);
     const livenessPayload = buildLivenessPayload();
     isDetecting = false;
     hideCountdownRing();
@@ -1118,7 +1132,7 @@ async function saveRegistration() {
         score: computeQualityScore(livenessPayload),
     });
     try {
-        const res = await fetch(storeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ user_id: selectedUserId, user_type: selectedUserType, descriptors: capturedDescriptors, angles: capturedAngles, quality_score: computeQualityScore(livenessPayload), liveness_score: livenessPayload.liveness_score, liveness_summary: livenessPayload, photo: c.toDataURL('image/jpeg', 0.8) }) });
+        const res = await fetch(storeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ user_id: selectedUserId, user_type: selectedUserType, descriptors: capturedDescriptors, angles: capturedAngles, quality_score: computeQualityScore(livenessPayload), liveness_score: livenessPayload.liveness_score, liveness_summary: livenessPayload, photos: capturedPhotos, photo: capturedPhotos[0] || null }) });
         const result = await res.json().catch(() => ({}));
         if (!res.ok) {
             const validationErrors = result.errors ? Object.values(result.errors).flat().join(', ') : '';
@@ -1244,6 +1258,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
 </script>
 @stop

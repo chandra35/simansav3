@@ -180,6 +180,8 @@ class FaceRegistrationController extends Controller
             'liveness_score' => 'nullable|numeric|min:0|max:100',
             'liveness_summary' => 'required|array',
             'photo' => 'nullable|string|max:3000000',
+            'photos' => 'nullable|array|max:5',
+            'photos.*' => 'required|string|max:1500000',
         ]);
 
         $authUser = $request->user();
@@ -216,10 +218,16 @@ class FaceRegistrationController extends Controller
             abort(422, $this->buildDuplicateMessage($duplicateMatch));
         }
 
-        $photoPath = $existingFace?->registration_photo;
-        if ($request->photo) {
-            $photoPath = $this->saveBase64Photo($request->photo, $targetUser->id, $userType);
+        $photoPaths = collect($existingFace?->registration_photos ?: [$existingFace?->registration_photo])->filter()->values();
+        if ($request->filled('photos')) {
+            $photoPaths = collect($request->input('photos'))
+                ->take(5)
+                ->map(fn (string $photo, int $index) => $this->saveBase64Photo($photo, $targetUser->id, $userType, '-'.($index + 1)))
+                ->values();
+        } elseif ($request->photo) {
+            $photoPaths = collect([$this->saveBase64Photo($request->photo, $targetUser->id, $userType)]);
         }
+        $photoPath = $photoPaths->first();
 
         $faceData = FaceEncoding::updateOrCreate(
             ['user_id' => $targetUser->id, 'user_type' => $userType],
@@ -229,6 +237,7 @@ class FaceRegistrationController extends Controller
                 'total_captures' => count($request->descriptors),
                 'quality_score' => $request->input('quality_score', $request->input('liveness_score')),
                 'registration_photo' => $photoPath,
+                'registration_photos' => $photoPaths->all(),
                 'self_registration_unlocked_at' => null,
                 'self_registration_requested_at' => null,
                 'self_registration_request_note' => null,
@@ -499,7 +508,7 @@ class FaceRegistrationController extends Controller
         return response()->json(['success' => true, 'data' => $faces]);
     }
 
-    private function saveBase64Photo(string $base64, string $userId, string $userType): ?string
+    private function saveBase64Photo(string $base64, string $userId, string $userType, string $suffix = ''): ?string
     {
         if (! preg_match('/^data:image\/(jpeg|jpg|png|webp);base64,/', $base64)) {
             throw ValidationException::withMessages(['photo' => 'Format foto registrasi tidak didukung.']);
@@ -517,7 +526,7 @@ class FaceRegistrationController extends Controller
             throw ValidationException::withMessages(['photo' => 'Foto registrasi tidak valid atau melebihi 2 MB.']);
         }
 
-        $filename = "face-registration/{$userType}/{$userId}.".$extensions[$imageInfo['mime']];
+        $filename = "face-registration/{$userType}/{$userId}{$suffix}.".$extensions[$imageInfo['mime']];
         Storage::disk('public')->put($filename, $data);
 
         return $filename;

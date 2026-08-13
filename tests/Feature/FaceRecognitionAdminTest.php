@@ -6,6 +6,7 @@ use App\Models\FaceEncoding;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
@@ -119,6 +120,7 @@ class FaceRecognitionAdminTest extends TestCase
 
     public function test_admin_can_unlock_one_self_reregistration_and_it_locks_after_save(): void
     {
+        Storage::fake('public');
         $admin = User::role('Super Admin')->first() ?: User::role('Admin')->first();
         $student = Siswa::whereNotNull('user_id')->whereHas('user')->first();
         if (! $admin || ! $student) {
@@ -186,6 +188,7 @@ class FaceRecognitionAdminTest extends TestCase
 
         $this->assertNull($face->fresh()->self_registration_unlocked_at);
         $this->assertSame(5, $face->fresh()->total_captures);
+        $this->assertCount(5, $face->fresh()->registration_photos);
         $this->assertTrue(Activity::query()
             ->where('log_name', 'face-recognition')
             ->where('subject_id', $face->id)
@@ -222,6 +225,7 @@ class FaceRecognitionAdminTest extends TestCase
                 'gesture_motion_score' => 0.1,
                 'liveness_score' => 90,
             ],
+            'photos' => array_fill(0, 5, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9WlmsAAAAASUVORK5CYII='),
         ];
     }
 }

@@ -19,7 +19,7 @@ class FaceEncoding extends Model
 
     protected $fillable = [
         'user_id', 'user_type', 'descriptors', 'capture_angles',
-        'total_captures', 'quality_score', 'registration_photo', 'self_registration_unlocked_at',
+        'total_captures', 'quality_score', 'registration_photo', 'registration_photos', 'self_registration_unlocked_at',
         'self_registration_requested_at', 'self_registration_request_note',
         'is_active', 'is_verified',
         'verified_by', 'verified_at', 'last_used_at',
@@ -28,6 +28,7 @@ class FaceEncoding extends Model
     protected $casts = [
         'descriptors' => 'array',
         'capture_angles' => 'array',
+        'registration_photos' => 'array',
         'is_active' => 'boolean',
         'is_verified' => 'boolean',
         'self_registration_unlocked_at' => 'datetime',
@@ -59,6 +60,17 @@ class FaceEncoding extends Model
     public function getRegistrationPhotoUrlAttribute(): ?string
     {
         return StorageHelper::publicFileUrl($this->registration_photo);
+    }
+
+    public function getRegistrationPhotoUrlsAttribute(): \Illuminate\Support\Collection
+    {
+        $photos = collect($this->registration_photos ?: [$this->registration_photo])
+            ->filter()
+            ->map(fn (string $photo) => StorageHelper::publicFileUrl($photo))
+            ->filter()
+            ->values();
+
+        return $photos;
     }
 
     /**

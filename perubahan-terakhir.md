@@ -7,8 +7,10 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 ### Preview Data Wajah pada Approval (13 Agustus 2026)
 
 - Tabel **Approval & Data Wajah** kini memisahkan foto profil dari foto hasil capture registrasi agar sumber gambar tidak ambigu.
-- Foto wajah terdaftar ditampilkan dalam rasio potret dan dapat diklik untuk membuka preview besar tanpa crop.
-- Modal preview menampilkan identitas, jumlah frame, quality, sudut wajah yang terekam, dan waktu registrasi. Data lama yang tidak memiliki foto capture diberi status `Belum tersimpan` tanpa menyamarkannya sebagai foto profil.
+- Proses registrasi baru menyimpan seluruh lima frame challenge secara terpisah, selaras dengan lima descriptor dan sudut wajahnya.
+- Foto wajah terdaftar ditampilkan dalam rasio potret dan dapat diklik untuk membuka galeri seluruh frame tanpa crop. Data lama tetap menampilkan satu foto lama yang memang tersedia dan baru memperoleh galeri lengkap setelah registrasi ulang.
+- Modal preview menampilkan identitas, navigasi thumbnail per sudut, jumlah frame, quality, sudut wajah yang terekam, dan waktu registrasi. Data lama yang tidak memiliki foto capture diberi status `Belum tersimpan` tanpa menyamarkannya sebagai foto profil.
+- Tombol-tombol aksi per pengguna dirapikan menjadi satu dropdown **Aksi** berisi preview frame, registrasi ulang, unlock/lock registrasi mandiri, reset verifikasi, dan hapus data wajah.
 
 ### Pemisahan Presensi Gerbang, Kehadiran Kelas, dan Layanan Wajah Pribadi
 
