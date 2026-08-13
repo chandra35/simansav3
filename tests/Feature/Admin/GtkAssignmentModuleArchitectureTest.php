@@ -96,4 +96,16 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
         $this->assertStringContainsString('.select2-results__option--highlighted[aria-selected] *', $styles);
         $this->assertStringContainsString('color: #fff !important;', $styles);
     }
+
+    public function test_global_dropdowns_scroll_inside_the_viewport(): void
+    {
+        $styles = file_get_contents(public_path('css/custom-compact.css'));
+
+        $this->assertStringContainsString('.select2-results__options {', $styles);
+        $this->assertStringContainsString('.dropdown-menu {', $styles);
+        $this->assertStringContainsString('max-height: min(45vh, 360px) !important;', $styles);
+        $this->assertStringContainsString('max-height: min(60vh, 420px);', $styles);
+        $this->assertStringContainsString('overscroll-behavior: contain;', $styles);
+        $this->assertStringContainsString('scrollbar-width: thin;', $styles);
+    }
 }
