@@ -1325,7 +1325,7 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 ## Penyempurnaan responsive layar laptop (13 Agustus 2026)
 
 - Halaman Penugasan GTK kini memiliki breakpoint khusus layar laptop 992–1439px.
-- Area deskripsi dan tombol hero dibagi 7/5 pada layar laptop agar tiga tombol aksi tetap rapi tanpa saling mendesak.
+- Area deskripsi dan tombol hero dibagi 7/5 secara konsisten pada laptop maupun desktop agar tiga tombol aksi tetap satu baris pada resolusi 1366 dan 1920.
 - Tombol hero dapat membungkus secara teratur, sedangkan pada ponsel disusun vertikal selebar area konten.
 - Tabel diberi lebar minimum dan tetap berada dalam pembungkus scroll internal agar struktur halaman tidak bergeser.
 - Header daftar, filter, dan kartu statistik dipadatkan secara bertahap tanpa mengubah tampilan desktop lebar.
