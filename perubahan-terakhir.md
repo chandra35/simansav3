@@ -11,6 +11,7 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 - Pada layar sempit, pemilih jenis pengguna turun menjadi satu baris penuh tanpa memotong judul atau deskripsi.
 - Styling custom segmented control dilepas dan pemilih GTK/Siswa dikembalikan ke komponen native Bootstrap/AdminLTE `btn-sm`, `btn-light`, dan `btn-outline-light` agar konsisten dengan tema serta state hover/focus bawaan aplikasi.
 - Mengikuti pola tombol aksi Jadwal Pelajaran, GTK/Siswa kini menjadi tombol Bootstrap kecil yang berdiri sendiri dengan jarak 8px: pilihan aktif solid terang dan pilihan lain outline. Keduanya tidak lagi menyatu sebagai segmented button.
+- Kontras tombol diperhalus dengan toolbar putih ringkas di sisi hero. GTK menggunakan `success`, Siswa menggunakan `primary`; pilihan aktif solid dan pilihan nonaktif outline sehingga warna tetap natural seperti tombol Jadwal Pelajaran.
 
 ### Standar Global Tabel Compact & Adaptif (13 Agustus 2026)
 
