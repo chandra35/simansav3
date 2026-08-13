@@ -8,13 +8,14 @@ use App\Models\JadwalPelajaran;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\GtkKemenagSyncService;
+use App\Services\GtkOnboardingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Intervention\Image\Laravel\Facades\Image;
 
 class GtkController extends Controller
@@ -398,15 +399,16 @@ class GtkController extends Controller
     /**
      * Store a newly created resource in storage (via modal - hanya nama dan NIK)
      */
-    public function store(Request $request)
+    public function store(Request $request, GtkOnboardingService $onboarding)
     {
         try {
             $validated = $request->validate([
                 'nama_lengkap' => 'required|string|max:255',
-                'nik' => 'required|string|size:16|unique:gtks,nik',
+                'nik' => 'required|string|size:16|unique:gtks,nik|unique:users,username',
                 'jenis_kelamin' => 'required|in:L,P',
                 'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
-                'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
+                'jenis_ptk' => ['required', Rule::in($request->kategori_ptk === 'Pendidik' ? ['Guru Mapel', 'Guru BK'] : ['Kepala TU', 'Staff TU', 'Bendahara', 'Laboran', 'Pustakawan', 'Cleaning Service', 'Satpam', 'Lainnya'])],
+                'tanggal_efektif' => 'required|date|before_or_equal:today',
             ], [
                 'nama_lengkap.required' => 'Nama lengkap wajib diisi',
                 'nik.required' => 'NIK wajib diisi',
@@ -417,37 +419,11 @@ class GtkController extends Controller
                 'jenis_ptk.required' => 'Jenis PTK wajib dipilih',
             ]);
 
-            DB::beginTransaction();
-
-            // Generate username dari NIK
-            $username = $validated['nik'];
-
-            // Create user account
-            $user = User::create([
-                'name' => $validated['nama_lengkap'],
-                'username' => $username,
-                'email' => $username.'@gtk.simansa.sch.id', // Email dummy
-                'password' => Hash::make($validated['nik']), // Default password = NIK
-                'is_active' => true,
-            ]);
-
-            // Assign role GTK (default)
-            $user->assignRole('GTK');
-
-            // Create GTK record
-            $gtk = Gtk::create([
-                'user_id' => $user->id,
-                'nama_lengkap' => $validated['nama_lengkap'],
-                'nik' => $validated['nik'],
-                'jenis_kelamin' => $validated['jenis_kelamin'],
-                'created_by' => Auth::id(),
-            ]);
-
-            DB::commit();
+            $gtk = $onboarding->create($validated, 'gtk_baru');
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data GTK berhasil ditambahkan. Username: '.$username.', Password default: NIK',
+                'message' => 'GTK baru dan histori awal berhasil dibuat. Username dan password default menggunakan NIK.',
                 'data' => $gtk,
             ]);
 
@@ -458,7 +434,6 @@ class GtkController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Error creating GTK: '.$e->getMessage());
 
             return response()->json([

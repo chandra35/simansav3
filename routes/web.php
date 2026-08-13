@@ -639,6 +639,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::middleware(['permission:manage-status-gtk'])->group(function () {
         Route::post('/mutasi-gtk', [App\Http\Controllers\Admin\GtkMutationController::class, 'store'])->name('mutasi-gtk.store');
+        Route::get('/mutasi-gtk/masuk/create', [App\Http\Controllers\Admin\GtkMutationController::class, 'createIncoming'])->name('mutasi-gtk.incoming.create');
+        Route::post('/mutasi-gtk/masuk', [App\Http\Controllers\Admin\GtkMutationController::class, 'storeIncoming'])->name('mutasi-gtk.incoming.store');
     });
     
     // GTK Kemenag Sync

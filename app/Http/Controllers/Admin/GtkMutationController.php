@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\MutasiGtk;
+use App\Services\GtkOnboardingService;
 use App\Services\GtkStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class GtkMutationController extends Controller
 {
-    public const ACTIVE_REASONS = ['mutasi_masuk', 'aktif_kembali', 'lainnya'];
+    public const ACTIVE_REASONS = ['aktif_kembali', 'lainnya'];
 
     public const INACTIVE_REASONS = ['pensiun', 'meninggal', 'mengundurkan_diri', 'mutasi_keluar', 'pemutusan_hubungan_kerja', 'kontrak_selesai', 'lainnya'];
 
@@ -29,10 +30,39 @@ class GtkMutationController extends Controller
         return view('admin.gtk-mutation.index', [
             'history' => $history,
             'gtks' => Gtk::query()->with('user')->orderBy('nama_lengkap')->get(['id', 'user_id', 'nama_lengkap', 'nip', 'nik', 'jenis_ptk', 'foto_profile', 'status_aktif', 'alasan_nonaktif']),
-            'stats' => ['aktif' => Gtk::where('status_aktif', true)->count(), 'nonaktif' => Gtk::where('status_aktif', false)->count(), 'pensiun' => Gtk::where('alasan_nonaktif', 'pensiun')->count(), 'mutasi' => Gtk::where('alasan_nonaktif', 'mutasi_keluar')->count()],
+            'stats' => ['aktif' => Gtk::where('status_aktif', true)->count(), 'nonaktif' => Gtk::where('status_aktif', false)->count(), 'baru' => MutasiGtk::where('alasan', 'gtk_baru')->count(), 'masuk' => MutasiGtk::where('alasan', 'mutasi_masuk')->count()],
             'reasonLabels' => $this->reasonLabels(),
             'selectedGtkId' => $request->gtk_id,
         ]);
+    }
+
+    public function createIncoming()
+    {
+        $this->authorize('manage-status-gtk');
+        $this->authorize('create-gtk');
+
+        return view('admin.gtk-mutation.create');
+    }
+
+    public function storeIncoming(Request $request, GtkOnboardingService $onboarding)
+    {
+        $this->authorize('manage-status-gtk');
+        $this->authorize('create-gtk');
+        $data = $request->validate([
+            'nama_lengkap' => ['required', 'string', 'max:255'],
+            'nik' => ['required', 'digits:16', 'unique:gtks,nik', 'unique:users,username'],
+            'nip' => ['nullable', 'string', 'max:20', 'unique:gtks,nip'],
+            'jenis_kelamin' => ['required', 'in:L,P'],
+            'kategori_ptk' => ['required', 'in:Pendidik,Tenaga Kependidikan'],
+            'jenis_ptk' => ['required', Rule::in($request->kategori_ptk === 'Pendidik' ? ['Guru Mapel', 'Guru BK'] : ['Kepala TU', 'Staff TU', 'Bendahara', 'Laboran', 'Pustakawan', 'Cleaning Service', 'Satpam', 'Lainnya'])],
+            'status_kepegawaian' => ['nullable', 'in:PNS,PPPK,GTY,PTY,Honorer'],
+            'tanggal_efektif' => ['required', 'date', 'before_or_equal:today'],
+            'instansi_asal' => ['required', 'string', 'max:255'],
+            'keterangan' => ['nullable', 'string', 'max:2000'],
+        ], ['nik.unique' => 'NIK sudah terdaftar. Jika GTK lama berstatus nonaktif, gunakan Aktif Kembali agar tidak membuat data ganda.']);
+        $gtk = $onboarding->create($data, 'mutasi_masuk');
+
+        return redirect()->route('admin.mutasi-gtk.index')->with('success', 'Mutasi masuk '.$gtk->nama_lengkap.' berhasil dicatat. Profil dan akun GTK telah dibuat.');
     }
 
     public function store(Request $request, GtkStatusService $service)
@@ -55,6 +85,6 @@ class GtkMutationController extends Controller
 
     private function reasonLabels(): array
     {
-        return ['mutasi_masuk' => 'Mutasi masuk', 'aktif_kembali' => 'Aktif kembali', 'pensiun' => 'Pensiun', 'meninggal' => 'Meninggal dunia', 'mengundurkan_diri' => 'Mengundurkan diri', 'mutasi_keluar' => 'Mutasi keluar', 'pemutusan_hubungan_kerja' => 'Pemutusan hubungan kerja', 'kontrak_selesai' => 'Kontrak selesai', 'lainnya' => 'Lainnya'];
+        return ['data_awal' => 'Data awal sistem', 'gtk_baru' => 'GTK baru', 'mutasi_masuk' => 'Mutasi masuk', 'aktif_kembali' => 'Aktif kembali', 'pensiun' => 'Pensiun', 'meninggal' => 'Meninggal dunia', 'mengundurkan_diri' => 'Mengundurkan diri', 'mutasi_keluar' => 'Mutasi keluar', 'pemutusan_hubungan_kerja' => 'Pemutusan hubungan kerja', 'kontrak_selesai' => 'Kontrak selesai', 'lainnya' => 'Lainnya'];
     }
 }

@@ -1336,3 +1336,9 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Jadwal mengajar dan histori lama tidak dihapus; aktivasi kembali tidak otomatis memulihkan penugasan lama.
 - Data GTK default menampilkan GTK aktif dan menyediakan filter keaktifan, sedangkan status akun tidak lagi dapat diubah tanpa histori dari form edit GTK.
 - Permission `view-mutasi-gtk` dan `manage-status-gtk` ditambahkan ke katalog role.
+## Penyempurnaan onboarding dan mutasi masuk GTK (13 Agustus 2026)
+
+- Tambah GTK dari Data GTK kini otomatis mencatat histori awal `GTK baru` beserta tanggal mulai/TMT.
+- Mutasi GTK memiliki alur `Mutasi Masuk` tersendiri yang membuat profil, akun, dan histori instansi asal secara atomik.
+- NIK/NIP ganda ditolak; GTK lama yang nonaktif harus memakai `Aktif Kembali` agar tidak terbentuk data ganda.
+- Pembuatan akun GTK baru dan mutasi masuk memakai satu service agar kategori/jenis PTK serta status akun selalu tersimpan konsisten.

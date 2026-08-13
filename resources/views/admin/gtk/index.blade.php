@@ -305,8 +305,15 @@
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
                         </select>
-                        <span class="invalid-feedback d-block" id="error-jenis_kelamin"></span>
-                    </div>
+                          <span class="invalid-feedback d-block" id="error-jenis_kelamin"></span>
+                      </div>
+
+                      <div class="form-group">
+                          <label for="tanggal_efektif">Tanggal Mulai/TMT <span class="text-danger">*</span></label>
+                          <input type="date" class="form-control" id="tanggal_efektif" name="tanggal_efektif" value="{{ today()->toDateString() }}" max="{{ today()->toDateString() }}" required>
+                          <small class="form-text text-muted">Dicatat sebagai histori awal GTK baru.</small>
+                          <span class="invalid-feedback d-block" id="error-tanggal_efektif"></span>
+                      </div>
 
                     <div class="form-group">
                         <label for="kategori_ptk">Kategori PTK <span class="text-danger">*</span></label>
