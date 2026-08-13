@@ -44,6 +44,7 @@ class GlobalDataTableUiTest extends TestCase
         $this->assertStringContainsString('face-approval-hero__eyebrow', $view);
         $this->assertStringContainsString('Kontrol Identitas Biometrik', $view);
         $this->assertStringContainsString('face-approval-actions', $view);
+        $this->assertStringContainsString('face-approval-toolbar', $view);
         $this->assertStringContainsString('btn btn-sm', $view);
         $this->assertStringContainsString("\$typeKey === 'gtk' ? 'success' : 'primary'", $view);
         $this->assertStringContainsString("'btn-'.\$buttonVariant : 'btn-outline-'.\$buttonVariant", $view);
@@ -51,5 +52,14 @@ class GlobalDataTableUiTest extends TestCase
         $this->assertStringNotContainsString('Face Approval', $view);
         $this->assertStringNotContainsString('face-type-switch__item', $view);
         $this->assertStringNotContainsString('btn-group btn-group-sm', $view);
+        $this->assertStringNotContainsString('face-approval-hero__selector', $view);
+    }
+
+    public function test_empty_face_table_relies_on_datatables_empty_state_without_colspan_row(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/absensi/face-verification.blade.php');
+
+        $this->assertStringContainsString("emptyTable: 'Belum ada data wajah terdaftar'", $view);
+        $this->assertStringNotContainsString('<td colspan="7"', $view);
     }
 }

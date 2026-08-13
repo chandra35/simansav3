@@ -20,26 +20,27 @@
 
 @section('content')
 <div class="face-recognition-verification">
-<section class="face-approval-hero mb-4">
+<section class="face-approval-hero mb-3">
     <div class="face-approval-hero__content">
         <div class="face-approval-hero__eyebrow"><i class="fas fa-shield-alt mr-1"></i>Kontrol Identitas Biometrik</div>
         <h2>Verifikasi Data Wajah <span>{{ $subjectLabel }}</span></h2>
         <p>Tinjau kualitas capture dan identitas pengguna sebelum mengaktifkannya sebagai referensi presensi gerbang.</p>
     </div>
-    <div class="face-approval-hero__selector">
-        <div class="face-approval-hero__selector-label">Tampilkan data</div>
-        <div class="d-flex flex-wrap justify-content-md-end face-approval-actions" role="group" aria-label="Pilih jenis pengguna">
-                    @foreach($typeOptions as $typeKey => $typeName)
-                        @php
-                            $buttonVariant = $typeKey === 'gtk' ? 'success' : 'primary';
-                        @endphp
-                        <a class="btn btn-sm {{ $selectedType === $typeKey ? 'btn-'.$buttonVariant : 'btn-outline-'.$buttonVariant }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}" @if($selectedType === $typeKey) aria-current="page" @endif>
-                            <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }} mr-1"></i>{{ $typeName }}
-                        </a>
-                    @endforeach
-        </div>
-    </div>
 </section>
+
+<div class="face-approval-toolbar mb-3" aria-label="Filter jenis pengguna">
+    <span class="face-approval-toolbar__label">Tampilkan data:</span>
+    <div class="d-flex flex-wrap face-approval-actions" role="group" aria-label="Pilih jenis pengguna">
+        @foreach($typeOptions as $typeKey => $typeName)
+            @php
+                $buttonVariant = $typeKey === 'gtk' ? 'success' : 'primary';
+            @endphp
+            <a class="btn btn-sm {{ $selectedType === $typeKey ? 'btn-'.$buttonVariant : 'btn-outline-'.$buttonVariant }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}" @if($selectedType === $typeKey) aria-current="page" @endif>
+                <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }} mr-1"></i>{{ $typeName }}
+            </a>
+        @endforeach
+    </div>
+</div>
 
 <div class="row mb-4">
     <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total Terdaftar</div><h3 class="text-info mb-0">{{ $allFaces->count() }}</h3><small class="text-muted">Data wajah {{ strtolower($subjectLabel) }} aktif.</small></div></div></div>
@@ -173,7 +174,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($allFaces as $i => $face)
+                            @foreach($allFaces as $i => $face)
                                 @php
                                     $profile = $face->user_type === 'gtk' ? $face->user->gtk : $face->user->siswa;
                                     $name = $profile->nama_lengkap ?? $face->user->name ?? '-';
@@ -289,9 +290,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data wajah terdaftar</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -330,7 +329,10 @@
 <script>
 $(function() {
     $('#tabelWajah').DataTable({
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json' },
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json',
+            emptyTable: 'Belum ada data wajah terdaftar',
+        },
         pageLength: 25,
         order: [[5, 'desc']],
         scrollX: true,
@@ -389,7 +391,7 @@ $(function() {
 
 @section('css')
 <style>
-.face-approval-hero{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:20px 22px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:linear-gradient(120deg,#2563eb 0%,#1685ef 58%,#0875df 100%);box-shadow:0 8px 20px rgba(37,99,235,.16);color:#fff}.face-approval-hero__content{min-width:0;max-width:760px}.face-approval-hero__eyebrow{display:inline-flex;align-items:center;margin-bottom:6px;color:#bfdbfe;font-size:.65rem;font-weight:800;letter-spacing:.075em;text-transform:uppercase}.face-approval-hero h2{margin:0;color:#fff;font-size:1.12rem;font-weight:800;line-height:1.25}.face-approval-hero h2 span{color:#dbeafe}.face-approval-hero p{max-width:680px;margin:5px 0 0;color:rgba(255,255,255,.78);font-size:.76rem;line-height:1.45}.face-approval-hero__selector{flex:0 0 auto;padding:10px 11px;border:1px solid rgba(255,255,255,.75);border-radius:10px;background:#fff;box-shadow:0 5px 14px rgba(15,23,42,.14)}.face-approval-hero__selector-label{margin-bottom:7px;color:#64748b;font-size:.6rem;font-weight:800;letter-spacing:.065em;text-align:right;text-transform:uppercase}.face-approval-actions{gap:8px}.face-approval-actions .btn{min-width:82px;font-weight:700}@media(max-width:767.98px){.face-approval-hero{align-items:flex-start;flex-direction:column;gap:16px;padding:18px}.face-approval-hero__selector{width:100%}.face-approval-hero__selector-label{text-align:left}.face-approval-actions .btn{flex:1}.face-approval-hero h2{font-size:1.05rem}}
+.face-approval-hero{padding:20px 22px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:linear-gradient(120deg,#2563eb 0%,#1685ef 58%,#0875df 100%);box-shadow:0 8px 20px rgba(37,99,235,.16);color:#fff}.face-approval-hero__content{min-width:0;max-width:760px}.face-approval-hero__eyebrow{display:inline-flex;align-items:center;margin-bottom:6px;color:#bfdbfe;font-size:.65rem;font-weight:800;letter-spacing:.075em;text-transform:uppercase}.face-approval-hero h2{margin:0;color:#fff;font-size:1.12rem;font-weight:800;line-height:1.25}.face-approval-hero h2 span{color:#dbeafe}.face-approval-hero p{max-width:680px;margin:5px 0 0;color:rgba(255,255,255,.78);font-size:.76rem;line-height:1.45}.face-approval-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:10px}.face-approval-toolbar__label{color:#64748b;font-size:.72rem;font-weight:700}.face-approval-actions{gap:8px}.face-approval-actions .btn{min-width:82px;font-weight:700}@media(max-width:575.98px){.face-approval-hero{padding:18px}.face-approval-toolbar{align-items:stretch;flex-direction:column}.face-approval-actions .btn{flex:1}.face-approval-hero h2{font-size:1.05rem}}
 .face-recognition-verification #tabelWajah{width:100%!important}.face-recognition-verification #tabelWajah th,.face-recognition-verification #tabelWajah td{vertical-align:middle}.face-identity-cell{min-width:235px}.face-identity{display:flex;align-items:center;gap:10px}.face-profile-thumb{width:40px;height:48px;flex:0 0 40px;object-fit:cover;border:2px solid #fff;border-radius:9px;box-shadow:0 0 0 1px #dbe4ef}.face-identity__copy{min-width:0}.face-identity__copy strong,.face-identity__copy span,.face-identity__copy small{display:block}.face-identity__copy strong{color:#172033;font-size:.82rem;line-height:1.25}.face-identity__copy span{margin-top:2px;color:#475569;font-size:.7rem;white-space:nowrap}.face-identity__copy small{margin-top:3px;color:#8492a6;font-size:.64rem}.face-capture-meta{min-width:180px}.face-capture-meta__summary{display:flex;align-items:center;gap:6px;white-space:nowrap}.face-capture-meta__summary>span:first-child{color:#475569;font-size:.7rem;font-weight:700}.face-photo-count{display:block;margin-top:4px;color:#64748b;font-size:.62rem}.face-angle-list{display:flex;max-width:190px;flex-wrap:wrap;gap:3px;margin-top:6px}.face-angle-list span{padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.62rem;font-weight:700}.face-verification-meta{display:flex;min-width:145px;flex-direction:column;align-items:flex-start;gap:4px}.face-verification-meta small{color:#64748b;font-size:.64rem;line-height:1.25}.face-registration-date{min-width:92px}.face-registration-date strong,.face-registration-date small{display:block}.face-registration-date strong{font-size:.72rem}.face-registration-date small{color:#64748b;font-size:.64rem}.face-action-dropdown{white-space:nowrap}
 .face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.face-preview-gallery__item{padding:5px;border:2px solid transparent;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:.72rem;transition:.2s}.face-preview-gallery__item img{display:block;width:100%;height:66px;object-fit:cover;border-radius:6px;margin-bottom:4px}.face-preview-gallery__item.is-active{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}.face-action-dropdown .dropdown-menu{min-width:245px}.face-action-dropdown .dropdown-item{font-size:.875rem;padding:.55rem .9rem}.face-action-dropdown form{display:block;width:100%}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}.face-preview-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
