@@ -20,29 +20,24 @@
 
 @section('content')
 <div class="face-recognition-verification">
-<div class="card bg-gradient-primary text-white mb-4">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <div class="text-uppercase small font-weight-bold text-white-50 mb-1">Face Approval</div>
-                <h2 class="h4 text-white mb-2">Verifikasi Data Wajah {{ $subjectLabel }}</h2>
-                <p class="text-white-50 mb-0">
-                    Setujui hanya hasil registrasi yang jelas dan stabil. Data approved menjadi identitas biometrik resmi sesuai jenis responden.
-                </p>
-            </div>
-            <div class="col-lg-4 mt-3 mt-lg-0 text-lg-right">
-                <div class="small text-white-50 text-uppercase font-weight-bold mb-2">Jenis responden</div>
-                <div class="btn-group" role="group" aria-label="Pilih jenis responden">
+<section class="face-approval-hero mb-4">
+    <div class="face-approval-hero__content">
+        <div class="face-approval-hero__eyebrow"><i class="fas fa-shield-alt mr-1"></i>Kontrol Identitas Biometrik</div>
+        <h2>Verifikasi Data Wajah <span>{{ $subjectLabel }}</span></h2>
+        <p>Tinjau kualitas capture dan identitas pengguna sebelum mengaktifkannya sebagai referensi presensi gerbang.</p>
+    </div>
+    <div class="face-approval-hero__selector">
+        <div class="face-approval-hero__selector-label">Tampilkan data</div>
+        <div class="face-type-switch" role="group" aria-label="Pilih jenis pengguna">
                     @foreach($typeOptions as $typeKey => $typeName)
-                        <a class="btn btn-{{ $selectedType === $typeKey ? 'light' : 'outline-light' }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}">
-                            <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }} mr-1"></i>{{ $typeName }}
+                        <a class="face-type-switch__item {{ $selectedType === $typeKey ? 'is-active' : '' }}" href="{{ route('admin.absensi.face-verification', ['type' => $typeKey]) }}" @if($selectedType === $typeKey) aria-current="page" @endif>
+                            <i class="fas fa-{{ $typeKey === 'gtk' ? 'chalkboard-teacher' : 'user-graduate' }}"></i>
+                            <span>{{ $typeName }}</span>
                         </a>
                     @endforeach
-                </div>
-            </div>
         </div>
     </div>
-</div>
+</section>
 
 <div class="row mb-4">
     <div class="col-md-6 col-xl-3 mb-3 mb-xl-0"><div class="card card-outline card-info h-100 mb-0"><div class="card-body py-3"><div class="text-muted small text-uppercase font-weight-bold">Total Terdaftar</div><h3 class="text-info mb-0">{{ $allFaces->count() }}</h3><small class="text-muted">Data wajah {{ strtolower($subjectLabel) }} aktif.</small></div></div></div>
@@ -392,6 +387,7 @@ $(function() {
 
 @section('css')
 <style>
+.face-approval-hero{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:20px 22px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:linear-gradient(120deg,#2563eb 0%,#1685ef 58%,#0875df 100%);box-shadow:0 8px 20px rgba(37,99,235,.16);color:#fff}.face-approval-hero__content{min-width:0;max-width:760px}.face-approval-hero__eyebrow{display:inline-flex;align-items:center;margin-bottom:6px;color:#bfdbfe;font-size:.65rem;font-weight:800;letter-spacing:.075em;text-transform:uppercase}.face-approval-hero h2{margin:0;color:#fff;font-size:1.12rem;font-weight:800;line-height:1.25}.face-approval-hero h2 span{color:#dbeafe}.face-approval-hero p{max-width:680px;margin:5px 0 0;color:rgba(255,255,255,.78);font-size:.76rem;line-height:1.45}.face-approval-hero__selector{flex:0 0 auto}.face-approval-hero__selector-label{margin-bottom:6px;color:#bfdbfe;font-size:.62rem;font-weight:800;letter-spacing:.065em;text-align:right;text-transform:uppercase}.face-type-switch{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(255,255,255,.22);border-radius:11px;background:rgba(15,55,125,.22);box-shadow:inset 0 1px 2px rgba(15,23,42,.12)}.face-type-switch__item{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:82px;padding:8px 12px;border-radius:8px;color:#dbeafe;font-size:.75rem;font-weight:800;line-height:1;transition:background .18s ease,color .18s ease,box-shadow .18s ease}.face-type-switch__item:hover{background:rgba(255,255,255,.12);color:#fff}.face-type-switch__item.is-active{background:#fff;box-shadow:0 3px 10px rgba(15,23,42,.16);color:#1d4ed8}.face-type-switch__item i{font-size:.72rem}@media(max-width:767.98px){.face-approval-hero{align-items:flex-start;flex-direction:column;gap:16px;padding:18px}.face-approval-hero__selector{width:100%}.face-approval-hero__selector-label{text-align:left}.face-type-switch{display:flex;width:100%}.face-type-switch__item{flex:1}.face-approval-hero h2{font-size:1.05rem}}
 .face-recognition-verification #tabelWajah{width:100%!important}.face-recognition-verification #tabelWajah th,.face-recognition-verification #tabelWajah td{vertical-align:middle}.face-identity-cell{min-width:235px}.face-identity{display:flex;align-items:center;gap:10px}.face-profile-thumb{width:40px;height:48px;flex:0 0 40px;object-fit:cover;border:2px solid #fff;border-radius:9px;box-shadow:0 0 0 1px #dbe4ef}.face-identity__copy{min-width:0}.face-identity__copy strong,.face-identity__copy span,.face-identity__copy small{display:block}.face-identity__copy strong{color:#172033;font-size:.82rem;line-height:1.25}.face-identity__copy span{margin-top:2px;color:#475569;font-size:.7rem;white-space:nowrap}.face-identity__copy small{margin-top:3px;color:#8492a6;font-size:.64rem}.face-capture-meta{min-width:180px}.face-capture-meta__summary{display:flex;align-items:center;gap:6px;white-space:nowrap}.face-capture-meta__summary>span:first-child{color:#475569;font-size:.7rem;font-weight:700}.face-photo-count{display:block;margin-top:4px;color:#64748b;font-size:.62rem}.face-angle-list{display:flex;max-width:190px;flex-wrap:wrap;gap:3px;margin-top:6px}.face-angle-list span{padding:2px 6px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:.62rem;font-weight:700}.face-verification-meta{display:flex;min-width:145px;flex-direction:column;align-items:flex-start;gap:4px}.face-verification-meta small{color:#64748b;font-size:.64rem;line-height:1.25}.face-registration-date{min-width:92px}.face-registration-date strong,.face-registration-date small{display:block}.face-registration-date strong{font-size:.72rem}.face-registration-date small{color:#64748b;font-size:.64rem}.face-action-dropdown{white-space:nowrap}
 .face-capture-thumb{width:58px;height:72px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid #dce5f3;box-shadow:0 4px 12px rgba(33,55,91,.12);transition:transform .2s ease,border-color .2s ease}.js-face-preview:hover .face-capture-thumb{transform:scale(1.05);border-color:#3b82f6}.face-preview-stage{display:flex;align-items:center;justify-content:center;min-height:360px;padding:16px;border-radius:14px;background:linear-gradient(145deg,#eef3fa,#dde7f4)}.face-preview-stage img{display:block;width:auto;max-width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:12px;box-shadow:0 12px 30px rgba(20,38,69,.2)}.face-preview-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.face-preview-gallery__item{padding:5px;border:2px solid transparent;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:.72rem;transition:.2s}.face-preview-gallery__item img{display:block;width:100%;height:66px;object-fit:cover;border-radius:6px;margin-bottom:4px}.face-preview-gallery__item.is-active{border-color:#3b82f6;background:#eff6ff;color:#1d4ed8}.face-preview-metrics>div{padding:10px 12px;border-radius:8px;background:#f7f9fc}.face-preview-metrics small,.face-preview-metrics strong{display:block}.face-preview-metrics small{color:#6c757d}.face-preview-metrics strong{color:#253858}.face-action-dropdown .dropdown-menu{min-width:245px}.face-action-dropdown .dropdown-item{font-size:.875rem;padding:.55rem .9rem}.face-action-dropdown form{display:block;width:100%}@media(max-width:575.98px){.face-preview-stage{min-height:280px}.face-preview-stage img{max-height:360px}.face-preview-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>

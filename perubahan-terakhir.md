@@ -4,6 +4,12 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyempurnaan Header Approval Data Wajah (13 Agustus 2026)
+
+- Hero Approval Data Wajah dibuat lebih compact dengan hierarki teks Bahasa Indonesia yang jelas: label konteks, judul utama, dan deskripsi operasional singkat.
+- Pemilih GTK/Siswa diganti menjadi segmented control dengan status aktif yang tegas, ukuran tombol seragam, target klik luas, dan state aksesibilitas `aria-current`.
+- Pada layar sempit, pemilih jenis pengguna turun menjadi satu baris penuh tanpa memotong judul atau deskripsi.
+
 ### Standar Global Tabel Compact & Adaptif (13 Agustus 2026)
 
 - Semua DataTables kini memperoleh standar global untuk padding compact, tipografi header/body, filter, jumlah baris, informasi, pagination, scrollbar, serta susunan kontrol pada layar ponsel.

@@ -36,4 +36,16 @@ class GlobalDataTableUiTest extends TestCase
         $this->assertStringContainsString('registrasi format lama', $view);
         $this->assertStringNotContainsString('<th>Angle</th>', $view);
     }
+
+    public function test_face_approval_header_uses_compact_semantic_switcher(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/absensi/face-verification.blade.php');
+
+        $this->assertStringContainsString('face-approval-hero__eyebrow', $view);
+        $this->assertStringContainsString('Kontrol Identitas Biometrik', $view);
+        $this->assertStringContainsString('face-type-switch__item', $view);
+        $this->assertStringContainsString('aria-current="page"', $view);
+        $this->assertStringNotContainsString('Face Approval', $view);
+        $this->assertStringNotContainsString("btn btn-{{ \$selectedType", $view);
+    }
 }
