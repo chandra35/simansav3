@@ -69,7 +69,9 @@
         <div class="card-header attendance-card-header">
             <div><h3 class="card-title"><i class="fas fa-calendar-check mr-1"></i> Kehadiran Harian</h3><small>Gunakan filter untuk menemukan data tanpa mengubah rekap tanggal terpilih.</small></div>
             <div class="attendance-card-actions">
-                @can('create-absensi')@if(!$isPersonalScope)<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalManual"><i class="fas fa-plus mr-1"></i>Input Manual</button>@endif@endcan
+                @can('create-absensi')
+                    @if(!$isPersonalScope)<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalManual"><i class="fas fa-plus mr-1"></i>Input Manual</button>@endif
+                @endcan
                 <a href="{{ route('admin.absensi.export', ['bulan' => $selectedDate->month, 'tahun' => $selectedDate->year]) }}" class="btn btn-outline-success btn-sm"><i class="fas fa-file-excel mr-1"></i>Export Bulan Ini</a>
             </div>
         </div>
@@ -122,7 +124,8 @@
         </div>
     </div>
 
-    @can('create-absensi')@if(!$isPersonalScope)
+    @can('create-absensi')
+    @if(!$isPersonalScope)
     <div class="modal fade" id="modalManual" tabindex="-1"><div class="modal-dialog modal-lg"><form method="POST" action="{{ route('admin.absensi.manual') }}" enctype="multipart/form-data" class="modal-content">@csrf
         <div class="modal-header"><div><h5 class="modal-title"><i class="fas fa-keyboard text-success mr-1"></i>Input Presensi Manual</h5><small class="text-muted">Setiap input tersimpan dalam audit log.</small></div><button type="button" class="close" data-dismiss="modal">&times;</button></div>
         <div class="modal-body"><input type="hidden" name="tanggal" value="{{ $tanggal }}"><div class="alert alert-warning py-2"><i class="fas fa-shield-alt mr-1"></i>Gunakan hanya untuk koreksi operasional, izin, sakit, atau ketika perangkat kiosk bermasalah.</div>
@@ -132,7 +135,8 @@
             <div class="form-group mb-0"><label>Bukti pendukung <small class="text-muted">(opsional, maks. 2 MB)</small></label><div class="custom-file"><input type="file" name="file_bukti" class="custom-file-input" id="manualEvidence" accept=".jpg,.jpeg,.png,.pdf"><label class="custom-file-label" for="manualEvidence">Pilih JPG, PNG, atau PDF</label></div></div>
         </div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-success"><i class="fas fa-save mr-1"></i>Simpan Presensi</button></div>
     </form></div></div>
-    @endif@endcan
+    @endif
+    @endcan
 
     @can('edit-absensi')
     <div class="modal fade" id="modalEdit" tabindex="-1"><div class="modal-dialog"><form id="formEdit" method="POST" class="modal-content">@csrf @method('PUT')
@@ -159,7 +163,7 @@
 @section('js')
 <script>
 $(function(){
-    const records = {{ Illuminate\Support\Js::from($absensis->mapWithKeys(fn($item) => [$item->id => ['status' => $item->status, 'catatan' => $item->catatan, 'nama' => $item->user?->gtk?->nama_lengkap ?? $item->user?->name]])) }};
+    const records = {!! Illuminate\Support\Js::from($absensis->mapWithKeys(fn($item) => [$item->id => ['status' => $item->status, 'catatan' => $item->catatan, 'nama' => $item->user?->gtk?->nama_lengkap ?? $item->user?->name]])) !!};
     $('.edit-attendance').on('click',function(){const record=records[$(this).data('id')];if(!record)return;$('#formEdit').attr('action',@json(url('admin/absensi'))+'/'+$(this).data('id'));$('#editStatus').val(record.status);$('#editCatatan').val(record.catatan||'');$('#editGtkName').text(record.nama||'GTK');$('#modalEdit').modal('show');});
     const optionTemplate=function(option){if(!option.id)return option.text;const source=option.element.dataset,wrap=$('<div class="manual-gtk-option">');return wrap.append($('<img>',{src:source.photo,alt:''}),$('<div>').append($('<strong>').text(source.name),$('<small>').text(source.nip)));};
     if($.fn.select2&&$('#manualGtk').length){$('#manualGtk').select2({theme:'bootstrap4',width:'100%',dropdownParent:$('#modalManual'),placeholder:'Cari nama atau NIP GTK',allowClear:true,templateResult:optionTemplate});}
