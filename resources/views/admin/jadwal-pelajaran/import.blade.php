@@ -136,6 +136,7 @@
 @stop
 
 @section('js')
+@if($preview)
 <script>
 document.getElementById('wakakurImportCommit')?.addEventListener('submit', function (event) {
     event.preventDefault();
@@ -162,4 +163,5 @@ document.getElementById('wakakurImportCommit')?.addEventListener('submit', funct
     });
 });
 </script>
+@endif
 @stop
