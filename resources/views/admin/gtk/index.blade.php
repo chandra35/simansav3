@@ -482,6 +482,13 @@ $(document).ready(function() {
         showGtk(this.dataset.gtkPhotoDetail);
     });
 
+    // Tombol dibuat oleh DataTables setelah halaman dimuat, sehingga aksi
+    // harus ditangani lewat delegasi event, bukan inline onclick.
+    $gtkTableElement.on('click', '.simansa-gtk-action-item', function(event) {
+        event.preventDefault();
+        handleGtkAction(this);
+    });
+
     $gtkTableElement
         .on('preXhr.dt', function() {
             $gtkTableWrap.addClass('is-loading');

@@ -334,32 +334,32 @@ class GtkController extends Controller
         $groups = [[], [], []];
 
         if ($user->can('view-gtk')) {
-            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view" onclick="handleGtkAction(this)"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
-            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="schedule" onclick="handleGtkAction(this)"><i class="fas fa-calendar-alt text-success"></i><span>Lihat jadwal</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="schedule"><i class="fas fa-calendar-alt text-success"></i><span>Lihat jadwal</span></button>';
         }
         if ($user->can('view-beban-kerja-gtk')) {
-            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="workload" onclick="handleGtkAction(this)"><i class="fas fa-balance-scale text-primary"></i><span>Beban kerja & penugasan</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="workload"><i class="fas fa-balance-scale text-primary"></i><span>Beban kerja & penugasan</span></button>';
         }
 
         if ($user->can('edit-gtk')) {
-            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="edit" onclick="handleGtkAction(this)"><i class="fas fa-edit text-primary"></i><span>Edit data</span></button>';
-            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="update-photo" onclick="handleGtkAction(this)"><i class="fas fa-camera text-success"></i><span>Update foto profil</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="edit"><i class="fas fa-edit text-primary"></i><span>Edit data</span></button>';
+            $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="update-photo"><i class="fas fa-camera text-success"></i><span>Update foto profil</span></button>';
         }
 
         if ($user->can('manage-status-gtk')) {
-            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="mutation" onclick="handleGtkAction(this)"><i class="fas fa-user-clock text-info"></i><span>Mutasi / ubah status</span></button>';
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="mutation"><i class="fas fa-user-clock text-info"></i><span>Mutasi / ubah status</span></button>';
         }
 
         if ($user->can('reset-password-gtk')) {
-            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="reset-password" onclick="handleGtkAction(this)"><i class="fas fa-key text-warning"></i><span>Reset password</span></button>';
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="reset-password"><i class="fas fa-key text-warning"></i><span>Reset password</span></button>';
         }
 
         if ($user->can('impersonate-users') && $item->user_id) {
-            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="login-as" onclick="handleGtkAction(this)"><i class="fas fa-user-shield text-success"></i><span>Login sebagai GTK</span></button>';
+            $groups[1][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="login-as"><i class="fas fa-user-shield text-success"></i><span>Login sebagai GTK</span></button>';
         }
 
         if ($user->can('delete-gtk')) {
-            $groups[2][] = '<button type="button" class="dropdown-item simansa-gtk-action-item text-danger" data-action="delete" onclick="handleGtkAction(this)"><i class="fas fa-trash-alt"></i><span>Hapus GTK</span></button>';
+            $groups[2][] = '<button type="button" class="dropdown-item simansa-gtk-action-item text-danger" data-action="delete"><i class="fas fa-trash-alt"></i><span>Hapus GTK</span></button>';
         }
 
         $menus = array_values(array_filter($groups));
