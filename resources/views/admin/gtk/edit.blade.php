@@ -332,6 +332,14 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label for="kode_gtk">Kode GTK Jadwal Wakakur</label>
+                                            <input type="text" class="form-control" id="kode_gtk" name="kode_gtk"
+                                                   value="{{ $gtk->kode_gtk }}" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" placeholder="Contoh: 56">
+                                            <small class="text-muted">Nomor guru pada sheet <code>Kode_GTK_mapel</code>. Kosongkan bila GTK tidak digunakan pada jadwal.</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label for="kategori_ptk">Kategori PTK <span class="text-danger">*</span></label>
                                             <select class="form-control" id="kategori_ptk" name="kategori_ptk" required>
                                                 <option value="">-- Pilih --</option>

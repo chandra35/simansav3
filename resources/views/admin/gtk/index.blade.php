@@ -1248,6 +1248,7 @@ function showGtk(id) {
                             <tr><th>NIK</th><td>${gtk.nik}</td></tr>
                             <tr><th>NUPTK</th><td>${gtk.nuptk || '-'}</td></tr>
                             <tr><th>NIP</th><td>${gtk.nip || '-'}</td></tr>
+                            <tr><th>Kode GTK Jadwal Wakakur</th><td><code>${gtk.kode_gtk || '-'}</code></td></tr>
                             <tr><th>Jenis Kelamin</th><td>${gtk.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</td></tr>
                             <tr><th>Tempat, Tgl Lahir</th><td>${gtk.tempat_lahir || '-'}, ${gtk.tanggal_lahir || '-'}</td></tr>
                             <tr><th>Email</th><td>${gtk.email || '-'}</td></tr>

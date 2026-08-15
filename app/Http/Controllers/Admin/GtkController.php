@@ -165,6 +165,9 @@ class GtkController extends Controller
                 : 'simansa-gtk-meta-badge--info';
             $nama = e($item->nama_lengkap);
             $nik = e($item->nik ?: '-');
+            $kodeGtk = $item->kode_gtk
+                ? '<span class="simansa-gtk-identifier"><small>Kode Jadwal</small><code>'.e($item->kode_gtk).'</code></span>'
+                : '';
             $jenisPtk = e($item->jenis_ptk ?: '-');
             $pegId = e($item->peg_id ?: '-');
             $avatar = $this->getGtkListAvatar($item);
@@ -209,6 +212,7 @@ class GtkController extends Controller
                             <div class="simansa-gtk-profile__identifiers">
                                 <span class="simansa-gtk-identifier"><small>NIK</small><code>'.$nik.'</code></span>
                                 <span class="simansa-gtk-identifier"><small>ID PTK</small><code>'.$pegId.'</code></span>
+                                '.$kodeGtk.'
                             </div>
                         </div>
                     </div>',
@@ -562,8 +566,20 @@ class GtkController extends Controller
 
             } elseif ($tab === 'kepeg') {
                 // Update Data Kepegawaian
+                $request->merge([
+                    'kode_gtk' => $request->filled('kode_gtk')
+                        ? trim((string) $request->kode_gtk)
+                        : null,
+                ]);
                 $validated = $request->validate([
                     'nip' => 'nullable|string|max:20',
+                    // Kode ini dipakai persis seperti pada sheet Kode_GTK_mapel
+                    // Wakakur, misalnya 56 pada slot jadwal 56S.
+                    'kode_gtk' => [
+                        'nullable',
+                        'regex:/^\d{1,3}$/',
+                        Rule::unique('gtks', 'kode_gtk')->ignore($gtk->id),
+                    ],
                     'kategori_ptk' => 'required|in:Pendidik,Tenaga Kependidikan',
                     'jenis_ptk' => 'required|in:Guru Mapel,Guru BK,Kepala TU,Staff TU,Bendahara,Laboran,Pustakawan,Cleaning Service,Satpam,Lainnya',
                     'status_kepegawaian' => 'nullable|in:PNS,PPPK,GTY,PTY,Honorer',

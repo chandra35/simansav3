@@ -180,7 +180,7 @@
                     <thead>
                         <tr>
                             <th width="5%">No</th>
-                            <th>Kode</th>
+                            <th>Kode Internal / Jadwal</th>
                             <th>Nama Mata Pelajaran</th>
                             <th>Kurikulum</th>
                             <th>Struktur</th>
