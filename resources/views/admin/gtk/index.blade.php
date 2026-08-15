@@ -482,11 +482,38 @@ $(document).ready(function() {
         showGtk(this.dataset.gtkPhotoDetail);
     });
 
+    const closeGtkActionMenus = function() {
+        $gtkTableElement.find('.simansa-gtk-action-menu').removeClass('show')
+            .find('.simansa-gtk-action-dropdown').removeClass('show');
+        $gtkTableElement.find('.simansa-gtk-action-toggle').attr('aria-expanded', 'false');
+        $gtkTableWrap.removeClass('simansa-action-dropdown-open');
+    };
+
+    // Tidak bergantung pada plugin dropdown Bootstrap; ini tetap bekerja bila
+    // tombol dibuat ulang oleh DataTables atau plugin belum terinisialisasi.
+    $gtkTableElement.on('click', '.simansa-gtk-action-toggle', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const $menu = $(this).closest('.simansa-gtk-action-menu');
+        const willOpen = !$menu.hasClass('show');
+        closeGtkActionMenus();
+        if (willOpen) {
+            $menu.addClass('show').find('.simansa-gtk-action-dropdown').addClass('show');
+            $(this).attr('aria-expanded', 'true');
+            $gtkTableWrap.addClass('simansa-action-dropdown-open');
+        }
+    });
+
     // Tombol dibuat oleh DataTables setelah halaman dimuat, sehingga aksi
     // harus ditangani lewat delegasi event, bukan inline onclick.
     $gtkTableElement.on('click', '.simansa-gtk-action-item', function(event) {
         event.preventDefault();
         handleGtkAction(this);
+    });
+
+    $(document).on('click.gtkActions', function(event) {
+        if (!$(event.target).closest('.simansa-gtk-action-menu').length) closeGtkActionMenus();
     });
 
     $gtkTableElement
