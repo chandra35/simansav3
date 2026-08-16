@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalJamConfig;
 use App\Models\JadwalHariJam;
+use App\Models\JadwalHariOverride;
 use App\Models\JadwalPelajaran;
 use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
@@ -30,9 +31,12 @@ class JadwalJamConfigController extends Controller
                 ->get()
             : collect();
         $presetGenerator = $this->presetGenerator($jamList, $tahunDipilih);
+        $hariOverrides = $tahunId
+            ? JadwalHariOverride::where('tahun_pelajaran_id', $tahunId)->get()->keyBy('hari')
+            : collect();
 
         return view('admin.jadwal-jam-config.index', compact(
-            'tahunList', 'tahunAktif', 'tahunDipilih', 'jamList', 'presetGenerator'
+            'tahunList', 'tahunAktif', 'tahunDipilih', 'jamList', 'presetGenerator', 'hariOverrides'
         ));
     }
 
@@ -57,6 +61,9 @@ class JadwalJamConfigController extends Controller
             'durasi_upacara_senin'    => 'required_if:upacara_senin_aktif,1|integer|min:5|max:120',
             'religi_harian_aktif'     => 'nullable|boolean',
             'durasi_religi_harian'    => 'required_if:religi_harian_aktif,1|integer|min:5|max:120',
+            'hari_khusus'             => 'nullable|array',
+            'hari_khusus.*.aktif'     => 'nullable|boolean',
+            'hari_khusus.*.jam_pulang'=> 'nullable|date_format:H:i',
         ]);
 
         $tahunId   = $request->tahun_pelajaran_id;
@@ -82,6 +89,18 @@ class JadwalJamConfigController extends Controller
 
             foreach ($rows as $row) {
                 JadwalJamConfig::create(array_merge($row, ['tahun_pelajaran_id' => $tahunId]));
+            }
+
+            JadwalHariOverride::where('tahun_pelajaran_id', $tahunId)->delete();
+            foreach ($request->input('hari_khusus', []) as $hari => $override) {
+                if (!in_array($hari, JadwalHariJam::HARI, true) || empty($override['aktif'])) {
+                    continue;
+                }
+                JadwalHariOverride::create([
+                    'tahun_pelajaran_id' => $tahunId,
+                    'hari' => $hari,
+                    'jam_pulang' => $override['jam_pulang'] ?: null,
+                ]);
             }
 
             return $this->sinkronkanSlotDanJadwal($tahun->fresh());
@@ -176,6 +195,7 @@ class JadwalJamConfigController extends Controller
         $configs = JadwalJamConfig::where('tahun_pelajaran_id', $tahun->id)
             ->orderBy('urutan')
             ->get();
+        $overrides = JadwalHariOverride::where('tahun_pelajaran_id', $tahun->id)->get()->keyBy('hari');
         $hariSekolah = $tahun->hariKerja();
         $jadwalTersinkron = 0;
 
@@ -187,6 +207,8 @@ class JadwalJamConfigController extends Controller
                 ->delete();
 
             foreach ($hariSekolah as $hari) {
+                $override = $overrides->get($hari);
+                $jamPulang = $override?->jam_pulang ?: $tahun->jadwal_jam_pulang;
                 $offsetMenit = 0;
                 $urutan = 1;
 
@@ -202,7 +224,7 @@ class JadwalJamConfigController extends Controller
                     $waktuMulai = $this->geserWaktu($config->waktu_mulai, $offsetMenit);
                     $waktuSelesai = $this->geserWaktu($config->waktu_selesai, $offsetMenit);
 
-                    if ($tahun->jadwal_jam_pulang && substr($waktuSelesai, 0, 5) > substr($tahun->jadwal_jam_pulang, 0, 5)) {
+                    if ($jamPulang && substr($waktuSelesai, 0, 5) > substr($jamPulang, 0, 5)) {
                         continue;
                     }
 
@@ -311,7 +333,7 @@ class JadwalJamConfigController extends Controller
             return (($akhirJam * 60) + $akhirMenit) - (($jam * 60) + $menit);
         })->countBy()->sortDesc()->keys()->first() ?? 45;
 
-        $istirahat = $configs->where('is_istirahat', true)->take(2)->values()->map(function ($item) use ($configs) {
+        $istirahat = $configs->where('is_istirahat', true)->values()->map(function ($item) use ($configs) {
             $sebelumnya = $configs->where('urutan', '<', $item->urutan)
                 ->where('is_istirahat', false)
                 ->max('jam_ke');

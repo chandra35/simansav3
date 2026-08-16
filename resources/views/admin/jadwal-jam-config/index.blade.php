@@ -205,6 +205,28 @@
                         </div>
                     </div>
 
+                    <div class="simansa-jjc-istirahat-block" id="blokJedaTambahan">
+                        <div class="simansa-jjc-istirahat-title">
+                            <i class="fas fa-stream text-primary"></i> Jeda atau kegiatan tambahan
+                            <button type="button" class="btn btn-sm btn-outline-primary ml-auto" id="btnTambahJeda"><i class="fas fa-plus"></i> Tambah</button>
+                        </div>
+                        <div class="simansa-jjc-istirahat-body" id="daftarJedaTambahan"></div>
+                        <small class="d-block px-3 pb-3 text-muted">Contoh: jeda sore, literasi, salat, makan. Semua muncul dalam urutan jadwal dan tidak dihitung sebagai jam pelajaran.</small>
+                    </div>
+
+                    <div class="simansa-jjc-istirahat-block">
+                        <div class="simansa-jjc-istirahat-title"><i class="fas fa-calendar-day text-primary"></i> Penyesuaian hari tertentu <small class="text-muted">- jam pulang dapat berbeda dari pola dasar</small></div>
+                        <div class="simansa-jjc-istirahat-body">
+                            @foreach(['senin','selasa','rabu','kamis','jumat','sabtu'] as $hari)
+                                @php($override = $hariOverrides->get($hari))
+                                <div class="form-row align-items-center mb-2">
+                                    <div class="col-5"><div class="custom-control custom-switch"><input class="custom-control-input hari-khusus-aktif" type="checkbox" id="hari-{{ $hari }}" name="hari_khusus[{{ $hari }}][aktif]" value="1" @checked($override)><label class="custom-control-label text-capitalize" for="hari-{{ $hari }}">{{ $hari }}</label></div></div>
+                                    <div class="col-7"><input type="time" class="form-control form-control-sm hari-khusus-pulang" name="hari_khusus[{{ $hari }}][jam_pulang]" value="{{ $override?->jam_pulang ? substr($override->jam_pulang, 0, 5) : $presetGenerator['jam_pulang'] }}" @disabled(!$override)></div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     {{-- Preview --}}
                     <div class="simansa-jjc-preview" id="previewBox">
                         <div class="simansa-jjc-preview__label"><i class="fas fa-eye"></i> Preview</div>
@@ -416,6 +438,26 @@ $(function () {
         updatePreview();
     }).trigger('change');
 
+    let jedaTambahanIndex = 2;
+    const jedaTambahanAwal = @json(array_slice($presetGenerator['istirahat'], 2));
+    function tambahJeda(data = {}) {
+        const index = jedaTambahanIndex++;
+        const label = String(data.label || 'Jeda').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));
+        $('#daftarJedaTambahan').append(`<div class="form-row align-items-end jeda-tambahan-row mb-2">
+            <div class="form-group col-3 mb-0"><label class="simansa-jjc-label">Setelah jam</label><input class="form-control form-control-sm jeda-setelah" type="number" name="istirahat[${index}][setelah_jam]" min="1" max="20" value="${data.setelah_jam || 8}"></div>
+            <div class="form-group col-3 mb-0"><label class="simansa-jjc-label">Durasi</label><input class="form-control form-control-sm jeda-durasi" type="number" name="istirahat[${index}][durasi]" min="5" max="90" value="${data.durasi || 15}"></div>
+            <div class="form-group col-5 mb-0"><label class="simansa-jjc-label">Label</label><input class="form-control form-control-sm jeda-label" type="text" name="istirahat[${index}][label]" maxlength="50" value="${label}"></div>
+            <div class="col-1 pb-1"><button type="button" class="btn btn-sm btn-outline-danger btn-hapus-jeda" title="Hapus"><i class="fas fa-times"></i></button></div>
+        </div>`);
+    }
+    jedaTambahanAwal.forEach(tambahJeda);
+    $('#btnTambahJeda').on('click', () => { tambahJeda(); updatePreview(); });
+    $(document).on('click', '.btn-hapus-jeda', function () { $(this).closest('.jeda-tambahan-row').remove(); updatePreview(); });
+    $(document).on('input change', '.jeda-tambahan-row input', updatePreview);
+    $('.hari-khusus-aktif').on('change', function () {
+        $(this).closest('.form-row').find('.hari-khusus-pulang').prop('disabled', !this.checked);
+    });
+
     // Toggle manual panel
     $('#toggleManual').on('click', function () {
         $('#manualBody').slideToggle(150);
@@ -454,6 +496,11 @@ $(function () {
         if ($('#ist2Active').is(':checked')) {
             breaks[parseInt($('#ist2Setelah').val())] = { durasi: parseInt($('#ist2Durasi').val()), label: 'Istirahat 2' };
         }
+        $('.jeda-tambahan-row').each(function () {
+            const after = parseInt($(this).find('.jeda-setelah').val());
+            const duration = parseInt($(this).find('.jeda-durasi').val());
+            if (after && duration) breaks[after] = { durasi: duration, label: $(this).find('.jeda-label').val() || 'Jeda' };
+        });
 
         function renderDay(title, openingLabel, openingDuration) {
             let cur = start;
@@ -530,6 +577,17 @@ $(function () {
             data['istirahat[1][durasi]']      = $('#ist2Durasi').val();
             data['istirahat[1][label]']       = $('#ist2Body input[type=text]').val();
         }
+        $('.jeda-tambahan-row').each(function () {
+            const index = $(this).find('.jeda-setelah').attr('name').match(/istirahat\[(\d+)\]/)[1];
+            data[`istirahat[${index}][setelah_jam]`] = $(this).find('.jeda-setelah').val();
+            data[`istirahat[${index}][durasi]`] = $(this).find('.jeda-durasi').val();
+            data[`istirahat[${index}][label]`] = $(this).find('.jeda-label').val();
+        });
+        $('.hari-khusus-aktif:checked').each(function () {
+            const hari = this.name.match(/hari_khusus\[([^\]]+)\]/)[1];
+            data[`hari_khusus[${hari}][aktif]`] = 1;
+            data[`hari_khusus[${hari}][jam_pulang]`] = $(this).closest('.form-row').find('.hari-khusus-pulang').val();
+        });
         const confirmation = window.Swal
             ? Swal.fire({
             title: 'Generate ulang?',
