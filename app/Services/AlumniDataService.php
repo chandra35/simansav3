@@ -17,6 +17,8 @@ class AlumniDataService
             'siswa.user',
             'siswa.dataLulusan.snbpRegistration',
             'siswa.dataLulusan.spanPtkinRegistration',
+            'siswa.snbpRegistrations',
+            'siswa.spanPtkinRegistrations',
             'tahunPelajaran',
         ])
             ->where('status', 'lulus')->orderBy('tanggal_keluar')->cursor()
@@ -33,6 +35,8 @@ class AlumniDataService
             'siswa.user',
             'siswa.dataLulusan.snbpRegistration',
             'siswa.dataLulusan.spanPtkinRegistration',
+            'siswa.snbpRegistrations',
+            'siswa.spanPtkinRegistrations',
             'tahunPelajaran',
         ])->where('siswa_id', $siswa->id)
             ->where('status', 'lulus')
@@ -53,7 +57,11 @@ class AlumniDataService
         $dataLulusan = $siswa->dataLulusan
             ->firstWhere('tahun_pelajaran_id', $record->tahun_pelajaran_id)
             ?? $siswa->dataLulusan->sortByDesc('created_at')->first();
-        $tracking = $this->buildGraduationTracking($dataLulusan);
+        $snbpRegistration = $siswa->snbpRegistrations
+            ->firstWhere('tahun_pelajaran_id', $record->tahun_pelajaran_id);
+        $spanPtkinRegistration = $siswa->spanPtkinRegistrations
+            ->firstWhere('tahun_pelajaran_id', $record->tahun_pelajaran_id);
+        $tracking = $this->buildGraduationTracking($dataLulusan, $snbpRegistration, $spanPtkinRegistration);
 
         $payload = [
                     'angkatan' => $record->tahunPelajaran?->nama,
@@ -93,28 +101,45 @@ class AlumniDataService
         return (bool) $existing;
     }
 
-    private function buildGraduationTracking(?SiswaLulusan $dataLulusan): ?array
+    private function buildGraduationTracking(
+        ?SiswaLulusan $dataLulusan,
+        $snbpRegistration = null,
+        $spanPtkinRegistration = null,
+    ): ?array
     {
-        if (!$dataLulusan) return null;
+        if (!$dataLulusan && !$snbpRegistration && !$spanPtkinRegistration) return null;
 
-        $snbpStatus = $dataLulusan->snbpRegistration?->check_status;
-        $spanStatus = $dataLulusan->spanPtkinRegistration?->check_status;
-        $checkerStatus = $snbpStatus === 'lulus' || $spanStatus === 'lulus'
+        $snbpStatus = $dataLulusan?->snbpRegistration?->check_status ?? $snbpRegistration?->check_status;
+        $spanStatus = $dataLulusan?->spanPtkinRegistration?->check_status ?? $spanPtkinRegistration?->check_status;
+        $statuses = collect([$snbpStatus, $spanStatus])->filter();
+        $checkerStatus = $statuses->contains('lulus')
             ? 'lulus'
-            : ($snbpStatus ?: $spanStatus);
+            : ($statuses->contains('tidak_lulus') ? 'tidak_lulus' : $statuses->first());
+
+        $jalur = $dataLulusan?->jalur_masuk;
+        if (!$jalur) {
+            $jalur = collect([
+                $snbpRegistration ? 'SNBP' : null,
+                $spanPtkinRegistration ? 'SPAN-PTKIN' : null,
+            ])->filter()->implode(' & ');
+        }
 
         return [
-            'siswa_lulusan_id' => $dataLulusan->id,
-            'tahun_pelajaran_id' => $dataLulusan->tahun_pelajaran_id,
-            'jalur_masuk' => $dataLulusan->jalur_masuk,
-            'nama_universitas' => $dataLulusan->nama_universitas_manual ?: $dataLulusan->nama_universitas,
-            'jurusan_fakultas' => $dataLulusan->jurusan_fakultas,
-            'program_studi' => $dataLulusan->program_studi_manual ?: $dataLulusan->program_studi,
-            'keterangan' => $dataLulusan->keterangan,
+            'siswa_lulusan_id' => $dataLulusan?->id,
+            'tahun_pelajaran_id' => $dataLulusan?->tahun_pelajaran_id
+                ?? $snbpRegistration?->tahun_pelajaran_id
+                ?? $spanPtkinRegistration?->tahun_pelajaran_id,
+            'jalur_masuk' => $jalur,
+            'nama_universitas' => $dataLulusan ? ($dataLulusan->nama_universitas_manual ?: $dataLulusan->nama_universitas) : null,
+            'jurusan_fakultas' => $dataLulusan?->jurusan_fakultas,
+            'program_studi' => $dataLulusan ? ($dataLulusan->program_studi_manual ?: $dataLulusan->program_studi) : null,
+            'keterangan' => $dataLulusan?->keterangan,
             'status_checker' => $checkerStatus,
             'status_snbp' => $snbpStatus,
             'status_span_ptkin' => $spanStatus,
-            'terakhir_diperbarui' => optional($dataLulusan->updated_at)->toIso8601String(),
+            'nomor_pendaftaran_snbp' => $dataLulusan?->snbpRegistration?->nomor_pendaftaran ?? $snbpRegistration?->nomor_pendaftaran,
+            'nomor_pendaftaran_span_ptkin' => $dataLulusan?->spanPtkinRegistration?->nomor_pendaftaran ?? $spanPtkinRegistration?->nomor_pendaftaran,
+            'terakhir_diperbarui' => optional($dataLulusan?->updated_at ?? $snbpRegistration?->updated_at ?? $spanPtkinRegistration?->updated_at)->toIso8601String(),
         ];
     }
 }

@@ -65,6 +65,8 @@
                             <div class="col-md-4 mb-2"><span class="text-muted d-block">Jalur</span><strong>{{ $tracking['jalur_masuk'] ?: '-' }}</strong></div>
                             <div class="col-md-4 mb-2"><span class="text-muted d-block">Hasil checker</span><strong>{{ $tracking['status_checker'] ? ucfirst(str_replace('_', ' ', $tracking['status_checker'])) : 'Belum ada' }}</strong></div>
                             <div class="col-md-4 mb-2"><span class="text-muted d-block">Diperbarui</span><strong>{{ $alumni->tracking_lulusan_updated_at?->format('d/m/Y H:i') ?: '-' }}</strong></div>
+                            @if(!empty($tracking['nomor_pendaftaran_snbp']))<div class="col-md-4 mb-2"><span class="text-muted d-block">Nomor SNBP</span><strong>{{ $tracking['nomor_pendaftaran_snbp'] }}</strong></div>@endif
+                            @if(!empty($tracking['nomor_pendaftaran_span_ptkin']))<div class="col-md-4 mb-2"><span class="text-muted d-block">Nomor SPAN-PTKIN</span><strong>{{ $tracking['nomor_pendaftaran_span_ptkin'] }}</strong></div>@endif
                             <div class="col-md-6 mb-2"><span class="text-muted d-block">Kampus tercatat</span><strong>{{ $tracking['nama_universitas'] ?: '-' }}</strong></div>
                             <div class="col-md-6 mb-2"><span class="text-muted d-block">Program studi tercatat</span><strong>{{ $tracking['program_studi'] ?: '-' }}</strong></div>
                             @if(!empty($tracking['jurusan_fakultas']))<div class="col-md-6 mb-2"><span class="text-muted d-block">Fakultas / jurusan</span><strong>{{ $tracking['jurusan_fakultas'] }}</strong></div>@endif
