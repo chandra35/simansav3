@@ -30,21 +30,25 @@ class SekolahAsalController extends Controller
                     ';
                 })
                 ->addColumn('action', function ($row) use ($canEnrich) {
-                    $detail = '<a href="' . e(route('admin.sekolah-asal.show', $row->npsn)) . '" class="btn btn-primary" title="Lihat Detail"><i class="fas fa-eye"></i></a>';
+                    $items = [];
 
-                    if (!$canEnrich) {
-                        return '<div class="btn-group btn-group-sm">' . $detail . '</div>';
+                    if ($canEnrich) {
+                        $items[] = '<button type="button" class="dropdown-item simansa-school-action-item btn-enrich-school"
+                            data-url="' . e(route('admin.sekolah-asal.enrich', $row->npsn)) . '"
+                            data-npsn="' . e($row->npsn) . '" data-school="' . e($row->nama) . '">
+                            <i class="fas fa-sync-alt text-primary"></i><span>Lengkapi data</span></button>';
                     }
 
-                    return '
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-primary btn-enrich-school"
-                                data-url="' . e(route('admin.sekolah-asal.enrich', $row->npsn)) . '"
-                                data-npsn="' . e($row->npsn) . '" data-school="' . e($row->nama) . '"
-                                title="Lengkapi data sekolah"><i class="fas fa-sync-alt"></i></button>
-                            ' . $detail . '
-                        </div>
-                    ';
+                    $items[] = '<a href="' . e(route('admin.sekolah-asal.show', $row->npsn)) . '" class="dropdown-item simansa-school-action-item">
+                        <i class="fas fa-eye text-info"></i><span>Lihat detail</span></a>';
+
+                    return '<div class="btn-group simansa-school-action-menu">'
+                        . '<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-school-action-toggle"'
+                        . ' title="Pilih aksi untuk ' . e($row->nama) . '" aria-haspopup="true" aria-expanded="false">'
+                        . '<i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>'
+                        . '<div class="dropdown-menu dropdown-menu-right simansa-school-action-dropdown">'
+                        . implode('', $items)
+                        . '</div></div>';
                 })
                 ->addColumn('status_badge', function ($row) {
                     $color = $row->status === 'NEGERI' ? 'primary' : 'success';

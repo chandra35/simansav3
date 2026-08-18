@@ -247,6 +247,12 @@
 
         .simansa-table-shell {
             padding: 16px 20px 20px;
+            position: relative;
+        }
+
+        .simansa-table-shell.simansa-action-dropdown-open,
+        .simansa-table-shell.simansa-action-dropdown-open .dataTables_scrollBody {
+            overflow: visible !important;
         }
 
         .simansa-table thead th {
@@ -285,6 +291,58 @@
         .btn {
             border-radius: 8px;
             font-weight: 700;
+        }
+
+        .simansa-school-action-menu .simansa-school-action-toggle {
+            min-width: 78px;
+            border-color: #60a5fa;
+            border-radius: 7px;
+            background: #fff;
+            color: #1d4ed8;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+
+        .simansa-school-action-menu.show .simansa-school-action-toggle,
+        .simansa-school-action-menu .simansa-school-action-toggle:hover,
+        .simansa-school-action-menu .simansa-school-action-toggle:focus {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+            box-shadow: 0 0 0 .15rem rgba(37, 99, 235, .12);
+        }
+
+        .simansa-school-action-dropdown {
+            z-index: 1060;
+            min-width: 190px;
+            padding: .35rem;
+            border: 1px solid #dbe4f0;
+            border-radius: 9px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+        }
+
+        .simansa-school-action-item {
+            align-items: center;
+            display: flex;
+            gap: .6rem;
+            padding: .5rem .6rem;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: #334155;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+
+        .simansa-school-action-item > i {
+            width: 17px;
+            text-align: center;
+        }
+
+        .simansa-school-action-item:hover,
+        .simansa-school-action-item:focus {
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
         .simansa-progress-overlay {
@@ -403,6 +461,8 @@
 <script>
 $(document).ready(function() {
     const csrf = '{{ csrf_token() }}';
+    const $schoolTable = $('#tableSekolah');
+    const $schoolTableShell = $('.simansa-table-shell');
     const table = $('#tableSekolah').DataTable({
         processing: true,
         serverSide: true,
@@ -437,7 +497,40 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 25,
         drawCallback() {
-            bindEnrichButtons();
+            positionSchoolActionMenus();
+        }
+    });
+
+    function closeSchoolActionMenus() {
+        $schoolTable.find('.simansa-school-action-menu').removeClass('show')
+            .find('.simansa-school-action-dropdown').removeClass('show');
+        $schoolTable.find('.simansa-school-action-toggle').attr('aria-expanded', 'false');
+        $schoolTableShell.removeClass('simansa-action-dropdown-open');
+    }
+
+    function positionSchoolActionMenus() {
+        const $rows = $schoolTable.find('tbody tr');
+        $rows.find('.simansa-school-action-menu').removeClass('dropup');
+        $rows.slice(-3).find('.simansa-school-action-menu').addClass('dropup');
+    }
+
+    $schoolTable.on('click', '.simansa-school-action-toggle', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const $menu = $(this).closest('.simansa-school-action-menu');
+        const willOpen = !$menu.hasClass('show');
+        closeSchoolActionMenus();
+        if (willOpen) {
+            $menu.addClass('show').find('.simansa-school-action-dropdown').addClass('show');
+            $(this).attr('aria-expanded', 'true');
+            $schoolTableShell.addClass('simansa-action-dropdown-open');
+        }
+    });
+
+    $(document).on('click.schoolActions', function(event) {
+        if (!$(event.target).closest('.simansa-school-action-menu').length) {
+            closeSchoolActionMenus();
         }
     });
 
@@ -521,11 +614,11 @@ $(document).ready(function() {
         });
     }
 
-    function bindEnrichButtons() {
-        $('.btn-enrich-school').off('click').on('click', function() {
-            runEnrich($(this));
-        });
-    }
+    $schoolTable.on('click', '.btn-enrich-school', function(event) {
+        event.preventDefault();
+        closeSchoolActionMenus();
+        runEnrich($(this));
+    });
 
     $('#btnCloseSchoolOverlay').on('click', function() {
         $('#schoolEnrichOverlay').removeClass('is-active').attr('aria-hidden', 'true');
