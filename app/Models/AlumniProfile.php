@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use IlluminateDatabaseEloquentConcernsHasUuids;
-use IlluminateDatabaseEloquentModel;
+use Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;
+use Illuminate\\Database\\Eloquent\\Model;
 
 class AlumniProfile extends Model
 {
