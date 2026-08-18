@@ -9,6 +9,7 @@ use App\Models\SnbpRegistration;
 use App\Models\SiswaLulusan;
 use App\Models\SpanPtkinRegistration;
 use App\Services\StudentGraduationAccessService;
+use App\Services\AlumniDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -106,7 +107,7 @@ class LulusanController extends Controller
         return response()->json($results);
     }
 
-    public function store(Request $request, StudentGraduationAccessService $accessService)
+    public function store(Request $request, StudentGraduationAccessService $accessService, AlumniDataService $alumniDataService)
     {
         $user = Auth::user();
         $siswa = $user->siswa;
@@ -211,6 +212,10 @@ class LulusanController extends Controller
             ],
             $payload
         );
+
+        // Untuk siswa yang sudah berstatus alumni, perubahan ini langsung menjadi
+        // histori tracking di Bank Data Alumni tanpa mengganti profil terkini mereka.
+        $alumniDataService->syncStudent($siswa);
 
         return redirect()->route('siswa.lulusan.index')
             ->with('success', 'Data lulusan berhasil disimpan.');

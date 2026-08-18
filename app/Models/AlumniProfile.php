@@ -16,12 +16,15 @@ class AlumniProfile extends Model
         'tempat_lahir', 'tanggal_lahir', 'nomor_hp', 'email', 'alamat', 'kabupaten_kota', 'provinsi',
         'status_setelah_lulus', 'institusi_lanjutan', 'program_studi', 'pekerjaan', 'instansi',
         'status_verifikasi', 'sumber_data', 'referensi_sumber', 'last_profile_update_at', 'catatan',
+        'tracking_lulusan', 'tracking_lulusan_updated_at',
     ];
 
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tahun_lulus' => 'integer',
         'last_profile_update_at' => 'datetime',
+        'tracking_lulusan' => 'array',
+        'tracking_lulusan_updated_at' => 'datetime',
     ];
 
     public function siswa()
