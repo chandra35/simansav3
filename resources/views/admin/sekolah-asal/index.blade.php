@@ -81,14 +81,14 @@
             <table id="tableSekolah" class="table table-hover simansa-table w-100">
                 <thead>
                     <tr>
-                        <th width="48">#</th>
-                        <th>Sekolah</th>
-                        <th width="115">Status</th>
-                        <th width="120">Bentuk</th>
-                        <th width="220">Wilayah</th>
-                        <th width="125">Kelengkapan</th>
-                        <th width="105" class="text-right">Siswa</th>
-                        <th width="95" class="text-right">Aksi</th>
+                        <th class="school-col-number">#</th>
+                        <th class="school-col-identity">Sekolah</th>
+                        <th class="school-col-status">Status</th>
+                        <th class="school-col-type">Bentuk</th>
+                        <th class="school-col-region">Wilayah</th>
+                        <th class="school-col-completeness">Kelengkapan</th>
+                        <th class="school-col-students text-right">Siswa</th>
+                        <th class="school-col-actions text-right">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -250,6 +250,37 @@
             position: relative;
         }
 
+        .simansa-table-shell .dataTables_wrapper > .row:first-child {
+            align-items: center;
+            margin: 0 0 10px;
+        }
+
+        .simansa-table-shell .dataTables_length label,
+        .simansa-table-shell .dataTables_filter label {
+            align-items: center;
+            color: #334155;
+            display: flex;
+            font-size: .82rem;
+            font-weight: 650;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .simansa-table-shell .dataTables_length select,
+        .simansa-table-shell .dataTables_filter input {
+            border-color: #cbd5e1;
+            border-radius: 7px;
+            box-shadow: none;
+            color: #334155;
+            font-size: .82rem;
+            min-height: 34px;
+        }
+
+        .simansa-table-shell .dataTables_filter input {
+            margin-left: 0;
+            width: 205px;
+        }
+
         .simansa-table-shell.simansa-action-dropdown-open,
         .simansa-table-shell.simansa-action-dropdown-open .dataTables_scrollBody {
             overflow: visible !important;
@@ -259,28 +290,65 @@
             background: #f8fafc;
             border-bottom: 1px solid #dbe7f5;
             color: #64748b;
-            font-size: 0.78rem;
+            font-size: .7rem;
             font-weight: 800;
-            letter-spacing: 0.04em;
+            letter-spacing: .055em;
+            padding: .78rem .72rem;
             text-transform: uppercase;
+            vertical-align: middle;
         }
 
         .simansa-table td {
             border-color: #edf2f7;
             color: #0f172a;
+            font-size: .82rem;
+            line-height: 1.42;
+            padding: .72rem;
             vertical-align: middle;
+        }
+
+        .simansa-table {
+            min-width: 940px;
+            table-layout: fixed;
+        }
+
+        .simansa-table .school-col-number,
+        .simansa-table td:nth-child(1) { width: 5%; }
+        .simansa-table .school-col-identity,
+        .simansa-table td:nth-child(2) { width: 24%; }
+        .simansa-table .school-col-status,
+        .simansa-table td:nth-child(3) { width: 11%; }
+        .simansa-table .school-col-type,
+        .simansa-table td:nth-child(4) { width: 9%; }
+        .simansa-table .school-col-region,
+        .simansa-table td:nth-child(5) { width: 20%; }
+        .simansa-table .school-col-completeness,
+        .simansa-table td:nth-child(6) { width: 14%; }
+        .simansa-table .school-col-students,
+        .simansa-table td:nth-child(7) { width: 8%; }
+        .simansa-table .school-col-actions,
+        .simansa-table td:nth-child(8) { width: 9%; }
+
+        .simansa-table td:nth-child(7),
+        .simansa-table td:nth-child(8) {
+            white-space: nowrap;
         }
 
         .school-name {
             color: #0f172a;
-            font-weight: 850;
-            line-height: 1.3;
+            font-size: .84rem;
+            font-weight: 800;
+            letter-spacing: .01em;
+            line-height: 1.34;
+            overflow-wrap: anywhere;
         }
 
         .school-meta {
             color: #64748b;
-            font-size: 0.84rem;
-            margin-top: 3px;
+            font-size: .76rem;
+            line-height: 1.45;
+            margin-top: 4px;
+            overflow-wrap: anywhere;
         }
 
         .school-meta span {
@@ -301,6 +369,10 @@
             color: #1d4ed8;
             font-size: .72rem;
             font-weight: 800;
+        }
+
+        .simansa-table td:last-child {
+            padding-right: .5rem;
         }
 
         .simansa-school-action-menu.show .simansa-school-action-toggle,
@@ -452,6 +524,19 @@
                 align-items: stretch;
                 flex-direction: column;
                 gap: 14px;
+            }
+
+            .simansa-table-shell {
+                padding: 14px;
+            }
+
+            .simansa-table-shell .dataTables_wrapper > .row:first-child {
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .simansa-table-shell .dataTables_filter input {
+                width: 150px;
             }
         }
     </style>
