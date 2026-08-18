@@ -124,7 +124,7 @@ class GtkProfileController extends Controller
             if ($gtk->foto_profile) {
                 Storage::disk('public')->delete($gtk->foto_profile);
             }
-            $fotoData['foto_profile'] = $request->file('foto_profile')->store('foto_profile/gtk', 'public');
+            $fotoData['foto_profile'] = $request->file('foto_profile')->store('foto_profile/gtk/' . $gtk->id, 'public');
         }
 
         // Update GTK data

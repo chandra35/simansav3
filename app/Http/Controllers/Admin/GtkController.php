@@ -672,7 +672,8 @@ class GtkController extends Controller
             $file = $request->file('foto_profile');
             $originalSize = (int) $file->getSize();
             $oldPath = $gtk->foto_profile_path;
-            $newPath = 'foto_profile/gtk/'.$gtk->id.'-'.Str::uuid().'.jpg';
+            $newPath = 'foto_profile/gtk/'.$gtk->id.'/profil-'.Str::uuid().'.jpg';
+            Storage::disk('public')->makeDirectory(dirname($newPath));
 
             // Normalisasi foto profil menjadi potret 4:5. Hasil akhir kecil dan konsisten
             // walaupun admin memilih file kamera beresolusi tinggi.

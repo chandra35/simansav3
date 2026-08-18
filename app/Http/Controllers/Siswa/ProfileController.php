@@ -765,10 +765,12 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($oldFotoPath);
         }
 
-        // Generate unique filename
-        $extension = $file->getClientOriginalExtension();
-        $filename = $siswa->id . '_' . time() . '.' . $extension;
-        $path = 'foto-profile/' . $filename;
+        // Semua foto siswa baru memakai struktur storage baku SIMANSA.
+        $extension = strtolower($file->getClientOriginalExtension());
+        $baseName = 'profil-' . now()->format('YmdHis');
+        $directory = 'foto_profile/siswa/' . $siswa->id;
+        $filename = $baseName . '.jpg';
+        $path = $directory . '/' . $filename;
 
         // Check if GD is available
         if (!extension_loaded('gd') || !function_exists('imagecreatetruecolor')) {
@@ -776,7 +778,7 @@ class ProfileController extends Controller
                 'siswa_id' => $siswa->id
             ]);
             // Fallback: Save without resize
-            return $file->storeAs('foto-profile', $filename, 'public');
+            return $file->storeAs($directory, $baseName . '.' . $extension, 'public');
         }
 
         $fullPath = storage_path('app/public/' . $path);
@@ -841,7 +843,7 @@ class ProfileController extends Controller
                 'error' => $e->getMessage()
             ]);
             // Fallback: Save without resize
-            return $file->storeAs('foto-profile', $filename, 'public');
+            return $file->storeAs($directory, $baseName . '.' . $extension, 'public');
         }
 
         return $path;
