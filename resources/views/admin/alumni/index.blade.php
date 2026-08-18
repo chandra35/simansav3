@@ -1,111 +1,18 @@
 @extends('adminlte::page')
-
-@section('title', 'Data Alumni')
+@section('title', 'Bank Data Alumni')
 @section('plugins.Chartjs', true)
-
 @section('content_header')
-    <div class="d-flex flex-wrap justify-content-between align-items-center">
-        <div>
-            <h1 class="mb-1"><i class="fas fa-user-friends text-primary mr-2"></i>Data Alumni</h1>
-            <p class="text-muted mb-0">Arsip siswa yang sudah lulus, terpisah dari daftar siswa aktif.</p>
-        </div>
-        <ol class="breadcrumb mb-0 bg-transparent p-0">
-            <li class="breadcrumb-item">Kesiswaan</li>
-            <li class="breadcrumb-item active">Alumni</li>
-        </ol>
-    </div>
+<div class="d-flex flex-wrap align-items-center justify-content-between"><div><h1 class="mb-1"><i class="fas fa-user-graduate text-primary mr-2"></i>Bank Data Alumni</h1><p class="text-muted mb-0">Profil alumni mandiri, terhubung ke siswa bila riwayat digital tersedia.</p></div>@can('edit-siswa')<button class="btn btn-primary" data-toggle="modal" data-target="#addAlumni"><i class="fas fa-plus mr-1"></i>Tambah Arsip Alumni</button>@endcan</div>
 @stop
-
 @section('content')
-    <div class="row alumni-kpis">
-        <div class="col-6 col-lg-3">
-            <div class="info-box shadow-sm"><span class="info-box-icon bg-primary"><i class="fas fa-users"></i></span><div class="info-box-content"><span class="info-box-text">Total Alumni</span><span class="info-box-number">{{ number_format($stats['total']) }}</span></div></div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="info-box shadow-sm"><span class="info-box-icon bg-info"><i class="fas fa-layer-group"></i></span><div class="info-box-content"><span class="info-box-text">Jumlah Angkatan</span><span class="info-box-number">{{ number_format($stats['angkatan']) }}</span></div></div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="info-box shadow-sm"><span class="info-box-icon bg-success"><i class="fas fa-mars"></i></span><div class="info-box-content"><span class="info-box-text">Laki-laki</span><span class="info-box-number">{{ number_format($stats['laki_laki']) }}</span></div></div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="info-box shadow-sm"><span class="info-box-icon bg-danger"><i class="fas fa-venus"></i></span><div class="info-box-content"><span class="info-box-text">Perempuan</span><span class="info-box-number">{{ number_format($stats['perempuan']) }}</span></div></div>
-        </div>
-    </div>
-
-    <div class="card card-outline card-primary shadow-sm">
-        <div class="card-header border-0">
-            <h3 class="card-title font-weight-bold"><i class="fas fa-chart-bar mr-2"></i>Statistik Alumni dari Tahun ke Tahun</h3>
-            @if($stats['terbaru_label'])
-                <div class="card-tools text-muted"><strong>{{ $stats['terbaru_total'] }}</strong> alumni pada {{ $stats['terbaru_label'] }}</div>
-            @endif
-        </div>
-        <div class="card-body"><div class="alumni-chart"><canvas id="alumniYearChart"></canvas></div></div>
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-header border-0 pb-0">
-            <h3 class="card-title font-weight-bold"><i class="fas fa-archive mr-2 text-primary"></i>Arsip Alumni</h3>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('admin.alumni.index') }}" class="alumni-filter mb-4">
-                <div class="row">
-                    <div class="col-lg-5 mb-2">
-                        <label for="q">Cari alumni</label>
-                        <div class="input-group"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input id="q" name="q" class="form-control" value="{{ request('q') }}" placeholder="Nama, NISN, atau NIS lokal"></div>
-                    </div>
-                    <div class="col-lg-3 mb-2">
-                        <label for="tahun_pelajaran_id">Tahun kelulusan</label>
-                        <select id="tahun_pelajaran_id" name="tahun_pelajaran_id" class="form-control">
-                            <option value="">Semua angkatan</option>
-                            @foreach($tahunPelajaranList as $tahun)
-                                <option value="{{ $tahun->id }}" @selected(request('tahun_pelajaran_id') === $tahun->id)>{{ $tahun->nama }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-lg-2 mb-2">
-                        <label for="jenis_kelamin">Jenis kelamin</label>
-                        <select id="jenis_kelamin" name="jenis_kelamin" class="form-control"><option value="">Semua</option><option value="L" @selected(request('jenis_kelamin') === 'L')>Laki-laki</option><option value="P" @selected(request('jenis_kelamin') === 'P')>Perempuan</option></select>
-                    </div>
-                    <div class="col-lg-2 mb-2 d-flex align-items-end"><button class="btn btn-primary mr-2"><i class="fas fa-filter mr-1"></i> Terapkan</button><a href="{{ route('admin.alumni.index') }}" class="btn btn-outline-secondary" title="Reset filter"><i class="fas fa-undo"></i></a></div>
-                </div>
-            </form>
-
-            <div class="table-responsive">
-                <table class="table table-hover alumni-table">
-                    <thead><tr><th>Alumni</th><th>Identitas</th><th>Kelas Terakhir</th><th>Tahun Lulus</th><th>Tanggal Lulus</th><th class="text-center">Riwayat</th></tr></thead>
-                    <tbody>
-                    @forelse($alumni as $record)
-                        <tr>
-                            <td><div class="d-flex align-items-center"><img class="alumni-avatar mr-3" src="{{ $record->siswa->foto_profile_url }}" alt="Foto {{ $record->siswa->nama_lengkap }}"><div><strong class="d-block text-dark">{{ $record->siswa->nama_lengkap }}</strong><small class="text-muted"><i class="fas fa-{{ $record->siswa->jenis_kelamin === 'L' ? 'mars text-info' : 'venus text-danger' }} mr-1"></i>{{ $record->siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</small></div></div></td>
-                            <td><div>NISN: <strong>{{ $record->siswa->nisn ?: '-' }}</strong></div><small class="text-muted">NIS: {{ $record->siswa->nis_lokal ?: '-' }}</small></td>
-                            <td><strong>{{ $record->kelas?->nama_kelas ?: 'Tanpa rombel' }}</strong><small class="d-block text-muted">{{ $record->kelas?->jurusan?->nama_jurusan ?: 'Jurusan tidak tercatat' }}</small></td>
-                            <td><span class="badge badge-primary px-3 py-2">{{ $record->tahunPelajaran?->nama ?: '-' }}</span></td>
-                            <td>{{ $record->tanggal_keluar?->translatedFormat('d M Y') ?: '-' }}</td>
-                            <td class="text-center"><a href="{{ route('admin.alumni.show', $record->siswa) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-history mr-1"></i> Detail</a></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="text-center py-5"><i class="fas fa-user-graduate fa-3x text-muted mb-3 d-block"></i><strong>Data alumni belum ditemukan</strong><div class="text-muted">Alumni otomatis muncul setelah kelulusan kelas XII difinalisasi.</div></td></tr>
-                    @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex flex-wrap justify-content-between align-items-center mt-3"><small class="text-muted">Menampilkan {{ $alumni->firstItem() ?? 0 }}–{{ $alumni->lastItem() ?? 0 }} dari {{ $alumni->total() }} alumni</small>{{ $alumni->links('pagination::bootstrap-4') }}</div>
-        </div>
-    </div>
+<div class="alumni-bank">
+<div class="alumni-summary">
+@foreach([['Total Profil',$stats['total'],'users','primary'],['Terverifikasi',$stats['terverifikasi'],'badge-check','success'],['Kontak Tersedia',$stats['kontak'],'phone','info'],['Arsip Historis',$stats['historis'],'archive','warning']] as [$label,$value,$icon,$color])<div class="alumni-summary-card"><span class="bg-{{ $color }}"><i class="fas fa-{{ $icon }}"></i></span><div><small>{{ $label }}</small><strong>{{ number_format($value) }}</strong></div></div>@endforeach
+</div>
+<section class="card card-outline card-primary shadow-sm"><div class="card-header border-0"><h3 class="card-title font-weight-bold"><i class="fas fa-chart-bar mr-2"></i>Per Angkatan</h3></div><div class="card-body"><div class="alumni-chart"><canvas id="alumniYearChart"></canvas></div></div></section>
+<section class="card shadow-sm"><div class="card-header border-0"><h3 class="card-title font-weight-bold"><i class="fas fa-database mr-2 text-primary"></i>Direktori Alumni</h3></div><div class="card-body"><form class="alumni-filter" method="get"><div class="form-row"><div class="col-lg-4 mb-2"><label>Cari</label><input class="form-control" name="q" value="{{ request('q') }}" placeholder="Nama, NISN, atau NIK"></div><div class="col-lg-2 mb-2"><label>Angkatan</label><select class="form-control" name="angkatan"><option value="">Semua</option>@foreach($angkatanList as $angkatan)<option @selected(request('angkatan')===$angkatan)>{{ $angkatan }}</option>@endforeach</select></div><div class="col-lg-2 mb-2"><label>Status</label><select class="form-control" name="status_setelah_lulus"><option value="">Semua</option>@foreach(['kuliah'=>'Kuliah','bekerja'=>'Bekerja','wirausaha'=>'Wirausaha','pesantren'=>'Pesantren','belum_terdata'=>'Belum terdata'] as $key=>$label)<option value="{{ $key }}" @selected(request('status_setelah_lulus')===$key)>{{ $label }}</option>@endforeach</select></div><div class="col-lg-2 mb-2"><label>Verifikasi</label><select class="form-control" name="status_verifikasi"><option value="">Semua</option><option value="terverifikasi">Terverifikasi</option><option value="belum_diverifikasi">Belum</option><option value="perlu_tinjau">Perlu tinjau</option></select></div><div class="col-lg-2 mb-2 d-flex align-items-end"><button class="btn btn-primary mr-2"><i class="fas fa-filter"></i></button><a class="btn btn-outline-secondary" href="{{ route('admin.alumni.index') }}"><i class="fas fa-redo"></i></a></div></div></form>
+<div class="table-responsive"><table class="table table-hover alumni-table"><thead><tr><th>Alumni</th><th>Angkatan</th><th>Kontak</th><th>Aktivitas</th><th>Verifikasi</th><th class="text-right">Aksi</th></tr></thead><tbody>@forelse($alumni as $item)<tr><td><strong>{{ $item->nama_lengkap }}</strong><small class="d-block text-muted">NISN {{ $item->nisn ?: '-' }}@if($item->siswa) · Terhubung SIMANSA@endif</small></td><td><span class="badge badge-primary">{{ $item->angkatan ?: ($item->tahun_lulus ?: '-') }}</span></td><td>{{ $item->nomor_hp ?: '-' }}<small class="d-block text-muted">{{ $item->kabupaten_kota ?: $item->provinsi ?: '' }}</small></td><td><strong>{{ $item->status_label }}</strong><small class="d-block text-muted">{{ $item->institusi_lanjutan ?: $item->instansi ?: $item->pekerjaan ?: '-' }}</small></td><td><span class="badge badge-{{ $item->status_verifikasi==='terverifikasi'?'success':($item->status_verifikasi==='perlu_tinjau'?'warning':'secondary') }}">{{ str_replace('_',' ',$item->status_verifikasi) }}</span></td><td class="text-right"><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.alumni.show',$item) }}"><i class="fas fa-arrow-right"></i></a></td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-5">Belum ada profil alumni. Jalankan sinkronisasi lulusan atau tambahkan arsip historis.</td></tr>@endforelse</tbody></table></div><div class="mt-3">{{ $alumni->links('pagination::bootstrap-4') }}</div></div></section></div>
+@can('edit-siswa')<div class="modal fade" id="addAlumni"><div class="modal-dialog modal-lg"><form class="modal-content" method="post" action="{{ route('admin.alumni.store') }}">@csrf<div class="modal-header"><h5>Tambah Arsip Alumni Historis</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><div class="form-row"><div class="form-group col-md-7"><label>Nama lengkap</label><input required name="nama_lengkap" class="form-control"></div><div class="form-group col-md-3"><label>Angkatan</label><input name="angkatan" class="form-control" placeholder="2017/2018"></div><div class="form-group col-md-2"><label>Tahun lulus</label><input name="tahun_lulus" type="number" class="form-control" placeholder="2018"></div><div class="form-group col-md-4"><label>NISN</label><input name="nisn" class="form-control"></div><div class="form-group col-md-4"><label>Nomor HP</label><input name="nomor_hp" class="form-control"></div><div class="form-group col-md-4"><label>Status</label><select name="status_setelah_lulus" class="form-control"><option value="belum_terdata">Belum terdata</option><option value="kuliah">Kuliah</option><option value="bekerja">Bekerja</option><option value="wirausaha">Wirausaha</option><option value="pesantren">Pesantren</option></select></div></div><small class="text-muted">Untuk impor backup SQL 2017, gunakan proses staging setelah struktur tabel lama diperiksa.</small></div><div class="modal-footer"><button class="btn btn-primary"><i class="fas fa-save mr-1"></i>Simpan</button></div></form></div></div>@endcan
 @stop
-
-@section('css')
-<style>
-    .alumni-kpis .info-box{border-radius:.75rem;min-height:88px}.alumni-kpis .info-box-icon{border-radius:.75rem 0 0 .75rem;width:66px}.alumni-chart{height:280px}.alumni-filter{background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem}.alumni-filter label{font-size:.78rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em}.alumni-table thead th{border-top:0;color:#64748b;font-size:.75rem;text-transform:uppercase;white-space:nowrap}.alumni-table td{vertical-align:middle}.alumni-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#e2e8f0}@media(max-width:767.98px){.alumni-chart{height:220px}.alumni-kpis .info-box-icon{width:52px}.alumni-kpis .info-box-text{font-size:.72rem}}
-</style>
-@stop
-
-@section('js')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const canvas = document.getElementById('alumniYearChart');
-    if (!canvas) return;
-    new Chart(canvas.getContext('2d'), {type:'bar',data:{labels:@json($stats['labels']),datasets:[{label:'Jumlah Alumni',data:@json($stats['values']),backgroundColor:'rgba(59, 130, 246, .78)',borderColor:'#2563eb',borderWidth:1,borderRadius:6,maxBarThickness:64}]},options:{maintainAspectRatio:false,responsive:true,legend:{display:false},scales:{yAxes:[{ticks:{beginAtZero:true,precision:0},gridLines:{color:'rgba(148,163,184,.18)'}}],xAxes:[{gridLines:{display:false}}]},tooltips:{callbacks:{label:function(item){return ' '+item.yLabel+' alumni';}}}}});
-});
-</script>
-@stop
+@section('css')<style>.alumni-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}.alumni-summary-card{display:flex;gap:.7rem;align-items:center;padding:.8rem;border:1px solid #dbe4f0;border-radius:12px;background:#fff}.alumni-summary-card>span{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;color:#fff}.alumni-summary-card small,.alumni-summary-card strong{display:block}.alumni-summary-card small{font-size:.68rem;text-transform:uppercase;color:#64748b;font-weight:800}.alumni-summary-card strong{font-size:1.35rem;color:#0f172a;line-height:1.1}.alumni-chart{height:230px}.alumni-filter{padding:.8rem;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}.alumni-filter label{font-size:.68rem;font-weight:800;text-transform:uppercase;color:#64748b}.alumni-table th{font-size:.7rem;text-transform:uppercase;color:#64748b;white-space:nowrap}@media(max-width:575px){.alumni-chart{height:190px}}</style>@stop
+@section('js')<script>document.addEventListener('DOMContentLoaded',()=>{const e=document.getElementById('alumniYearChart');if(!e)return;new Chart(e.getContext('2d'),{type:'bar',data:{labels:@json($stats['labels']),datasets:[{data:@json($stats['values']),backgroundColor:'#3b82f6',borderRadius:6,maxBarThickness:54}]},options:{maintainAspectRatio:false,legend:{display:false},scales:{yAxes:[{ticks:{beginAtZero:true,precision:0}}],xAxes:[{gridLines:{display:false}}]}}})})</script>@stop

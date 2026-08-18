@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Siswa;
-use App\Models\SiswaKelas;
-use App\Models\TahunPelajaran;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\AlumniProfile;
 use Illuminate\Http\Request;
 
 class AlumniController extends Controller
@@ -15,105 +12,73 @@ class AlumniController extends Controller
     {
         $this->authorize('view-siswa');
 
-        $tahunPelajaranList = TahunPelajaran::query()
-            ->whereHas('siswaKelas', fn (Builder $query) => $query->where('status', 'lulus'))
-            ->orderByDesc('tahun_mulai')
-            ->get();
+        $query = AlumniProfile::query()->with('siswa:id,nama_lengkap,foto_profile');
+        if ($request->filled('q')) {
+            $term = trim((string) $request->q);
+            $query->where(fn ($q) => $q->where('nama_lengkap', 'like', "%{$term}%")
+                ->orWhere('nisn', 'like', "%{$term}%")->orWhere('nik', 'like', "%{$term}%"));
+        }
+        foreach (['angkatan', 'status_setelah_lulus', 'status_verifikasi'] as $filter) {
+            if ($request->filled($filter)) $query->where($filter, $request->input($filter));
+        }
 
-        $alumni = $this->graduationQuery($request)
-            ->with([
-                'siswa:id,nisn,nis_lokal,nama_lengkap,jenis_kelamin,foto_profile,nomor_hp,status_siswa',
-                'kelas:id,nama_kelas,tingkat,jurusan_id',
-                'kelas.jurusan:id,nama_jurusan',
-                'tahunPelajaran:id,nama,tahun_mulai,tahun_selesai',
-            ])
-            ->orderByDesc('tanggal_keluar')
-            ->orderByDesc('created_at')
-            ->paginate(20)
-            ->withQueryString();
+        $alumni = $query->orderByDesc('tahun_lulus')->orderBy('nama_lengkap')->paginate(25)->withQueryString();
+        $base = AlumniProfile::query();
+        $byYear = (clone $base)->selectRaw('angkatan, COUNT(*) total')->whereNotNull('angkatan')
+            ->groupBy('angkatan')->orderBy('angkatan')->get();
 
-        $stats = $this->statistics();
-
-        return view('admin.alumni.index', compact('alumni', 'tahunPelajaranList', 'stats'));
+        return view('admin.alumni.index', [
+            'alumni' => $alumni,
+            'angkatanList' => (clone $base)->whereNotNull('angkatan')->distinct()->orderByDesc('angkatan')->pluck('angkatan'),
+            'stats' => [
+                'total' => (clone $base)->count(),
+                'terverifikasi' => (clone $base)->where('status_verifikasi', 'terverifikasi')->count(),
+                'kontak' => (clone $base)->whereNotNull('nomor_hp')->count(),
+                'historis' => (clone $base)->where('sumber_data', 'historis')->count(),
+                'labels' => $byYear->pluck('angkatan')->values(),
+                'values' => $byYear->pluck('total')->values(),
+            ],
+        ]);
     }
 
-    public function show(Siswa $siswa)
+    public function store(Request $request)
+    {
+        $this->authorize('edit-siswa');
+        AlumniProfile::create($this->validated($request) + [
+            'sumber_data' => 'manual',
+            'status_verifikasi' => 'belum_diverifikasi',
+        ]);
+        return back()->with('success', 'Profil alumni historis berhasil ditambahkan.');
+    }
+
+    public function show(AlumniProfile $alumni)
     {
         $this->authorize('view-siswa');
+        $alumni->load(['siswa.user', 'siswa.ortu', 'siswa.sekolahAsal', 'siswa.siswaKelasRecords.tahunPelajaran']);
+        return view('admin.alumni.show', compact('alumni'));
+    }
 
-        $graduation = $siswa->siswaKelasRecords()
-            ->where('status', 'lulus')
-            ->with(['kelas.jurusan', 'tahunPelajaran'])
-            ->latest('tanggal_keluar')
-            ->firstOrFail();
-
-        $siswa->load([
-            'user:id,email',
-            'ortu',
-            'sekolahAsal',
-            'siswaKelasRecords' => fn ($query) => $query
-                ->with(['kelas.jurusan', 'tahunPelajaran'])
-                ->orderBy('tanggal_masuk')
-                ->orderBy('created_at'),
-            'dataLulusan' => fn ($query) => $query
-                ->with('tahunPelajaran')
-                ->latest('updated_at'),
+    public function update(Request $request, AlumniProfile $alumni)
+    {
+        $this->authorize('edit-siswa');
+        $alumni->update($this->validated($request) + [
+            'last_profile_update_at' => now(),
         ]);
-
-        return view('admin.alumni.show', compact('siswa', 'graduation'));
+        return back()->with('success', 'Profil alumni berhasil diperbarui.');
     }
 
-    private function graduationQuery(Request $request): Builder
+    private function validated(Request $request): array
     {
-        return SiswaKelas::query()
-            ->where('status', 'lulus')
-            ->whereHas('siswa', function (Builder $query) use ($request) {
-                $query->whereIn('status_siswa', ['lulus', 'alumni']);
-
-                if ($request->filled('q')) {
-                    $term = trim((string) $request->q);
-                    $query->where(function (Builder $search) use ($term) {
-                        $search->where('nama_lengkap', 'like', "%{$term}%")
-                            ->orWhere('nisn', 'like', "%{$term}%")
-                            ->orWhere('nis_lokal', 'like', "%{$term}%");
-                    });
-                }
-
-                if (in_array($request->jenis_kelamin, ['L', 'P'], true)) {
-                    $query->where('jenis_kelamin', $request->jenis_kelamin);
-                }
-            })
-            ->when($request->filled('tahun_pelajaran_id'), fn (Builder $query) =>
-                $query->where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
-            );
-    }
-
-    private function statistics(): array
-    {
-        $base = SiswaKelas::query()
-            ->where('siswa_kelas.status', 'lulus')
-            ->join('siswa', 'siswa.id', '=', 'siswa_kelas.siswa_id')
-            ->whereNull('siswa.deleted_at')
-            ->whereIn('siswa.status_siswa', ['lulus', 'alumni']);
-
-        $byYear = (clone $base)
-            ->join('tahun_pelajaran', 'tahun_pelajaran.id', '=', 'siswa_kelas.tahun_pelajaran_id')
-            ->selectRaw('tahun_pelajaran.id, tahun_pelajaran.nama, tahun_pelajaran.tahun_mulai, COUNT(DISTINCT siswa_kelas.siswa_id) as total')
-            ->groupBy('tahun_pelajaran.id', 'tahun_pelajaran.nama', 'tahun_pelajaran.tahun_mulai')
-            ->orderBy('tahun_pelajaran.tahun_mulai')
-            ->get();
-
-        $latest = $byYear->last();
-
-        return [
-            'total' => (clone $base)->distinct()->count('siswa_kelas.siswa_id'),
-            'laki_laki' => (clone $base)->where('siswa.jenis_kelamin', 'L')->distinct()->count('siswa_kelas.siswa_id'),
-            'perempuan' => (clone $base)->where('siswa.jenis_kelamin', 'P')->distinct()->count('siswa_kelas.siswa_id'),
-            'angkatan' => $byYear->count(),
-            'terbaru_label' => $latest?->nama,
-            'terbaru_total' => (int) ($latest?->total ?? 0),
-            'labels' => $byYear->pluck('nama')->values(),
-            'values' => $byYear->pluck('total')->map(fn ($total) => (int) $total)->values(),
-        ];
+        return $request->validate([
+            'angkatan' => ['nullable', 'string', 'max:30'], 'tahun_lulus' => ['nullable', 'integer', 'min:1900', 'max:2100'],
+            'nama_lengkap' => ['required', 'string', 'max:160'], 'nisn' => ['nullable', 'string', 'max:20'], 'nik' => ['nullable', 'string', 'max:20'],
+            'jenis_kelamin' => ['nullable', 'in:L,P'], 'tempat_lahir' => ['nullable', 'string', 'max:100'], 'tanggal_lahir' => ['nullable', 'date'],
+            'nomor_hp' => ['nullable', 'string', 'max:30'], 'email' => ['nullable', 'email', 'max:255'], 'alamat' => ['nullable', 'string'],
+            'kabupaten_kota' => ['nullable', 'string', 'max:120'], 'provinsi' => ['nullable', 'string', 'max:120'],
+            'status_setelah_lulus' => ['nullable', 'in:kuliah,bekerja,wirausaha,pesantren,belum_terdata,lainnya'],
+            'institusi_lanjutan' => ['nullable', 'string', 'max:180'], 'program_studi' => ['nullable', 'string', 'max:180'],
+            'pekerjaan' => ['nullable', 'string', 'max:160'], 'instansi' => ['nullable', 'string', 'max:180'],
+            'status_verifikasi' => ['nullable', 'in:belum_diverifikasi,terverifikasi,perlu_tinjau'], 'catatan' => ['nullable', 'string', 'max:2000'],
+        ]);
     }
 }
