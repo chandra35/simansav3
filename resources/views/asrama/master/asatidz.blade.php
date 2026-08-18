@@ -93,7 +93,7 @@
 <div class="modal fade" id="assignAsatidz" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><form method="post" action="{{ route('asrama.asatidz.store') }}" class="modal-content" data-asrama-loading data-loading-title="Menambahkan GTK Asrama" data-loading-text="Akses menu dan kewenangan sedang disinkronkan.">@csrf
 <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus mr-2"></i>Tambah GTK Asrama</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
 <div class="modal-body">
-    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Pilih satu atau beberapa GTK sekaligus — kewenangan &amp; jabatan di bawah berlaku untuk semua yang dipilih. GTK yang sudah masuk tim tidak tampil di daftar. Tanggal mulai tugas diisi otomatis hari ini.</small></div>
+    <div class="callout callout-info py-2 mb-3"><small><i class="fas fa-info-circle mr-1"></i>Hanya GTK aktif yang dapat dipilih. GTK mutasi, pensiun, nonaktif, atau yang sudah masuk tim tidak tampil di daftar. Kewenangan &amp; jabatan di bawah berlaku untuk semua GTK yang dipilih.</small></div>
     <div class="row">
         <div class="col-lg-7 mb-3">
             <div class="card card-outline card-primary h-100 mb-0">
@@ -111,7 +111,7 @@
                                 <td class="align-middle"><label class="mb-0 font-weight-normal d-block" for="gtk{{ $gtk->id }}" style="cursor:pointer"><strong>{{ $gtk->nama_lengkap }}</strong><br><small class="text-muted">{{ $identitas }}</small></label></td>
                             </tr>
                             @empty
-                            <tr><td class="text-center text-muted py-3"><i class="fas fa-info-circle mr-1"></i>Semua GTK ber-akun sudah masuk tim Asrama.</td></tr>
+                            <tr><td class="text-center text-muted py-3"><i class="fas fa-info-circle mr-1"></i>Tidak ada GTK aktif ber-akun yang dapat ditambahkan.</td></tr>
                             @endforelse
                             </tbody>
                         </table>
