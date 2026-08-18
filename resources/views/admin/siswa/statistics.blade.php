@@ -60,67 +60,67 @@
         <button class="btn btn-primary"><i class="fas fa-chart-bar mr-1"></i>Terapkan</button><a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>
     </form>
 </section>
-<div class="row">
-    <div class="col-md-6 col-xl mb-4">
+<div class="simansa-kpi-grid">
+    <div>
         <a href="{{ $listUrl() }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--blue">
                 <div class="simansa-kpi__icon"><i class="fas fa-users"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Total Siswa</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['total_siswa']) }}</div>
-                    <div class="simansa-kpi__desc">{{ $scopeLabel }} · {{ number_format($kpi['laki_laki']) }} laki-laki dan {{ number_format($kpi['perempuan']) }} perempuan.</div>
+                    <div class="simansa-kpi__desc">{{ number_format($kpi['laki_laki']) }} laki-laki &middot; {{ number_format($kpi['perempuan']) }} perempuan</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Semua Siswa</div>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl mb-4">
+    <div>
         <a href="{{ $listUrl(['status' => 'lengkap']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--green">
                 <div class="simansa-kpi__icon"><i class="fas fa-check-circle"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Data Lengkap</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['data_lengkap']) }}</div>
-                    <div class="simansa-kpi__desc">{{ $kpi['persen_lengkap'] }}% lengkap · {{ number_format($kpi['belum_lengkap']) }} siswa masih perlu melengkapi data.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_lengkap'] }}% lengkap &middot; {{ number_format($kpi['belum_lengkap']) }} perlu dilengkapi</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl mb-4">
+    <div>
         <a href="{{ $listUrl(['login_status' => 'sudah']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--amber">
                 <div class="simansa-kpi__icon"><i class="fas fa-sign-in-alt"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Sudah Login</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['sudah_login']) }}</div>
-                    <div class="simansa-kpi__desc">{{ $kpi['persen_login'] }}% dari {{ number_format($kpi['total_siswa']) }} siswa pada filter aktif.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_login'] }}% dari {{ number_format($kpi['total_siswa']) }} siswa</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl mb-4">
+    <div>
         <a href="{{ $listUrl(['login_status' => 'belum']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--rose">
                 <div class="simansa-kpi__icon"><i class="fas fa-user-clock"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">Belum Pernah Login</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['belum_pernah_login']) }}</div>
-                    <div class="simansa-kpi__desc">{{ 100 - $kpi['persen_login'] }}% belum login · {{ number_format($kpi['sudah_login']) }} siswa sudah aktif.</div>
+                    <div class="simansa-kpi__desc">{{ 100 - $kpi['persen_login'] }}% belum login &middot; {{ number_format($kpi['sudah_login']) }} sudah aktif</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-xl mb-4">
+    <div>
         <a href="{{ $listUrl(['npsn_status' => 'kosong']) }}" class="simansa-kpi-link">
             <div class="simansa-kpi simansa-kpi--slate">
                 <div class="simansa-kpi__icon"><i class="fas fa-school"></i></div>
                 <div class="simansa-kpi__body">
                     <div class="simansa-kpi__label">NPSN Kosong</div>
                     <div class="simansa-kpi__value">{{ number_format($kpi['npsn_kosong']) }}</div>
-                    <div class="simansa-kpi__desc">{{ $kpi['persen_npsn_kosong'] }}% kosong · {{ number_format($kpi['npsn_terisi']) }} siswa sudah memiliki NPSN asal sekolah.</div>
+                    <div class="simansa-kpi__desc">{{ $kpi['persen_npsn_kosong'] }}% kosong &middot; {{ number_format($kpi['npsn_terisi']) }} sudah terisi</div>
                     <div class="simansa-kpi__view-link"><i class="fas fa-arrow-right mr-1"></i>Lihat Daftar</div>
                 </div>
             </div>
@@ -623,50 +623,76 @@
         .simansa-stat-filter{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;padding:1rem 1.15rem;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#f8fbff,#f0fdfa);box-shadow:0 8px 22px rgba(15,23,42,.04)}
         .simansa-stat-filter__intro{display:flex;align-items:center;gap:.75rem;min-width:280px}.simansa-stat-filter__intro>i{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#2563eb;color:#fff}.simansa-stat-filter__intro h2{font-size:1rem;font-weight:800;color:#0f172a;margin:0}.simansa-stat-filter__intro p{font-size:.78rem;color:#64748b;margin:.2rem 0 0}.simansa-stat-filter form{display:grid;grid-template-columns:minmax(155px,1fr) minmax(210px,1.4fr) auto auto;align-items:end;gap:.6rem;flex:1;max-width:760px}.simansa-stat-filter label{font-size:.7rem;text-transform:uppercase;color:#64748b;font-weight:800}.simansa-stat-filter .form-control,.simansa-stat-filter .btn{height:38px;border-radius:8px}.simansa-stat-filter .form-control{border-color:#cbd5e1}
 
+        .simansa-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+            gap: .8rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .simansa-kpi-grid > a,
+        .simansa-kpi-grid > div,
+        .simansa-kpi-grid .simansa-kpi-link {
+            min-width: 0;
+        }
+
         .simansa-kpi {
             display: flex;
-            gap: 0.85rem;
-            min-height: 156px;
-            padding: 1rem 1.05rem;
-            border-radius: 14px;
+            gap: .7rem;
+            min-height: 132px;
+            padding: .8rem .85rem;
+            border-radius: 12px;
             background: #fff;
             border: 1px solid #dbe4f0;
-            border-top: 4px solid #3b82f6;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+            border-top: 3px solid #3b82f6;
+            box-shadow: 0 7px 18px rgba(15, 23, 42, 0.045);
         }
 
         .simansa-kpi__icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
+            font-size: .94rem;
             flex-shrink: 0;
         }
 
+        .simansa-kpi__body {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            min-width: 0;
+        }
+
         .simansa-kpi__label {
-            font-size: 0.78rem;
+            font-size: .68rem;
             color: #64748b;
-            margin-bottom: 0.25rem;
+            line-height: 1.2;
+            margin-bottom: .18rem;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-weight: 700;
+            letter-spacing: .055em;
+            font-weight: 800;
         }
 
         .simansa-kpi__value {
-            font-size: 1.55rem;
-            line-height: 1.1;
-            font-weight: 700;
+            font-size: 1.48rem;
+            line-height: 1.05;
+            font-weight: 800;
             color: #0f172a;
-            margin-bottom: 0.35rem;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: .3rem;
         }
 
         .simansa-kpi__desc {
             color: #64748b;
-            line-height: 1.45;
-            font-size: 0.84rem;
+            display: -webkit-box;
+            font-size: .74rem;
+            line-height: 1.38;
+            overflow: hidden;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
         }
 
         .simansa-kpi--blue { border-top-color: #3b82f6; }
@@ -674,11 +700,11 @@
         .simansa-kpi--amber { border-top-color: #f59e0b; }
         .simansa-kpi--rose { border-top-color: #e11d48; }
         .simansa-kpi--slate { border-top-color: #0f766e; }
-        .simansa-kpi--blue .simansa-kpi__icon,
-        .simansa-kpi--green .simansa-kpi__icon,
-        .simansa-kpi--amber .simansa-kpi__icon,
-        .simansa-kpi--rose .simansa-kpi__icon,
-        .simansa-kpi--slate .simansa-kpi__icon { background: #eef4ff; color: #2563eb; }
+        .simansa-kpi--blue .simansa-kpi__icon { background: #eef4ff; color: #2563eb; }
+        .simansa-kpi--green .simansa-kpi__icon { background: #ecfdf3; color: #16a34a; }
+        .simansa-kpi--amber .simansa-kpi__icon { background: #fff7e6; color: #d97706; }
+        .simansa-kpi--rose .simansa-kpi__icon { background: #fff1f2; color: #e11d48; }
+        .simansa-kpi--slate .simansa-kpi__icon { background: #ecfdf5; color: #0f766e; }
 
         a.simansa-kpi-link {
             display: block;
@@ -696,11 +722,12 @@
         }
         a.simansa-kpi-link .simansa-kpi__view-link {
             display: inline-block;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: 600;
+            margin-top: auto;
+            padding-top: .45rem;
+            font-size: .72rem;
+            font-weight: 700;
             opacity: 0.55;
-            letter-spacing: 0.02em;
+            letter-spacing: .01em;
         }
         a.simansa-kpi-link:hover .simansa-kpi__view-link {
             opacity: 1;
@@ -1344,9 +1371,18 @@
 
         @media (max-width: 767.98px) {
             .simansa-stat-hero,
-            .simansa-analytics-section,
-            .simansa-kpi {
+            .simansa-analytics-section {
                 border-radius: 18px;
+            }
+
+            .simansa-kpi-grid {
+                gap: .65rem;
+                grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+            }
+
+            .simansa-kpi {
+                min-height: 126px;
+                padding: .75rem;
             }
 
             .simansa-stat-hero {
