@@ -102,7 +102,7 @@
                 <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
                     <small class="text-muted">Export leger memuat alumni yang terhubung ke riwayat kelas XII dan nilai SIMANSA.</small>
                     @if($selectedTahunPelajaran)
-                        <a class="btn btn-sm btn-success" href="{{ route('admin.alumni.export-legger-bulk', ['tahun_pelajaran_id' => $selectedTahunPelajaran->id]) }}">
+                        <a id="exportAlumniLegger" class="btn btn-sm btn-success" data-no-overlay href="{{ route('admin.alumni.export-legger-bulk', ['tahun_pelajaran_id' => $selectedTahunPelajaran->id]) }}">
                             <i class="fas fa-file-excel mr-1"></i>Export Leger Semua Alumni (.xls)
                         </a>
                     @else
@@ -202,6 +202,67 @@
                     datasets: [{ data: @json($stats['values']), backgroundColor: '#3b82f6', borderRadius: 6, maxBarThickness: 54 }]
                 },
                 options: { maintainAspectRatio: false, legend: { display: false }, scales: { yAxes: [{ ticks: { beginAtZero: true, precision: 0 } }], xAxes: [{ gridLines: { display: false } }] } }
+            });
+
+            var exportLink = document.getElementById('exportAlumniLegger');
+            if (!exportLink) return;
+
+            exportLink.addEventListener('click', async function (event) {
+                event.preventDefault();
+                if (exportLink.dataset.exporting === '1') return;
+
+                var originalHtml = exportLink.innerHTML;
+                exportLink.dataset.exporting = '1';
+                exportLink.classList.add('disabled');
+                exportLink.setAttribute('aria-disabled', 'true');
+                exportLink.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyiapkan XLS...';
+
+                if (window.showAppGlobalOverlay) {
+                    window.showAppGlobalOverlay('Menyiapkan leger alumni...', 'Nilai seluruh alumni sedang dihimpun. Mohon tunggu.');
+                }
+
+                try {
+                    var response = await fetch(exportLink.href, {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/vnd.ms-excel', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    var blob = await response.blob();
+                    var signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+                    var isXls = signature[0] === 0xD0 && signature[1] === 0xCF && signature[2] === 0x11 && signature[3] === 0xE0;
+
+                    if (!response.ok || !isXls) {
+                        var detail = 'Server tidak mengirim file XLS yang valid.';
+                        try {
+                            var text = await blob.text();
+                            detail = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300) || detail;
+                        } catch (ignore) {}
+                        throw new Error(detail);
+                    }
+
+                    var disposition = response.headers.get('Content-Disposition') || '';
+                    var match = disposition.match(/filename="?([^";]+)"?/i);
+                    var filename = match && match[1] ? match[1] : 'legger_alumni.xls';
+                    var url = URL.createObjectURL(blob);
+                    var download = document.createElement('a');
+                    download.href = url;
+                    download.download = filename.endsWith('.xls') ? filename : filename + '.xls';
+                    document.body.appendChild(download);
+                    download.click();
+                    download.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+                } catch (error) {
+                    if (window.Swal) {
+                        Swal.fire({ icon: 'error', title: 'Export leger gagal', text: error.message || 'Silakan coba kembali.' });
+                    } else {
+                        alert(error.message || 'Export leger gagal.');
+                    }
+                } finally {
+                    exportLink.dataset.exporting = '0';
+                    exportLink.classList.remove('disabled');
+                    exportLink.removeAttribute('aria-disabled');
+                    exportLink.innerHTML = originalHtml;
+                    if (window.hideAppGlobalOverlay) window.hideAppGlobalOverlay();
+                }
             });
         });
     </script>

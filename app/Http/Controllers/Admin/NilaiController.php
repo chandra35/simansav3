@@ -138,29 +138,30 @@ class NilaiController extends Controller
 
         $lookup = [];
 
-        DB::table('nilai_siswa')
-            ->select(['id', 'siswa_id', 'semester', 'mata_pelajaran_id', 'nilai'])
+        DB::table('nilai_siswa as nilai_siswa')
+            ->join('mata_pelajaran as mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai_siswa.mata_pelajaran_id')
+            ->select(['nilai_siswa.id', 'nilai_siswa.siswa_id', 'nilai_siswa.semester', 'mata_pelajaran.kode_mapel', 'nilai_siswa.nilai'])
             ->whereIn('siswa_id', $siswaIds)
             ->where(function ($query) use ($periods) {
                 foreach ($periods as $semester => $tahunPelajaranId) {
                     $query->orWhere(function ($periodQuery) use ($semester, $tahunPelajaranId) {
-                        $periodQuery->where('semester', (int) $semester)
-                            ->where('tahun_pelajaran_id', $tahunPelajaranId);
+                        $periodQuery->where('nilai_siswa.semester', (int) $semester)
+                            ->where('nilai_siswa.tahun_pelajaran_id', $tahunPelajaranId);
                     });
                 }
             })
-            ->lazyById(1000)
+            ->lazyById(1000, 'nilai_siswa.id', 'id')
             ->each(function ($row) use (&$lookup) {
-                $key = $this->leggerNilaiKey($row->siswa_id, (int) $row->semester, $row->mata_pelajaran_id);
+                $key = $this->leggerNilaiKey($row->siswa_id, (int) $row->semester, $row->kode_mapel);
                 $lookup[$key] ??= $row->nilai;
             });
 
         return $lookup;
     }
 
-    private function leggerNilaiKey(string $siswaId, int $semester, string $mapelId): string
+    private function leggerNilaiKey(string $siswaId, int $semester, string $kodeMapel): string
     {
-        return $siswaId.'|'.$semester.'|'.$mapelId;
+        return $siswaId.'|'.$semester.'|'.$kodeMapel;
     }
 
     /**
@@ -1569,7 +1570,7 @@ class NilaiController extends Controller
                 
                 foreach (array_keys($semesterConfig) as $sem) {
                     $nilai = $mapel
-                        ? ($nilaiLookup[$this->leggerNilaiKey($siswa->id, $sem, $mapel->id)] ?? null)
+                        ? ($nilaiLookup[$this->leggerNilaiKey($siswa->id, $sem, $kode)] ?? null)
                         : null;
                     $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
                     if ($nilai !== null) {
@@ -1899,7 +1900,7 @@ class NilaiController extends Controller
                 
                 foreach ($semesterMapels as $mapel) {
                     $nilai = $nilaiLookup[
-                        $this->leggerNilaiKey($siswa->id, $sem, $mapel->id)
+                        $this->leggerNilaiKey($siswa->id, $sem, $mapel->kode_mapel)
                     ] ?? null;
                     
                     $sheet->setCellValue($col++ . $row, $nilai !== null ? round($nilai, 0) : '');
