@@ -263,6 +263,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('await video.play().catch(() => null);', $view);
         $this->assertStringContainsString('Menyiapkan kamera dan deteksi wajah...', $view);
         $this->assertStringContainsString('window.setTimeout(detect, 180);', $view);
+        $this->assertStringContainsString("FACE_DETECTOR_INPUT_SIZE = window.matchMedia('(max-width: 767.98px)').matches ? 160 : 320", $view);
+        $this->assertStringContainsString('async function detectFaceWithWatchdog(video, options)', $view);
+        $this->assertStringContainsString('Kamera aktif. Mencari wajah...', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
         $this->assertStringContainsString('height: 100dvh', $view);

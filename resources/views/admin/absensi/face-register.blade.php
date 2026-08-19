@@ -812,6 +812,7 @@ let registrationFinished = false;
 let guidanceVoiceEnabled = true;
 let guidanceSpeechSupported = 'speechSynthesis' in window;
 let guidanceAudioContext = null;
+const FACE_DETECTOR_INPUT_SIZE = window.matchMedia('(max-width: 767.98px)').matches ? 160 : 320;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
     frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
@@ -1014,7 +1015,8 @@ function updateStepUI() {
 }
 function startDetectionLoop() {
     isDetecting = true;
-    const video = document.getElementById('videoElement'), canvas = document.getElementById('overlayCanvas'), ctx = canvas.getContext('2d'), options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+    const video = document.getElementById('videoElement'), canvas = document.getElementById('overlayCanvas'), ctx = canvas.getContext('2d'), options = new faceapi.TinyFaceDetectorOptions({ inputSize: FACE_DETECTOR_INPUT_SIZE, scoreThreshold: 0.4 });
+    setFaceStatus('Kamera aktif. Mencari wajah...', true);
     async function detect() {
         if (!isDetecting || currentStep < 0) return;
         if (video.paused || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
@@ -1025,7 +1027,13 @@ function startDetectionLoop() {
         }
         try {
             canvas.width = video.videoWidth || video.clientWidth; canvas.height = video.videoHeight || video.clientHeight;
-            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks(true); ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const result = await detectFaceWithWatchdog(video, options);
+            if (result.timedOut) {
+                setFaceStatus('Deteksi wajah membutuhkan waktu. Tetap dekat dan hadap ke kamera.', true);
+                window.setTimeout(detect, 1000);
+                return;
+            }
+            const detection = result.detection; ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (detection) {
                 const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
                 resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI); ctx.fillStyle = '#00e5ff'; ctx.globalAlpha = 0.7; ctx.fill(); });
@@ -1049,6 +1057,15 @@ function startDetectionLoop() {
         const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 60 : 150; requestAnimationFrame(() => setTimeout(detect, delay));
     }
     detect();
+}
+async function detectFaceWithWatchdog(video, options) {
+    let watchdog;
+    const result = await Promise.race([
+        faceapi.detectSingleFace(video, options).withFaceLandmarks(true).then(detection => ({ detection, timedOut: false })),
+        new Promise(resolve => { watchdog = window.setTimeout(() => resolve({ detection: null, timedOut: true }), 5000); }),
+    ]);
+    window.clearTimeout(watchdog);
+    return result;
 }
 function setFaceStatus(text, ok) { const el = document.getElementById('faceStatus'); el.style.color = ok ? '#00e676' : '#ff5252'; el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`; }
 function validatePose(landmarks, angle, liveMetrics) {
@@ -1163,7 +1180,7 @@ function captureVideoFrame(video) {
 }
 async function doCapture() {
     if (currentStep >= totalSteps) return;
-    const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
+    const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
     if (!det) { faceStableStart = null; hideCountdownRing(); return false; }
     const liveMetrics = collectLivenessMetrics(det.landmarks, det.detection.box, video.videoWidth || video.clientWidth, video.videoHeight || video.clientHeight);
     if (!verifyCurrentChallenge(det.landmarks, STEPS[currentStep].angle, liveMetrics)) {
