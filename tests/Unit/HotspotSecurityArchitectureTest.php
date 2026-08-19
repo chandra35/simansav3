@@ -120,22 +120,27 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('Sync semua', $view);
     }
 
-    public function test_legacy_nik_password_is_accepted_only_for_gtk(): void
+    public function test_simansa_password_is_preserved_and_legacy_fallback_is_limited_to_gtk(): void
     {
         $model = file_get_contents($this->root.'/app/Models/HotspotUser.php');
         $command = file_get_contents($this->root.'/app/Console/Commands/HotspotSync.php');
+        $login = file_get_contents($this->root.'/app/Http/Controllers/Auth/LoginController.php');
+        $passwordSync = file_get_contents($this->root.'/app/Console/Commands/HotspotSyncSimansaPasswords.php');
 
-        $this->assertStringContainsString("\$this->role === 'guru'", $model);
-        $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$this->username)", $model);
+        $this->assertStringContainsString('return mb_strlen($password) >= 8;', $model);
         $this->assertStringContainsString("\$role === 'guru'", $command);
         $this->assertStringContainsString("preg_match('/^\\d{16}$/', \$username)", $command);
         $this->assertStringContainsString('return $username;', $command);
+        $this->assertStringContainsString('hash_equals((string) ($user->readable_password', $login);
+        $this->assertStringContainsString('$user->readable_password = (string) $request->password;', $login);
+        $this->assertStringContainsString('hotspot:sync-simansa-passwords', $passwordSync);
+        $this->assertStringContainsString('Crypt::decryptString($hotspot->user->encrypted_password)', $passwordSync);
 
         $guru = new HotspotUser(['username' => '1872041185770001', 'role' => 'guru']);
         $siswa = new HotspotUser(['username' => '1234567890', 'role' => 'siswa']);
 
         $this->assertTrue($guru->isSecurePassword('1872041185770001'));
-        $this->assertFalse($siswa->isSecurePassword('1234567890'));
+        $this->assertTrue($siswa->isSecurePassword('1234567890'));
         $this->assertFalse($guru->isSecurePassword('short'));
     }
 

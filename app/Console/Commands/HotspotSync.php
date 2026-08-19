@@ -276,13 +276,9 @@ class HotspotSync extends Command
                     return null;
                 }
 
-                if (!hash_equals($username, $password)) {
-                    return $password;
-                }
-
-                return $role === 'guru' && preg_match('/^\d{16}$/', $username) === 1
-                    ? $password
-                    : null;
+                // Nilai ini adalah password SIMANSA yang tersimpan terenkripsi.
+                // Pertahankan nilainya apa adanya agar login web dan Hotspot sama.
+                return $password;
             } catch (\Exception) {
                 // Fallback jika decrypt gagal
             }

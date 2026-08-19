@@ -52,6 +52,15 @@ class LoginController extends Controller
             $request->session()->regenerate();
             
             $user = Auth::user();
+
+            // Password Laravel berbentuk hash dan tidak dapat dikirim ke RADIUS.
+            // Setelah autentikasi berhasil, simpan salinan terenkripsi melalui
+            // mutator bawaan User. UserObserver akan menyinkronkannya ke RADIUS.
+            // Nilainya tidak pernah ditulis ke log atau respons.
+            if (!hash_equals((string) ($user->readable_password ?? ''), (string) $request->password)) {
+                $user->readable_password = (string) $request->password;
+                $user->save();
+            }
             
             // Enhanced login log with device location if provided
             $logData = ['user_id' => $user->id];
