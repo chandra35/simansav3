@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="-1">
-  <meta name="theme-color" content="#102c26">
-  <title>Akses Internet MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819">
+  <meta name="theme-color" content="#285de7">
+  <title>Login Hotspot MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260819c">
 </head>
 <body>
   <script>
@@ -18,7 +18,7 @@
       var button = document.querySelector('[data-login-submit]');
       if (button) {
         button.disabled = true;
-        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span><span>Menghubungkan...</span>';
+        button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span>Memeriksa akun...';
       }
       return true;
     }
@@ -26,7 +26,7 @@
   </script>
 
   $(if chap-id)
-  <form name="sendin" action="$(link-login-only)" method="post" hidden>
+  <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
     <input type="hidden" name="username">
     <input type="hidden" name="password">
     <input type="hidden" name="dst" value="$(link-orig)">
@@ -46,76 +46,62 @@
   </script>
   $(endif)
 
-  <main class="access-page">
-    <section class="story-panel" aria-label="Informasi jaringan MAN 1 Metro">
-      <div class="story-grid" aria-hidden="true"></div>
-      <header class="school-brand">
-        <span class="school-mark"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></span>
-        <span class="school-copy"><strong>MAN 1 Metro</strong><small>Madrasah Digital</small></span>
-      </header>
+  <main class="page login-page">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
 
-      <div class="story-content">
-        <span class="eyebrow">Jaringan resmi madrasah</span>
-        <h1>Belajar.<br>Terhubung.<br><em>Bertumbuh.</em></h1>
-        <p>Akses internet aman untuk seluruh warga MAN 1 Metro dalam satu akun terintegrasi.</p>
+    <section class="portal-card">
+      <div class="portal-top">
+        <div class="portal-brand">
+          <div class="brand-logo compact"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
+          <div><span>SIMANSA Hotspot</span><strong>MAN 1 Metro</strong></div>
+        </div>
+        <div class="status-dot">Jaringan aktif</div>
       </div>
 
-      <footer class="network-facts">
-        <div><span class="fact-icon">01</span><p><strong>Aman</strong><small>Autentikasi terpusat</small></p></div>
-        <div><span class="fact-icon">02</span><p><strong>Terkelola</strong><small>Akses sesuai profil</small></p></div>
-      </footer>
-    </section>
-
-    <section class="login-panel">
-      <div class="mobile-brand">
-        <img src="assets/logo.png" alt="Logo MAN 1 Metro">
-        <p><strong>MAN 1 Metro</strong><small>Madrasah Digital</small></p>
+      <div class="portal-avatar" aria-hidden="true">
+        <span class="wifi-ring ring-a"></span>
+        <span class="wifi-ring ring-b"></span>
+        <img src="assets/logo.png" alt="">
       </div>
 
-      <div class="login-box">
-        <div class="network-state"><i aria-hidden="true"></i><span>MAN 1 METRO &middot; ONLINE</span></div>
-        <div class="login-heading">
-          <span class="step-number">01</span>
-          <div><h2>Masuk ke jaringan</h2><p>Gunakan akun Hotspot SIMANSA Anda.</p></div>
+      <div class="portal-title">
+        <h1>Login Hotspot</h1>
+        <p>Masuk menggunakan akun resmi warga MAN 1 Metro.</p>
+      </div>
+
+      <div class="alert" data-hotspot-error="$(error)"></div>
+
+      <form name="login" action="$(link-login-only)" method="post" onsubmit="return doLogin()">
+        <input type="hidden" name="dst" value="$(link-orig)">
+        <input type="hidden" name="popup" value="true">
+
+        <div class="field">
+          <label for="username">Username</label>
+          <div class="input-shell">
+            <span>Username</span>
+            <input class="input" id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" required autofocus>
+          </div>
         </div>
 
-        <div class="alert" data-hotspot-error="$(error)"></div>
-
-        <form name="login" action="$(link-login-only)" method="post" onsubmit="return doLogin()" class="login-form">
-          <input type="hidden" name="dst" value="$(link-orig)">
-          <input type="hidden" name="popup" value="true">
-
-          <div class="field-group">
-            <label for="username"><span>Username</span><small>ID akun Anda</small></label>
-            <div class="control">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/></svg>
-              <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" required autofocus>
-            </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-shell">
+            <span>Password</span>
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
+            <button class="password-toggle" type="button" data-password-toggle aria-label="Tampilkan password" aria-pressed="false">Lihat</button>
           </div>
+        </div>
 
-          <div class="field-group">
-            <label for="password"><span>Password</span><small>Kunci akun Anda</small></label>
-            <div class="control">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Z"/></svg>
-              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
-              <button class="reveal" type="button" data-password-toggle aria-label="Tampilkan password" aria-pressed="false">Lihat</button>
-            </div>
-          </div>
+        <button class="submit" type="submit" data-login-submit>Masuk Internet</button>
+      </form>
 
-          <button class="login-button" type="submit" data-login-submit>
-            <span>Hubungkan sekarang</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </form>
-
-        <div class="support-line"><span>Kesulitan masuk?</span><a href="mailto:admin@man1metro.sch.id">Hubungi Admin</a></div>
-        <p class="privacy-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5.2 3.4 8.5 8 10 4.6-1.5 8-4.8 8-10V6l-8-3Z"/></svg><span>Kredensial diproses secara aman melalui server autentikasi madrasah.</span></p>
-      </div>
-
-      <footer class="page-footer"><span>&copy; 2026 MAN 1 Metro</span><span>Powered by SIMANSA</span></footer>
+      <p class="security-note">Jangan membagikan password. Pastikan nama jaringan Wi-Fi sesuai informasi resmi madrasah.</p>
+      <div class="help-box compact-help"><span>Bantuan</span><a href="mailto:admin@man1metro.sch.id">admin@man1metro.sch.id</a></div>
+      <div class="portal-footer">SIMANSA &middot; Sistem Informasi MAN 1 Metro</div>
     </section>
   </main>
 
-  <script src="assets/portal.js?v=20260819"></script>
+  <script src="assets/portal.js?v=20260819c"></script>
 </body>
 </html>

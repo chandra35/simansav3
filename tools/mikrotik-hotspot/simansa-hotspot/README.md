@@ -4,7 +4,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 
 ## Isi Paket
 
-- `login.html` - halaman login profesional dan responsif dengan toggle password, avatar, serta animasi sambutan ringan.
+- `login.html` - halaman login kartu SIMANSA yang responsif dengan toggle password dan animasi sambutan ringan.
 - `alogin.html` - notifikasi login berhasil dan pembuka halaman status pada tab baru.
 - `status.html` - halaman status setelah login.
 - `logout.html` - halaman logout.
@@ -12,7 +12,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - `md5.js` - dukungan CHAP MikroTik.
 - `assets/logo.png` - logo MAN 1 Metro dari SIMANSA.
 - `assets/style.css` - tema halaman status, sukses, logout, dan error.
-- `assets/login-v2.css` - tema editorial khusus halaman login.
+- `assets/login-v2.css` - tema editorial khusus halaman sukses dan status.
 - `assets/portal.js` - interaksi form dan mapping pesan error.
 - Nama lengkap pada halaman sukses/status berasal dari atribut RADIUS `Reply-Message` (`$(radius18)`) yang disinkronkan SIMANSA dalam format Base64 aman.
 

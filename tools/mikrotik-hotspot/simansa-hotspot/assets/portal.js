@@ -57,6 +57,12 @@
         title: 'Sesi login kedaluwarsa',
         message: 'Muat ulang halaman login, lalu coba masuk kembali.',
         reload: true
+      },
+      {
+        match: ['unknown host'],
+        title: 'Koneksi perangkat berubah',
+        message: 'Gateway tidak lagi mengenali sesi perangkat ini. Sambungkan ulang Wi-Fi, lalu buka portal dari notifikasi jaringan.',
+        reload: true
       }
     ];
 

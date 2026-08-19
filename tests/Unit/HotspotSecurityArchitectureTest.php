@@ -193,20 +193,21 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('target="hotspot_status"', $success);
     }
 
-    public function test_mikrotik_login_uses_dedicated_responsive_redesign(): void
+    public function test_mikrotik_login_uses_restored_responsive_card_design(): void
     {
         $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
         $login = file_get_contents($portal.'login.html');
-        $style = file_get_contents($portal.'assets/login-v2.css');
+        $style = file_get_contents($portal.'assets/style.css');
         $script = file_get_contents($portal.'assets/portal.js');
 
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819', $login);
-        $this->assertStringContainsString('class="story-panel"', $login);
-        $this->assertStringContainsString('class="login-panel"', $login);
-        $this->assertStringContainsString('@media(max-width:900px)', $style);
-        $this->assertStringContainsString('prefers-reduced-motion:reduce', $style);
+        $this->assertStringContainsString('assets/style.css?v=20260819c', $login);
+        $this->assertStringContainsString('class="portal-card"', $login);
+        $this->assertStringContainsString('class="portal-top"', $login);
+        $this->assertStringContainsString('@media (max-width: 560px)', $style);
+        $this->assertStringContainsString('prefers-reduced-motion: reduce', $style);
         $this->assertStringContainsString('.hotspot-modal.is-visible', $style);
         $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
+        $this->assertStringContainsString("match: ['unknown host']", $script);
     }
 
     public function test_radius_identity_is_synced_and_rendered_after_login(): void
