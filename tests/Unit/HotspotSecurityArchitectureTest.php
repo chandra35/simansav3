@@ -208,4 +208,24 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('.hotspot-modal.is-visible', $style);
         $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
     }
+
+    public function test_radius_identity_is_synced_and_rendered_after_login(): void
+    {
+        $model = file_get_contents($this->root.'/app/Models/HotspotUser.php');
+        $command = file_get_contents($this->root.'/app/Console/Commands/HotspotSyncRadiusIdentities.php');
+        $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
+        $success = file_get_contents($portal.'alogin.html');
+        $status = file_get_contents($portal.'status.html');
+
+        $this->assertStringContainsString("'firstname' => \$displayName", $model);
+        $this->assertStringContainsString("'attribute' => 'Reply-Message'", $model);
+        $this->assertStringContainsString('base64_encode($displayName)', $model);
+        $this->assertStringContainsString('hotspot:sync-radius-identities', $command);
+        $this->assertStringContainsString('$(radius18)', $success);
+        $this->assertStringContainsString('$(radius18)', $status);
+        $this->assertStringContainsString("window.atob", $success);
+        $this->assertStringContainsString('data-username="$(username)"', $success);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819b', $success);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819b', $status);
+    }
 }

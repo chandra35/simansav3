@@ -14,6 +14,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - `assets/style.css` - tema halaman status, sukses, logout, dan error.
 - `assets/login-v2.css` - tema editorial khusus halaman login.
 - `assets/portal.js` - interaksi form dan mapping pesan error.
+- Nama lengkap pada halaman sukses/status berasal dari atribut RADIUS `Reply-Message` (`$(radius18)`) yang disinkronkan SIMANSA dalam format Base64 aman.
 
 ## Cara Pasang di MikroTik
 

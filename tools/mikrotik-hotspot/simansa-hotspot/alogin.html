@@ -2,31 +2,50 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="-1">
-  <meta name="theme-color" content="#16887e">
-  <title>Login Berhasil - Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <meta name="theme-color" content="#102c26">
+  <title>Login Berhasil - MAN 1 Metro</title>
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819b">
 </head>
-<body>
-  <main class="page login-page">
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-    <section class="result-card result-success" role="alert" aria-live="polite">
-      <div class="result-icon" aria-hidden="true">&#10003;</div>
-      <span class="result-kicker">LOGIN BERHASIL</span>
-      <h1>Internet sudah terhubung</h1>
-      <p>Selamat datang, <strong>$(username)</strong>. Halaman status dibuka pada tab baru.</p>
-      <div class="result-actions">
-        <a class="button primary" href="$(link-status)" target="hotspot_status">Buka Status Hotspot</a>
-        <a class="button" href="$(link-redirect)">Lanjutkan Browsing</a>
+<body class="session-page">
+  <main class="session-layout">
+    <section class="session-card success-card" role="alert" aria-live="polite">
+      <header class="session-brand">
+        <img src="assets/logo.png" alt="Logo MAN 1 Metro">
+        <p><strong>MAN 1 Metro</strong><small>Hotspot SIMANSA</small></p>
+      </header>
+
+      <div class="success-mark" aria-hidden="true"><span>&#10003;</span></div>
+      <span class="session-kicker">Koneksi berhasil</span>
+      <h1>Selamat datang,<br><em data-radius-name="$(radius18)" data-username="$(username)">$(username)</em></h1>
+      <p class="session-lead">Perangkat Anda sudah terhubung ke internet madrasah.</p>
+
+      <div class="identity-ticket">
+        <span>Akun aktif</span>
+        <strong data-radius-name="$(radius18)" data-username="$(username)">$(username)</strong>
+        <small>Username: $(username)</small>
       </div>
-      <small>Jika tab status tidak terbuka otomatis, tekan tombol “Buka Status Hotspot”.</small>
+
+      <div class="session-actions">
+        <a class="session-button primary" href="$(link-status)" target="hotspot_status"><span>Lihat status koneksi</span><b>&rarr;</b></a>
+        <a class="session-button secondary" href="$(link-redirect)">Lanjutkan browsing</a>
+      </div>
+      <p class="session-note">Halaman status dibuka pada tab baru agar pemakaian koneksi mudah dipantau.</p>
     </section>
   </main>
   <script>
     (function () {
+      function decodeName(value) {
+        if (!value || value.indexOf('$(') === 0) return '';
+        try { return decodeURIComponent(escape(window.atob(value))); } catch (error) { return ''; }
+      }
+      var targets = document.querySelectorAll('[data-radius-name]');
+      for (var i = 0; i < targets.length; i += 1) {
+        var name = decodeName(targets[i].getAttribute('data-radius-name'));
+        targets[i].textContent = name || targets[i].getAttribute('data-username') || 'Pengguna';
+      }
       var statusTab = window.open('$(link-status)', 'hotspot_status');
       if (statusTab) statusTab.focus();
     }());

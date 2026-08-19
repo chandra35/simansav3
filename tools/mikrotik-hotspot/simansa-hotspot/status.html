@@ -2,45 +2,51 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="refresh" content="$(refresh-timeout-secs)">
+  <meta name="theme-color" content="#102c26">
   <title>Status Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819b">
 </head>
-<body>
-  <main class="page">
-    <section class="status-wrap">
-      <div class="status-card">
-        <div class="status-head">
-          <div class="brand-logo"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
-          <div>
-            <h1>Terhubung</h1>
-            <p>Akun hotspot aktif di jaringan MAN 1 Metro.</p>
-          </div>
-        </div>
+<body class="session-page">
+  <main class="session-layout status-layout">
+    <section class="session-card status-session-card">
+      <header class="session-brand status-brand">
+        <img src="assets/logo.png" alt="Logo MAN 1 Metro">
+        <p><strong>MAN 1 Metro</strong><small>Status koneksi</small></p>
+        <span class="connected-pill"><i></i> Terhubung</span>
+      </header>
 
-        <div class="status-body">
-          <div class="stats">
-            <div class="stat"><span>Username</span><strong>$(username)</strong></div>
-            <div class="stat"><span>IP Address</span><strong>$(ip)</strong></div>
-            <div class="stat"><span>MAC Address</span><strong>$(mac)</strong></div>
-            <div class="stat"><span>Waktu Aktif</span><strong>$(uptime)</strong></div>
-            <div class="stat"><span>Download</span><strong>$(bytes-out-nice)</strong></div>
-            <div class="stat"><span>Upload</span><strong>$(bytes-in-nice)</strong></div>
-          </div>
-
-          <div class="actions">
-            <a class="button primary" href="$(link-status)">Refresh Status</a>
-            <a class="button" href="$(link-logout)">Logout</a>
-          </div>
-
-          <div class="help-box">
-            <span>Bantuan</span>
-            <a href="mailto:admin@man1metro.sch.id">admin@man1metro.sch.id</a>
-          </div>
-        </div>
+      <div class="status-title">
+        <span class="session-kicker">Sesi sedang aktif</span>
+        <h1 data-radius-name="$(radius18)" data-username="$(username)">$(username)</h1>
+        <p>Username <strong>$(username)</strong></p>
       </div>
+
+      <div class="status-grid">
+        <article><span>Waktu aktif</span><strong>$(uptime)</strong><small>Durasi sesi berjalan</small></article>
+        <article><span>Alamat IP</span><strong>$(ip)</strong><small>IP perangkat saat ini</small></article>
+        <article class="traffic-card download"><span>Download</span><strong>$(bytes-out-nice)</strong><small>Data diterima perangkat</small></article>
+        <article class="traffic-card upload"><span>Upload</span><strong>$(bytes-in-nice)</strong><small>Data dikirim perangkat</small></article>
+      </div>
+
+      <div class="device-line"><span>Perangkat</span><strong>$(mac)</strong></div>
+      <div class="session-actions horizontal-actions">
+        <a class="session-button primary" href="$(link-status)"><span>Perbarui status</span><b>&#8635;</b></a>
+        <a class="session-button danger" href="$(link-logout)">Keluar dari jaringan</a>
+      </div>
+      <p class="session-note">Halaman diperbarui otomatis setiap $(refresh-timeout) untuk menampilkan pemakaian terbaru.</p>
     </section>
   </main>
+  <script>
+    (function () {
+      var target = document.querySelector('[data-radius-name]');
+      if (!target) return;
+      var encoded = target.getAttribute('data-radius-name');
+      var name = '';
+      try { if (encoded && encoded.indexOf('$(') !== 0) name = decodeURIComponent(escape(window.atob(encoded))); } catch (error) {}
+      target.textContent = name || target.getAttribute('data-username') || 'Pengguna';
+    }());
+  </script>
 </body>
 </html>

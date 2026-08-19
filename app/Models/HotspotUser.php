@@ -93,11 +93,8 @@ class HotspotUser extends Model
                 ['groupname' => $groupName, 'priority' => $priority]
             );
 
-            // 4. Pastikan userinfo ada (dibutuhkan daloRADIUS untuk menampilkan user)
-            $db->table('userinfo')->updateOrInsert(
-                ['username' => $this->username],
-                ['updatedate' => now(), 'updateby' => 'simansav3']
-            );
+            // 4. Sinkronkan identitas untuk daloRADIUS dan halaman status MikroTik.
+            $this->writeIdentityToRadius($db);
 
             $this->update([
                 'last_synced_at' => now(),
@@ -119,6 +116,54 @@ class HotspotUser extends Model
 
             return false;
         }
+    }
+
+    /**
+     * Sinkronkan nama tanpa menyentuh password atau status autentikasi.
+     */
+    public function syncIdentityToRadius(): bool
+    {
+        try {
+            $this->writeIdentityToRadius(DB::connection('mysql_radius'));
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('[HotspotUser] Identity sync to RADIUS failed', [
+                'username' => $this->username,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function writeIdentityToRadius($db): void
+    {
+        $displayName = trim((string) $this->display_name);
+
+        $db->table('userinfo')->updateOrInsert(
+            ['username' => $this->username],
+            [
+                'firstname' => $displayName !== '' ? $displayName : null,
+                'updatedate' => now(),
+                'updateby' => 'simansav3',
+            ]
+        );
+
+        if ($displayName === '') {
+            $db->table('radreply')
+                ->where('username', $this->username)
+                ->where('attribute', 'Reply-Message')
+                ->delete();
+
+            return;
+        }
+
+        // Base64 menjaga nama aman saat disisipkan RouterOS ke atribut HTML.
+        $db->table('radreply')->updateOrInsert(
+            ['username' => $this->username, 'attribute' => 'Reply-Message'],
+            ['op' => ':=', 'value' => base64_encode($displayName)]
+        );
     }
 
     /**
