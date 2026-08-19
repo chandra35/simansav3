@@ -300,8 +300,16 @@ class FaceRegistrationController extends Controller
             'Kedipan mata belum terdeteksi dengan jelas. Mohon ulangi registrasi dari kamera langsung.'
         );
 
+        $turnSigns = collect($summary->get('turn_signs', []))
+            ->filter(fn ($value) => in_array((int) $value, [-1, 1], true))
+            ->map(fn ($value) => (int) $value)
+            ->values();
+        $hasOppositeTurns = $turnSigns->contains(1) && $turnSigns->contains(-1);
+        $hasDetailedTurnEvidence = $hasOppositeTurns && (float) $summary->get('turn_span', 0) >= 0.12;
+        $hasLegacyTurnEvidence = (float) $summary->get('yaw_span', 0) >= 0.30;
+
         abort_if(
-            (float) $summary->get('yaw_span', 0) < 0.30,
+            ! $hasDetailedTurnEvidence && ! $hasLegacyTurnEvidence,
             422,
             'Gerakan kepala belum cukup berbeda. Jangan gunakan foto atau layar lain saat registrasi.'
         );

@@ -1024,6 +1024,7 @@ function beginAutoRegistration() {
         challenge_order: STEPS.map(step => step.angle),
         completed_steps: [],
         turn_signs: [],
+        turn_deltas: [],
         blink_count: 0,
         max_blink_close_frames: 0,
         yaw_min: null,
@@ -1123,6 +1124,7 @@ function detectBlendshapeBlink(blinkScore) {
 }
 async function processLiveFace(face, ctx, canvas) {
     lastLiveMetrics = face.metrics;
+    recordLivenessMetrics(face.metrics);
     setFaceStatus('Wajah terdeteksi. Landmark aktif.', true);
     if (currentStep >= totalSteps || autoCapturing) return;
     if (STEPS[currentStep].angle === 'kedip') {
@@ -1254,6 +1256,13 @@ function collectLivenessMetrics(landmarks, box, canvasWidth, canvasHeight) {
     const areaRatio = (box.width * box.height) / Math.max(canvasWidth * canvasHeight, 1);
     const noseOffset = (noseTip.x - box.x) / Math.max(box.width, 1);
 
+    const metrics = { yawRatio, smileRatio, centerX, centerY, areaRatio, noseOffset };
+    recordLivenessMetrics(metrics);
+    return { ...metrics, passiveMotion: livenessSummary.passive_motion_score, gestureMotion: livenessSummary.gesture_motion_score, centerShift: livenessSummary.center_shift_score };
+}
+function recordLivenessMetrics(metrics) {
+    const { yawRatio, smileRatio, centerX, centerY, areaRatio, noseOffset } = metrics;
+    if (![yawRatio, smileRatio, centerX, centerY, areaRatio, noseOffset].every(Number.isFinite)) return;
     const sample = { time: Date.now(), yawRatio, smileRatio, centerX, centerY, areaRatio, noseOffset };
     passiveSamples.push(sample);
     if (passiveSamples.length > 24) passiveSamples.shift();
@@ -1269,8 +1278,6 @@ function collectLivenessMetrics(landmarks, box, canvasWidth, canvasHeight) {
     livenessSummary.passive_motion_score = Math.max(livenessSummary.passive_motion_score, passiveMotion);
     livenessSummary.gesture_motion_score = Math.max(livenessSummary.gesture_motion_score, gestureMotion);
     livenessSummary.center_shift_score = Math.max(livenessSummary.center_shift_score, centerShift);
-
-    return { yawRatio, smileRatio, passiveMotion, gestureMotion, centerShift, areaRatio, centerX, centerY, noseOffset };
 }
 function computeRecentRange(samples, key) {
     if (samples.length < 2) return 0;
@@ -1346,6 +1353,7 @@ async function doCapture() {
         const turnDelta = liveMetrics.noseOffset - baselineMetrics.noseOffset;
         turnSigns.push(Math.sign(turnDelta));
         livenessSummary.turn_signs = [...turnSigns];
+        livenessSummary.turn_deltas = [...(livenessSummary.turn_deltas || []), Number(turnDelta.toFixed(4))];
     }
     gestureSamples.push({
         angle: STEPS[currentStep].angle,
@@ -1489,6 +1497,8 @@ function buildLivenessPayload() {
     const yawSpan = (livenessSummary.yaw_max ?? 0) - (livenessSummary.yaw_min ?? 0);
     const smileDelta = (livenessSummary.smile_max ?? 0) - (livenessSummary.smile_min ?? 0);
     const completed = Array.from(new Set(livenessSummary.completed_steps));
+    const turnDeltas = (livenessSummary.turn_deltas || []).filter(Number.isFinite);
+    const turnSpan = turnDeltas.length >= 2 ? Math.max(...turnDeltas) - Math.min(...turnDeltas) : 0;
     const hasDirectionalTurn = livenessSummary.turn_signs.length >= 2
         && livenessSummary.turn_signs[0] !== livenessSummary.turn_signs[1];
     const durationScore = Math.min(livenessSummary.total_duration_ms / 7000, 1) * 20;
@@ -1505,6 +1515,7 @@ function buildLivenessPayload() {
         completed_steps: completed,
         challenge_count: STEPS.length,
         yaw_span: Number(yawSpan.toFixed(4)),
+        turn_span: Number(turnSpan.toFixed(4)),
         smile_delta: Number(smileDelta.toFixed(4)),
         has_directional_turn: hasDirectionalTurn,
         liveness_score: livenessScore,
