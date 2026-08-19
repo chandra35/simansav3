@@ -19,6 +19,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class FaceRegistrationController extends Controller
 {
+    private const DUPLICATE_REQUIRED_CAPTURES = 3;
+
     public function index(Request $request)
     {
         $authUser = $request->user();
@@ -31,7 +33,6 @@ class FaceRegistrationController extends Controller
             $selectedType = $this->normalizeUserType($request->query('type'));
             $registrants = $this->getRegistrantsForType($selectedType);
             $storeUrl = route('admin.absensi.face-register.store');
-            $descriptorUrl = route('admin.absensi.face-descriptors');
             $selfOnly = false;
         } else {
             $context = $this->getSelfRegistrationContext($authUser);
@@ -42,7 +43,6 @@ class FaceRegistrationController extends Controller
             $storeUrl = $authUser->isSiswa()
                 ? route('siswa.face-register.store')
                 : route('admin.absensi.face-register.store');
-            $descriptorUrl = null;
             $selfOnly = true;
             $selfFace = FaceEncoding::where('user_id', $authUser->id)
                 ->where('user_type', $selectedType)
@@ -85,7 +85,6 @@ class FaceRegistrationController extends Controller
             'canManageAll' => $canManageAll,
             'selfOnly' => $selfOnly,
             'storeUrl' => $storeUrl,
-            'descriptorUrl' => $descriptorUrl,
             'selectedType' => $selectedType,
             'typeOptions' => $this->typeOptions(),
             'initialSelection' => $initialSelection,
@@ -96,7 +95,6 @@ class FaceRegistrationController extends Controller
             'registeredCount' => $registeredCount,
             'verifiedCount' => $verifiedCount,
             'pendingCount' => max($registeredCount - $verifiedCount, 0),
-            'duplicateThreshold' => (float) AbsensiSetting::getValue('face_duplicate_threshold', 0.55),
         ]);
     }
 
@@ -620,6 +618,7 @@ class FaceRegistrationController extends Controller
 
         $candidateFaces = FaceEncoding::query()
             ->where('is_active', true)
+            ->where('is_verified', true)
             ->where('user_id', '!=', $userId)
             ->with([
                 'user:id,name',
@@ -629,17 +628,20 @@ class FaceRegistrationController extends Controller
             ->get();
 
         $bestMatch = null;
+        $minimumMatches = min(self::DUPLICATE_REQUIRED_CAPTURES, count($submittedDescriptors));
 
         foreach ($candidateFaces as $face) {
             if (empty($face->descriptors) || ! is_array($face->descriptors)) {
                 continue;
             }
 
+            $captureMatches = [];
             foreach ($submittedDescriptors as $submittedDescriptor) {
                 if (! is_array($submittedDescriptor)) {
                     continue;
                 }
 
+                $nearestDistance = null;
                 foreach ($face->descriptors as $storedDescriptor) {
                     if (! is_array($storedDescriptor)) {
                         continue;
@@ -650,13 +652,31 @@ class FaceRegistrationController extends Controller
                         continue;
                     }
 
-                    if ($distance <= $threshold && (! $bestMatch || $distance < $bestMatch['distance'])) {
-                        $bestMatch = [
-                            'distance' => $distance,
-                            'face' => $face,
-                        ];
+                    if ($distance <= $threshold && ($nearestDistance === null || $distance < $nearestDistance)) {
+                        $nearestDistance = $distance;
                     }
                 }
+
+                if ($nearestDistance !== null) {
+                    $captureMatches[] = $nearestDistance;
+                }
+            }
+
+            // Satu frame dapat terpengaruh blur, pose, atau cahaya. Duplikasi
+            // hanya ditolak jika identitas yang sama cocok lintas beberapa capture.
+            if (count($captureMatches) < $minimumMatches) {
+                continue;
+            }
+
+            $averageDistance = array_sum($captureMatches) / count($captureMatches);
+            if (! $bestMatch
+                || count($captureMatches) > $bestMatch['matched_captures']
+                || (count($captureMatches) === $bestMatch['matched_captures'] && $averageDistance < $bestMatch['distance'])) {
+                $bestMatch = [
+                    'distance' => $averageDistance,
+                    'matched_captures' => count($captureMatches),
+                    'face' => $face,
+                ];
             }
         }
 
@@ -693,7 +713,8 @@ class FaceRegistrationController extends Controller
         $status = $face->is_verified ? 'approved' : 'pending';
 
         return sprintf(
-            'Wajah terdeteksi mirip dengan akun %s (%s: %s, status: %s). Registrasi dibatalkan untuk mencegah duplikasi.',
+            'Kemiripan kuat terdeteksi pada %d capture dengan akun %s (%s: %s, status: %s). Registrasi dibatalkan untuk mencegah duplikasi.',
+            $duplicateMatch['matched_captures'],
             $name,
             $identifierLabel,
             $identifier,

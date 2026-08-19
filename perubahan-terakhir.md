@@ -4,6 +4,14 @@ Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Registrasi Wajah: Panduan Suara & Validasi Duplikasi (19 Agustus 2026)
+
+- Setiap tahap registrasi kini dibacakan memakai voice Bahasa Indonesia browser, misalnya “Wajah Depan, lihat lurus ke kamera”, “Toleh Kanan”, “Toleh Kiri”, “Senyum”, dan “Kedipkan Mata”.
+- Tanda centang pada tahap yang berhasil disertai bunyi singkat agar pengguna mengetahui capture selesai tanpa harus terus melihat layar.
+- Pemeriksaan duplikasi di browser dihapus karena sebelumnya dapat menghentikan registrasi hanya dari satu frame awal dan memunculkan false positive seperti nama GTK lain.
+- Keputusan duplikasi kini hanya dilakukan server setelah semua capture selesai dan wajib memiliki kecocokan konsisten pada minimal tiga capture terhadap wajah **verified**. Satu frame yang kebetulan mirip, blur, atau terpengaruh cahaya tidak lagi membatalkan registrasi.
+- Descriptor semua pengguna tidak lagi diunduh ke browser pada halaman registrasi admin; ini memperbaiki privasi dan mengurangi beban awal halaman.
+
 ### Face Python Edge Agent (13 Agustus 2026)
 
 - Unduhan agent diperbaiki setelah BOM konfigurasi lama dapat menyisipkan byte sebelum signature ZIP. Endpoint kini menetapkan MIME ZIP/no-store, memeriksa `ZipArchive::CHECKCONS`, memastikan empat file wajib tersedia, dan membatalkan unduhan jika integritas arsip gagal.

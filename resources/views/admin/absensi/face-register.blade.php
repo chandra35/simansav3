@@ -710,8 +710,8 @@
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
-const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), descriptorUrl = @json($descriptorUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll), duplicateThreshold = @json($duplicateThreshold);
-let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false, duplicateFaceDatabase = [];
+const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
+let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
 let STEPS = [];
 let livenessSummary = {};
 let passiveSamples = [];
@@ -721,6 +721,9 @@ let registrationStartedAt = null;
 let baselineMetrics = null;
 let blinkCloseFrames = 0;
 let registrationFinished = false;
+let guidanceVoiceEnabled = true;
+let guidanceSpeechSupported = 'speechSynthesis' in window;
+let guidanceAudioContext = null;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
     frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil.' },
@@ -806,33 +809,8 @@ async function loadModels() {
         setLoadingText('Memuat model deteksi wajah...'); await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model landmark wajah...'); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model pengenalan wajah...'); await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        if (canManageAll && descriptorUrl) {
-            setLoadingText('Memuat database validasi wajah...');
-            await loadDuplicateFaceDatabase();
-        }
         modelsLoaded = true; startCameraAndRegister();
     } catch (err) { setLoadingText('Error: ' + err.message); }
-}
-async function loadDuplicateFaceDatabase() {
-    const requests = ['gtk', 'siswa'].map(async (type) => {
-        const response = await fetch(`${descriptorUrl}?type=${type}`, {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-        });
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Gagal memuat database wajah');
-        }
-        return result.data || [];
-    });
-
-    const datasets = await Promise.all(requests);
-    duplicateFaceDatabase = datasets.flat().map(person => ({
-        userId: person.user_id,
-        userType: person.user_type,
-        name: person.name,
-        identifier: person.identifier,
-        descriptors: (person.descriptors || []).map(d => new Float32Array(d)),
-    }));
 }
 async function startCameraAndRegister() {
     setLoadingText('Menyalakan kamera...'); document.getElementById('loadingOverlay').style.display = 'flex';
@@ -843,6 +821,30 @@ async function startCameraAndRegister() {
     } catch (err) { setLoadingText('Kamera tidak tersedia: ' + err.message); }
 }
 function setLoadingText(text) { document.getElementById('loadingText').textContent = text; }
+function speakGuidance(text) {
+    if (!guidanceVoiceEnabled || !guidanceSpeechSupported || !text) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'id-ID';
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    const indonesianVoice = window.speechSynthesis.getVoices().find(voice => /^id([_-]|$)/i.test(voice.lang));
+    if (indonesianVoice) utterance.voice = indonesianVoice;
+    window.speechSynthesis.speak(utterance);
+}
+function playStepCompleteTone() {
+    try {
+        guidanceAudioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = guidanceAudioContext.createOscillator();
+        const gain = guidanceAudioContext.createGain();
+        oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, guidanceAudioContext.currentTime);
+        gain.gain.setValueAtTime(0.001, guidanceAudioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, guidanceAudioContext.currentTime + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, guidanceAudioContext.currentTime + 0.22);
+        oscillator.connect(gain).connect(guidanceAudioContext.destination);
+        oscillator.start(); oscillator.stop(guidanceAudioContext.currentTime + 0.24);
+    } catch (_) { /* Audio cue is optional; browser voice remains available. */ }
+}
 function beginAutoRegistration() {
     STEPS = buildStepSequence();
     renderStepList();
@@ -897,6 +899,7 @@ function updateStepUI() {
     document.getElementById('stepInstruction').style.display = 'block';
     document.getElementById('stepIcon').className = 'fas ' + step.icon + ' mr-2';
     document.getElementById('stepText').textContent = step.text;
+    speakGuidance(`${step.title}. ${step.text}.`);
     if (step.angle === 'kedip') {
         blinkCount = 0;
         blinkCloseFrames = 0;
@@ -1049,16 +1052,6 @@ async function doCapture() {
         hideCountdownRing();
         return false;
     }
-    if (currentStep === 0) {
-        const duplicateMatch = findLiveDuplicateMatch(det.descriptor);
-        if (duplicateMatch) {
-            faceStableStart = null;
-            hideCountdownRing();
-            setFaceStatus(`Wajah terdeteksi sudah terdaftar pada akun ${duplicateMatch.name}.`, false);
-            showDuplicateRegistrationWarning(duplicateMatch);
-            return false;
-        }
-    }
     if (!baselineMetrics && STEPS[currentStep].angle === 'frontal') {
         baselineMetrics = {
             yawRatio: liveMetrics.yawRatio,
@@ -1074,6 +1067,7 @@ async function doCapture() {
     livenessSummary.completed_steps.push(STEPS[currentStep].angle);
     capturedDescriptors.push(Array.from(det.descriptor)); capturedAngles.push(STEPS[currentStep].angle); capturedPhotos.push(captureVideoFrame(video));
     const stepEl = document.getElementById('step-' + currentStep); stepEl.classList.remove('active', 'capturing'); stepEl.classList.add('done'); stepEl.querySelector('.step-check').style.display = 'block'; hideCountdownRing();
+    playStepCompleteTone();
     const video2 = document.getElementById('videoElement'); video2.style.outline = '4px solid #00e676'; setTimeout(() => { video2.style.outline = ''; }, 400);
     currentStep++; document.getElementById('progressBar').style.width = ((currentStep / totalSteps) * 100) + '%'; document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps} selesai`;
     if (currentStep >= totalSteps) { document.getElementById('stepInstruction').style.display = 'none'; setFaceStatus('Menyimpan...', true); await saveRegistration(); }
@@ -1089,33 +1083,6 @@ function verifyCurrentChallenge(landmarks, angle, liveMetrics) {
         return true;
     }
     return validatePose(landmarks, angle, liveMetrics);
-}
-function findLiveDuplicateMatch(descriptor) {
-    if (!duplicateFaceDatabase.length) return null;
-    let bestMatch = null;
-    for (const person of duplicateFaceDatabase) {
-        if (person.userId === selectedUserId) continue;
-        for (const refDescriptor of person.descriptors) {
-            const distance = faceapi.euclideanDistance(descriptor, refDescriptor);
-            if (distance <= duplicateThreshold && (!bestMatch || distance < bestMatch.distance)) {
-                bestMatch = { ...person, distance };
-            }
-        }
-    }
-    return bestMatch;
-}
-function showDuplicateRegistrationWarning(match) {
-    const identifierLabel = match.userType === 'siswa' ? 'NISN' : 'NIP';
-    const duplicateMessage = `Wajah terdeteksi atas nama ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}. Silakan gunakan akun yang sesuai atau hubungi admin jika terjadi kekeliruan.`;
-    document.getElementById('stepInstruction').innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>Wajah sudah terdaftar`;
-    document.getElementById('stepInstruction').style.display = 'block';
-    document.getElementById('stepInstruction').style.background = 'rgba(220,53,69,0.92)';
-    document.getElementById('stepInstruction').style.color = '#fff';
-    document.getElementById('duplicateFaceAlertText').textContent = duplicateMessage;
-    document.getElementById('duplicateFaceAlert').classList.remove('d-none');
-    document.getElementById('duplicateFaceModalText').textContent = duplicateMessage;
-    document.getElementById('duplicateFaceModal').classList.remove('d-none');
-    setFaceStatus(`Mirip akun ${match.name}${match.identifier ? ` (${identifierLabel}: ${match.identifier})` : ''}`, false);
 }
 function hideDuplicateFaceModal() {
     const duplicateModal = document.getElementById('duplicateFaceModal');

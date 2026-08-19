@@ -244,6 +244,23 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertSame('<?p', $menuBytes, 'Konfigurasi menu tidak boleh memiliki BOM yang merusak respons biner/JSON.');
     }
 
+    public function test_face_registration_has_voice_guidance_and_avoids_single_frame_duplicate_blocks(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/FaceRegistrationController.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/face-register.blade.php');
+
+        $this->assertStringContainsString('DUPLICATE_REQUIRED_CAPTURES = 3', $controller);
+        $this->assertStringContainsString("->where('is_verified', true)", $controller);
+        $this->assertStringContainsString('matched_captures', $controller);
+        $this->assertStringContainsString('function speakGuidance(text)', $view);
+        $this->assertStringContainsString("utterance.lang = 'id-ID'", $view);
+        $this->assertStringContainsString('function playStepCompleteTone()', $view);
+        $this->assertStringContainsString('playStepCompleteTone();', $view);
+        $this->assertStringNotContainsString('findLiveDuplicateMatch', $view);
+        $this->assertStringNotContainsString('loadDuplicateFaceDatabase', $view);
+    }
+
     public function test_teacher_and_homeroom_notes_use_a_per_student_modal(): void
     {
         $root = dirname(__DIR__, 2);

@@ -7,6 +7,7 @@ use App\Models\AbsensiSetting;
 use App\Models\Siswa;
 use App\Models\User;
 use App\Services\FaceDescriptorService;
+use App\Http\Controllers\Admin\FaceRegistrationController;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,39 @@ class FaceRecognitionAdminTest extends TestCase
             $this->assertNotFalse($archive->locateName('simansa-face-python/requirements.txt'));
             $archive->close();
         }
+    }
+
+    public function test_duplicate_face_protection_requires_consistent_matches_across_three_captures(): void
+    {
+        $users = User::query()->whereHas('siswa')->limit(2)->get();
+        if ($users->count() < 2) {
+            $this->markTestSkipped('Dua akun siswa diperlukan.');
+        }
+
+        [$target, $registered] = $users->values();
+        $descriptor = array_fill(0, 128, 0.1);
+        $different = array_fill(0, 128, 2.0);
+        FaceEncoding::updateOrCreate(
+            ['user_id' => $registered->id, 'user_type' => 'siswa'],
+            [
+                'descriptors' => array_fill(0, 5, $descriptor),
+                'capture_angles' => ['frontal', 'kanan', 'kiri', 'senyum', 'kedip'],
+                'total_captures' => 5,
+                'quality_score' => 90,
+                'is_active' => true,
+                'is_verified' => true,
+            ]
+        );
+
+        $method = new \ReflectionMethod(FaceRegistrationController::class, 'findDuplicateFaceMatch');
+        $controller = app(FaceRegistrationController::class);
+
+        $oneCoincidentalCapture = $method->invoke($controller, [$descriptor, $different, $different, $different, $different], $target->id);
+        $this->assertNull($oneCoincidentalCapture);
+
+        $threeConsistentCaptures = $method->invoke($controller, [$descriptor, $descriptor, $descriptor, $different, $different], $target->id);
+        $this->assertSame(3, $threeConsistentCaptures['matched_captures']);
+        $this->assertSame($registered->id, $threeConsistentCaptures['face']->user_id);
     }
 
     public function test_public_face_detect_requires_valid_rotatable_device_token_without_login(): void
