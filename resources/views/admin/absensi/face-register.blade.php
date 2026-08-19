@@ -1103,13 +1103,12 @@ async function activateCompatibilityBackend() {
 }
 function setFaceStatus(text, ok) { const el = document.getElementById('faceStatus'); el.style.color = ok ? '#00e676' : '#ff5252'; el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`; }
 function validatePose(landmarks, angle, liveMetrics) {
-    const { yawRatio, smileRatio, passiveMotion, gestureMotion } = liveMetrics;
+    const { yawRatio, smileRatio } = liveMetrics;
     const yawDelta = baselineMetrics ? Math.abs(yawRatio - baselineMetrics.yawRatio) : 0;
     const smileDelta = baselineMetrics ? smileRatio - baselineMetrics.smileRatio : 0;
-    const passiveOk = passiveMotion >= 0.018 || gestureMotion >= 0.014;
     if (angle === 'frontal') {
-        const ok = yawRatio > 0.86 && yawRatio < 1.16 && passiveOk;
-        setFaceStatus(ok ? 'Bagus! Tetap menghadap depan...' : `Pastikan wajah asli dan stabil, jangan hanya menggeser foto.`, ok);
+        const ok = yawRatio > 0.86 && yawRatio < 1.16;
+        setFaceStatus(ok ? 'Bagus! Tetap menghadap depan dan stabil...' : 'Posisikan wajah lurus ke kamera.', ok);
         return ok;
     }
     if (angle === 'kanan') {

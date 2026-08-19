@@ -6,6 +6,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 
+- Analisis screenshot perangkat menemukan deteksi wajah sebenarnya telah berjalan: pesan merah berasal dari validasi pose depan, bukan dari kegagalan kamera/AI. Aturan lama keliru mewajibkan gerakan pasif pada tahap yang justru menginstruksikan pengguna untuk diam. Tahap wajah depan kini menerima wajah lurus yang stabil; liveness tetap diwajibkan pada kedip, senyum, dan arah kepala berikutnya.
 - Registrasi wajah tidak lagi dibuka dalam modal. Tombol daftar kini membuka area kerja halaman penuh melalui URL peserta yang dipilih; directory disembunyikan, kamera mendapatkan ruang normal, dan tombol kembali mengarah ke daftar. Perubahan ini menghindari lifecycle modal yang dapat mengganggu kamera/browser ponsel.
 - Setelah kamera siap, registrasi kini membacakan: “Selamat datang, [nama lengkap]. Silakan melakukan registrasi wajah.” sebelum tahap liveness dimulai. Tidak ada kartu/tulisan sambutan yang menutup area kamera.
 - Foto profil tidak dipakai untuk menyetujui, menolak, atau mencocokkan biometrik, sehingga tidak menambah risiko false positive pada proses registrasi.
