@@ -907,6 +907,7 @@ async function startCameraAndRegister() {
         cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' } });
         video.srcObject = cameraStream;
         await new Promise(r => { video.onloadedmetadata = r; });
+        await video.play().catch(() => null);
         document.getElementById('loadingOverlay').style.display = 'none';
         await welcomeRegistrant();
         if (cameraStream && video.srcObject === cameraStream) beginAutoRegistration();
@@ -1015,26 +1016,36 @@ function startDetectionLoop() {
     isDetecting = true;
     const video = document.getElementById('videoElement'), canvas = document.getElementById('overlayCanvas'), ctx = canvas.getContext('2d'), options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
     async function detect() {
-        if (!isDetecting || video.paused || currentStep < 0) return;
-        canvas.width = video.videoWidth || video.clientWidth; canvas.height = video.videoHeight || video.clientHeight;
-        const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks(true); ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (detection) {
-            const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
-            resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI); ctx.fillStyle = '#00e5ff'; ctx.globalAlpha = 0.7; ctx.fill(); });
-            ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.strokeRect(box.x, box.y, box.width, box.height);
-            const liveMetrics = collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height);
-            setFaceStatus(`Wajah terdeteksi (${(detection.detection.score * 100).toFixed(0)}%)`, true);
-            if (currentStep < totalSteps && !autoCapturing) {
-                if (STEPS[currentStep].angle === 'kedip') detectBlink(detection.landmarks);
-                else {
-                    const poseOk = validatePose(detection.landmarks, STEPS[currentStep].angle, liveMetrics);
-                    if (poseOk) {
-                        if (!faceStableStart) { faceStableStart = Date.now(); showCountdownRing(); }
-                        else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) { autoCapturing = true; await doCapture(); autoCapturing = false; }
-                    } else if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
+        if (!isDetecting || currentStep < 0) return;
+        if (video.paused || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            setFaceStatus('Menyiapkan kamera dan deteksi wajah...', true);
+            video.play().catch(() => null);
+            window.setTimeout(detect, 180);
+            return;
+        }
+        try {
+            canvas.width = video.videoWidth || video.clientWidth; canvas.height = video.videoHeight || video.clientHeight;
+            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks(true); ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (detection) {
+                const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
+                resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI); ctx.fillStyle = '#00e5ff'; ctx.globalAlpha = 0.7; ctx.fill(); });
+                ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.strokeRect(box.x, box.y, box.width, box.height);
+                const liveMetrics = collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height);
+                setFaceStatus(`Wajah terdeteksi (${(detection.detection.score * 100).toFixed(0)}%)`, true);
+                if (currentStep < totalSteps && !autoCapturing) {
+                    if (STEPS[currentStep].angle === 'kedip') detectBlink(detection.landmarks);
+                    else {
+                        const poseOk = validatePose(detection.landmarks, STEPS[currentStep].angle, liveMetrics);
+                        if (poseOk) {
+                            if (!faceStableStart) { faceStableStart = Date.now(); showCountdownRing(); }
+                            else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) { autoCapturing = true; await doCapture(); autoCapturing = false; }
+                        } else if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
+                    }
                 }
-            }
-        } else { setFaceStatus('Arahkan wajah ke kamera', false); if (faceStableStart) { faceStableStart = null; hideCountdownRing(); } }
+            } else { setFaceStatus('Arahkan wajah ke kamera', false); if (faceStableStart) { faceStableStart = null; hideCountdownRing(); } }
+        } catch (_) {
+            setFaceStatus('Deteksi wajah sedang disiapkan, mohon tetap di depan kamera.', true);
+        }
         const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 60 : 150; requestAnimationFrame(() => setTimeout(detect, delay));
     }
     detect();

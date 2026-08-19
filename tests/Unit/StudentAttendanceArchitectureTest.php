@@ -260,6 +260,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('blinkOpenEarBaseline', $view);
         $this->assertStringContainsString('const closeThreshold = Math.max(0.11, Math.min(0.23, openEar * 0.72));', $view);
         $this->assertStringContainsString('Kedipkan mata secara normal: tutup lalu buka kembali.', $view);
+        $this->assertStringContainsString('await video.play().catch(() => null);', $view);
+        $this->assertStringContainsString('Menyiapkan kamera dan deteksi wajah...', $view);
+        $this->assertStringContainsString('window.setTimeout(detect, 180);', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
         $this->assertStringContainsString('height: 100dvh', $view);

@@ -9,6 +9,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Setelah kamera siap, registrasi kini membacakan: “Selamat datang, [nama lengkap]. Silakan melakukan registrasi wajah.” sebelum tahap liveness dimulai. Tidak ada kartu/tulisan sambutan yang menutup area kamera.
 - Foto profil tidak dipakai untuk menyetujui, menolak, atau mencocokkan biometrik, sehingga tidak menambah risiko false positive pada proses registrasi.
 - Deteksi kedip kini memakai baseline bukaan mata peserta secara adaptif, bukan ambang angka tunggal. Sistem mengenali urutan mata menutup lalu membuka kembali, sehingga lebih toleran terhadap kamera, bentuk mata, kacamata, dan pencahayaan yang berbeda.
+- Loop kamera kini memanggil `video.play()` dan melakukan retry bila video belum memiliki frame siap. Sebelumnya status dapat berhenti pada “Menunggu” setelah sambutan karena loop deteksi keluar saat video sementara berstatus `paused`; kini status memberi informasi bahwa kamera/deteksi sedang disiapkan dan kotak wajah akan muncul kembali begitu frame tersedia.
 
 ### Registrasi Wajah: Responsif, Ramah Hijab & Senyum Natural (19 Agustus 2026)
 
