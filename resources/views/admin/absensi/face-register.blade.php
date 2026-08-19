@@ -834,7 +834,7 @@ const IS_MOBILE_FACE_REGISTRATION = window.matchMedia('(max-width: 767.98px)').m
 let compatibilityBackendAttempted = false;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
-    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
+    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dari jarak sekitar satu lengan, wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
     kanan: { angle: 'kanan', title: 'Toleh Kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right', description: 'Putar kepala perlahan ke kanan Anda; hijab tetap boleh dipakai.' },
     kiri: { angle: 'kiri', title: 'Toleh Kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left', description: 'Putar kepala perlahan ke kiri Anda; hijab tetap boleh dipakai.' },
     senyum: { angle: 'senyum', title: 'Senyum', text: 'Senyum natural', icon: 'fa-smile', description: 'Senyum lembut boleh tertutup; gigi tidak perlu terlihat.' },
@@ -1107,8 +1107,8 @@ function validatePose(landmarks, angle, liveMetrics) {
     const yawDelta = baselineMetrics ? Math.abs(yawRatio - baselineMetrics.yawRatio) : 0;
     const smileDelta = baselineMetrics ? smileRatio - baselineMetrics.smileRatio : 0;
     if (angle === 'frontal') {
-        const ok = yawRatio > 0.86 && yawRatio < 1.16;
-        setFaceStatus(ok ? 'Bagus! Tetap menghadap depan dan stabil...' : 'Posisikan wajah lurus ke kamera.', ok);
+        const ok = yawRatio > 0.72 && yawRatio < 1.34;
+        setFaceStatus(ok ? 'Bagus! Tetap menghadap depan dan stabil...' : 'Hadapkan wajah ke kamera dan jaga jarak sekitar satu lengan.', ok);
         return ok;
     }
     if (angle === 'kanan') {
