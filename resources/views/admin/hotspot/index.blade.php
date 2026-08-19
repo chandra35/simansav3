@@ -327,7 +327,7 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
-<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819a">
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819b">
 @endsection
 
 @section('content_header')
