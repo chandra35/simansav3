@@ -1101,3 +1101,204 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Scientific animated login background and wide desktop composition */
+.science-background {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dna-ribbon {
+  position: absolute;
+  width: 230px;
+  height: 760px;
+  right: 5vw;
+  top: -90px;
+  opacity: .2;
+  filter: drop-shadow(0 10px 24px rgba(37, 99, 235, .14));
+  animation: dnaDrift 16s ease-in-out infinite alternate;
+}
+
+.dna-strand, .dna-steps path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dna-strand { stroke-width: 5; }
+.strand-a { stroke: #356bf7; }
+.strand-b { stroke: #16887e; }
+.dna-steps path { stroke: #5f79ae; stroke-width: 2; stroke-dasharray: 4 9; }
+
+.orbit-path {
+  position: absolute;
+  width: 310px;
+  height: 310px;
+  left: 3vw;
+  bottom: -72px;
+  opacity: .16;
+  fill: none;
+  stroke: #16887e;
+  stroke-width: 2;
+  animation: orbitTurn 24s linear infinite;
+}
+.orbit-path circle { fill: #356bf7; stroke: none; }
+.orbit-path circle:not(.electron) { fill: #16887e; }
+
+.formula {
+  position: absolute;
+  color: #58709d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 1.7vw, 1.5rem);
+  opacity: .17;
+  animation: formulaFloat 9s ease-in-out infinite;
+}
+.formula-one { left: 7%; top: 14%; }
+.formula-two { left: 16%; top: 63%; animation-delay: -2s; }
+.formula-three { right: 26%; bottom: 7%; animation-delay: -5s; }
+.formula-four { right: 8%; top: 42%; animation-delay: -7s; }
+
+.portal-card {
+  width: min(1060px, calc(100vw - 64px));
+  min-height: 660px;
+  display: grid;
+  grid-template-columns: minmax(370px, .9fr) minmax(470px, 1.1fr);
+  padding: 0;
+  overflow: hidden;
+}
+
+.portal-science {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(34px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #fff;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255,255,255,.2), transparent 17rem),
+    linear-gradient(145deg, #315fe9 0%, #176f7b 62%, #126960 100%);
+}
+.portal-science:before, .portal-science:after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 50%;
+  animation: sciencePulse 7s ease-in-out infinite;
+}
+.portal-science:before { width: 400px; height: 400px; left: -220px; top: -190px; }
+.portal-science:after { width: 280px; height: 280px; right: -150px; bottom: 90px; animation-delay: -3s; }
+
+.science-orbit {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+}
+.science-orbit > i {
+  position: absolute;
+  width: 240px;
+  height: 82px;
+  border: 1px solid rgba(255,255,255,.32);
+  border-radius: 50%;
+  animation: atomOrbit 11s linear infinite;
+}
+.science-orbit > i:nth-child(2) { transform: rotate(60deg); animation-delay: -3.6s; }
+.science-orbit > i:nth-child(3) { transform: rotate(120deg); animation-delay: -7.2s; }
+.science-orbit > i:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  right: 14px;
+  top: 12px;
+  border-radius: 50%;
+  background: #9ff7de;
+  box-shadow: 0 0 18px rgba(159,247,222,.9);
+}
+.science-orbit > span {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 18px 48px rgba(7,32,70,.28);
+  z-index: 2;
+}
+.science-orbit img { width: 76px; height: 76px; object-fit: contain; }
+
+.science-copy { position: relative; z-index: 3; }
+.science-copy > span { color: #baf6e6; font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.science-copy h2 { max-width: 390px; margin: 12px 0 14px; font-size: clamp(2.5rem, 4.2vw, 4.25rem); line-height: .96; letter-spacing: -.04em; }
+.science-copy p { max-width: 420px; margin: 0; color: rgba(255,255,255,.72); font-size: .9rem; line-height: 1.65; }
+.science-copy > div { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+.science-copy b { padding: 8px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(255,255,255,.1); font-size: .65rem; letter-spacing: .04em; }
+
+.portal-form-panel {
+  min-width: 0;
+  padding: 18px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(255,255,255,.9);
+}
+.portal-form-panel .portal-avatar { width: 100px; height: 100px; margin-top: 2px; }
+.portal-form-panel .portal-avatar img { width: 68px; height: 68px; }
+.portal-form-panel .portal-title h1 { font-size: 2.15rem; }
+.portal-form-panel form { width: min(470px, 100%); margin-inline: auto; }
+
+.field-icon {
+  width: 21px;
+  height: 21px;
+  margin-left: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #6b7a92;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes dnaDrift {
+  0% { transform: translate3d(0, -22px, 0) rotate(-4deg); }
+  100% { transform: translate3d(-38px, 58px, 0) rotate(5deg); }
+}
+@keyframes orbitTurn { to { transform: rotate(360deg); } }
+@keyframes formulaFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+@keyframes sciencePulse { 0%,100% { transform: scale(.9); opacity: .35; } 50% { transform: scale(1.14); opacity: .8; } }
+@keyframes atomOrbit { to { rotate: 360deg; } }
+
+@media (max-width: 900px) {
+  .portal-card {
+    width: min(430px, 100%);
+    min-height: 0;
+    display: block;
+    padding: 14px;
+    overflow: visible;
+  }
+  .portal-science { display: none; }
+  .portal-form-panel { padding: 0; background: transparent; }
+  .portal-form-panel .portal-avatar { width: 92px; height: 92px; margin-top: 10px; }
+  .portal-form-panel .portal-avatar img { width: 64px; height: 64px; }
+  .portal-form-panel .portal-title h1 { font-size: clamp(2rem, 7vw, 2.55rem); }
+  .formula-three, .formula-four { display: none; }
+  .dna-ribbon { right: -62px; opacity: .14; }
+  .orbit-path { left: -100px; opacity: .12; }
+}
+
+@media (max-width: 380px) {
+  .portal-form-panel .portal-avatar { display: none; }
+  .field-icon { margin-left: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dna-ribbon, .orbit-path, .formula, .portal-science:before, .portal-science:after, .science-orbit > i { animation: none !important; }
+}

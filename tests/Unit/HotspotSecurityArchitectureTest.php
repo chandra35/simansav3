@@ -200,12 +200,19 @@ class HotspotSecurityArchitectureTest extends TestCase
         $style = file_get_contents($portal.'assets/style.css');
         $script = file_get_contents($portal.'assets/portal.js');
 
-        $this->assertStringContainsString('assets/style.css?v=20260819c', $login);
+        $this->assertStringContainsString('assets/style.css?v=20260819d', $login);
         $this->assertStringContainsString('class="portal-card"', $login);
         $this->assertStringContainsString('class="portal-top"', $login);
+        $this->assertStringContainsString('class="portal-science"', $login);
+        $this->assertStringContainsString('class="science-background"', $login);
+        $this->assertStringContainsString('class="dna-ribbon dna-one"', $login);
+        $this->assertStringContainsString('class="field-icon"', $login);
+        $this->assertStringNotContainsString('<span>Username</span>', $login);
+        $this->assertStringNotContainsString('<span>Password</span>', $login);
         $this->assertStringContainsString('@media (max-width: 560px)', $style);
         $this->assertStringContainsString('prefers-reduced-motion: reduce', $style);
         $this->assertStringContainsString('.hotspot-modal.is-visible', $style);
+        $this->assertStringContainsString('@keyframes dnaDrift', $style);
         $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
         $this->assertStringContainsString("match: ['unknown host']", $script);
     }
@@ -226,7 +233,9 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('$(radius18)', $status);
         $this->assertStringContainsString("window.atob", $success);
         $this->assertStringContainsString('data-username="$(username)"', $success);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819b', $success);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819b', $status);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819e', $success);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819e', $status);
+        $this->assertStringContainsString('data-status-countdown', $success);
+        $this->assertStringContainsString('}, 7000)', $success);
     }
 }

@@ -4,7 +4,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 
 ## Isi Paket
 
-- `login.html` - halaman login kartu SIMANSA yang responsif dengan toggle password dan animasi sambutan ringan.
+- `login.html` - kartu SIMANSA responsif dengan layout desktop dua kolom serta animasi DNA, molekul, dan matematika.
 - `alogin.html` - notifikasi login berhasil dan pembuka halaman status pada tab baru.
 - `status.html` - halaman status setelah login.
 - `logout.html` - halaman logout.

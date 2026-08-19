@@ -7,7 +7,7 @@
   <meta http-equiv="expires" content="-1">
   <meta name="theme-color" content="#102c26">
   <title>Login Berhasil - MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819b">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819e">
 </head>
 <body class="session-page">
   <main class="session-layout">
@@ -28,6 +28,11 @@
         <small>Username: $(username)</small>
       </div>
 
+      <div class="success-hold">
+        <span>Status koneksi dibuka dalam <strong data-status-countdown>7</strong> detik</span>
+        <i><b></b></i>
+      </div>
+
       <div class="session-actions">
         <a class="session-button primary" href="$(link-status)" target="hotspot_status"><span>Lihat status koneksi</span><b>&rarr;</b></a>
         <a class="session-button secondary" href="$(link-redirect)">Lanjutkan browsing</a>
@@ -46,8 +51,17 @@
         var name = decodeName(targets[i].getAttribute('data-radius-name'));
         targets[i].textContent = name || targets[i].getAttribute('data-username') || 'Pengguna';
       }
-      var statusTab = window.open('$(link-status)', 'hotspot_status');
-      if (statusTab) statusTab.focus();
+      var remaining = 7;
+      var countdown = document.querySelector('[data-status-countdown]');
+      var ticker = window.setInterval(function () {
+        remaining -= 1;
+        if (countdown) countdown.textContent = Math.max(remaining, 0);
+        if (remaining <= 0) window.clearInterval(ticker);
+      }, 1000);
+      window.setTimeout(function () {
+        var statusTab = window.open('$(link-status)', 'hotspot_status');
+        if (statusTab) statusTab.focus();
+      }, 7000);
     }());
   </script>
 </body>
