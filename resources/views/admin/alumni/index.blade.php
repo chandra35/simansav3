@@ -185,6 +185,10 @@
         .alumni-filter { padding:.8rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
         .alumni-filter label, .alumni-table th { font-size:.68rem; font-weight:800; text-transform:uppercase; color:#64748b; }
         .alumni-table th { white-space:nowrap; }
+        .alumni-export-progress { width:100%; max-width:260px; display:flex; align-items:center; gap:.55rem; margin:.85rem auto 0; }
+        .alumni-export-progress__track { flex:1; height:7px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.24); }
+        .alumni-export-progress__bar { display:block; width:8%; height:100%; border-radius:inherit; background:#76e4b2; transition:width .55s ease; box-shadow:0 0 12px rgba(118,228,178,.75); }
+        .alumni-export-progress__value { min-width:34px; color:#d9ffef; font-weight:800; }
         @media (max-width:575px) { .alumni-chart { height:190px; } }
     </style>
 @stop
@@ -217,8 +221,37 @@
                 exportLink.setAttribute('aria-disabled', 'true');
                 exportLink.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyiapkan XLS...';
 
+                var progressEl = null;
+                var progressTimer = null;
+                var progress = 8;
+                var progressStages = [
+                    'Menyiapkan daftar alumni...',
+                    'Membaca nilai tiap semester...',
+                    'Menyelaraskan mata pelajaran...',
+                    'Menyusun lembar Excel...',
+                    'Merapikan format XLS...'
+                ];
+                var updateProgress = function (value) {
+                    progress = value >= 100 ? 100 : Math.min(value, 94);
+                    var subtitle = document.getElementById('appGlobalOverlaySubtitle');
+                    if (subtitle) subtitle.textContent = progressStages[Math.min(Math.floor(progress / 20), progressStages.length - 1)] + ' (' + progress + '%)';
+                    if (progressEl) progressEl.querySelector('.alumni-export-progress__bar').style.width = progress + '%';
+                    if (progressEl) progressEl.querySelector('.alumni-export-progress__value').textContent = progress + '%';
+                };
+
                 if (window.showAppGlobalOverlay) {
-                    window.showAppGlobalOverlay('Menyiapkan leger alumni...', 'Nilai seluruh alumni sedang dihimpun. Mohon tunggu.');
+                    window.showAppGlobalOverlay('Menyiapkan leger alumni...', 'Memulai proses export (8%)');
+                    var overlayContent = document.querySelector('#appGlobalOverlay .app-global-overlay__content');
+                    if (overlayContent) {
+                        progressEl = document.createElement('div');
+                        progressEl.className = 'alumni-export-progress';
+                        progressEl.innerHTML = '<div class="alumni-export-progress__track"><span class="alumni-export-progress__bar"></span></div><small class="alumni-export-progress__value">8%</small>';
+                        overlayContent.appendChild(progressEl);
+                    }
+                    updateProgress(8);
+                    progressTimer = window.setInterval(function () {
+                        updateProgress(progress < 65 ? progress + 7 : progress + 3);
+                    }, 3500);
                 }
 
                 try {
@@ -250,6 +283,7 @@
                     download.click();
                     download.remove();
                     setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+                    updateProgress(100);
                 } catch (error) {
                     if (window.Swal) {
                         Swal.fire({ icon: 'error', title: 'Export leger gagal', text: error.message || 'Silakan coba kembali.' });
@@ -257,6 +291,8 @@
                         alert(error.message || 'Export leger gagal.');
                     }
                 } finally {
+                    if (progressTimer) window.clearInterval(progressTimer);
+                    if (progressEl) progressEl.remove();
                     exportLink.dataset.exporting = '0';
                     exportLink.classList.remove('disabled');
                     exportLink.removeAttribute('aria-disabled');

@@ -1446,7 +1446,9 @@ class NilaiController extends Controller
         $selectedMapel = $requestedMapels
             ? collect($requestedMapels)->filter(fn ($kode) => $availableMapelsByCode->has($kode))->values()->all()
             : $availableMapels->pluck('kode_mapel')->all();
-        $mapels = $availableMapelsByCode->only($selectedMapel);
+        // EloquentCollection::only() membaca primary key model, bukan kode mapel.
+        // Ubah menjadi collection biasa supaya kode seperti QH/AA/FIK dipilih benar.
+        $mapels = collect($availableMapelsByCode->all())->only($selectedMapel);
         
         if ($alumniContext) {
             $siswaList = $alumniContext['siswa_list'] ?? collect([$alumniContext['siswa']]);
