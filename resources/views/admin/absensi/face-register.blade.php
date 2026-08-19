@@ -12,6 +12,9 @@
     if ($selfFace) {
         $selfStatus = $selfFace->is_verified ? 'approved' : ($selfFace->is_active ? 'pending' : 'belum');
     }
+    $registrationListUrl = request()->routeIs('siswa.*')
+        ? route('siswa.face-register')
+        : route('admin.absensi.face-register', ['type' => $selectedType]);
 
     $statusMeta = match ($selfStatus) {
         'approved' => ['badge' => 'success', 'icon' => 'check-circle', 'title' => 'Registrasi Anda sudah disetujui', 'description' => $approvedDescription, 'label' => 'Approved'],
@@ -66,6 +69,7 @@
     </div>
 </div>
 
+<div id="faceRegisterDirectory" @if($initialSelection) class="d-none" @endif>
 @if($selfOnly)
     <div class="row">
         <div class="col-xl-8">
@@ -120,11 +124,12 @@
 
                             @if($selfCanRegister)
                                 <div class="d-flex flex-column flex-md-row mt-4">
-                                    <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
-                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
+                                    <a href="{{ request()->routeIs('siswa.*')
+                                        ? route('siswa.face-register', ['user_id' => $selfRegistrant['user_id']])
+                                        : route('admin.absensi.face-register', ['type' => $selectedType, 'user_id' => $selfRegistrant['user_id']]) }}" class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg">
                                         <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
                                         {{ $selfFace ? 'Registrasi Ulang Diizinkan' : 'Mulai Registrasi' }}
-                                    </button>
+                                    </a>
                                 </div>
                             @else
                                 <div class="alert alert-success mt-4 mb-3">
@@ -342,11 +347,10 @@
                                 </td>
                                 <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
                                 <td data-label="Aksi">
-                                    <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
-                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
+                                    <a href="{{ route('admin.absensi.face-register', ['type' => $selectedType, 'user_id' => $registrant['user_id']]) }}" class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action">
                                         <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
                                         {{ $face ? 'Ulang' : 'Daftar' }}
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                         @empty
@@ -359,7 +363,9 @@
     </div>
 @endif
 
-<div class="modal fade" id="modalRegister" tabindex="-1" data-backdrop="static" data-keyboard="false">
+</div>
+
+<div class="face-register-page d-none" id="modalRegister">
     <div class="modal-dialog modal-xl modal-dialog-centered face-register-modal">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-2 face-register-modal__header">
@@ -403,7 +409,7 @@
                                 <i class="fas fa-redo mr-1"></i> Ulangi Registrasi
                             </button>
                             <button type="button" class="btn btn-primary d-none" id="registrationResultClose" onclick="finishRegistrationResult()">
-                                <i class="fas fa-sync-alt mr-1"></i> Refresh Halaman
+                                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar
                             </button>
                         </div>
                     </div>
@@ -502,6 +508,13 @@
     }
     .face-register-modal {
         max-width: 1180px;
+    }
+    .face-register-page {
+        margin: 0 auto 1.5rem;
+        width: min(100%, 1180px);
+    }
+    .face-register-page .face-register-modal {
+        margin: 0 auto;
     }
     .face-register-modal .modal-content {
         max-height: calc(100vh - 2rem);
@@ -657,6 +670,10 @@
             min-height: 100dvh;
             height: 100dvh;
         }
+        .face-register-page {
+            margin: 0;
+            width: 100%;
+        }
         .face-register-modal .modal-content {
             height: 100dvh;
             min-height: 100dvh;
@@ -797,7 +814,7 @@
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
 let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
-const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
+const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), registrationListUrl = @json($registrationListUrl);
 let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
 let STEPS = [];
 let livenessSummary = {};
@@ -871,7 +888,7 @@ $(function() {
         });
     }
 
-    if (initialSelection && canManageAll) {
+    if (initialSelection) {
         openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type);
     }
 });
@@ -881,15 +898,12 @@ function openRegister(userId, userName, userType) {
     selectedUserName = userName;
     selectedUserType = userType;
     document.getElementById('modalUserName').textContent = userName;
-    $('#modalRegister').modal('show');
+    document.getElementById('modalRegister').classList.remove('d-none');
+    document.getElementById('modalRegister').scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (!modelsLoaded) loadModels(); else startCameraAndRegister();
 }
 function closeRegister() {
-    if (registrationFinished) {
-        window.location.reload();
-        return;
-    }
-    isDetecting = false; stopCamera(); resetUI(); $('#modalRegister').modal('hide');
+    isDetecting = false; stopCamera(); resetUI(); window.location.assign(registrationListUrl);
 }
 function stopCamera() { if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; } const video = document.getElementById('videoElement'); if (video) video.srcObject = null; }
 async function loadModels() {
@@ -1321,7 +1335,7 @@ function retryRegistrationAfterFailure() {
 }
 function finishRegistrationResult() {
     if (registrationFinished) {
-        window.location.reload();
+        window.location.assign(registrationListUrl);
         return;
     }
     hideRegistrationResult();

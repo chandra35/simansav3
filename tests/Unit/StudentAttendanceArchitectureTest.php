@@ -257,6 +257,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("utterance.lang = 'id-ID'", $view);
         $this->assertStringContainsString('async function welcomeRegistrant()', $view);
         $this->assertStringContainsString('Selamat datang, ${selectedUserName}. Silakan melakukan registrasi wajah.', $view);
+        $this->assertStringContainsString('class="face-register-page d-none" id="modalRegister"', $view);
+        $this->assertStringContainsString("window.location.assign(registrationListUrl);", $view);
+        $this->assertStringNotContainsString("$('#modalRegister').modal('show')", $view);
         $this->assertStringContainsString('blinkOpenEarBaseline', $view);
         $this->assertStringContainsString('const closeThreshold = Math.max(0.11, Math.min(0.23, openEar * 0.72));', $view);
         $this->assertStringContainsString('Kedipkan mata secara normal: tutup lalu buka kembali.', $view);

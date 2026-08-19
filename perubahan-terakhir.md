@@ -6,6 +6,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 
+- Registrasi wajah tidak lagi dibuka dalam modal. Tombol daftar kini membuka area kerja halaman penuh melalui URL peserta yang dipilih; directory disembunyikan, kamera mendapatkan ruang normal, dan tombol kembali mengarah ke daftar. Perubahan ini menghindari lifecycle modal yang dapat mengganggu kamera/browser ponsel.
 - Setelah kamera siap, registrasi kini membacakan: “Selamat datang, [nama lengkap]. Silakan melakukan registrasi wajah.” sebelum tahap liveness dimulai. Tidak ada kartu/tulisan sambutan yang menutup area kamera.
 - Foto profil tidak dipakai untuk menyetujui, menolak, atau mencocokkan biometrik, sehingga tidak menambah risiko false positive pada proses registrasi.
 - Deteksi kedip kini memakai baseline bukaan mata peserta secara adaptif, bukan ambang angka tunggal. Sistem mengenali urutan mata menutup lalu membuka kembali, sehingga lebih toleran terhadap kamera, bentuk mata, kacamata, dan pencahayaan yang berbeda.
