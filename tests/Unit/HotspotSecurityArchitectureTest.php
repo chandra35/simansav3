@@ -200,7 +200,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $style = file_get_contents($portal.'assets/style.css');
         $script = file_get_contents($portal.'assets/portal.js');
 
-        $this->assertStringContainsString('assets/style.css?v=20260819d', $login);
+        $this->assertStringContainsString('assets/style.css?v=20260819f', $login);
         $this->assertStringContainsString('class="portal-card"', $login);
         $this->assertStringContainsString('class="portal-top"', $login);
         $this->assertStringContainsString('class="portal-science"', $login);
@@ -213,6 +213,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('prefers-reduced-motion: reduce', $style);
         $this->assertStringContainsString('.hotspot-modal.is-visible', $style);
         $this->assertStringContainsString('@keyframes dnaDrift', $style);
+        $this->assertStringContainsString('(min-width: 901px) and (max-height: 760px)', $style);
         $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
         $this->assertStringContainsString("match: ['unknown host']", $script);
     }
@@ -227,14 +228,18 @@ class HotspotSecurityArchitectureTest extends TestCase
 
         $this->assertStringContainsString("'firstname' => \$displayName", $model);
         $this->assertStringContainsString("'attribute' => 'Reply-Message'", $model);
-        $this->assertStringContainsString('base64_encode($displayName)', $model);
+        $this->assertStringContainsString("'department' => \$this->role", $model);
+        $this->assertStringContainsString("'notes' => \$rombel", $model);
+        $this->assertStringContainsString('base64_encode(json_encode($identity', $model);
         $this->assertStringContainsString('hotspot:sync-radius-identities', $command);
         $this->assertStringContainsString('$(radius18)', $success);
         $this->assertStringContainsString('$(radius18)', $status);
         $this->assertStringContainsString("window.atob", $success);
         $this->assertStringContainsString('data-username="$(username)"', $success);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819e', $success);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819e', $status);
+        $this->assertStringContainsString('data-identity-role', $success);
+        $this->assertStringContainsString('data-identity-class', $status);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819f', $success);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819f', $status);
         $this->assertStringContainsString('data-status-countdown', $success);
         $this->assertStringContainsString('}, 7000)', $success);
     }

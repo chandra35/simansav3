@@ -1238,6 +1238,7 @@ body {
 .science-copy { position: relative; z-index: 3; }
 .science-copy > span { color: #baf6e6; font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .science-copy h2 { max-width: 390px; margin: 12px 0 14px; font-size: clamp(2.5rem, 4.2vw, 4.25rem); line-height: .96; letter-spacing: -.04em; }
+.science-copy h2 em { color: #baf6e6; font-style: normal; }
 .science-copy p { max-width: 420px; margin: 0; color: rgba(255,255,255,.72); font-size: .9rem; line-height: 1.65; }
 .science-copy > div { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
 .science-copy b { padding: 8px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(255,255,255,.1); font-size: .65rem; letter-spacing: .04em; }
@@ -1292,6 +1293,47 @@ body {
   .formula-three, .formula-four { display: none; }
   .dna-ribbon { right: -62px; opacity: .14; }
   .orbit-path { left: -100px; opacity: .12; }
+}
+
+/* Keep the complete portal visible on short desktop browser viewports. */
+@media (min-width: 901px) and (max-height: 760px) {
+  .login-page { min-height: 100svh; padding: 8px 16px; }
+  .portal-card {
+    width: min(1060px, calc(100vw - 32px));
+    height: calc(100svh - 16px);
+    min-height: 0;
+  }
+  .portal-science { padding: 28px 40px; }
+  .science-orbit { width: 205px; height: 205px; top: 35%; }
+  .science-orbit > i { width: 188px; height: 64px; }
+  .science-orbit > span { width: 76px; height: 76px; }
+  .science-orbit img { width: 60px; height: 60px; }
+  .science-copy h2 { max-width: 400px; margin: 8px 0 9px; font-size: clamp(2.4rem, 3.25vw, 2.75rem); line-height: .94; }
+  .science-copy p { max-width: 380px; font-size: .82rem; line-height: 1.5; }
+  .science-copy > div { margin-top: 14px; }
+  .science-copy b { padding: 6px 9px; font-size: .61rem; }
+  .portal-form-panel { padding: 10px 24px 11px; }
+  .portal-form-panel .portal-top { padding: 8px 12px; border-radius: 16px; }
+  .portal-form-panel .brand-logo.compact { width: 42px; height: 42px; border-radius: 13px; }
+  .portal-form-panel .brand-logo.compact img { width: 34px; height: 34px; }
+  .portal-form-panel .portal-brand span { font-size: .61rem; }
+  .portal-form-panel .portal-brand strong { font-size: .91rem; }
+  .portal-form-panel .status-dot { padding: 8px 10px; font-size: .66rem; }
+  .portal-form-panel .portal-avatar { width: 70px; height: 70px; margin-top: 2px; }
+  .portal-form-panel .portal-avatar img { width: 48px; height: 48px; }
+  .portal-form-panel .portal-title { margin-bottom: 7px; }
+  .portal-form-panel .portal-title h1 { font-size: 1.72rem; }
+  .portal-form-panel .portal-title p { margin-top: 3px; font-size: .78rem; }
+  .portal-form-panel .field { margin-bottom: 6px; }
+  .portal-form-panel .field label { margin-bottom: 3px; font-size: .76rem; }
+  .portal-form-panel .input-shell { height: 42px; }
+  .portal-form-panel .input { font-size: .85rem; }
+  .portal-form-panel .field-icon { width: 18px; height: 18px; margin-left: 14px; }
+  .portal-form-panel .password-toggle { padding: 7px 10px; font-size: .64rem; }
+  .portal-form-panel .submit { min-height: 44px; margin-top: 3px; }
+  .portal-form-panel .security-note { margin: 8px 0; font-size: .61rem; line-height: 1.35; }
+  .portal-form-panel .compact-help { padding: 9px 12px; border-radius: 13px; font-size: .68rem; }
+  .portal-form-panel .portal-footer { margin-top: 8px; font-size: .58rem; }
 }
 
 @media (max-width: 380px) {

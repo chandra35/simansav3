@@ -11,7 +11,7 @@ class HotspotSyncRadiusIdentities extends Command
         {--username= : Sinkronkan satu username saja}
         {--dry-run : Hitung data tanpa menulis ke FreeRADIUS}';
 
-    protected $description = 'Sinkronkan nama akun Hotspot SIMANSA ke FreeRADIUS tanpa mengubah password';
+    protected $description = 'Sinkronkan nama, role, rombel, dan profil Hotspot ke FreeRADIUS tanpa mengubah password';
 
     public function handle(): int
     {

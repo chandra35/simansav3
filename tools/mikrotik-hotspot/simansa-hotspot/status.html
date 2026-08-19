@@ -6,7 +6,7 @@
   <meta http-equiv="refresh" content="$(refresh-timeout-secs)">
   <meta name="theme-color" content="#102c26">
   <title>Status Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819e">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819f">
 </head>
 <body class="session-page">
   <main class="session-layout status-layout">
@@ -19,8 +19,13 @@
 
       <div class="status-title">
         <span class="session-kicker">Sesi sedang aktif</span>
-        <h1 data-radius-name="$(radius18)" data-username="$(username)">$(username)</h1>
+        <h1 data-radius-identity="$(radius18)" data-username="$(username)">$(username)</h1>
         <p>Username <strong>$(username)</strong></p>
+        <div class="identity-tags" aria-label="Identitas pengguna">
+          <span data-identity-role hidden></span>
+          <span data-identity-class hidden></span>
+          <span data-identity-profile hidden></span>
+        </div>
       </div>
 
       <div class="status-grid">
@@ -40,12 +45,26 @@
   </main>
   <script>
     (function () {
-      var target = document.querySelector('[data-radius-name]');
+      var target = document.querySelector('[data-radius-identity]');
       if (!target) return;
-      var encoded = target.getAttribute('data-radius-name');
-      var name = '';
-      try { if (encoded && encoded.indexOf('$(') !== 0) name = decodeURIComponent(escape(window.atob(encoded))); } catch (error) {}
-      target.textContent = name || target.getAttribute('data-username') || 'Pengguna';
+      var encoded = target.getAttribute('data-radius-identity');
+      var identity = {};
+      try {
+        if (encoded && encoded.indexOf('$(') !== 0) {
+          var decoded = decodeURIComponent(escape(window.atob(encoded)));
+          try { identity = JSON.parse(decoded); } catch (jsonError) { identity = { n: decoded }; }
+        }
+      } catch (error) {}
+      target.textContent = identity.n || target.getAttribute('data-username') || 'Pengguna';
+      var tags = [
+        ['[data-identity-role]', identity.r ? identity.r.charAt(0).toUpperCase() + identity.r.slice(1) : ''],
+        ['[data-identity-class]', identity.k || ''],
+        ['[data-identity-profile]', identity.p || '']
+      ];
+      for (var i = 0; i < tags.length; i += 1) {
+        var tag = document.querySelector(tags[i][0]);
+        if (tag && tags[i][1]) { tag.textContent = tags[i][1]; tag.hidden = false; }
+      }
     }());
   </script>
 </body>

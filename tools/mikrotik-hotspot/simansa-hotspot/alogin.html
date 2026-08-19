@@ -7,7 +7,7 @@
   <meta http-equiv="expires" content="-1">
   <meta name="theme-color" content="#102c26">
   <title>Login Berhasil - MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819e">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819f">
 </head>
 <body class="session-page">
   <main class="session-layout">
@@ -19,12 +19,18 @@
 
       <div class="success-mark" aria-hidden="true"><span>&#10003;</span></div>
       <span class="session-kicker">Koneksi berhasil</span>
-      <h1>Selamat datang,<br><em data-radius-name="$(radius18)" data-username="$(username)">$(username)</em></h1>
+      <h1>Selamat datang,<br><em data-radius-identity="$(radius18)" data-username="$(username)">$(username)</em></h1>
       <p class="session-lead">Perangkat Anda sudah terhubung ke internet madrasah.</p>
+
+      <div class="identity-tags success-tags" aria-label="Identitas pengguna">
+        <span data-identity-role hidden></span>
+        <span data-identity-class hidden></span>
+        <span data-identity-profile hidden></span>
+      </div>
 
       <div class="identity-ticket">
         <span>Akun aktif</span>
-        <strong data-radius-name="$(radius18)" data-username="$(username)">$(username)</strong>
+        <strong data-radius-identity="$(radius18)" data-username="$(username)">$(username)</strong>
         <small>Username: $(username)</small>
       </div>
 
@@ -42,14 +48,26 @@
   </main>
   <script>
     (function () {
-      function decodeName(value) {
-        if (!value || value.indexOf('$(') === 0) return '';
-        try { return decodeURIComponent(escape(window.atob(value))); } catch (error) { return ''; }
+      function decodeIdentity(value) {
+        if (!value || value.indexOf('$(') === 0) return {};
+        try {
+          var decoded = decodeURIComponent(escape(window.atob(value)));
+          try { return JSON.parse(decoded); } catch (jsonError) { return { n: decoded }; }
+        } catch (error) { return {}; }
       }
-      var targets = document.querySelectorAll('[data-radius-name]');
+      var targets = document.querySelectorAll('[data-radius-identity]');
+      var identity = targets.length ? decodeIdentity(targets[0].getAttribute('data-radius-identity')) : {};
       for (var i = 0; i < targets.length; i += 1) {
-        var name = decodeName(targets[i].getAttribute('data-radius-name'));
-        targets[i].textContent = name || targets[i].getAttribute('data-username') || 'Pengguna';
+        targets[i].textContent = identity.n || targets[i].getAttribute('data-username') || 'Pengguna';
+      }
+      var tags = [
+        ['[data-identity-role]', identity.r ? identity.r.charAt(0).toUpperCase() + identity.r.slice(1) : ''],
+        ['[data-identity-class]', identity.k || ''],
+        ['[data-identity-profile]', identity.p || '']
+      ];
+      for (var j = 0; j < tags.length; j += 1) {
+        var tag = document.querySelector(tags[j][0]);
+        if (tag && tags[j][1]) { tag.textContent = tags[j][1]; tag.hidden = false; }
       }
       var remaining = 7;
       var countdown = document.querySelector('[data-status-countdown]');

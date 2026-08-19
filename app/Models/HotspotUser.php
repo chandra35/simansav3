@@ -139,12 +139,20 @@ class HotspotUser extends Model
 
     private function writeIdentityToRadius($db): void
     {
+        $this->loadMissing(['radiusProfile', 'user.siswa.kelasAktif']);
+
         $displayName = trim((string) $this->display_name);
+        $profile = $this->radiusProfile ?: HotspotRadiusProfile::defaultForRole($this->role);
+        $profileLabel = trim((string) ($profile?->name ?: $profile?->code));
+        $rombel = trim((string) ($this->user?->siswa?->kelasAktif?->first()?->nama_kelas));
 
         $db->table('userinfo')->updateOrInsert(
             ['username' => $this->username],
             [
                 'firstname' => $displayName !== '' ? $displayName : null,
+                'department' => $this->role ?: null,
+                'company' => $profileLabel !== '' ? $profileLabel : null,
+                'notes' => $rombel !== '' ? $rombel : null,
                 'updatedate' => now(),
                 'updateby' => 'simansav3',
             ]
@@ -159,10 +167,33 @@ class HotspotUser extends Model
             return;
         }
 
-        // Base64 menjaga nama aman saat disisipkan RouterOS ke atribut HTML.
+        // Reply-Message hanya dipakai sebagai payload tampilan portal. Hindari
+        // Filter-Id/Class karena keduanya memiliki arti kebijakan/accounting.
+        $identity = array_filter([
+            'n' => $displayName,
+            'r' => $this->role,
+            'k' => $rombel,
+            'p' => $profileLabel,
+        ], static fn ($value) => $value !== null && $value !== '');
+        $encodedIdentity = base64_encode(json_encode($identity, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        // Nilai atribut RADIUS dibatasi 253 byte. Nama tetap diprioritaskan;
+        // metadata opsional dikurangi hanya untuk identitas yang sangat panjang.
+        foreach (['p', 'k', 'r'] as $optionalKey) {
+            if (strlen($encodedIdentity) <= 253) {
+                break;
+            }
+            unset($identity[$optionalKey]);
+            $encodedIdentity = base64_encode(json_encode($identity, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+        if (strlen($encodedIdentity) > 253) {
+            $identity = ['n' => mb_strcut($displayName, 0, 165, 'UTF-8')];
+            $encodedIdentity = base64_encode(json_encode($identity, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+
         $db->table('radreply')->updateOrInsert(
             ['username' => $this->username, 'attribute' => 'Reply-Message'],
-            ['op' => ':=', 'value' => base64_encode($displayName)]
+            ['op' => ':=', 'value' => $encodedIdentity]
         );
     }
 
