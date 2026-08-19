@@ -1398,19 +1398,44 @@ function loadFaceCapture(photo) {
     });
 }
 async function buildDescriptorsFromCapturedPhotos() {
+    await releaseDetailedLandmarkerForDescriptors();
     const opts = new faceapi.TinyFaceDetectorOptions({
         inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416,
         scoreThreshold: 0.4,
     });
     const descriptors = [];
-    for (const photo of capturedPhotos) {
+    for (const [index, photo] of capturedPhotos.entries()) {
+        setFaceStatus(`Membuat template wajah ${index + 1} dari ${capturedPhotos.length}...`, true);
         const image = await loadFaceCapture(photo);
-        const detection = await faceapi.detectSingleFace(image, opts).withFaceLandmarks(true).withFaceDescriptor();
+        const detection = await detectDescriptorWithWatchdog(image, opts);
         if (!detection) return false;
         descriptors.push(Array.from(detection.descriptor));
     }
     capturedDescriptors = descriptors;
     return descriptors.length === totalSteps;
+}
+async function releaseDetailedLandmarkerForDescriptors() {
+    try {
+        if (typeof detailedFaceLandmarker?.close === 'function') detailedFaceLandmarker.close();
+    } finally {
+        detailedFaceLandmarker = null;
+        detailedLandmarkerReady = false;
+    }
+    if (faceapi.tf?.setBackend && faceapi.tf.getBackend?.() !== 'cpu') {
+        await faceapi.tf.setBackend('cpu');
+        await faceapi.tf.ready();
+    }
+}
+async function detectDescriptorWithWatchdog(image, options) {
+    let timeoutId;
+    try {
+        return await Promise.race([
+            faceapi.detectSingleFace(image, options).withFaceLandmarks(true).withFaceDescriptor(),
+            new Promise(resolve => { timeoutId = window.setTimeout(() => resolve(null), 12000); }),
+        ]);
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
 }
 function verifyCurrentChallenge(landmarks, angle, liveMetrics) {
     if (angle === 'kedip') {
@@ -1567,6 +1592,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; turnSigns = []; lastLiveMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; turnSigns = []; lastLiveMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(async () => { if (!detailedLandmarkerReady) detailedLandmarkerReady = await initializeDetailedFaceLandmarker(); beginAutoRegistration(); }, 300); }
 </script>
 @stop
