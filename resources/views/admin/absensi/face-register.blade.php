@@ -360,9 +360,9 @@
 @endif
 
 <div class="modal fade" id="modalRegister" tabindex="-1" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable face-register-modal">
+    <div class="modal-dialog modal-xl modal-dialog-centered face-register-modal">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white py-2">
+            <div class="modal-header bg-primary text-white py-2 face-register-modal__header">
                 <h5 class="modal-title"><i class="fas fa-camera"></i> Registrasi Wajah - <span id="modalUserName"></span></h5>
                 <button type="button" class="close text-white" onclick="closeRegister()"><span>&times;</span></button>
             </div>
@@ -412,10 +412,11 @@
                     <div class="small text-muted d-flex flex-wrap align-items-center">
                         <span class="mr-3 mb-1"><i class="fas fa-mobile-alt mr-1"></i> Tampilan menyesuaikan perangkat</span>
                         <span class="mr-3 mb-1"><i class="fas fa-lightbulb mr-1"></i> Gunakan cahaya dari depan</span>
-                        <span class="mb-1"><i class="fas fa-user-check mr-1"></i> Simpan lalu tunggu verifikasi admin</span>
+                        <span class="mr-3 mb-1"><i class="fas fa-user-check mr-1"></i> Simpan lalu tunggu verifikasi admin</span>
+                        <span class="mb-1"><i class="fas fa-user-tag mr-1"></i> Hijab boleh tetap dipakai</span>
                     </div>
                 </div>
-                <div class="row no-gutters">
+                <div class="row no-gutters face-register-layout">
                     <div class="col-md-8 position-relative face-register-camera-panel">
                         <div id="loadingOverlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;">
                             <div class="spinner-border text-info mb-3" role="status"></div>
@@ -437,13 +438,14 @@
                             <i class="fas fa-video"></i> Menunggu...
                         </div>
                     </div>
-                    <div class="col-md-4 face-register-side-panel" style="background:#f8f9fa;">
-                        <div class="p-3">
+                    <div class="col-md-4 face-register-side-panel">
+                        <div class="p-3 face-register-sidebar-content">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <h6 class="mb-0"><i class="fas fa-list-ol"></i> Langkah Registrasi</h6>
                                 <span class="badge badge-info">5 tahap</span>
                             </div>
                             <p class="text-muted small mb-3"><i class="fas fa-magic"></i> Auto-capture saat wajah stabil (~1.5s)</p>
+                            <div class="face-register-steps">
                             @for($i = 0; $i < 5; $i++)
                                 <div class="step-item" id="step-{{ $i }}">
                                     <div class="d-flex align-items-center p-2 mb-1 rounded" style="background:#fff; border:2px solid #ddd;">
@@ -456,6 +458,7 @@
                                     </div>
                                 </div>
                             @endfor
+                            </div>
                             <div class="mt-2">
                                 <div class="progress" style="height:6px;"><div class="progress-bar bg-success" id="progressBar" style="width:0%"></div></div>
                                 <small class="text-muted" id="progressText">0 / 5 selesai</small>
@@ -469,7 +472,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer py-2">
+            <div class="modal-footer py-2 face-register-modal__footer">
                 <button type="button" class="btn btn-secondary" onclick="closeRegister()"><i class="fas fa-times"></i> Batal</button>
             </div>
         </div>
@@ -497,8 +500,22 @@
         border-radius: 1rem;
         overflow: hidden;
     }
+    .face-register-modal {
+        max-width: 1180px;
+    }
+    .face-register-modal .modal-content {
+        max-height: calc(100vh - 2rem);
+    }
     .face-register-modal .modal-body {
         position: relative;
+        overflow-y: auto;
+    }
+    .face-register-modal__header,
+    .face-register-modal__footer {
+        flex-shrink: 0;
+    }
+    .face-register-layout {
+        min-height: min(68vh, 640px);
     }
     .face-self-card__avatar {
         width: 92px;
@@ -599,6 +616,10 @@
     }
     .face-register-side-panel {
         border-left: 1px solid rgba(0, 0, 0, 0.06);
+        background: #f8f9fa;
+    }
+    .face-register-sidebar-content {
+        height: 100%;
     }
     .face-register-step-instruction,
     .face-register-status {
@@ -617,8 +638,11 @@
     @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
 
     @media (max-width: 991.98px) {
+        .face-register-layout {
+            min-height: 0;
+        }
         .face-register-camera-panel {
-            min-height: 320px;
+            min-height: min(56vh, 460px);
         }
         .face-register-side-panel {
             border-left: 0;
@@ -630,14 +654,71 @@
         .face-register-modal {
             margin: 0;
             max-width: 100%;
-            height: 100%;
+            min-height: 100dvh;
+            height: 100dvh;
         }
         .face-register-modal .modal-content {
-            min-height: 100vh;
+            height: 100dvh;
+            min-height: 100dvh;
+            max-height: 100dvh;
             border-radius: 0;
+            border: 0;
+        }
+        .face-register-modal .modal-body {
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow-y: auto;
+        }
+        .face-register-modal__header {
+            min-height: 3.4rem;
+        }
+        .face-register-modal__header .modal-title {
+            max-width: calc(100% - 2.5rem);
+            font-size: 0.95rem;
+            line-height: 1.25;
+        }
+        .face-register-modal__info {
+            padding: 0.45rem 0.75rem !important;
+        }
+        .face-register-modal__info .small {
+            font-size: 0.68rem;
+            line-height: 1.35;
         }
         .face-register-camera-panel {
-            min-height: 45vh;
+            min-height: 19rem;
+            height: min(48dvh, 27rem);
+        }
+        .face-register-sidebar-content {
+            padding: 0.75rem !important;
+        }
+        .face-register-sidebar-content > p {
+            margin-bottom: 0.6rem !important;
+        }
+        .face-register-steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.45rem;
+        }
+        .face-register-steps .step-item .d-flex {
+            height: 100%;
+            margin-bottom: 0 !important;
+            padding: 0.45rem !important;
+        }
+        .face-register-steps .step-number {
+            width: 1.55rem !important;
+            height: 1.55rem !important;
+            margin-right: 0.4rem !important;
+            flex: 0 0 auto;
+            font-size: 0.75rem !important;
+        }
+        .face-register-steps .step-title {
+            font-size: 0.75rem !important;
+            line-height: 1.15;
+        }
+        .face-register-steps .step-desc {
+            display: block;
+            font-size: 0.64rem;
+            line-height: 1.22;
         }
         .face-register-duplicate-card {
             padding: 1rem;
@@ -655,6 +736,12 @@
             transform: none !important;
             width: auto;
             text-align: center;
+        }
+        .face-register-modal__footer {
+            padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom)) !important;
+        }
+        .face-register-modal__footer .btn {
+            width: 100%;
         }
         .btn-face-action {
             width: 100%;
@@ -726,10 +813,10 @@ let guidanceSpeechSupported = 'speechSynthesis' in window;
 let guidanceAudioContext = null;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
-    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil.' },
-    kanan: { angle: 'kanan', title: 'Toleh Kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right', description: 'Putar kepala ke kanan Anda, jangan hanya menggeser foto.' },
-    kiri: { angle: 'kiri', title: 'Toleh Kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left', description: 'Putar kepala ke kiri Anda, jangan hanya menggeser foto.' },
-    senyum: { angle: 'senyum', title: 'Senyum', text: 'Tersenyum natural', icon: 'fa-smile', description: 'Beri senyum natural agar perubahan ekspresi terbaca.' },
+    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
+    kanan: { angle: 'kanan', title: 'Toleh Kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right', description: 'Putar kepala perlahan ke kanan Anda; hijab tetap boleh dipakai.' },
+    kiri: { angle: 'kiri', title: 'Toleh Kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left', description: 'Putar kepala perlahan ke kiri Anda; hijab tetap boleh dipakai.' },
+    senyum: { angle: 'senyum', title: 'Senyum', text: 'Senyum natural', icon: 'fa-smile', description: 'Senyum lembut boleh tertutup; gigi tidak perlu terlihat.' },
     kedip: { angle: 'kedip', title: 'Kedipkan Mata', text: 'Kedipkan mata 1 kali', icon: 'fa-eye', description: 'Kedip sungguhan diperlukan untuk liveness.' },
 };
 
@@ -950,18 +1037,18 @@ function validatePose(landmarks, angle, liveMetrics) {
         return ok;
     }
     if (angle === 'kanan') {
-        const ok = yawRatio < 0.82 && yawDelta >= 0.14;
-        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : `Putar kepala ke KANAN Anda sungguhan.`, ok);
+        const ok = yawRatio < 0.87 && yawDelta >= 0.10;
+        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KANAN Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }
     if (angle === 'kiri') {
-        const ok = yawRatio > 1.22 && yawDelta >= 0.14;
-        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : `Putar kepala ke KIRI Anda sungguhan.`, ok);
+        const ok = yawRatio > 1.17 && yawDelta >= 0.10;
+        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KIRI Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }
     if (angle === 'senyum') {
-        const ok = smileRatio > 0.38 && smileDelta >= 0.028;
-        setFaceStatus(ok ? 'Senyum terdeteksi! Tahan...' : `Tersenyum lebih natural agar perubahan ekspresi terbaca.`, ok);
+        const ok = smileRatio > 0.34 && smileDelta >= 0.015;
+        setFaceStatus(ok ? 'Senyum terdeteksi! Tahan...' : 'Senyum lembut sudah cukup; gigi tidak perlu terlihat.', ok);
         return ok;
     }
     return true;

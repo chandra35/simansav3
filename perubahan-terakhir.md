@@ -1,8 +1,17 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 13 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Registrasi Wajah: Responsif, Ramah Hijab & Senyum Natural (19 Agustus 2026)
+
+- Modal registrasi tetap lebar dan nyaman di desktop, sedangkan pada ponsel otomatis menjadi layar penuh dengan area kamera proporsional, isi yang dapat digulir, dan tombol batal yang selalu mudah dijangkau.
+- Daftar lima tahap pada ponsel kini tersusun dua kolom agar tidak memenuhi tinggi layar atau memotong panduan.
+- Instruksi depan, toleh kanan, dan toleh kiri secara eksplisit menyatakan hijab boleh tetap dipakai. Yang diperlukan adalah mata, hidung, dan kontur wajah tetap cukup terlihat; pengguna cukup memutar kepala perlahan, bukan melepas hijab.
+- Ambang pose kanan/kiri dibuat sedikit lebih toleran terhadap variasi penutup kepala, namun tetap membutuhkan perubahan posisi kepala nyata sebagai bagian dari liveness.
+- Senyum sekarang menerima senyum lembut tertutup. Sistem hanya mengukur perubahan geometri mulut, bukan memeriksa atau mengharuskan gigi terlihat.
+- Unit test arsitektur diperbarui untuk menjaga mode layar penuh ponsel, panduan hijab, senyum tertutup, dan ambang senyum baru.
 
 ### Registrasi Wajah: Panduan Suara & Validasi Duplikasi (19 Agustus 2026)
 

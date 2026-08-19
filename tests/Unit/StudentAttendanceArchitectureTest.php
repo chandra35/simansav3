@@ -257,6 +257,10 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("utterance.lang = 'id-ID'", $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
+        $this->assertStringContainsString('height: 100dvh', $view);
+        $this->assertStringContainsString('Hijab boleh tetap dipakai', $view);
+        $this->assertStringContainsString('gigi tidak perlu terlihat', $view);
+        $this->assertStringContainsString("smileRatio > 0.34 && smileDelta >= 0.015", $view);
         $this->assertStringNotContainsString('findLiveDuplicateMatch', $view);
         $this->assertStringNotContainsString('loadDuplicateFaceDatabase', $view);
     }
