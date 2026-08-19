@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="refresh" content="$(refresh-timeout-secs)">
-  <meta name="theme-color" content="#102c26">
+  <meta name="theme-color" content="#245eea">
   <title>Status Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819f">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260819g">
 </head>
 <body class="session-page">
   <main class="session-layout status-layout">
+    <div class="session-atmosphere" aria-hidden="true"><i></i><i></i><i></i></div>
     <section class="session-card status-session-card">
       <header class="session-brand status-brand">
         <img src="assets/logo.png" alt="Logo MAN 1 Metro">
@@ -29,10 +30,10 @@
       </div>
 
       <div class="status-grid">
-        <article><span>Waktu aktif</span><strong>$(uptime)</strong><small>Durasi sesi berjalan</small></article>
-        <article><span>Alamat IP</span><strong>$(ip)</strong><small>IP perangkat saat ini</small></article>
-        <article class="traffic-card download"><span>Download</span><strong>$(bytes-out-nice)</strong><small>Data diterima perangkat</small></article>
-        <article class="traffic-card upload"><span>Upload</span><strong>$(bytes-in-nice)</strong><small>Data dikirim perangkat</small></article>
+        <article><i class="metric-icon">&#9719;</i><span>Waktu aktif</span><strong>$(uptime)</strong><small>Durasi sesi berjalan</small></article>
+        <article><i class="metric-icon">IP</i><span>Alamat IP</span><strong>$(ip)</strong><small>IP perangkat saat ini</small></article>
+        <article class="traffic-card download"><i class="metric-icon">&#8595;</i><span>Download</span><strong>$(bytes-out-nice)</strong><small>Data diterima perangkat</small></article>
+        <article class="traffic-card upload"><i class="metric-icon">&#8593;</i><span>Upload</span><strong>$(bytes-in-nice)</strong><small>Data dikirim perangkat</small></article>
       </div>
 
       <div class="device-line"><span>Perangkat</span><strong>$(mac)</strong></div>
