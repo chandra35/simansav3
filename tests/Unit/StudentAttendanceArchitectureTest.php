@@ -269,6 +269,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("FACE_DETECTOR_INPUT_SIZE = window.matchMedia('(max-width: 767.98px)').matches ? 160 : 320", $view);
         $this->assertStringContainsString('async function detectFaceWithWatchdog(video, options)', $view);
         $this->assertStringContainsString('Kamera aktif. Mencari wajah...', $view);
+        $this->assertStringContainsString('async function activateCompatibilityBackend()', $view);
+        $this->assertStringContainsString("await faceapi.tf.setBackend('cpu');", $view);
+        $this->assertStringContainsString('Mode kompatibilitas kamera aktif. Mencari wajah kembali...', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
         $this->assertStringContainsString('height: 100dvh', $view);

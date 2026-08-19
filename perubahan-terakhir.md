@@ -12,6 +12,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Deteksi kedip kini memakai baseline bukaan mata peserta secara adaptif, bukan ambang angka tunggal. Sistem mengenali urutan mata menutup lalu membuka kembali, sehingga lebih toleran terhadap kamera, bentuk mata, kacamata, dan pencahayaan yang berbeda.
 - Loop kamera kini memanggil `video.play()` dan melakukan retry bila video belum memiliki frame siap. Sebelumnya status dapat berhenti pada “Menunggu” setelah sambutan karena loop deteksi keluar saat video sementara berstatus `paused`; kini status memberi informasi bahwa kamera/deteksi sedang disiapkan dan kotak wajah akan muncul kembali begitu frame tersedia.
 - Untuk ponsel, Tiny Face Detector kini menggunakan input 160 (desktop tetap 320) agar inferensi awal jauh lebih ringan. Pencarian wajah mempunyai watchdog lima detik dan status yang informatif; proses tidak lagi berhenti tanpa respons bila inferensi awal perangkat lambat.
+- Jika watchdog ponsel mendeteksi inferensi WebGL macet atau gagal, sistem satu kali otomatis beralih ke backend TensorFlow.js CPU dan mengulang pencarian wajah dalam “Mode kompatibilitas kamera”. Ini menargetkan perangkat yang dapat menampilkan preview kamera tetapi GPU/browser-nya tidak dapat membaca frame untuk AI secara stabil.
 
 ### Registrasi Wajah: Responsif, Ramah Hijab & Senyum Natural (19 Agustus 2026)
 

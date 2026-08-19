@@ -830,6 +830,8 @@ let guidanceVoiceEnabled = true;
 let guidanceSpeechSupported = 'speechSynthesis' in window;
 let guidanceAudioContext = null;
 const FACE_DETECTOR_INPUT_SIZE = window.matchMedia('(max-width: 767.98px)').matches ? 160 : 320;
+const IS_MOBILE_FACE_REGISTRATION = window.matchMedia('(max-width: 767.98px)').matches;
+let compatibilityBackendAttempted = false;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
     frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dengan wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
@@ -1043,8 +1045,11 @@ function startDetectionLoop() {
             canvas.width = video.videoWidth || video.clientWidth; canvas.height = video.videoHeight || video.clientHeight;
             const result = await detectFaceWithWatchdog(video, options);
             if (result.timedOut) {
-                setFaceStatus('Deteksi wajah membutuhkan waktu. Tetap dekat dan hadap ke kamera.', true);
-                window.setTimeout(detect, 1000);
+                const compatibilityMode = await activateCompatibilityBackend();
+                setFaceStatus(compatibilityMode
+                    ? 'Mode kompatibilitas kamera aktif. Mencari wajah kembali...'
+                    : 'Deteksi wajah membutuhkan waktu. Tetap dekat dan hadap ke kamera.', true);
+                window.setTimeout(detect, compatibilityMode ? 500 : 1000);
                 return;
             }
             const detection = result.detection; ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1066,7 +1071,10 @@ function startDetectionLoop() {
                 }
             } else { setFaceStatus('Arahkan wajah ke kamera', false); if (faceStableStart) { faceStableStart = null; hideCountdownRing(); } }
         } catch (_) {
-            setFaceStatus('Deteksi wajah sedang disiapkan, mohon tetap di depan kamera.', true);
+            const compatibilityMode = await activateCompatibilityBackend();
+            setFaceStatus(compatibilityMode
+                ? 'Mode kompatibilitas kamera aktif. Mencari wajah kembali...'
+                : 'Deteksi wajah sedang disiapkan, mohon tetap di depan kamera.', true);
         }
         const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 60 : 150; requestAnimationFrame(() => setTimeout(detect, delay));
     }
@@ -1080,6 +1088,18 @@ async function detectFaceWithWatchdog(video, options) {
     ]);
     window.clearTimeout(watchdog);
     return result;
+}
+async function activateCompatibilityBackend() {
+    if (!IS_MOBILE_FACE_REGISTRATION || compatibilityBackendAttempted || !faceapi.tf?.setBackend) return false;
+    compatibilityBackendAttempted = true;
+    try {
+        const activated = await faceapi.tf.setBackend('cpu');
+        if (!activated) return false;
+        await faceapi.tf.ready();
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 function setFaceStatus(text, ok) { const el = document.getElementById('faceStatus'); el.style.color = ok ? '#00e676' : '#ff5252'; el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`; }
 function validatePose(landmarks, angle, liveMetrics) {
