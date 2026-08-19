@@ -121,7 +121,7 @@
                             @if($selfCanRegister)
                                 <div class="d-flex flex-column flex-md-row mt-4">
                                     <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
-                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}', '{{ addslashes($selfFace?->registration_photo_url ?: $selfRegistrant['avatar_url']) }}')">
+                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
                                         <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
                                         {{ $selfFace ? 'Registrasi Ulang Diizinkan' : 'Mulai Registrasi' }}
                                     </button>
@@ -343,7 +343,7 @@
                                 <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
                                 <td data-label="Aksi">
                                     <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
-                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}', '{{ addslashes($registrant['avatar_url']) }}')">
+                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
                                         <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
                                         {{ $face ? 'Ulang' : 'Daftar' }}
                                     </button>
@@ -407,12 +407,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="face-register-welcome d-none" id="registrationWelcome" aria-live="polite">
-                    <img id="registrationWelcomePhoto" class="img-circle face-register-welcome__photo" alt="Foto profil peserta registrasi">
-                    <div class="text-uppercase small font-weight-bold text-primary mt-2">Selamat datang</div>
-                    <div class="font-weight-bold text-dark" id="registrationWelcomeName"></div>
-                    <div class="small text-muted mt-1">Silakan melakukan registrasi wajah.</div>
                 </div>
                 <div class="face-register-modal__info px-3 py-2 border-bottom">
                     <div class="small text-muted d-flex flex-wrap align-items-center">
@@ -574,25 +568,6 @@
         background: rgba(15, 23, 42, 0.72);
         backdrop-filter: blur(4px);
     }
-    .face-register-welcome {
-        position: absolute;
-        z-index: 20;
-        top: 50%;
-        left: 50%;
-        width: min(19rem, calc(100% - 2rem));
-        padding: 1.15rem;
-        text-align: center;
-        background: rgba(255, 255, 255, 0.96);
-        border-radius: 1rem;
-        box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.28);
-        transform: translate(-50%, -50%);
-    }
-    .face-register-welcome__photo {
-        width: 4.5rem;
-        height: 4.5rem;
-        object-fit: cover;
-        border: 3px solid rgba(37, 99, 235, 0.16);
-    }
     .face-register-result-card {
         width: min(100%, 31rem);
         background: #fff;
@@ -748,10 +723,6 @@
         .face-register-duplicate-card {
             padding: 1rem;
         }
-        .face-register-welcome {
-            width: min(17rem, calc(100% - 1.5rem));
-            padding: 0.9rem;
-        }
         .face-register-step-instruction {
             font-size: 0.9rem !important;
             padding: 0.6rem 0.9rem !important;
@@ -825,7 +796,7 @@
 @section('js')
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
-let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', selectedUserPhoto = '', currentStep = -1;
+let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
 const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
 let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
 let STEPS = [];
@@ -836,6 +807,7 @@ let stepStartedAt = null;
 let registrationStartedAt = null;
 let baselineMetrics = null;
 let blinkCloseFrames = 0;
+let blinkOpenEarBaseline = null;
 let registrationFinished = false;
 let guidanceVoiceEnabled = true;
 let guidanceSpeechSupported = 'speechSynthesis' in window;
@@ -899,15 +871,14 @@ $(function() {
     }
 
     if (initialSelection && canManageAll) {
-        openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type, initialSelection.avatar_url);
+        openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type);
     }
 });
 
-function openRegister(userId, userName, userType, userPhoto = '') {
+function openRegister(userId, userName, userType) {
     selectedUserId = userId;
     selectedUserName = userName;
     selectedUserType = userType;
-    selectedUserPhoto = userPhoto;
     document.getElementById('modalUserName').textContent = userName;
     $('#modalRegister').modal('show');
     if (!modelsLoaded) loadModels(); else startCameraAndRegister();
@@ -958,14 +929,7 @@ function speakGuidance(text) {
     });
 }
 async function welcomeRegistrant() {
-    const welcome = document.getElementById('registrationWelcome');
-    const photo = document.getElementById('registrationWelcomePhoto');
-    document.getElementById('registrationWelcomeName').textContent = selectedUserName;
-    photo.src = selectedUserPhoto || '{{ asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}';
-    photo.onerror = () => { photo.src = '{{ asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}'; };
-    welcome.classList.remove('d-none');
     await speakGuidance(`Selamat datang, ${selectedUserName}. Silakan melakukan registrasi wajah.`);
-    welcome.classList.add('d-none');
 }
 function playStepCompleteTone() {
     try {
@@ -989,6 +953,7 @@ function beginAutoRegistration() {
     currentStep = 0;
     blinkCount = 0;
     blinkCloseFrames = 0;
+    blinkOpenEarBaseline = null;
     earHistory = [];
     eyeWasClosed = false;
     faceStableStart = null;
@@ -1038,6 +1003,7 @@ function updateStepUI() {
     if (step.angle === 'kedip') {
         blinkCount = 0;
         blinkCloseFrames = 0;
+        blinkOpenEarBaseline = null;
         earHistory = [];
         eyeWasClosed = false;
     }
@@ -1141,14 +1107,21 @@ function showCountdownRing() { const ring = document.getElementById('autoCapture
 function hideCountdownRing() { document.getElementById('autoCaptureIndicator').style.display = 'none'; const c = document.getElementById('countdownCircle'); c.style.transition = 'none'; c.style.strokeDashoffset = '220'; if (currentStep >= 0 && currentStep < totalSteps) document.getElementById('step-' + currentStep).classList.remove('capturing'); }
 function detectBlink(landmarks) {
     const leftEye = landmarks.getLeftEye(), rightEye = landmarks.getRightEye(), rawEar = (eyeAspectRatio(leftEye) + eyeAspectRatio(rightEye)) / 2;
-    earHistory.push(rawEar); if (earHistory.length > 3) earHistory.shift(); const ear = earHistory.reduce((a, b) => a + b, 0) / earHistory.length, threshold = 0.26;
-    setFaceStatus(`Kedipkan mata! EAR: ${ear.toFixed(3)} ${ear < threshold ? 'TERTUTUP' : 'Terbuka'} (${blinkCount}/1)`, true);
-    if (ear < threshold) {
+    earHistory.push(rawEar); if (earHistory.length > 2) earHistory.shift();
+    const ear = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
+    if (!eyeWasClosed && ear >= 0.12) {
+        blinkOpenEarBaseline = blinkOpenEarBaseline === null ? ear : ((blinkOpenEarBaseline * 0.8) + (ear * 0.2));
+    }
+    const openEar = blinkOpenEarBaseline ?? 0.28;
+    const closeThreshold = Math.max(0.11, Math.min(0.23, openEar * 0.72));
+    const reopenThreshold = Math.max(closeThreshold + 0.025, openEar * 0.84);
+    setFaceStatus(eyeWasClosed ? 'Bagus, sekarang buka mata kembali.' : 'Kedipkan mata secara normal: tutup lalu buka kembali.', true);
+    if (ear < closeThreshold) {
         blinkCloseFrames++;
         if (!eyeWasClosed) eyeWasClosed = true;
-    } else if (ear > threshold + 0.03 && eyeWasClosed) {
+    } else if (ear > reopenThreshold && eyeWasClosed) {
         eyeWasClosed = false;
-        if (blinkCloseFrames >= 2) {
+        if (blinkCloseFrames >= 1) {
             blinkCount++;
             livenessSummary.blink_count = Math.max(livenessSummary.blink_count, blinkCount);
             livenessSummary.max_blink_close_frames = Math.max(livenessSummary.max_blink_close_frames, blinkCloseFrames);
@@ -1360,6 +1333,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
 </script>
 @stop
