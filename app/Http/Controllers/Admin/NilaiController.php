@@ -1514,9 +1514,12 @@ class NilaiController extends Controller
             $endCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + $semesterCount + 1); // +1 for AVG
             
             // Row 1: Mapel name
-            $sheet->setCellValue($startCol . '1', $kode);
+            $sheet->setCellValue($startCol . '1', $mapel?->nama_mapel ?: $kode);
             $sheet->mergeCells($startCol . '1:' . $endCol . '1');
-            $sheet->getStyle($startCol . '1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($startCol . '1')->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setWrapText(true);
             
             // Row 2: Semester numbers
             $semCol = $colIndex;
@@ -1551,6 +1554,7 @@ class NilaiController extends Controller
             ->getStartColor()->setRGB('D9EAD3');
         $sheet->getStyle('A1:' . $lastCol . '2')->getBorders()->getAllBorders()
             ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getRowDimension(1)->setRowHeight(32);
         
         // Write data starting from row 3
         $row = 3;
