@@ -90,6 +90,9 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("'can' => 'manage-hotspot'", $menu);
         $this->assertStringContainsString('Satu pusat kendali untuk seluruh akun WiFi', $account);
         $this->assertStringContainsString("asset('css/admin/hotspot-accounts.css')", $account);
+        $this->assertStringContainsString('function requestMessage(xhr, fallback)', $account);
+        $this->assertStringContainsString('function setButtonBusy(button, busy, busyLabel)', $account);
+        $this->assertStringContainsString('ROUTES.assignProfile', $account);
         $this->assertStringNotContainsString('id="mikrotikScript"', $account);
         $this->assertStringNotContainsString('id="btnAddNas"', $account);
         $this->assertStringNotContainsString('id="radiusStatusPanel"', $account);

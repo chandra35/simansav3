@@ -159,6 +159,9 @@
 .modal-title { font-size: .95rem; font-weight: 800; }
 .modal-body .form-control { height: 42px; border-color: #dce3ec; border-radius: 8px; }
 .modal-footer .btn { border-radius: 8px; font-size: .76rem; }
+.btn.hs-action-busy { cursor: wait; opacity: .72; pointer-events: none; }
+#hotspotTable .btn.hs-action-busy { width: 30px; overflow: hidden; color: transparent !important; position: relative; }
+#hotspotTable .btn.hs-action-busy i { position: absolute; left: 8px; color: #fff; }
 
 @media (max-width: 1199.98px) {
     .hs-stats { grid-template-columns: repeat(4,minmax(0,1fr)); }

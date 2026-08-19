@@ -698,6 +698,33 @@ const ROUTES = {
     toggleActive: (id) => `{{ url("admin/hotspot") }}/${id}/toggle-active`,
 };
 
+function requestMessage(xhr, fallback) {
+    const json = xhr && xhr.responseJSON ? xhr.responseJSON : {};
+    if (json.message) return json.message;
+    if (json.errors) {
+        const messages = Object.values(json.errors).reduce((all, item) => all.concat(item), []);
+        if (messages.length) return messages[0];
+    }
+    if (xhr && xhr.status === 403) return 'Anda tidak memiliki izin untuk menjalankan tindakan ini.';
+    if (xhr && xhr.status === 419) return 'Sesi halaman kedaluwarsa. Muat ulang halaman lalu coba kembali.';
+    if (xhr && xhr.status === 422) return 'Data belum valid. Periksa isian lalu coba kembali.';
+    return fallback;
+}
+
+function setButtonBusy(button, busy, busyLabel) {
+    const $button = $(button);
+    if (!$button.length) return;
+    if (busy) {
+        $button.data('original-html', $button.html());
+        $button.prop('disabled', true).addClass('hs-action-busy')
+            .html(`<i class="fas fa-spinner fa-spin mr-1"></i>${busyLabel || 'Memproses...'}`);
+    } else {
+        $button.prop('disabled', false).removeClass('hs-action-busy')
+            .html($button.data('original-html') || $button.html());
+        $button.removeData('original-html');
+    }
+}
+
 // ── DataTable ─────────────────────────────────────────────────────────────
 let table;
 $(function () {
@@ -713,7 +740,8 @@ $(function () {
                 d.search      = $('#searchBox').val();
                 d.tingkat     = $('#filterTingkat').val();
                 d.kelas_id    = $('#filterRombel').val();
-            }
+            },
+            error: xhr => toastr.error(requestMessage(xhr, 'Daftar akun gagal dimuat. Muat ulang halaman untuk mencoba kembali.'))
         },
         columns: [
             {
@@ -809,7 +837,7 @@ function loadFilterOptions() {
     $.get(ROUTES.filterOptions).done(data => {
         _allKelas = data.kelas || [];
         populateRombel('');
-    });
+    }).fail(xhr => toastr.error(requestMessage(xhr, 'Pilihan rombel gagal dimuat.')));
 }
 
 function populateRombel(tingkat) {
@@ -864,6 +892,8 @@ function doBulkToggle(action) {
     const label = action === 'aktif' ? 'aktifkan' : 'nonaktifkan';
     if (!confirm(`${ids.length} akun akan di-${label}. Lanjutkan?`)) return;
 
+    const button = action === 'aktif' ? '#btnBulkAktif' : '#btnBulkNonaktif';
+    setButtonBusy(button, true, action === 'aktif' ? 'Mengaktifkan...' : 'Menonaktifkan...');
     $.post(ROUTES.bulkToggle, { ids, action, _token: '{{ csrf_token() }}' })
         .done(r => {
             toastr[r.success ? 'success' : 'error'](r.message);
@@ -875,7 +905,8 @@ function doBulkToggle(action) {
                 if (r.stats) updateStatCards(r.stats);
             }
         })
-        .fail(() => toastr.error('Gagal. Coba lagi.'));
+        .fail(xhr => toastr.error(requestMessage(xhr, 'Aksi massal gagal dijalankan.')))
+        .always(() => setButtonBusy(button, false));
 }
 
 $('#btnBulkAktif').on('click', () => doBulkToggle('aktif'));
@@ -891,6 +922,7 @@ $('#btnBulkProfile').on('click', () => {
     const profileId = $('#bulkProfileId').val();
     if (!confirm(`${ids.length} akun akan dipindahkan ke profile yang dipilih. Lanjutkan?`)) return;
 
+    setButtonBusy('#btnBulkProfile', true, 'Menerapkan...');
     $.post(ROUTES.assignProfile, {
         ids,
         profile_id: profileId,
@@ -903,7 +935,8 @@ $('#btnBulkProfile').on('click', () => {
             updateBulkBar();
             table.ajax.reload();
         }
-    }).fail(xhr => toastr.error(xhr.responseJSON?.message || 'Gagal mengubah profile.'));
+    }).fail(xhr => toastr.error(requestMessage(xhr, 'Gagal mengubah profile.')))
+      .always(() => setButtonBusy('#btnBulkProfile', false));
 });
 
 // ── Sync overlay ──────────────────────────────────────────────────────────
@@ -984,12 +1017,12 @@ function doSync(role = '', force = false) {
             if (r.stats) updateStatCards(r.stats);
             table.ajax.reload();
         })
-        .fail(() => {
+        .fail(xhr => {
             $('#syncResultIconWrap').removeClass('ok err').addClass('fail');
             $('#syncResultEmoji').text('❌');
             $('#syncHeaderTitle').text('Sync Gagal');
             $('#syncResultTitle').text('Terjadi Kesalahan!');
-            $('#syncResultSub').text('Gagal menghubungi server. Cek koneksi dan coba lagi.');
+            $('#syncResultSub').text(requestMessage(xhr, 'Gagal menghubungi server. Cek koneksi dan coba lagi.'));
             $('#syncResultCounts').html('');
             $('#btnToggleSyncLog').hide();
             $('#syncStateRunning').hide();
@@ -1038,26 +1071,31 @@ function updateStatCards(s) {
 
 // ── Sync single ───────────────────────────────────────────────────────────
 $(document).on('click', '.btn-sync-single', function () {
+    const button = this;
     const id = $(this).data('id');
-    $(this).html('<i class="fas fa-spin fa-sync"></i>');
+    setButtonBusy(button, true, '');
     $.post(ROUTES.syncSingle(id), { _token: '{{ csrf_token() }}' })
         .done(r => {
             toastr[r.success ? 'success' : 'error'](r.message);
             table.ajax.reload();
         })
-        .fail(() => toastr.error('Gagal.'))
-        .always(() => $(this).html('<i class="fas fa-sync"></i>'));
+        .fail(xhr => toastr.error(requestMessage(xhr, 'Sinkronisasi akun gagal.')))
+        .always(() => setButtonBusy(button, false));
 });
 
 // ── Toggle active ─────────────────────────────────────────────────────────
 $(document).on('click', '.btn-toggle-active', function () {
+    const button = this;
     const id = $(this).data('id');
     if (!confirm('Ubah status akun ini?')) return;
+    setButtonBusy(button, true, '');
     $.post(ROUTES.toggleActive(id), { _token: '{{ csrf_token() }}' })
         .done(r => {
             toastr[r.success ? 'success' : 'error'](r.message);
             table.ajax.reload();
-        });
+        })
+        .fail(xhr => toastr.error(requestMessage(xhr, 'Status akun gagal diubah.')))
+        .always(() => setButtonBusy(button, false));
 });
 
 // ── Tamu modal ────────────────────────────────────────────────────────────
@@ -1105,6 +1143,7 @@ $('#btnSaveTamu').on('click', () => {
     const url    = isEdit ? ROUTES.tamuUpdate(id) : ROUTES.tamuStore;
     const method = isEdit ? 'PUT' : 'POST';
 
+    setButtonBusy('#btnSaveTamu', true, isEdit ? 'Memperbarui...' : 'Menyimpan...');
     $.ajax({ url, method, data })
         .done(r => {
             if (r.success) {
@@ -1120,17 +1159,22 @@ $('#btnSaveTamu').on('click', () => {
                 toastr.error(r.message || 'Gagal menyimpan.');
             }
         })
-        .fail(xhr => toastr.error(xhr.responseJSON?.message || 'Error.'));
+        .fail(xhr => toastr.error(requestMessage(xhr, 'Akun tamu gagal disimpan.')))
+        .always(() => setButtonBusy('#btnSaveTamu', false));
 });
 
 $(document).on('click', '.btn-delete', function () {
+    const button = this;
     const id = $(this).data('id');
     if (!confirm('Hapus akun tamu ini dari sistem?')) return;
+    setButtonBusy(button, true, '');
     $.ajax({ url: ROUTES.tamuDestroy(id), method: 'DELETE', data: { _token: '{{ csrf_token() }}' } })
         .done(r => {
             toastr[r.success ? 'success' : 'error'](r.message);
             table.ajax.reload();
-        });
+        })
+        .fail(xhr => toastr.error(requestMessage(xhr, 'Akun tamu gagal dihapus.')))
+        .always(() => setButtonBusy(button, false));
 });
 
 // ── RADIUS Live Status ────────────────────────────────────────────────────
