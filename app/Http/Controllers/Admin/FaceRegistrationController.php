@@ -305,7 +305,11 @@ class FaceRegistrationController extends Controller
             ->map(fn ($value) => (int) $value)
             ->values();
         $hasOppositeTurns = $turnSigns->contains(1) && $turnSigns->contains(-1);
-        $hasDetailedTurnEvidence = $hasOppositeTurns && (float) $summary->get('turn_span', 0) >= 0.12;
+        // Client hanya merekam tanda arah setelah landmark detail memverifikasi
+        // perubahan posisi hidung dari baseline pada masing-masing tahap. Nilai
+        // span numeriknya dapat berbeda antar model/perangkat, sehingga dua arah
+        // yang berlawanan merupakan bukti yang lebih stabil daripada ambang global.
+        $hasDetailedTurnEvidence = $hasOppositeTurns;
         $hasLegacyTurnEvidence = (float) $summary->get('yaw_span', 0) >= 0.30;
 
         abort_if(
