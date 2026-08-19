@@ -9,6 +9,7 @@ use App\Models\MataPelajaran;
 use App\Models\TahunPelajaran;
 use App\Models\Kelas;
 use App\Models\AlumniProfile;
+use App\Models\SiswaKelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,7 @@ use Yajra\DataTables\Facades\DataTables;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
 
 class NilaiController extends Controller
 {
@@ -1446,9 +1448,11 @@ class NilaiController extends Controller
         $mapels = $availableMapelsByCode->only($selectedMapel);
         
         if ($alumniContext) {
-            $siswa = $alumniContext['siswa'];
-            $siswa->setRelation('kelas', collect([$alumniContext['kelas']]));
-            $siswaList = collect([$siswa]);
+            $siswaList = $alumniContext['siswa_list'] ?? collect([$alumniContext['siswa']]);
+            $siswaList->each(function (Siswa $siswa) use ($alumniContext) {
+                $kelas = $alumniContext['kelas_by_siswa'][$siswa->id] ?? $alumniContext['kelas'] ?? null;
+                $siswa->setRelation('kelas', collect($kelas ? [$kelas] : []));
+            });
         } else {
             // Get siswa kelas 12 (dari kelas, bukan dari nilai)
             $siswaQuery = Siswa::whereHas('kelasAktif', function($q) use ($tingkat, $tahunAktif, $selectedKelas) {
@@ -1633,10 +1637,13 @@ class NilaiController extends Controller
         
         $spreadsheet->setActiveSheetIndex(0);
         
-        $filenamePrefix = $alumniContext ? 'legger_alumni_' . $alumniContext['alumni']->nisn : "legger_kelas_{$tingkat}";
-        $filename = $filenamePrefix . '_' . date('Y-m-d_His') . '.xlsx';
-        
-        $writer = new Xlsx($spreadsheet);
+        $filenamePrefix = $alumniContext
+            ? ($alumniContext['filename_prefix'] ?? ('legger_alumni_' . $alumniContext['alumni']->nisn))
+            : "legger_kelas_{$tingkat}";
+        $isXls = ($alumniContext['format'] ?? 'xlsx') === 'xls';
+        $filename = $filenamePrefix . '_' . date('Y-m-d_His') . ($isXls ? '.xls' : '.xlsx');
+
+        $writer = $isXls ? new Xls($spreadsheet) : new Xlsx($spreadsheet);
         
         return response()->streamDownload(function () use ($writer, $spreadsheet) {
             try {
@@ -1645,7 +1652,7 @@ class NilaiController extends Controller
                 $spreadsheet->disconnectWorksheets();
             }
         }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => $isXls ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 
@@ -1678,6 +1685,50 @@ class NilaiController extends Controller
             'siswa' => $alumni->siswa,
             'kelas' => $kelasXii->kelas,
             'tahun_pelajaran' => $kelasXii->tahunPelajaran,
+        ]);
+
+        return $this->exportLegger($request);
+    }
+
+    /** Export satu file XLS berisi leger seluruh alumni pada kohor kelulusan yang dipilih. */
+    public function exportAlumniLeggerBulk(Request $request)
+    {
+        $this->authorize('view-siswa');
+        $request->validate(['tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id']]);
+        $tahunPelajaran = TahunPelajaran::findOrFail($request->input('tahun_pelajaran_id'));
+
+        $profiles = AlumniProfile::query()
+            ->with('siswa')
+            ->where('angkatan', $tahunPelajaran->nama)
+            ->whereNotNull('siswa_id')
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        $siswaIds = $profiles->pluck('siswa_id')->filter()->values();
+        $kelasXiiBySiswa = SiswaKelas::query()
+            ->with('kelas')
+            ->whereIn('siswa_id', $siswaIds)
+            ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+            ->whereHas('kelas', fn ($query) => $query->where('tingkat', 12))
+            ->get()
+            ->keyBy('siswa_id');
+
+        $siswaList = $profiles
+            ->map(fn (AlumniProfile $profile) => $profile->siswa)
+            ->filter(fn (?Siswa $siswa) => $siswa && $kelasXiiBySiswa->has($siswa->id))
+            ->values();
+
+        if ($siswaList->isEmpty()) {
+            return back()->with('error', 'Tidak ada alumni terhubung dengan riwayat kelas XII pada tahun yang dipilih.');
+        }
+
+        $request->merge(['tingkat' => 12, 'include_semester_6' => true]);
+        $request->attributes->set('alumni_legger_context', [
+            'siswa_list' => $siswaList,
+            'kelas_by_siswa' => $kelasXiiBySiswa->mapWithKeys(fn (SiswaKelas $record) => [$record->siswa_id => $record->kelas])->all(),
+            'tahun_pelajaran' => $tahunPelajaran,
+            'filename_prefix' => 'legger_alumni_' . str_replace('/', '-', $tahunPelajaran->nama),
+            'format' => 'xls',
         ]);
 
         return $this->exportLegger($request);

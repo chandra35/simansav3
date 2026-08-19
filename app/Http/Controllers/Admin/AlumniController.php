@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AlumniProfile;
+use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 
 class AlumniController extends Controller
@@ -13,12 +14,19 @@ class AlumniController extends Controller
         $this->authorize('view-siswa');
 
         $query = AlumniProfile::query()->with('siswa:id,nama_lengkap,foto_profile');
+        $selectedTahunPelajaran = $request->filled('tahun_pelajaran_id')
+            ? TahunPelajaran::find($request->input('tahun_pelajaran_id'))
+            : null;
+
+        if ($selectedTahunPelajaran) {
+            $query->where('angkatan', $selectedTahunPelajaran->nama);
+        }
         if ($request->filled('q')) {
             $term = trim((string) $request->q);
             $query->where(fn ($q) => $q->where('nama_lengkap', 'like', "%{$term}%")
                 ->orWhere('nisn', 'like', "%{$term}%")->orWhere('nik', 'like', "%{$term}%"));
         }
-        foreach (['angkatan', 'status_setelah_lulus', 'status_verifikasi'] as $filter) {
+        foreach (['status_setelah_lulus', 'status_verifikasi'] as $filter) {
             if ($request->filled($filter)) $query->where($filter, $request->input($filter));
         }
 
@@ -30,6 +38,8 @@ class AlumniController extends Controller
         return view('admin.alumni.index', [
             'alumni' => $alumni,
             'angkatanList' => (clone $base)->whereNotNull('angkatan')->distinct()->orderByDesc('angkatan')->pluck('angkatan'),
+            'tahunPelajaranList' => TahunPelajaran::query()->orderByDesc('tahun_mulai')->get(['id', 'nama']),
+            'selectedTahunPelajaran' => $selectedTahunPelajaran,
             'stats' => [
                 'total' => (clone $base)->count(),
                 'terverifikasi' => (clone $base)->where('status_verifikasi', 'terverifikasi')->count(),

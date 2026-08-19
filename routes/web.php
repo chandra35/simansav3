@@ -348,6 +348,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/sekolah-asal/{npsn}/siswa-data', [App\Http\Controllers\Admin\SekolahAsalController::class, 'getSiswaData'])->name('sekolah-asal.siswa-data');
         Route::get('/alumni', [App\Http\Controllers\Admin\AlumniController::class, 'index'])->name('alumni.index');
         Route::post('/alumni', [App\Http\Controllers\Admin\AlumniController::class, 'store'])->name('alumni.store');
+        Route::get('/alumni/export-legger', [App\Http\Controllers\Admin\NilaiController::class, 'exportAlumniLeggerBulk'])->name('alumni.export-legger-bulk');
         Route::get('/alumni/{alumni}/export-legger', [App\Http\Controllers\Admin\NilaiController::class, 'exportAlumniLegger'])->name('alumni.export-legger');
         Route::get('/alumni/{alumni}', [App\Http\Controllers\Admin\AlumniController::class, 'show'])->name('alumni.show');
         Route::put('/alumni/{alumni}', [App\Http\Controllers\Admin\AlumniController::class, 'update'])->name('alumni.update');

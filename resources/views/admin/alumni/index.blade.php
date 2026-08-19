@@ -61,16 +61,16 @@
             <div class="card-body">
                 <form class="alumni-filter" method="get">
                     <div class="form-row">
-                        <div class="col-lg-4 mb-2">
+                        <div class="col-lg-3 mb-2">
                             <label for="alumniSearch">Cari</label>
                             <input id="alumniSearch" class="form-control" name="q" value="{{ request('q') }}" placeholder="Nama, NISN, atau NIK">
                         </div>
-                        <div class="col-lg-2 mb-2">
-                            <label for="alumniAngkatan">Angkatan</label>
-                            <select id="alumniAngkatan" class="form-control" name="angkatan">
-                                <option value="">Semua</option>
-                                @foreach($angkatanList as $angkatan)
-                                    <option value="{{ $angkatan }}" {{ request('angkatan') === $angkatan ? 'selected' : '' }}>{{ $angkatan }}</option>
+                        <div class="col-lg-3 mb-2">
+                            <label for="alumniTahun">Tahun Kelulusan</label>
+                            <select id="alumniTahun" class="form-control" name="tahun_pelajaran_id">
+                                <option value="">Pilih tahun untuk export</option>
+                                @foreach($tahunPelajaranList as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ $selectedTahunPelajaran?->id === $tahun->id ? 'selected' : '' }}>{{ $tahun->nama }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -98,6 +98,19 @@
                         </div>
                     </div>
                 </form>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                    <small class="text-muted">Export leger memuat alumni yang terhubung ke riwayat kelas XII dan nilai SIMANSA.</small>
+                    @if($selectedTahunPelajaran)
+                        <a class="btn btn-sm btn-success" href="{{ route('admin.alumni.export-legger-bulk', ['tahun_pelajaran_id' => $selectedTahunPelajaran->id]) }}">
+                            <i class="fas fa-file-excel mr-1"></i>Export Leger Semua Alumni (.xls)
+                        </a>
+                    @else
+                        <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="Pilih tahun kelulusan terlebih dahulu">
+                            <i class="fas fa-file-excel mr-1"></i>Export Leger Semua Alumni (.xls)
+                        </button>
+                    @endif
+                </div>
 
                 <div class="table-responsive">
                     <table class="table table-hover alumni-table">
