@@ -96,10 +96,10 @@
                     <i class="fas fa-file-excel"></i> Export EMIS GTK
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
-                    <a class="dropdown-item" href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 1]) }}">
+                    <a class="dropdown-item" data-no-overlay href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 1]) }}">
                         <i class="fas fa-download text-success mr-2"></i>Semester 1 (Ganjil)
                     </a>
-                    <a class="dropdown-item" href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 2]) }}">
+                    <a class="dropdown-item" data-no-overlay href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 2]) }}">
                         <i class="fas fa-download text-success mr-2"></i>Semester 2 (Genap)
                     </a>
                 </div>
