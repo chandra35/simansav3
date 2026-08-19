@@ -122,20 +122,20 @@ class HotspotController extends Controller
                 return '<span class="badge badge-primary">'.e($profile->name).'</span>'.$rate;
             })
             ->addColumn('actions', function (HotspotUser $h) {
-                $btn = '';
+                $btn = '<div class="btn-group btn-group-sm hs-row-actions" role="group" aria-label="Aksi akun '.e($h->username).'">';
                 if (!$h->deleted_at) {
-                    $btn .= '<button class="btn btn-xs btn-info btn-sync-single" data-id="'.$h->id.'" title="Sync ulang"><i class="fas fa-sync"></i></button> ';
+                    $btn .= '<button type="button" class="btn btn-info btn-sync-single" data-id="'.$h->id.'" title="Sync ulang"><i class="fas fa-sync"></i><span class="sr-only">Sync ulang</span></button>';
                     if ($h->is_active) {
-                        $btn .= '<button class="btn btn-xs btn-warning btn-toggle-active" data-id="'.$h->id.'" data-active="1" title="Nonaktifkan"><i class="fas fa-ban"></i></button> ';
+                        $btn .= '<button type="button" class="btn btn-warning btn-toggle-active" data-id="'.$h->id.'" data-active="1" title="Nonaktifkan"><i class="fas fa-ban"></i><span class="sr-only">Nonaktifkan</span></button>';
                     } else {
-                        $btn .= '<button class="btn btn-xs btn-success btn-toggle-active" data-id="'.$h->id.'" data-active="0" title="Aktifkan"><i class="fas fa-check"></i></button> ';
+                        $btn .= '<button type="button" class="btn btn-success btn-toggle-active" data-id="'.$h->id.'" data-active="0" title="Aktifkan"><i class="fas fa-check"></i><span class="sr-only">Aktifkan</span></button>';
                     }
                     if ($h->role === 'tamu') {
-                        $btn .= '<button class="btn btn-xs btn-secondary btn-edit-tamu" data-id="'.$h->id.'" data-username="'.$h->username.'" data-displayname="'.e($h->display_name).'" data-keterangan="'.e($h->keterangan).'" data-expired="'.($h->expired_at?->format('Y-m-d') ?? '').'" title="Edit"><i class="fas fa-edit"></i></button> ';
-                        $btn .= '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$h->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
+                        $btn .= '<button type="button" class="btn btn-secondary btn-edit-tamu" data-id="'.$h->id.'" data-username="'.$h->username.'" data-displayname="'.e($h->display_name).'" data-keterangan="'.e($h->keterangan).'" data-expired="'.($h->expired_at?->format('Y-m-d') ?? '').'" title="Edit"><i class="fas fa-edit"></i><span class="sr-only">Edit</span></button>';
+                        $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$h->id.'" title="Hapus"><i class="fas fa-trash"></i><span class="sr-only">Hapus</span></button>';
                     }
                 }
-                return $btn;
+                return $btn.'</div>';
             })
             ->rawColumns(['kelas_info', 'status_badge', 'sync_badge', 'role_badge', 'profile_badge', 'actions'])
             ->make(true);

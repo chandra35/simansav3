@@ -327,7 +327,7 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
-<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819b">
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819c">
 @endsection
 
 @section('content_header')
@@ -396,32 +396,40 @@
 </div>
 
 {{-- Main Panel ----------------------------------------------------------- --}}
-<div class="row">
-    <div class="col-lg-8">
+<div class="row hs-workspace-row">
+    <div class="col-xl-9">
         <div class="hs-panel">
             <div class="hs-panel__header">
                 <span class="hs-panel__title"><i class="fas fa-users mr-1 text-primary"></i>Daftar Akun Hotspot</span>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <input type="text" id="searchBox" class="form-control form-control-sm" placeholder="Cari username / nama..." style="width:200px">
-                    <select id="filterRole" class="form-control form-control-sm" style="width:110px">
+            </div>
+            <div class="hs-directory-toolbar">
+                <div class="hs-directory-filters">
+                    <div class="hs-filter-search">
+                        <label class="sr-only" for="searchBox">Cari akun</label>
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                            <input type="search" id="searchBox" class="form-control" placeholder="Cari username atau nama..." autocomplete="off">
+                        </div>
+                    </div>
+                    <select id="filterRole" class="form-control form-control-sm" aria-label="Filter role">
                         <option value="">Semua Role</option>
                         <option value="guru">Guru</option>
                         <option value="siswa">Siswa</option>
                         <option value="tamu">Tamu</option>
                     </select>
                     {{-- Filter kelas: tampil saat role=siswa --}}
-                    <div id="kelasFilterWrap" style="display:none" class="d-flex gap-2 align-items-center">
-                        <select id="filterTingkat" class="form-control form-control-sm" style="width:82px">
+                    <div id="kelasFilterWrap" style="display:none">
+                        <select id="filterTingkat" class="form-control form-control-sm" aria-label="Filter tingkat">
                             <option value="">Kelas</option>
                             <option value="10">X</option>
                             <option value="11">XI</option>
                             <option value="12">XII</option>
                         </select>
-                        <select id="filterRombel" class="form-control form-control-sm" style="width:145px">
+                        <select id="filterRombel" class="form-control form-control-sm" aria-label="Filter rombel">
                             <option value="">Semua Rombel</option>
                         </select>
                     </div>
-                    <select id="filterSync" class="form-control form-control-sm" style="width:110px">
+                    <select id="filterSync" class="form-control form-control-sm" aria-label="Filter status sinkronisasi">
                         <option value="">Semua Status</option>
                         <option value="synced">Synced</option>
                         <option value="pending">Pending</option>
@@ -432,65 +440,70 @@
             <div class="hs-panel__body" style="padding:.5rem">
 
                 {{-- Bulk action bar --}}
-                <div id="bulkBar" style="display:none;background:#eff6ff;border-bottom:1px solid #bfdbfe"
-                     class="d-flex align-items-center flex-wrap gap-2 px-3 py-2">
-                    <i class="fas fa-check-square text-primary"></i>
-                    <span class="font-weight-bold text-primary small" id="bulkCount">0 dipilih</span>
-                    <div class="d-flex gap-1 ml-2">
-                        <button class="btn btn-success btn-sm px-3" id="btnBulkAktif">
+                <div id="bulkBar" class="hs-bulk-toolbar" style="display:none">
+                    <div class="hs-bulk-toolbar__meta">
+                        <i class="fas fa-check-square text-primary"></i>
+                        <span class="font-weight-bold text-primary small" id="bulkCount">0 akun dipilih</span>
+                    </div>
+                    <div class="hs-bulk-toolbar__actions">
+                        <button type="button" class="btn btn-success btn-sm" id="btnBulkAktif">
                             <i class="fas fa-check mr-1"></i>Aktifkan
                         </button>
-                        <button class="btn btn-danger btn-sm px-3" id="btnBulkNonaktif">
+                        <button type="button" class="btn btn-danger btn-sm" id="btnBulkNonaktif">
                             <i class="fas fa-ban mr-1"></i>Nonaktifkan
                         </button>
-                        <select id="bulkProfileId" class="form-control form-control-sm" style="width:190px">
+                        <select id="bulkProfileId" class="form-control form-control-sm" aria-label="Profile RADIUS tujuan">
                             <option value="">Profile default role</option>
                             @foreach($profiles as $profile)
                                 <option value="{{ $profile->id }}">{{ $profile->name }}</option>
                             @endforeach
                         </select>
-                        <button class="btn btn-info btn-sm px-3" id="btnBulkProfile">
+                        <button type="button" class="btn btn-info btn-sm" id="btnBulkProfile">
                             <i class="fas fa-layer-group mr-1"></i>Set Profile
                         </button>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm ml-auto" id="btnBulkClear" title="Batal pilih semua">
+                    <button type="button" class="btn btn-outline-secondary btn-sm hs-bulk-toolbar__clear" id="btnBulkClear" title="Batal pilih semua">
                         <i class="fas fa-times mr-1"></i>Batal Pilih
                     </button>
                 </div>
 
-                <div class="hs-filter-bar" style="padding:.3rem .5rem 0">
-                    <button class="btn btn-outline-secondary filter-active active" data-active="">Semua</button>
-                    <button class="btn btn-outline-success filter-active" data-active="1">Aktif</button>
-                    <button class="btn btn-outline-danger filter-active" data-active="0">Nonaktif</button>
-                    <span class="ml-auto">
-                        <button class="btn btn-outline-primary btn-sm" id="btnSyncErrors">
+                <div class="hs-filter-bar">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Filter status akun">
+                        <button type="button" class="btn btn-outline-secondary filter-active active" data-active="">Semua</button>
+                        <button type="button" class="btn btn-outline-success filter-active" data-active="1">Aktif</button>
+                        <button type="button" class="btn btn-outline-danger filter-active" data-active="0">Nonaktif</button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="btnSyncErrors">
                             <i class="fas fa-redo mr-1"></i>Retry Error
                         </button>
-                    </span>
+                    </div>
                 </div>
-                <table id="hotspotTable" class="table table-sm table-hover" style="width:100%;font-size:.82rem">
-                    <thead class="thead-light">
-                        <tr>
-                            <th style="width:38px;text-align:center">
-                                <input type="checkbox" id="checkAll" title="Pilih semua di halaman ini" style="cursor:pointer">
-                            </th>
-                            <th>Username</th>
-                            <th>Nama</th>
-                            <th>Kelas</th>
-                            <th>Role</th>
-                            <th>Profile</th>
-                            <th>Status</th>
-                            <th>Sync</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="table-responsive hs-table-wrap">
+                    <table id="hotspotTable" class="table table-hover table-striped w-100 mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="text-center">
+                                    <input type="checkbox" id="checkAll" title="Pilih semua di halaman ini">
+                                </th>
+                                <th>Username</th>
+                                <th>Nama</th>
+                                <th>Kelas</th>
+                                <th>Role</th>
+                                <th>Profile</th>
+                                <th>Status</th>
+                                <th>Sync</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Sidebar: RADIUS live + sync actions ─────────────────────────────── --}}
-    <div class="col-lg-4">
+    <div class="col-xl-3 hs-sidebar">
         {{-- Sync Actions --}}
         <div class="hs-panel mb-3">
             <div class="hs-panel__header">
@@ -748,21 +761,23 @@ $(function () {
                 data: 'id',
                 render: (data) =>
                     `<div style="text-align:center"><input type="checkbox" class="row-check" data-id="${data}" style="cursor:pointer"></div>`,
-                orderable: false, searchable: false, width: 38, name: 'id'
+                orderable: false, searchable: false, width: 38, name: 'id', className: 'text-center'
             },
-            { data: 'username',     name: 'username' },
-            { data: 'display_name', name: 'display_name' },
-            { data: 'kelas_info',   name: 'kelas_info', orderable: false, searchable: false },
-            { data: 'role_badge',   name: 'role', orderable: false },
-            { data: 'profile_badge', name: 'profile_badge', orderable: false, searchable: false },
-            { data: 'status_badge', name: 'is_active', orderable: false },
-            { data: 'sync_badge',   name: 'sync_status', orderable: false },
-            { data: 'actions',      name: 'actions', orderable: false, searchable: false },
+            { data: 'username',     name: 'username', className: 'text-nowrap' },
+            { data: 'display_name', name: 'display_name', className: 'hs-account-name' },
+            { data: 'kelas_info',   name: 'kelas_info', orderable: false, searchable: false, className: 'text-nowrap' },
+            { data: 'role_badge',   name: 'role', orderable: false, className: 'text-nowrap' },
+            { data: 'profile_badge', name: 'profile_badge', orderable: false, searchable: false, className: 'text-nowrap' },
+            { data: 'status_badge', name: 'is_active', orderable: false, className: 'text-nowrap' },
+            { data: 'sync_badge',   name: 'sync_status', orderable: false, className: 'text-nowrap' },
+            { data: 'actions',      name: 'actions', orderable: false, searchable: false, className: 'text-center text-nowrap' },
         ],
         language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
         pageLength: 20,
+        lengthMenu: [[10, 20, 50, 100], [10, 20, 50, 100]],
         order: [[1, 'asc']],
-        dom: 'tip',
+        autoWidth: false,
+        dom: "<'row align-items-center mx-0'<'col-sm-12 col-md-6'l>>rt<'row align-items-center mx-0'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     });
 
     // Restore checkbox state setelah setiap draw
@@ -789,9 +804,9 @@ $(function () {
     $('#filterRole').on('change', function () {
         const isSiswa = $(this).val() === 'siswa';
         if (isSiswa) {
-            $('#kelasFilterWrap').show();
+            $('#kelasFilterWrap').addClass('is-visible');
         } else {
-            $('#kelasFilterWrap').hide();
+            $('#kelasFilterWrap').removeClass('is-visible');
             $('#filterTingkat').val('');
             $('#filterRombel').html('<option value="">Semua Rombel</option>').val('');
         }
@@ -806,7 +821,7 @@ $(function () {
     const _p = new URLSearchParams(window.location.search);
     if (_p.get('role')) {
         $('#filterRole').val(_p.get('role'));
-        if (_p.get('role') === 'siswa') $('#kelasFilterWrap').show();
+        if (_p.get('role') === 'siswa') $('#kelasFilterWrap').addClass('is-visible');
     }
     if (_p.get('sync_status')) {
         $('#filterSync').val(_p.get('sync_status'));
@@ -853,8 +868,7 @@ let selectedIds = new Set();
 function updateBulkBar() {
     const n = selectedIds.size;
     $('#bulkCount').text(n + ' akun dipilih');
-    if (n > 0) { $('#bulkBar').slideDown(150); }
-    else       { $('#bulkBar').slideUp(150); }
+    $('#bulkBar').toggleClass('is-visible', n > 0);
 }
 
 // Header checkAll
