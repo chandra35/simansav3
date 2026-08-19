@@ -823,6 +823,7 @@ let gestureSamples = [];
 let stepStartedAt = null;
 let registrationStartedAt = null;
 let baselineMetrics = null;
+let turnSigns = [];
 let blinkCloseFrames = 0;
 let blinkOpenEarBaseline = null;
 let registrationFinished = false;
@@ -834,9 +835,9 @@ const IS_MOBILE_FACE_REGISTRATION = window.matchMedia('(max-width: 767.98px)').m
 let compatibilityBackendAttempted = false;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
-    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Tatap kamera dari jarak sekitar satu lengan, wajah penuh dan stabil. Hijab boleh tetap dipakai.' },
-    kanan: { angle: 'kanan', title: 'Toleh Kanan', text: 'Putar kepala ke KANAN', icon: 'fa-arrow-right', description: 'Putar kepala perlahan ke kanan Anda; hijab tetap boleh dipakai.' },
-    kiri: { angle: 'kiri', title: 'Toleh Kiri', text: 'Putar kepala ke KIRI', icon: 'fa-arrow-left', description: 'Putar kepala perlahan ke kiri Anda; hijab tetap boleh dipakai.' },
+    frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Posisikan wajah di tengah frame, dari jarak sekitar satu lengan, lalu tahan stabil.' },
+    kanan: { angle: 'kanan', title: 'Toleh Sisi Pertama', text: 'Putar kepala ke satu sisi', icon: 'fa-arrow-right', description: 'Pilih salah satu sisi, putar kepala nyata, lalu tahan. Arah kamera selfie dapat berbeda.' },
+    kiri: { angle: 'kiri', title: 'Toleh Sisi Lawan', text: 'Putar ke sisi sebaliknya', icon: 'fa-arrow-left', description: 'Putar kepala ke sisi kebalikan dari tahap sebelumnya, lalu tahan.' },
     senyum: { angle: 'senyum', title: 'Senyum', text: 'Senyum natural', icon: 'fa-smile', description: 'Senyum lembut boleh tertutup; gigi tidak perlu terlihat.' },
     kedip: { angle: 'kedip', title: 'Kedipkan Mata', text: 'Kedipkan mata 1 kali', icon: 'fa-eye', description: 'Kedip sungguhan diperlukan untuk liveness.' },
 };
@@ -851,8 +852,7 @@ function shuffleArray(items) {
 }
 
 function buildStepSequence() {
-    const challengePool = shuffleArray(['kanan', 'kiri', 'senyum', 'kedip']);
-    return ['frontal', ...challengePool].map(key => ({ ...STEP_LIBRARY[key] }));
+    return ['frontal', 'kanan', 'kiri', ...shuffleArray(['senyum', 'kedip'])].map(key => ({ ...STEP_LIBRARY[key] }));
 }
 
 function renderStepList() {
@@ -977,6 +977,7 @@ function beginAutoRegistration() {
     faceStableStart = null;
     autoCapturing = false;
     baselineMetrics = null;
+    turnSigns = [];
     passiveSamples = [];
     gestureSamples = [];
     registrationStartedAt = Date.now();
@@ -985,6 +986,7 @@ function beginAutoRegistration() {
     livenessSummary = {
         challenge_order: STEPS.map(step => step.angle),
         completed_steps: [],
+        turn_signs: [],
         blink_count: 0,
         max_blink_close_frames: 0,
         yaw_min: null,
@@ -1103,20 +1105,25 @@ async function activateCompatibilityBackend() {
 }
 function setFaceStatus(text, ok) { const el = document.getElementById('faceStatus'); el.style.color = ok ? '#00e676' : '#ff5252'; el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`; }
 function validatePose(landmarks, angle, liveMetrics) {
-    const { yawRatio, smileRatio } = liveMetrics;
+    const { noseOffset, smileRatio, centerX, centerY, areaRatio } = liveMetrics;
     const smileDelta = baselineMetrics ? smileRatio - baselineMetrics.smileRatio : 0;
     if (angle === 'frontal') {
-        setFaceStatus('Bagus! Tetap menghadap depan dan stabil...', true);
-        return true;
-    }
-    if (angle === 'kanan') {
-        const ok = baselineMetrics && Math.abs(yawRatio - baselineMetrics.yawRatio) >= 0.08;
-        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KANAN Anda perlahan; hijab tidak perlu dilepas.', ok);
+        const centered = centerX > 0.16 && centerX < 0.84 && centerY > 0.12 && centerY < 0.88;
+        const framed = areaRatio > 0.035 && areaRatio < 0.72 && noseOffset > 0.24 && noseOffset < 0.76;
+        const ok = centered && framed;
+        setFaceStatus(ok ? 'Bagus! Tahan wajah di tengah frame...' : 'Pusatkan wajah dan atur jarak sekitar satu lengan.', ok);
         return ok;
     }
-    if (angle === 'kiri') {
-        const ok = baselineMetrics && Math.abs(yawRatio - baselineMetrics.yawRatio) >= 0.08;
-        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KIRI Anda perlahan; hijab tidak perlu dilepas.', ok);
+    if (angle === 'kanan' || angle === 'kiri') {
+        const turnDelta = baselineMetrics ? noseOffset - baselineMetrics.noseOffset : 0;
+        const firstTurn = turnSigns.length === 0;
+        const ok = firstTurn
+            ? Math.abs(turnDelta) >= 0.075
+            : Math.abs(turnDelta) >= 0.075 && Math.sign(turnDelta) !== turnSigns[0];
+        const instruction = firstTurn
+            ? 'Putar kepala ke salah satu sisi sampai wajah tampak menyamping.'
+            : 'Putar kepala ke sisi kebalikan dari tahap toleh pertama.';
+        setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : instruction, ok);
         return ok;
     }
     if (angle === 'senyum') {
@@ -1138,8 +1145,9 @@ function collectLivenessMetrics(landmarks, box, canvasWidth, canvasHeight) {
     const centerX = (box.x + (box.width / 2)) / Math.max(canvasWidth, 1);
     const centerY = (box.y + (box.height / 2)) / Math.max(canvasHeight, 1);
     const areaRatio = (box.width * box.height) / Math.max(canvasWidth * canvasHeight, 1);
+    const noseOffset = (noseTip.x - box.x) / Math.max(box.width, 1);
 
-    const sample = { time: Date.now(), yawRatio, smileRatio, centerX, centerY, areaRatio };
+    const sample = { time: Date.now(), yawRatio, smileRatio, centerX, centerY, areaRatio, noseOffset };
     passiveSamples.push(sample);
     if (passiveSamples.length > 24) passiveSamples.shift();
 
@@ -1155,7 +1163,7 @@ function collectLivenessMetrics(landmarks, box, canvasWidth, canvasHeight) {
     livenessSummary.gesture_motion_score = Math.max(livenessSummary.gesture_motion_score, gestureMotion);
     livenessSummary.center_shift_score = Math.max(livenessSummary.center_shift_score, centerShift);
 
-    return { yawRatio, smileRatio, passiveMotion, gestureMotion, centerShift, areaRatio, centerX, centerY };
+    return { yawRatio, smileRatio, passiveMotion, gestureMotion, centerShift, areaRatio, centerX, centerY, noseOffset };
 }
 function computeRecentRange(samples, key) {
     if (samples.length < 2) return 0;
@@ -1223,7 +1231,13 @@ async function doCapture() {
         baselineMetrics = {
             yawRatio: liveMetrics.yawRatio,
             smileRatio: liveMetrics.smileRatio,
+            noseOffset: liveMetrics.noseOffset,
         };
+    }
+    if (['kanan', 'kiri'].includes(STEPS[currentStep].angle) && baselineMetrics) {
+        const turnDelta = liveMetrics.noseOffset - baselineMetrics.noseOffset;
+        turnSigns.push(Math.sign(turnDelta));
+        livenessSummary.turn_signs = [...turnSigns];
     }
     gestureSamples.push({
         angle: STEPS[currentStep].angle,
@@ -1367,7 +1381,8 @@ function buildLivenessPayload() {
     const yawSpan = (livenessSummary.yaw_max ?? 0) - (livenessSummary.yaw_min ?? 0);
     const smileDelta = (livenessSummary.smile_max ?? 0) - (livenessSummary.smile_min ?? 0);
     const completed = Array.from(new Set(livenessSummary.completed_steps));
-    const hasDirectionalTurn = completed.includes('kanan') || completed.includes('kiri');
+    const hasDirectionalTurn = livenessSummary.turn_signs.length >= 2
+        && livenessSummary.turn_signs[0] !== livenessSummary.turn_signs[1];
     const durationScore = Math.min(livenessSummary.total_duration_ms / 7000, 1) * 20;
     const yawScore = Math.min(yawSpan / 0.5, 1) * 20;
     const smileScore = Math.min(Math.max(smileDelta, 0) / 0.08, 1) * 15;
@@ -1392,6 +1407,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; turnSigns = []; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
 </script>
 @stop

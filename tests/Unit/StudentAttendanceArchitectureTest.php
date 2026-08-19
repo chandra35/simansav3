@@ -272,8 +272,11 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('async function activateCompatibilityBackend()', $view);
         $this->assertStringContainsString("await faceapi.tf.setBackend('cpu');", $view);
         $this->assertStringContainsString('Mode kompatibilitas kamera aktif. Mencari wajah kembali...', $view);
-        $this->assertStringContainsString("if (angle === 'frontal') {\n        setFaceStatus('Bagus! Tetap menghadap depan dan stabil...', true);\n        return true;", $view);
-        $this->assertStringContainsString('Math.abs(yawRatio - baselineMetrics.yawRatio) >= 0.08', $view);
+        $this->assertStringContainsString("return ['frontal', 'kanan', 'kiri', ...shuffleArray(['senyum', 'kedip'])]", $view);
+        $this->assertStringContainsString('const centered = centerX > 0.16 && centerX < 0.84', $view);
+        $this->assertStringContainsString('const noseOffset = (noseTip.x - box.x) / Math.max(box.width, 1);', $view);
+        $this->assertStringContainsString('Math.abs(turnDelta) >= 0.075 && Math.sign(turnDelta) !== turnSigns[0]', $view);
+        $this->assertStringContainsString('livenessSummary.turn_signs.length >= 2', $view);
         $this->assertStringContainsString("ctx.strokeStyle = '#39ff88'", $view);
         $this->assertStringContainsString('z-index:4', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
