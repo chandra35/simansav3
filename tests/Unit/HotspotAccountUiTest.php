@@ -19,13 +19,17 @@ class HotspotAccountUiTest extends TestCase
         $view = file_get_contents($this->root.'/resources/views/admin/hotspot/index.blade.php');
         $css = file_get_contents($this->root.'/public/css/admin/hotspot-accounts.css');
 
-        $this->assertStringContainsString('class="col-xl-9"', $view);
-        $this->assertStringContainsString('class="col-xl-3 hs-sidebar"', $view);
+        $this->assertStringContainsString('class="col-12"', $view);
+        $this->assertStringNotContainsString('class="col-xl-3 hs-sidebar"', $view);
+        $this->assertStringContainsString('class="card card-outline card-info hs-control-card mb-3"', $view);
+        $this->assertLessThan(strpos($view, 'hs-account-card'), strpos($view, 'hs-control-card'));
         $this->assertStringContainsString('class="table-responsive hs-table-wrap"', $view);
-        $this->assertStringContainsString('table table-hover table-striped w-100 mb-0', $view);
+        $this->assertStringContainsString('table table-bordered table-striped table-hover w-100 mb-0', $view);
+        $this->assertStringContainsString("@section('plugins.Datatables', true)", $view);
+        $this->assertStringNotContainsString('cdn.datatables.net', $view);
         $this->assertStringContainsString("lengthMenu: [[10, 20, 50, 100]", $view);
-        $this->assertStringContainsString("dom: \"<'row align-items-center mx-0'", $view);
-        $this->assertStringContainsString('.hs-directory-filters { display: grid;', $css);
+        $this->assertStringNotContainsString('dom:', $view);
+        $this->assertStringNotContainsString('.dataTables_wrapper', $css);
     }
 
     public function test_all_account_action_groups_have_stable_button_layouts(): void
@@ -36,8 +40,9 @@ class HotspotAccountUiTest extends TestCase
 
         $this->assertStringContainsString('class="hs-bulk-toolbar__actions"', $view);
         $this->assertStringContainsString('class="btn-group btn-group-sm" role="group"', $view);
-        $this->assertStringContainsString('btn-group btn-group-sm hs-row-actions', $controller);
-        $this->assertStringContainsString('.hs-row-actions { display: inline-flex; flex-wrap: nowrap;', $css);
+        $this->assertStringContainsString('class="dropdown hs-row-actions"', $controller);
+        $this->assertStringContainsString('dropdown-menu dropdown-menu-right', $controller);
+        $this->assertStringContainsString('data-boundary="viewport"', $controller);
         $this->assertStringContainsString('.hs-bulk-toolbar.is-visible { display: flex !important; }', $css);
     }
 }

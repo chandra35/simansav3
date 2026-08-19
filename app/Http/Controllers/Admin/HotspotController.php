@@ -55,15 +55,6 @@ class HotspotController extends Controller
             $query->where('is_active', (bool)$request->is_active);
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                  ->orWhere('display_name', 'like', "%{$search}%")
-                  ->orWhere('keterangan', 'like', "%{$search}%");
-            });
-        }
-
         // Filter kelas (hanya berlaku saat role = siswa)
         if ($request->input('role') === 'siswa' &&
             ($request->filled('tingkat') || $request->filled('kelas_id'))) {
@@ -122,20 +113,26 @@ class HotspotController extends Controller
                 return '<span class="badge badge-primary">'.e($profile->name).'</span>'.$rate;
             })
             ->addColumn('actions', function (HotspotUser $h) {
-                $btn = '<div class="btn-group btn-group-sm hs-row-actions" role="group" aria-label="Aksi akun '.e($h->username).'">';
-                if (!$h->deleted_at) {
-                    $btn .= '<button type="button" class="btn btn-info btn-sync-single" data-id="'.$h->id.'" title="Sync ulang"><i class="fas fa-sync"></i><span class="sr-only">Sync ulang</span></button>';
-                    if ($h->is_active) {
-                        $btn .= '<button type="button" class="btn btn-warning btn-toggle-active" data-id="'.$h->id.'" data-active="1" title="Nonaktifkan"><i class="fas fa-ban"></i><span class="sr-only">Nonaktifkan</span></button>';
-                    } else {
-                        $btn .= '<button type="button" class="btn btn-success btn-toggle-active" data-id="'.$h->id.'" data-active="0" title="Aktifkan"><i class="fas fa-check"></i><span class="sr-only">Aktifkan</span></button>';
-                    }
-                    if ($h->role === 'tamu') {
-                        $btn .= '<button type="button" class="btn btn-secondary btn-edit-tamu" data-id="'.$h->id.'" data-username="'.$h->username.'" data-displayname="'.e($h->display_name).'" data-keterangan="'.e($h->keterangan).'" data-expired="'.($h->expired_at?->format('Y-m-d') ?? '').'" title="Edit"><i class="fas fa-edit"></i><span class="sr-only">Edit</span></button>';
-                        $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$h->id.'" title="Hapus"><i class="fas fa-trash"></i><span class="sr-only">Hapus</span></button>';
-                    }
+                if ($h->deleted_at) {
+                    return '<span class="text-muted">&mdash;</span>';
                 }
-                return $btn.'</div>';
+
+                $items = '<button type="button" class="dropdown-item btn-sync-single" data-id="'.$h->id.'"><i class="fas fa-sync text-info mr-2"></i>Sync ulang</button>';
+                if ($h->is_active) {
+                    $items .= '<button type="button" class="dropdown-item btn-toggle-active" data-id="'.$h->id.'" data-active="1"><i class="fas fa-ban text-warning mr-2"></i>Nonaktifkan</button>';
+                } else {
+                    $items .= '<button type="button" class="dropdown-item btn-toggle-active" data-id="'.$h->id.'" data-active="0"><i class="fas fa-check text-success mr-2"></i>Aktifkan</button>';
+                }
+                if ($h->role === 'tamu') {
+                    $items .= '<div class="dropdown-divider"></div>';
+                    $items .= '<button type="button" class="dropdown-item btn-edit-tamu" data-id="'.$h->id.'" data-username="'.$h->username.'" data-displayname="'.e($h->display_name).'" data-keterangan="'.e($h->keterangan).'" data-expired="'.($h->expired_at?->format('Y-m-d') ?? '').'"><i class="fas fa-edit text-secondary mr-2"></i>Edit akun tamu</button>';
+                    $items .= '<button type="button" class="dropdown-item btn-delete text-danger" data-id="'.$h->id.'"><i class="fas fa-trash mr-2"></i>Hapus akun tamu</button>';
+                }
+
+                return '<div class="dropdown hs-row-actions">'
+                    .'<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">Aksi</button>'
+                    .'<div class="dropdown-menu dropdown-menu-right">'.$items.'</div>'
+                    .'</div>';
             })
             ->rawColumns(['kelas_info', 'status_badge', 'sync_badge', 'role_badge', 'profile_badge', 'actions'])
             ->make(true);

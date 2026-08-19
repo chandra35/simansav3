@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
 @section('title', 'Hotspot Manager - SIMANSA')
+@section('plugins.Datatables', true)
 
 @section('css')
-<link rel="stylesheet" href="//cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 <style>
 /* ── Hero Card ─────────────────────────────────── */
 .hs-hero {
@@ -327,7 +327,7 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
-<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819c">
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819d">
 @endsection
 
 @section('content_header')
@@ -395,22 +395,49 @@
     </a>
 </div>
 
+{{-- Hotspot controls ---------------------------------------------------- --}}
+<div class="card card-outline card-info hs-control-card mb-3">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold"><i class="fas fa-sliders-h text-info mr-2"></i>Kontrol Hotspot</h3>
+    </div>
+    <div class="card-body">
+        <div class="hs-control-layout">
+            <div>
+                <div class="text-muted text-uppercase font-weight-bold small mb-2">Sinkronisasi FreeRADIUS</div>
+                <div class="hs-control-actions">
+                    <button type="button" class="btn btn-primary btn-sm btn-sync-role" data-role="guru"><i class="fas fa-chalkboard-teacher mr-1"></i>Sync Guru/GTK</button>
+                    <button type="button" class="btn btn-info btn-sm btn-sync-role" data-role="siswa"><i class="fas fa-user-graduate mr-1"></i>Sync Siswa</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-sync-role" data-role="" data-force="1"><i class="fas fa-sync-alt mr-1"></i>Force Sync Semua</button>
+                </div>
+            </div>
+            <div>
+                <div class="text-muted text-uppercase font-weight-bold small mb-2">Akses Cepat</div>
+                <div class="hs-control-actions">
+                    <a href="{{ route('admin.hotspot.online') }}" class="btn btn-outline-success btn-sm"><i class="fas fa-signal mr-1"></i>Monitoring</a>
+                    <a href="{{ route('admin.hotspot.auth-logs') }}" class="btn btn-outline-warning btn-sm"><i class="fas fa-clipboard-list mr-1"></i>Log Auth</a>
+                    <a href="{{ route('admin.hotspot.settings') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-cog mr-1"></i>Setting</a>
+                </div>
+            </div>
+            <div class="hs-control-note">
+                <i class="fas fa-shield-alt text-success"></i>
+                <span><strong>Password terintegrasi</strong>Password SIMANSA diteruskan otomatis. Sync terjadwal setiap malam pukul 02.00.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Main Panel ----------------------------------------------------------- --}}
 <div class="row hs-workspace-row">
-    <div class="col-xl-9">
-        <div class="hs-panel">
-            <div class="hs-panel__header">
-                <span class="hs-panel__title"><i class="fas fa-users mr-1 text-primary"></i>Daftar Akun Hotspot</span>
+    <div class="col-12">
+        <div class="card card-outline card-primary hs-account-card">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold"><i class="fas fa-users mr-2 text-primary"></i>Daftar Akun Hotspot</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnSyncErrors"><i class="fas fa-redo mr-1"></i>Retry Error</button>
+                </div>
             </div>
             <div class="hs-directory-toolbar">
                 <div class="hs-directory-filters">
-                    <div class="hs-filter-search">
-                        <label class="sr-only" for="searchBox">Cari akun</label>
-                        <div class="input-group input-group-sm">
-                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
-                            <input type="search" id="searchBox" class="form-control" placeholder="Cari username atau nama..." autocomplete="off">
-                        </div>
-                    </div>
                     <select id="filterRole" class="form-control form-control-sm" aria-label="Filter role">
                         <option value="">Semua Role</option>
                         <option value="guru">Guru</option>
@@ -437,7 +464,7 @@
                     </select>
                 </div>
             </div>
-            <div class="hs-panel__body" style="padding:.5rem">
+            <div class="card-body p-0">
 
                 {{-- Bulk action bar --}}
                 <div id="bulkBar" class="hs-bulk-toolbar" style="display:none">
@@ -473,15 +500,10 @@
                         <button type="button" class="btn btn-outline-success filter-active" data-active="1">Aktif</button>
                         <button type="button" class="btn btn-outline-danger filter-active" data-active="0">Nonaktif</button>
                     </div>
-                    <div>
-                        <button type="button" class="btn btn-outline-warning btn-sm" id="btnSyncErrors">
-                            <i class="fas fa-redo mr-1"></i>Retry Error
-                        </button>
-                    </div>
                 </div>
                 <div class="table-responsive hs-table-wrap">
-                    <table id="hotspotTable" class="table table-hover table-striped w-100 mb-0">
-                        <thead class="thead-light">
+                    <table id="hotspotTable" class="table table-bordered table-striped table-hover w-100 mb-0">
+                        <thead>
                             <tr>
                                 <th class="text-center">
                                     <input type="checkbox" id="checkAll" title="Pilih semua di halaman ini">
@@ -503,56 +525,6 @@
     </div>
 
     {{-- Sidebar: RADIUS live + sync actions ─────────────────────────────── --}}
-    <div class="col-xl-3 hs-sidebar">
-        {{-- Sync Actions --}}
-        <div class="hs-panel mb-3">
-            <div class="hs-panel__header">
-                <span class="hs-panel__title"><i class="fas fa-sync mr-1 text-info"></i>Sync Control</span>
-            </div>
-            <div class="hs-panel__body">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-primary btn-block btn-sync-role" data-role="guru">
-                        <i class="fas fa-chalkboard-teacher mr-1"></i>Sync Guru/GTK
-                    </button>
-                    <button class="btn btn-info btn-block btn-sync-role" data-role="siswa">
-                        <i class="fas fa-user-graduate mr-1"></i>Sync Siswa
-                    </button>
-                    <button class="btn btn-outline-secondary btn-block btn-sync-role" data-role="" data-force="1">
-                        <i class="fas fa-sync-alt mr-1"></i>Force Sync Semua
-                    </button>
-                </div>
-                <hr class="my-2">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    Sync otomatis berjalan setiap malam jam 02:00.<br>
-                    Password ikut password Simansa secara real-time.
-                </small>
-            </div>
-        </div>
-
-        <div class="card hs-quick-links mt-3">
-            <div class="card-header border-0 pb-0">
-                <h3 class="card-title font-weight-bold">Akses Cepat</h3>
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="{{ route('admin.hotspot.online') }}" class="list-group-item list-group-item-action">
-                    <span><i class="fas fa-signal text-success mr-2"></i>Monitoring Online</span><i class="fas fa-chevron-right"></i>
-                </a>
-                <a href="{{ route('admin.hotspot.auth-logs') }}" class="list-group-item list-group-item-action">
-                    <span><i class="fas fa-clipboard-list text-warning mr-2"></i>Log Autentikasi</span><i class="fas fa-chevron-right"></i>
-                </a>
-                <a href="{{ route('admin.hotspot.settings') }}" class="list-group-item list-group-item-action">
-                    <span><i class="fas fa-cog text-primary mr-2"></i>Pengaturan Hotspot</span><i class="fas fa-chevron-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="alert hs-password-note">
-            <i class="fas fa-shield-alt"></i>
-            <span><strong>Password terintegrasi</strong>Perubahan password SIMANSA diteruskan ke Hotspot secara otomatis.</span>
-        </div>
-
-    </div>
 </div>
 
 {{-- Sync Overlay --------------------------------------------------------- --}}
@@ -694,8 +666,6 @@
 @endsection
 
 @section('js')
-<script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="//cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 <script>
 const ROUTES = {
     data:         '{{ route("admin.hotspot.data") }}',
@@ -750,7 +720,6 @@ $(function () {
                 d.role        = $('#filterRole').val();
                 d.sync_status = $('#filterSync').val();
                 d.is_active   = activeFilter;
-                d.search      = $('#searchBox').val();
                 d.tingkat     = $('#filterTingkat').val();
                 d.kelas_id    = $('#filterRombel').val();
             },
@@ -772,12 +741,10 @@ $(function () {
             { data: 'sync_badge',   name: 'sync_status', orderable: false, className: 'text-nowrap' },
             { data: 'actions',      name: 'actions', orderable: false, searchable: false, className: 'text-center text-nowrap' },
         ],
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
         pageLength: 20,
         lengthMenu: [[10, 20, 50, 100], [10, 20, 50, 100]],
         order: [[1, 'asc']],
         autoWidth: false,
-        dom: "<'row align-items-center mx-0'<'col-sm-12 col-md-6'l>>rt<'row align-items-center mx-0'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     });
 
     // Restore checkbox state setelah setiap draw
@@ -812,8 +779,6 @@ $(function () {
         }
         table.ajax.reload();
     });
-    $('#searchBox').on('keyup', debounce(() => table.ajax.reload(), 400));
-
     // Load kelas options
     loadFilterOptions();
 
