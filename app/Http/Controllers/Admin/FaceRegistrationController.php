@@ -19,7 +19,7 @@ use Spatie\Activitylog\Models\Activity;
 
 class FaceRegistrationController extends Controller
 {
-    private const DUPLICATE_REQUIRED_CAPTURES = 3;
+    private const DUPLICATE_REQUIRED_CAPTURES = 4;
 
     public function index(Request $request)
     {
@@ -626,7 +626,10 @@ class FaceRegistrationController extends Controller
 
     private function findDuplicateFaceMatch(array $submittedDescriptors, string $userId): ?array
     {
-        $threshold = (float) AbsensiSetting::getValue('face_duplicate_threshold', 0.55);
+        // Pendaftaran mandiri menggunakan frame ponsel yang lebih beragam dari
+        // kamera gerbang. Jangan izinkan ambang duplikasi lebih longgar daripada
+        // ambang pengenalan resmi agar kemiripan kebetulan tidak memblokir akun.
+        $threshold = min((float) AbsensiSetting::getValue('face_duplicate_threshold', 0.45), 0.45);
 
         $candidateFaces = FaceEncoding::query()
             ->where('is_active', true)

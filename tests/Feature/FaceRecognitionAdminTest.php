@@ -79,7 +79,7 @@ class FaceRecognitionAdminTest extends TestCase
         }
     }
 
-    public function test_duplicate_face_protection_requires_consistent_matches_across_three_captures(): void
+    public function test_duplicate_face_protection_requires_consistent_matches_across_four_captures(): void
     {
         $users = User::query()->whereHas('siswa')->limit(2)->get();
         if ($users->count() < 2) {
@@ -108,8 +108,11 @@ class FaceRecognitionAdminTest extends TestCase
         $this->assertNull($oneCoincidentalCapture);
 
         $threeConsistentCaptures = $method->invoke($controller, [$descriptor, $descriptor, $descriptor, $different, $different], $target->id);
-        $this->assertSame(3, $threeConsistentCaptures['matched_captures']);
-        $this->assertSame($registered->id, $threeConsistentCaptures['face']->user_id);
+        $this->assertNull($threeConsistentCaptures);
+
+        $fourConsistentCaptures = $method->invoke($controller, [$descriptor, $descriptor, $descriptor, $descriptor, $different], $target->id);
+        $this->assertSame(4, $fourConsistentCaptures['matched_captures']);
+        $this->assertSame($registered->id, $fourConsistentCaptures['face']->user_id);
     }
 
     public function test_public_face_detect_requires_valid_rotatable_device_token_without_login(): void

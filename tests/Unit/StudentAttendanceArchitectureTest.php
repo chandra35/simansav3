@@ -250,7 +250,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $controller = file_get_contents($root.'/app/Http/Controllers/Admin/FaceRegistrationController.php');
         $view = file_get_contents($root.'/resources/views/admin/absensi/face-register.blade.php');
 
-        $this->assertStringContainsString('DUPLICATE_REQUIRED_CAPTURES = 3', $controller);
+        $this->assertStringContainsString('DUPLICATE_REQUIRED_CAPTURES = 4', $controller);
         $this->assertStringContainsString("->where('is_verified', true)", $controller);
         $this->assertStringContainsString('matched_captures', $controller);
         $this->assertStringContainsString('function speakGuidance(text)', $view);
