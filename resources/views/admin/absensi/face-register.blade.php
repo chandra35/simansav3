@@ -1340,11 +1340,9 @@ function captureVideoFrame(video) {
 }
 async function doCapture() {
     if (currentStep >= totalSteps) return;
-    const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
-    if (!det) { faceStableStart = null; hideCountdownRing(); return false; }
-    const descriptorMetrics = collectLivenessMetrics(det.landmarks, det.detection.box, video.videoWidth || video.clientWidth, video.videoHeight || video.clientHeight);
-    const liveMetrics = lastLiveMetrics || descriptorMetrics;
-    if (!verifyCurrentChallenge(det.landmarks, STEPS[currentStep].angle, liveMetrics)) {
+    const video = document.getElementById('videoElement');
+    const liveMetrics = lastLiveMetrics;
+    if (!liveMetrics || !verifyCurrentChallenge(null, STEPS[currentStep].angle, liveMetrics)) {
         faceStableStart = null;
         hideCountdownRing();
         return false;
@@ -1369,14 +1367,50 @@ async function doCapture() {
         duration_ms: Date.now() - stepStartedAt,
     });
     livenessSummary.completed_steps.push(STEPS[currentStep].angle);
-    capturedDescriptors.push(Array.from(det.descriptor)); capturedAngles.push(STEPS[currentStep].angle); capturedPhotos.push(captureVideoFrame(video));
+    capturedAngles.push(STEPS[currentStep].angle);
+    capturedPhotos.push(captureVideoFrame(video));
     const stepEl = document.getElementById('step-' + currentStep); stepEl.classList.remove('active', 'capturing'); stepEl.classList.add('done'); stepEl.querySelector('.step-check').style.display = 'block'; hideCountdownRing();
     playStepCompleteTone();
     const video2 = document.getElementById('videoElement'); video2.style.outline = '4px solid #00e676'; setTimeout(() => { video2.style.outline = ''; }, 400);
     currentStep++; document.getElementById('progressBar').style.width = ((currentStep / totalSteps) * 100) + '%'; document.getElementById('progressText').textContent = `${currentStep} / ${totalSteps} selesai`;
-    if (currentStep >= totalSteps) { document.getElementById('stepInstruction').style.display = 'none'; setFaceStatus('Menyimpan...', true); await saveRegistration(); }
+    if (currentStep >= totalSteps) {
+        document.getElementById('stepInstruction').style.display = 'none';
+        isDetecting = false;
+        setFaceStatus('Menyiapkan template wajah dari lima capture...', true);
+        const descriptorsReady = await buildDescriptorsFromCapturedPhotos();
+        if (!descriptorsReady) {
+            setFaceStatus('Salah satu capture belum terbaca. Silakan ulangi registrasi.', false);
+            showRegistrationResult('error', 'Registrasi wajah perlu diulangi', 'Salah satu capture tidak dapat dibuatkan template wajah. Pastikan cahaya cukup dan wajah menghadap kamera.', { captures: capturedPhotos.length });
+            return false;
+        }
+        setFaceStatus('Menyimpan...', true);
+        await saveRegistration();
+    }
     else { await new Promise(r => setTimeout(r, 500)); updateStepUI(); }
     return true;
+}
+function loadFaceCapture(photo) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = photo;
+    });
+}
+async function buildDescriptorsFromCapturedPhotos() {
+    const opts = new faceapi.TinyFaceDetectorOptions({
+        inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416,
+        scoreThreshold: 0.4,
+    });
+    const descriptors = [];
+    for (const photo of capturedPhotos) {
+        const image = await loadFaceCapture(photo);
+        const detection = await faceapi.detectSingleFace(image, opts).withFaceLandmarks(true).withFaceDescriptor();
+        if (!detection) return false;
+        descriptors.push(Array.from(detection.descriptor));
+    }
+    capturedDescriptors = descriptors;
+    return descriptors.length === totalSteps;
 }
 function verifyCurrentChallenge(landmarks, angle, liveMetrics) {
     if (angle === 'kedip') {
