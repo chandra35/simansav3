@@ -8,7 +8,14 @@
             <h1 class="mb-1"><i class="fas fa-user-graduate text-primary mr-2"></i>{{ $alumni->nama_lengkap }}</h1>
             <p class="text-muted mb-0">Profil Bank Data Alumni</p>
         </div>
-        <a href="{{ route('admin.alumni.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+        <div class="d-flex align-items-center">
+            @if($canExportLegger)
+                <a href="{{ route('admin.alumni.export-legger', ['alumni' => $alumni, 'include_semester_6' => 1]) }}" class="btn btn-success mr-2">
+                    <i class="fas fa-file-excel mr-1"></i>Export Leger
+                </a>
+            @endif
+            <a href="{{ route('admin.alumni.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+        </div>
     </div>
 @stop
 

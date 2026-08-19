@@ -55,7 +55,10 @@ class AlumniController extends Controller
     {
         $this->authorize('view-siswa');
         $alumni->load(['siswa.user', 'siswa.ortu', 'siswa.sekolahAsal', 'siswa.siswaKelasRecords.tahunPelajaran']);
-        return view('admin.alumni.show', compact('alumni'));
+        $canExportLegger = $alumni->siswa
+            && $alumni->siswa->siswaKelasRecords->contains(fn ($record) => $record->tingkat === 12);
+
+        return view('admin.alumni.show', compact('alumni', 'canExportLegger'));
     }
 
     public function update(Request $request, AlumniProfile $alumni)
