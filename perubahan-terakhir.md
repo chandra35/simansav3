@@ -4,6 +4,11 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
+
+- Setelah kamera siap, registrasi kini menampilkan foto profil sementara dan membacakan: “Selamat datang, [nama lengkap]. Silakan melakukan registrasi wajah.” sebelum tahap liveness dimulai.
+- Foto profil hanya menjadi konteks visual sambutan dan fallback tampilan. Ia tidak dipakai untuk menyetujui, menolak, atau mencocokkan biometrik, sehingga tidak menambah risiko false positive pada proses registrasi.
+
 ### Registrasi Wajah: Responsif, Ramah Hijab & Senyum Natural (19 Agustus 2026)
 
 - Modal registrasi tetap lebar dan nyaman di desktop, sedangkan pada ponsel otomatis menjadi layar penuh dengan area kamera proporsional, isi yang dapat digulir, dan tombol batal yang selalu mudah dijangkau.

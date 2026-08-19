@@ -255,6 +255,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('matched_captures', $controller);
         $this->assertStringContainsString('function speakGuidance(text)', $view);
         $this->assertStringContainsString("utterance.lang = 'id-ID'", $view);
+        $this->assertStringContainsString('async function welcomeRegistrant()', $view);
+        $this->assertStringContainsString('Selamat datang, ${selectedUserName}. Silakan melakukan registrasi wajah.', $view);
+        $this->assertStringContainsString('id="registrationWelcomePhoto"', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
         $this->assertStringContainsString('height: 100dvh', $view);

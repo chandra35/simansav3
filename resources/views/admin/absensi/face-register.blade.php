@@ -121,7 +121,7 @@
                             @if($selfCanRegister)
                                 <div class="d-flex flex-column flex-md-row mt-4">
                                     <button class="btn btn-{{ $selfFace ? 'warning' : 'primary' }} btn-face-action btn-lg"
-                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}')">
+                                            onclick="openRegister('{{ $selfRegistrant['user_id'] }}', '{{ addslashes($selfRegistrant['name']) }}', '{{ $selfRegistrant['user_type'] }}', '{{ addslashes($selfFace?->registration_photo_url ?: $selfRegistrant['avatar_url']) }}')">
                                         <i class="fas fa-{{ $selfFace ? 'redo' : 'camera' }} mr-1"></i>
                                         {{ $selfFace ? 'Registrasi Ulang Diizinkan' : 'Mulai Registrasi' }}
                                     </button>
@@ -343,7 +343,7 @@
                                 <td data-label="Tgl Registrasi">@if($face)<small>{{ $face->created_at->format('d/m/Y H:i') }}</small>@else - @endif</td>
                                 <td data-label="Aksi">
                                     <button class="btn btn-sm btn-{{ $face ? 'warning' : 'primary' }} btn-face-action"
-                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}')">
+                                            onclick="openRegister('{{ $registrant['user_id'] }}', '{{ addslashes($registrant['name']) }}', '{{ $registrant['user_type'] }}', '{{ addslashes($registrant['avatar_url']) }}')">
                                         <i class="fas fa-{{ $face ? 'redo' : 'camera' }}"></i>
                                         {{ $face ? 'Ulang' : 'Daftar' }}
                                     </button>
@@ -407,6 +407,12 @@
                             </button>
                         </div>
                     </div>
+                </div>
+                <div class="face-register-welcome d-none" id="registrationWelcome" aria-live="polite">
+                    <img id="registrationWelcomePhoto" class="img-circle face-register-welcome__photo" alt="Foto profil peserta registrasi">
+                    <div class="text-uppercase small font-weight-bold text-primary mt-2">Selamat datang</div>
+                    <div class="font-weight-bold text-dark" id="registrationWelcomeName"></div>
+                    <div class="small text-muted mt-1">Silakan melakukan registrasi wajah.</div>
                 </div>
                 <div class="face-register-modal__info px-3 py-2 border-bottom">
                     <div class="small text-muted d-flex flex-wrap align-items-center">
@@ -568,6 +574,25 @@
         background: rgba(15, 23, 42, 0.72);
         backdrop-filter: blur(4px);
     }
+    .face-register-welcome {
+        position: absolute;
+        z-index: 20;
+        top: 50%;
+        left: 50%;
+        width: min(19rem, calc(100% - 2rem));
+        padding: 1.15rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 1rem;
+        box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.28);
+        transform: translate(-50%, -50%);
+    }
+    .face-register-welcome__photo {
+        width: 4.5rem;
+        height: 4.5rem;
+        object-fit: cover;
+        border: 3px solid rgba(37, 99, 235, 0.16);
+    }
     .face-register-result-card {
         width: min(100%, 31rem);
         background: #fff;
@@ -723,6 +748,10 @@
         .face-register-duplicate-card {
             padding: 1rem;
         }
+        .face-register-welcome {
+            width: min(17rem, calc(100% - 1.5rem));
+            padding: 0.9rem;
+        }
         .face-register-step-instruction {
             font-size: 0.9rem !important;
             padding: 0.6rem 0.9rem !important;
@@ -796,7 +825,7 @@
 @section('js')
 <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
 <script>
-let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', currentStep = -1;
+let selectedUserId = null, selectedUserName = '', selectedUserType = '{{ $selectedType }}', selectedUserPhoto = '', currentStep = -1;
 const totalSteps = 5, STABLE_DURATION_MS = 1500, storeUrl = @json($storeUrl), initialSelection = @json($initialSelection), canManageAll = @json($canManageAll);
 let capturedDescriptors = [], capturedAngles = [], capturedPhotos = [], isDetecting = false, modelsLoaded = false, cameraStream = null, faceStableStart = null, autoCapturing = false, blinkCount = 0, earHistory = [], eyeWasClosed = false;
 let STEPS = [];
@@ -870,14 +899,15 @@ $(function() {
     }
 
     if (initialSelection && canManageAll) {
-        openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type);
+        openRegister(initialSelection.user_id, initialSelection.name, initialSelection.user_type, initialSelection.avatar_url);
     }
 });
 
-function openRegister(userId, userName, userType) {
+function openRegister(userId, userName, userType, userPhoto = '') {
     selectedUserId = userId;
     selectedUserName = userName;
     selectedUserType = userType;
+    selectedUserPhoto = userPhoto;
     document.getElementById('modalUserName').textContent = userName;
     $('#modalRegister').modal('show');
     if (!modelsLoaded) loadModels(); else startCameraAndRegister();
@@ -904,20 +934,38 @@ async function startCameraAndRegister() {
     const video = document.getElementById('videoElement');
     try {
         cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' } });
-        video.srcObject = cameraStream; await new Promise(r => { video.onloadedmetadata = r; }); document.getElementById('loadingOverlay').style.display = 'none'; beginAutoRegistration();
+        video.srcObject = cameraStream;
+        await new Promise(r => { video.onloadedmetadata = r; });
+        document.getElementById('loadingOverlay').style.display = 'none';
+        await welcomeRegistrant();
+        if (cameraStream && video.srcObject === cameraStream) beginAutoRegistration();
     } catch (err) { setLoadingText('Kamera tidak tersedia: ' + err.message); }
 }
 function setLoadingText(text) { document.getElementById('loadingText').textContent = text; }
 function speakGuidance(text) {
-    if (!guidanceVoiceEnabled || !guidanceSpeechSupported || !text) return;
+    if (!guidanceVoiceEnabled || !guidanceSpeechSupported || !text) return Promise.resolve();
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'id-ID';
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    const indonesianVoice = window.speechSynthesis.getVoices().find(voice => /^id([_-]|$)/i.test(voice.lang));
-    if (indonesianVoice) utterance.voice = indonesianVoice;
-    window.speechSynthesis.speak(utterance);
+    return new Promise(resolve => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        utterance.onend = utterance.onerror = resolve;
+        const indonesianVoice = window.speechSynthesis.getVoices().find(voice => /^id([_-]|$)/i.test(voice.lang));
+        if (indonesianVoice) utterance.voice = indonesianVoice;
+        window.speechSynthesis.speak(utterance);
+        window.setTimeout(resolve, 6500);
+    });
+}
+async function welcomeRegistrant() {
+    const welcome = document.getElementById('registrationWelcome');
+    const photo = document.getElementById('registrationWelcomePhoto');
+    document.getElementById('registrationWelcomeName').textContent = selectedUserName;
+    photo.src = selectedUserPhoto || '{{ asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}';
+    photo.onerror = () => { photo.src = '{{ asset('vendor/adminlte/dist/img/user2-160x160.jpg') }}'; };
+    welcome.classList.remove('d-none');
+    await speakGuidance(`Selamat datang, ${selectedUserName}. Silakan melakukan registrasi wajah.`);
+    welcome.classList.add('d-none');
 }
 function playStepCompleteTone() {
     try {
