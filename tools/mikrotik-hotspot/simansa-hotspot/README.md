@@ -11,7 +11,9 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - `error.html` - halaman error umum.
 - `md5.js` - dukungan CHAP MikroTik.
 - `assets/logo.png` - logo MAN 1 Metro dari SIMANSA.
-- `assets/style.css` dan `assets/portal.js` - tampilan dan mapping pesan error.
+- `assets/style.css` - tema halaman status, sukses, logout, dan error.
+- `assets/login-v2.css` - tema editorial khusus halaman login.
+- `assets/portal.js` - interaksi form dan mapping pesan error.
 
 ## Cara Pasang di MikroTik
 

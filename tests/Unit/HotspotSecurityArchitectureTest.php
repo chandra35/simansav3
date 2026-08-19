@@ -192,4 +192,20 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("window.open('$(link-status)', 'hotspot_status')", $success);
         $this->assertStringContainsString('target="hotspot_status"', $success);
     }
+
+    public function test_mikrotik_login_uses_dedicated_responsive_redesign(): void
+    {
+        $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
+        $login = file_get_contents($portal.'login.html');
+        $style = file_get_contents($portal.'assets/login-v2.css');
+        $script = file_get_contents($portal.'assets/portal.js');
+
+        $this->assertStringContainsString('assets/login-v2.css?v=20260819', $login);
+        $this->assertStringContainsString('class="story-panel"', $login);
+        $this->assertStringContainsString('class="login-panel"', $login);
+        $this->assertStringContainsString('@media(max-width:900px)', $style);
+        $this->assertStringContainsString('prefers-reduced-motion:reduce', $style);
+        $this->assertStringContainsString('.hotspot-modal.is-visible', $style);
+        $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
+    }
 }

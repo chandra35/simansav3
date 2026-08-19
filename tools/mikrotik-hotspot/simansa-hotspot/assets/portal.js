@@ -45,7 +45,7 @@
       {
         match: ['invalid username or password', 'invalid password', 'not found', 'radius reject'],
         title: 'Login ditolak',
-        message: 'Username atau password belum sesuai. Siswa menggunakan NISN sebagai username.'
+        message: 'Username atau password belum sesuai. Periksa kembali ID akun dan password Anda.'
       },
       {
         match: ['radius timeout', 'radius is not responding', 'authentication server'],
