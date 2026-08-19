@@ -1104,20 +1104,18 @@ async function activateCompatibilityBackend() {
 function setFaceStatus(text, ok) { const el = document.getElementById('faceStatus'); el.style.color = ok ? '#00e676' : '#ff5252'; el.innerHTML = `<i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`; }
 function validatePose(landmarks, angle, liveMetrics) {
     const { yawRatio, smileRatio } = liveMetrics;
-    const yawDelta = baselineMetrics ? Math.abs(yawRatio - baselineMetrics.yawRatio) : 0;
     const smileDelta = baselineMetrics ? smileRatio - baselineMetrics.smileRatio : 0;
     if (angle === 'frontal') {
-        const ok = yawRatio > 0.72 && yawRatio < 1.34;
-        setFaceStatus(ok ? 'Bagus! Tetap menghadap depan dan stabil...' : 'Hadapkan wajah ke kamera dan jaga jarak sekitar satu lengan.', ok);
-        return ok;
+        setFaceStatus('Bagus! Tetap menghadap depan dan stabil...', true);
+        return true;
     }
     if (angle === 'kanan') {
-        const ok = yawRatio < 0.87 && yawDelta >= 0.10;
+        const ok = baselineMetrics && yawRatio <= baselineMetrics.yawRatio - 0.08;
         setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KANAN Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }
     if (angle === 'kiri') {
-        const ok = yawRatio > 1.17 && yawDelta >= 0.10;
+        const ok = baselineMetrics && yawRatio >= baselineMetrics.yawRatio + 0.08;
         setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KIRI Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }

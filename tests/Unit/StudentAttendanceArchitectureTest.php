@@ -272,8 +272,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('async function activateCompatibilityBackend()', $view);
         $this->assertStringContainsString("await faceapi.tf.setBackend('cpu');", $view);
         $this->assertStringContainsString('Mode kompatibilitas kamera aktif. Mencari wajah kembali...', $view);
-        $this->assertStringContainsString('const ok = yawRatio > 0.72 && yawRatio < 1.34;', $view);
-        $this->assertStringNotContainsString('yawRatio > 0.72 && yawRatio < 1.34 && passiveOk', $view);
+        $this->assertStringContainsString("if (angle === 'frontal') {\n        setFaceStatus('Bagus! Tetap menghadap depan dan stabil...', true);\n        return true;", $view);
+        $this->assertStringContainsString('yawRatio <= baselineMetrics.yawRatio - 0.08', $view);
+        $this->assertStringContainsString('yawRatio >= baselineMetrics.yawRatio + 0.08', $view);
         $this->assertStringContainsString('function playStepCompleteTone()', $view);
         $this->assertStringContainsString('playStepCompleteTone();', $view);
         $this->assertStringContainsString('height: 100dvh', $view);
