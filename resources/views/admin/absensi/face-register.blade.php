@@ -833,6 +833,9 @@ let guidanceAudioContext = null;
 const FACE_DETECTOR_INPUT_SIZE = window.matchMedia('(max-width: 767.98px)').matches ? 160 : 320;
 const IS_MOBILE_FACE_REGISTRATION = window.matchMedia('(max-width: 767.98px)').matches;
 let compatibilityBackendAttempted = false;
+let detailedFaceLandmarker = null;
+let detailedLandmarkerReady = false;
+let lastLiveMetrics = null;
 const REQUIRED_STEP_TYPES = ['frontal', 'kedip', 'senyum'];
 const STEP_LIBRARY = {
     frontal: { angle: 'frontal', title: 'Wajah Depan', text: 'Lihat lurus ke kamera', icon: 'fa-user', description: 'Posisikan wajah di tengah frame, dari jarak sekitar satu lengan, lalu tahan stabil.' },
@@ -914,8 +917,41 @@ async function loadModels() {
         setLoadingText('Memuat model deteksi wajah...'); await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model landmark wajah...'); await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
         setLoadingText('Memuat model pengenalan wajah...'); await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        setLoadingText('Memuat 478 titik wajah dan ekspresi mata...');
+        detailedLandmarkerReady = await initializeDetailedFaceLandmarker();
         modelsLoaded = true; startCameraAndRegister();
     } catch (err) { setLoadingText('Error: ' + err.message); }
+}
+async function initializeDetailedFaceLandmarker() {
+    try {
+        const mediaPipeBaseUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21';
+        const { FaceLandmarker, FilesetResolver } = await import(`${mediaPipeBaseUrl}/vision_bundle.mjs`);
+        const vision = await FilesetResolver.forVisionTasks(`${mediaPipeBaseUrl}/wasm`);
+        const options = {
+            baseOptions: {
+                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                delegate: 'GPU',
+            },
+            runningMode: 'VIDEO',
+            numFaces: 1,
+            outputFaceBlendshapes: true,
+            minFaceDetectionConfidence: 0.45,
+            minFacePresenceConfidence: 0.45,
+            minTrackingConfidence: 0.45,
+        };
+        try {
+            detailedFaceLandmarker = await FaceLandmarker.createFromOptions(vision, options);
+        } catch (_) {
+            detailedFaceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+                ...options,
+                baseOptions: { ...options.baseOptions, delegate: 'CPU' },
+            });
+        }
+        return true;
+    } catch (_) {
+        detailedFaceLandmarker = null;
+        return false;
+    }
 }
 async function startCameraAndRegister() {
     setLoadingText('Menyalakan kamera...'); document.getElementById('loadingOverlay').style.display = 'flex';
@@ -978,6 +1014,7 @@ function beginAutoRegistration() {
     autoCapturing = false;
     baselineMetrics = null;
     turnSigns = [];
+    lastLiveMetrics = null;
     passiveSamples = [];
     gestureSamples = [];
     registrationStartedAt = Date.now();
@@ -1031,6 +1068,74 @@ function updateStepUI() {
     faceStableStart = null;
     hideCountdownRing();
 }
+function detectDetailedFace(video, canvasWidth, canvasHeight) {
+    if (!detailedLandmarkerReady || !detailedFaceLandmarker) return null;
+    const result = detailedFaceLandmarker.detectForVideo(video, performance.now());
+    const landmarks = result.faceLandmarks?.[0];
+    if (!landmarks?.length) return null;
+    const xs = landmarks.map(point => point.x * canvasWidth), ys = landmarks.map(point => point.y * canvasHeight);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const box = { x: minX, y: minY, width: Math.max(maxX - minX, 1), height: Math.max(maxY - minY, 1) };
+    const blendshapes = Object.fromEntries((result.faceBlendshapes?.[0]?.categories || []).map(category => [category.categoryName, category.score]));
+    const nose = landmarks[1];
+    const centerX = (box.x + (box.width / 2)) / Math.max(canvasWidth, 1);
+    const centerY = (box.y + (box.height / 2)) / Math.max(canvasHeight, 1);
+    const noseOffset = ((nose.x * canvasWidth) - box.x) / box.width;
+    const areaRatio = (box.width * box.height) / Math.max(canvasWidth * canvasHeight, 1);
+    const smileRatio = ((blendshapes.mouthSmileLeft || 0) + (blendshapes.mouthSmileRight || 0)) / 2;
+    const blinkScore = ((blendshapes.eyeBlinkLeft || 0) + (blendshapes.eyeBlinkRight || 0)) / 2;
+    return {
+        points: landmarks.map(point => ({ x: point.x * canvasWidth, y: point.y * canvasHeight })),
+        box,
+        metrics: { yawRatio: noseOffset / Math.max(1 - noseOffset, 0.001), smileRatio, centerX, centerY, areaRatio, noseOffset },
+        blinkScore,
+    };
+}
+function drawDetailedFace(ctx, face) {
+    face.points.forEach((point, index) => {
+        if (index % 2 !== 0) return;
+        ctx.beginPath(); ctx.arc(point.x, point.y, 1.35, 0, 2 * Math.PI); ctx.fillStyle = '#39ff88'; ctx.globalAlpha = 0.86; ctx.fill();
+    });
+    ctx.globalAlpha = 1; ctx.strokeStyle = '#39ff88'; ctx.lineWidth = 3; ctx.shadowColor = 'rgba(57, 255, 136, 0.72)'; ctx.shadowBlur = 7;
+    ctx.strokeRect(face.box.x, face.box.y, face.box.width, face.box.height); ctx.shadowBlur = 0;
+}
+function detectBlendshapeBlink(blinkScore) {
+    const closed = blinkScore >= 0.38;
+    const opened = blinkScore <= 0.16;
+    setFaceStatus(closed ? 'Bagus, sekarang buka mata kembali.' : 'Kedipkan mata secara normal: tutup lalu buka kembali.', true);
+    if (closed) {
+        blinkCloseFrames++;
+        eyeWasClosed = true;
+        return;
+    }
+    if (opened && eyeWasClosed && blinkCloseFrames >= 1) {
+        blinkCount++;
+        livenessSummary.blink_count = Math.max(livenessSummary.blink_count, blinkCount);
+        livenessSummary.max_blink_close_frames = Math.max(livenessSummary.max_blink_close_frames, blinkCloseFrames);
+        eyeWasClosed = false;
+        blinkCloseFrames = 0;
+        document.getElementById('stepText').textContent = 'Kedip terdeteksi!';
+        if (!autoCapturing) {
+            autoCapturing = true;
+            setTimeout(async () => { await doCaptureWithRetry(); autoCapturing = false; }, 300);
+        }
+    }
+}
+async function processLiveFace(face, ctx, canvas) {
+    lastLiveMetrics = face.metrics;
+    setFaceStatus('Wajah terdeteksi. Landmark aktif.', true);
+    if (currentStep >= totalSteps || autoCapturing) return;
+    if (STEPS[currentStep].angle === 'kedip') {
+        if (face.blinkScore !== undefined) detectBlendshapeBlink(face.blinkScore);
+        else detectBlink(face.landmarks);
+        return;
+    }
+    const poseOk = validatePose(null, STEPS[currentStep].angle, face.metrics);
+    if (poseOk) {
+        if (!faceStableStart) { faceStableStart = Date.now(); showCountdownRing(); }
+        else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) { autoCapturing = true; await doCapture(); autoCapturing = false; }
+    } else if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
+}
 function startDetectionLoop() {
     isDetecting = true;
     const video = document.getElementById('videoElement'), canvas = document.getElementById('overlayCanvas'), ctx = canvas.getContext('2d'), options = new faceapi.TinyFaceDetectorOptions({ inputSize: FACE_DETECTOR_INPUT_SIZE, scoreThreshold: 0.4 });
@@ -1045,6 +1150,15 @@ function startDetectionLoop() {
         }
         try {
             canvas.width = video.videoWidth || video.clientWidth; canvas.height = video.videoHeight || video.clientHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const detailedFace = detectDetailedFace(video, canvas.width, canvas.height);
+            if (detailedFace) {
+                drawDetailedFace(ctx, detailedFace);
+                await processLiveFace(detailedFace, ctx, canvas);
+                const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 80 : 120;
+                requestAnimationFrame(() => setTimeout(detect, delay));
+                return;
+            }
             const result = await detectFaceWithWatchdog(video, options);
             if (result.timedOut) {
                 const compatibilityMode = await activateCompatibilityBackend();
@@ -1054,23 +1168,16 @@ function startDetectionLoop() {
                 window.setTimeout(detect, compatibilityMode ? 500 : 1000);
                 return;
             }
-            const detection = result.detection; ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const detection = result.detection;
             if (detection) {
                 const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
                 resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, 2 * Math.PI); ctx.fillStyle = '#39ff88'; ctx.globalAlpha = 0.9; ctx.fill(); });
                 ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#39ff88'; ctx.lineWidth = 3; ctx.shadowColor = 'rgba(57, 255, 136, 0.72)'; ctx.shadowBlur = 7; ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.shadowBlur = 0;
-                const liveMetrics = collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height);
-                setFaceStatus(`Wajah terdeteksi (${(detection.detection.score * 100).toFixed(0)}%)`, true);
-                if (currentStep < totalSteps && !autoCapturing) {
-                    if (STEPS[currentStep].angle === 'kedip') detectBlink(detection.landmarks);
-                    else {
-                        const poseOk = validatePose(detection.landmarks, STEPS[currentStep].angle, liveMetrics);
-                        if (poseOk) {
-                            if (!faceStableStart) { faceStableStart = Date.now(); showCountdownRing(); }
-                            else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) { autoCapturing = true; await doCapture(); autoCapturing = false; }
-                        } else if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
-                    }
-                }
+                await processLiveFace({
+                    landmarks: detection.landmarks,
+                    box,
+                    metrics: collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height),
+                }, ctx, canvas);
             } else { setFaceStatus('Arahkan wajah ke kamera', false); if (faceStableStart) { faceStableStart = null; hideCountdownRing(); } }
         } catch (_) {
             const compatibilityMode = await activateCompatibilityBackend();
@@ -1221,7 +1328,8 @@ async function doCapture() {
     if (currentStep >= totalSteps) return;
     const video = document.getElementById('videoElement'), opts = new faceapi.TinyFaceDetectorOptions({ inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416, scoreThreshold: 0.5 }), det = await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
     if (!det) { faceStableStart = null; hideCountdownRing(); return false; }
-    const liveMetrics = collectLivenessMetrics(det.landmarks, det.detection.box, video.videoWidth || video.clientWidth, video.videoHeight || video.clientHeight);
+    const descriptorMetrics = collectLivenessMetrics(det.landmarks, det.detection.box, video.videoWidth || video.clientWidth, video.videoHeight || video.clientHeight);
+    const liveMetrics = lastLiveMetrics || descriptorMetrics;
     if (!verifyCurrentChallenge(det.landmarks, STEPS[currentStep].angle, liveMetrics)) {
         faceStableStart = null;
         hideCountdownRing();
@@ -1407,6 +1515,6 @@ function computeQualityScore(livenessPayload) {
     const bonus = Math.min(Math.round((livenessPayload.liveness_score || 0) * 0.3), 30);
     return Math.min(baseScore + bonus, 100);
 }
-function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; turnSigns = []; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
+function resetRegistration() { isDetecting = false; autoCapturing = false; capturedDescriptors = []; capturedAngles = []; capturedPhotos = []; currentStep = -1; blinkCount = 0; blinkCloseFrames = 0; blinkOpenEarBaseline = null; earHistory = []; eyeWasClosed = false; faceStableStart = null; baselineMetrics = null; turnSigns = []; lastLiveMetrics = null; passiveSamples = []; gestureSamples = []; registrationFinished = false; resetUI(); setTimeout(() => beginAutoRegistration(), 300); }
 </script>
 @stop

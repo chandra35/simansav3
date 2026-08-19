@@ -272,6 +272,11 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('async function activateCompatibilityBackend()', $view);
         $this->assertStringContainsString("await faceapi.tf.setBackend('cpu');", $view);
         $this->assertStringContainsString('Mode kompatibilitas kamera aktif. Mencari wajah kembali...', $view);
+        $this->assertStringContainsString("@mediapipe/tasks-vision@0.10.21", $view);
+        $this->assertStringContainsString('outputFaceBlendshapes: true', $view);
+        $this->assertStringContainsString('function detectDetailedFace(video, canvasWidth, canvasHeight)', $view);
+        $this->assertStringContainsString('blendshapes.eyeBlinkLeft', $view);
+        $this->assertStringContainsString('function detectBlendshapeBlink(blinkScore)', $view);
         $this->assertStringContainsString("return ['frontal', 'kanan', 'kiri', ...shuffleArray(['senyum', 'kedip'])]", $view);
         $this->assertStringContainsString('const centered = centerX > 0.16 && centerX < 0.84', $view);
         $this->assertStringContainsString('const noseOffset = (noseTip.x - box.x) / Math.max(box.width, 1);', $view);
