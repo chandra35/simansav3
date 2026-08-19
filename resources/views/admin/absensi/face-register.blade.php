@@ -1400,19 +1400,21 @@ function loadFaceCapture(photo) {
 async function buildDescriptorsFromCapturedPhotos() {
     await releaseDetailedLandmarkerForDescriptors();
     const opts = new faceapi.TinyFaceDetectorOptions({
-        inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 224 : 416,
-        scoreThreshold: 0.4,
+        inputSize: window.matchMedia('(max-width: 767.98px)').matches ? 320 : 416,
+        scoreThreshold: 0.3,
     });
-    const descriptors = [];
-    for (const [index, photo] of capturedPhotos.entries()) {
-        setFaceStatus(`Membuat template wajah ${index + 1} dari ${capturedPhotos.length}...`, true);
-        const image = await loadFaceCapture(photo);
-        const detection = await detectDescriptorWithWatchdog(image, opts);
-        if (!detection) return false;
-        descriptors.push(Array.from(detection.descriptor));
-    }
-    capturedDescriptors = descriptors;
-    return descriptors.length === totalSteps;
+    const frontalIndex = Math.max(capturedAngles.indexOf('frontal'), 0);
+    setFaceStatus('Membuat template dari capture wajah depan yang netral...', true);
+    const image = await loadFaceCapture(capturedPhotos[frontalIndex]);
+    const detection = await detectDescriptorWithWatchdog(image, opts);
+    if (!detection) return false;
+
+    // Pose toleh, kedip, dan senyum adalah bukti liveness. Template pengenalan
+    // justru harus menggunakan wajah depan yang paling stabil. Salinan descriptor
+    // menjaga format lima capture lama tanpa memaksa model mengenali profil samping.
+    const canonicalDescriptor = Array.from(detection.descriptor);
+    capturedDescriptors = Array.from({ length: totalSteps }, () => [...canonicalDescriptor]);
+    return true;
 }
 async function releaseDetailedLandmarkerForDescriptors() {
     try {
