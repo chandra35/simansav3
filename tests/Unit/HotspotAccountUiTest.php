@@ -43,6 +43,14 @@ class HotspotAccountUiTest extends TestCase
         $this->assertStringContainsString('class="dropdown hs-row-actions"', $controller);
         $this->assertStringContainsString('dropdown-menu dropdown-menu-right', $controller);
         $this->assertStringContainsString('data-boundary="viewport"', $controller);
+        $this->assertStringContainsString("data-username=\"'.e(\$h->username).'\"", $controller);
+        $this->assertStringContainsString('id="accountActionFeedback"', $view);
+        $this->assertStringContainsString("showAccountActionFeedback('info', 'Sinkronisasi sedang berjalan'", $view);
+        $this->assertStringContainsString('timeout: 60000', $view);
+        $this->assertStringContainsString('table.ajax.reload(null, false)', $view);
         $this->assertStringContainsString('.hs-bulk-toolbar.is-visible { display: flex !important; }', $css);
+        $this->assertStringContainsString('.hs-account-card .pagination .page-item.active .page-link', $css);
+        $this->assertStringContainsString('background-color: #007bff', $css);
+        $this->assertStringNotContainsString('box-shadow: 0 5px 12px', $css);
     }
 }

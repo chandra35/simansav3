@@ -327,7 +327,7 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
-<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819d">
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819e">
 @endsection
 
 @section('content_header')
@@ -465,6 +465,17 @@
                 </div>
             </div>
             <div class="card-body p-0">
+
+                <div id="accountActionFeedback" class="alert alert-info d-none m-3 mb-0" role="status" aria-live="polite">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle mt-1 mr-2 hs-action-feedback__icon"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block hs-action-feedback__title">Informasi akun</strong>
+                            <span class="hs-action-feedback__message"></span>
+                        </div>
+                        <button type="button" class="close ml-3" aria-label="Tutup" id="btnCloseAccountFeedback"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                </div>
 
                 {{-- Bulk action bar --}}
                 <div id="bulkBar" class="hs-bulk-toolbar" style="display:none">
@@ -707,6 +718,27 @@ function setButtonBusy(button, busy, busyLabel) {
         $button.removeData('original-html');
     }
 }
+
+let accountFeedbackTimer = null;
+function showAccountActionFeedback(type, title, message, autoHide = 0) {
+    const icons = { info: 'fa-spinner fa-spin', success: 'fa-check-circle', danger: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
+    const $feedback = $('#accountActionFeedback');
+    window.clearTimeout(accountFeedbackTimer);
+    $feedback
+        .removeClass('d-none alert-info alert-success alert-danger alert-warning')
+        .addClass(`alert-${type}`);
+    $feedback.find('.hs-action-feedback__icon').attr('class', `fas ${icons[type] || icons.info} mt-1 mr-2 hs-action-feedback__icon`);
+    $feedback.find('.hs-action-feedback__title').text(title);
+    $feedback.find('.hs-action-feedback__message').text(message);
+    if (autoHide > 0) {
+        accountFeedbackTimer = window.setTimeout(() => $feedback.addClass('d-none'), autoHide);
+    }
+}
+
+$('#btnCloseAccountFeedback').on('click', () => {
+    window.clearTimeout(accountFeedbackTimer);
+    $('#accountActionFeedback').addClass('d-none');
+});
 
 // ── DataTable ─────────────────────────────────────────────────────────────
 let table;
@@ -1051,14 +1083,33 @@ function updateStatCards(s) {
 // ── Sync single ───────────────────────────────────────────────────────────
 $(document).on('click', '.btn-sync-single', function () {
     const button = this;
-    const id = $(this).data('id');
-    setButtonBusy(button, true, '');
-    $.post(ROUTES.syncSingle(id), { _token: '{{ csrf_token() }}' })
+    const $button = $(button);
+    const id = $button.data('id');
+    const username = $button.data('username') || `ID ${id}`;
+    if ($button.prop('disabled')) return;
+
+    $('[data-toggle="dropdown"][aria-expanded="true"]').dropdown('hide');
+    showAccountActionFeedback('info', 'Sinkronisasi sedang berjalan', `Akun ${username} sedang disinkronkan ke FreeRADIUS.`);
+    setButtonBusy(button, true, 'Menyinkronkan...');
+    $.ajax({
+        url: ROUTES.syncSingle(id),
+        method: 'POST',
+        data: { _token: '{{ csrf_token() }}' },
+        timeout: 60000,
+    })
         .done(r => {
+            const type = r.success ? 'success' : 'danger';
+            showAccountActionFeedback(type, r.success ? 'Sinkronisasi berhasil' : 'Sinkronisasi ditolak', `${username}: ${r.message}`, r.success ? 8000 : 0);
             toastr[r.success ? 'success' : 'error'](r.message);
-            table.ajax.reload();
+            table.ajax.reload(null, false);
         })
-        .fail(xhr => toastr.error(requestMessage(xhr, 'Sinkronisasi akun gagal.')))
+        .fail(xhr => {
+            const message = xhr.statusText === 'timeout'
+                ? 'Server belum memberi respons setelah 60 detik. Periksa status sync akun sebelum mencoba kembali.'
+                : requestMessage(xhr, 'Sinkronisasi akun gagal.');
+            showAccountActionFeedback('danger', 'Sinkronisasi gagal', `${username}: ${message}`);
+            toastr.error(message);
+        })
         .always(() => setButtonBusy(button, false));
 });
 

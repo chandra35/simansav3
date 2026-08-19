@@ -117,6 +117,10 @@
 #hotspotTable input[type="checkbox"],#checkAll { cursor: pointer; }
 .hs-row-actions .dropdown-toggle { min-width: 74px; }
 .hs-row-actions .dropdown-menu { min-width: 190px; }
+.hs-account-card .pagination .page-link { color: #007bff; background-color: #fff; border: 1px solid #dee2e6; box-shadow: none; }
+.hs-account-card .pagination .page-link:hover { color: #0056b3; background-color: #e9ecef; border-color: #dee2e6; }
+.hs-account-card .pagination .page-item.active .page-link { color: #fff; background-color: #007bff; border-color: #007bff; box-shadow: none; }
+.hs-account-card .pagination .page-item.disabled .page-link { color: #6c757d; background-color: #fff; border-color: #dee2e6; }
 
 /* Overlays and modals */
 #syncOverlay { background: rgba(15,28,51,.68); }

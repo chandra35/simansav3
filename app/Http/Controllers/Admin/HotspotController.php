@@ -117,7 +117,7 @@ class HotspotController extends Controller
                     return '<span class="text-muted">&mdash;</span>';
                 }
 
-                $items = '<button type="button" class="dropdown-item btn-sync-single" data-id="'.$h->id.'"><i class="fas fa-sync text-info mr-2"></i>Sync ulang</button>';
+                $items = '<button type="button" class="dropdown-item btn-sync-single" data-id="'.$h->id.'" data-username="'.e($h->username).'"><i class="fas fa-sync text-info mr-2"></i>Sync ulang</button>';
                 if ($h->is_active) {
                     $items .= '<button type="button" class="dropdown-item btn-toggle-active" data-id="'.$h->id.'" data-active="1"><i class="fas fa-ban text-warning mr-2"></i>Nonaktifkan</button>';
                 } else {
