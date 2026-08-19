@@ -92,7 +92,11 @@ class JadwalPelajaranController extends Controller
         $rows = collect($parsed['slots'])->map(function (array $slot) use ($classes, $gtkByCode, $gtkAliases, $gtkByExactName, $mapelByCode, $mapelAliases, $mappingService, $hariKerja, &$seenSlots) {
             $errors = [];
             $kelas = $classes->get($slot['kelas_key']);
-            $gtkDariKode = $gtkByCode[$slot['kode_gtk']]?->id;
+            // Kode yang ada di file Wakakur belum tentu sudah terdaftar pada
+            // master GTK. Jangan akses Collection sebagai indeks wajib karena
+            // itu akan menghentikan preview dengan error 500; biarkan validasi
+            // di bawah menandai baris tersebut untuk dipetakan admin.
+            $gtkDariKode = $gtkByCode->get($slot['kode_gtk'])?->id;
             $gtkDariNama = $slot['gtk_excel']
                 ? ($gtkByExactName[$mappingService->normalizePersonName($slot['gtk_excel'])] ?? null)
                 : null;
