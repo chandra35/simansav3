@@ -277,6 +277,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('function detectDetailedFace(video, canvasWidth, canvasHeight)', $view);
         $this->assertStringContainsString('blendshapes.eyeBlinkLeft', $view);
         $this->assertStringContainsString('function detectBlendshapeBlink(blinkScore)', $view);
+        $this->assertStringContainsString('function runCaptureInBackground(capture)', $view);
         $this->assertStringContainsString('turn_span: Number(turnSpan.toFixed(4))', $view);
         $this->assertStringContainsString("return ['frontal', 'kanan', 'kiri', ...shuffleArray(['senyum', 'kedip'])]", $view);
         $this->assertStringContainsString('const centered = centerX > 0.16 && centerX < 0.84', $view);

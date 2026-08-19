@@ -1117,12 +1117,20 @@ function detectBlendshapeBlink(blinkScore) {
         blinkCloseFrames = 0;
         document.getElementById('stepText').textContent = 'Kedip terdeteksi!';
         if (!autoCapturing) {
-            autoCapturing = true;
-            setTimeout(async () => { await doCaptureWithRetry(); autoCapturing = false; }, 300);
+            window.setTimeout(() => runCaptureInBackground(() => doCaptureWithRetry()), 300);
         }
     }
 }
-async function processLiveFace(face, ctx, canvas) {
+function runCaptureInBackground(capture) {
+    if (autoCapturing || currentStep >= totalSteps) return;
+    autoCapturing = true;
+    setFaceStatus('Merekam data wajah, landmark tetap aktif...', true);
+    Promise.resolve()
+        .then(capture)
+        .catch(() => setFaceStatus('Capture wajah perlu diulangi. Tetap hadap ke kamera.', false))
+        .finally(() => { autoCapturing = false; });
+}
+function processLiveFace(face, ctx, canvas) {
     lastLiveMetrics = face.metrics;
     recordLivenessMetrics(face.metrics);
     setFaceStatus('Wajah terdeteksi. Landmark aktif.', true);
@@ -1135,7 +1143,7 @@ async function processLiveFace(face, ctx, canvas) {
     const poseOk = validatePose(null, STEPS[currentStep].angle, face.metrics);
     if (poseOk) {
         if (!faceStableStart) { faceStableStart = Date.now(); showCountdownRing(); }
-        else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) { autoCapturing = true; await doCapture(); autoCapturing = false; }
+        else if (Date.now() - faceStableStart >= STABLE_DURATION_MS) runCaptureInBackground(() => doCapture());
     } else if (faceStableStart) { faceStableStart = null; hideCountdownRing(); }
 }
 function startDetectionLoop() {
@@ -1156,7 +1164,7 @@ function startDetectionLoop() {
             const detailedFace = detectDetailedFace(video, canvas.width, canvas.height);
             if (detailedFace) {
                 drawDetailedFace(ctx, detailedFace);
-                await processLiveFace(detailedFace, ctx, canvas);
+                processLiveFace(detailedFace, ctx, canvas);
                 const delay = (currentStep < totalSteps && STEPS[currentStep]?.angle === 'kedip') ? 80 : 120;
                 requestAnimationFrame(() => setTimeout(detect, delay));
                 return;
@@ -1175,7 +1183,7 @@ function startDetectionLoop() {
                 const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
                 resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, 2 * Math.PI); ctx.fillStyle = '#39ff88'; ctx.globalAlpha = 0.9; ctx.fill(); });
                 ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#39ff88'; ctx.lineWidth = 3; ctx.shadowColor = 'rgba(57, 255, 136, 0.72)'; ctx.shadowBlur = 7; ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.shadowBlur = 0;
-                await processLiveFace({
+                processLiveFace({
                     landmarks: detection.landmarks,
                     box,
                     metrics: collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height),
@@ -1308,8 +1316,7 @@ function detectBlink(landmarks) {
             livenessSummary.max_blink_close_frames = Math.max(livenessSummary.max_blink_close_frames, blinkCloseFrames);
             document.getElementById('stepText').textContent = `Kedip terdeteksi! (${blinkCount}/1)`;
             if (blinkCount >= 1 && !autoCapturing) {
-                autoCapturing = true;
-                setTimeout(async () => { await doCaptureWithRetry(); autoCapturing = false; }, 400);
+                window.setTimeout(() => runCaptureInBackground(() => doCaptureWithRetry()), 400);
             }
         }
         blinkCloseFrames = 0;
