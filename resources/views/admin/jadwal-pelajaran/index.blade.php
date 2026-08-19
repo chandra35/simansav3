@@ -91,6 +91,19 @@
             <a href="{{ route('admin.jadwal-pelajaran.monitor') }}" class="btn btn-success btn-sm">
                 <i class="fas fa-tv"></i> Monitor Jadwal
             </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-success btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-excel"></i> Export EMIS GTK
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 1]) }}">
+                        <i class="fas fa-download text-success mr-2"></i>Semester 1 (Ganjil)
+                    </a>
+                    <a class="dropdown-item" href="{{ route('admin.jadwal-pelajaran.export-emis-gtk', ['tahun_pelajaran_id' => $tahunId, 'semester' => 2]) }}">
+                        <i class="fas fa-download text-success mr-2"></i>Semester 2 (Genap)
+                    </a>
+                </div>
+            </div>
             @can('view-jadwal-mapping')
                 <a href="{{ route('admin.jadwal-mapping.index', ['tahun_pelajaran_id' => $tahunId]) }}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-link"></i> Mapping Kode

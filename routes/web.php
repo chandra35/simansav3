@@ -899,6 +899,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 // ==================== FITUR BARU: JADWAL PELAJARAN ====================
     Route::middleware(['permission:view-jadwal-pelajaran'])->group(function () {
         Route::get('/jadwal-pelajaran', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'index'])->name('jadwal-pelajaran.index');
+        Route::get('/jadwal-pelajaran/export-emis-gtk', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'exportEmisGtk'])->name('jadwal-pelajaran.export-emis-gtk');
         Route::get('/jadwal-pelajaran/timetable', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetable'])->name('jadwal-pelajaran.timetable');
         Route::get('/jadwal-pelajaran/monitor', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'monitor'])->name('jadwal-pelajaran.monitor');
         Route::get('/jadwal-pelajaran/timetable-data', [App\Http\Controllers\Admin\JadwalPelajaranController::class, 'timetableData'])->name('jadwal-pelajaran.timetable-data');

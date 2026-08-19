@@ -20,6 +20,12 @@ use App\Services\GtkWorkloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class JadwalPelajaranController extends Controller
 {
@@ -339,6 +345,169 @@ class JadwalPelajaranController extends Controller
         return view('admin.jadwal-pelajaran.index', compact(
             'tahunList', 'tahunAktif', 'tahunId', 'kelasList', 'stats'
         ));
+    }
+
+    /**
+     * Ekspor jadwal ke workbook yang dapat langsung diunggah ke EMIS GTK.
+     * Format mengikuti template Wakakur/EMIS: INFO MODEL, LEGEND, dan lima
+     * sheet harian dengan kode GTK + kode jadwal mapel.
+     */
+    public function exportEmisGtk(Request $request)
+    {
+        $this->authorize('view-jadwal-pelajaran');
+
+        $data = $request->validate([
+            'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
+            'semester' => ['required', 'integer', 'in:1,2'],
+        ]);
+        $tahun = TahunPelajaran::findOrFail($data['tahun_pelajaran_id']);
+        $semester = (int) $data['semester'];
+        $days = ['senin' => 'Senin', 'selasa' => 'Selasa', 'rabu' => 'Rabu', 'kamis' => 'Kamis', 'jumat' => 'Jumat'];
+        $maxJam = 12; // Batas resmi template EMIS GTK model New5hari.
+
+        $classes = Kelas::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('is_active', true)
+            ->with(['kurikulum:id,kode', 'jurusan:id,nama_jurusan,singkatan'])
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'kurikulum_id', 'jurusan_id', 'nama_kelas', 'tingkat']);
+
+        $jadwal = JadwalPelajaran::query()
+            ->with([
+                'gtk:id,kode_gtk',
+                'mataPelajaran:id,kode_jadwal,kode_mapel',
+            ])
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('semester', $semester)
+            ->where('is_active', true)
+            ->whereIn('hari', array_keys($days))
+            ->get();
+
+        if ($jadwal->max('jam_ke') > $maxJam) {
+            return back()->with('error', "Ekspor EMIS GTK tidak dapat dibuat karena terdapat jam ke-{$jadwal->max('jam_ke')}. Template EMIS hanya mendukung hingga jam ke-{$maxJam}.");
+        }
+
+        $jadwalBySlot = $jadwal->keyBy(fn (JadwalPelajaran $item) => implode('|', [$item->hari, $item->kelas_id, $item->jam_ke]));
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+        $this->appendEmisInfoModelSheet($spreadsheet, $classes);
+        $this->appendEmisLegendSheet($spreadsheet);
+
+        foreach ($days as $dayKey => $dayLabel) {
+            $this->appendEmisDailySheet($spreadsheet, $dayKey, $dayLabel, $classes, $jadwalBySlot, $maxJam);
+        }
+
+        $filename = 'jadwal_emisgtk_'.str_replace('/', '-', $tahun->nama).'_semester_'.$semester.'.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    private function appendEmisInfoModelSheet(Spreadsheet $spreadsheet, $classes): void
+    {
+        $sheet = $spreadsheet->createSheet()->setTitle('INFO MODEL');
+        $sheet->setCellValue('A1', 'INFORMASI MODEL JADWAL PER ROMBEL');
+        $sheet->mergeCells('A1:H1');
+        $sheet->setCellValue('A3', 'No');
+        $sheet->fromArray(['Rombel', 'Kurikulum', 'Kompetensi', 'Model Jadwal', 'Hari Libur', 'Max Jam/Hari', 'Keterangan'], null, 'B3');
+        $this->styleEmisHeader($sheet, 'A3:H3');
+
+        foreach ($classes->values() as $index => $kelas) {
+            $row = $index + 4;
+            $kompetensi = $kelas->jurusan?->singkatan ?: ($kelas->jurusan?->nama_jurusan ?: 'Umum');
+            $sheet->fromArray([
+                $index + 1,
+                $kelas->nama_kelas,
+                $kelas->kurikulum?->kode ?: '-',
+                $kompetensi,
+                'New5hari',
+                'Sabtu, Minggu',
+                12,
+                'Jadwal di hari libur akan DITOLAK saat import',
+            ], null, 'A'.$row);
+        }
+
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        foreach (['A' => 8, 'B' => 18, 'C' => 15, 'D' => 20, 'E' => 18, 'F' => 20, 'G' => 14, 'H' => 48] as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+        $sheet->freezePane('A4');
+    }
+
+    private function appendEmisLegendSheet(Spreadsheet $spreadsheet): void
+    {
+        $sheet = $spreadsheet->createSheet()->setTitle('LEGEND');
+        $sheet->setCellValue('A1', 'KODE WARNA TEMPLATE');
+        $sheet->mergeCells('A1:C1');
+        $sheet->fromArray(['Warna', 'Keterangan', 'Action Required'], null, 'A3');
+        $sheet->fromArray(['', 'Slot Template (Upacara/Religi)', 'JANGAN DIISI - akan ditolak saat import'], null, 'A4');
+        $sheet->fromArray(['', 'Slot Available', 'Silakan isi dengan jadwal'], null, 'A5');
+        $this->styleEmisHeader($sheet, 'A3:C3');
+        $sheet->getStyle('A4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFE6E6');
+        $sheet->getStyle('A5')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E6FFE6');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getColumnDimension('A')->setWidth(14);
+        $sheet->getColumnDimension('B')->setWidth(34);
+        $sheet->getColumnDimension('C')->setWidth(48);
+    }
+
+    private function appendEmisDailySheet(Spreadsheet $spreadsheet, string $dayKey, string $dayLabel, $classes, $jadwalBySlot, int $maxJam): void
+    {
+        $sheet = $spreadsheet->createSheet()->setTitle($dayLabel);
+        $sheet->fromArray(['Kelas', 'Rombel', 'Jam ke', 'ID PTK', 'ID Mapel'], null, 'A1');
+        $this->styleEmisHeader($sheet, 'A1:E1');
+
+        $row = 2;
+        foreach ($classes as $kelas) {
+            for ($jamKe = 1; $jamKe <= $maxJam; $jamKe++, $row++) {
+                $isProtectedActivity = $jamKe === 1;
+                $sheet->fromArray([(int) $kelas->tingkat, $kelas->nama_kelas, $jamKe, '', ''], null, 'A'.$row);
+
+                if ($isProtectedActivity) {
+                    $sheet->setCellValue('E'.$row, '[TEMPLATE: '.($dayKey === 'senin' ? 'Upacara' : 'Religi').']');
+                    $this->styleEmisRow($sheet, $row, 'FFE6E6');
+                    continue;
+                }
+
+                $slot = $jadwalBySlot->get(implode('|', [$dayKey, $kelas->id, $jamKe]));
+                if ($slot) {
+                    $sheet->setCellValueExplicit('D'.$row, (string) $slot->gtk?->kode_gtk, DataType::TYPE_STRING);
+                    $sheet->setCellValueExplicit('E'.$row, (string) ($slot->mataPelajaran?->kode_jadwal ?: $slot->mataPelajaran?->kode_mapel), DataType::TYPE_STRING);
+                }
+                $this->styleEmisRow($sheet, $row, 'E6FFE6');
+            }
+        }
+
+        foreach (['A' => 10, 'B' => 20, 'C' => 10, 'D' => 14, 'E' => 16] as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter('A1:E'.($row - 1));
+    }
+
+    private function styleEmisHeader($sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'D9EAD3']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+    }
+
+    private function styleEmisRow($sheet, int $row, string $fillColor): void
+    {
+        $sheet->getStyle('A'.$row.':E'.$row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => $fillColor]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
+        ]);
     }
 
     public function timetable(Request $request)
