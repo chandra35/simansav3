@@ -1694,6 +1694,9 @@ class NilaiController extends Controller
     public function exportAlumniLeggerBulk(Request $request)
     {
         $this->authorize('view-siswa');
+        // Writer XLS membutuhkan waktu lebih panjang untuk kohor besar karena format
+        // lama ini menyusun seluruh sel sebelum pengunduhan dimulai.
+        @set_time_limit(300);
         $request->validate(['tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id']]);
         $tahunPelajaran = TahunPelajaran::findOrFail($request->input('tahun_pelajaran_id'));
 
