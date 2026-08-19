@@ -428,8 +428,8 @@
                             <div class="spinner-border text-info mb-3" role="status"></div>
                             <p class="text-white" id="loadingText">Memuat model face detection...</p>
                         </div>
-                        <video id="videoElement" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
-                        <canvas id="overlayCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; transform:scaleX(-1);"></canvas>
+                        <video id="videoElement" autoplay playsinline style="display:block; width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
+                        <canvas id="overlayCanvas" style="position:absolute; z-index:4; top:0; left:0; width:100%; height:100%; pointer-events:none; transform:scaleX(-1);"></canvas>
                         <div id="stepInstruction" class="face-register-step-instruction" style="position:absolute; top:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#00e5ff; padding:10px 25px; border-radius:25px; font-size:1.1rem; font-weight:600; text-align:center; z-index:5; display:none;">
                             <i class="fas fa-arrow-right" id="stepIcon"></i>
                             <span id="stepText">Lihat ke kamera</span>
@@ -1055,8 +1055,8 @@ function startDetectionLoop() {
             const detection = result.detection; ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (detection) {
                 const dims = faceapi.matchDimensions(canvas, video, true), resized = faceapi.resizeResults(detection, dims);
-                resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI); ctx.fillStyle = '#00e5ff'; ctx.globalAlpha = 0.7; ctx.fill(); });
-                ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2; ctx.strokeRect(box.x, box.y, box.width, box.height);
+                resized.landmarks.positions.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, 2 * Math.PI); ctx.fillStyle = '#39ff88'; ctx.globalAlpha = 0.9; ctx.fill(); });
+                ctx.globalAlpha = 1; const box = resized.detection.box; ctx.strokeStyle = '#39ff88'; ctx.lineWidth = 3; ctx.shadowColor = 'rgba(57, 255, 136, 0.72)'; ctx.shadowBlur = 7; ctx.strokeRect(box.x, box.y, box.width, box.height); ctx.shadowBlur = 0;
                 const liveMetrics = collectLivenessMetrics(detection.landmarks, box, canvas.width, canvas.height);
                 setFaceStatus(`Wajah terdeteksi (${(detection.detection.score * 100).toFixed(0)}%)`, true);
                 if (currentStep < totalSteps && !autoCapturing) {
@@ -1110,12 +1110,12 @@ function validatePose(landmarks, angle, liveMetrics) {
         return true;
     }
     if (angle === 'kanan') {
-        const ok = baselineMetrics && yawRatio <= baselineMetrics.yawRatio - 0.08;
+        const ok = baselineMetrics && Math.abs(yawRatio - baselineMetrics.yawRatio) >= 0.08;
         setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KANAN Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }
     if (angle === 'kiri') {
-        const ok = baselineMetrics && yawRatio >= baselineMetrics.yawRatio + 0.08;
+        const ok = baselineMetrics && Math.abs(yawRatio - baselineMetrics.yawRatio) >= 0.08;
         setFaceStatus(ok ? 'Bagus! Tahan posisi kepala...' : 'Putar kepala ke KIRI Anda perlahan; hijab tidak perlu dilepas.', ok);
         return ok;
     }
