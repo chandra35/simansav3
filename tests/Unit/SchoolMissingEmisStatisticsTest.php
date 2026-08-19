@@ -16,6 +16,7 @@ class SchoolMissingEmisStatisticsTest extends TestCase
         $this->assertStringContainsString("whereNull('siswa.emis_registered')", $controller);
         $this->assertStringContainsString("'siswa.nik'", $controller);
         $this->assertStringContainsString("'nik' => \$siswa->nik", $controller);
+        $this->assertStringContainsString("'tanggal_lahir' => \$siswa->tanggal_lahir?->format('Y-m-d')", $controller);
         $this->assertStringContainsString('school-missing-emis', $routes);
     }
 

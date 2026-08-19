@@ -252,7 +252,7 @@ class SiswaStatisticsController extends Controller
                     'nomor_tes' => $siswa->nomor_tes,
                     'jenis_kelamin' => $siswa->jenis_kelamin,
                     'tempat_lahir' => $siswa->tempat_lahir,
-                    'tanggal_lahir' => $siswa->tanggal_lahir?->format('d/m/Y'),
+                    'tanggal_lahir' => $siswa->tanggal_lahir?->format('Y-m-d'),
                     'kelas' => $siswa->kelasTahunAktif->first()?->nama_kelas ?: 'Belum masuk rombel',
                     'foto_url' => $siswa->foto_profile_url,
                     'detail_url' => $isWaliScope
