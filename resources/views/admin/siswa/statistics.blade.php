@@ -1593,6 +1593,7 @@
                         <div>
                             <div class="simansa-emis-student__name">${escapeHtml(student.nama_lengkap)}</div>
                             <div class="simansa-emis-student__meta">
+                                <i class="fas fa-address-card mr-1"></i>NIK: ${escapeHtml(student.nik || '-')}<br>
                                 <i class="fas fa-id-card mr-1"></i>NISN: ${escapeHtml(student.nisn || '-')}<br>
                                 <i class="fas fa-map-marker-alt mr-1"></i>${escapeHtml(birth)}<br>
                                 <i class="fas fa-door-open mr-1"></i>${escapeHtml(student.kelas || '-')}

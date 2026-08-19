@@ -14,6 +14,8 @@ class SchoolMissingEmisStatisticsTest extends TestCase
         $this->assertStringContainsString('missing_emis_count', $controller);
         $this->assertStringContainsString('studentsMissingEmis', $controller);
         $this->assertStringContainsString("whereNull('siswa.emis_registered')", $controller);
+        $this->assertStringContainsString("'siswa.nik'", $controller);
+        $this->assertStringContainsString("'nik' => \$siswa->nik", $controller);
         $this->assertStringContainsString('school-missing-emis', $routes);
     }
 
@@ -24,6 +26,11 @@ class SchoolMissingEmisStatisticsTest extends TestCase
         $this->assertStringContainsString('Belum Ada di EMIS', $view);
         $this->assertStringContainsString('schoolMissingEmisModal', $view);
         $this->assertStringContainsString('simansa-emis-student-grid', $view);
+        $this->assertStringContainsString("NIK: \${escapeHtml(student.nik || '-')}", $view);
+        $this->assertTrue(
+            strpos($view, "NIK: \${escapeHtml(student.nik || '-')}")
+                < strpos($view, "NISN: \${escapeHtml(student.nisn || '-')}")
+        );
         $this->assertStringContainsString('NPSN', $view);
         $this->assertStringContainsString('NSM', $view);
         $this->assertStringContainsString('btn-modal-toggle-emis', $view);

@@ -234,6 +234,7 @@ class SiswaStatisticsController extends Controller
             ->orderBy('siswa.nama_lengkap')
             ->get([
                 'siswa.id',
+                'siswa.nik',
                 'siswa.nisn',
                 'siswa.nomor_tes',
                 'siswa.nama_lengkap',
@@ -246,6 +247,7 @@ class SiswaStatisticsController extends Controller
                 return [
                     'id' => $siswa->id,
                     'nama_lengkap' => $siswa->nama_lengkap,
+                    'nik' => $siswa->nik,
                     'nisn' => $siswa->nisn,
                     'nomor_tes' => $siswa->nomor_tes,
                     'jenis_kelamin' => $siswa->jenis_kelamin,
