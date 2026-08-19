@@ -55,6 +55,20 @@ class HotspotController extends Controller
             $query->where('is_active', (bool)$request->is_active);
         }
 
+        if ($request->filled('account_state')) {
+            match ($request->string('account_state')->toString()) {
+                'active' => $query->where('is_active', true),
+                'inactive' => $query->where('is_active', false),
+                'alumni' => $query->where('is_active', false)->where('inactive_reason_code', 'alumni'),
+                'mutation' => $query->where('is_active', false)->where('inactive_reason_code', 'mutation'),
+                'credentials_missing' => $query->where('is_active', false)->where('inactive_reason_code', 'credentials_missing'),
+                'user_removed' => $query->where('is_active', false)->where('inactive_reason_code', 'user_removed'),
+                'blocked' => $query->where('is_active', false)->where('inactive_reason_code', 'blocked'),
+                'other_inactive' => $query->where('is_active', false)->whereNotIn('inactive_reason_code', ['alumni', 'mutation', 'credentials_missing', 'user_removed', 'blocked']),
+                default => null,
+            };
+        }
+
         // Filter kelas (hanya berlaku saat role = siswa)
         if ($request->input('role') === 'siswa' &&
             ($request->filled('tingkat') || $request->filled('kelas_id'))) {
@@ -80,7 +94,19 @@ class HotspotController extends Controller
                     return '<span class="badge badge-secondary"><i class="fas fa-trash mr-1"></i>Dihapus</span>';
                 }
                 if (!$h->is_active) {
-                    return '<span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>Nonaktif</span>';
+                    $state = match ($h->inactive_reason_code) {
+                        'alumni' => ['secondary', 'user-graduate', 'Alumni'],
+                        'mutation' => ['warning', 'exchange-alt', 'Mutasi'],
+                        'credentials_missing' => ['warning', 'key', 'Password belum tersedia'],
+                        'user_removed' => ['dark', 'user-slash', 'User dihapus'],
+                        'blocked' => ['danger', 'ban', 'Diblokir'],
+                        'guest_expired' => ['secondary', 'clock', 'Tamu kedaluwarsa'],
+                        default => ['danger', 'ban', 'Nonaktif'],
+                    };
+                    $reason = e($h->inactive_reason ?: 'Alasan belum tercatat.');
+
+                    return '<span class="badge badge-'.$state[0].'" title="'.$reason.'"><i class="fas fa-'.$state[1].' mr-1"></i>'.$state[2].'</span>'
+                        .'<small class="d-block text-muted mt-1" title="'.$reason.'">'.e(Str::limit($h->inactive_reason ?: 'Alasan belum tercatat', 42)).'</small>';
                 }
                 if ($h->isExpired()) {
                     return '<span class="badge badge-warning"><i class="fas fa-clock mr-1"></i>Expired</span>';
@@ -177,7 +203,10 @@ class HotspotController extends Controller
         $hotspot->loadMissing('user.siswa');
 
         if (!$hotspot->isEligibleForRadius()) {
-            $hotspot->rejectFromRadius('Akun tidak disync karena siswa/user tidak aktif.');
+            $hotspot->rejectFromRadius(
+                $hotspot->inactive_reason ?: 'Akun tidak disync karena siswa/user tidak aktif.',
+                $hotspot->inactive_reason_code ?: 'ineligible'
+            );
 
             return response()->json([
                 'success' => false,
@@ -204,7 +233,10 @@ class HotspotController extends Controller
         $willActivate = !$hotspot->is_active;
 
         if ($willActivate && !$hotspot->isEligibleForRadius()) {
-            $hotspot->rejectFromRadius('Aktivasi ditolak karena siswa/user tidak aktif.');
+            $hotspot->rejectFromRadius(
+                $hotspot->inactive_reason ?: 'Aktivasi ditolak karena siswa/user tidak aktif.',
+                $hotspot->inactive_reason_code ?: 'ineligible'
+            );
 
             return response()->json([
                 'success' => false,
@@ -215,10 +247,17 @@ class HotspotController extends Controller
         $hotspot->update(array_merge(
             ['is_active' => $willActivate],
             $willActivate ? [
+                'inactive_reason_code' => null,
+                'inactive_reason' => null,
+                'deactivated_at' => null,
                 'blocked_at' => null,
                 'blocked_by' => null,
                 'block_reason' => null,
-            ] : []
+            ] : [
+                'inactive_reason_code' => 'manual',
+                'inactive_reason' => 'Akun dinonaktifkan secara manual dari halaman Akun Hotspot.',
+                'deactivated_at' => now(),
+            ]
         ));
 
         // Sync status ke RADIUS
@@ -734,7 +773,10 @@ class HotspotController extends Controller
             $hotspot->loadMissing('user.siswa');
 
             if ($isActive && !$hotspot->isEligibleForRadius()) {
-                $hotspot->rejectFromRadius('Bulk aktivasi ditolak karena siswa/user tidak aktif.');
+                $hotspot->rejectFromRadius(
+                    $hotspot->inactive_reason ?: 'Bulk aktivasi ditolak karena siswa/user tidak aktif.',
+                    $hotspot->inactive_reason_code ?: 'ineligible'
+                );
                 $skipped++;
                 continue;
             }
@@ -742,10 +784,17 @@ class HotspotController extends Controller
             $hotspot->update(array_merge(
                 ['is_active' => $isActive],
                 $isActive ? [
+                    'inactive_reason_code' => null,
+                    'inactive_reason' => null,
+                    'deactivated_at' => null,
                     'blocked_at' => null,
                     'blocked_by' => null,
                     'block_reason' => null,
-                ] : []
+                ] : [
+                    'inactive_reason_code' => 'manual',
+                    'inactive_reason' => 'Akun dinonaktifkan melalui aksi massal.',
+                    'deactivated_at' => now(),
+                ]
             ));
 
             // Sync status ke RADIUS
@@ -813,6 +862,9 @@ class HotspotController extends Controller
         $validated = $request->validate(['reason' => 'nullable|string|max:255']);
         $hotspot->update([
             'is_active' => false,
+            'inactive_reason_code' => 'blocked',
+            'inactive_reason' => $validated['reason'] ?? 'Diblokir dari Monitoring Hotspot',
+            'deactivated_at' => now(),
             'blocked_at' => now(),
             'blocked_by' => $request->user()->getKey(),
             'block_reason' => $validated['reason'] ?? 'Diblokir dari Monitoring Hotspot',
@@ -855,6 +907,9 @@ class HotspotController extends Controller
 
         $hotspot->update([
             'is_active' => true,
+            'inactive_reason_code' => null,
+            'inactive_reason' => null,
+            'deactivated_at' => null,
             'blocked_at' => null,
             'blocked_by' => null,
             'block_reason' => null,
@@ -894,6 +949,10 @@ class HotspotController extends Controller
             'tamu' => HotspotUser::tamu()->count(),
             'aktif' => HotspotUser::where('is_active', true)->count(),
             'nonaktif' => HotspotUser::where('is_active', false)->count(),
+            'alumni' => HotspotUser::where('is_active', false)->where('inactive_reason_code', 'alumni')->count(),
+            'mutation' => HotspotUser::where('is_active', false)->where('inactive_reason_code', 'mutation')->count(),
+            'credentials_missing' => HotspotUser::where('is_active', false)->where('inactive_reason_code', 'credentials_missing')->count(),
+            'user_removed' => HotspotUser::where('is_active', false)->where('inactive_reason_code', 'user_removed')->count(),
             'error_sync' => HotspotUser::where('sync_status', 'error')->count(),
             'pending_sync' => HotspotUser::where('sync_status', 'pending')->count(),
             'online' => $includeRadius ? $this->getOnlineCount() : null,

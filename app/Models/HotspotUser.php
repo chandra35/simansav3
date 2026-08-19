@@ -18,6 +18,9 @@ class HotspotUser extends Model
         'hotspot_radius_profile_id',
         'display_name',
         'is_active',
+        'inactive_reason_code',
+        'inactive_reason',
+        'deactivated_at',
         'blocked_at',
         'blocked_by',
         'block_reason',
@@ -31,6 +34,7 @@ class HotspotUser extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'deactivated_at' => 'datetime',
         'blocked_at' => 'datetime',
         'expired_at' => 'datetime',
         'last_synced_at' => 'datetime',
@@ -57,6 +61,9 @@ class HotspotUser extends Model
             if ($this->role !== 'tamu' && $plainPassword !== '__DISABLED__' && !$this->isSecurePassword($plainPassword)) {
                 $this->forceFill([
                     'is_active' => false,
+                    'inactive_reason_code' => 'credentials_missing',
+                    'inactive_reason' => 'Password hotspot tidak aman. Reset password akun SIMANSA untuk mengaktifkan kembali.',
+                    'deactivated_at' => $this->deactivated_at ?: now(),
                     'sync_error' => 'Password hotspot tidak aman. Reset password akun SIMANSA untuk mengaktifkan kembali.',
                 ])->save();
                 $plainPassword = '__DISABLED__';
@@ -96,11 +103,19 @@ class HotspotUser extends Model
             // 4. Sinkronkan identitas untuk daloRADIUS dan halaman status MikroTik.
             $this->writeIdentityToRadius($db);
 
-            $this->update([
+            $syncState = [
                 'last_synced_at' => now(),
                 'sync_status' => 'synced',
                 'sync_error' => null,
-            ]);
+            ];
+            if ($this->is_active) {
+                $syncState += [
+                    'inactive_reason_code' => null,
+                    'inactive_reason' => null,
+                    'deactivated_at' => null,
+                ];
+            }
+            $this->update($syncState);
 
             return true;
         } catch (\Exception $e) {
@@ -269,10 +284,16 @@ class HotspotUser extends Model
         return in_array($this->role, ['guru', 'tamu'], true);
     }
 
-    public function rejectFromRadius(string $reason = 'Tidak eligible untuk akses hotspot.'): void
+    public function rejectFromRadius(
+        string $reason = 'Tidak eligible untuk akses hotspot.',
+        string $reasonCode = 'ineligible'
+    ): void
     {
         $this->update([
             'is_active' => false,
+            'inactive_reason_code' => $reasonCode,
+            'inactive_reason' => $reason,
+            'deactivated_at' => $this->deactivated_at ?: now(),
             'sync_status' => 'pending',
             'sync_error' => $reason,
         ]);

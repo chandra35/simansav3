@@ -176,7 +176,10 @@ class HotspotSync extends Command
                 'is_active' => false,
                 'sync_status' => 'pending',
             ]);
-            $hotspot->rejectFromRadius('Password hotspot tidak aman atau tidak tersedia. Reset password akun SIMANSA untuk mengaktifkan kembali.');
+            $hotspot->rejectFromRadius(
+                'Password hotspot tidak aman atau tidak tersedia. Reset password akun SIMANSA untuk mengaktifkan kembali.',
+                'credentials_missing'
+            );
             $this->deactivated++;
             return;
         }
@@ -189,6 +192,9 @@ class HotspotSync extends Command
                     'role' => $role,
                     'display_name' => $displayName,
                     'is_active' => true,
+                    'inactive_reason_code' => null,
+                    'inactive_reason' => null,
+                    'deactivated_at' => null,
                     'sync_status' => 'pending',
                 ]);
                 $hotspot->syncToRadius($plainPassword);
@@ -204,6 +210,9 @@ class HotspotSync extends Command
                     'role' => $role,
                     'display_name' => $displayName,
                     'is_active' => true,
+                    'inactive_reason_code' => null,
+                    'inactive_reason' => null,
+                    'deactivated_at' => null,
                     'sync_status' => 'pending',
                 ]);
                 $existing->syncToRadius($plainPassword);
@@ -241,7 +250,17 @@ class HotspotSync extends Command
                 continue;
             }
             $status = $hotspot->user?->siswa?->status_siswa ?: 'tanpa data siswa/user';
-            $hotspot->rejectFromRadius("Siswa tidak aktif untuk hotspot: {$status}");
+            $reasonCode = match ($status) {
+                'lulus' => 'alumni',
+                'mutasi_keluar' => 'mutation',
+                default => 'student_inactive',
+            };
+            $reason = match ($reasonCode) {
+                'alumni' => 'Siswa telah lulus dan diarsipkan sebagai alumni.',
+                'mutation' => 'Siswa telah mutasi keluar.',
+                default => "Siswa tidak aktif untuk hotspot: {$status}",
+            };
+            $hotspot->rejectFromRadius($reason, $reasonCode);
             $this->deactivated++;
         }
     }
@@ -261,7 +280,7 @@ class HotspotSync extends Command
                 continue;
             }
 
-            $hotspot->rejectFromRadius('Masa berlaku akun tamu telah berakhir.');
+            $hotspot->rejectFromRadius('Masa berlaku akun tamu telah berakhir.', 'guest_expired');
             $this->deactivated++;
         }
     }

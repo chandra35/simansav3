@@ -35,6 +35,9 @@ class UserObserver
         if ($hotspotUser->isEligibleForRadius() && $hotspotUser->isSecurePassword($plainPassword)) {
             $hotspotUser->update([
                 'is_active' => true,
+                'inactive_reason_code' => null,
+                'inactive_reason' => null,
+                'deactivated_at' => null,
                 'sync_status' => 'pending',
                 'sync_error' => null,
             ]);

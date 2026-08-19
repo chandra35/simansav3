@@ -53,6 +53,9 @@ class HotspotSyncSimansaPasswords extends Command
 
                 $hotspot->forceFill([
                     'is_active' => true,
+                    'inactive_reason_code' => null,
+                    'inactive_reason' => null,
+                    'deactivated_at' => null,
                     'sync_status' => 'pending',
                     'sync_error' => null,
                 ])->save();

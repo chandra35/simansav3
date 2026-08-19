@@ -327,7 +327,7 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
-<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819e">
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819f">
 @endsection
 
 @section('content_header')
@@ -383,12 +383,12 @@
         <div class="hs-stat__val" id="statPending">{{ $stats['pending_sync'] }}</div>
         <div class="hs-stat__label">Pending Sync</div>
     </a>
-    <a href="{{ route('admin.hotspot.index') }}?is_active=1" class="hs-stat">
+    <a href="{{ route('admin.hotspot.index') }}?account_state=active" class="hs-stat">
         <div class="hs-stat__icon">✅</div>
         <div class="hs-stat__val" id="statAktif">{{ $stats['aktif'] }}</div>
         <div class="hs-stat__label">Akun Aktif</div>
     </a>
-    <a href="{{ route('admin.hotspot.index') }}?is_active=0" class="hs-stat">
+    <a href="{{ route('admin.hotspot.index') }}?account_state=inactive" class="hs-stat">
         <div class="hs-stat__icon">🚫</div>
         <div class="hs-stat__val" id="statNonaktif">{{ $stats['nonaktif'] }}</div>
         <div class="hs-stat__label">Nonaktif</div>
@@ -462,6 +462,17 @@
                         <option value="pending">Pending</option>
                         <option value="error">Error</option>
                     </select>
+                    <select id="filterAccountState" class="form-control form-control-sm" aria-label="Filter status akses akun">
+                        <option value="">Semua Akun</option>
+                        <option value="active" selected>Aktif</option>
+                        <option value="inactive">Semua Nonaktif ({{ $stats['nonaktif'] }})</option>
+                        <option value="alumni">Alumni / Lulus ({{ $stats['alumni'] }})</option>
+                        <option value="mutation">Mutasi Keluar ({{ $stats['mutation'] }})</option>
+                        <option value="credentials_missing">Password Belum Tersedia ({{ $stats['credentials_missing'] }})</option>
+                        <option value="user_removed">User Dihapus ({{ $stats['user_removed'] }})</option>
+                        <option value="blocked">Diblokir Admin</option>
+                        <option value="other_inactive">Nonaktif Lainnya</option>
+                    </select>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -505,13 +516,6 @@
                     </button>
                 </div>
 
-                <div class="hs-filter-bar">
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Filter status akun">
-                        <button type="button" class="btn btn-outline-secondary filter-active active" data-active="">Semua</button>
-                        <button type="button" class="btn btn-outline-success filter-active" data-active="1">Aktif</button>
-                        <button type="button" class="btn btn-outline-danger filter-active" data-active="0">Nonaktif</button>
-                    </div>
-                </div>
                 <div class="table-responsive hs-table-wrap">
                     <table id="hotspotTable" class="table table-bordered table-striped table-hover w-100 mb-0">
                         <thead>
@@ -751,7 +755,7 @@ $(function () {
             data: d => {
                 d.role        = $('#filterRole').val();
                 d.sync_status = $('#filterSync').val();
-                d.is_active   = activeFilter;
+                d.account_state = $('#filterAccountState').val();
                 d.tingkat     = $('#filterTingkat').val();
                 d.kelas_id    = $('#filterRombel').val();
             },
@@ -794,6 +798,7 @@ $(function () {
 
     // Filter bindings
     $('#filterSync').on('change', () => table.ajax.reload());
+    $('#filterAccountState').on('change', () => table.ajax.reload());
     $('#filterRombel').on('change', () => table.ajax.reload());
     $('#filterTingkat').on('change', function () {
         populateRombel($(this).val());
@@ -823,25 +828,17 @@ $(function () {
     if (_p.get('sync_status')) {
         $('#filterSync').val(_p.get('sync_status'));
     }
-    if (_p.get('is_active') !== null && _p.get('is_active') !== '') {
-        activeFilter = _p.get('is_active');
-        $('.filter-active').removeClass('active');
-        $(`.filter-active[data-active="${activeFilter}"]`).addClass('active');
+    if (_p.get('account_state')) {
+        $('#filterAccountState').val(_p.get('account_state'));
+    } else if (_p.get('is_active') !== null && _p.get('is_active') !== '') {
+        $('#filterAccountState').val(_p.get('is_active') === '1' ? 'active' : 'inactive');
     }
-    if (_p.has('role') || _p.has('sync_status') || _p.has('is_active')) {
+    if (_p.has('role') || _p.has('sync_status') || _p.has('account_state') || _p.has('is_active')) {
         table.ajax.reload();
     }
 });
 
 // ── Active filter buttons ─────────────────────────────────────────────────
-let activeFilter = '';
-$('.filter-active').on('click', function () {
-    $('.filter-active').removeClass('active');
-    $(this).addClass('active');
-    activeFilter = $(this).data('active');
-    table.ajax.reload();
-});
-
 // ── Filter options (tingkat / rombel) ─────────────────────────────────────
 let _allKelas = [];
 

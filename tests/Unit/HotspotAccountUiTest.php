@@ -39,7 +39,10 @@ class HotspotAccountUiTest extends TestCase
         $css = file_get_contents($this->root.'/public/css/admin/hotspot-accounts.css');
 
         $this->assertStringContainsString('class="hs-bulk-toolbar__actions"', $view);
-        $this->assertStringContainsString('class="btn-group btn-group-sm" role="group"', $view);
+        $this->assertStringContainsString('id="filterAccountState"', $view);
+        $this->assertStringContainsString('<option value="active" selected>Aktif</option>', $view);
+        $this->assertMatchesRegularExpression('/<option value="alumni">Alumni \/ Lulus \([^<]+\)<\/option>/', $view);
+        $this->assertMatchesRegularExpression('/<option value="credentials_missing">Password Belum Tersedia \([^<]+\)<\/option>/', $view);
         $this->assertStringContainsString('class="dropdown hs-row-actions"', $controller);
         $this->assertStringContainsString('dropdown-menu dropdown-menu-right', $controller);
         $this->assertStringContainsString('data-boundary="viewport"', $controller);
@@ -49,8 +52,7 @@ class HotspotAccountUiTest extends TestCase
         $this->assertStringContainsString('timeout: 60000', $view);
         $this->assertStringContainsString('table.ajax.reload(null, false)', $view);
         $this->assertStringContainsString('.hs-bulk-toolbar.is-visible { display: flex !important; }', $css);
-        $this->assertStringContainsString('.hs-account-card .pagination .page-item.active .page-link', $css);
-        $this->assertStringContainsString('background-color: #007bff', $css);
-        $this->assertStringNotContainsString('box-shadow: 0 5px 12px', $css);
+        $this->assertStringNotContainsString('.hs-account-card .pagination', $css);
+        $this->assertStringNotContainsString('.page-item.active', $css);
     }
 }
