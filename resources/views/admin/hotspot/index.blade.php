@@ -327,11 +327,12 @@
     .net-kv { grid-template-columns: 1fr; }
 }
 </style>
+<link rel="stylesheet" href="{{ asset('css/admin/hotspot-accounts.css') }}?v=20260819a">
 @endsection
 
 @section('content_header')
 <div class="row mb-2">
-    <div class="col-sm-6"><h1><i class="fas fa-users text-primary mr-2"></i>Akun Hotspot</h1></div>
+    <div class="col-sm-6"><h1 class="hs-page-title">Akun Hotspot<small>Direktori akses internet warga MAN 1 Metro</small></h1></div>
     <div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item active">Akun Hotspot</li></ol></div>
 </div>
 @endsection
@@ -340,13 +341,13 @@
 
 <div class="hs-hero">
     <div>
-        <div class="hs-hero__eyebrow"><i class="fas fa-users mr-1"></i>Manajemen Akun Hotspot</div>
-        <h2 class="hs-hero__title">Akun Hotspot</h2>
-        <p class="hs-hero__sub mb-0">Kelola akun WiFi siswa, GTK, dan tamu tanpa mencampurkan konfigurasi infrastruktur.</p>
+        <div class="hs-hero__eyebrow"><i class="fas fa-shield-alt mr-1"></i>Access Management</div>
+        <h2 class="hs-hero__title">Satu pusat kendali untuk seluruh akun WiFi.</h2>
+        <p class="hs-hero__sub mb-0">Kelola identitas siswa, GTK, dan tamu. Password mengikuti SIMANSA dan kebijakan akses diteruskan melalui FreeRADIUS.</p>
     </div>
     <div class="d-flex flex-wrap justify-content-end" style="gap:.5rem">
-        <button class="btn btn-light btn-sm" id="btnSyncAll"><i class="fas fa-sync mr-1"></i>Sync Semua</button>
-        <button class="btn btn-warning btn-sm" id="btnTambahTamu"><i class="fas fa-user-plus mr-1"></i>Tambah Tamu</button>
+        <button class="btn btn-light btn-sm" id="btnSyncAll"><i class="fas fa-sync-alt mr-1"></i>Sinkronkan Akun</button>
+        <button class="btn btn-warning btn-sm" id="btnTambahTamu"><i class="fas fa-user-plus mr-1"></i>Akun Tamu Baru</button>
     </div>
 </div>
 
@@ -514,6 +515,28 @@
                     Password ikut password Simansa secara real-time.
                 </small>
             </div>
+        </div>
+
+        <div class="card hs-quick-links mt-3">
+            <div class="card-header border-0 pb-0">
+                <h3 class="card-title font-weight-bold">Akses Cepat</h3>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ route('admin.hotspot.online') }}" class="list-group-item list-group-item-action">
+                    <span><i class="fas fa-signal text-success mr-2"></i>Monitoring Online</span><i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="{{ route('admin.hotspot.auth-logs') }}" class="list-group-item list-group-item-action">
+                    <span><i class="fas fa-clipboard-list text-warning mr-2"></i>Log Autentikasi</span><i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="{{ route('admin.hotspot.settings') }}" class="list-group-item list-group-item-action">
+                    <span><i class="fas fa-cog text-primary mr-2"></i>Pengaturan Hotspot</span><i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="alert hs-password-note">
+            <i class="fas fa-shield-alt"></i>
+            <span><strong>Password terintegrasi</strong>Perubahan password SIMANSA diteruskan ke Hotspot secara otomatis.</span>
         </div>
 
     </div>
