@@ -6,7 +6,7 @@
   <meta http-equiv="refresh" content="$(refresh-timeout-secs)">
   <meta name="theme-color" content="#245eea">
   <title>Status Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260819g">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260820a">
 </head>
 <body class="session-page">
   <main class="session-layout status-layout">
@@ -20,7 +20,7 @@
 
       <div class="status-title">
         <span class="session-kicker">Sesi sedang aktif</span>
-        <h1 data-radius-identity="$(radius18)" data-username="$(username)">$(username)</h1>
+        <h1 class="responsive-identity-name" data-radius-identity="$(radius18)" data-username="$(username)">$(username)</h1>
         <p>Username <strong>$(username)</strong></p>
         <div class="identity-tags" aria-label="Identitas pengguna">
           <span data-identity-role hidden></span>
@@ -56,7 +56,10 @@
           try { identity = JSON.parse(decoded); } catch (jsonError) { identity = { n: decoded }; }
         }
       } catch (error) {}
-      target.textContent = identity.n || target.getAttribute('data-username') || 'Pengguna';
+      var displayName = identity.n || target.getAttribute('data-username') || 'Pengguna';
+      target.textContent = displayName;
+      target.classList.toggle('identity-name--long', displayName.length > 22 && displayName.length <= 34);
+      target.classList.toggle('identity-name--very-long', displayName.length > 34);
       var tags = [
         ['[data-identity-role]', identity.r ? identity.r.charAt(0).toUpperCase() + identity.r.slice(1) : ''],
         ['[data-identity-class]', identity.k || ''],

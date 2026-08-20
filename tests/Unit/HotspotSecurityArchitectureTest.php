@@ -262,10 +262,13 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('data-username="$(username)"', $success);
         $this->assertStringContainsString('data-identity-role', $success);
         $this->assertStringContainsString('data-identity-class', $status);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819g', $success);
-        $this->assertStringContainsString('assets/login-v2.css?v=20260819g', $status);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260820a', $success);
+        $this->assertStringContainsString('assets/login-v2.css?v=20260820a', $status);
         $this->assertStringContainsString('class="session-atmosphere"', $success);
         $this->assertStringContainsString('class="metric-icon"', $status);
+        $this->assertStringContainsString('class="responsive-identity-name"', $status);
+        $this->assertStringContainsString("displayName.length > 22", $status);
+        $this->assertStringContainsString('.status-title h1.identity-name--very-long', file_get_contents($portal.'assets/login-v2.css'));
         $this->assertStringContainsString('data-status-countdown', $success);
         $this->assertStringContainsString('}, 7000)', $success);
     }
