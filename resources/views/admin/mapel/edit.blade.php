@@ -25,8 +25,8 @@
         <section class="mapel-form-hero">
             <div>
                 <span class="mapel-form-hero__eyebrow"><i class="fas fa-book-open"></i> AKADEMIK · KATALOG MAPEL</span>
-                <h2>Perbarui mata pelajaran</h2>
-                <p>Kelola identitas, struktur kurikulum, dan mapping EMIS GTK pada satu formulir yang rapi.</p>
+                <h2>{{ $mapel->nama_mapel }}</h2>
+                <p>Edit informasi inti terlebih dahulu. Pengaturan khusus dapat dibuka bila diperlukan.</p>
             </div>
             <div class="mapel-form-hero__code">
                 <small>KODE MAPEL</small>
@@ -269,11 +269,12 @@
         </div>
 
         {{-- Madrasah Specific Fields --}}
-        <div class="card card-info card-outline mapel-form-card">
+        <div class="card card-info card-outline mapel-form-card mapel-form-card--collapsible">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-mosque"></i> Konfigurasi Madrasah (Kemenag)</h3>
+                <button type="button" class="mapel-section-toggle" data-toggle="collapse" data-target="#mapel-madrasah" aria-expanded="false" aria-controls="mapel-madrasah"><span>Pengaturan khusus</span><i class="fas fa-chevron-down"></i></button>
             </div>
-            <div class="card-body">
+            <div class="collapse" id="mapel-madrasah"><div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="custom-control custom-switch">
@@ -335,15 +336,16 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div></div>
         </div>
 
         {{-- Kurikulum Merdeka & KTSP --}}
-        <div class="card card-success card-outline mapel-form-card">
+        <div class="card card-success card-outline mapel-form-card mapel-form-card--collapsible">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-graduation-cap"></i> Konfigurasi Kurikulum Khusus</h3>
+                <button type="button" class="mapel-section-toggle" data-toggle="collapse" data-target="#mapel-kurikulum-khusus" aria-expanded="false" aria-controls="mapel-kurikulum-khusus"><span>Pengaturan khusus</span><i class="fas fa-chevron-down"></i></button>
             </div>
-            <div class="card-body">
+            <div class="collapse" id="mapel-kurikulum-khusus"><div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="custom-control custom-switch">
@@ -394,15 +396,16 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div></div>
         </div>
 
         {{-- Additional Info --}}
-        <div class="card card-secondary card-outline mapel-form-card">
+        <div class="card card-secondary card-outline mapel-form-card mapel-form-card--collapsible">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-file-alt"></i> Informasi Tambahan</h3>
+                <button type="button" class="mapel-section-toggle" data-toggle="collapse" data-target="#mapel-informasi-tambahan" aria-expanded="false" aria-controls="mapel-informasi-tambahan"><span>Deskripsi & status</span><i class="fas fa-chevron-down"></i></button>
             </div>
-            <div class="card-body">
+            <div class="collapse" id="mapel-informasi-tambahan"><div class="card-body">
                 <div class="form-group">
                     <label for="deskripsi">Deskripsi</label>
                     <textarea name="deskripsi" id="deskripsi" rows="3" class="form-control @error('deskripsi') is-invalid @enderror" 
@@ -417,7 +420,7 @@
                            {{ old('is_active', $mapel->is_active) ? 'checked' : '' }}>
                     <label class="custom-control-label" for="is_active">Aktif</label>
                 </div>
-            </div>
+            </div></div>
         </div>
 
         <div class="mapel-form-actions">
@@ -433,9 +436,9 @@
 
 @section('css')
     <style>
-        .mapel-form-page{max-width:1180px;margin:0 auto 28px}.mapel-form-hero{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:25px 28px;margin-bottom:18px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#3f63e9,#247f93);box-shadow:0 16px 34px rgba(43,75,153,.16)}
-        .mapel-form-hero__eyebrow{display:block;font-size:.75rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero h2{margin:8px 0 5px;font-size:1.65rem;font-weight:800}.mapel-form-hero p{margin:0;color:rgba(255,255,255,.86)}.mapel-form-hero__code{min-width:130px;padding:12px 16px;border:1px solid rgba(255,255,255,.25);border-radius:13px;background:rgba(16,37,105,.2);text-align:center}.mapel-form-hero__code small,.mapel-form-hero__code strong{display:block}.mapel-form-hero__code small{font-size:.64rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero__code strong{margin-top:3px;font-size:1.1rem}
-        .mapel-form-card{border:1px solid #dfe7f4;border-radius:17px;box-shadow:0 9px 25px rgba(31,53,91,.055);overflow:hidden}.mapel-form-card>.card-header{padding:15px 20px;border-bottom:1px solid #e7edf6;background:#fff}.mapel-form-card .card-title{font-size:1rem;font-weight:800;color:#20365f}.mapel-form-card .card-title i{margin-right:7px;color:#426deb}.mapel-form-card>.card-body{padding:22px 20px;background:#fff}.mapel-form-card .form-group{margin-bottom:1.2rem}.mapel-form-card label{font-size:.76rem;font-weight:800;letter-spacing:.025em;color:#526783}.mapel-form-card .form-control{min-height:41px;border-color:#d8e2f0;border-radius:9px;color:#30415e;font-size:.9rem;box-shadow:none}.mapel-form-card textarea.form-control{min-height:96px}.mapel-form-card .form-control:focus{border-color:#5279ed;box-shadow:0 0 0 .18rem rgba(82,121,237,.12)}.mapel-form-card .text-muted{font-size:.75rem;color:#7889a3!important}.mapel-form-card .custom-control{padding:14px 12px 12px 2rem;border-radius:10px;background:#f7f9fc}.mapel-form-card .custom-control-label{font-size:.82rem;color:#344966}.mapel-emis-card{border-top:3px solid #31b978}.mapel-emis-card .alert{border-radius:10px;color:#49617f;font-size:.84rem}.mapel-emis-id{font-family:Consolas,Monaco,monospace!important;font-size:.8rem!important;font-weight:700;letter-spacing:.02em}.mapel-form-actions{display:flex;justify-content:flex-end;gap:9px;padding:16px 20px;margin-top:4px;border:1px solid #dfe7f4;border-radius:15px;background:#fff;box-shadow:0 9px 25px rgba(31,53,91,.05)}.mapel-form-actions .btn{border-radius:9px;font-weight:700;padding:.52rem 1rem}
+        .mapel-form-page{max-width:1040px;margin:0 auto 24px}.mapel-form-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 21px;margin-bottom:14px;border-radius:15px;color:#fff;background:linear-gradient(120deg,#3f63e9,#247f93);box-shadow:0 11px 24px rgba(43,75,153,.14)}
+        .mapel-form-hero__eyebrow{display:block;font-size:.68rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero h2{margin:4px 0 2px;font-size:1.26rem;font-weight:800}.mapel-form-hero p{margin:0;font-size:.82rem;color:rgba(255,255,255,.86)}.mapel-form-hero__code{min-width:104px;padding:9px 13px;border:1px solid rgba(255,255,255,.25);border-radius:11px;background:rgba(16,37,105,.2);text-align:center}.mapel-form-hero__code small,.mapel-form-hero__code strong{display:block}.mapel-form-hero__code small{font-size:.6rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero__code strong{margin-top:2px;font-size:.95rem}
+        .mapel-form-card{border:1px solid #dfe7f4;border-radius:14px;box-shadow:0 7px 19px rgba(31,53,91,.05);overflow:hidden;margin-bottom:12px}.mapel-form-card>.card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-bottom:1px solid #e7edf6;background:#fff}.mapel-form-card .card-title{font-size:.91rem;font-weight:800;color:#20365f}.mapel-form-card .card-title i{margin-right:6px;color:#426deb}.mapel-form-card>.card-body{padding:16px 17px;background:#fff}.mapel-form-card .form-group{margin-bottom:.82rem}.mapel-form-card label{margin-bottom:.32rem;font-size:.71rem;font-weight:800;letter-spacing:.025em;color:#526783}.mapel-form-card .form-control{min-height:37px;border-color:#d8e2f0;border-radius:8px;color:#30415e;font-size:.86rem;box-shadow:none}.mapel-form-card textarea.form-control{min-height:78px}.mapel-form-card .form-control:focus{border-color:#5279ed;box-shadow:0 0 0 .18rem rgba(82,121,237,.12)}.mapel-form-card .text-muted{font-size:.69rem;color:#7889a3!important}.mapel-form-card .custom-control{min-height:42px;padding:11px 10px 9px 1.8rem;border-radius:8px;background:#f7f9fc}.mapel-form-card .custom-control-label{padding-top:0;font-size:.76rem;color:#344966}.mapel-form-card--collapsible>.card-header{border-bottom:0}.mapel-section-toggle{display:inline-flex;align-items:center;gap:8px;padding:5px 0;border:0;background:transparent;color:#637795;font-size:.72rem;font-weight:700}.mapel-section-toggle i{transition:transform .2s}.mapel-section-toggle[aria-expanded="true"] i{transform:rotate(180deg)}.mapel-emis-card{border-top:3px solid #31b978}.mapel-emis-card .alert{padding:.6rem .75rem;margin-bottom:.8rem!important;border-radius:8px;color:#49617f;font-size:.76rem}.mapel-emis-id{font-family:Consolas,Monaco,monospace!important;font-size:.75rem!important;font-weight:700;letter-spacing:.02em}.mapel-form-actions{position:sticky;bottom:10px;z-index:10;display:flex;justify-content:flex-end;gap:9px;padding:11px 14px;margin-top:4px;border:1px solid #dfe7f4;border-radius:12px;background:rgba(255,255,255,.95);box-shadow:0 8px 20px rgba(31,53,91,.1);backdrop-filter:blur(8px)}.mapel-form-actions .btn{border-radius:8px;font-size:.86rem;font-weight:700;padding:.46rem .9rem}
         @media(max-width:767px){.mapel-form-hero{align-items:flex-start;flex-direction:column;padding:22px}.mapel-form-hero h2{font-size:1.4rem}.mapel-form-hero__code{width:100%;text-align:left}.mapel-form-card>.card-header,.mapel-form-card>.card-body{padding-left:15px;padding-right:15px}.mapel-form-actions{justify-content:stretch;padding:14px}.mapel-form-actions .btn{flex:1}}
     </style>
 @stop
@@ -443,6 +446,14 @@
 @section('js')
     <script>
         $(document).ready(function() {
+            $('.mapel-form-card--collapsible .collapse').on('show.bs.collapse hide.bs.collapse', function (event) {
+                const isOpen = event.type === 'show';
+                $('[data-target="#' + this.id + '"]').attr('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            // Jika validasi server mengembalikan error pada panel lanjutan, bukakan panel terkait.
+            $('.mapel-form-card--collapsible .is-invalid').closest('.collapse').collapse('show');
+
             // Toggle jenis agama field
             function toggleJenisAgama() {
                 if ($('#is_mapel_agama').is(':checked')) {
