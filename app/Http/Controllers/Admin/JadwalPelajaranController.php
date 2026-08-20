@@ -384,8 +384,9 @@ class JadwalPelajaranController extends Controller
             ->whereIn('hari', array_keys($days))
             ->get();
 
-        if ($jadwal->max('jam_ke') > $maxJam) {
-            return back()->with('error', "Ekspor EMIS GTK tidak dapat dibuat karena terdapat jam ke-{$jadwal->max('jam_ke')}. Template EMIS hanya mendukung hingga jam ke-{$maxJam}.");
+        $maxJamPelajaran = $maxJam - 1; // Satu slot setiap hari dipakai template Upacara/Religi.
+        if ($jadwal->max('jam_ke') > $maxJamPelajaran) {
+            return back()->with('error', "Ekspor EMIS GTK tidak dapat dibuat karena terdapat jam ke-{$jadwal->max('jam_ke')}. Setelah slot kegiatan pembuka, template EMIS mendukung hingga {$maxJamPelajaran} jam pelajaran SIMANSA.");
         }
 
         $jadwalBySlot = $jadwal->keyBy(fn (JadwalPelajaran $item) => implode('|', [$item->hari, $item->kelas_id, $item->jam_ke]));
@@ -465,9 +466,9 @@ class JadwalPelajaranController extends Controller
 
         $row = 2;
         foreach ($classes as $kelas) {
-            for ($jamKe = 1; $jamKe <= $maxJam; $jamKe++, $row++) {
-                $isProtectedActivity = $jamKe === 1;
-                $sheet->fromArray([(int) $kelas->tingkat, $kelas->nama_kelas, $jamKe, '', ''], null, 'A'.$row);
+            for ($slotEmis = 1; $slotEmis <= $maxJam; $slotEmis++, $row++) {
+                $isProtectedActivity = $slotEmis === 1;
+                $sheet->fromArray([(int) $kelas->tingkat, $kelas->nama_kelas, $slotEmis, '', ''], null, 'A'.$row);
 
                 if ($isProtectedActivity) {
                     $sheet->setCellValue('E'.$row, '[TEMPLATE: '.($dayKey === 'senin' ? 'Upacara' : 'Religi').']');
@@ -475,7 +476,11 @@ class JadwalPelajaranController extends Controller
                     continue;
                 }
 
-                $slot = $jadwalBySlot->get(implode('|', [$dayKey, $kelas->id, $jamKe]));
+                // Nomor jam SIMANSA hanya menghitung pelajaran. Slot pertama EMIS
+                // sudah dipakai template Upacara/Religi, sehingga Jam SIMANSA 1
+                // ditempatkan ke slot EMIS 2, Jam SIMANSA 2 ke slot EMIS 3, dst.
+                $jamKeSimansa = $slotEmis - 1;
+                $slot = $jadwalBySlot->get(implode('|', [$dayKey, $kelas->id, $jamKeSimansa]));
                 if ($slot) {
                     // EMIS GTK memakai PEG ID sebagai ID PTK dan ID mapel
                     // EMIS yang dipetakan per tingkat dari referensi Wakakur.
