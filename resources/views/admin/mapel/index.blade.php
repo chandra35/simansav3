@@ -223,6 +223,7 @@
         th.mapel-action-cell,td.mapel-action-cell{min-width:86px!important;text-align:right!important;white-space:nowrap}.mapel-action-desktop{display:inline-block}.mapel-action-desktop .btn{border-radius:8px;font-size:.76rem;font-weight:700;white-space:nowrap}.mapel-action-desktop .dropdown-menu{min-width:168px;padding:6px;border:1px solid #dce5f1;border-radius:10px;box-shadow:0 12px 28px rgba(33,56,100,.14)}.mapel-action-desktop .dropdown-item{padding:8px 10px;border:0;background:transparent;font-size:.82rem;color:#41536e;text-align:left}.mapel-action-desktop .dropdown-item i{width:19px}.mapel-action-desktop .dropdown-item:hover{border-radius:7px;background:#f1f5ff}.mapel-action-mobile{display:none;align-items:center;justify-content:flex-end;gap:5px}.mapel-action-mobile .btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:32px;padding:0;border-radius:8px}.mapel-action-mobile .btn span{display:none}
         table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before{top:50%;transform:translateY(-50%);background:#416eed;box-shadow:none}
         @media(min-width:992px){.mapel-table-shell{overflow-x:auto}.mapel-table-card table#mapel-table{min-width:1080px}.mapel-table-card table#mapel-table th.mapel-action-cell,.mapel-table-card table#mapel-table td.mapel-action-cell{position:sticky;right:0;z-index:2;background:#fff;box-shadow:-8px 0 14px rgba(38,61,106,.05)}.mapel-table-card table#mapel-table thead th.mapel-action-cell{z-index:3;background:#f5f8fc}.mapel-table-card table#mapel-table tbody tr:hover td.mapel-action-cell{background:#f7faff}}
+        @media(max-width:991px){.mapel-action-desktop{display:none}.mapel-action-mobile{display:flex}}
         @media(max-width:767px){
             .mapel-hero{align-items:flex-start;flex-direction:column}
             .mapel-hero__actions{width:100%}.mapel-hero__actions .btn{flex:1}
@@ -245,7 +246,7 @@
             .mapel-table-card .dataTables_paginate{width:100%;overflow:hidden}
             .mapel-table-card .dataTables_paginate .pagination{justify-content:center;flex-wrap:wrap;gap:2px}
             .mapel-table-card .page-link{min-width:28px;margin:0!important;padding:.32rem .42rem;font-size:.68rem}
-            .mapel-action-desktop{display:none}.mapel-action-mobile{display:flex;justify-content:center}
+            .mapel-action-mobile{justify-content:center}
             .mapel-action-mobile .btn{width:30px;height:30px}
         }
     </style>
@@ -260,14 +261,16 @@
     
     <script>
         $(document).ready(function() {
+            const useMobileCollapse = window.matchMedia('(max-width: 991px)').matches;
+
             // Initialize DataTable
             let table = $('#mapel-table').DataTable({
                 processing: true,
                 serverSide: true,
                 // Desktop memakai tabel penuh tanpa child-row/collapse. Mobile tetap
                 // menggunakan responsive collapse agar kolom mudah dibaca.
-                responsive: window.matchMedia('(max-width: 991px)').matches,
-                scrollX: !window.matchMedia('(max-width: 991px)').matches,
+                responsive: useMobileCollapse,
+                scrollX: !useMobileCollapse,
                 scrollCollapse: true,
                 autoWidth: false,
                 ajax: {
@@ -338,8 +341,8 @@
                         name: 'action',
                         orderable: false,
                         searchable: false,
-                        className: 'text-right mapel-action-cell all',
-                        responsivePriority: 1
+                        className: useMobileCollapse ? 'mapel-action-cell none' : 'text-right mapel-action-cell all',
+                        responsivePriority: useMobileCollapse ? 10000 : 1
                     }
                 ],
                 order: [[1, 'asc']],
