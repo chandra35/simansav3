@@ -432,6 +432,7 @@ class MataPelajaranController extends Controller
 
     public function edit(MataPelajaran $mapel)
     {
+        $mapel->load('kurikulum');
         $kurikulums = Kurikulum::where('is_active', true)->get();
         $jurusans = Jurusan::where('is_active', true)->get();
         
@@ -441,6 +442,9 @@ class MataPelajaranController extends Controller
     public function update(Request $request, MataPelajaran $mapel)
     {
         $request->merge([
+            // Katalog kurikulum adalah identitas mapel. Edit rutin, termasuk
+            // koreksi ID EMIS GTK, tidak boleh memindahkan mapel ke kurikulum lain.
+            'kurikulum_id' => $mapel->kurikulum_id,
             'kode_jadwal' => $request->filled('kode_jadwal') ? strtoupper($request->kode_jadwal) : null,
             'is_mapel_agama' => $request->boolean('is_mapel_agama'),
             'is_rumpun_pai' => $request->boolean('is_rumpun_pai'),
