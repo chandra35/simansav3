@@ -73,7 +73,7 @@
     @endif
 
     {{-- Filter Card --}}
-    <div class="card card-outline card-secondary collapsed-card">
+    <div class="card card-outline card-secondary collapsed-card mapel-filter-card">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-filter"></i> Filter</h3>
             <div class="card-tools">
@@ -163,7 +163,7 @@
     </div>
 
     {{-- Data Card --}}
-    <div class="card card-outline card-primary">
+    <div class="card card-outline card-primary mapel-table-card">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Mata Pelajaran Aktif</h3>
             <div class="card-tools">
@@ -174,9 +174,9 @@
                 @endcan
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="mapel-table" class="table table-bordered table-striped table-hover">
+        <div class="card-body p-0">
+            <div class="table-responsive mapel-table-shell">
+                <table id="mapel-table" class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th width="5%">No</th>
@@ -209,7 +209,19 @@
         .mapel-stat>i{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#edf2ff;color:#4770ef;font-size:1.15rem}
         .mapel-stat small,.mapel-stat strong{display:block}.mapel-stat small{font-weight:700;color:#66728a;text-transform:uppercase;font-size:.72rem}.mapel-stat strong{font-size:1.55rem;line-height:1.15}
         .mapel-stat--green{border-top-color:#31b978}.mapel-stat--green>i{color:#229460;background:#eaf9f1}.mapel-stat--purple{border-top-color:#7957df}.mapel-stat--purple>i{color:#6943d2;background:#f2edff}.mapel-stat--orange{border-top-color:#ef9d21}.mapel-stat--orange>i{color:#c97800;background:#fff6e5}
-        @media(max-width:767px){.mapel-hero{align-items:flex-start;flex-direction:column}.mapel-hero__actions{width:100%}.mapel-hero__actions .btn{flex:1}}
+        .mapel-filter-card,.mapel-table-card{border:1px solid #dfe7f4;border-radius:18px;box-shadow:0 10px 28px rgba(31,53,91,.055);overflow:hidden}
+        .mapel-filter-card>.card-header,.mapel-table-card>.card-header{display:flex;align-items:center;min-height:64px;padding:14px 20px;border-bottom:1px solid #e7edf6;background:#fff}
+        .mapel-filter-card .card-title,.mapel-table-card .card-title{font-size:1rem;font-weight:800;color:#20365f}.mapel-filter-card .card-title i,.mapel-table-card .card-title i{color:#3867e8;margin-right:7px}
+        .mapel-filter-card .card-body{padding:20px;background:#f9fbff}.mapel-filter-card label{font-size:.73rem;font-weight:800;letter-spacing:.035em;text-transform:uppercase;color:#5a6d8d}
+        .mapel-filter-card .form-control{height:40px;border-color:#d7e1f0;border-radius:10px;font-size:.9rem}.mapel-filter-card .btn{border-radius:9px;font-weight:700;padding:.5rem .9rem}
+        .mapel-table-card .card-tools{margin-left:auto}.mapel-table-card .card-tools .btn{border-radius:9px;font-weight:700;padding:.45rem .75rem}
+        .mapel-table-shell{padding:0 16px 16px}.mapel-table-card .dataTables_wrapper{padding-top:16px}.mapel-table-card .dataTables_length,.mapel-table-card .dataTables_filter{margin-bottom:14px;color:#536787;font-size:.86rem;font-weight:600}
+        .mapel-table-card .dataTables_filter input,.mapel-table-card .dataTables_length select{height:36px;border:1px solid #d6e0ef;border-radius:8px;background:#fff;padding:.3rem .65rem;outline:0;box-shadow:none}.mapel-table-card .dataTables_filter input:focus,.mapel-table-card .dataTables_length select:focus{border-color:#547bf0;box-shadow:0 0 0 .18rem rgba(71,112,239,.12)}
+        table#mapel-table{border-collapse:separate;border-spacing:0;font-size:.86rem;color:#344561}table#mapel-table thead th{padding:13px 11px;border-top:1px solid #e4ebf5;border-bottom:1px solid #dce5f1;background:#f5f8fc;color:#60718d;font-size:.69rem;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
+        table#mapel-table tbody td{padding:14px 11px;vertical-align:middle;border-top:1px solid #edf1f6}table#mapel-table tbody tr:hover{background:#f7faff}table#mapel-table tbody td:first-child{font-weight:700;color:#6980a5}table#mapel-table .badge{border-radius:999px;padding:.38em .7em;font-size:.71rem;font-weight:700}
+        .mapel-table-card .dataTables_info{padding-top:12px;color:#687b98;font-size:.83rem}.mapel-table-card .pagination{margin:10px 0 0}.mapel-table-card .page-link{border:0;border-radius:8px!important;margin-left:3px;color:#4866a5;font-weight:700}.mapel-table-card .page-item.active .page-link{background:#416eed;box-shadow:0 4px 10px rgba(65,110,237,.25)}
+        table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before{top:50%;transform:translateY(-50%);background:#416eed;box-shadow:none}
+        @media(max-width:767px){.mapel-hero{align-items:flex-start;flex-direction:column}.mapel-hero__actions{width:100%}.mapel-hero__actions .btn{flex:1}.mapel-filter-card>.card-header,.mapel-table-card>.card-header{padding:13px 15px}.mapel-filter-card .card-body{padding:16px}.mapel-table-shell{padding:0 10px 12px}.mapel-table-card .dataTables_filter{float:none;text-align:left}.mapel-table-card .dataTables_filter input{width:calc(100% - 42px)}}
     </style>
 @stop
 
@@ -227,6 +239,7 @@
                 processing: true,
                 serverSide: true,
                 responsive: true,
+                autoWidth: false,
                 ajax: {
                     url: '{{ route('admin.mapel.data') }}',
                     data: function(d) {

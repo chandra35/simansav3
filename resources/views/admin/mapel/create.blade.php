@@ -18,10 +18,19 @@
 @stop
 
 @section('content')
-    <form action="{{ route('admin.mapel.store') }}" method="POST" id="form-mapel">
+    <form action="{{ route('admin.mapel.store') }}" method="POST" id="form-mapel" class="mapel-form-page">
         @csrf
+
+        <section class="mapel-form-hero">
+            <div>
+                <span class="mapel-form-hero__eyebrow"><i class="fas fa-book-open"></i> AKADEMIK · KATALOG MAPEL</span>
+                <h2>Tambahkan mata pelajaran</h2>
+                <p>Susun identitas, struktur kurikulum, dan kesiapan jadwal dalam satu alur yang jelas.</p>
+            </div>
+            <div class="mapel-form-hero__code"><i class="fas fa-plus-circle"></i><strong>Mapel baru</strong></div>
+        </section>
         
-        <div class="card card-primary card-outline">
+        <div class="card card-primary card-outline mapel-form-card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Dasar</h3>
             </div>
@@ -191,7 +200,7 @@
         </div>
 
         {{-- Madrasah Specific Fields --}}
-        <div class="card card-info card-outline">
+        <div class="card card-info card-outline mapel-form-card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-mosque"></i> Konfigurasi Madrasah (Kemenag)</h3>
             </div>
@@ -261,7 +270,7 @@
         </div>
 
         {{-- Kurikulum Merdeka & KTSP --}}
-        <div class="card card-success card-outline">
+        <div class="card card-success card-outline mapel-form-card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-graduation-cap"></i> Konfigurasi Kurikulum Khusus</h3>
             </div>
@@ -311,7 +320,7 @@
         </div>
 
         {{-- Additional Info --}}
-        <div class="card card-secondary card-outline">
+        <div class="card card-secondary card-outline mapel-form-card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-file-alt"></i> Informasi Tambahan</h3>
             </div>
@@ -333,17 +342,24 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-footer">
+        <div class="mapel-form-actions">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Simpan
                 </button>
                 <a href="{{ route('admin.mapel.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
-            </div>
         </div>
     </form>
+@stop
+
+@section('css')
+    <style>
+        .mapel-form-page{max-width:1180px;margin:0 auto 28px}.mapel-form-hero{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:25px 28px;margin-bottom:18px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#3f63e9,#247f93);box-shadow:0 16px 34px rgba(43,75,153,.16)}
+        .mapel-form-hero__eyebrow{display:block;font-size:.75rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero h2{margin:8px 0 5px;font-size:1.65rem;font-weight:800}.mapel-form-hero p{margin:0;color:rgba(255,255,255,.86)}.mapel-form-hero__code{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:130px;min-height:74px;padding:12px 16px;border:1px solid rgba(255,255,255,.25);border-radius:13px;background:rgba(16,37,105,.2);font-size:1.05rem}.mapel-form-hero__code strong{font-size:.85rem}
+        .mapel-form-card{border:1px solid #dfe7f4;border-radius:17px;box-shadow:0 9px 25px rgba(31,53,91,.055);overflow:hidden}.mapel-form-card>.card-header{padding:15px 20px;border-bottom:1px solid #e7edf6;background:#fff}.mapel-form-card .card-title{font-size:1rem;font-weight:800;color:#20365f}.mapel-form-card .card-title i{margin-right:7px;color:#426deb}.mapel-form-card>.card-body{padding:22px 20px;background:#fff}.mapel-form-card .form-group{margin-bottom:1.2rem}.mapel-form-card label{font-size:.76rem;font-weight:800;letter-spacing:.025em;color:#526783}.mapel-form-card .form-control{min-height:41px;border-color:#d8e2f0;border-radius:9px;color:#30415e;font-size:.9rem;box-shadow:none}.mapel-form-card textarea.form-control{min-height:96px}.mapel-form-card .form-control:focus{border-color:#5279ed;box-shadow:0 0 0 .18rem rgba(82,121,237,.12)}.mapel-form-card .text-muted{font-size:.75rem;color:#7889a3!important}.mapel-form-card .custom-control{padding:14px 12px 12px 2rem;border-radius:10px;background:#f7f9fc}.mapel-form-card .custom-control-label{font-size:.82rem;color:#344966}.mapel-form-actions{display:flex;justify-content:flex-end;gap:9px;padding:16px 20px;margin-top:4px;border:1px solid #dfe7f4;border-radius:15px;background:#fff;box-shadow:0 9px 25px rgba(31,53,91,.05)}.mapel-form-actions .btn{border-radius:9px;font-weight:700;padding:.52rem 1rem}
+        @media(max-width:767px){.mapel-form-hero{align-items:flex-start;flex-direction:column;padding:22px}.mapel-form-hero h2{font-size:1.4rem}.mapel-form-hero__code{width:100%;align-items:flex-start}.mapel-form-card>.card-header,.mapel-form-card>.card-body{padding-left:15px;padding-right:15px}.mapel-form-actions{justify-content:stretch;padding:14px}.mapel-form-actions .btn{flex:1}}
+    </style>
 @stop
 
 @section('js')
