@@ -120,8 +120,8 @@ class NormalizeStudentMediaCommand extends Command
             ->where('file_path', 'like', 'matrikulasi-ppdb/%')
             ->cursor()
             ->each(function (DokumenSiswa $document) use (&$result, $dryRun, $targetDisk) {
-                $sourceDisk = $document->storage_disk ?: StorageHelper::getDiskFromPath($document->file_path);
-                if (!$document->siswa || !Storage::disk($sourceDisk)->exists($document->file_path)) {
+                $source = StorageHelper::resolveExistingDokumenFile($document->storage_disk, $document->file_path);
+                if (!$document->siswa || !$source) {
                     $result['failed']++;
                     return;
                 }
@@ -134,7 +134,7 @@ class NormalizeStudentMediaCommand extends Command
                     if (!$dryRun) {
                         Storage::disk($targetDisk)->makeDirectory(dirname($target));
                         if (!Storage::disk($targetDisk)->exists($target)) {
-                            Storage::disk($targetDisk)->put($target, Storage::disk($sourceDisk)->get($document->file_path));
+                            Storage::disk($targetDisk)->put($target, Storage::disk($source['disk'])->get($source['path']));
                         }
                         $document->update([
                             'file_path' => $target,

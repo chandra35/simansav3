@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasUuid;
 use App\Traits\HasCreatedUpdatedBy;
+use App\Helpers\StorageHelper;
 use Illuminate\Support\Facades\Storage;
 
 class DokumenSiswa extends Model
@@ -94,6 +95,11 @@ class DokumenSiswa extends Model
 
     public function getSecureFilePath()
     {
+        $location = StorageHelper::resolveExistingDokumenFile($this->storage_disk, $this->file_path);
+        if ($location) {
+            return Storage::disk($location['disk'])->path($location['path']);
+        }
+
         // Return absolute path for secure files
         if ($this->file_uuid) {
             return storage_path("app/private/{$this->file_path}");
@@ -173,17 +179,9 @@ class DokumenSiswa extends Model
         parent::boot();
 
         static::deleting(function ($dokumen) {
-            // Handle both secure and legacy files
-            if ($dokumen->file_uuid) {
-                // New secure files in private storage
-                if (Storage::disk('private')->exists($dokumen->file_path)) {
-                    Storage::disk('private')->delete($dokumen->file_path);
-                }
-            } else {
-                // Legacy files in public storage
-                if (Storage::disk('public')->exists($dokumen->file_path)) {
-                    Storage::disk('public')->delete($dokumen->file_path);
-                }
+            $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
+            if ($location) {
+                Storage::disk($location['disk'])->delete($location['path']);
             }
         });
     }

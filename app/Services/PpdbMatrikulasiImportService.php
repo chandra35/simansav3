@@ -880,8 +880,8 @@ class PpdbMatrikulasiImportService
         $targetDisk = StorageHelper::getDokumenDisk();
 
         foreach ($peserta->dokumens as $dokumen) {
-            $sourceDisk = $dokumen->storage_disk ?: StorageHelper::getDiskFromPath($dokumen->file_path);
-            if (!$dokumen->file_path || !Storage::disk($sourceDisk)->exists($dokumen->file_path)) {
+            $source = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
+            if (!$source) {
                 continue;
             }
 
@@ -890,7 +890,7 @@ class PpdbMatrikulasiImportService
             $targetPath = $studentFolder . '/ppdb/' . $dokumen->id . '.' . $extension;
 
             if (!Storage::disk($targetDisk)->exists($targetPath)) {
-                Storage::disk($targetDisk)->put($targetPath, Storage::disk($sourceDisk)->get($dokumen->file_path));
+                Storage::disk($targetDisk)->put($targetPath, Storage::disk($source['disk'])->get($source['path']));
             }
 
             DokumenSiswa::updateOrCreate(
@@ -934,12 +934,12 @@ class PpdbMatrikulasiImportService
             return;
         }
 
-        $disk = $foto->storage_disk ?: StorageHelper::getDiskFromPath($foto->file_path);
-        if (!Storage::disk($disk)->exists($foto->file_path)) {
+        $source = StorageHelper::resolveExistingDokumenFile($foto->storage_disk, $foto->file_path);
+        if (!$source) {
             return;
         }
 
-        $content = Storage::disk($disk)->get($foto->file_path);
+        $content = Storage::disk($source['disk'])->get($source['path']);
         if (!$this->looksLikeImage($content, $foto->mime_type)) {
             return;
         }

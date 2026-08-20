@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class DokumenController extends Controller
 {
@@ -259,7 +260,7 @@ class DokumenController extends Controller
             }
 
             // Delete file from storage
-            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
+            $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
             
             try {
                 if (Storage::disk($disk)->exists($dokumen->file_path)) {
@@ -328,14 +329,13 @@ class DokumenController extends Controller
             $dokumen->update(['accessed_at' => now()]);
 
             // Get disk and file path
-            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
+            $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
             
-            if (!Storage::disk($disk)->exists($dokumen->file_path)) {
+            if (!$location) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
             // Get absolute filesystem path
-            $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
             $fileName = $dokumen->getDownloadFileName($siswaDok?->nama_lengkap);
 
@@ -346,16 +346,16 @@ class DokumenController extends Controller
             }
 
             // Stream directly — bypass all Laravel/Symfony response abstractions
-            header('Content-Type: ' . $dokumen->mime_type);
-            header('Content-Disposition: inline; filename="' . addslashes($fileName) . '"');
-            header('Content-Length: ' . filesize($absolutePath));
-            header('Cache-Control: no-cache, no-store, must-revalidate');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-            readfile($absolutePath);
-            exit;
+            return Storage::disk($location['disk'])->response($location['path'], $fileName, [
+                'Content-Type' => $dokumen->mime_type ?: 'application/octet-stream',
+                'Cache-Control' => 'private, no-store, max-age=0',
+            ], 'inline');
 
         } catch (\Throwable $e) {
+            if ($e instanceof HttpExceptionInterface) {
+                throw $e;
+            }
+
             Log::error('Error previewing dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),
@@ -391,25 +391,26 @@ class DokumenController extends Controller
             // Get disk and file path
             $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
 
-            if (!Storage::disk($disk)->exists($dokumen->file_path)) {
+            if (!$location) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
-            $absolutePath = Storage::disk($disk)->path($dokumen->file_path);
             $fileName = $dokumen->getDownloadFileName($siswaDok?->nama_lengkap);
 
             while (ob_get_level() > 0) {
                 ob_end_clean();
             }
 
-            header('Content-Type: ' . $dokumen->mime_type);
-            header('Content-Disposition: attachment; filename="' . addslashes($fileName) . '"');
-            header('Content-Length: ' . filesize($absolutePath));
-            header('Cache-Control: no-cache, no-store, must-revalidate');
-            readfile($absolutePath);
-            exit;
+            return Storage::disk($location['disk'])->download($location['path'], $fileName, [
+                'Content-Type' => $dokumen->mime_type ?: 'application/octet-stream',
+                'Cache-Control' => 'private, no-store, max-age=0',
+            ]);
 
         } catch (\Throwable $e) {
+            if ($e instanceof HttpExceptionInterface) {
+                throw $e;
+            }
+
             Log::error('Error downloading dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),

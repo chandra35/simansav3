@@ -220,4 +220,58 @@ class StorageHelper
         // Default to dokumen
         return 'dokumen';
     }
+
+    /**
+     * Cari dokumen pada disk yang tersimpan maupun lokasi legacy.
+     * File sumber migrasi tetap dipertahankan, sehingga path lama harus tetap
+     * dapat dibaca tanpa mengubah data dokumen yang sudah berjalan.
+     *
+     * @return array{disk:string,path:string}|null
+     */
+    public static function resolveExistingDokumenFile(?string $storedDisk, ?string $filePath): ?array
+    {
+        $rawPath = trim(str_replace('\\', '/', (string) $filePath));
+
+        if ($rawPath === '' || filter_var($rawPath, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $rawPath = ltrim($rawPath, '/');
+        $paths = [$rawPath];
+
+        foreach ([
+            'storage/app/private/', 'storage/app/public/',
+            'storage/private/', 'storage/public/',
+            'private/', 'public/', 'storage/',
+        ] as $prefix) {
+            if (str_starts_with($rawPath, $prefix)) {
+                $paths[] = substr($rawPath, strlen($prefix));
+            }
+        }
+
+        $paths = array_values(array_unique(array_filter($paths)));
+        $disks = array_values(array_unique(array_filter([
+            $storedDisk,
+            self::getDiskFromPath($rawPath),
+            'dokumen', 'dokumen_fallback', 'private', 'public',
+        ])));
+
+        foreach ($disks as $disk) {
+            try {
+                foreach ($paths as $path) {
+                    if (Storage::disk($disk)->exists($path)) {
+                        return compact('disk', 'path');
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Dokumen storage disk tidak dapat diperiksa', [
+                    'disk' => $disk,
+                    'file_path' => $rawPath,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
+    }
 }

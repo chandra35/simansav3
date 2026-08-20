@@ -1043,9 +1043,9 @@ class SiswaController extends Controller
         }
 
         // Gunakan disk yang sama seperti preview — bukan getSecureFilePath()
-        $disk = $dokumen->storage_disk ?? \App\Helpers\StorageHelper::getDiskFromPath($dokumen->file_path);
+        $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
 
-        if (!Storage::disk($disk)->exists($dokumen->file_path)) {
+        if (!$location) {
             abort(404, 'File tidak ditemukan');
         }
 
@@ -1057,7 +1057,7 @@ class SiswaController extends Controller
 
         // Tulis ke temp file agar bisa diproses pdftoppm / GD
         $tmpInput = tempnam(sys_get_temp_dir(), 'simansa_in_');
-        file_put_contents($tmpInput, Storage::disk($disk)->get($dokumen->file_path));
+        file_put_contents($tmpInput, Storage::disk($location['disk'])->get($location['path']));
 
         // Helper: flush buffer + stream file as attachment, then cleanup
         $streamAndExit = function (string $outPath) use ($filename) {
