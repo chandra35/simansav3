@@ -350,7 +350,7 @@ class JadwalPelajaranController extends Controller
     /**
      * Ekspor jadwal ke workbook yang dapat langsung diunggah ke EMIS GTK.
      * Format mengikuti template Wakakur/EMIS: INFO MODEL, LEGEND, dan lima
-     * sheet harian dengan kode GTK + kode jadwal mapel.
+     * sheet harian dengan ID PTK dan ID master mapel yang direlasikan jadwal.
      */
     public function exportEmisGtk(Request $request)
     {
@@ -375,8 +375,8 @@ class JadwalPelajaranController extends Controller
 
         $jadwal = JadwalPelajaran::query()
             ->with([
-                'gtk:id,kode_gtk',
-                'mataPelajaran:id,kode_jadwal,kode_mapel',
+                'gtk:id,peg_id',
+                'mataPelajaran:id',
             ])
             ->where('tahun_pelajaran_id', $tahun->id)
             ->where('semester', $semester)
@@ -477,8 +477,11 @@ class JadwalPelajaranController extends Controller
 
                 $slot = $jadwalBySlot->get(implode('|', [$dayKey, $kelas->id, $jamKe]));
                 if ($slot) {
-                    $sheet->setCellValueExplicit('D'.$row, (string) $slot->gtk?->kode_gtk, DataType::TYPE_STRING);
-                    $sheet->setCellValueExplicit('E'.$row, (string) ($slot->mataPelajaran?->kode_jadwal ?: $slot->mataPelajaran?->kode_mapel), DataType::TYPE_STRING);
+                    // EMIS GTK memakai PEG ID sebagai ID PTK dan ID master
+                    // mapel yang tersimpan pada relasi jadwal, bukan kode
+                    // singkat Wakakur (kode_gtk/kode_jadwal).
+                    $sheet->setCellValueExplicit('D'.$row, (string) $slot->gtk?->peg_id, DataType::TYPE_STRING);
+                    $sheet->setCellValueExplicit('E'.$row, (string) $slot->mapel_id, DataType::TYPE_STRING);
                 }
                 $this->styleEmisRow($sheet, $row, 'E6FFE6');
             }
