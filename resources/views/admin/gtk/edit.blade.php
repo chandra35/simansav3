@@ -162,7 +162,7 @@
                                             <label for="peg_id">PEG ID / ID PTK</label>
                                             <input type="text" class="form-control" id="peg_id" name="peg_id"
                                                    value="{{ $gtk->peg_id }}" maxlength="20" inputmode="numeric">
-                                            <small class="text-muted">Nomor identitas PTK dari data manajemen PTK.</small>
+                                            <small class="text-muted">Nomor identitas PTK dari manajemen PTK; dipakai sebagai ID PTK saat Export EMIS GTK.</small>
                                         </div>
                                     </div>
                                 </div>

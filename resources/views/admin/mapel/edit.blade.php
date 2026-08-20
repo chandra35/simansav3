@@ -223,6 +223,39 @@
             </div>
         </div>
 
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-file-export"></i> Mapping ID Mapel EMIS GTK</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light border mb-3">
+                    <i class="fas fa-info-circle text-success mr-1"></i>
+                    ID ini hanya digunakan saat <strong>Export EMIS GTK</strong>. Jadwal Wakakur, monitoring, nilai, dan absensi SIMANSA tidak berubah.
+                </div>
+                <div class="row">
+                    @foreach([10 => 'Kelas X', 11 => 'Kelas XI', 12 => 'Kelas XII'] as $tingkat => $label)
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="emisgtk_mapel_id_{{ $tingkat }}">{{ $label }}</label>
+                                <input type="text"
+                                       id="emisgtk_mapel_id_{{ $tingkat }}"
+                                       name="emisgtk_mapel_ids[{{ $tingkat }}]"
+                                       class="form-control font-weight-bold @error('emisgtk_mapel_ids.'.$tingkat) is-invalid @enderror"
+                                       value="{{ old('emisgtk_mapel_ids.'.$tingkat, $mapel->emisgtk_mapel_ids[(string) $tingkat] ?? '') }}"
+                                       placeholder="Contoh: 83f0d965e5054973a2f491"
+                                       maxlength="64"
+                                       autocomplete="off">
+                                <small class="text-muted">ID Mapel dari EMIS GTK untuk tingkat ini.</small>
+                                @error('emisgtk_mapel_ids.'.$tingkat)
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         {{-- Madrasah Specific Fields --}}
         <div class="card card-info card-outline">
             <div class="card-header">

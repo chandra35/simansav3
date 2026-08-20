@@ -456,6 +456,10 @@ class MataPelajaranController extends Controller
                     ->where(fn ($query) => $query->where('kurikulum_id', $request->kurikulum_id))
                     ->ignore($mapel->id),
             ],
+            'emisgtk_mapel_ids' => 'nullable|array',
+            'emisgtk_mapel_ids.10' => 'nullable|string|max:64',
+            'emisgtk_mapel_ids.11' => 'nullable|string|max:64',
+            'emisgtk_mapel_ids.12' => 'nullable|string|max:64',
             'nama_mapel' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:20',
             'kategori' => 'nullable|string|max:50',
@@ -490,6 +494,13 @@ class MataPelajaranController extends Controller
             'deskripsi' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+
+        // Kosongkan tingkat yang tidak memiliki ID EMIS GTK agar mapping
+        // ekspor tetap eksplisit dan tidak menyimpan nilai kosong.
+        $validated['emisgtk_mapel_ids'] = array_filter(
+            $validated['emisgtk_mapel_ids'] ?? [],
+            fn ($id) => filled($id)
+        );
 
         try {
             $mapel->update($validated);
