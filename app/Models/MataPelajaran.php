@@ -20,6 +20,7 @@ class MataPelajaran extends Model
         'jurusan_id',
         'kode_mapel',
         'kode_jadwal',
+        'emisgtk_mapel_ids',
         'nama_mapel',
         'kelompok',
         'kategori',
@@ -49,6 +50,7 @@ class MataPelajaran extends Model
     protected $casts = [
         'tingkat' => 'array',
         'semester' => 'array',
+        'emisgtk_mapel_ids' => 'array',
         'is_mapel_agama' => 'boolean',
         'is_rumpun_pai' => 'boolean',
         'is_bahasa_arab' => 'boolean',
@@ -93,6 +95,12 @@ class MataPelajaran extends Model
     public function jadwalPelajaran(): HasMany
     {
         return $this->hasMany(JadwalPelajaran::class, 'mapel_id');
+    }
+
+    /** ID mata pelajaran EMIS GTK yang berlaku untuk tingkat kelas tertentu. */
+    public function emisGtkIdUntukTingkat(int $tingkat): ?string
+    {
+        return $this->emisgtk_mapel_ids[(string) $tingkat] ?? null;
     }
 
     /**

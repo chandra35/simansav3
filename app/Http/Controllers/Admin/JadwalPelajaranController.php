@@ -376,7 +376,7 @@ class JadwalPelajaranController extends Controller
         $jadwal = JadwalPelajaran::query()
             ->with([
                 'gtk:id,peg_id',
-                'mataPelajaran:id',
+                'mataPelajaran:id,emisgtk_mapel_ids',
             ])
             ->where('tahun_pelajaran_id', $tahun->id)
             ->where('semester', $semester)
@@ -477,11 +477,10 @@ class JadwalPelajaranController extends Controller
 
                 $slot = $jadwalBySlot->get(implode('|', [$dayKey, $kelas->id, $jamKe]));
                 if ($slot) {
-                    // EMIS GTK memakai PEG ID sebagai ID PTK dan ID master
-                    // mapel yang tersimpan pada relasi jadwal, bukan kode
-                    // singkat Wakakur (kode_gtk/kode_jadwal).
+                    // EMIS GTK memakai PEG ID sebagai ID PTK dan ID mapel
+                    // EMIS yang dipetakan per tingkat dari referensi Wakakur.
                     $sheet->setCellValueExplicit('D'.$row, (string) $slot->gtk?->peg_id, DataType::TYPE_STRING);
-                    $sheet->setCellValueExplicit('E'.$row, (string) $slot->mapel_id, DataType::TYPE_STRING);
+                    $sheet->setCellValueExplicit('E'.$row, (string) $slot->mataPelajaran?->emisGtkIdUntukTingkat((int) $kelas->tingkat), DataType::TYPE_STRING);
                 }
                 $this->styleEmisRow($sheet, $row, 'E6FFE6');
             }
