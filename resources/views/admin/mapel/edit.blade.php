@@ -22,25 +22,26 @@
         @csrf
         @method('PUT')
 
-        <section class="mapel-form-hero">
-            <div>
-                <span class="mapel-form-hero__eyebrow"><i class="fas fa-book-open"></i> AKADEMIK · KATALOG MAPEL</span>
+        <section class="mapel-edit-heading">
+            <div class="mapel-edit-heading__icon"><i class="fas fa-book-open"></i></div>
+            <div class="mapel-edit-heading__content">
+                <span>AKADEMIK / DATA MAPEL</span>
                 <h2>{{ $mapel->nama_mapel }}</h2>
                 <p>Edit informasi inti terlebih dahulu. Pengaturan khusus dapat dibuka bila diperlukan.</p>
             </div>
-            <div class="mapel-form-hero__code">
-                <small>KODE MAPEL</small>
-                <strong>{{ $mapel->kode_mapel }}</strong>
+            <div class="mapel-edit-heading__meta">
+                <small>KODE</small><strong>{{ $mapel->kode_mapel }}</strong>
             </div>
         </section>
         
+        <div class="mapel-edit-grid">
         <div class="card card-primary card-outline mapel-form-card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-info-circle"></i> Informasi Dasar</h3>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="kurikulum_id">Kurikulum <span class="text-danger">*</span></label>
                             <input type="hidden" name="kurikulum_id" value="{{ $mapel->kurikulum_id }}">
@@ -55,7 +56,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="jurusan_id">Jurusan (Peminatan)</label>
                             <select name="jurusan_id" id="jurusan_id" class="form-control @error('jurusan_id') is-invalid @enderror">
@@ -73,7 +74,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="kode_mapel">Kode Mapel <span class="text-danger">*</span></label>
                             <input type="text" name="kode_mapel" id="kode_mapel" class="form-control @error('kode_mapel') is-invalid @enderror" 
@@ -83,7 +84,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="kode_jadwal">Kode Jadwal Wakakur</label>
                             <input type="text" name="kode_jadwal" id="kode_jadwal" class="form-control @error('kode_jadwal') is-invalid @enderror"
@@ -97,7 +98,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="form-group">
                             <label for="nama_mapel">Nama Mata Pelajaran <span class="text-danger">*</span></label>
                             <input type="text" name="nama_mapel" id="nama_mapel" class="form-control @error('nama_mapel') is-invalid @enderror" 
@@ -108,7 +109,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="rumpun">Rumpun</label>
                             <select name="rumpun" id="rumpun" class="form-control @error('rumpun') is-invalid @enderror">
@@ -125,7 +126,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="kategori">Kategori</label>
                             <input type="text" name="kategori" id="kategori" class="form-control @error('kategori') is-invalid @enderror" 
@@ -266,6 +267,9 @@
             </div>
         </div>
 
+        </div>
+
+        <div class="mapel-advanced-grid">
         {{-- Madrasah Specific Fields --}}
         <div class="card card-info card-outline mapel-form-card mapel-form-card--collapsible">
             <div class="card-header">
@@ -420,6 +424,7 @@
                 </div>
             </div></div>
         </div>
+        </div>
 
         <div class="mapel-form-actions">
                 <button type="submit" class="btn btn-primary">
@@ -434,10 +439,10 @@
 
 @section('css')
     <style>
-        .mapel-form-page{max-width:1040px;margin:0 auto 24px}.mapel-form-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 21px;margin-bottom:14px;border-radius:15px;color:#fff;background:linear-gradient(120deg,#3f63e9,#247f93);box-shadow:0 11px 24px rgba(43,75,153,.14)}
-        .mapel-form-hero__eyebrow{display:block;font-size:.68rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero h2{margin:4px 0 2px;font-size:1.26rem;font-weight:800}.mapel-form-hero p{margin:0;font-size:.82rem;color:rgba(255,255,255,.86)}.mapel-form-hero__code{min-width:104px;padding:9px 13px;border:1px solid rgba(255,255,255,.25);border-radius:11px;background:rgba(16,37,105,.2);text-align:center}.mapel-form-hero__code small,.mapel-form-hero__code strong{display:block}.mapel-form-hero__code small{font-size:.6rem;font-weight:800;letter-spacing:.06em}.mapel-form-hero__code strong{margin-top:2px;font-size:.95rem}
-        .mapel-form-card{border:1px solid #dfe7f4;border-radius:14px;box-shadow:0 7px 19px rgba(31,53,91,.05);overflow:hidden;margin-bottom:12px}.mapel-form-card>.card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-bottom:1px solid #e7edf6;background:#fff}.mapel-form-card .card-title{font-size:.91rem;font-weight:800;color:#20365f}.mapel-form-card .card-title i{margin-right:6px;color:#426deb}.mapel-form-card>.card-body{padding:16px 17px;background:#fff}.mapel-form-card .form-group{margin-bottom:.82rem}.mapel-form-card label{margin-bottom:.32rem;font-size:.71rem;font-weight:800;letter-spacing:.025em;color:#526783}.mapel-form-card .form-control{min-height:37px;border-color:#d8e2f0;border-radius:8px;color:#30415e;font-size:.86rem;box-shadow:none}.mapel-form-card .form-control:focus{border-color:#5279ed;box-shadow:0 0 0 .18rem rgba(82,121,237,.12)}.mapel-form-card textarea.form-control{min-height:78px}.mapel-locked-label{border-color:#d8e2f0;background:#f3f6fb;color:#60728d;font-size:.7rem;font-weight:700}.mapel-form-card .text-muted{font-size:.69rem;color:#7889a3!important}.mapel-form-card .custom-control{min-height:42px;padding:11px 10px 9px 1.8rem;border-radius:8px;background:#f7f9fc}.mapel-form-card .custom-control-label{padding-top:0;font-size:.76rem;color:#344966}.mapel-form-card--collapsible>.card-header{border-bottom:0}.mapel-section-toggle{display:inline-flex;align-items:center;gap:8px;padding:5px 0;border:0;background:transparent;color:#637795;font-size:.72rem;font-weight:700}.mapel-section-toggle i{transition:transform .2s}.mapel-section-toggle[aria-expanded="true"] i{transform:rotate(180deg)}.mapel-emis-card{border-top:3px solid #31b978}.mapel-emis-card .alert{padding:.6rem .75rem;margin-bottom:.8rem!important;border-radius:8px;color:#49617f;font-size:.76rem}.mapel-emis-id{font-family:Consolas,Monaco,monospace!important;font-size:.75rem!important;font-weight:700;letter-spacing:.02em}.mapel-form-actions{position:sticky;bottom:10px;z-index:10;display:flex;justify-content:flex-end;gap:9px;padding:11px 14px;margin-top:4px;border:1px solid #dfe7f4;border-radius:12px;background:rgba(255,255,255,.95);box-shadow:0 8px 20px rgba(31,53,91,.1);backdrop-filter:blur(8px)}.mapel-form-actions .btn{border-radius:8px;font-size:.86rem;font-weight:700;padding:.46rem .9rem}
-        @media(max-width:767px){.mapel-form-hero{align-items:flex-start;flex-direction:column;padding:22px}.mapel-form-hero h2{font-size:1.4rem}.mapel-form-hero__code{width:100%;text-align:left}.mapel-form-card>.card-header,.mapel-form-card>.card-body{padding-left:15px;padding-right:15px}.mapel-form-actions{justify-content:stretch;padding:14px}.mapel-form-actions .btn{flex:1}}
+        .mapel-form-page{max-width:1180px;margin:0 auto 28px}.mapel-edit-heading{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;padding:15px 18px;margin-bottom:14px;border:1px solid #dce5f2;border-radius:15px;background:#fff;box-shadow:0 8px 22px rgba(31,53,91,.055)}.mapel-edit-heading__icon{display:grid;place-items:center;width:39px;height:39px;border-radius:11px;background:#e9f0ff;color:#426deb}.mapel-edit-heading__content span,.mapel-edit-heading__meta small{display:block;font-size:.64rem;font-weight:800;letter-spacing:.06em;color:#7183a0}.mapel-edit-heading h2{margin:2px 0;font-size:1.1rem;font-weight:800;color:#20365f}.mapel-edit-heading p{margin:0;color:#7788a3;font-size:.76rem}.mapel-edit-heading__meta{min-width:86px;padding-left:14px;border-left:1px solid #e3eaf4;text-align:right}.mapel-edit-heading__meta strong{font-size:.85rem;color:#2c4b83}
+        .mapel-edit-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(285px,.8fr);gap:14px;align-items:start}.mapel-edit-grid>.mapel-form-card{margin-bottom:0}.mapel-edit-grid>.mapel-form-card:first-child .row>.col-md-3{flex:0 0 50%;max-width:50%}.mapel-emis-card{position:sticky;top:82px;border-top:3px solid #2db273}.mapel-emis-card .row>.col-md-4{flex:0 0 100%;max-width:100%}
+        .mapel-form-card{border:1px solid #dfe7f4;border-radius:14px;box-shadow:0 7px 19px rgba(31,53,91,.05);overflow:hidden;margin-bottom:12px}.mapel-form-card>.card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-bottom:1px solid #e7edf6;background:#fff}.mapel-form-card .card-title{font-size:.91rem;font-weight:800;color:#20365f}.mapel-form-card .card-title i{margin-right:6px;color:#426deb}.mapel-form-card>.card-body{padding:16px 17px;background:#fff}.mapel-form-card .form-group{margin-bottom:.82rem}.mapel-form-card label{margin-bottom:.32rem;font-size:.71rem;font-weight:800;letter-spacing:.025em;color:#526783}.mapel-form-card .form-control{min-height:37px;border-color:#d8e2f0;border-radius:8px;color:#30415e;font-size:.86rem;box-shadow:none}.mapel-form-card .form-control:focus{border-color:#5279ed;box-shadow:0 0 0 .18rem rgba(82,121,237,.12)}.mapel-form-card textarea.form-control{min-height:78px}.mapel-locked-label{border-color:#d8e2f0;background:#f3f6fb;color:#60728d;font-size:.7rem;font-weight:700}.mapel-form-card .text-muted{font-size:.69rem;color:#7889a3!important}.mapel-form-card .custom-control{min-height:42px;padding:11px 10px 9px 1.8rem;border-radius:8px;background:#f7f9fc}.mapel-form-card .custom-control-label{padding-top:0;font-size:.76rem;color:#344966}.mapel-form-card--collapsible>.card-header{border-bottom:0}.mapel-section-toggle{display:inline-flex;align-items:center;gap:8px;padding:5px 0;border:0;background:transparent;color:#637795;font-size:.72rem;font-weight:700}.mapel-section-toggle i{transition:transform .2s}.mapel-section-toggle[aria-expanded="true"] i{transform:rotate(180deg)}.mapel-emis-card .alert{padding:.6rem .75rem;margin-bottom:.8rem!important;border-radius:8px;color:#49617f;font-size:.76rem}.mapel-emis-id{font-family:Consolas,Monaco,monospace!important;font-size:.72rem!important;font-weight:700;letter-spacing:.02em}.mapel-advanced-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.mapel-advanced-grid .mapel-form-card{height:max-content}.mapel-form-actions{position:sticky;bottom:10px;z-index:10;display:flex;justify-content:flex-end;gap:9px;padding:11px 14px;margin-top:2px;border:1px solid #dfe7f4;border-radius:12px;background:rgba(255,255,255,.95);box-shadow:0 8px 20px rgba(31,53,91,.1);backdrop-filter:blur(8px)}.mapel-form-actions .btn{border-radius:8px;font-size:.86rem;font-weight:700;padding:.46rem .9rem}
+        @media(max-width:991px){.mapel-edit-grid{grid-template-columns:1fr}.mapel-emis-card{position:static}.mapel-emis-card .row>.col-md-4{flex:0 0 33.333%;max-width:33.333%}.mapel-advanced-grid{grid-template-columns:1fr 1fr}}@media(max-width:767px){.mapel-edit-heading{grid-template-columns:auto 1fr}.mapel-edit-heading__meta{grid-column:1/-1;padding:9px 0 0;border-left:0;border-top:1px solid #e3eaf4;text-align:left}.mapel-edit-grid>.mapel-form-card:first-child .row>.col-md-3{flex:0 0 100%;max-width:100%}.mapel-emis-card .row>.col-md-4{flex:0 0 100%;max-width:100%}.mapel-advanced-grid{grid-template-columns:1fr}.mapel-form-card>.card-header,.mapel-form-card>.card-body{padding-left:15px;padding-right:15px}.mapel-form-actions{justify-content:stretch;padding:14px}.mapel-form-actions .btn{flex:1}}
     </style>
 @stop
 
