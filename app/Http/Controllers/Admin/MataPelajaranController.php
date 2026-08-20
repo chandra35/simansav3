@@ -32,10 +32,6 @@ class MataPelajaranController extends Controller
                         ->orWhereJsonContains('tingkat', 12);
                 });
 
-            if ($kurikulumAktifId) {
-                $catalogQuery->where('kurikulum_id', $kurikulumAktifId);
-            }
-
             $catalogIds = (clone $catalogQuery)->pluck('id');
             $stats = [
                 'total' => $catalogIds->count(),

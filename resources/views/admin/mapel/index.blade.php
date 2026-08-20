@@ -91,7 +91,7 @@
                             <select class="form-control" id="filter-kurikulum" name="kurikulum_id">
                                 <option value="">Semua</option>
                                 @foreach($kurikulums as $kurikulum)
-                                    <option value="{{ $kurikulum->id }}" @selected($kurikulum->id === $kurikulumAktifId)>
+                                    <option value="{{ $kurikulum->id }}">
                                         {{ $kurikulum->nama_kurikulum }}
                                     </option>
                                 @endforeach
@@ -336,7 +336,7 @@
             // Reset Filter
             $('#btn-reset').click(function() {
                 $('#filter-form')[0].reset();
-                $('#filter-kurikulum').val(@json($kurikulumAktifId));
+                $('#filter-kurikulum').val('');
                 $('#filter-tahun-pelajaran').val('');
                 $('#filter-status').val('1');
                 table.draw();
