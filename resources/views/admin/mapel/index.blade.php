@@ -219,11 +219,11 @@
         .mapel-table-card .dataTables_filter input,.mapel-table-card .dataTables_length select{height:36px;border:1px solid #d6e0ef;border-radius:8px;background:#fff;padding:.3rem .65rem;outline:0;box-shadow:none}.mapel-table-card .dataTables_filter input:focus,.mapel-table-card .dataTables_length select:focus{border-color:#547bf0;box-shadow:0 0 0 .18rem rgba(71,112,239,.12)}
         table#mapel-table{border-collapse:separate;border-spacing:0;font-size:.86rem;color:#344561}table#mapel-table thead th{padding:13px 11px;border-top:1px solid #e4ebf5;border-bottom:1px solid #dce5f1;background:#f5f8fc;color:#60718d;font-size:.69rem;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
         table#mapel-table tbody td{padding:14px 11px;vertical-align:middle;border-top:1px solid #edf1f6}table#mapel-table tbody tr:hover{background:#f7faff}table#mapel-table tbody td:first-child{font-weight:700;color:#6980a5}table#mapel-table .badge{border-radius:999px;padding:.38em .7em;font-size:.71rem;font-weight:700}
-        .mapel-table-card .dataTables_info{padding-top:12px;color:#687b98;font-size:.83rem}.mapel-table-card .pagination{margin:10px 0 0}.mapel-table-card .page-link{border:0;border-radius:8px!important;margin-left:3px;color:#4866a5;font-weight:700}.mapel-table-card .page-item.active .page-link{background:#416eed;box-shadow:0 4px 10px rgba(65,110,237,.25)}
+        .mapel-table-card .dataTables_info{padding-top:12px;color:#687b98;font-size:.83rem}.mapel-table-card .pagination{margin:10px 0 0}.mapel-table-card .page-link{margin-left:-1px;border:1px solid #dee2e6;border-radius:0!important;color:#007bff;font-weight:400;box-shadow:none}.mapel-table-card .page-item.active .page-link{background:#007bff;border-color:#007bff;box-shadow:none}
         th.mapel-action-cell,td.mapel-action-cell{min-width:86px!important;text-align:right!important;white-space:nowrap}.mapel-action-desktop{display:inline-block}.mapel-action-desktop .btn{border-radius:8px;font-size:.76rem;font-weight:700;white-space:nowrap}.mapel-action-desktop .dropdown-menu{min-width:168px;padding:6px;border:1px solid #dce5f1;border-radius:10px;box-shadow:0 12px 28px rgba(33,56,100,.14)}.mapel-action-desktop .dropdown-item{padding:8px 10px;border:0;background:transparent;font-size:.82rem;color:#41536e;text-align:left}.mapel-action-desktop .dropdown-item i{width:19px}.mapel-action-desktop .dropdown-item:hover{border-radius:7px;background:#f1f5ff}.mapel-action-mobile{display:none;align-items:center;justify-content:flex-end;gap:5px}.mapel-action-mobile .btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:32px;padding:0;border-radius:8px}.mapel-action-mobile .btn span{display:none}
         table.dataTable.dtr-inline.collapsed>tbody>tr[role="row"]>td:first-child:before{top:50%;transform:translateY(-50%);background:#416eed;box-shadow:none}
-        @media(min-width:992px){.mapel-table-shell{overflow-x:auto}.mapel-table-card table#mapel-table{min-width:1080px}.mapel-table-card table#mapel-table th.mapel-action-cell,.mapel-table-card table#mapel-table td.mapel-action-cell{position:sticky;right:0;z-index:2;background:#fff;box-shadow:-8px 0 14px rgba(38,61,106,.05)}.mapel-table-card table#mapel-table thead th.mapel-action-cell{z-index:3;background:#f5f8fc}.mapel-table-card table#mapel-table tbody tr:hover td.mapel-action-cell{background:#f7faff}}
-        @media(max-width:991px){.mapel-action-desktop{display:none}.mapel-action-mobile{display:flex}}
+        @media(min-width:768px){.mapel-table-shell{overflow-x:auto}.mapel-table-card table#mapel-table{min-width:1080px}.mapel-table-card table#mapel-table th.mapel-action-cell,.mapel-table-card table#mapel-table td.mapel-action-cell{position:sticky;right:0;z-index:2;background:#fff;box-shadow:-8px 0 14px rgba(38,61,106,.05)}.mapel-table-card table#mapel-table thead th.mapel-action-cell{z-index:3;background:#f5f8fc}.mapel-table-card table#mapel-table tbody tr:hover td.mapel-action-cell{background:#f7faff}}
+        @media(max-width:767px){.mapel-action-desktop{display:none}.mapel-action-mobile{display:flex}}
         @media(max-width:767px){
             .mapel-hero{align-items:flex-start;flex-direction:column}
             .mapel-hero__actions{width:100%}.mapel-hero__actions .btn{flex:1}
@@ -250,7 +250,7 @@
             .mapel-action-mobile .btn{width:30px;height:30px}
         }
         /* Mobile: daftar inti saja; detail dan Aksi dibuka melalui collapse baris. */
-        @media(max-width:991px){
+        @media(max-width:767px){
             .mapel-table-card{overflow:visible}.mapel-table-shell,.mapel-table-card .dataTables_wrapper{width:100%;max-width:100%;overflow:visible}
             .mapel-table-card table#mapel-table{width:100%!important;min-width:0!important;table-layout:auto!important}
             .mapel-table-card table#mapel-table thead th,.mapel-table-card table#mapel-table tbody td{padding:11px 7px!important;white-space:normal!important;overflow-wrap:anywhere!important}
@@ -270,7 +270,7 @@
     
     <script>
         $(document).ready(function() {
-            const useMobileCollapse = window.matchMedia('(max-width: 991px)').matches;
+            const useMobileCollapse = window.matchMedia('(max-width: 767px)').matches;
             const hiddenOnMobile = useMobileCollapse ? 'none' : '';
 
             // Initialize DataTable
