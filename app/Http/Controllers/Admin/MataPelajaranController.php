@@ -179,18 +179,35 @@ class MataPelajaranController extends Controller
                 return $mapel->tingkat_text;
             })
             ->addColumn('action', function ($mapel) {
-                $showBtn = '<a href="' . route('admin.mapel.show', $mapel->id) . '" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i></a>';
+                $showBtn = '<a href="' . route('admin.mapel.show', $mapel->id) . '" class="btn btn-sm btn-info" title="Detail"><i class="fas fa-eye"></i><span> Detail</span></a>';
                 $editBtn = auth()->user()->can('edit-mapel')
-                    ? '<a href="' . route('admin.mapel.edit', $mapel->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>'
+                    ? '<a href="' . route('admin.mapel.edit', $mapel->id) . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i><span> Edit</span></a>'
                     : '';
                 $deleteBtn = auth()->user()->can('delete-mapel')
-                    ? '<button class="btn btn-sm btn-danger delete-btn" data-id="' . $mapel->id . '" title="Hapus"><i class="fas fa-trash"></i></button>'
+                    ? '<button class="btn btn-sm btn-danger delete-btn" data-id="' . $mapel->id . '" title="Hapus"><i class="fas fa-trash"></i><span> Hapus</span></button>'
                     : '';
                 $duplicateBtn = auth()->user()->can('create-mapel')
-                    ? '<button class="btn btn-sm btn-success duplicate-btn" data-id="' . $mapel->id . '" title="Duplikat"><i class="fas fa-copy"></i></button>'
+                    ? '<button class="btn btn-sm btn-success duplicate-btn" data-id="' . $mapel->id . '" title="Duplikat"><i class="fas fa-copy"></i><span> Duplikat</span></button>'
                     : '';
-                
-                return $showBtn . ' ' . $editBtn . ' ' . $duplicateBtn . ' ' . $deleteBtn;
+
+                $menuItems = '<a class="dropdown-item" href="' . route('admin.mapel.show', $mapel->id) . '"><i class="fas fa-eye text-info"></i> Lihat detail</a>';
+                if ($editBtn) {
+                    $menuItems .= '<a class="dropdown-item" href="' . route('admin.mapel.edit', $mapel->id) . '"><i class="fas fa-edit text-warning"></i> Edit mapel</a>';
+                }
+                if ($duplicateBtn) {
+                    $menuItems .= '<button type="button" class="dropdown-item duplicate-btn" data-id="' . $mapel->id . '"><i class="fas fa-copy text-success"></i> Duplikat</button>';
+                }
+                if ($deleteBtn) {
+                    $menuItems .= '<div class="dropdown-divider"></div><button type="button" class="dropdown-item text-danger delete-btn" data-id="' . $mapel->id . '"><i class="fas fa-trash"></i> Hapus mapel</button>';
+                }
+
+                $desktop = '<div class="dropdown mapel-action-desktop">'
+                    . '<button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v"></i> Aksi</button>'
+                    . '<div class="dropdown-menu dropdown-menu-right">' . $menuItems . '</div></div>';
+                $mobile = '<div class="mapel-action-mobile" role="group" aria-label="Aksi mata pelajaran">'
+                    . $showBtn . $editBtn . $duplicateBtn . $deleteBtn . '</div>';
+
+                return $desktop . $mobile;
             })
             ->rawColumns(['kode_mapel', 'kelompok_badge', 'integrasi_badge', 'status_badge', 'action'])
             ->make(true);
