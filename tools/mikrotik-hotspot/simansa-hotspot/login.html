@@ -7,7 +7,7 @@
   <meta http-equiv="expires" content="-1">
   <meta name="theme-color" content="#285de7">
   <title>Login Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/style.css?v=20260819f">
+  <link rel="stylesheet" href="assets/style.css?v=20260820a">
 </head>
 <body>
   <script>
@@ -26,7 +26,7 @@
   </script>
 
   $(if chap-id)
-  <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
+  <form name="sendin" action="$(link-login-only)" method="post" autocomplete="off" style="display:none">
     <input type="hidden" name="username">
     <input type="hidden" name="password">
     <input type="hidden" name="dst" value="$(link-orig)">
@@ -92,7 +92,7 @@
 
         <div class="alert" data-hotspot-error="$(error)"></div>
 
-        <form name="login" action="$(link-login-only)" method="post" onsubmit="return doLogin()">
+        <form id="hotspot-login-form" name="login" action="$(link-login-only)" method="post" autocomplete="on" onsubmit="return doLogin()">
           <input type="hidden" name="dst" value="$(link-orig)">
           <input type="hidden" name="popup" value="true">
 
@@ -113,6 +113,14 @@
             </div>
           </div>
 
+          <div class="remember-row">
+            <label class="remember-option" for="rememberUsername">
+              <input id="rememberUsername" type="checkbox" autocomplete="off">
+              <span>Ingat username di perangkat ini</span>
+            </label>
+            <span class="remember-hint">Password dikelola browser</span>
+          </div>
+
           <button class="submit" type="submit" data-login-submit>Masuk Internet</button>
         </form>
 
@@ -123,6 +131,6 @@
     </section>
   </main>
 
-  <script src="assets/portal.js?v=20260819c"></script>
+  <script src="assets/portal.js?v=20260820a"></script>
 </body>
 </html>

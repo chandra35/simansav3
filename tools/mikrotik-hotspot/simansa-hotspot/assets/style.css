@@ -593,6 +593,36 @@ body {
   outline: 3px solid rgba(52, 104, 246, .22);
 }
 
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -1px 3px 11px;
+  color: #64748b;
+  font-size: .7rem;
+}
+
+.remember-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #334155;
+  font-size: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.remember-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--blue);
+}
+
+.remember-hint { text-align: right; }
+
 .input:focus {
   box-shadow: none;
 }
@@ -954,6 +984,8 @@ body {
 }
 
 @media (max-width: 560px) {
+  .remember-row { justify-content: flex-start; }
+  .remember-hint { display: none; }
   .page {
     padding: 10px;
     place-items: stretch;

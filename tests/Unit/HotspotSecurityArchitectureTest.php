@@ -209,7 +209,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $style = file_get_contents($portal.'assets/style.css');
         $script = file_get_contents($portal.'assets/portal.js');
 
-        $this->assertStringContainsString('assets/style.css?v=20260819f', $login);
+        $this->assertStringContainsString('assets/style.css?v=20260820a', $login);
         $this->assertStringContainsString('class="portal-card"', $login);
         $this->assertStringContainsString('class="portal-top"', $login);
         $this->assertStringContainsString('class="portal-science"', $login);
@@ -225,6 +225,21 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('(min-width: 901px) and (max-height: 760px)', $style);
         $this->assertStringNotContainsString('Siswa menggunakan NISN', $script);
         $this->assertStringContainsString("match: ['unknown host']", $script);
+    }
+
+    public function test_mikrotik_login_remembers_only_username_and_supports_password_managers(): void
+    {
+        $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
+        $login = file_get_contents($portal.'login.html');
+        $script = file_get_contents($portal.'assets/portal.js');
+
+        $this->assertStringContainsString('id="hotspot-login-form"', $login);
+        $this->assertStringContainsString('autocomplete="username"', $login);
+        $this->assertStringContainsString('autocomplete="current-password"', $login);
+        $this->assertStringContainsString('id="rememberUsername"', $login);
+        $this->assertStringContainsString("window.localStorage.setItem(storageKey, username.value.trim())", $script);
+        $this->assertStringNotContainsString('localStorage.setItem(storageKey, password', $script);
+        $this->assertStringNotContainsString('rememberedPassword', $script);
     }
 
     public function test_radius_identity_is_synced_and_rendered_after_login(): void

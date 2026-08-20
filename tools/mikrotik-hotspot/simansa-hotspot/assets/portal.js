@@ -122,8 +122,41 @@
     });
   }
 
+  function setupRememberedUsername() {
+    var form = document.getElementById('hotspot-login-form');
+    var username = document.getElementById('username');
+    var password = document.getElementById('password');
+    var remember = document.getElementById('rememberUsername');
+    var storageKey = 'simansa.hotspot.rememberedUsername';
+    if (!form || !username || !remember) return;
+
+    try {
+      var savedUsername = window.localStorage.getItem(storageKey) || '';
+      if (savedUsername) {
+        username.value = savedUsername;
+        remember.checked = true;
+        if (password) password.focus();
+      }
+    } catch (error) {
+      remember.disabled = true;
+    }
+
+    form.addEventListener('submit', function () {
+      try {
+        if (remember.checked && username.value.trim()) {
+          window.localStorage.setItem(storageKey, username.value.trim());
+        } else {
+          window.localStorage.removeItem(storageKey);
+        }
+      } catch (error) {
+        // Captive portal tertentu menonaktifkan storage; login tetap dilanjutkan.
+      }
+    }, true);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     renderError();
     setupPasswordToggle();
+    setupRememberedUsername();
   });
 }());
