@@ -249,6 +249,15 @@
             .mapel-action-mobile{justify-content:center}
             .mapel-action-mobile .btn{width:30px;height:30px}
         }
+        /* Mobile: daftar inti saja; detail dan Aksi dibuka melalui collapse baris. */
+        @media(max-width:991px){
+            .mapel-table-card{overflow:visible}.mapel-table-shell,.mapel-table-card .dataTables_wrapper{width:100%;max-width:100%;overflow:visible}
+            .mapel-table-card table#mapel-table{width:100%!important;min-width:0!important;table-layout:auto!important}
+            .mapel-table-card table#mapel-table thead th,.mapel-table-card table#mapel-table tbody td{padding:11px 7px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+            .mapel-table-card table#mapel-table thead th{font-size:.64rem}.mapel-table-card table#mapel-table th:first-child,.mapel-table-card table#mapel-table td:first-child{width:34px!important;text-align:center!important}
+            .mapel-table-card table#mapel-table th:nth-child(2),.mapel-table-card table#mapel-table td:nth-child(2){width:88px!important}.mapel-table-card table#mapel-table th:nth-child(3),.mapel-table-card table#mapel-table td:nth-child(3){width:auto!important}
+            .mapel-table-card .dtr-details{width:100%;margin:0;padding:2px 0 6px}.mapel-table-card .dtr-details>li{display:flex;align-items:flex-start;gap:10px;padding:9px 4px!important;border-bottom:1px solid #edf1f6!important}.mapel-table-card .dtr-title{min-width:92px;color:#7183a0;font-size:.69rem;font-weight:800;text-transform:uppercase}.mapel-table-card .dtr-data{flex:1;min-width:0;color:#344561;font-size:.83rem}.mapel-table-card .dtr-data .mapel-action-mobile{justify-content:flex-start;flex-wrap:wrap}.mapel-table-card .dtr-data .mapel-action-mobile .btn{width:38px;height:36px}
+        }
     </style>
 @stop
 
@@ -262,6 +271,7 @@
     <script>
         $(document).ready(function() {
             const useMobileCollapse = window.matchMedia('(max-width: 991px)').matches;
+            const hiddenOnMobile = useMobileCollapse ? 'none' : '';
 
             // Initialize DataTable
             let table = $('#mapel-table').DataTable({
@@ -289,21 +299,23 @@
                         name: 'DT_RowIndex',
                         orderable: false,
                         searchable: false,
-                        className: 'text-center',
+                        className: useMobileCollapse ? 'control all text-center' : 'text-center',
                         responsivePriority: 4
                     },
-                    {data: 'kode_mapel', name: 'kode_mapel', responsivePriority: 2},
-                    {data: 'nama_mapel', name: 'nama_mapel', responsivePriority: 1},
+                    {data: 'kode_mapel', name: 'kode_mapel', className: useMobileCollapse ? 'all' : '', responsivePriority: 2},
+                    {data: 'nama_mapel', name: 'nama_mapel', className: useMobileCollapse ? 'all' : '', responsivePriority: 1},
                     {
                         data: 'kurikulum.nama_kurikulum',
                         name: 'kurikulum.nama_kurikulum',
                         defaultContent: '-',
+                        className: hiddenOnMobile,
                         responsivePriority: 3
                     },
                     {
                         data: 'kelompok_badge',
                         name: 'kelompok',
                         orderable: false,
+                        className: hiddenOnMobile,
                         render: function(data) {
                             return data || '-';
                         }
@@ -311,30 +323,32 @@
                     {
                         data: 'fase_display',
                         name: 'fase_display',
-                        orderable: false
+                        orderable: false,
+                        className: hiddenOnMobile
                     },
                     {
                         data: 'rumpun_display',
                         name: 'rumpun',
-                        className: 'text-capitalize'
+                        className: useMobileCollapse ? 'none' : 'text-capitalize'
                     },
                     {
                         data: 'jam_pelajaran',
                         name: 'jam_pelajaran',
-                        className: 'text-center',
+                        className: useMobileCollapse ? 'none' : 'text-center',
                         render: data => `${data || 0} JP`
                     },
                     {
                         data: 'integrasi_badge',
                         name: 'integrasi_badge',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        className: hiddenOnMobile
                     },
                     {
                         data: 'status_badge',
                         name: 'is_active',
                         orderable: false,
-                        className: 'text-center'
+                        className: useMobileCollapse ? 'none' : 'text-center'
                     },
                     {
                         data: 'action',
