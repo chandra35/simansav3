@@ -27,9 +27,11 @@ class MataPelajaranController extends Controller
             $catalogQuery = MataPelajaran::query()
                 ->where('is_active', true)
                 ->where(function ($query) {
-                    $query->whereJsonContains('tingkat', 10)
-                        ->orWhereJsonContains('tingkat', 11)
-                        ->orWhereJsonContains('tingkat', 12);
+                    foreach ([10, 11, 12] as $tingkat) {
+                        // Mendukung data lama yang pernah tersimpan sebagai string JSON.
+                        $query->orWhereJsonContains('tingkat', $tingkat)
+                            ->orWhereJsonContains('tingkat', (string) $tingkat);
+                    }
                 });
 
             $catalogIds = (clone $catalogQuery)->pluck('id');
@@ -103,12 +105,17 @@ class MataPelajaranController extends Controller
 
         // Filter by tingkat
         if ($request->tingkat) {
-            $query->whereJsonContains('tingkat', (int) $request->tingkat);
+            $tingkat = (int) $request->tingkat;
+            $query->where(function ($levels) use ($tingkat) {
+                $levels->whereJsonContains('tingkat', $tingkat)
+                    ->orWhereJsonContains('tingkat', (string) $tingkat);
+            });
         } else {
             $query->where(function ($levels) {
-                $levels->whereJsonContains('tingkat', 10)
-                    ->orWhereJsonContains('tingkat', 11)
-                    ->orWhereJsonContains('tingkat', 12);
+                foreach ([10, 11, 12] as $tingkat) {
+                    $levels->orWhereJsonContains('tingkat', $tingkat)
+                        ->orWhereJsonContains('tingkat', (string) $tingkat);
+                }
             });
         }
 
@@ -518,6 +525,18 @@ class MataPelajaranController extends Controller
             $validated['emisgtk_mapel_ids'] ?? [],
             fn ($id) => filled($id)
         );
+        $validated['tingkat'] = collect($validated['tingkat'] ?? [])
+            ->filter(fn ($tingkat) => is_numeric($tingkat))
+            ->map(fn ($tingkat) => (int) $tingkat)
+            ->unique()
+            ->values()
+            ->all();
+        $validated['semester'] = collect($validated['semester'] ?? [])
+            ->filter(fn ($semester) => is_numeric($semester))
+            ->map(fn ($semester) => (int) $semester)
+            ->unique()
+            ->values()
+            ->all();
 
         try {
             $mapel->update($validated);
