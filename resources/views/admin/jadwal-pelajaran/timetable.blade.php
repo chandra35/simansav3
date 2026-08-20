@@ -196,7 +196,12 @@
                                         <div class="simansa-tt-slot__mapel">{{ $jadwal->mataPelajaran?->nama_mapel ?? '?' }}</div>
                                         <div class="simansa-tt-slot__guru">
                                             <img src="{{ $jadwal->gtk?->foto_profile_url }}" alt="" class="simansa-tt-guru-foto" loading="lazy">
-                                            <span>{{ $jadwal->gtk?->nama_lengkap ?? '-' }}</span>
+                                            <div class="simansa-tt-guru-info">
+                                                <span>{{ $jadwal->gtk?->nama_lengkap ?? '-' }}</span>
+                                                @if($jadwal->gtk?->peg_id)
+                                                    <small class="simansa-tt-guru-id">ID PTK: {{ $jadwal->gtk->peg_id }}</small>
+                                                @endif
+                                            </div>
                                         </div>
                                         @if($jadwal->ruangan)<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> {{ $jadwal->ruangan }}</div>@endif
                                     </div>
@@ -538,6 +543,8 @@
 .simansa-tt-slot{border-radius:7px;padding:4px 6px;font-size:.76rem;line-height:1.3}
 .simansa-tt-slot__mapel{font-weight:700;font-size:.78rem;margin-bottom:2px}
 .simansa-tt-slot__guru{color:rgba(0,0,0,.65);font-size:.7rem;display:flex;align-items:center;gap:4px}
+.simansa-tt-guru-info{display:flex;flex-direction:column;line-height:1.18;min-width:0}
+.simansa-tt-guru-id{font-size:.6rem;color:rgba(0,0,0,.46);letter-spacing:.01em}
 .simansa-tt-guru-foto{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,.12)}
 .simansa-tt-guru-foto--lg{width:30px;height:30px}
 .simansa-tt-slot__room{color:rgba(0,0,0,.45);font-size:.65rem;margin-top:2px}
@@ -1024,7 +1031,7 @@ function refreshRow(data, hari, jamKe) {
     $row.find('.simansa-tt-row__body').html(`
         <div class="simansa-tt-slot mc-${ci}">
             <div class="simansa-tt-slot__mapel">${data.mapel_kode || data.mapel_nama}</div>
-            <div class="simansa-tt-slot__guru">${data.gtk_nama}</div>
+            <div class="simansa-tt-slot__guru"><div class="simansa-tt-guru-info"><span>${data.gtk_nama}</span>${data.gtk_peg_id ? `<small class="simansa-tt-guru-id">ID PTK: ${data.gtk_peg_id}</small>` : ''}</div></div>
             ${data.ruangan ? `<div class="simansa-tt-slot__room"><i class="fas fa-door-open"></i> ${data.ruangan}</div>` : ''}
         </div>`);
 }

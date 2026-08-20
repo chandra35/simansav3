@@ -658,6 +658,7 @@ class JadwalPelajaranController extends Controller
                     'gtk_id'      => $j->gtk_id,
                     'gtk_nama'    => $j->gtk?->nama_lengkap ?? '-',
                     'gtk_kode'    => $j->gtk?->kode_gtk ?? '',
+                    'gtk_peg_id'  => $j->gtk?->peg_id ?? '',
                     'ruangan'     => $j->ruangan ?? '',
                     'catatan'     => $j->catatan ?? '',
                 ];
@@ -899,6 +900,7 @@ class JadwalPelajaranController extends Controller
                 'mapel_kode' => $jadwal->mataPelajaran?->kode_tampil_jadwal ?? '',
                 'gtk_nama'   => $jadwal->gtk?->nama_lengkap ?? '-',
                 'gtk_kode'   => $jadwal->gtk?->kode_gtk ?? '',
+                'gtk_peg_id' => $jadwal->gtk?->peg_id ?? '',
                 'ruangan'    => $jadwal->ruangan ?? '',
             ],
         ]);
@@ -969,6 +971,7 @@ class JadwalPelajaranController extends Controller
                 'mapel_kode' => $jadwalPelajaran->mataPelajaran?->kode_tampil_jadwal ?? '',
                 'gtk_nama'   => $jadwalPelajaran->gtk?->nama_lengkap ?? '-',
                 'gtk_kode'   => $jadwalPelajaran->gtk?->kode_gtk ?? '',
+                'gtk_peg_id' => $jadwalPelajaran->gtk?->peg_id ?? '',
                 'ruangan'    => $jadwalPelajaran->ruangan ?? '',
             ],
         ]);
