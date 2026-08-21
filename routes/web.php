@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\RdmSyncController;
 use App\Http\Controllers\Admin\RdmMapelMappingController;
 use App\Http\Controllers\Admin\RdmMatchingController;
+use App\Http\Controllers\Admin\NilaiRdmController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\MutasiSiswaController;
 use App\Http\Controllers\Admin\MatrikulasiPpdbController;
@@ -484,8 +485,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/mapel/{mapel}/toggle-status', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'toggleStatus'])->name('mapel.toggle-status')->middleware('permission:edit-mapel');
     Route::post('/mapel/{mapel}/duplicate', [\App\Http\Controllers\Admin\MataPelajaranController::class, 'duplicate'])->name('mapel.duplicate')->middleware('permission:create-mapel');
     
-    // Nilai Siswa Management (Legger untuk SPAN-PTKIN)
-    Route::middleware('permission:view-nilai')->group(function () {
+    // Nilai Legger bersifat institusional (SNBP/SNBT/PTKIN), bukan rekap wali kelas.
+    Route::middleware('permission:view-nilai-legger')->group(function () {
         Route::get('/nilai', [\App\Http\Controllers\Admin\NilaiController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'semester'])->name('nilai.semester');
         Route::get('/nilai/template', [\App\Http\Controllers\Admin\NilaiController::class, 'downloadTemplate'])->name('nilai.template');
@@ -506,6 +507,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/nilai/cancel-upload', [\App\Http\Controllers\Admin\NilaiController::class, 'cancelUpload'])->name('nilai.cancel-upload');
     });
     Route::delete('/nilai/semester/{semester}', [\App\Http\Controllers\Admin\NilaiController::class, 'deleteSemester'])->name('nilai.delete-semester')->middleware('permission:delete-nilai');
+
+    // Rekap baca-saja nilai yang sudah disinkronkan dari RDM untuk rombel aktif.
+    Route::get('/nilai-rdm', [NilaiRdmController::class, 'index'])
+        ->middleware('permission:view-nilai-rdm')
+        ->name('nilai-rdm.index');
 
     // Integrasi RDM
     Route::middleware(['permission:view-rdm'])->group(function () {

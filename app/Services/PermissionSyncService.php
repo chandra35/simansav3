@@ -193,16 +193,26 @@ class PermissionSyncService
                 ],
             ],
             'nilai' => [
-                'label' => 'Nilai & Rapor',
+                'label' => 'Nilai Legger & Rapor',
                 'icon' => 'clipboard-list',
                 'color' => 'warning',
                 'description' => 'Manajemen nilai dan rapor siswa',
                 'permissions' => [
                     'view-nilai',
+                    'view-nilai-legger',
                     'input-nilai',
                     'edit-nilai',
                     'delete-nilai',
                     'cetak-rapor',
+                ],
+            ],
+            'nilai-rdm' => [
+                'label' => 'Rekap Nilai RDM',
+                'icon' => 'clipboard-check',
+                'color' => 'info',
+                'description' => 'Rekap baca-saja nilai hasil sinkronisasi RDM sesuai rombel penugasan',
+                'permissions' => [
+                    'view-nilai-rdm',
                 ],
             ],
             'asrama' => [

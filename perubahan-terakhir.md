@@ -6,6 +6,8 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
 
+- Akses Nilai Legger kini dipisahkan dari wali kelas melalui permission `view-nilai-legger`; halaman dan URL Legger untuk SNBP/SNBT/PTKIN tidak lagi memakai permission Nilai umum. Wali kelas otomatis kehilangan hak Legger/input nilai lama dan memperoleh `view-nilai-rdm` untuk menu Rekap Nilai RDM yang hanya-baca, terbatas pada rombel aktif penugasannya, serta hanya menampilkan nilai resmi bersumber `rdm_sync`.
+
 - Pada Analitik Kehadiran, akun wali kelas tidak lagi menerima filter Tingkat maupun Rombel. Halaman menampilkan cakupan rombel perwalian yang terkunci, dan parameter URL lama untuk kedua filter diabaikan di server agar analitik selalu mencakup seluruh rombel perwaliannya.
 
 - Preview dan unduh dokumen KIP/PIP kini mengizinkan role dengan permission `view-pip`; sebelumnya role tersebut dapat melihat daftar tetapi file gambar gagal dimuat karena endpoint dokumen hanya mengenali akses siswa/mutasi.

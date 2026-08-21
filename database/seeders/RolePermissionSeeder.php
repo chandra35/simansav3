@@ -93,6 +93,8 @@ class RolePermissionSeeder extends Seeder
 
             // Nilai & Rapor (Future)
             'view-nilai',
+            'view-nilai-legger',
+            'view-nilai-rdm',
             'input-nilai',
             'edit-nilai',
             'delete-nilai',
@@ -160,7 +162,7 @@ class RolePermissionSeeder extends Seeder
             'view-gtk-dashboard', 'edit-gtk-profile', 'change-password-gtk',
 
             // Nilai & Rapor
-            'view-nilai', 'input-nilai', 'edit-nilai', 'delete-nilai', 'cetak-rapor',
+            'view-nilai', 'view-nilai-legger', 'input-nilai', 'edit-nilai', 'delete-nilai', 'cetak-rapor',
 
             // Absensi
             'view-absensi', 'input-absensi', 'edit-absensi', 'rekap-absensi',
@@ -182,7 +184,7 @@ class RolePermissionSeeder extends Seeder
             'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'approve-mutasi', 'reject-mutasi',
             'view-gtk',
-            'view-nilai', 'input-nilai', 'edit-nilai', 'cetak-rapor',
+            'view-nilai', 'view-nilai-legger', 'input-nilai', 'edit-nilai', 'cetak-rapor',
             'view-absensi', 'input-absensi', 'edit-absensi', 'rekap-absensi',
             'view-laporan', 'export-laporan',
             'view-profile', 'edit-profile',
@@ -242,7 +244,7 @@ class RolePermissionSeeder extends Seeder
             // NO view-dashboard - Wali Kelas uses GTK dashboard instead
             'view-siswa', 'view-dokumen-siswa',
             'view-kelas', 'view-detail-kelas',
-            'view-nilai', 'input-nilai',
+            'view-nilai-rdm',
             'view-absensi', 'input-absensi', 'rekap-absensi',
             'cetak-rapor',
             'view-profile', 'edit-profile',

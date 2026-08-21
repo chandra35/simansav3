@@ -599,11 +599,18 @@ return [
                     'active' => ['admin/jadwal-mapping*'],
                 ],
                 [
-                    'text' => 'Nilai Siswa',
+                    'text' => 'Nilai Legger',
                     'route' => 'admin.nilai.index',
                     'icon' => 'fas fa-fw fa-chart-line',
-                    'can' => 'view-nilai',
-                    'active' => ['admin/nilai*'],
+                    'can' => 'view-nilai-legger',
+                    'active' => ['admin/nilai', 'admin/nilai/*'],
+                ],
+                [
+                    'text' => 'Rekap Nilai RDM',
+                    'route' => 'admin.nilai-rdm.index',
+                    'icon' => 'fas fa-fw fa-clipboard-check',
+                    'can' => 'view-nilai-rdm',
+                    'active' => ['admin/nilai-rdm*'],
                 ],
                 [
                     'text' => 'Kalender Akademik',
