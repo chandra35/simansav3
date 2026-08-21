@@ -15,8 +15,26 @@
 @stop
 
 @section('content')
-<div class="emis-nip-page">
-    <div class="card hero-card border-0 mb-4">
+{{-- Diletakkan setelah stylesheet layout agar tidak ditimpa tema global AdminLTE/SIMANSA. --}}
+<style>
+#emisGtkPage{max-width:1180px;margin:0 auto 2rem;color:#1f2937}
+#emisGtkHero{position:relative;isolation:isolate;overflow:hidden;border:0!important;border-radius:18px!important;background:linear-gradient(120deg,#253d76 0%,#176b82 58%,#138a83 100%)!important;color:#fff!important;box-shadow:0 15px 34px rgba(28,61,108,.2)!important}
+#emisGtkHero:before,#emisGtkHero:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(255,255,255,.12);border-radius:50%}
+#emisGtkHero:before{width:330px;height:330px;right:-80px;top:-210px}#emisGtkHero:after{width:230px;height:230px;left:42%;bottom:-190px}
+#emisGtkHero .card-body{padding:1.65rem 1.8rem!important}#emisGtkHero h2{color:#fff!important;font-size:1.7rem!important;font-weight:700!important;line-height:1.25;margin:.65rem 0 .4rem!important}#emisGtkHero p{color:rgba(255,255,255,.78)!important;font-size:.92rem!important;line-height:1.55}
+#emisGtkHero .source-label{display:inline-flex;align-items:center;color:#fff!important;font-size:.7rem!important;font-weight:700;letter-spacing:.08em;background:rgba(255,255,255,.14)!important;border:1px solid rgba(255,255,255,.16);padding:.38rem .68rem;border-radius:20px}
+#emisGtkHero .credential-state{display:flex!important;align-items:center;text-align:left;gap:.8rem;padding:1rem 1.1rem;border-radius:13px;background:rgba(7,31,52,.22)!important;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(5px)}
+#emisGtkHero .credential-state i{font-size:1.65rem}#emisGtkHero .credential-state strong,#emisGtkHero .credential-state small{display:block!important;color:#fff!important}#emisGtkHero .credential-state strong{font-size:.91rem}#emisGtkHero .credential-state small{font-size:.75rem;color:rgba(255,255,255,.72)!important;margin-top:.15rem}#emisGtkHero .credential-state.is-ready i{color:#70efb1!important}#emisGtkHero .credential-state.is-missing i{color:#ffd166!important}
+#emisGtkPage .search-card,#emisGtkPage .result-card{border:1px solid #e3e8f0!important;border-radius:14px!important;background:#fff!important;box-shadow:0 7px 20px rgba(31,45,61,.07)!important;overflow:hidden}
+#emisGtkPage .search-head{display:flex;align-items:center;gap:.8rem;margin-bottom:1.15rem}#emisGtkPage .search-head-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:#edf2ff;color:#4056d6;font-size:1.05rem}#emisGtkPage .search-head h3{font-size:1rem;font-weight:700;margin:0;color:#202b3c}#emisGtkPage .search-head p{font-size:.78rem;color:#758196;margin:.15rem 0 0}
+#emisGtkPage .nip-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.055em;color:#596579;margin-bottom:.42rem}#emisGtkPage .nip-input-wrap{display:flex;align-items:stretch;border:1px solid #cfd7e4;border-radius:11px;overflow:hidden;transition:.2s;background:#fff}#emisGtkPage .nip-input-wrap:focus-within{border-color:#5268e8;box-shadow:0 0 0 3px rgba(82,104,232,.12)}#emisGtkPage .nip-prefix{width:48px;display:grid;place-items:center;color:#65738a;background:#f7f9fc;border-right:1px solid #e4e8ef}#emisGtkPage .nip-input-wrap input{min-width:0;height:48px;border:0!important;box-shadow:none!important;padding:.6rem .85rem;font-size:1rem;letter-spacing:.025em}#emisGtkPage .nip-input-wrap button{margin:5px;border:0;border-radius:8px;padding:0 1.3rem;font-weight:600;white-space:nowrap;background:#4355d8}#emisGtkPage #nip-help{margin-top:.5rem;font-size:.74rem}
+#emisGtkPage .validation-icon{width:64px;height:64px;margin:0 auto 1rem;border-radius:50%;display:grid;place-items:center;background:#dff6e9;color:#198754;font-size:1.5rem}#emisGtkPage .validation-icon.invalid{background:#fde7e9;color:#dc3545}#emisGtkPage .result-kicker{font-size:.75rem;font-weight:700;letter-spacing:.09em;color:#748198}#emisGtkPage .flag-list{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}#emisGtkPage .flag-pill{border-radius:20px;padding:.3rem .6rem;font-size:.77rem;background:#eef2f7}#emisGtkPage .flag-pill.ok{color:#13744a;background:#e0f4ea}#emisGtkPage .flag-pill.bad{color:#a72a36;background:#fbe7e9}
+#emisGtkPage .identity-grid,#emisGtkPage .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}#emisGtkPage .identity-grid>div,#emisGtkPage .detail-item{padding:.85rem;border:1px solid #e7ebf0;border-radius:10px;background:#fbfcfe}#emisGtkPage .identity-grid span,#emisGtkPage .detail-item span{display:block;color:#738095;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}#emisGtkPage .identity-grid strong,#emisGtkPage .detail-item strong{overflow-wrap:anywhere}#emisGtkPage .detail-item.wide{grid-column:1/-1}
+#emisGtkPage #result-alert{border:0;border-radius:12px;padding:1rem 1.1rem;box-shadow:0 5px 16px rgba(31,45,61,.06)}
+@media(max-width:767.98px){#emisGtkHero .card-body{padding:1.3rem!important}#emisGtkHero h2{font-size:1.35rem!important}#emisGtkPage .nip-input-wrap{flex-wrap:wrap}#emisGtkPage .nip-prefix{width:44px}#emisGtkPage .nip-input-wrap input{width:calc(100% - 44px)}#emisGtkPage .nip-input-wrap button{width:calc(100% - 10px);height:42px;margin-top:0}#emisGtkPage .identity-grid,#emisGtkPage .detail-grid{grid-template-columns:1fr}#emisGtkPage .detail-item.wide{grid-column:auto}}
+</style>
+<div id="emisGtkPage">
+    <div id="emisGtkHero" class="card mb-4">
         <div class="card-body p-4">
             <div class="row align-items-center">
                 <div class="col-lg-7">
@@ -28,8 +46,8 @@
                     <div class="credential-state {{ $credentialConfigured ? 'is-ready' : 'is-missing' }}">
                         <i class="fas {{ $credentialConfigured ? 'fa-check-circle' : 'fa-exclamation-triangle' }}"></i>
                         <div>
-                            <strong>{{ $credentialConfigured ? 'Sesi siap digunakan' : 'Sesi belum dikonfigurasi' }}</strong>
-                            <small>{{ $credentialConfigured ? 'Cookie tersimpan terenkripsi' : 'Tambahkan cookie melalui Update API Token' }}</small>
+                            <strong>{{ $credentialConfigured ? 'Kredensial sesi tersimpan' : 'Sesi belum dikonfigurasi' }}</strong>
+                            <small>{{ $credentialConfigured ? 'Terenkripsi • validitas diperiksa saat pencarian' : 'Tambahkan cookie melalui Update API Token' }}</small>
                         </div>
                     </div>
                 </div>
@@ -39,17 +57,22 @@
 
     <div class="card card-outline card-primary search-card">
         <div class="card-body">
+            <div class="search-head">
+                <div class="search-head-icon"><i class="fas fa-fingerprint"></i></div>
+                <div>
+                    <h3>Pencarian data SIMPEG</h3>
+                    <p>Masukkan NIP ASN untuk membandingkan data PTK dan SIMPEG.</p>
+                </div>
+            </div>
             <form id="nip-form" autocomplete="off">
                 @csrf
-                <label for="nip">Nomor Induk Pegawai</label>
-                <div class="input-group input-group-lg">
-                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-id-card"></i></span></div>
+                <label for="nip" class="nip-label">Nomor Induk Pegawai</label>
+                <div class="nip-input-wrap">
+                    <span class="nip-prefix"><i class="fas fa-id-card"></i></span>
                     <input id="nip" name="nip" class="form-control" inputmode="numeric" pattern="[0-9]{18}" maxlength="18" placeholder="Masukkan 18 digit NIP" aria-describedby="nip-help" required>
-                    <div class="input-group-append">
-                        <button class="btn btn-primary px-4" id="check-button" type="submit" {{ $credentialConfigured ? '' : 'disabled' }}>
-                            <i class="fas fa-search mr-1"></i> Periksa
-                        </button>
-                    </div>
+                    <button class="btn btn-primary" id="check-button" type="submit" {{ $credentialConfigured ? '' : 'disabled' }}>
+                        <i class="fas fa-search mr-1"></i> Periksa NIP
+                    </button>
                 </div>
                 <small id="nip-help" class="form-text text-muted"><span id="digit-count">0</span>/18 digit. Data hanya ditampilkan dan tidak otomatis mengubah data GTK SIMANSA.</small>
             </form>
@@ -97,16 +120,6 @@
 </div>
 @stop
 
-@section('css')
-<style>
-.emis-nip-page{max-width:1200px;margin:0 auto 2rem}.hero-card{background:linear-gradient(125deg,#183b68,#167d8d);color:#fff;border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(24,59,104,.16)}
-.source-label{font-size:.75rem;font-weight:700;letter-spacing:.08em;background:rgba(255,255,255,.14);padding:.4rem .65rem;border-radius:20px}.credential-state{display:flex;align-items:center;gap:.75rem;padding:1rem;border-radius:12px;background:rgba(255,255,255,.12)}.credential-state i{font-size:1.6rem}.credential-state strong,.credential-state small{display:block}.credential-state.is-ready i{color:#69e6a6}.credential-state.is-missing i{color:#ffd166}
-.search-card,.result-card{border-radius:12px;box-shadow:0 5px 18px rgba(31,45,61,.07)}.validation-icon{width:64px;height:64px;margin:0 auto 1rem;border-radius:50%;display:grid;place-items:center;background:#dff6e9;color:#198754;font-size:1.5rem}.validation-icon.invalid{background:#fde7e9;color:#dc3545}.result-kicker{font-size:.75rem;font-weight:700;letter-spacing:.09em;color:#748198}.flag-list{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}.flag-pill{border-radius:20px;padding:.3rem .6rem;font-size:.77rem;background:#eef2f7}.flag-pill.ok{color:#13744a;background:#e0f4ea}.flag-pill.bad{color:#a72a36;background:#fbe7e9}
-.identity-grid,.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.identity-grid>div,.detail-item{padding:.85rem;border:1px solid #e7ebf0;border-radius:10px;background:#fbfcfe}.identity-grid span,.detail-item span{display:block;color:#738095;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}.identity-grid strong,.detail-item strong{overflow-wrap:anywhere}.detail-item.wide{grid-column:1/-1}
-@media(max-width:575.98px){.hero-card h2{font-size:1.45rem}.input-group-lg>.form-control{font-size:1rem}.input-group-append .btn{padding-left:1rem!important;padding-right:1rem!important}.identity-grid,.detail-grid{grid-template-columns:1fr}.detail-item.wide{grid-column:auto}}
-</style>
-@stop
-
 @section('js')
 <script>
 (() => {
@@ -142,7 +155,7 @@
             if (!response.ok || !payload.success) throw new Error(payload.message || 'Pemeriksaan gagal.');
             render(payload.data); result.classList.remove('d-none');
         } catch (error) { showError(error.message || 'Tidak dapat menghubungi server.'); }
-        finally { button.disabled = false; button.innerHTML = '<i class="fas fa-search mr-1"></i> Periksa'; }
+        finally { button.disabled = false; button.innerHTML = '<i class="fas fa-search mr-1"></i> Periksa NIP'; }
     });
 
     function showError(message) { alertBox.className='alert alert-danger'; alertBox.textContent=message; alertBox.classList.remove('d-none'); }
