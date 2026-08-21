@@ -21,6 +21,8 @@ class GtkOnboardingService
                 'is_first_login' => true,
                 'is_active' => true,
             ]);
+            $user->readable_password = $data['nik'];
+            $user->save();
             $user->assignRole('GTK');
 
             $gtk = Gtk::create([

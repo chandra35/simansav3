@@ -15,6 +15,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Filter kelas pada KIP/SKTM/PKH kini hanya memuat rombel tahun pelajaran aktif dan pencarian tabel memakai relasi rombel tahun berjalan yang sama; kelas arsip tidak lagi memunculkan pilihan ganda atau hasil filter yang tidak selaras.
 - Panel filter Data Siswa kini menggunakan lebar kontrol berdasarkan teks opsi terpanjang, termasuk pilihan kelas setelah dimuat. Kontrol dan tombol aksi tersusun sebagai flex-wrap mandiri sehingga tidak lagi membentang maupun tersambung tidak rapi.
 - Keterangan default kelompok Data Siswa dipindahkan menjadi tooltip label agar panel filter tetap padat dan tidak membuang ruang vertikal.
+- Detail GTK kini dapat menampilkan dan menyalin password terenkripsi bagi pengguna berizin reset password GTK. Akun GTK baru dan hasil reset mulai menyimpan salinan terenkripsi; akun lama hanya dapat ditampilkan bila passwordnya masih default NIK, sedangkan password lama yang sudah diubah harus direset karena hash tidak dapat didekripsi.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

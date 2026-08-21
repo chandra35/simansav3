@@ -1266,6 +1266,7 @@ function showGtk(id) {
         success: function(response) {
             const gtk = response.data;
             const photoUrl = gtk.foto_profile_url || '';
+            const account = gtk.account || {};
             let html = `
                 <div class="row align-items-stretch">
                     <div class="col-md-4 mb-3 mb-md-0">
@@ -1288,6 +1289,13 @@ function showGtk(id) {
                             <tr><th>Email</th><td>${gtk.email || '-'}</td></tr>
                             <tr><th>No HP</th><td>${gtk.nomor_hp || '-'}</td></tr>
                         </table>
+                        ${account.can_view_password ? `
+                        <h5 class="border-bottom pb-2 mt-3">Akun Login</h5>
+                        <table class="table table-sm mb-0">
+                            <tr><th width="150">Username</th><td><code>${escapeGtkDetail(account.username || '-')}</code></td></tr>
+                            <tr><th>Email</th><td>${escapeGtkDetail(account.email || '-')}</td></tr>
+                            <tr><th>Password</th><td>${renderGtkPasswordPreview(account.readable_password)}</td></tr>
+                        </table>` : ''}
                     </div>
                 </div>
                 <div class="row mt-3">
@@ -1322,6 +1330,39 @@ function showGtk(id) {
     });
 }
 
+function escapeGtkDetail(value) {
+    return $('<div>').text(value || '').html();
+}
+
+function renderGtkPasswordPreview(password) {
+    if (!password) {
+        return '<span class="text-muted">Tidak tersedia. Password lama yang sudah diubah tidak dapat dipulihkan; gunakan reset password.</span>';
+    }
+
+    const safePassword = escapeGtkDetail(password);
+
+    return `<code class="text-danger js-gtk-password-text" data-password="${safePassword}">••••••••</code>
+        <button type="button" class="btn btn-xs btn-outline-secondary ml-2 js-toggle-gtk-password" aria-label="Tampilkan password"><i class="fas fa-eye"></i></button>
+        <button type="button" class="btn btn-xs btn-outline-secondary ml-1 js-copy-gtk-password" data-password="${safePassword}" aria-label="Salin password"><i class="fas fa-copy"></i></button>`;
+}
+
+$(document).on('click', '.js-toggle-gtk-password', function () {
+    const button = $(this);
+    const passwordElement = button.siblings('.js-gtk-password-text');
+    const isHidden = passwordElement.text() === '••••••••';
+
+    passwordElement.text(isHidden ? passwordElement.data('password') : '••••••••');
+    button.html('<i class="fas ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '"></i>');
+});
+
+$(document).on('click', '.js-copy-gtk-password', function () {
+    navigator.clipboard.writeText($(this).data('password')).then(function () {
+        toastr.success('Password berhasil disalin.');
+    }, function () {
+        toastr.error('Password gagal disalin.');
+    });
+});
+
 // Reset Password
 function resetPassword(id) {
     Swal.fire({
@@ -1337,7 +1378,7 @@ function resetPassword(id) {
         if (result.isConfirmed) {
             $.ajax({
                 url: '/admin/gtk/' + id + '/reset-password',
-                type: 'POST',
+                type: 'PUT',
                 data: {
                     _token: '{{ csrf_token() }}'
                 },

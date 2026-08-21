@@ -477,11 +477,19 @@ class GtkController extends Controller
     {
         $gtk = Gtk::with(['user', 'provinsi', 'kabupaten', 'kecamatan', 'kelurahan'])
             ->findOrFail($id);
+        $canViewPassword = auth()->user()?->can('reset-password-gtk') ?? false;
+        $readablePassword = $canViewPassword ? $this->readablePasswordFor($gtk) : null;
 
         return response()->json([
             'success' => true,
             'data' => array_merge($gtk->toArray(), [
                 'foto_profile_url' => $gtk->foto_profile_url,
+                'account' => [
+                    'username' => $gtk->user?->username,
+                    'email' => $gtk->user?->email,
+                    'readable_password' => $readablePassword,
+                    'can_view_password' => $canViewPassword,
+                ],
             ]),
         ]);
     }
@@ -802,10 +810,12 @@ class GtkController extends Controller
                 ], 404);
             }
 
-            $gtk->user->update([
-                'password' => Hash::make($gtk->nik),
-                'is_first_login' => true,
-            ]);
+            $gtk->user->password = Hash::make($gtk->nik);
+            $gtk->user->readable_password = $gtk->nik;
+            $gtk->user->is_first_login = true;
+            $gtk->user->password_reset_at = now();
+            $gtk->user->password_reset_by = auth()->user()?->name;
+            $gtk->user->save();
 
             return response()->json([
                 'success' => true,
@@ -820,6 +830,27 @@ class GtkController extends Controller
                 'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Password hash tidak dapat didekripsi. Untuk akun lama tanpa salinan
+     * terenkripsi, hanya password default NIK yang dapat dipastikan aman.
+     */
+    private function readablePasswordFor(Gtk $gtk): ?string
+    {
+        $user = $gtk->user;
+
+        if (! $user) {
+            return null;
+        }
+
+        if ($user->readable_password !== null) {
+            return $user->readable_password;
+        }
+
+        return $gtk->nik && Hash::check($gtk->nik, $user->password)
+            ? $gtk->nik
+            : null;
     }
 
     /**
