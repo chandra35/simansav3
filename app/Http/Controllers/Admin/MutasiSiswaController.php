@@ -84,11 +84,11 @@ class MutasiSiswaController extends Controller
             ->limit(25)
             ->get(['id', 'nama_lengkap', 'nisn', 'status_siswa'])
             ->map(fn ($s) => [
-            'id' => $s->id,
-            'nama_lengkap' => $s->nama_lengkap,
-            'nisn' => $s->nisn ?? '-',
-            'status_siswa' => $s->status_siswa ?? 'aktif',
-        ]);
+                'id' => $s->id,
+                'nama_lengkap' => $s->nama_lengkap,
+                'nisn' => $s->nisn ?? '-',
+                'status_siswa' => $s->status_siswa ?? 'aktif',
+            ]);
 
         return response()->json($results);
     }
@@ -261,7 +261,24 @@ class MutasiSiswaController extends Controller
     public function show(MutasiSiswa $mutasiSiswa)
     {
         $this->authorize('view-mutasi');
-        $mutasiSiswa->load(['siswa', 'tahunPelajaran', 'verifikator']);
+        $mutasiSiswa->load([
+            'tahunPelajaran',
+            'verifikator',
+            'siswa.user',
+            'siswa.ortu.provinsi',
+            'siswa.ortu.kabupaten',
+            'siswa.ortu.kecamatan',
+            'siswa.ortu.kelurahan',
+            'siswa.provinsiSiswa',
+            'siswa.kabupatenSiswa',
+            'siswa.kecamatanSiswa',
+            'siswa.kelurahanSiswa',
+            'siswa.sekolahAsal',
+            'siswa.siswaKelasRecords.kelas.jurusan',
+            'siswa.siswaKelasRecords.tahunPelajaran',
+            'siswa.mutasiHistory.tahunPelajaran',
+            'siswa.mutasiHistory.verifikator',
+        ]);
 
         return view('admin.mutasi-siswa.show', compact('mutasiSiswa'));
     }

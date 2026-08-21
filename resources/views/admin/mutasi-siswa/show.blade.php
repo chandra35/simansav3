@@ -100,6 +100,13 @@
         <div class="card">
             <div class="card-header" style="border-top: 3px solid #007bff;">
                 <h3 class="card-title"><i class="fas fa-user-graduate mr-1"></i> Data Siswa</h3>
+                @if($mutasiSiswa->siswa)
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalArsipSiswa">
+                        <i class="fas fa-address-card mr-1"></i> Lihat Data Lengkap
+                    </button>
+                </div>
+                @endif
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
@@ -316,6 +323,10 @@
 
     </div>
 </div>
+
+@if($mutasiSiswa->siswa)
+    @include('admin.mutasi-siswa.partials.student-history-modal', ['siswa' => $mutasiSiswa->siswa])
+@endif
 
 @endsection
 
