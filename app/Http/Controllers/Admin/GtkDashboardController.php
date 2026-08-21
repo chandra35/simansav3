@@ -88,6 +88,27 @@ class GtkDashboardController extends Controller
             $scheduleService->schedulesForDay($gtk, $tahunAktif, $now),
             $now
         );
+        $weeklyTeachingSchedules = $scheduleService->schedulesForWeek($gtk, $tahunAktif);
+        $assignmentRoles = $gtk->penugasan()
+            ->active()
+            ->with('jenis:id,nama')
+            ->latest('mulai_tugas')
+            ->get()
+            ->map(fn ($assignment) => [
+                'name' => $assignment->jenis?->nama ?: 'Penugasan GTK',
+                'detail' => $assignment->unit_nama,
+            ]);
+        if ($isWaliKelas) {
+            $assignmentRoles->prepend([
+                'name' => 'Wali Kelas',
+                'detail' => $waliKelasRombels->pluck('nama_lengkap')->filter()->implode(', '),
+            ]);
+        }
+        $teachingSummary = [
+            'today_slots' => $todaySchedules->count(),
+            'weekly_slots' => $weeklyTeachingSchedules->count(),
+            'teaching_days' => $weeklyTeachingSchedules->pluck('hari')->unique()->count(),
+        ];
         $scheduleReminder = $scheduleService->reminder($todaySchedules, $gtk, $scheduleSettings, now());
         $scheduleReminderConfig = [
             'enabled' => (bool) $scheduleSettings->gtk_schedule_reminder_enabled,
@@ -102,7 +123,8 @@ class GtkDashboardController extends Controller
             'needsCompletion',
             'tahunAktif',
             'waliKelasRombels',
-            'isWaliKelas', 'teacherNotices', 'todaySchedules', 'scheduleReminder', 'scheduleReminderConfig'
+            'isWaliKelas', 'teacherNotices', 'todaySchedules', 'scheduleReminder', 'scheduleReminderConfig',
+            'assignmentRoles', 'teachingSummary'
         ));
     }
 
