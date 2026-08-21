@@ -6,6 +6,8 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
 
+- Halaman status 403, 404, 500, dan 503 kini memakai satu layout ringkas dan responsif: alasan yang aman serta mudah dipahami, kode HTTP, tombol dashboard/kembali, dan tanpa menampilkan detail exception kepada pengguna. Halaman 503 tetap memuat ulang otomatis setiap 30 detik selama pemeliharaan.
+
 - Akses Nilai Legger kini dipisahkan dari wali kelas melalui permission `view-nilai-legger`; halaman dan URL Legger untuk SNBP/SNBT/PTKIN tidak lagi memakai permission Nilai umum. Wali kelas otomatis kehilangan hak Legger/input nilai lama dan memperoleh `view-nilai-rdm` untuk menu Rekap Nilai RDM yang hanya-baca, terbatas pada rombel aktif penugasannya, serta hanya menampilkan nilai resmi bersumber `rdm_sync`.
 
 - Pada Analitik Kehadiran, akun wali kelas tidak lagi menerima filter Tingkat maupun Rombel. Halaman menampilkan cakupan rombel perwalian yang terkunci, dan parameter URL lama untuk kedua filter diabaikan di server agar analitik selalu mencakup seluruh rombel perwaliannya.
