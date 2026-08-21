@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Models\DokumenSiswa;
+use App\Models\TahunPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -55,7 +56,10 @@ class SiswaPipController extends Controller
 
         $tingkatOptions = [10 => 'Kelas X', 11 => 'Kelas XI', 12 => 'Kelas XII'];
 
+        // Kelas dari tahun lama dapat tetap aktif sebagai arsip. Pilihan filter
+        // harus mengikuti rombel tahun pelajaran berjalan agar tidak dobel.
         $kelasOptions = \App\Models\Kelas::where('is_active', true)
+            ->whereIn('tahun_pelajaran_id', TahunPelajaran::query()->active()->select('id'))
             ->orderBy('tingkat')->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'tingkat']);
 
@@ -69,7 +73,7 @@ class SiswaPipController extends Controller
     {
         $this->authorize('view-pip');
 
-        $query = Siswa::with(['kelasAktif', 'dokumen'])
+        $query = Siswa::with(['kelasTahunAktif', 'dokumen'])
             ->withCount(['dokumen as kip_count' => function ($q) {
                 $this->filterByType($q, 'kip');
             }])
@@ -89,12 +93,12 @@ class SiswaPipController extends Controller
 
         // Filter tingkat
         if ($request->filled('tingkat')) {
-            $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
+            $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.tingkat', $request->tingkat));
         }
 
         // Filter kelas
         if ($request->filled('kelas_id')) {
-            $query->whereHas('kelasAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
+            $query->whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $request->kelas_id));
         }
 
         // Search
@@ -119,7 +123,7 @@ class SiswaPipController extends Controller
         }
 
         $data = $query->get()->map(function ($siswa) {
-            $kelas      = $siswa->kelasAktif()->first();
+            $kelas      = $siswa->kelasTahunAktif->first();
             $kelasNama  = $kelas ? $kelas->nama_kelas : '<em class="text-muted">Tanpa Rombel</em>';
 
             // Kumpulkan dokumen KIP/SKTM milik siswa ini
