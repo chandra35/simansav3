@@ -39,6 +39,10 @@ class JadwalController extends BaseWaliKelasController
             $jadwalMengajar = $q->get()->groupBy('hari');
         }
 
+        $todayKey = [1 => 'senin', 2 => 'selasa', 3 => 'rabu', 4 => 'kamis', 5 => 'jumat', 6 => 'sabtu'][now()->dayOfWeekIso] ?? '';
+        $classSlots = $jadwalKelas->flatten();
+        $teachingSlots = $jadwalMengajar->flatten();
+
         return view('admin.gtk.wali.jadwal.index', [
             'kelas' => $kelas,
             'kelasList' => $this->waliClasses(),
@@ -46,6 +50,14 @@ class JadwalController extends BaseWaliKelasController
             'jadwalKelas' => $jadwalKelas,
             'jadwalMengajar' => $jadwalMengajar,
             'hasGtk' => (bool) $gtk,
+            'tahun' => $tahun,
+            'todayKey' => $todayKey,
+            'scheduleSummary' => [
+                'class_slots' => $classSlots->count(),
+                'today_slots' => ($jadwalKelas[$todayKey] ?? collect())->count(),
+                'subjects' => $classSlots->pluck('mapel_id')->filter()->unique()->count(),
+                'teaching_slots' => $teachingSlots->count(),
+            ],
         ]);
     }
 }

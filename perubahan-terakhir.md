@@ -26,6 +26,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Dashboard GTK kini merangkum beban mengajar (slot hari ini, JTM mingguan, hari mengajar) dan menampilkan status penugasan aktif yang berasal dari data resmi, seperti Wali Kelas, Wakil Kepala, atau tugas tambahan lain. Jadwal hari ini kembali menjadi satu kartu ringkas berisi daftar slot dan metadata uniknya agar lebih nyaman dipandang.
 - Workspace `/admin` kini menerapkan scope data siswa berdasarkan penugasan aktif untuk GTK non-global: rombel wali kelas dan kelas pada jadwal mengajar tahun aktif menjadi satu-satunya cakupan server-side. Menu Data Siswa global disembunyikan untuk akun berscope, parameter filter global dikunci, dan endpoint detail/foto/dokumen/perubahan siswa memverifikasi scope objek sehingga ID atau URL tidak dapat dipakai untuk melihat data rombel lain.
 - Untuk GTK yang juga wali kelas aktif, scope perwalian kini diprioritaskan dan tidak lagi digabung dengan seluruh kelas pada jadwal mapel. Dengan demikian statistik serta data siswa wali kelas hanya menampilkan rombel perwaliannya.
+- Halaman Kelas Saya > Jadwal Kelas direbuild mengikuti pola AdminLTE responsif: hero konteks rombel dan tahun aktif, ringkasan slot, kartu harian dengan jam/mapel/pengajar/ruang, penanda hari ini, serta panel ringkasan jadwal mengajar pribadi.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

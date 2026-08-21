@@ -1,84 +1,36 @@
 @extends('adminlte::page')
 
-@section('title', 'Jadwal Kelas — Kelas Saya')
+@section('title', 'Jadwal Kelas - Kelas Saya')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-calendar-alt"></i> Kelas Saya</div>
-            <h1 class="simansa-hero__title">Jadwal Kelas</h1>
-            <p class="simansa-hero__subtitle">Jadwal pelajaran {{ $kelas->nama_kelas }}@if($hasGtk) &amp; jadwal mengajar Anda @endif.</p>
-        </div>
-    </div>
+<div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-calendar-alt text-primary"></i> Jadwal Kelas</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.gtk.dashboard') }}">Dashboard Saya</a></li><li class="breadcrumb-item active">Jadwal Kelas</li></ol></div></div>
 @stop
 
 @section('content')
+<div class="wali-jadwal-page">
+    <div class="card bg-gradient-primary text-white mb-4 wali-jadwal-page__hero"><div class="card-body"><div class="row align-items-center"><div class="col-lg-8"><div class="wali-jadwal-page__eyebrow"><i class="fas fa-chalkboard-teacher mr-1"></i>KELAS SAYA</div><h3 class="mb-1">Jadwal {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</h3><p class="mb-0 text-white-50">Pantau pelajaran, pengajar, waktu, dan ruang rombel perwalian pada {{ $tahun?->nama ?? 'tahun pelajaran aktif' }}.</p></div><div class="col-lg-4 mt-3 mt-lg-0"><div class="wali-jadwal-page__hero-stats"><div><span>Slot Mingguan</span><strong>{{ $scheduleSummary['class_slots'] }}</strong></div><div><span>Hari Ini</span><strong>{{ $scheduleSummary['today_slots'] }}</strong></div></div></div></div></div></div>
+
     @includeWhen($kelasList->count() > 1, 'admin.gtk.wali.partials.kelas-switcher', ['route' => 'admin.gtk.wali.jadwal.index'])
 
-    <div class="card simansa-management-card">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-chalkboard"></i> Jadwal Pelajaran {{ $kelas->nama_kelas }}</h3></div>
-        <div class="card-body">
-            @php $adaJadwalKelas = $jadwalKelas->flatten()->isNotEmpty(); @endphp
-            @if($adaJadwalKelas)
-                <div class="row">
-                    @foreach($hariList as $key => $label)
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <h6 class="font-weight-600 text-primary border-bottom pb-1">{{ $label }}</h6>
-                            @php $items = ($jadwalKelas[$key] ?? collect())->sortBy('jam_ke'); @endphp
-                            @forelse($items as $j)
-                                <div class="d-flex justify-content-between py-1 border-bottom">
-                                    <div>
-                                        <span class="badge badge-light">Jam {{ $j->jam_ke }}</span>
-                                        {{ optional($j->mataPelajaran)->nama_mapel ?? '—' }}
-                                    </div>
-                                    <small class="text-muted">{{ optional($j->gtk->user ?? null)->name ?? '' }}</small>
-                                </div>
-                            @empty
-                                <p class="text-muted small mb-0">Tidak ada.</p>
-                            @endforelse
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                    <p class="mb-0">Belum ada jadwal pelajaran untuk rombel ini.</p>
-                </div>
-            @endif
-        </div>
-    </div>
+    <div class="row"><div class="col-lg-8 mb-4"><div class="card card-outline card-primary h-100 wali-jadwal-page__class-card"><div class="card-header d-flex flex-wrap align-items-center justify-content-between"><h3 class="card-title"><i class="fas fa-calendar-week mr-1"></i> Jadwal Pelajaran Rombel</h3><span class="badge badge-light border mt-2 mt-sm-0">{{ $scheduleSummary['subjects'] }} mata pelajaran</span></div><div class="card-body">
+        @if($jadwalKelas->flatten()->isNotEmpty())
+            <div class="wali-jadwal-page__days">@foreach($hariList as $key => $label)@php $items = ($jadwalKelas[$key] ?? collect())->sortBy(fn ($slot) => sprintf('%04d-%s', $slot->jam_ke, $slot->jam_mulai)); @endphp
+                <section class="wali-jadwal-page__day {{ $todayKey === $key ? 'is-today' : '' }}"><header><span>{{ $label }}</span>@if($todayKey === $key)<small>Hari ini</small>@endif<span class="wali-jadwal-page__slot-count">{{ $items->count() }} slot</span></header>
+                    @forelse($items as $j)@php $teacher = $j->gtk?->nama_lengkap ?? $j->gtk?->user?->name ?? 'Pengajar belum ditetapkan'; @endphp
+                    <article class="wali-jadwal-page__slot"><div class="wali-jadwal-page__time"><strong>{{ $j->jam_mulai ? substr($j->jam_mulai, 0, 5) : 'Jam '.$j->jam_ke }}</strong><span>{{ $j->jam_selesai ? 's.d. '.substr($j->jam_selesai, 0, 5) : 'Jam '.$j->jam_ke }}</span></div><div class="wali-jadwal-page__lesson"><strong>{{ $j->mataPelajaran?->nama_mapel ?? 'Mata pelajaran' }}</strong><span><i class="fas fa-user-tie mr-1"></i>{{ $teacher }}</span>@if($j->ruangan)<small><i class="fas fa-map-marker-alt mr-1"></i>{{ $j->ruangan }}</small>@endif</div><span class="badge badge-light border">Jam {{ $j->jam_ke ?: '-' }}</span></article>
+                    @empty <div class="wali-jadwal-page__empty">Tidak ada jadwal</div>@endforelse
+                </section>@endforeach</div>
+        @else <div class="text-center text-muted py-5"><i class="far fa-calendar-times fa-3x d-block mb-3"></i>Belum ada jadwal pelajaran untuk rombel ini.</div>@endif
+    </div></div></div>
+    <div class="col-lg-4 mb-4"><div class="card card-outline card-primary h-100 wali-jadwal-page__teaching-card"><div class="card-header"><h3 class="card-title"><i class="fas fa-user-clock mr-1"></i> Ringkasan Mengajar</h3></div><div class="card-body"><div class="wali-jadwal-page__metric"><i class="fas fa-chalkboard"></i><div><strong>{{ $scheduleSummary['teaching_slots'] }}</strong><span>slot jadwal mengajar Anda</span></div></div><div class="wali-jadwal-page__metric"><i class="fas fa-book-open"></i><div><strong>{{ $scheduleSummary['subjects'] }}</strong><span>mapel pada rombel ini</span></div></div>
+        @if($hasGtk && $jadwalMengajar->flatten()->isNotEmpty())<h4 class="wali-jadwal-page__mini-title">Jadwal Anda Hari Ini</h4>@php $todayTeaching = ($jadwalMengajar[$todayKey] ?? collect())->sortBy('jam_ke'); @endphp@forelse($todayTeaching as $j)<div class="wali-jadwal-page__personal-slot"><strong>{{ $j->jam }}</strong><span>{{ $j->mataPelajaran?->nama_mapel ?? 'Mata pelajaran' }} · {{ $j->kelas?->nama_kelas ?? '-' }}</span></div>@empty<p class="text-muted small mb-0">Tidak ada jadwal mengajar Anda hari ini.</p>@endforelse
+        @else <div class="wali-jadwal-page__note"><i class="fas fa-info-circle mr-1"></i> Jadwal mengajar pribadi belum tersedia pada akun ini.</div>@endif
+    </div></div></div></div>
+</div>
+@stop
 
-    @if($hasGtk)
-        <div class="card simansa-management-card">
-            <div class="card-header"><h3 class="card-title"><i class="fas fa-chalkboard-teacher"></i> Jadwal Mengajar Saya</h3></div>
-            <div class="card-body">
-                @if($jadwalMengajar->flatten()->isNotEmpty())
-                    <div class="row">
-                        @foreach($hariList as $key => $label)
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <h6 class="font-weight-600 text-primary border-bottom pb-1">{{ $label }}</h6>
-                                @php $items = ($jadwalMengajar[$key] ?? collect())->sortBy('jam_ke'); @endphp
-                                @forelse($items as $j)
-                                    <div class="d-flex justify-content-between py-1 border-bottom">
-                                        <div>
-                                            <span class="badge badge-light">Jam {{ $j->jam_ke }}</span>
-                                            {{ optional($j->mataPelajaran)->nama_mapel ?? '—' }}
-                                        </div>
-                                        <small class="text-muted">{{ optional($j->kelas)->nama_kelas ?? '' }}</small>
-                                    </div>
-                                @empty
-                                    <p class="text-muted small mb-0">Tidak ada.</p>
-                                @endforelse
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                        <p class="mb-0">Belum ada jadwal mengajar tercatat.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    @endif
+@section('css')
+<style>
+.wali-jadwal-page{color:#0f172a}.wali-jadwal-page__hero{overflow:hidden;border:0;border-radius:14px;box-shadow:0 10px 24px rgba(15,23,42,.08)}.wali-jadwal-page__hero .card-body{padding:1.15rem 1.25rem}.wali-jadwal-page__eyebrow{margin-bottom:.28rem;color:rgba(255,255,255,.72);font-size:.7rem;font-weight:800;letter-spacing:.08em}.wali-jadwal-page__hero h3{font-weight:800}.wali-jadwal-page__hero-stats{display:grid;grid-template-columns:repeat(2,1fr);border-left:1px solid rgba(255,255,255,.28);text-align:center}.wali-jadwal-page__hero-stats>div+div{border-left:1px solid rgba(255,255,255,.28)}.wali-jadwal-page__hero-stats span,.wali-jadwal-page__hero-stats strong{display:block}.wali-jadwal-page__hero-stats span{color:rgba(255,255,255,.7);font-size:.68rem;font-weight:800;text-transform:uppercase}.wali-jadwal-page__hero-stats strong{font-size:1.35rem}.wali-jadwal-page .card-outline{border-radius:12px;box-shadow:0 7px 18px rgba(15,23,42,.05)}.wali-jadwal-page__days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.wali-jadwal-page__day{overflow:hidden;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.wali-jadwal-page__day.is-today{border-color:#93c5fd;box-shadow:0 4px 14px rgba(37,99,235,.1)}.wali-jadwal-page__day header{display:flex;align-items:center;gap:.4rem;padding:.58rem .7rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;color:#1e3a8a;font-size:.83rem;font-weight:800}.wali-jadwal-page__day.is-today header{background:#eff6ff}.wali-jadwal-page__day header small{padding:.1rem .35rem;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:.62rem}.wali-jadwal-page__slot-count{margin-left:auto;color:#64748b;font-size:.68rem;font-weight:700}.wali-jadwal-page__slot{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:.45rem;align-items:center;padding:.55rem .65rem;border-bottom:1px solid #f1f5f9}.wali-jadwal-page__slot:last-child{border-bottom:0}.wali-jadwal-page__time strong,.wali-jadwal-page__time span,.wali-jadwal-page__lesson strong,.wali-jadwal-page__lesson span,.wali-jadwal-page__lesson small{display:block}.wali-jadwal-page__time strong{color:#2563eb;font-size:.78rem}.wali-jadwal-page__time span,.wali-jadwal-page__lesson span,.wali-jadwal-page__lesson small{color:#64748b;font-size:.68rem}.wali-jadwal-page__lesson strong{overflow:hidden;color:#0f172a;font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}.wali-jadwal-page__lesson small{margin-top:.1rem}.wali-jadwal-page__slot .badge{font-size:.63rem;font-weight:700}.wali-jadwal-page__empty{padding:.8rem;color:#94a3b8;font-size:.75rem;text-align:center}.wali-jadwal-page__metric{display:flex;align-items:center;gap:.65rem;padding:.65rem 0;border-bottom:1px solid #eef2f7}.wali-jadwal-page__metric i{display:grid;width:34px;height:34px;place-items:center;border-radius:9px;background:#eff6ff;color:#2563eb}.wali-jadwal-page__metric strong,.wali-jadwal-page__metric span{display:block}.wali-jadwal-page__metric strong{color:#1e3a8a;font-size:1rem}.wali-jadwal-page__metric span{color:#64748b;font-size:.72rem}.wali-jadwal-page__mini-title{margin:1rem 0 .45rem;color:#334155;font-size:.8rem;font-weight:800}.wali-jadwal-page__personal-slot{padding:.48rem 0;border-bottom:1px dashed #e2e8f0}.wali-jadwal-page__personal-slot strong,.wali-jadwal-page__personal-slot span{display:block}.wali-jadwal-page__personal-slot strong{color:#2563eb;font-size:.76rem}.wali-jadwal-page__personal-slot span{color:#475569;font-size:.72rem}.wali-jadwal-page__note{margin-top:1rem;padding:.65rem;border-radius:8px;background:#f8fafc;color:#64748b;font-size:.75rem}@media(max-width:991.98px){.wali-jadwal-page__hero-stats{margin-top:1rem;border-top:1px solid rgba(255,255,255,.28);border-left:0;padding-top:.75rem}}@media(max-width:575.98px){.wali-jadwal-page__hero .card-body{padding:1rem}.wali-jadwal-page__hero h3{font-size:1.2rem}.wali-jadwal-page__days{grid-template-columns:1fr;gap:.6rem}.wali-jadwal-page__slot{grid-template-columns:58px minmax(0,1fr)}.wali-jadwal-page__slot .badge{grid-column:2;justify-self:start}.wali-jadwal-page__hero-stats strong{font-size:1.15rem}}
+</style>
 @stop
