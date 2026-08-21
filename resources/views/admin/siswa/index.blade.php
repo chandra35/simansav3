@@ -122,7 +122,7 @@
                 <div class="simansa-filter-panel">
                     <div class="simansa-filter-layout">
                         <div class="simansa-filter-field">
-                            <label for="filterPopulation" class="simansa-filter-label">
+                            <label for="filterPopulation" class="simansa-filter-label" title="Default hanya menampilkan siswa pada rombel tahun aktif.">
                                 <i class="fas fa-users mr-1"></i> Kelompok Data
                             </label>
                             <select id="filterPopulation" class="form-control form-control-sm">
@@ -142,7 +142,6 @@
                                     Semua Riwayat ({{ number_format($populationCounts['all']) }})
                                 </option>
                             </select>
-                            <small class="text-muted">Default hanya siswa pada rombel tahun aktif.</small>
                         </div>
                         <div class="simansa-filter-field">
                             <label for="filterJenisKelamin" class="simansa-filter-label">
