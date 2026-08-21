@@ -68,6 +68,13 @@ class AppSettingController extends Controller
             'logo_display_height' => 'nullable|integer|min:30|max:100',
             'logo_column_width' => 'nullable|integer|min:8|max:20',
             'activity_log_require_location' => 'boolean',
+            'gtk_schedule_reminder_enabled' => 'boolean',
+            'gtk_schedule_reminder_minutes' => 'required|integer|min:1|max:30',
+            'gtk_schedule_salutation_enabled' => 'boolean',
+            'gtk_salutation_male_senior' => 'required|string|max:30',
+            'gtk_salutation_female_senior' => 'required|string|max:30',
+            'gtk_salutation_male_young' => 'required|string|max:30',
+            'gtk_salutation_female_young' => 'required|string|max:30',
         ]);
 
         if ($validator->fails()) {
@@ -104,6 +111,13 @@ class AppSettingController extends Controller
                 'logo_display_height',
                 'logo_column_width',
                 'activity_log_require_location',
+                'gtk_schedule_reminder_enabled',
+                'gtk_schedule_reminder_minutes',
+                'gtk_schedule_salutation_enabled',
+                'gtk_salutation_male_senior',
+                'gtk_salutation_female_senior',
+                'gtk_salutation_male_young',
+                'gtk_salutation_female_young',
             ]));
             
             // Update kop_surat_config if provided

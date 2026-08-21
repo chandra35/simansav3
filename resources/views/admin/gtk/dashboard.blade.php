@@ -136,16 +136,25 @@
         </div>
     @endif
 
-    <div class="card card-outline card-primary mb-3">
+    <div class="card card-outline card-primary mb-3 gtk-account-dashboard__schedule">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
             <h3 class="card-title"><i class="fas fa-calendar-day mr-1"></i> Jadwal Mengajar Hari Ini</h3>
-            <span class="badge badge-light mt-2 mt-sm-0">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM YYYY') }}</span>
+            <div class="card-tools mt-2 mt-sm-0"><span class="badge badge-light mr-1">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM YYYY') }}</span><a href="{{ route('admin.gtk.my-schedule') }}" class="btn btn-primary btn-sm"><i class="fas fa-calendar-alt mr-1"></i> Jadwal Saya</a></div>
         </div>
         <div class="card-body">
-            <div class="callout callout-info mb-0">
-                <h5><i class="fas fa-info-circle mr-1"></i> Informasi</h5>
-                <p class="mb-0">Fitur jadwal mengajar akan segera tersedia. Hubungi admin untuk informasi jadwal.</p>
-            </div>
+            <div id="gtkScheduleLiveReminder" class="alert alert-warning gtk-account-dashboard__schedule-reminder d-none" role="status"></div>
+            @if($scheduleReminder)
+                <div class="alert alert-warning gtk-account-dashboard__schedule-reminder"><i class="fas fa-bell mr-1"></i>{{ $scheduleReminder['message'] }}</div>
+            @endif
+            @forelse($todaySchedules as $schedule)
+                <div class="gtk-account-dashboard__schedule-item" data-schedule-start="{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '' }}" data-schedule-subject="{{ $schedule->mataPelajaran?->nama_mapel ?? 'jadwal mengajar' }}" data-schedule-class="{{ $schedule->kelas?->nama_kelas ?? 'kelas Anda' }}">
+                    <div class="gtk-account-dashboard__schedule-time"><strong>{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '-' }}</strong><span>{{ $schedule->jam_selesai ? substr($schedule->jam_selesai, 0, 5) : '' }}</span></div>
+                    <div><strong>{{ $schedule->mataPelajaran?->nama_mapel ?? 'Mata pelajaran' }}</strong><span><i class="fas fa-school mr-1"></i>{{ $schedule->kelas?->nama_kelas ?? '-' }}{{ $schedule->ruangan ?: ($schedule->kelas?->ruang_kelas ? ' · '.$schedule->kelas->ruang_kelas : '') }}</span></div>
+                    <span class="badge badge-light">Jam {{ $schedule->jam_ke }}</span>
+                </div>
+            @empty
+                <div class="text-center text-muted py-3"><i class="far fa-calendar-check fa-2x mb-2 d-block"></i>Tidak ada jadwal mengajar hari ini.</div>
+            @endforelse
         </div>
     </div>
 </div>
@@ -172,6 +181,11 @@
     .gtk-account-dashboard__notice small { color:#64748b; font-size:.72rem; }
     .gtk-account-dashboard__notice p { margin:.6rem 0 0; color:#334155; font-size:.82rem; white-space:pre-line; }
     .gtk-account-dashboard__alert { border-radius:12px; }
+    .gtk-account-dashboard__schedule-reminder { margin-bottom:.8rem; border-radius:10px; font-size:.88rem; }
+    .gtk-account-dashboard__schedule-item { display:grid; grid-template-columns:88px minmax(0,1fr) auto; gap:.75rem; align-items:center; padding:.7rem 0; border-bottom:1px solid #eef2f7; }
+    .gtk-account-dashboard__schedule-item:last-child { border-bottom:0; }
+    .gtk-account-dashboard__schedule-time strong,.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-item>div:nth-child(2) strong,.gtk-account-dashboard__schedule-item>div:nth-child(2) span { display:block; }
+    .gtk-account-dashboard__schedule-time strong { color:#2563eb; font-size:.9rem; }.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-item>div:nth-child(2) span { color:#64748b; font-size:.75rem; }.gtk-account-dashboard__schedule-item>div:nth-child(2) strong { color:#0f172a; font-size:.88rem; }
     @media (max-width:991.98px) {
         .gtk-account-dashboard__details { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .gtk-account-dashboard__actions { flex-direction:row; min-width:0; }
@@ -183,6 +197,48 @@
         .gtk-account-dashboard .card-outline > .card-header { align-items:flex-start !important; }
         .gtk-account-dashboard__hero > .card-body { padding:1rem; }
         .gtk-account-dashboard__hero h3 { font-size:1.15rem; }
+        .gtk-account-dashboard__schedule-item { grid-template-columns:72px minmax(0,1fr); }.gtk-account-dashboard__schedule-item .badge { grid-column:2; justify-self:start; }
     }
 </style>
+@stop
+
+@section('js')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const config = @json($scheduleReminderConfig);
+    if (!config.enabled) return;
+
+    const serverStartedAt = Date.parse(config.server_now);
+    const browserStartedAt = Date.now();
+    const shown = new Set();
+    const reminder = document.getElementById('gtkScheduleLiveReminder');
+
+    function checkScheduleReminder() {
+        const now = new Date(serverStartedAt + (Date.now() - browserStartedAt));
+        document.querySelectorAll('[data-schedule-start]').forEach(function (item) {
+            const start = item.dataset.scheduleStart;
+            if (!start) return;
+
+            const [hour, minute] = start.split(':').map(Number);
+            const startsAt = new Date(now);
+            startsAt.setHours(hour, minute, 0, 0);
+            const remaining = Math.ceil((startsAt - now) / 60000);
+            const key = start + item.dataset.scheduleSubject + item.dataset.scheduleClass;
+
+            if (shown.has(key) || remaining < 0 || remaining > config.minutes) return;
+
+            shown.add(key);
+            const lead = remaining === 0
+                ? ['Jadwal dimulai sekarang', 'Saatnya menuju kelas', 'Jangan lupa, jadwal sudah dimulai']
+                : [`${remaining} menit lagi`, `Segera dimulai dalam ${remaining} menit`, `Jangan lupa, ${remaining} menit lagi`];
+            const prefix = config.greeting ? config.greeting + ', ' : '';
+            reminder.textContent = '🔔 ' + prefix + lead[Math.floor(Math.random() * lead.length)] + ': ' + item.dataset.scheduleSubject + ' di ' + item.dataset.scheduleClass + '.';
+            reminder.classList.remove('d-none');
+        });
+    }
+
+    checkScheduleReminder();
+    window.setInterval(checkScheduleReminder, 30000);
+});
+</script>
 @stop

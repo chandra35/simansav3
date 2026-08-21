@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKonseling;
+use App\Models\AppSetting;
 use App\Models\Gtk;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\TahunPelajaran;
+use App\Services\GtkScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +18,7 @@ class GtkDashboardController extends Controller
     /**
      * Display GTK dashboard
      */
-    public function index(Request $request)
+    public function index(Request $request, GtkScheduleService $scheduleService)
     {
         $this->authorize('view-gtk-dashboard');
 
@@ -79,6 +81,15 @@ class GtkDashboardController extends Controller
             ->where('share_with_teachers', true)->whereNotNull('teacher_notice')
             ->whereHas('siswa.kelasTahunAktif', fn ($query) => $query->whereIn('kelas.id', $relatedClassIds))
             ->latest('tanggal_konseling')->limit(12)->get();
+        $scheduleSettings = AppSetting::getInstance();
+        $todaySchedules = $scheduleService->schedulesForDay($gtk, $tahunAktif, now());
+        $scheduleReminder = $scheduleService->reminder($todaySchedules, $gtk, $scheduleSettings, now());
+        $scheduleReminderConfig = [
+            'enabled' => (bool) $scheduleSettings->gtk_schedule_reminder_enabled,
+            'minutes' => max(1, (int) $scheduleSettings->gtk_schedule_reminder_minutes),
+            'greeting' => $scheduleService->greeting($gtk, $scheduleSettings),
+            'server_now' => now()->toIso8601String(),
+        ];
 
         return view('admin.gtk.dashboard', compact(
             'gtk',
@@ -86,8 +97,26 @@ class GtkDashboardController extends Controller
             'needsCompletion',
             'tahunAktif',
             'waliKelasRombels',
-            'isWaliKelas', 'teacherNotices'
+            'isWaliKelas', 'teacherNotices', 'todaySchedules', 'scheduleReminder', 'scheduleReminderConfig'
         ));
+    }
+
+    public function mySchedule(GtkScheduleService $scheduleService)
+    {
+        $this->authorize('view-gtk-dashboard');
+
+        $gtk = Auth::user()->gtk;
+        abort_unless($gtk, 404);
+
+        $tahunAktif = TahunPelajaran::query()->active()->first();
+        $schedules = $scheduleService->schedulesForWeek($gtk, $tahunAktif);
+
+        return view('admin.gtk.my-schedule', [
+            'gtk' => $gtk,
+            'tahunAktif' => $tahunAktif,
+            'schedulesByDay' => $schedules->groupBy('hari'),
+            'dayLabels' => JadwalPelajaran::HARI,
+        ]);
     }
 
     /**

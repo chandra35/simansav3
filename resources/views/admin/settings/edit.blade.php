@@ -1709,6 +1709,50 @@
             </div>
         </div>
 
+        <div class="card settings-card" id="gtkScheduleReminderCard">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-chalkboard-teacher"></i> Jadwal & Sapaan Akun GTK</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="gtk_schedule_reminder_enabled">Pengingat jadwal</label>
+                            <select name="gtk_schedule_reminder_enabled" id="gtk_schedule_reminder_enabled" class="form-control">
+                                <option value="1" @selected(old('gtk_schedule_reminder_enabled', $setting->gtk_schedule_reminder_enabled))>Tampilkan</option>
+                                <option value="0" @selected(!old('gtk_schedule_reminder_enabled', $setting->gtk_schedule_reminder_enabled))>Sembunyikan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="gtk_schedule_reminder_minutes">Waktu pengingat</label>
+                            <div class="input-group">
+                                <input type="number" min="1" max="30" name="gtk_schedule_reminder_minutes" id="gtk_schedule_reminder_minutes" class="form-control" value="{{ old('gtk_schedule_reminder_minutes', $setting->gtk_schedule_reminder_minutes ?: 5) }}">
+                                <div class="input-group-append"><span class="input-group-text">menit sebelum</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="gtk_schedule_salutation_enabled">Sapaan pada pengingat</label>
+                            <select name="gtk_schedule_salutation_enabled" id="gtk_schedule_salutation_enabled" class="form-control">
+                                <option value="1" @selected(old('gtk_schedule_salutation_enabled', $setting->gtk_schedule_salutation_enabled))>Tampilkan</option>
+                                <option value="0" @selected(!old('gtk_schedule_salutation_enabled', $setting->gtk_schedule_salutation_enabled))>Sembunyikan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small">GTK kelahiran 1984 atau sebelumnya memakai sapaan senior; kelahiran 1985 dan sesudahnya memakai sapaan muda.</p>
+                <div class="form-row">
+                    <div class="col-sm-6 col-lg-3"><div class="form-group"><label for="gtk_salutation_male_senior">Laki-laki senior</label><input type="text" maxlength="30" name="gtk_salutation_male_senior" id="gtk_salutation_male_senior" class="form-control" value="{{ old('gtk_salutation_male_senior', $setting->gtk_salutation_male_senior ?: 'Pak') }}"></div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="form-group"><label for="gtk_salutation_female_senior">Perempuan senior</label><input type="text" maxlength="30" name="gtk_salutation_female_senior" id="gtk_salutation_female_senior" class="form-control" value="{{ old('gtk_salutation_female_senior', $setting->gtk_salutation_female_senior ?: 'Bu') }}"></div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="form-group"><label for="gtk_salutation_male_young">Laki-laki muda</label><input type="text" maxlength="30" name="gtk_salutation_male_young" id="gtk_salutation_male_young" class="form-control" value="{{ old('gtk_salutation_male_young', $setting->gtk_salutation_male_young ?: 'Mas') }}"></div></div>
+                    <div class="col-sm-6 col-lg-3"><div class="form-group"><label for="gtk_salutation_female_young">Perempuan muda</label><input type="text" maxlength="30" name="gtk_salutation_female_young" id="gtk_salutation_female_young" class="form-control" value="{{ old('gtk_salutation_female_young', $setting->gtk_salutation_female_young ?: 'Mbak') }}"></div></div>
+                </div>
+            </div>
+        </div>
+
         {{-- Submit Button --}}
         <div class="card settings-actions-card" id="settingsActions">
             <div class="card-body">

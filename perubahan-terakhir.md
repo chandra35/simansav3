@@ -16,6 +16,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Panel filter Data Siswa kini menggunakan lebar kontrol berdasarkan teks opsi terpanjang, termasuk pilihan kelas setelah dimuat. Kontrol dan tombol aksi tersusun sebagai flex-wrap mandiri sehingga tidak lagi membentang maupun tersambung tidak rapi.
 - Keterangan default kelompok Data Siswa dipindahkan menjadi tooltip label agar panel filter tetap padat dan tidak membuang ruang vertikal.
 - Detail GTK kini dapat menampilkan dan menyalin password terenkripsi bagi pengguna berizin reset password GTK. Akun GTK baru dan hasil reset mulai menyimpan salinan terenkripsi; akun lama hanya dapat ditampilkan bila passwordnya masih default NIK, sedangkan password lama yang sudah diubah harus direset karena hash tidak dapat didekripsi.
+- Akun GTK kini memiliki Jadwal Saya, jadwal mengajar hari ini, serta pengingat jadwal mendatang. Sapaan pengingat mengikuti jenis kelamin dan tahun lahir (senior sampai 1984, muda sejak 1985), dengan teks sapaan, visibilitas, dan jeda pengingat yang dapat diatur pada Pengaturan.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 
