@@ -39,8 +39,10 @@ class StudentAttendanceAnalyticsController extends Controller
         $classes = Kelas::query()->where('tahun_pelajaran_id', $year->id)
             ->when($accessibleClassIds !== null, fn ($query) => $query->whereIn('id', $accessibleClassIds))
             ->orderBy('tingkat')->orderBy('nama_kelas')->get();
-        $tingkat = in_array((int) $request->get('tingkat'), [10, 11, 12], true) ? (int) $request->get('tingkat') : null;
-        $classId = (string) $request->get('kelas_id', '');
+        // Wali kelas selalu melihat keseluruhan rombel perwaliannya.  Jangan
+        // biarkan query string lama menyisakan filter tingkat/rombel tersembunyi.
+        $tingkat = $isWaliScope ? null : (in_array((int) $request->get('tingkat'), [10, 11, 12], true) ? (int) $request->get('tingkat') : null);
+        $classId = $isWaliScope ? '' : (string) $request->get('kelas_id', '');
         if ($classId !== '' && ! $classes->contains('id', $classId)) {
             abort_if($accessibleClassIds !== null, 404, 'Rombel tidak ditemukan dalam cakupan wali kelas Anda.');
             $classId = '';

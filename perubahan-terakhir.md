@@ -6,6 +6,8 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
 
+- Pada Analitik Kehadiran, akun wali kelas tidak lagi menerima filter Tingkat maupun Rombel. Halaman menampilkan cakupan rombel perwalian yang terkunci, dan parameter URL lama untuk kedua filter diabaikan di server agar analitik selalu mencakup seluruh rombel perwaliannya.
+
 - Preview dan unduh dokumen KIP/PIP kini mengizinkan role dengan permission `view-pip`; sebelumnya role tersebut dapat melihat daftar tetapi file gambar gagal dimuat karena endpoint dokumen hanya mengenali akses siswa/mutasi.
 - Penyimpanan dokumen siswa kini memverifikasi disk/folder aktif dan hasil tulis file. Penggantian maupun penghapusan dokumen mencari file lintas storage baru dan lokasi legacy sehingga data lama tetap dapat dikelola.
 - Audit upload publik menegaskan disk `public` untuk URL, penghapusan, dan tampilan logo sekolah/Kemenag, kop surat, mutasi, lampiran pengumuman, serta foto/sertifikat prestasi. Foto absensi, registrasi wajah, dan konfigurasi statis Exam Browser sekarang juga melaporkan kegagalan simpan.
