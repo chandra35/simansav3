@@ -37,6 +37,12 @@ class SiswaStatisticsController extends Controller
             ->orderBy('tingkat')->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'tingkat', 'tahun_pelajaran_id']);
         $kelasId = (string) $request->get('kelas_id', '');
+        if ($isWaliScope) {
+            // Scope penugasan adalah otoritasnya; parameter URL tidak boleh
+            // mengubah cakupan kerja wali/guru yang sedang aktif.
+            $tingkat = null;
+            $kelasId = '';
+        }
         if ($kelasId !== '' && ! $classes->contains(fn (Kelas $class) => $class->id === $kelasId && (! $tingkat || (int) $class->tingkat === $tingkat))) {
             abort_if($isWaliScope, 404, 'Rombel tidak ditemukan dalam cakupan wali kelas Anda.');
             $kelasId = '';
@@ -390,8 +396,8 @@ class SiswaStatisticsController extends Controller
             return null;
         }
 
-        $classIds = Auth::user()->activeWaliKelasClasses()->pluck('id');
-        abort_if($classIds->isEmpty(), 403, 'Anda bukan wali kelas aktif.');
+        $classIds = app(\App\Services\StudentAccessScope::class)->classIds(Auth::user());
+        abort_if($classIds->isEmpty(), 403, 'Anda tidak memiliki penugasan rombel aktif.');
 
         return $classIds;
     }
@@ -399,10 +405,7 @@ class SiswaStatisticsController extends Controller
     private function isWaliScopedUser(): bool
     {
         $user = Auth::user();
-        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
-            || in_array($user->role, ['super_admin', 'admin', 'operator'], true);
-
-        return ! $isManager && $user->hasAnyRole(['GTK', 'Wali Kelas']);
+        return app(\App\Services\StudentAccessScope::class)->isLimited($user);
     }
 
     private function authorizeSchoolInScope(Sekolah $sekolah, ?Collection $classIds): void

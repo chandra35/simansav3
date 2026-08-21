@@ -166,6 +166,10 @@ class AuthServiceProvider extends ServiceProvider
             return $user->can('view-statistik-siswa') && ($isManager || ! $user->hasAnyRole(['GTK', 'Wali Kelas']));
         });
 
+        Gate::define('sidebar-student-data-global', function ($user) {
+            return $user->can('view-siswa') && ! app(\App\Services\StudentAccessScope::class)->isLimited($user);
+        });
+
         Gate::define('sidebar-student-attendance-global', function ($user) {
             $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
                 in_array($user->role, ['super_admin', 'admin', 'operator'], true);

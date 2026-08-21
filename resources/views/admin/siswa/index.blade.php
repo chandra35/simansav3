@@ -121,6 +121,12 @@
             <div class="card-body">
                 <div class="simansa-filter-panel">
                     <div class="simansa-filter-layout">
+                        @if($isScopedStudentAccess)
+                            <div class="simansa-filter-field simansa-filter-field--locked">
+                                <label class="simansa-filter-label"><i class="fas fa-shield-alt mr-1"></i>Cakupan Kerja</label>
+                                <div class="form-control form-control-sm d-flex align-items-center" aria-label="Cakupan penugasan aktif">{{ $scopedClasses->pluck('nama_kelas')->implode(', ') ?: 'Belum ada rombel penugasan aktif' }}</div>
+                            </div>
+                        @else
                         <div class="simansa-filter-field">
                             <label for="filterPopulation" class="simansa-filter-label" title="Default hanya menampilkan siswa pada rombel tahun aktif.">
                                 <i class="fas fa-users mr-1"></i> Kelompok Data
@@ -143,6 +149,7 @@
                                 </option>
                             </select>
                         </div>
+                        @endif
                         <div class="simansa-filter-field">
                             <label for="filterJenisKelamin" class="simansa-filter-label">
                                 <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
@@ -153,7 +160,7 @@
                                 <option value="P">Perempuan</option>
                             </select>
                         </div>
-                        @if(!auth()->user()->hasRole('Wali Kelas') || auth()->user()->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah']))
+                        @if(!$isScopedStudentAccess)
                             <div class="simansa-filter-field">
                                 <label for="filterTingkat" class="simansa-filter-label">
                                     <i class="fas fa-layer-group mr-1"></i> Tingkat

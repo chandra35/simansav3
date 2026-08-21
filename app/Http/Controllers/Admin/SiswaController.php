@@ -55,6 +55,10 @@ class SiswaController extends Controller
         $populationCounts = $this->populationCounts();
 
         $contextScope = $this->buildStatisticsContext($request);
+        $isScopedStudentAccess = $this->studentAccessScope()->isLimited($request->user());
+        $scopedClasses = $isScopedStudentAccess
+            ? \App\Models\Kelas::query()->whereIn('id', $this->studentAccessScope()->classIds($request->user()) ?? collect())->orderBy('nama_kelas')->get(['id', 'nama_kelas'])
+            : collect();
         $contextQuery = collect($request->only([
             'school_npsn',
             'school_name',
@@ -84,7 +88,9 @@ class SiswaController extends Controller
             'contextQuery',
             'population',
             'populationCounts',
-            'activeYear'
+            'activeYear',
+            'isScopedStudentAccess',
+            'scopedClasses'
         ));
     }
 
@@ -317,6 +323,7 @@ class SiswaController extends Controller
     public function toggleVervalIjazah(Siswa $siswa)
     {
         $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $siswa->verval_ijazah = !$siswa->verval_ijazah;
         $siswa->verval_ijazah_at = $siswa->verval_ijazah ? now() : null;
@@ -392,6 +399,7 @@ class SiswaController extends Controller
     {
         abort_unless(Auth::user()?->hasRole('Super Admin'), 403);
         $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $previousStatus = (bool) $siswa->emis_registered;
         $siswa->emis_registered = !$siswa->emis_registered;
@@ -699,6 +707,7 @@ class SiswaController extends Controller
     public function show(Siswa $siswa)
     {
         $this->authorize('view-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $siswa->load([
             'user', 
@@ -761,6 +770,7 @@ class SiswaController extends Controller
     public function quickDetail(Siswa $siswa)
     {
         $this->authorize('view-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $siswa->load('kelasTahunAktif');
         $kelasAktif = $siswa->kelasTahunAktif->first();
@@ -794,6 +804,7 @@ class SiswaController extends Controller
     public function downloadFoto(Siswa $siswa)
     {
         $this->authorize('view-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $normalizedPath = StorageHelper::normalizePublicPath($siswa->foto_profile);
 
@@ -822,6 +833,7 @@ class SiswaController extends Controller
     public function update(Request $request, Siswa $siswa)
     {
         $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
 
         $request->validate([
             'nisn' => ['required', 'string', Rule::unique('siswa', 'nisn')->ignore($siswa->id)],
@@ -889,6 +901,7 @@ class SiswaController extends Controller
     public function destroy(Siswa $siswa)
     {
         $this->authorize('delete-siswa');
+        $this->ensureStudentInScope($siswa);
 
         DB::beginTransaction();
         try {
@@ -950,6 +963,7 @@ class SiswaController extends Controller
     public function resetPassword(Siswa $siswa)
     {
         $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
 
         try {
             $user = $siswa->user;
@@ -993,6 +1007,7 @@ class SiswaController extends Controller
     public function getDokumen(Siswa $siswa)
     {
         $this->authorize('view-siswa');
+        $this->ensureStudentInScope($siswa);
 
         try {
             $dokumen = $siswa->dokumen()->latest()->get()->map(function($dok) use ($siswa) {
@@ -1041,6 +1056,7 @@ class SiswaController extends Controller
         if (!$siswa) {
             abort(404, 'Data siswa tidak ditemukan');
         }
+        $this->ensureStudentInScope($siswa);
 
         // Gunakan disk yang sama seperti preview — bukan getSecureFilePath()
         $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
@@ -1125,9 +1141,11 @@ class SiswaController extends Controller
             return response()->json([]);
         }
 
+        $classIds = $this->studentAccessScope()->classIds($request->user());
         $kelas = \App\Models\Kelas::where('tingkat', $tingkat)
             ->where('tahun_pelajaran_id', $activeYear->id)
             ->where('is_active', true)
+            ->when($classIds !== null, fn ($query) => $classIds->isEmpty() ? $query->whereRaw('1 = 0') : $query->whereIn('id', $classIds))
             ->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'kode_kelas'])
             ->map(function($k) {
@@ -1176,6 +1194,16 @@ class SiswaController extends Controller
         return $query;
     }
 
+    private function studentAccessScope(): \App\Services\StudentAccessScope
+    {
+        return app(\App\Services\StudentAccessScope::class);
+    }
+
+    private function ensureStudentInScope(Siswa $siswa): void
+    {
+        abort_unless($this->baseSiswaQuery()->whereKey($siswa->id)->exists(), 404, 'Siswa tidak ditemukan dalam cakupan akses Anda.');
+    }
+
     /**
      * Population shown on the operational student page.
      *
@@ -1184,6 +1212,10 @@ class SiswaController extends Controller
      */
     private function resolvePopulation(Request $request): string
     {
+        if ($this->studentAccessScope()->isLimited($request->user())) {
+            return 'active_year';
+        }
+
         $population = (string) $request->input('population', 'active_year');
 
         return in_array($population, [
@@ -1275,24 +1307,7 @@ class SiswaController extends Controller
 
     private function applyRoleScope($query)
     {
-        $user = Auth::user();
-
-        if ($user->hasRole('Wali Kelas') && !$user->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah'])) {
-            $kelasIds = \App\Models\Kelas::where('wali_kelas_id', $user->id)
-                ->whereIn('tahun_pelajaran_id', \App\Models\TahunPelajaran::query()->active()->select('id'))
-                ->where('is_active', true)
-                ->pluck('id');
-
-            if ($kelasIds->isNotEmpty()) {
-                $query->whereHas('kelasTahunAktif', function ($q) use ($kelasIds) {
-                    $q->whereIn('kelas.id', $kelasIds);
-                });
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
-
-        return $query;
+        return $this->studentAccessScope()->apply($query, Auth::user());
     }
 
     private function applyStatisticsDrilldownFilters($query, Request $request)

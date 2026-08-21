@@ -24,6 +24,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Metadata jam pelajaran dan status pada jadwal GTK kini dikelompokkan di dekat informasi mata pelajaran, bukan ditempatkan berjauhan di tepi kanan kartu.
 - Dashboard GTK direstrukturisasi menjadi profil dua kolom: foto, status profil, dan aksi berada pada panel identitas; metadata identitas, kepegawaian, kontak, alamat, serta penugasan asrama berada pada panel terpisah. Jadwal hari ini kini tampil sebagai kartu slot kompak yang lurus sejajar, bukan baris lebar penuh.
 - Dashboard GTK kini merangkum beban mengajar (slot hari ini, JTM mingguan, hari mengajar) dan menampilkan status penugasan aktif yang berasal dari data resmi, seperti Wali Kelas, Wakil Kepala, atau tugas tambahan lain. Jadwal hari ini kembali menjadi satu kartu ringkas berisi daftar slot dan metadata uniknya agar lebih nyaman dipandang.
+- Workspace `/admin` kini menerapkan scope data siswa berdasarkan penugasan aktif untuk GTK non-global: rombel wali kelas dan kelas pada jadwal mengajar tahun aktif menjadi satu-satunya cakupan server-side. Menu Data Siswa global disembunyikan untuk akun berscope, parameter filter global dikunci, dan endpoint detail/foto/dokumen/perubahan siswa memverifikasi scope objek sehingga ID atau URL tidak dapat dipakai untuk melihat data rombel lain.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

@@ -216,18 +216,14 @@ class SekolahAsalController extends Controller
     {
         if (!$this->isWaliScopedUser()) return null;
 
-        $classIds = auth()->user()->activeWaliKelasClasses()->pluck('id');
-        abort_if($classIds->isEmpty(), 403, 'Anda bukan wali kelas aktif.');
+        $classIds = app(\App\Services\StudentAccessScope::class)->classIds(auth()->user());
+        abort_if($classIds->isEmpty(), 403, 'Anda tidak memiliki penugasan rombel aktif.');
 
         return $classIds;
     }
 
     private function isWaliScopedUser(): bool
     {
-        $user = auth()->user();
-        $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
-            || in_array($user->role, ['super_admin', 'admin', 'operator'], true);
-
-        return !$isManager && $user->hasAnyRole(['GTK', 'Wali Kelas']);
+        return app(\App\Services\StudentAccessScope::class)->isLimited(auth()->user());
     }
 }

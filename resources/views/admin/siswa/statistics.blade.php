@@ -5,13 +5,8 @@
 @php
     $selectedClass = $kelasId ? $classes->firstWhere('id', $kelasId) : null;
     $scopeLabel = $selectedClass ? $selectedClass->nama_kelas.$selectedClass->asrama_suffix : ($tingkat ? 'Tingkat '.($tingkat === 10 ? 'X' : ($tingkat === 11 ? 'XI' : 'XII')) : ($isWaliScope ? 'Rombel yang Anda ampu' : 'Semua siswa'));
-    $waliClassId = $kelasId ?: $classes->first()?->id;
-    $listUrl = fn (array $extra = []) => $isWaliScope
-        ? route('admin.gtk.wali.siswa.index', array_filter(['kelas_id' => $waliClassId]))
-        : route('admin.siswa.index', array_merge($filterQuery, $extra));
-    $schoolStudentsUrl = fn (array $school) => $isWaliScope
-        ? route('admin.sekolah-asal.show', $school['npsn'])
-        : route('admin.siswa.index', array_filter([
+    $listUrl = fn (array $extra = []) => route('admin.siswa.index', array_merge($filterQuery, $extra));
+    $schoolStudentsUrl = fn (array $school) => route('admin.siswa.index', array_filter([
             'tingkat' => $tingkat,
             'school_npsn' => $school['npsn'] ?: null,
             'school_name' => blank($school['npsn']) ? $school['school_name'] : null,
@@ -50,15 +45,19 @@
     </div>
 </div>
 @if($isWaliScope)
-    <div class="alert alert-info border-0 shadow-sm"><i class="fas fa-shield-alt mr-1"></i> Mode Wali Kelas: statistik bersifat hanya-baca dan dibatasi pada {{ strtolower($scopeLabel) }}.</div>
+    <div class="alert alert-info border-0 shadow-sm"><i class="fas fa-shield-alt mr-1"></i> Mode Penugasan Aktif: statistik bersifat hanya-baca dan dibatasi pada rombel yang melekat pada penugasan Anda.</div>
 @endif
 <section class="simansa-stat-filter mb-4">
     <div class="simansa-stat-filter__intro"><i class="fas fa-filter"></i><div><h2>Filter Statistik</h2><p>Semua kartu, grafik, peta, domisili, dan sekolah asal mengikuti pilihan ini · {{ $activeYear?->nama ?? 'Tahun aktif belum tersedia' }}</p></div></div>
+    @if($isWaliScope)
+        <div class="simansa-stat-scope-lock"><i class="fas fa-door-open"></i><span>{{ $classes->pluck('nama_kelas')->filter()->implode(', ') ?: 'Tidak ada rombel aktif' }}</span></div>
+    @else
     <form method="GET" action="{{ route('admin.siswa.statistics') }}">
         <div class="form-group mb-0"><label for="statTingkat">Tingkat</label><select id="statTingkat" name="tingkat" class="form-control"><option value="">Semua tingkat</option><option value="10" @selected($tingkat===10)>Kelas X</option><option value="11" @selected($tingkat===11)>Kelas XI</option><option value="12" @selected($tingkat===12)>Kelas XII</option></select></div>
         <div class="form-group mb-0"><label for="statKelas">Kelas Tahun Aktif</label><select id="statKelas" name="kelas_id" class="form-control" @disabled(!$tingkat)><option value="">{{ $tingkat ? 'Semua kelas tingkat ini' : 'Pilih tingkat dahulu' }}</option>@foreach($classes as $class)<option value="{{ $class->id }}" data-level="{{ $class->tingkat }}" @selected($kelasId===$class->id)>{{ $class->nama_kelas }}{{ $class->asrama_suffix }}</option>@endforeach</select></div>
         <button class="btn btn-primary"><i class="fas fa-chart-bar mr-1"></i>Terapkan</button><a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>
     </form>
+    @endif
 </section>
 <div class="simansa-kpi-grid">
     <div>
@@ -621,7 +620,7 @@
         }
 
         .simansa-stat-filter{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;padding:1rem 1.15rem;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#f8fbff,#f0fdfa);box-shadow:0 8px 22px rgba(15,23,42,.04)}
-        .simansa-stat-filter__intro{display:flex;align-items:center;gap:.75rem;min-width:280px}.simansa-stat-filter__intro>i{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#2563eb;color:#fff}.simansa-stat-filter__intro h2{font-size:1rem;font-weight:800;color:#0f172a;margin:0}.simansa-stat-filter__intro p{font-size:.78rem;color:#64748b;margin:.2rem 0 0}.simansa-stat-filter form{display:grid;grid-template-columns:minmax(155px,1fr) minmax(210px,1.4fr) auto auto;align-items:end;gap:.6rem;flex:1;max-width:760px}.simansa-stat-filter label{font-size:.7rem;text-transform:uppercase;color:#64748b;font-weight:800}.simansa-stat-filter .form-control,.simansa-stat-filter .btn{height:38px;border-radius:8px}.simansa-stat-filter .form-control{border-color:#cbd5e1}
+        .simansa-stat-filter__intro{display:flex;align-items:center;gap:.75rem;min-width:280px}.simansa-stat-filter__intro>i{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:#2563eb;color:#fff}.simansa-stat-filter__intro h2{font-size:1rem;font-weight:800;color:#0f172a;margin:0}.simansa-stat-filter__intro p{font-size:.78rem;color:#64748b;margin:.2rem 0 0}.simansa-stat-filter form{display:grid;grid-template-columns:minmax(155px,1fr) minmax(210px,1.4fr) auto auto;align-items:end;gap:.6rem;flex:1;max-width:760px}.simansa-stat-filter label{font-size:.7rem;text-transform:uppercase;color:#64748b;font-weight:800}.simansa-stat-filter .form-control,.simansa-stat-filter .btn{height:38px;border-radius:8px}.simansa-stat-filter .form-control{border-color:#cbd5e1}.simansa-stat-scope-lock{display:flex;align-items:center;gap:.5rem;flex:1;max-width:760px;min-height:38px;padding:.55rem .7rem;border:1px solid #bfdbfe;border-radius:8px;background:#fff;color:#1e3a8a;font-size:.82rem;font-weight:700}.simansa-stat-scope-lock i{color:#2563eb}
 
         .simansa-kpi-grid {
             display: grid;

@@ -425,7 +425,7 @@ return [
                     'text' => 'Data Siswa',
                     'route' => 'admin.siswa.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
-                    'can' => 'view-siswa',
+                    'can' => 'sidebar-student-data-global',
                     'active' => ['admin/siswa*'],
                 ],
                 [
