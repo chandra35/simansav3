@@ -607,7 +607,7 @@ class JadwalPelajaranController extends Controller
             : collect();
         $jadwalByJam = ($tahun && $slotRows->isNotEmpty())
             ? JadwalPelajaran::query()
-                ->with(['kelas:id,nama_kelas', 'mataPelajaran:id,nama_mapel', 'gtk:id,nama_lengkap,foto_profile'])
+                ->with(['kelas:id,nama_kelas,is_asrama', 'mataPelajaran:id,nama_mapel', 'gtk:id,nama_lengkap,foto_profile'])
                 ->where('tahun_pelajaran_id', $tahun->id)
                 ->where('semester', $semester)
                 ->where('hari', $hari)
@@ -625,6 +625,7 @@ class JadwalPelajaranController extends Controller
                 'label' => $slot->displayLabel(),
                 'kelas' => $slot->isPelajaran() ? ($jadwalByJam->get($slot->jam_ke) ?? collect())->map(fn (JadwalPelajaran $jadwal) => [
                     'kelas' => $jadwal->kelas?->nama_kelas ?? '-',
+                    'is_asrama' => (bool) $jadwal->kelas?->is_asrama,
                     'mapel' => $jadwal->mataPelajaran?->nama_mapel ?? '-',
                     'guru' => $jadwal->gtk?->nama_lengkap ?? '-',
                     'foto_guru' => $jadwal->gtk?->foto_profile_url,

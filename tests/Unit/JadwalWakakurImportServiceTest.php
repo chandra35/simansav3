@@ -152,6 +152,7 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('selectedIndex', $view);
         $this->assertStringContainsString('Kegiatan kelas pada jadwal dipilih', $view);
         $this->assertStringContainsString("'foto_guru' => \$jadwal->gtk?->foto_profile_url", $controller);
+        $this->assertStringContainsString("'is_asrama' => (bool) \$jadwal->kelas?->is_asrama", $controller);
         $this->assertStringContainsString('piket-guru-photo', $view);
         $this->assertStringContainsString('grid-template-columns:26px minmax(0,1fr) 54px', $view);
         $this->assertStringContainsString('piket-class__content', $view);
@@ -159,5 +160,8 @@ class JadwalWakakurImportServiceTest extends TestCase
         $this->assertStringContainsString('data-schedule-detail', $view);
         $this->assertStringContainsString('detailModal.showModal()', $view);
         $this->assertStringContainsString("const classes = document.getElementById('monitorClasses');", $view);
+        $this->assertStringContainsString('monitorSearch', $view);
+        $this->assertStringContainsString('piket-asrama', $view);
+        $this->assertStringContainsString('piket-match', $view);
     }
 }
