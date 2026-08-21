@@ -11,6 +11,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Audit upload publik menegaskan disk `public` untuk URL, penghapusan, dan tampilan logo sekolah/Kemenag, kop surat, mutasi, lampiran pengumuman, serta foto/sertifikat prestasi. Foto absensi, registrasi wajah, dan konfigurasi statis Exam Browser sekarang juga melaporkan kegagalan simpan.
 - Detail `Diunggah` dan `Diperbarui` ditampilkan pada daftar KIP/PIP, modal preview dokumen admin, detail siswa, dan portal dokumen siswa. Aktivitas melihat/unduh tidak lagi mengubah `updated_at`, sehingga tanggal pembaruan tetap merepresentasikan perubahan data dokumen.
 - Halaman KIP/SKTM/PKH direbuild mengikuti pola operasional SIMANSA: header dan breadcrumb standar, satu hero gradient utuh di area konten, empat kartu ringkasan bantuan yang ringkas, filter berpanel ringan, serta tabel dokumen yang lebih fokus dan responsif.
+- Pagination Laravel dan DataTables kini dinormalisasi secara global menjadi netral: teks abu gelap, latar putih, serta halaman aktif abu muda. Acuan UI melarang penggunaan biru, gradient, pill, atau kombinasi warna khusus pada pagination.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

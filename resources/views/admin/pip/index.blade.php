@@ -36,8 +36,6 @@
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
     .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
-    .pip-assistance-page .dataTables_wrapper .page-link { color: #495057; }
-    .pip-assistance-page .dataTables_wrapper .page-item.active .page-link { color: #495057; background-color: #e9ecef; border-color: #dee2e6; }
     @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-entry { display: flex; margin: .28rem 0 0; } }
 </style>
 @stop

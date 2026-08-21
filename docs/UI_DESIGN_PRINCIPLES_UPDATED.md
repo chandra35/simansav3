@@ -158,6 +158,12 @@ Tabel harus:
 - menjaga tombol aksi tetap ringkas
 - tidak mengubah setiap baris menjadi card besar pada desktop
 
+Pagination harus memakai gaya AdminLTE/Bootstrap yang netral secara global:
+
+- nomor dan kontrol pagination menggunakan teks abu gelap dengan latar putih
+- halaman aktif menggunakan abu muda, bukan biru atau warna aksen lain
+- jangan membuat pagination per halaman dengan gradient, pill, gap dekoratif, atau kombinasi warna khusus
+
 ## Tombol
 
 Tombol harus langsung terbaca dan memiliki hierarki jelas.

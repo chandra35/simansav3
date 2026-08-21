@@ -158,6 +158,40 @@
         font-size: .66rem;
     }
 
+    /* Pagination is intentionally neutral across SIMANSA. */
+    .pagination .page-link,
+    .dataTables_wrapper .page-link {
+        color: #495057 !important;
+        background-color: #fff !important;
+        border-color: #dee2e6 !important;
+        box-shadow: none !important;
+        margin-left: -1px !important;
+        border-radius: 0 !important;
+    }
+
+    .pagination .page-item.active .page-link,
+    .dataTables_wrapper .page-item.active .page-link {
+        color: #495057 !important;
+        background-color: #e9ecef !important;
+        border-color: #dee2e6 !important;
+    }
+
+    .pagination .page-item:first-child .page-link {
+        margin-left: 0 !important;
+        border-radius: .25rem 0 0 .25rem !important;
+    }
+
+    .pagination .page-item:last-child .page-link {
+        border-radius: 0 .25rem .25rem 0 !important;
+    }
+
+    .pagination .page-item.disabled .page-link,
+    .dataTables_wrapper .page-item.disabled .page-link {
+        color: #adb5bd !important;
+        background-color: #fff !important;
+        border-color: #dee2e6 !important;
+    }
+
     @media (max-width: 767.98px) {
         .dataTables_wrapper > .row:first-child,
         .dataTables_wrapper > .row:last-child {
