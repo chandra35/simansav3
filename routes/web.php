@@ -63,6 +63,12 @@ Route::get('/monitor-jadwal', [App\Http\Controllers\Admin\JadwalPelajaranControl
     ->middleware('throttle:60,1')
     ->name('public.jadwal-monitor');
 
+// Metadata perangkat dikirim portal setelah login dan hanya diterima bila cocok
+// dengan sesi aktif FreeRADIUS (username + MAC + IP).
+Route::post('/api/hotspot/device-report', [App\Http\Controllers\HotspotDeviceReportController::class, 'store'])
+    ->middleware('throttle:hotspot-device-report')
+    ->name('public.hotspot.device-report');
+
 // Perangkat Face Detect tidak memerlukan login, tetapi wajib membawa token rahasia yang dapat dirotasi admin.
 Route::get('/face-detect-publik/{token}', [PublicFaceDetectController::class, 'show'])
     ->middleware('throttle:30,1')

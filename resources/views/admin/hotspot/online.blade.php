@@ -9,6 +9,7 @@
 .metric-grid{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:.7rem;margin-bottom:1rem}.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:.75rem .85rem;box-shadow:0 2px 10px rgba(15,23,42,.05)}.metric-label{font-size:.66rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700}.metric-value{font-size:1.25rem;font-weight:800;color:#0f172a;margin-top:.15rem}.metric-note{font-size:.67rem;color:#94a3b8}
 .hs-panel{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(15,23,42,.06);margin-bottom:1rem}.hs-panel-head{padding:.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}.hs-panel-title{font-size:.87rem;font-weight:800;color:#1e293b}.hs-table{margin:0;font-size:.78rem}.hs-table th{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc;border-top:0;white-space:nowrap}.hs-table td{vertical-align:middle}.person{display:flex;align-items:center;gap:.65rem;min-width:220px}.person img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:2px solid #e2e8f0}.person-name{font-weight:750;color:#1e293b}.person-meta{font-size:.68rem;color:#64748b}.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 0 4px rgba(34,197,94,.12);margin-right:.4rem}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}.detail-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.55rem .65rem}.detail-label{font-size:.62rem;color:#64748b;text-transform:uppercase;font-weight:700}.detail-value{font-size:.8rem;color:#0f172a;font-weight:650;word-break:break-word}.profile-photo{width:92px;height:92px;border-radius:18px;object-fit:cover;border:3px solid #e2e8f0}.empty-state{text-align:center;padding:2.5rem;color:#64748b}.refresh-note{font-size:.68rem;color:#64748b}
 .traffic-rate{font-size:.66rem;font-weight:700;color:#64748b}.traffic-live{animation:trafficPulse 1.2s ease-in-out infinite}@keyframes trafficPulse{50%{opacity:.55}}
+.device-name{display:flex;align-items:center;gap:.4rem;color:#1e293b;font-weight:750}.device-name i{width:15px;color:#0f766e;text-align:center}.device-meta{margin-top:2px;color:#64748b;font-size:.66rem;line-height:1.35}
 @media(max-width:1100px){.metric-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:767px){.metric-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.hotspot-hero{border-radius:14px}.person{min-width:190px}}
 </style>
 @endsection
@@ -92,6 +93,9 @@ const attr = value => esc(value).replace(/`/g, '&#96;');
 function bytes(value){value=Number(value||0);const unit=['B','KB','MB','GB','TB'];let i=0;while(value>=1024&&i<unit.length-1){value/=1024;i++;}return `${value.toFixed(i?1:0)} ${unit[i]}`;}
 function duration(value){value=Number(value||0);const h=Math.floor(value/3600),m=Math.floor((value%3600)/60),s=value%60;return `${h?h+'j ':''}${m?m+'m ':''}${s}d`;}
 function dateTime(value){return value?new Date(value).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}):'-';}
+function deviceIcon(type){return type==='mobile'?'fa-mobile-alt':type==='tablet'?'fa-tablet-alt':'fa-laptop';}
+function deviceLabel(session){return session.device?.label||'Belum teridentifikasi';}
+function deviceSystem(session){const d=session.device||{};return [d.platform,d.platform_version,d.browser].filter(Boolean).join(' · ')||'Model akan terbaca setelah login ulang';}
 
 function updateTrafficRates(nextSessions){
     const now=Date.now(),activeKeys=new Set();
@@ -131,12 +135,12 @@ function loadOnline(){
 }
 function renderOnline(){
     const search=($('#searchOnline').val()||'').toLowerCase(),role=$('#roleOnline').val();
-    const rows=sessions.map((s,index)=>({s,index})).filter(({s})=>(!role||s.role===role)&&(!search||[s.display_name,s.username,s.framed_ip,s.mac,s.kelas].join(' ').toLowerCase().includes(search)));
+    const rows=sessions.map((s,index)=>({s,index})).filter(({s})=>(!role||s.role===role)&&(!search||[s.display_name,s.username,s.framed_ip,s.mac,s.kelas,s.device?.label,s.device?.vendor,s.device?.model,s.device?.platform,s.device?.browser].join(' ').toLowerCase().includes(search)));
     if(!rows.length){$('#onlineWrap').html('<div class="empty-state"><i class="fas fa-wifi fa-2x mb-2 d-block"></i>Tidak ada sesi yang cocok.</div>');return;}
     $('#onlineWrap').html(`<table class="table hs-table table-hover"><thead><tr><th>User</th><th>Role/Rombel</th><th>Perangkat</th><th>Durasi</th><th>Pemakaian</th><th>Profile</th><th></th></tr></thead><tbody>${rows.map(({s,index})=>`<tr>
         <td><div class="person"><img src="${attr(s.photo_url)}" alt="Foto"><div><div class="person-name">${esc(s.display_name)}</div><div class="person-meta"><code>${esc(s.username)}</code></div></div></div></td>
         <td><span class="badge badge-${s.role==='guru'?'primary':s.role==='siswa'?'info':'warning'}">${esc(s.role)}</span>${s.kelas?`<div class="person-meta mt-1">${esc(s.kelas)}</div>`:''}</td>
-        <td><strong>${esc(s.framed_ip||'-')}</strong><div class="person-meta">${esc(s.mac||'-')}</div></td>
+        <td><div class="device-name"><i class="fas ${deviceIcon(s.device?.type)}"></i><span>${esc(deviceLabel(s))}</span></div><div class="device-meta">${esc(deviceSystem(s))}</div><div class="device-meta">${esc(s.framed_ip||'-')} · ${esc(s.mac||'-')}</div></td>
         <td><span class="live-duration font-weight-bold" data-seconds="${Number(s.session_time||0)}" data-snapshot="${s.snapshot_ms}">${duration(s.session_time)}</span><div class="person-meta">${dateTime(s.started_at)}</div></td>
         <td><span class="text-success"><i class="fas fa-arrow-down"></i> ${bytes(s.bytes_download)}</span> <span class="traffic-rate ${s.download_rate>0?'traffic-live':''}">${bytes(s.download_rate)}/s</span><br><span class="text-primary"><i class="fas fa-arrow-up"></i> ${bytes(s.bytes_upload)}</span> <span class="traffic-rate ${s.upload_rate>0?'traffic-live':''}">${bytes(s.upload_rate)}/s</span></td>
         <td>${esc(s.profile||'-')}<div class="person-meta">${esc(s.queue_name||'')}</div></td>
@@ -151,7 +155,7 @@ function renderBlocked(){
 }
 function renderRecent(rows){
     if(!rows.length){$('#recentWrap').html('<div class="empty-state">Belum ada sesi selesai.</div>');return;}
-    $('#recentWrap').html(`<table class="table hs-table"><thead><tr><th>User</th><th>IP / MAC</th><th>Durasi</th><th>Berakhir</th><th>Penyebab</th></tr></thead><tbody>${rows.map(s=>`<tr><td><strong>${esc(s.display_name)}</strong><div class="person-meta">${esc(s.username)}</div></td><td>${esc(s.framed_ip||'-')}<div class="person-meta">${esc(s.mac||'-')}</div></td><td>${duration(s.session_time)}</td><td>${dateTime(s.stopped_at)}</td><td><span class="badge badge-light border">${esc(s.terminate_cause)}</span></td></tr>`).join('')}</tbody></table>`);
+    $('#recentWrap').html(`<table class="table hs-table"><thead><tr><th>User</th><th>Perangkat / IP / MAC</th><th>Durasi</th><th>Berakhir</th><th>Penyebab</th></tr></thead><tbody>${rows.map(s=>`<tr><td><strong>${esc(s.display_name)}</strong><div class="person-meta">${esc(s.username)}</div></td><td><strong>${esc(deviceLabel(s))}</strong><div class="person-meta">${esc(s.framed_ip||'-')} · ${esc(s.mac||'-')}</div></td><td>${duration(s.session_time)}</td><td>${dateTime(s.stopped_at)}</td><td><span class="badge badge-light border">${esc(s.terminate_cause)}</span></td></tr>`).join('')}</tbody></table>`);
 }
 function showSession(index){
     const s=sessions[index],id=s.identity||{};
@@ -165,6 +169,9 @@ function showSession(index){
       <div class="detail-item"><div class="detail-label">Rombel</div><div class="detail-value">${esc(s.kelas||'-')}</div></div>
       <div class="detail-item"><div class="detail-label">Profile RADIUS</div><div class="detail-value">${esc(s.profile||'-')}</div></div>
       <div class="detail-item"><div class="detail-label">IP / MAC</div><div class="detail-value">${esc(s.framed_ip||'-')} / ${esc(s.mac||'-')}</div></div>
+      <div class="detail-item"><div class="detail-label">Jenis Perangkat</div><div class="detail-value"><i class="fas ${deviceIcon(s.device?.type)} mr-1"></i>${esc(deviceLabel(s))}</div></div>
+      <div class="detail-item"><div class="detail-label">Model / Vendor</div><div class="detail-value">${esc(s.device?.model||'-')} / ${esc(s.device?.vendor||'-')}</div></div>
+      <div class="detail-item"><div class="detail-label">Sistem / Browser</div><div class="detail-value">${esc(deviceSystem(s))}</div></div>
       <div class="detail-item"><div class="detail-label">NAS / Port</div><div class="detail-value">${esc(s.nas_ip||'-')} / ${esc(s.nas_port||'-')}</div></div>
       <div class="detail-item"><div class="detail-label">Durasi</div><div class="detail-value">${duration(s.session_time)} sejak ${dateTime(s.started_at)}</div></div>
       <div class="detail-item"><div class="detail-label">Dynamic Simple Queue</div><div class="detail-value">${esc(s.queue_name||'-')}</div></div>

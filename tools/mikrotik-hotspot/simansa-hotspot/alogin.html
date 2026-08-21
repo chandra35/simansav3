@@ -9,7 +9,7 @@
   <title>Login Berhasil - MAN 1 Metro</title>
   <link rel="stylesheet" href="assets/login-v2.css?v=20260820a">
 </head>
-<body class="session-page">
+<body class="session-page" data-device-report-url="https://simansa.man1metro.sch.id/api/hotspot/device-report" data-hotspot-username="$(username)" data-hotspot-mac="$(mac)" data-hotspot-ip="$(ip)">
   <main class="session-layout">
     <div class="session-atmosphere" aria-hidden="true"><i></i><i></i><i></i></div>
     <section class="session-card success-card" role="alert" aria-live="polite">
@@ -89,5 +89,6 @@
       }, 7000);
     }());
   </script>
+  <script src="assets/device-report.js?v=20260821a"></script>
 </body>
 </html>

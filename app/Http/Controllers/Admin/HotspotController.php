@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HotspotRadiusNas;
 use App\Models\HotspotRadiusProfile;
+use App\Models\HotspotDeviceReport;
 use App\Models\HotspotUser;
 use App\Models\Siswa;
 use App\Models\Gtk;
@@ -643,9 +644,15 @@ class HotspotController extends Controller
                 ->where('is_default', true)
                 ->get()
                 ->keyBy('role');
+            $deviceMap = HotspotDeviceReport::query()
+                ->whereIn('username', $usernames)
+                ->orderByDesc('last_seen_at')
+                ->get()
+                ->keyBy(fn (HotspotDeviceReport $report) => $this->hotspotDeviceKey($report->username, $report->mac_address));
 
-            $result = $sessions->map(function ($s) use ($hotspotMap, $defaultProfiles) {
+            $result = $sessions->map(function ($s) use ($hotspotMap, $defaultProfiles, $deviceMap) {
                 $hs = $hotspotMap->get($s->username);
+                $device = $deviceMap->get($this->hotspotDeviceKey($s->username, $s->callingstationid));
                 $identity = $this->hotspotIdentity($hs);
                 $elapsed = $s->acctstarttime ? now()->diffInSeconds($s->acctstarttime) : 0;
                 $download = (int) ($s->acctinputoctets ?? 0);
@@ -670,6 +677,7 @@ class HotspotController extends Controller
                     'is_active'    => $hs?->is_active ?? true,
                     'framed_ip'    => $s->framedipaddress,
                     'mac'          => $s->callingstationid,
+                    'device'       => $this->hotspotDevicePayload($device),
                     'nas_ip'       => $s->nasipaddress,
                     'nas_port'     => $s->nasportid ?? $s->nasport ?? null,
                     'terminate_cause' => $s->acctterminatecause,
@@ -706,8 +714,9 @@ class HotspotController extends Controller
                     'block_reason' => $user->block_reason,
                 ]);
 
-            $recentSessions = $recentRaw->map(function ($session) use ($hotspotMap) {
+            $recentSessions = $recentRaw->map(function ($session) use ($hotspotMap, $deviceMap) {
                     $hotspot = $hotspotMap->get($session->username);
+                    $device = $deviceMap->get($this->hotspotDeviceKey($session->username, $session->callingstationid));
 
                     return [
                         'username' => $session->username,
@@ -717,6 +726,7 @@ class HotspotController extends Controller
                         'terminate_cause' => $session->acctterminatecause ?: 'Tidak diketahui',
                         'framed_ip' => $session->framedipaddress,
                         'mac' => $session->callingstationid,
+                        'device' => $this->hotspotDevicePayload($device),
                     ];
                 });
 
@@ -1212,6 +1222,29 @@ class HotspotController extends Controller
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    private function hotspotDeviceKey(?string $username, ?string $mac): string
+    {
+        $normalizedMac = strtoupper(preg_replace('/[^0-9A-Fa-f]/', '', (string) $mac));
+
+        return strtolower((string) $username).'|'.$normalizedMac;
+    }
+
+    private function hotspotDevicePayload(?HotspotDeviceReport $device): ?array
+    {
+        if (! $device) return null;
+
+        return [
+            'label' => $device->display_label,
+            'vendor' => $device->vendor,
+            'model' => $device->model,
+            'type' => $device->device_type,
+            'platform' => $device->platform,
+            'platform_version' => $device->platform_version,
+            'browser' => $device->browser,
+            'last_seen_at' => $device->last_seen_at?->toIso8601String(),
+        ];
     }
 
     public function authLogs(Request $request)

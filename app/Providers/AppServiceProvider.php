@@ -56,6 +56,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Register User Observer untuk sync password ke RADIUS
         User::observe(UserObserver::class);
+        RateLimiter::for('hotspot-device-report', function (Request $request) {
+            $mac = strtolower(preg_replace('/[^0-9a-f]/i', '', (string) $request->input('mac', 'unknown')));
+
+            return [
+                Limit::perMinute(5000)->by('hotspot-device-ip:'.$request->ip()),
+                Limit::perMinute(6)->by('hotspot-device:'.$request->ip().':'.$mac),
+            ];
+        });
         RateLimiter::for('exam-browser-config', function (Request $request) {
             return [
                 Limit::perMinute(1200)->by($request->ip())->response(fn () => response()->json([

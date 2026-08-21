@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Device API routes authenticate without browser sessions/cookies.
         $middleware->validateCsrfTokens(except: [
             'api/exam-browser/*',
+            'api/hotspot/device-report',
             'face-python-api/*',
         ]);
         

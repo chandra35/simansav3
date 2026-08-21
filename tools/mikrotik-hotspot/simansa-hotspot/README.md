@@ -14,6 +14,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - `assets/style.css` - tema halaman status, sukses, logout, dan error.
 - `assets/login-v2.css` - tema editorial khusus halaman sukses dan status.
 - `assets/portal.js` - interaksi form dan mapping pesan error.
+- `assets/device-report.js` - melaporkan model/jenis perangkat setelah login dan mengikatnya ke sesi aktif FreeRADIUS.
 - Nama lengkap pada halaman sukses/status berasal dari atribut RADIUS `Reply-Message` (`$(radius18)`) yang disinkronkan SIMANSA dalam format Base64 aman.
 - Username dapat diingat secara lokal melalui pilihan pengguna. Password tetap diserahkan ke password manager browser dan tidak pernah disimpan mentah oleh portal.
 
@@ -35,4 +36,5 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - Bantuan diarahkan ke `admin@man1metro.sch.id`.
 - Jika Kampus 2 memakai router berbeda, salin paket yang sama ke router Kampus 2. Akun tetap sama karena RADIUS terpusat, tetapi sesi hotspot tetap dikelola per router.
 - Mini-browser captive portal Android/iOS dapat bersifat sementara dan tidak selalu menyediakan autofill password. Untuk memakai password manager, buka `hotspot.man1metro.net` melalui browser utama.
+- Model perangkat bergantung pada informasi yang bersedia dibagikan browser/OS. Jika Android/iOS menyamarkan model, monitoring menampilkan jenis perangkat dan platform generik; IP/MAC tetap tercatat.
 - Untuk roaming tanpa login ulang lintas router, opsi paling stabil adalah Wi-Fi WPA2/WPA3 Enterprise berbasis RADIUS. Hotspot captive portal lebih cocok untuk akses tamu atau jaringan yang masih satu gateway/session domain.
