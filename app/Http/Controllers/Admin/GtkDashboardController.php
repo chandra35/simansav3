@@ -82,7 +82,12 @@ class GtkDashboardController extends Controller
             ->whereHas('siswa.kelasTahunAktif', fn ($query) => $query->whereIn('kelas.id', $relatedClassIds))
             ->latest('tanggal_konseling')->limit(12)->get();
         $scheduleSettings = AppSetting::getInstance();
-        $todaySchedules = $scheduleService->schedulesForDay($gtk, $tahunAktif, now());
+        $gtk->load(['asramaAssignments' => fn ($query) => $query->where('is_active', true)->with('asrama')]);
+        $now = now();
+        $todaySchedules = $scheduleService->decorateSchedules(
+            $scheduleService->schedulesForDay($gtk, $tahunAktif, $now),
+            $now
+        );
         $scheduleReminder = $scheduleService->reminder($todaySchedules, $gtk, $scheduleSettings, now());
         $scheduleReminderConfig = [
             'enabled' => (bool) $scheduleSettings->gtk_schedule_reminder_enabled,
@@ -109,7 +114,7 @@ class GtkDashboardController extends Controller
         abort_unless($gtk, 404);
 
         $tahunAktif = TahunPelajaran::query()->active()->first();
-        $schedules = $scheduleService->schedulesForWeek($gtk, $tahunAktif);
+        $schedules = $scheduleService->decorateSchedules($scheduleService->schedulesForWeek($gtk, $tahunAktif));
 
         return view('admin.gtk.my-schedule', [
             'gtk' => $gtk,

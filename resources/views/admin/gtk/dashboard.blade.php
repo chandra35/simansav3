@@ -78,6 +78,13 @@
                         <div class="gtk-account-dashboard__detail"><span>Status</span><strong>{{ $gtk->status_kepegawaian ?: '-' }}</strong></div>
                         <div class="gtk-account-dashboard__detail"><span>Jabatan</span><strong>{{ $gtk->jabatan ?: '-' }}</strong></div>
                         <div class="gtk-account-dashboard__detail"><span>Jenis PTK</span><strong>{{ $gtk->jenis_ptk ?: ($gtk->kategori_ptk ?: '-') }}</strong></div>
+                        @foreach($gtk->asramaAssignments as $assignment)
+                            <div class="gtk-account-dashboard__detail gtk-account-dashboard__detail--asrama">
+                                <span><i class="fas fa-bed mr-1"></i>Penugasan Asrama</span>
+                                <strong>{{ $assignment->asrama?->nama ?? 'Asrama' }}</strong>
+                                @if($assignment->jabatan)<small>{{ $assignment->jabatan }}</small>@endif
+                            </div>
+                        @endforeach
                     </div>
                 </div>
                 <div class="col-12 col-lg-auto mt-3 mt-lg-0">
@@ -147,10 +154,10 @@
                 <div class="alert alert-warning gtk-account-dashboard__schedule-reminder"><i class="fas fa-bell mr-1"></i>{{ $scheduleReminder['message'] }}</div>
             @endif
             @forelse($todaySchedules as $schedule)
-                <div class="gtk-account-dashboard__schedule-item" data-schedule-start="{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '' }}" data-schedule-subject="{{ $schedule->mataPelajaran?->nama_mapel ?? 'jadwal mengajar' }}" data-schedule-class="{{ $schedule->kelas?->nama_kelas ?? 'kelas Anda' }}">
-                    <div class="gtk-account-dashboard__schedule-time"><strong>{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '-' }}</strong><span>{{ $schedule->jam_selesai ? substr($schedule->jam_selesai, 0, 5) : '' }}</span></div>
-                    <div><strong>{{ $schedule->mataPelajaran?->nama_mapel ?? 'Mata pelajaran' }}</strong><span><i class="fas fa-school mr-1"></i>{{ $schedule->kelas?->nama_kelas ?? '-' }}{{ $schedule->ruangan ?: ($schedule->kelas?->ruang_kelas ? ' · '.$schedule->kelas->ruang_kelas : '') }}</span></div>
-                    <span class="badge badge-light">Jam {{ $schedule->jam_ke }}</span>
+                <div class="gtk-account-dashboard__schedule-item is-{{ $schedule->dashboard_status }}" data-schedule-start="{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '' }}" data-schedule-end="{{ $schedule->jam_selesai ? substr($schedule->jam_selesai, 0, 5) : '' }}" data-schedule-subject="{{ $schedule->mataPelajaran?->nama_mapel ?? 'jadwal mengajar' }}" data-schedule-class="{{ $schedule->kelas?->nama_kelas ?? 'kelas Anda' }}">
+                    <div class="gtk-account-dashboard__schedule-time"><strong>{{ $schedule->jam_mulai ? substr($schedule->jam_mulai, 0, 5) : '-' }}</strong><span>{{ $schedule->jam_selesai ? 's.d. '.substr($schedule->jam_selesai, 0, 5) : 'Waktu belum diisi' }}</span></div>
+                    <div class="gtk-account-dashboard__schedule-main"><strong>{{ $schedule->mataPelajaran?->nama_mapel ?? 'Mata pelajaran' }}</strong><span><i class="fas fa-school mr-1"></i>{{ $schedule->location_label }}</span></div>
+                    <div class="gtk-account-dashboard__schedule-meta"><span class="badge badge-light">Jam {{ $schedule->jam_ke ?: '-' }}</span><span class="gtk-account-dashboard__schedule-status">{{ ['ongoing' => 'Sedang berlangsung', 'completed' => 'Selesai', 'next' => 'Berikutnya', 'upcoming' => 'Terjadwal'][$schedule->dashboard_status] ?? 'Terjadwal' }}</span></div>
                 </div>
             @empty
                 <div class="text-center text-muted py-3"><i class="far fa-calendar-check fa-2x mb-2 d-block"></i>Tidak ada jadwal mengajar hari ini.</div>
@@ -167,12 +174,14 @@
     .gtk-account-dashboard__hero > .card-body { padding:1.2rem 1.25rem; }
     .gtk-account-dashboard__hero h3 { font-size:1.35rem; font-weight:700; }
     .gtk-account-dashboard .card-outline { border-radius:12px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
-    .gtk-account-dashboard__avatar { width:96px; height:96px; object-fit:cover; border-radius:50%; border:3px solid #e2e8f0; box-shadow:0 6px 16px rgba(15,23,42,.12); }
+    .gtk-account-dashboard__avatar { width:72px; height:72px; object-fit:cover; border-radius:50%; border:3px solid #e2e8f0; box-shadow:0 6px 16px rgba(15,23,42,.12); }
     .gtk-account-dashboard__name { margin:0 0 .2rem; color:#0f172a; font-size:1.25rem; font-weight:800; }
     .gtk-account-dashboard__details { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
     .gtk-account-dashboard__detail, .gtk-account-dashboard__rombel-meta { min-width:0; padding:.7rem .8rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
     .gtk-account-dashboard__detail span, .gtk-account-dashboard__rombel-meta span { display:block; margin-bottom:.18rem; color:#64748b; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
     .gtk-account-dashboard__detail strong, .gtk-account-dashboard__rombel-meta strong { display:block; overflow-wrap:anywhere; color:#0f172a; font-size:.88rem; }
+    .gtk-account-dashboard__detail small { display:block; margin-top:.16rem; color:#64748b; font-size:.75rem; }
+    .gtk-account-dashboard__detail--asrama { border-color:#c7d2fe; background:#f5f7ff; }
     .gtk-account-dashboard__actions { display:flex; flex-direction:column; gap:.6rem; min-width:172px; }
     .gtk-account-dashboard__rombel { padding:1rem; border:1px solid #e2e8f0; border-radius:12px; }
     .gtk-account-dashboard__notice { height:100%; padding:.75rem; border:1px solid #fde68a; border-radius:10px; background:#fffbeb; }
@@ -182,10 +191,18 @@
     .gtk-account-dashboard__notice p { margin:.6rem 0 0; color:#334155; font-size:.82rem; white-space:pre-line; }
     .gtk-account-dashboard__alert { border-radius:12px; }
     .gtk-account-dashboard__schedule-reminder { margin-bottom:.8rem; border-radius:10px; font-size:.88rem; }
-    .gtk-account-dashboard__schedule-item { display:grid; grid-template-columns:88px minmax(0,1fr) auto; gap:.75rem; align-items:center; padding:.7rem 0; border-bottom:1px solid #eef2f7; }
+    .gtk-account-dashboard__schedule-item { position:relative; display:grid; grid-template-columns:96px minmax(0,1fr) auto; gap:.75rem; align-items:center; margin:0 -.15rem; padding:.78rem .65rem .78rem .85rem; overflow:hidden; border-bottom:1px solid #eef2f7; border-radius:10px; transition:background .25s ease,transform .25s ease,opacity .25s ease; }
     .gtk-account-dashboard__schedule-item:last-child { border-bottom:0; }
-    .gtk-account-dashboard__schedule-time strong,.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-item>div:nth-child(2) strong,.gtk-account-dashboard__schedule-item>div:nth-child(2) span { display:block; }
-    .gtk-account-dashboard__schedule-time strong { color:#2563eb; font-size:.9rem; }.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-item>div:nth-child(2) span { color:#64748b; font-size:.75rem; }.gtk-account-dashboard__schedule-item>div:nth-child(2) strong { color:#0f172a; font-size:.88rem; }
+    .gtk-account-dashboard__schedule-item::before { position:absolute; top:.55rem; bottom:.55rem; left:0; width:3px; border-radius:3px; background:#cbd5e1; content:''; }
+    .gtk-account-dashboard__schedule-time strong,.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-main strong,.gtk-account-dashboard__schedule-main span { display:block; }
+    .gtk-account-dashboard__schedule-time strong { color:#2563eb; font-size:.93rem; }.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-main span { color:#64748b; font-size:.75rem; }.gtk-account-dashboard__schedule-main strong { color:#0f172a; font-size:.9rem; }
+    .gtk-account-dashboard__schedule-meta { display:flex; flex-direction:column; align-items:flex-end; gap:.34rem; white-space:nowrap; }
+    .gtk-account-dashboard__schedule-status { color:#64748b; font-size:.7rem; font-weight:700; }
+    .gtk-account-dashboard__schedule-item.is-ongoing { background:linear-gradient(90deg,#ecfdf5 0%,#f8fffc 78%); box-shadow:0 4px 16px rgba(16,185,129,.12); transform:translateX(2px); }
+    .gtk-account-dashboard__schedule-item.is-ongoing::before { background:#10b981; animation:gtkSchedulePulse 1.8s ease-in-out infinite; }.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status { color:#047857; }.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status::before { content:'● '; animation:gtkScheduleBlink 1.2s ease-in-out infinite; }
+    .gtk-account-dashboard__schedule-item.is-next { background:#f5f7ff; }.gtk-account-dashboard__schedule-item.is-next::before { background:#6366f1; }.gtk-account-dashboard__schedule-item.is-next .gtk-account-dashboard__schedule-status { color:#4f46e5; }
+    .gtk-account-dashboard__schedule-item.is-completed { opacity:.58; }.gtk-account-dashboard__schedule-item.is-completed::before { background:#94a3b8; }.gtk-account-dashboard__schedule-item.is-completed .gtk-account-dashboard__schedule-time strong { color:#64748b; text-decoration:line-through; }
+    @keyframes gtkSchedulePulse { 50% { box-shadow:0 0 0 5px rgba(16,185,129,.12); } } @keyframes gtkScheduleBlink { 50% { opacity:.35; } }
     @media (max-width:991.98px) {
         .gtk-account-dashboard__details { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .gtk-account-dashboard__actions { flex-direction:row; min-width:0; }
@@ -197,8 +214,10 @@
         .gtk-account-dashboard .card-outline > .card-header { align-items:flex-start !important; }
         .gtk-account-dashboard__hero > .card-body { padding:1rem; }
         .gtk-account-dashboard__hero h3 { font-size:1.15rem; }
-        .gtk-account-dashboard__schedule-item { grid-template-columns:72px minmax(0,1fr); }.gtk-account-dashboard__schedule-item .badge { grid-column:2; justify-self:start; }
+        .gtk-account-dashboard__avatar { width:62px; height:62px; }
+        .gtk-account-dashboard__schedule-item { grid-template-columns:76px minmax(0,1fr); gap:.55rem; padding:.75rem .45rem .75rem .7rem; }.gtk-account-dashboard__schedule-meta { grid-column:2; flex-direction:row; justify-content:flex-start; align-items:center; }.gtk-account-dashboard__schedule-status { font-size:.68rem; }
     }
+    @media (prefers-reduced-motion:reduce) { .gtk-account-dashboard__schedule-item,.gtk-account-dashboard__schedule-item.is-ongoing::before,.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status::before { animation:none; transition:none; } }
 </style>
 @stop
 
@@ -206,8 +225,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const config = @json($scheduleReminderConfig);
-    if (!config.enabled) return;
-
     const serverStartedAt = Date.parse(config.server_now);
     const browserStartedAt = Date.now();
     const shown = new Set();
@@ -215,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function checkScheduleReminder() {
         const now = new Date(serverStartedAt + (Date.now() - browserStartedAt));
+        let nextItem = null;
         document.querySelectorAll('[data-schedule-start]').forEach(function (item) {
             const start = item.dataset.scheduleStart;
             if (!start) return;
@@ -222,10 +240,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const [hour, minute] = start.split(':').map(Number);
             const startsAt = new Date(now);
             startsAt.setHours(hour, minute, 0, 0);
+            const [endHour, endMinute] = (item.dataset.scheduleEnd || '').split(':').map(Number);
+            const endsAt = new Date(now);
+            if (Number.isFinite(endHour) && Number.isFinite(endMinute)) endsAt.setHours(endHour, endMinute, 0, 0);
             const remaining = Math.ceil((startsAt - now) / 60000);
             const key = start + item.dataset.scheduleSubject + item.dataset.scheduleClass;
 
-            if (shown.has(key) || remaining < 0 || remaining > config.minutes) return;
+            item.classList.remove('is-ongoing', 'is-completed', 'is-next', 'is-upcoming');
+            let state = 'upcoming';
+            if (Number.isFinite(endHour) && now >= endsAt) state = 'completed';
+            else if (now >= startsAt) state = 'ongoing';
+            else if (!nextItem) { state = 'next'; nextItem = item; }
+            item.classList.add('is-' + state);
+            const stateLabel = item.querySelector('.gtk-account-dashboard__schedule-status');
+            if (stateLabel) stateLabel.textContent = { ongoing: 'Sedang berlangsung', completed: 'Selesai', next: 'Berikutnya', upcoming: 'Terjadwal' }[state];
+
+            if (!config.enabled || shown.has(key) || remaining < 0 || remaining > config.minutes) return;
 
             shown.add(key);
             const lead = remaining === 0

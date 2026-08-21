@@ -55,4 +55,20 @@ class GtkScheduleServiceTest extends TestCase
         $this->assertStringContainsString('5 menit', $reminder['message']);
         $this->assertStringContainsString('Pak Budi', $reminder['message']);
     }
+
+    public function test_it_removes_duplicate_room_and_marks_live_schedule_status(): void
+    {
+        $service = new GtkScheduleService();
+        $current = new JadwalPelajaran(['jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00', 'ruangan' => 'XI-A2']);
+        $current->setRelation('kelas', new Kelas(['nama_kelas' => 'XI-A2']));
+        $next = new JadwalPelajaran(['jam_mulai' => '10:00:00', 'jam_selesai' => '11:00:00', 'ruangan' => 'Lab 1']);
+        $next->setRelation('kelas', new Kelas(['nama_kelas' => 'XI-A2']));
+
+        $schedules = $service->decorateSchedules(new Collection([$current, $next]), Carbon::parse('2026-08-21 08:30:00'));
+
+        $this->assertSame('XI-A2', $schedules->first()->location_label);
+        $this->assertSame('ongoing', $schedules->first()->dashboard_status);
+        $this->assertSame('XI-A2 · Lab 1', $schedules->last()->location_label);
+        $this->assertSame('next', $schedules->last()->dashboard_status);
+    }
 }
