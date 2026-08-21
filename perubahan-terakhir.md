@@ -21,6 +21,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Foto profil pada ringkasan akun GTK diperbesar kembali menjadi fokus visual utama (160px desktop, 112px ponsel) tanpa mengorbankan proporsi layar kecil.
 - Crop foto profil GTK berfokus ke bagian atas agar kepala tidak terpotong pada foto potret.
 - Kartu Jadwal Mengajar Hari Ini dipadatkan: ruang tepi, tinggi slot, dan jarak kolom waktu ke mata pelajaran diperkecil agar lebih profesional dan mudah dipindai.
+- Metadata jam pelajaran dan status pada jadwal GTK kini dikelompokkan di dekat informasi mata pelajaran, bukan ditempatkan berjauhan di tepi kanan kartu.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

@@ -193,12 +193,12 @@
     .gtk-account-dashboard__schedule > .card-header { min-height:0; padding:.65rem .9rem; }
     .gtk-account-dashboard__schedule > .card-body { padding:.45rem .75rem; }
     .gtk-account-dashboard__schedule-reminder { margin-bottom:.8rem; border-radius:10px; font-size:.88rem; }
-    .gtk-account-dashboard__schedule-item { position:relative; display:grid; grid-template-columns:72px minmax(0,1fr) auto; gap:.5rem; align-items:center; margin:0 -.1rem; padding:.52rem .55rem .52rem .72rem; overflow:hidden; border-bottom:1px solid #eef2f7; border-radius:8px; transition:background .25s ease,transform .25s ease,opacity .25s ease; }
+    .gtk-account-dashboard__schedule-item { position:relative; display:grid; grid-template-columns:72px minmax(220px,440px) auto; gap:.5rem; align-items:center; margin:0 -.1rem; padding:.52rem .55rem .52rem .72rem; overflow:hidden; border-bottom:1px solid #eef2f7; border-radius:8px; transition:background .25s ease,transform .25s ease,opacity .25s ease; }
     .gtk-account-dashboard__schedule-item:last-child { border-bottom:0; }
     .gtk-account-dashboard__schedule-item::before { position:absolute; top:.55rem; bottom:.55rem; left:0; width:3px; border-radius:3px; background:#cbd5e1; content:''; }
     .gtk-account-dashboard__schedule-time strong,.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-main strong,.gtk-account-dashboard__schedule-main span { display:block; }
     .gtk-account-dashboard__schedule-time strong { color:#2563eb; font-size:.93rem; }.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-main span { color:#64748b; font-size:.75rem; }.gtk-account-dashboard__schedule-main strong { color:#0f172a; font-size:.9rem; }
-    .gtk-account-dashboard__schedule-meta { display:flex; flex-direction:column; align-items:flex-end; gap:.34rem; white-space:nowrap; }
+    .gtk-account-dashboard__schedule-meta { display:flex; flex-direction:column; align-items:flex-start; gap:.34rem; white-space:nowrap; }
     .gtk-account-dashboard__schedule-status { color:#64748b; font-size:.7rem; font-weight:700; }
     .gtk-account-dashboard__schedule-item.is-ongoing { background:linear-gradient(90deg,#ecfdf5 0%,#f8fffc 78%); box-shadow:0 4px 16px rgba(16,185,129,.12); transform:translateX(2px); }
     .gtk-account-dashboard__schedule-item.is-ongoing::before { background:#10b981; animation:gtkSchedulePulse 1.8s ease-in-out infinite; }.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status { color:#047857; }.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status::before { content:'● '; animation:gtkScheduleBlink 1.2s ease-in-out infinite; }
