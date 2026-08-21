@@ -274,6 +274,8 @@ class MutasiSiswaController extends Controller
             'siswa.kecamatanSiswa',
             'siswa.kelurahanSiswa',
             'siswa.sekolahAsal',
+            'siswa.dokumen.approvedBy',
+            'siswa.dokumen.kelas',
             'siswa.siswaKelasRecords.kelas.jurusan',
             'siswa.siswaKelasRecords.tahunPelajaran',
             'siswa.mutasiHistory.tahunPelajaran',

@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Helpers\ImageCompressionHelper;
+use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\DokumenSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\ActivityLogService;
-use App\Helpers\StorageHelper;
-use App\Helpers\ImageCompressionHelper;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -25,13 +25,13 @@ class DokumenController extends Controller
     {
         $user = Auth::user();
         $siswa = $user->siswa;
-        
-        if (!$siswa) {
+
+        if (! $siswa) {
             abort(403, 'Data siswa tidak ditemukan');
         }
 
         $dokumen = $siswa->dokumen()->latest()->get();
-        
+
         return view('siswa.dokumen.index', compact('siswa', 'dokumen'));
     }
 
@@ -49,7 +49,7 @@ class DokumenController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        if (!$siswa) {
+        if (! $siswa) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data siswa tidak ditemukan',
@@ -98,16 +98,16 @@ class DokumenController extends Controller
             $user = Auth::user();
             $siswa = $user->siswa;
 
-            if (!$siswa) {
+            if (! $siswa) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data siswa tidak ditemukan'
+                    'message' => 'Data siswa tidak ditemukan',
                 ], 404);
             }
 
             // Ensure storage exists
             StorageHelper::ensureStorageExists();
-            
+
             // Get writable disk
             $disk = StorageHelper::getDokumenDisk();
 
@@ -120,7 +120,7 @@ class DokumenController extends Controller
                 if ($existing) {
                     // Delete old file (check all possible disks for backward compatibility)
                     $oldDisk = $existing->storage_disk ?? StorageHelper::getDiskFromPath($existing->file_path);
-                    
+
                     try {
                         if (Storage::disk($oldDisk)->exists($existing->file_path)) {
                             Storage::disk($oldDisk)->delete($existing->file_path);
@@ -132,7 +132,7 @@ class DokumenController extends Controller
                             'error' => $e->getMessage(),
                         ]);
                     }
-                    
+
                     // Delete old record
                     $existing->delete();
                 }
@@ -141,39 +141,39 @@ class DokumenController extends Controller
             // Generate UUID for secure filename
             $file = $request->file('file');
             $originalFileSize = $file->getSize();
-            
+
             // Auto-compress image if needed (tidak membebani server, hanya file >2MB)
             // Hanya berlaku untuk image files (JPG, PNG, GIF, WEBP)
             $file = ImageCompressionHelper::compressImage($file);
-            
+
             $uuid = Str::uuid()->toString();
             $extension = $file->getClientOriginalExtension();
             $originalName = $file->getClientOriginalName();
-            
+
             // Secure filename: {UUID}.ext
             $fileName = "{$uuid}.{$extension}";
-            
+
             // Store in new storage: {NISN}/{UUID}.ext
             $nisn = $siswa->nisn;
             $filePath = "{$nisn}/{$fileName}";
-            
+
             Storage::disk($disk)->put($filePath, file_get_contents($file));
-            
+
             $fileSize = round($file->getSize() / 1024, 2); // Convert to KB
-            
+
             // Log compression if happened
             if ($originalFileSize > $file->getSize()) {
                 $savedPercentage = round((($originalFileSize - $file->getSize()) / $originalFileSize) * 100, 2);
-                Log::info("File compressed on upload", [
-                    'original_size' => round($originalFileSize / 1024, 2) . ' KB',
-                    'compressed_size' => $fileSize . ' KB',
-                    'saved' => $savedPercentage . '%',
+                Log::info('File compressed on upload', [
+                    'original_size' => round($originalFileSize / 1024, 2).' KB',
+                    'compressed_size' => $fileSize.' KB',
+                    'saved' => $savedPercentage.'%',
                 ]);
             }
 
             // Get active tahun pelajaran
             $tahunPelajaran = TahunPelajaran::where('is_active', true)->first();
-            
+
             // Get current kelas from siswa_kelas
             $currentKelas = $siswa->kelasAktif->first();
 
@@ -200,12 +200,12 @@ class DokumenController extends Controller
                 'activity_type' => 'upload_dokumen',
                 'model_type' => DokumenSiswa::class,
                 'model_id' => $dokumen->id,
-                'description' => "Upload dokumen: " . ($request->jenis_dokumen === 'lainnya' ? $request->nama_dokumen : $request->jenis_dokumen),
+                'description' => 'Upload dokumen: '.($request->jenis_dokumen === 'lainnya' ? $request->nama_dokumen : $request->jenis_dokumen),
                 'new_values' => [
                     'jenis_dokumen' => $request->jenis_dokumen,
                     'original_name' => $originalName,
                     'file_uuid' => $uuid,
-                    'file_size' => $fileSize . ' KB',
+                    'file_size' => $fileSize.' KB',
                     'status' => 'pending',
                 ],
             ]);
@@ -220,24 +220,24 @@ class DokumenController extends Controller
                     'file_size' => $dokumen->file_size,
                     'status' => $dokumen->status,
                     'uploaded_at' => $dokumen->created_at->format('d M Y H:i'),
-                ]
+                ],
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             Log::error('Error uploading dokumen', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal upload dokumen: ' . $e->getMessage()
+                'message' => 'Gagal upload dokumen: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -249,19 +249,19 @@ class DokumenController extends Controller
     {
         try {
             $dokumen = DokumenSiswa::findOrFail($id);
-            
+
             // Check ownership
             $user = Auth::user();
             if ($dokumen->siswa->user_id != $user->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda tidak memiliki akses untuk menghapus dokumen ini'
+                    'message' => 'Anda tidak memiliki akses untuk menghapus dokumen ini',
                 ], 403);
             }
 
             // Delete file from storage
             $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
-            
+
             try {
                 if (Storage::disk($disk)->exists($dokumen->file_path)) {
                     Storage::disk($disk)->delete($dokumen->file_path);
@@ -283,24 +283,24 @@ class DokumenController extends Controller
                 'activity_type' => 'delete_dokumen',
                 'model_type' => DokumenSiswa::class,
                 'model_id' => $dokumen->siswa_id,
-                'description' => "Menghapus dokumen: " . $jenisDokumen,
+                'description' => 'Menghapus dokumen: '.$jenisDokumen,
                 'old_values' => $oldDokumen,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dokumen berhasil dihapus'
+                'message' => 'Dokumen berhasil dihapus',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error deleting dokumen', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
+                'message' => 'Gagal menghapus dokumen: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -312,14 +312,14 @@ class DokumenController extends Controller
     {
         try {
             $dokumen = DokumenSiswa::findOrFail($id);
-            
+
             // Check ownership or admin permission
             $user = Auth::user();
-            $isAdmin = $user->can('view-siswa');
-            if (!$isAdmin) {
+            $isAdmin = $user->can('view-siswa') || $user->can('view-mutasi');
+            if (! $isAdmin) {
                 // Gunakan withTrashed agar tidak null meski siswa sudah dihapus
                 $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
-                if (!$siswaDok || $siswaDok->user_id != $user->id) {
+                if (! $siswaDok || $siswaDok->user_id != $user->id) {
                     abort(403, 'Anda tidak memiliki akses untuk melihat dokumen ini');
                 }
             }
@@ -330,8 +330,8 @@ class DokumenController extends Controller
 
             // Get disk and file path
             $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
-            
-            if (!$location) {
+
+            if (! $location) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
@@ -359,10 +359,10 @@ class DokumenController extends Controller
             Log::error('Error previewing dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            abort(500, 'Gagal menampilkan dokumen: ' . $e->getMessage());
+            abort(500, 'Gagal menampilkan dokumen: '.$e->getMessage());
         }
     }
 
@@ -373,14 +373,14 @@ class DokumenController extends Controller
     {
         try {
             $dokumen = DokumenSiswa::findOrFail($id);
-            
+
             // Check ownership or admin permission
             $user = Auth::user();
             $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
             $isOwner = $siswaDok && $siswaDok->user_id == $user->id;
-            $isAdmin = $user->can('view-siswa');
+            $isAdmin = $user->can('view-siswa') || $user->can('view-mutasi');
 
-            if (!$isOwner && !$isAdmin) {
+            if (! $isOwner && ! $isAdmin) {
                 abort(403, 'Anda tidak memiliki akses untuk mengunduh dokumen ini');
             }
 
@@ -389,9 +389,9 @@ class DokumenController extends Controller
             $dokumen->update(['accessed_at' => now()]);
 
             // Get disk and file path
-            $disk = $dokumen->storage_disk ?? StorageHelper::getDiskFromPath($dokumen->file_path);
+            $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
 
-            if (!$location) {
+            if (! $location) {
                 abort(404, 'File dokumen tidak ditemukan');
             }
 
@@ -414,10 +414,10 @@ class DokumenController extends Controller
             Log::error('Error downloading dokumen', [
                 'dokumen_id' => $id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
+            abort(500, 'Gagal mengunduh dokumen: '.$e->getMessage());
         }
     }
 }

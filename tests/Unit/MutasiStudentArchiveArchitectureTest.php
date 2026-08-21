@@ -16,9 +16,12 @@ class MutasiStudentArchiveArchitectureTest extends TestCase
         $this->assertStringContainsString("'siswa.ortu.provinsi'", $controller);
         $this->assertStringContainsString("'siswa.siswaKelasRecords.tahunPelajaran'", $controller);
         $this->assertStringContainsString("'siswa.mutasiHistory.verifikator'", $controller);
+        $this->assertStringContainsString("'siswa.dokumen.approvedBy'", $controller);
         $this->assertStringContainsString('data-target="#modalArsipSiswa"', $view);
         $this->assertStringContainsString('Riwayat Rombel', $modal);
         $this->assertStringContainsString('Riwayat Mutasi', $modal);
         $this->assertStringContainsString('Keluarga & Alamat', $modal);
+        $this->assertStringContainsString('Dokumen Tersimpan', $modal);
+        $this->assertStringContainsString("route('siswa.dokumen.preview'", $modal);
     }
 }
