@@ -79,6 +79,7 @@
             <li>Buka Developer Tools (F12) dan pilih tab <strong>Network</strong>.</li>
             <li>Cari request <code>preview-simpeg</code>, lalu buka bagian <strong>Request Headers</strong>.</li>
             <li>Salin nilai header <code>Cookie</code> secara lengkap dan tempelkan di formulir ini.</li>
+            <li>Pastikan terdapat <code>cookiesession1</code>, <code>csrftoken</code>, <code>emisSSO</code>, dan <code>sessionid</code>. Cookie <code>_ga</code> tidak diperlukan.</li>
         </ol>
         <div class="alert alert-danger mt-3 mb-0">
             <i class="icon fas fa-user-shield"></i>

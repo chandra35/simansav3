@@ -11,11 +11,18 @@ class EmisGtkNipServiceTest extends TestCase
     public function test_it_normalizes_cookie_and_discards_analytics_cookies(): void
     {
         $normalized = EmisGtkNipService::normalizeCookieHeader(
-            'Cookie: _ga=tracking; cookiesession1=session-value; csrftoken=csrf-value; emisSSO=sso-value; other=ignored'
+            'Cookie: _ga=tracking; cookiesession1=waf-value; csrftoken=csrf-value; emisSSO=sso-value; sessionid=session-value; other=ignored'
         );
 
-        $this->assertSame('cookiesession1=session-value; csrftoken=csrf-value; emisSSO=sso-value', $normalized);
+        $this->assertSame('cookiesession1=waf-value; csrftoken=csrf-value; emisSSO=sso-value; sessionid=session-value', $normalized);
         $this->assertStringNotContainsString('_ga', $normalized);
+    }
+
+    public function test_it_requires_the_emis_session_id(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        EmisGtkNipService::normalizeCookieHeader('cookiesession1=waf; csrftoken=csrf; emisSSO=sso');
     }
 
     public function test_it_maps_a_successful_simpeg_response_without_returning_raw_payload(): void

@@ -17,7 +17,7 @@ class EmisGtkNipService
 
     private const REFERER = 'https://emisgtk.kemenag.go.id/kepegawaian/verval-kepegawaian/ptk/asn/ubah-nip/';
 
-    private const ALLOWED_COOKIES = ['cookiesession1', 'csrftoken', 'emisSSO'];
+    private const ALLOWED_COOKIES = ['cookiesession1', 'csrftoken', 'emisSSO', 'sessionid'];
 
     private ?string $sessionCookie;
 
@@ -43,8 +43,8 @@ class EmisGtkNipService
             }
         }
 
-        if (! isset($cookies['emisSSO']) || count($cookies) < 2) {
-            throw new \InvalidArgumentException('Cookie harus memuat emisSSO dan cookie sesi EMIS GTK yang masih aktif.');
+        if (! isset($cookies['emisSSO'], $cookies['sessionid'])) {
+            throw new \InvalidArgumentException('Cookie harus memuat emisSSO dan sessionid dari sesi EMIS GTK yang masih aktif.');
         }
 
         return collect(self::ALLOWED_COOKIES)
