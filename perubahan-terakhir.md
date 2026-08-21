@@ -20,6 +20,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Dashboard GTK kini menampilkan foto profil yang lebih proporsional, metadata penugasan asrama aktif (bila ada), serta jadwal yang memisahkan kelas dan ruang tanpa menampilkan kelas ganda. Slot jadwal menandai status selesai, berikutnya, dan sedang berlangsung secara langsung; status aktif menggunakan aksen animasi halus yang tetap ramah aksesibilitas dan tata letaknya menyesuaikan layar ponsel.
 - Foto profil pada ringkasan akun GTK diperbesar kembali menjadi fokus visual utama (160px desktop, 112px ponsel) tanpa mengorbankan proporsi layar kecil.
 - Crop foto profil GTK berfokus ke bagian atas agar kepala tidak terpotong pada foto potret.
+- Kartu Jadwal Mengajar Hari Ini dipadatkan: ruang tepi, tinggi slot, dan jarak kolom waktu ke mata pelajaran diperkecil agar lebih profesional dan mudah dipindai.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

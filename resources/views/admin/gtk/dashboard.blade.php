@@ -190,8 +190,10 @@
     .gtk-account-dashboard__notice small { color:#64748b; font-size:.72rem; }
     .gtk-account-dashboard__notice p { margin:.6rem 0 0; color:#334155; font-size:.82rem; white-space:pre-line; }
     .gtk-account-dashboard__alert { border-radius:12px; }
+    .gtk-account-dashboard__schedule > .card-header { min-height:0; padding:.65rem .9rem; }
+    .gtk-account-dashboard__schedule > .card-body { padding:.45rem .75rem; }
     .gtk-account-dashboard__schedule-reminder { margin-bottom:.8rem; border-radius:10px; font-size:.88rem; }
-    .gtk-account-dashboard__schedule-item { position:relative; display:grid; grid-template-columns:96px minmax(0,1fr) auto; gap:.75rem; align-items:center; margin:0 -.15rem; padding:.78rem .65rem .78rem .85rem; overflow:hidden; border-bottom:1px solid #eef2f7; border-radius:10px; transition:background .25s ease,transform .25s ease,opacity .25s ease; }
+    .gtk-account-dashboard__schedule-item { position:relative; display:grid; grid-template-columns:72px minmax(0,1fr) auto; gap:.5rem; align-items:center; margin:0 -.1rem; padding:.52rem .55rem .52rem .72rem; overflow:hidden; border-bottom:1px solid #eef2f7; border-radius:8px; transition:background .25s ease,transform .25s ease,opacity .25s ease; }
     .gtk-account-dashboard__schedule-item:last-child { border-bottom:0; }
     .gtk-account-dashboard__schedule-item::before { position:absolute; top:.55rem; bottom:.55rem; left:0; width:3px; border-radius:3px; background:#cbd5e1; content:''; }
     .gtk-account-dashboard__schedule-time strong,.gtk-account-dashboard__schedule-time span,.gtk-account-dashboard__schedule-main strong,.gtk-account-dashboard__schedule-main span { display:block; }
@@ -215,7 +217,8 @@
         .gtk-account-dashboard__hero > .card-body { padding:1rem; }
         .gtk-account-dashboard__hero h3 { font-size:1.15rem; }
         .gtk-account-dashboard__avatar { width:112px; height:112px; }
-        .gtk-account-dashboard__schedule-item { grid-template-columns:76px minmax(0,1fr); gap:.55rem; padding:.75rem .45rem .75rem .7rem; }.gtk-account-dashboard__schedule-meta { grid-column:2; flex-direction:row; justify-content:flex-start; align-items:center; }.gtk-account-dashboard__schedule-status { font-size:.68rem; }
+        .gtk-account-dashboard__schedule > .card-header { padding:.6rem .75rem; }.gtk-account-dashboard__schedule > .card-body { padding:.35rem .55rem; }
+        .gtk-account-dashboard__schedule-item { grid-template-columns:68px minmax(0,1fr); gap:.4rem; padding:.5rem .4rem .5rem .65rem; }.gtk-account-dashboard__schedule-meta { grid-column:2; flex-direction:row; justify-content:flex-start; align-items:center; }.gtk-account-dashboard__schedule-status { font-size:.68rem; }
     }
     @media (prefers-reduced-motion:reduce) { .gtk-account-dashboard__schedule-item,.gtk-account-dashboard__schedule-item.is-ongoing::before,.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status::before { animation:none; transition:none; } }
 </style>
