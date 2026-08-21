@@ -174,7 +174,7 @@
     .gtk-account-dashboard__hero > .card-body { padding:1.2rem 1.25rem; }
     .gtk-account-dashboard__hero h3 { font-size:1.35rem; font-weight:700; }
     .gtk-account-dashboard .card-outline { border-radius:12px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
-    .gtk-account-dashboard__avatar { width:112px; height:112px; object-fit:cover; border-radius:50%; border:3px solid #e2e8f0; box-shadow:0 8px 20px rgba(15,23,42,.14); }
+    .gtk-account-dashboard__avatar { width:160px; height:160px; object-fit:cover; border-radius:50%; border:4px solid #e2e8f0; box-shadow:0 10px 24px rgba(15,23,42,.16); }
     .gtk-account-dashboard__name { margin:0 0 .2rem; color:#0f172a; font-size:1.25rem; font-weight:800; }
     .gtk-account-dashboard__details { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
     .gtk-account-dashboard__detail, .gtk-account-dashboard__rombel-meta { min-width:0; padding:.7rem .8rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
@@ -214,7 +214,7 @@
         .gtk-account-dashboard .card-outline > .card-header { align-items:flex-start !important; }
         .gtk-account-dashboard__hero > .card-body { padding:1rem; }
         .gtk-account-dashboard__hero h3 { font-size:1.15rem; }
-        .gtk-account-dashboard__avatar { width:82px; height:82px; }
+        .gtk-account-dashboard__avatar { width:112px; height:112px; }
         .gtk-account-dashboard__schedule-item { grid-template-columns:76px minmax(0,1fr); gap:.55rem; padding:.75rem .45rem .75rem .7rem; }.gtk-account-dashboard__schedule-meta { grid-column:2; flex-direction:row; justify-content:flex-start; align-items:center; }.gtk-account-dashboard__schedule-status { font-size:.68rem; }
     }
     @media (prefers-reduced-motion:reduce) { .gtk-account-dashboard__schedule-item,.gtk-account-dashboard__schedule-item.is-ongoing::before,.gtk-account-dashboard__schedule-item.is-ongoing .gtk-account-dashboard__schedule-status::before { animation:none; transition:none; } }
