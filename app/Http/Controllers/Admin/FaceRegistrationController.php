@@ -506,7 +506,9 @@ class FaceRegistrationController extends Controller
         }
 
         $filename = "face-registration/{$userType}/{$userId}{$suffix}.".$extensions[$imageInfo['mime']];
-        Storage::disk('public')->put($filename, $data);
+        if (! Storage::disk('public')->put($filename, $data)) {
+            throw ValidationException::withMessages(['photo' => 'Foto registrasi gagal disimpan.']);
+        }
 
         return $filename;
     }

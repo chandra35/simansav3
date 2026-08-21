@@ -181,7 +181,7 @@ class AppSettingController extends Controller
             
             // Delete old logo if exists
             if ($setting->logo_kemenag_path) {
-                Storage::delete($setting->logo_kemenag_path);
+                Storage::disk('public')->delete($setting->logo_kemenag_path);
             }
             
             // Store new logo
@@ -201,7 +201,7 @@ class AppSettingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Logo Kemenag berhasil diupload.',
-                'url' => Storage::url($path)
+                'url' => Storage::disk('public')->url($path)
             ]);
 
         } catch (\Exception $e) {
@@ -235,7 +235,7 @@ class AppSettingController extends Controller
             
             // Delete old logo if exists
             if ($setting->logo_sekolah_path) {
-                Storage::delete($setting->logo_sekolah_path);
+                Storage::disk('public')->delete($setting->logo_sekolah_path);
             }
             
             // Store new logo
@@ -255,7 +255,7 @@ class AppSettingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Logo Sekolah berhasil diupload.',
-                'url' => Storage::url($path)
+                'url' => Storage::disk('public')->url($path)
             ]);
 
         } catch (\Exception $e) {
@@ -289,7 +289,7 @@ class AppSettingController extends Controller
             
             // Delete old kop surat if exists
             if ($setting->kop_surat_custom_path) {
-                Storage::delete($setting->kop_surat_custom_path);
+                Storage::disk('public')->delete($setting->kop_surat_custom_path);
             }
             
             // Store new kop surat
@@ -310,7 +310,7 @@ class AppSettingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Kop Surat berhasil diupload.',
-                'url' => Storage::url($path)
+                'url' => Storage::disk('public')->url($path)
             ]);
 
         } catch (\Exception $e) {

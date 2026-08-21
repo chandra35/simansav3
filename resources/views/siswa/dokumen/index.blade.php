@@ -152,7 +152,7 @@
                             <p class="mb-1 text-muted">
                                 <small>
                                     <i class="far fa-file"></i> {{ $kk->getFileSizeFormatted() }} |
-                                    <i class="far fa-clock"></i> {{ $kk->created_at->format('d/m/Y H:i') }}
+                                    <i class="far fa-clock"></i> Diunggah: {{ $kk->created_at->format('d/m/Y H:i') }}@if($kk->updated_at && ! $kk->updated_at->equalTo($kk->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $kk->updated_at->format('d/m/Y H:i') }}@endif
                                 </small>
                             </p>
                             @if($kk->keterangan)
@@ -211,7 +211,7 @@
                             <p class="mb-1 text-muted">
                                 <small>
                                     <i class="far fa-file"></i> {{ $ijazah->getFileSizeFormatted() }} |
-                                    <i class="far fa-clock"></i> {{ $ijazah->created_at->format('d/m/Y H:i') }}
+                                    <i class="far fa-clock"></i> Diunggah: {{ $ijazah->created_at->format('d/m/Y H:i') }}@if($ijazah->updated_at && ! $ijazah->updated_at->equalTo($ijazah->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $ijazah->updated_at->format('d/m/Y H:i') }}@endif
                                 </small>
                             </p>
                             @if($ijazah->keterangan)
@@ -270,7 +270,7 @@
                             <p class="mb-1 text-muted">
                                 <small>
                                     <i class="far fa-file"></i> {{ $kip->getFileSizeFormatted() }} |
-                                    <i class="far fa-clock"></i> {{ $kip->created_at->format('d/m/Y H:i') }}
+                                    <i class="far fa-clock"></i> Diunggah: {{ $kip->created_at->format('d/m/Y H:i') }}@if($kip->updated_at && ! $kip->updated_at->equalTo($kip->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $kip->updated_at->format('d/m/Y H:i') }}@endif
                                 </small>
                             </p>
                             @if($kip->keterangan)
@@ -329,7 +329,7 @@
                             <p class="mb-1 text-muted">
                                 <small>
                                     <i class="far fa-file"></i> {{ $sktm->getFileSizeFormatted() }} |
-                                    <i class="far fa-clock"></i> {{ $sktm->created_at->format('d/m/Y H:i') }}
+                                    <i class="far fa-clock"></i> Diunggah: {{ $sktm->created_at->format('d/m/Y H:i') }}@if($sktm->updated_at && ! $sktm->updated_at->equalTo($sktm->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $sktm->updated_at->format('d/m/Y H:i') }}@endif
                                 </small>
                             </p>
                             @if($sktm->keterangan)
@@ -409,7 +409,12 @@
                                         @endif
                                     </td>
                                     <td>{{ $file->getFileSizeFormatted() }}</td>
-                                    <td>{{ $file->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <div>Diunggah: {{ $file->created_at->format('d/m/Y H:i') }}</div>
+                                        @if($file->updated_at && ! $file->updated_at->equalTo($file->created_at))
+                                            <small class="text-muted">Diperbarui: {{ $file->updated_at->format('d/m/Y H:i') }}</small>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-info" onclick="previewDokumen('{{ $file->getFileUrl() }}', '{{ $file->nama_file }}', '{{ $file->getFileExtension() }}')" title="Lihat">

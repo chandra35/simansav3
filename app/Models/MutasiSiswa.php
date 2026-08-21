@@ -224,7 +224,7 @@ class MutasiSiswa extends Model
             return null;
         }
 
-        return Storage::url($this->file_surat_mutasi);
+        return Storage::disk('public')->url($this->file_surat_mutasi);
     }
 
     /**

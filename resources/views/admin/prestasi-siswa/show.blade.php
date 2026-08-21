@@ -96,7 +96,7 @@
                         <h5 class="card-title"><i class="fas fa-image"></i> Foto Dokumentasi</h5>
                     </div>
                     <div class="card-body text-center">
-                        <img src="{{ Storage::url($prestasiSiswa->foto) }}" alt="Foto Prestasi" class="img-fluid rounded">
+                        <img src="{{ Storage::disk('public')->url($prestasiSiswa->foto) }}" alt="Foto Prestasi" class="img-fluid rounded">
                     </div>
                 </div>
             @endif
@@ -107,7 +107,7 @@
                         <h5 class="card-title"><i class="fas fa-certificate"></i> Sertifikat</h5>
                     </div>
                     <div class="card-body text-center">
-                        <a href="{{ Storage::url($prestasiSiswa->sertifikat) }}" target="_blank" class="btn btn-primary btn-block">
+                        <a href="{{ Storage::disk('public')->url($prestasiSiswa->sertifikat) }}" target="_blank" class="btn btn-primary btn-block">
                             <i class="fas fa-download mr-1"></i> Download Sertifikat
                         </a>
                     </div>

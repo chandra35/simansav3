@@ -70,7 +70,7 @@
                                 <h5 class="card-title"><i class="fas fa-paperclip"></i> Lampiran</h5>
                             </div>
                             <div class="card-body">
-                                <a href="{{ Storage::url($pengumuman->lampiran) }}" target="_blank" class="btn btn-primary btn-block">
+                                <a href="{{ Storage::disk('public')->url($pengumuman->lampiran) }}" target="_blank" class="btn btn-primary btn-block">
                                     <i class="fas fa-download mr-1"></i> Download File
                                 </a>
                             </div>

@@ -768,9 +768,9 @@ class ProfileController extends Controller
         // Semua foto siswa baru memakai struktur storage baku SIMANSA.
         $extension = strtolower($file->getClientOriginalExtension());
         $baseName = 'profil-' . now()->format('YmdHis');
-        $directory = 'foto_profile/siswa/' . $siswa->id;
+        $storageDirectory = 'foto_profile/siswa/' . $siswa->id;
         $filename = $baseName . '.jpg';
-        $path = $directory . '/' . $filename;
+        $path = $storageDirectory . '/' . $filename;
 
         // Check if GD is available
         if (!extension_loaded('gd') || !function_exists('imagecreatetruecolor')) {
@@ -778,15 +778,15 @@ class ProfileController extends Controller
                 'siswa_id' => $siswa->id
             ]);
             // Fallback: Save without resize
-            return $file->storeAs($directory, $baseName . '.' . $extension, 'public');
+            return $file->storeAs($storageDirectory, $baseName . '.' . $extension, 'public');
         }
 
         $fullPath = storage_path('app/public/' . $path);
 
         // Create directory if not exists
-        $directory = dirname($fullPath);
-        if (!file_exists($directory)) {
-            mkdir($directory, 0755, true);
+        $absoluteDirectory = dirname($fullPath);
+        if (!file_exists($absoluteDirectory)) {
+            mkdir($absoluteDirectory, 0755, true);
         }
 
         try {
@@ -843,7 +843,7 @@ class ProfileController extends Controller
                 'error' => $e->getMessage()
             ]);
             // Fallback: Save without resize
-            return $file->storeAs($directory, $baseName . '.' . $extension, 'public');
+            return $file->storeAs($storageDirectory, $baseName . '.' . $extension, 'public');
         }
 
         return $path;

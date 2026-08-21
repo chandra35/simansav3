@@ -175,7 +175,7 @@ class AppSetting extends Model
     public function getLogoKemenagUrlAttribute()
     {
         if ($this->logo_kemenag_path) {
-            return Storage::url($this->logo_kemenag_path);
+            return Storage::disk('public')->url($this->logo_kemenag_path);
         }
         return asset('vendor/adminlte/dist/img/logo-kemenag.png'); // Default logo
     }
@@ -183,7 +183,7 @@ class AppSetting extends Model
     public function getLogoSekolahUrlAttribute()
     {
         if ($this->logo_sekolah_path) {
-            return Storage::url($this->logo_sekolah_path);
+            return Storage::disk('public')->url($this->logo_sekolah_path);
         }
         return asset('vendor/adminlte/dist/img/logo-sekolah.png'); // Default logo
     }
@@ -191,7 +191,7 @@ class AppSetting extends Model
     public function getKopSuratCustomUrlAttribute()
     {
         if ($this->kop_surat_custom_path) {
-            return Storage::url($this->kop_surat_custom_path);
+            return Storage::disk('public')->url($this->kop_surat_custom_path);
         }
         return null;
     }

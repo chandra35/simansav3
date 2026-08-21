@@ -152,7 +152,7 @@
                             <label for="sertifikat">Sertifikat</label>
                             @if($prestasiSiswa->sertifikat)
                                 <div class="mb-2">
-                                    <a href="{{ Storage::url($prestasiSiswa->sertifikat) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <a href="{{ Storage::disk('public')->url($prestasiSiswa->sertifikat) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-file mr-1"></i> Lihat Sertifikat
                                     </a>
                                 </div>
@@ -170,7 +170,7 @@
                             <label for="foto">Foto Dokumentasi</label>
                             @if($prestasiSiswa->foto)
                                 <div class="mb-2">
-                                    <img src="{{ Storage::url($prestasiSiswa->foto) }}" alt="Foto" class="img-thumbnail" style="max-height: 100px;">
+                                    <img src="{{ Storage::disk('public')->url($prestasiSiswa->foto) }}" alt="Foto" class="img-thumbnail" style="max-height: 100px;">
                                 </div>
                             @endif
                             <input type="file" name="foto" id="foto" 

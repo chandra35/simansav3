@@ -106,10 +106,10 @@ class DokumenController extends Controller
             }
 
             // Ensure storage exists
-            StorageHelper::ensureStorageExists();
-
-            // Get writable disk
             $disk = StorageHelper::getDokumenDisk();
+            if (! StorageHelper::ensureStorageExists($disk)) {
+                throw new \RuntimeException('Penyimpanan dokumen tidak dapat digunakan.');
+            }
 
             // For non-lainnya dokumen, check if already exists and replace
             if ($request->jenis_dokumen !== 'lainnya') {
@@ -119,16 +119,15 @@ class DokumenController extends Controller
 
                 if ($existing) {
                     // Delete old file (check all possible disks for backward compatibility)
-                    $oldDisk = $existing->storage_disk ?? StorageHelper::getDiskFromPath($existing->file_path);
-
                     try {
-                        if (Storage::disk($oldDisk)->exists($existing->file_path)) {
-                            Storage::disk($oldDisk)->delete($existing->file_path);
+                        $oldLocation = StorageHelper::resolveExistingDokumenFile($existing->storage_disk, $existing->file_path);
+                        if ($oldLocation) {
+                            Storage::disk($oldLocation['disk'])->delete($oldLocation['path']);
                         }
                     } catch (\Exception $e) {
                         Log::warning('Failed to delete old file', [
                             'file_path' => $existing->file_path,
-                            'disk' => $oldDisk,
+                            'disk' => $existing->storage_disk,
                             'error' => $e->getMessage(),
                         ]);
                     }
@@ -157,7 +156,9 @@ class DokumenController extends Controller
             $nisn = $siswa->nisn;
             $filePath = "{$nisn}/{$fileName}";
 
-            Storage::disk($disk)->put($filePath, file_get_contents($file));
+            if (! Storage::disk($disk)->put($filePath, file_get_contents($file))) {
+                throw new \RuntimeException('File dokumen gagal disimpan.');
+            }
 
             $fileSize = round($file->getSize() / 1024, 2); // Convert to KB
 
@@ -260,16 +261,15 @@ class DokumenController extends Controller
             }
 
             // Delete file from storage
-            $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
-
             try {
-                if (Storage::disk($disk)->exists($dokumen->file_path)) {
-                    Storage::disk($disk)->delete($dokumen->file_path);
+                $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
+                if ($location) {
+                    Storage::disk($location['disk'])->delete($location['path']);
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to delete file from storage', [
                     'file_path' => $dokumen->file_path,
-                    'disk' => $disk,
+                    'disk' => $dokumen->storage_disk,
                     'error' => $e->getMessage(),
                 ]);
             }
@@ -315,7 +315,7 @@ class DokumenController extends Controller
 
             // Check ownership or admin permission
             $user = Auth::user();
-            $isAdmin = $user->can('view-siswa') || $user->can('view-mutasi');
+            $isAdmin = $user->canAny(['view-siswa', 'view-mutasi', 'view-pip']);
             if (! $isAdmin) {
                 // Gunakan withTrashed agar tidak null meski siswa sudah dihapus
                 $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
@@ -325,8 +325,10 @@ class DokumenController extends Controller
             }
 
             // Update audit trail
-            $dokumen->increment('access_count');
-            $dokumen->update(['accessed_at' => now()]);
+            DokumenSiswa::withoutTimestamps(function () use ($dokumen) {
+                $dokumen->increment('access_count');
+                $dokumen->update(['accessed_at' => now()]);
+            });
 
             // Get disk and file path
             $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
@@ -378,15 +380,17 @@ class DokumenController extends Controller
             $user = Auth::user();
             $siswaDok = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
             $isOwner = $siswaDok && $siswaDok->user_id == $user->id;
-            $isAdmin = $user->can('view-siswa') || $user->can('view-mutasi');
+            $isAdmin = $user->canAny(['view-siswa', 'view-mutasi', 'view-pip']);
 
             if (! $isOwner && ! $isAdmin) {
                 abort(403, 'Anda tidak memiliki akses untuk mengunduh dokumen ini');
             }
 
             // Update audit trail
-            $dokumen->increment('access_count');
-            $dokumen->update(['accessed_at' => now()]);
+            DokumenSiswa::withoutTimestamps(function () use ($dokumen) {
+                $dokumen->increment('access_count');
+                $dokumen->update(['accessed_at' => now()]);
+            });
 
             // Get disk and file path
             $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);

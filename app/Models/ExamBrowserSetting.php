@@ -187,14 +187,13 @@ class ExamBrowserSetting extends Model
     public function generateStaticConfigFile(): bool
     {
         try {
-            Storage::disk('public')->put(
+            return Storage::disk('public')->put(
                 self::STATIC_CONFIG_PATH,
                 json_encode(
                     $this->toStaticConfig(),
                     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
                 )
-            );
-            return true;
+            ) !== false;
         } catch (\Throwable $e) {
             Log::error('[ExamBrowser] Gagal menulis file config statis: ' . $e->getMessage());
             return false;

@@ -4,6 +4,13 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
+
+- Preview dan unduh dokumen KIP/PIP kini mengizinkan role dengan permission `view-pip`; sebelumnya role tersebut dapat melihat daftar tetapi file gambar gagal dimuat karena endpoint dokumen hanya mengenali akses siswa/mutasi.
+- Penyimpanan dokumen siswa kini memverifikasi disk/folder aktif dan hasil tulis file. Penggantian maupun penghapusan dokumen mencari file lintas storage baru dan lokasi legacy sehingga data lama tetap dapat dikelola.
+- Audit upload publik menegaskan disk `public` untuk URL, penghapusan, dan tampilan logo sekolah/Kemenag, kop surat, mutasi, lampiran pengumuman, serta foto/sertifikat prestasi. Foto absensi, registrasi wajah, dan konfigurasi statis Exam Browser sekarang juga melaporkan kegagalan simpan.
+- Detail `Diunggah` dan `Diperbarui` ditampilkan pada daftar KIP/PIP, modal preview dokumen admin, detail siswa, dan portal dokumen siswa. Aktivitas melihat/unduh tidak lagi mengubah `updated_at`, sehingga tanggal pembaruan tetap merepresentasikan perubahan data dokumen.
+
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 
 - Live landmark registrasi ditingkatkan dari Face API tiny 68 titik menjadi MediaPipe Face Landmarker dengan sekitar 478 titik dan 52 blendshape ekspresi. Overlay menampilkan titik detail (disederhanakan setiap dua titik agar tetap terbaca), sedangkan blink memakai koefisien `eyeBlinkLeft`/`eyeBlinkRight` khusus kelopak mata, bukan lagi perkiraan EAR 68 titik. Face API tetap dipakai hanya saat mengambil descriptor yang kompatibel dengan basis data lama; bila MediaPipe tidak dapat dimuat, sistem memiliki fallback legacy.

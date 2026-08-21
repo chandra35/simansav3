@@ -94,7 +94,7 @@
                             <label for="lampiran">Lampiran</label>
                             @if($pengumuman->lampiran)
                                 <div class="mb-2">
-                                    <a href="{{ Storage::url($pengumuman->lampiran) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <a href="{{ Storage::disk('public')->url($pengumuman->lampiran) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-file mr-1"></i> Lihat File Saat Ini
                                     </a>
                                 </div>

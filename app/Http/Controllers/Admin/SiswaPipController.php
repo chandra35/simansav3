@@ -219,17 +219,24 @@ class SiswaPipController extends Controller
             $previewUrl = route('siswa.dokumen.preview', $item->id);
             $downloadUrl = route('siswa.dokumen.download', $item->id);
             $extension = $item->getFileExtension();
+            $uploadedAt = $item->created_at?->format('d/m/Y H:i') ?? '-';
+            $updatedAt = $item->updated_at?->format('d/m/Y H:i') ?? '-';
+            $updatedLabel = $item->updated_at && ! $item->updated_at->equalTo($item->created_at)
+                ? ' • Diperbarui: '.$updatedAt
+                : '';
 
-            return '<button type="button"
+            return '<span class="d-inline-block mr-1 mb-1"><button type="button"
                         class="btn btn-outline-info btn-xs mr-1 js-preview-admin-dokumen"
                         data-preview-url="' . e($previewUrl) . '"
                         data-download-url="' . e($downloadUrl) . '"
                         data-title="' . e($label) . '"
                         data-extension="' . e($extension) . '"
                         data-mime-type="' . e($item->mime_type) . '"
+                        data-uploaded-at="' . e($uploadedAt) . '"
+                        data-updated-at="' . e($updatedAt) . '"
                         title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
-                    </button>';
+                    </button><small class="text-muted d-block"><i class="far fa-clock"></i> Diunggah: ' . e($uploadedAt) . e($updatedLabel) . '</small></span>';
         })->implode('');
     }
 

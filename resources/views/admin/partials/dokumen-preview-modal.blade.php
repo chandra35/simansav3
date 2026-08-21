@@ -96,6 +96,10 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            <div id="adminDokumenPreviewMeta" class="px-3 py-2 border-bottom bg-white text-muted small" style="display: none;">
+                <span class="mr-3"><i class="far fa-calendar-plus mr-1"></i>Diunggah: <strong id="adminDokumenPreviewUploadedAt">-</strong></span>
+                <span><i class="far fa-edit mr-1"></i>Diperbarui: <strong id="adminDokumenPreviewUpdatedAt">-</strong></span>
+            </div>
             <div id="adminDokumenPreviewToolbar" class="admin-doc-preview-toolbar" style="display: none;">
                 <button type="button" class="btn btn-sm btn-outline-secondary js-admin-doc-tool" data-action="zoom-out" title="Zoom out">
                     <i class="fas fa-search-minus"></i>
@@ -186,6 +190,11 @@
         if (element) element.innerHTML = html;
     }
 
+    function setText(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value || '-';
+    }
+
     function setAttr(selector, attr, value) {
         const element = document.querySelector(selector);
         if (element) element.setAttribute(attr, value || '');
@@ -244,6 +253,7 @@
         hideElement('adminDokumenPreviewPdf');
         hideElement('adminDokumenPreviewBrowser');
         hideElement('adminDokumenPreviewUnsupported');
+        hideElement('adminDokumenPreviewMeta');
         hideElement('adminDokumenPreviewFitToggle');
         hideElement('adminDokumenPreviewToolbar');
         hideElement('adminDokumenPreviewPanToggle');
@@ -301,9 +311,14 @@
         const title = button.dataset.title || 'Preview Dokumen';
         const extension = String(button.dataset.extension || '').toLowerCase();
         const mimeType = String(button.dataset.mimeType || '').toLowerCase();
+        const uploadedAt = button.dataset.uploadedAt || '-';
+        const updatedAt = button.dataset.updatedAt || '-';
 
         resetAdminDokumenPreview();
         setHtml('adminDokumenPreviewTitle', '<i class="fas fa-eye mr-1"></i> ' + title);
+        setText('adminDokumenPreviewUploadedAt', uploadedAt);
+        setText('adminDokumenPreviewUpdatedAt', updatedAt);
+        showElement('adminDokumenPreviewMeta');
         setAttr('#adminDokumenPreviewDownload', 'href', downloadUrl);
         showPreviewModal();
 

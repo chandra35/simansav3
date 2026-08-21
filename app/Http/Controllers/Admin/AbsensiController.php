@@ -584,7 +584,9 @@ class AbsensiController extends Controller
 
         $date = now()->format('Y-m-d');
         $filename = "absensi/captures/{$date}/{$userId}_{$type}.".$extension;
-        \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $data);
+        if (! \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $data)) {
+            return null;
+        }
 
         return $filename;
     }

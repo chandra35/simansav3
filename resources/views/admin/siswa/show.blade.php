@@ -599,7 +599,7 @@
                                     <th>Jenis Dokumen</th>
                                     <th>Nama File</th>
                                     <th>Ukuran</th>
-                                    <th>Upload</th>
+                                    <th>Diunggah / Diperbarui</th>
                                     <th width="150">Aksi</th>
                                 </tr>
                             </thead>
@@ -614,7 +614,12 @@
                                         </td>
                                         <td>{{ $dokumen->original_name ?? $dokumen->nama_file ?? '-' }}</td>
                                         <td>{{ $dokumen->getFileSizeFormatted() }}</td>
-                                        <td>{{ $dokumen->created_at?->format('d M Y H:i') ?? '-' }}</td>
+                                        <td>
+                                            <div>{{ $dokumen->created_at?->format('d M Y H:i') ?? '-' }}</div>
+                                            @if($dokumen->updated_at && ! $dokumen->updated_at->equalTo($dokumen->created_at))
+                                                <small class="text-muted">Diperbarui: {{ $dokumen->updated_at->format('d M Y H:i') }}</small>
+                                            @endif
+                                        </td>
                                         <td>
                                             <button type="button"
                                                     class="btn btn-info btn-xs js-preview-admin-dokumen"
@@ -622,7 +627,9 @@
                                                     data-download-url="{{ route('siswa.dokumen.download', $dokumen->id) }}"
                                                     data-title="{{ $dokumen->original_name ?? $dokumen->nama_file ?? $dokumen->getJenisDokumenLabel() }}"
                                                     data-extension="{{ $dokumen->getFileExtension() }}"
-                                                    data-mime-type="{{ $dokumen->mime_type }}">
+                                                    data-mime-type="{{ $dokumen->mime_type }}"
+                                                    data-uploaded-at="{{ $dokumen->created_at?->format('d/m/Y H:i') ?? '-' }}"
+                                                    data-updated-at="{{ $dokumen->updated_at?->format('d/m/Y H:i') ?? '-' }}">
                                                 <i class="fas fa-eye"></i> Lihat
                                             </button>
                                             <a href="{{ route('siswa.dokumen.download', $dokumen->id) }}" class="btn btn-secondary btn-xs">
