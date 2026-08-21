@@ -19,6 +19,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Akun GTK kini memiliki Jadwal Saya, jadwal mengajar hari ini, serta pengingat jadwal mendatang. Sapaan pengingat mengikuti jenis kelamin dan tahun lahir (senior sampai 1984, muda sejak 1985), dengan teks sapaan, visibilitas, dan jeda pengingat yang dapat diatur pada Pengaturan.
 - Dashboard GTK kini menampilkan foto profil yang lebih proporsional, metadata penugasan asrama aktif (bila ada), serta jadwal yang memisahkan kelas dan ruang tanpa menampilkan kelas ganda. Slot jadwal menandai status selesai, berikutnya, dan sedang berlangsung secara langsung; status aktif menggunakan aksen animasi halus yang tetap ramah aksesibilitas dan tata letaknya menyesuaikan layar ponsel.
 - Foto profil pada ringkasan akun GTK diperbesar kembali menjadi fokus visual utama (160px desktop, 112px ponsel) tanpa mengorbankan proporsi layar kecil.
+- Crop foto profil GTK berfokus ke bagian atas agar kepala tidak terpotong pada foto potret.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 
