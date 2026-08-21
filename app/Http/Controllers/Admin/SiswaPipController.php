@@ -198,13 +198,13 @@ class SiswaPipController extends Controller
         $html = '';
 
         if ($dokumenKip->isNotEmpty()) {
-            $html .= '<div class="mb-1"><span class="badge badge-success mr-1"><i class="fas fa-id-card mr-1"></i>KIP (' . $dokumenKip->count() . ')</span>';
+            $html .= '<div class="pip-document-group"><span class="badge badge-success"><i class="fas fa-id-card mr-1"></i>KIP (' . $dokumenKip->count() . ')</span>';
             $html .= $this->renderDokumenLinks($dokumenKip);
             $html .= '</div>';
         }
 
         if ($dokumenSktm->isNotEmpty()) {
-            $html .= '<div><span class="badge badge-warning text-dark mr-1"><i class="fas fa-file-alt mr-1"></i>SKTM (' . $dokumenSktm->count() . ')</span>';
+            $html .= '<div class="pip-document-group"><span class="badge badge-warning text-dark"><i class="fas fa-file-alt mr-1"></i>SKTM (' . $dokumenSktm->count() . ')</span>';
             $html .= $this->renderDokumenLinks($dokumenSktm);
             $html .= '</div>';
         }
@@ -225,8 +225,8 @@ class SiswaPipController extends Controller
                 ? ' • Diperbarui: '.$updatedAt
                 : '';
 
-            return '<span class="d-inline-block mr-1 mb-1"><button type="button"
-                        class="btn btn-outline-info btn-xs mr-1 js-preview-admin-dokumen"
+            return '<div class="pip-document-entry"><button type="button"
+                        class="btn btn-outline-info btn-xs js-preview-admin-dokumen"
                         data-preview-url="' . e($previewUrl) . '"
                         data-download-url="' . e($downloadUrl) . '"
                         data-title="' . e($label) . '"
@@ -236,7 +236,7 @@ class SiswaPipController extends Controller
                         data-updated-at="' . e($updatedAt) . '"
                         title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
-                    </button><small class="text-muted d-block"><i class="far fa-clock"></i> Diunggah: ' . e($uploadedAt) . e($updatedLabel) . '</small></span>';
+                    </button><small class="text-muted"><i class="far fa-clock"></i> Diunggah: ' . e($uploadedAt) . e($updatedLabel) . '</small></div>';
         })->implode('');
     }
 

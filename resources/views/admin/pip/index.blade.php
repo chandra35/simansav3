@@ -32,7 +32,18 @@
     .pip-assistance-page .pip-filter-actions { display: flex; align-items: flex-end; height: 100%; }
     .pip-assistance-page #pip-table th { white-space: nowrap; font-size: .72rem; letter-spacing: .03em; text-transform: uppercase; }
     .pip-assistance-page #pip-table td { vertical-align: middle; }
-    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } }
+    .pip-assistance-page .pip-document-group + .pip-document-group { margin-top: .45rem; }
+    .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
+    .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
+    .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
+    .pip-assistance-page .dataTables_wrapper .dataTables_paginate .pagination { justify-content: flex-end; gap: 0; }
+    .pip-assistance-page .dataTables_wrapper .page-link { min-width: auto; padding: .5rem .75rem; border: 1px solid #dee2e6; border-radius: 0 !important; box-shadow: none !important; color: #007bff; background: #fff; }
+    .pip-assistance-page .dataTables_wrapper .page-item + .page-item .page-link { margin-left: -1px; }
+    .pip-assistance-page .dataTables_wrapper .page-item:first-child .page-link { border-radius: .25rem 0 0 .25rem !important; }
+    .pip-assistance-page .dataTables_wrapper .page-item:last-child .page-link { border-radius: 0 .25rem .25rem 0 !important; }
+    .pip-assistance-page .dataTables_wrapper .page-item.active .page-link { color: #fff; background: #007bff; border-color: #007bff; }
+    .pip-assistance-page .dataTables_wrapper .page-item.disabled .page-link { color: #6c757d; background: #fff; }
+    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-entry { display: flex; margin: .28rem 0 0; } .pip-assistance-page .dataTables_wrapper .dataTables_paginate .pagination { justify-content: flex-start; } }
 </style>
 @stop
 
