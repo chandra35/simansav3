@@ -1271,11 +1271,18 @@ return [
             'can' => 'manage-settings',
             'submenu' => [
                 [
-                    'text' => 'Cek NIP',
+                    'text' => 'Cek NIP Pintar',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
                     'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nip*'],
+                    'active' => ['admin/pengaturan/cek-nip'],
+                ],
+                [
+                    'text' => 'Cek NIP EMIS GTK',
+                    'route' => 'admin.pengaturan.cek-nip-emisgtk.index',
+                    'icon' => 'fas fa-fw fa-user-shield',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/cek-nip-emisgtk*'],
                 ],
                 [
                     'text' => 'Cek NIK Dukcapil',

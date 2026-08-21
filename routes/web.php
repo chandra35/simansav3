@@ -423,6 +423,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware('permission:manage-tools')->group(function () {
     Route::get('/pengaturan/cek-nip', [App\Http\Controllers\Admin\NipCheckerController::class, 'index'])->name('pengaturan.cek-nip.index');
     Route::post('/pengaturan/cek-nip/check', [App\Http\Controllers\Admin\NipCheckerController::class, 'check'])->name('pengaturan.cek-nip.check');
+    Route::get('/pengaturan/cek-nip-emisgtk', [App\Http\Controllers\Admin\EmisGtkNipCheckerController::class, 'index'])->name('pengaturan.cek-nip-emisgtk.index');
+    Route::post('/pengaturan/cek-nip-emisgtk/check', [App\Http\Controllers\Admin\EmisGtkNipCheckerController::class, 'check'])
+        ->middleware('throttle:emisgtk-nip-check')
+        ->name('pengaturan.cek-nip-emisgtk.check');
 
     // Pengaturan - Cek NIK Dukcapil (Super Admin Only)
     Route::get('/pengaturan/cek-nik', [App\Http\Controllers\Admin\NikCheckerController::class, 'index'])->name('pengaturan.cek-nik.index');

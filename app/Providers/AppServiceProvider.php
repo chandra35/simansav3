@@ -93,6 +93,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('emisgtk-nip-check', function (Request $request) {
+            $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+            $nip = preg_replace('/\D/', '', (string) $request->input('nip', 'unknown'));
+
+            return [
+                Limit::perMinute(20)->by('emisgtk-user:'.$userKey),
+                Limit::perMinute(5)->by('emisgtk-nip:'.$userKey.':'.$nip),
+            ];
+        });
+
         View::composer([
             'adminlte::partials.navbar.navbar',
             'adminlte::partials.navbar.navbar-layout-topnav',
@@ -144,6 +154,7 @@ class AppServiceProvider extends ServiceProvider
                 $audience = app(PollingAudienceService::class);
                 $polling = $audience->pendingForUser($user)->first(function ($candidate) use ($user) {
                     $state = $candidate->notificationStates()->where('user_id', $user->id)->first();
+
                     return ! $state?->snoozed_until || $state->snoozed_until->lte(now());
                 });
 

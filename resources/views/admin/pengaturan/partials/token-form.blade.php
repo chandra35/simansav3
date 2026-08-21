@@ -17,8 +17,8 @@
 
         <div class="form-group">
             <label>Token Saat Ini</label>
-            <textarea class="form-control" rows="2" readonly style="resize: none;">{{ $tokenData ? substr($tokenData->token, 0, 50) . '...' . substr($tokenData->token, -20) : 'Belum ada token' }}</textarea>
-            <small class="form-text text-muted">Token ditampilkan sebagian untuk keamanan</small>
+            <textarea class="form-control" rows="2" readonly style="resize: none;">{{ $tokenData ? (!empty($tokenInfo['is_secret']) ? 'Tersimpan aman (nilai tidak dapat ditampilkan kembali)' : substr($tokenData->token, 0, 50) . '...' . substr($tokenData->token, -20)) : 'Belum dikonfigurasi' }}</textarea>
+            <small class="form-text text-muted">{{ !empty($tokenInfo['is_secret']) ? 'Cookie dienkripsi dan tidak pernah dikirim kembali ke browser.' : 'Token ditampilkan sebagian untuk keamanan' }}</small>
         </div>
 
         <div class="form-group">
@@ -29,11 +29,11 @@
         <hr>
 
         <div class="form-group">
-            <label>Token Baru <span class="text-danger">*</span></label>
+            <label>{{ ($tokenInfo['credential_type'] ?? 'token') === 'cookie' ? 'Cookie Sesi Baru' : 'Token Baru' }} <span class="text-danger">*</span></label>
             <textarea class="form-control token-input" 
                       rows="5" 
                       name="token" 
-                      placeholder="Paste token baru di sini..."
+                      placeholder="{{ ($tokenInfo['credential_type'] ?? 'token') === 'cookie' ? 'Paste nilai header Cookie dari request preview-simpeg...' : 'Paste token baru di sini...' }}"
                       style="resize: vertical; min-height: 120px;"
                       required></textarea>
             <small class="form-text text-muted">Paste token lengkap yang didapat dari {{ $tokenName }}</small>
@@ -73,7 +73,19 @@
         </div>
     </div>
     <div class="card-body">
-        @if($tokenType === 'emis_api_token')
+        @if($tokenType === 'emisgtk_session_cookie')
+        <ol>
+            <li>Login ke <strong>EMIS GTK</strong>, lalu buka halaman ubah/verval NIP.</li>
+            <li>Buka Developer Tools (F12) dan pilih tab <strong>Network</strong>.</li>
+            <li>Cari request <code>preview-simpeg</code>, lalu buka bagian <strong>Request Headers</strong>.</li>
+            <li>Salin nilai header <code>Cookie</code> secara lengkap dan tempelkan di formulir ini.</li>
+        </ol>
+        <div class="alert alert-danger mt-3 mb-0">
+            <i class="icon fas fa-user-shield"></i>
+            Cookie memberi akses ke sesi EMIS GTK. Jangan kirim melalui chat atau menyimpannya di file proyek.
+            Cookie analitik seperti <code>_ga</code> akan dibuang otomatis.
+        </div>
+        @elseif($tokenType === 'emis_api_token')
         <ol>
             <li>Login ke sistem EMIS Kemenag</li>
             <li>Buka Developer Tools browser (F12)</li>

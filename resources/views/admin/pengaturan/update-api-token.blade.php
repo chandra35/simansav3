@@ -33,6 +33,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="emisgtk-tab" data-toggle="tab" href="#emisgtk" role="tab">
+                            <i class="fas fa-user-shield"></i> Sesi EMIS GTK
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" id="emis-institusi-tab" data-toggle="tab" href="#emis-institusi" role="tab"
                            style="color: #495057;">
                             <i class="fas fa-school"></i> Token EMIS Lembaga
@@ -85,6 +90,18 @@
                             'tokenInfo' => $tokenTypes['kemenag_nip_token'],
                         ])
                     </div>
+                    <div class="tab-pane fade" id="emisgtk" role="tabpanel">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-shield-alt"></i>
+                            Kredensial ini khusus untuk Cek NIP EMIS GTK/SIMPEG, dienkripsi sebelum disimpan, dan perlu diperbarui saat sesi berakhir.
+                        </div>
+                        @include('admin.pengaturan.partials.token-form', [
+                            'tokenType' => 'emisgtk_session_cookie',
+                            'tokenName' => 'Sesi EMIS GTK',
+                            'tokenData' => $tokens->get('emisgtk_session_cookie'),
+                            'tokenInfo' => $tokenTypes['emisgtk_session_cookie'],
+                        ])
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,10 +126,10 @@
                     </dd>
 
                     <dt>Format</dt>
-                    <dd>JWT atau Bearer Token</dd>
+                    <dd>JWT, Bearer Token, atau cookie sesi</dd>
 
                     <dt>Keamanan</dt>
-                    <dd>Token disimpan terenkripsi di database</dd>
+                    <dd>Cookie sesi EMIS GTK disimpan terenkripsi dan tidak ditampilkan kembali.</dd>
                 </dl>
             </div>
         </div>
@@ -182,6 +199,7 @@ $(document).ready(function() {
         const formatStatus = form.find('.format-status');
         const expiryTime = form.find('.expiry-time');
         const btnSubmit = form.find('.btn-submit');
+        const isCookie = tokenType === 'emisgtk_session_cookie';
 
         console.log('Initializing form for token type:', tokenType);
 
@@ -189,7 +207,7 @@ $(document).ready(function() {
         tokenInput.on('input', function() {
             const token = $(this).val().trim();
             
-            if (token.length > 100) {
+            if (token.length > 100 && !isCookie) {
                 validateToken(token, tokenInfo, formatStatus, expiryTime);
             } else {
                 tokenInfo.addClass('d-none');
@@ -205,8 +223,8 @@ $(document).ready(function() {
             if (token.length < 100) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Token Tidak Valid',
-                    text: 'Token terlalu pendek. Pastikan Anda copy token lengkap.'
+                    title: isCookie ? 'Cookie Tidak Valid' : 'Token Tidak Valid',
+                    text: (isCookie ? 'Cookie sesi' : 'Token') + ' terlalu pendek. Pastikan Anda menyalin nilai lengkap.'
                 });
                 return;
             }
@@ -228,7 +246,7 @@ $(document).ready(function() {
                         if (response.expires_at) {
                             message += '<br><small>Kadaluarsa: ' + response.expires_at + '</small>';
                         }
-                        if (!response.is_jwt) {
+                        if (!response.is_jwt && response.credential_type !== 'cookie') {
                             message += '<br><small class="text-warning">Token bukan format JWT</small>';
                         }
 

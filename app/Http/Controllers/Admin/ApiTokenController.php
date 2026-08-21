@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\EmisGtkNipService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -30,13 +32,21 @@ class ApiTokenController extends Controller
             'api_url' => 'https://be-pintar.kemenag.go.id/api/v1',
             'test_route' => 'admin.pengaturan.cek-nip.index',
         ],
+        'emisgtk_session_cookie' => [
+            'name' => 'Sesi EMIS GTK (Cek NIP SIMPEG)',
+            'description' => 'Cookie sesi terenkripsi untuk preview SIMPEG pada EMIS GTK',
+            'api_url' => 'https://emisgtk.kemenag.go.id/kepegawaian/verval-kepegawaian/ptk/asn/preview-simpeg/',
+            'test_route' => 'admin.pengaturan.cek-nip-emisgtk.index',
+            'is_secret' => true,
+            'credential_type' => 'cookie',
+        ],
     ];
 
     public function index()
     {
         // Cek permission Super Admin atau manage-settings
         $user = Auth::user();
-        if (!$user->can('manage-settings') && !$user->hasRole('Super Admin')) {
+        if (! $user->can('manage-settings') && ! $user->hasRole('Super Admin')) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini');
         }
 
@@ -56,39 +66,41 @@ class ApiTokenController extends Controller
     {
         Log::info('API Token Update Request Received', [
             'user_id' => Auth::id(),
-            'request_data' => $request->except('token')
+            'request_data' => $request->except('token'),
         ]);
 
         // Cek permission Super Admin atau manage-settings
         $user = Auth::user();
-        if (!$user->can('manage-settings') && !$user->hasRole('Super Admin')) {
+        if (! $user->can('manage-settings') && ! $user->hasRole('Super Admin')) {
             Log::warning('API Token Update: Unauthorized access attempt', [
                 'user_id' => Auth::id(),
-                'user_roles' => $user->getRoleNames()
+                'user_roles' => $user->getRoleNames(),
             ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access'
+                'message' => 'Unauthorized access',
             ], 403);
         }
 
         try {
             $request->validate([
-                'token_type' => 'required|in:' . implode(',', array_keys($this->tokenTypes)),
-                'token' => 'required|string|min:100'
+                'token_type' => 'required|in:'.implode(',', array_keys($this->tokenTypes)),
+                'token' => 'required|string|min:100',
             ], [
                 'token_type.required' => 'Tipe token wajib dipilih',
                 'token_type.in' => 'Tipe token tidak valid',
                 'token.required' => 'Token wajib diisi',
-                'token.min' => 'Token minimal 100 karakter'
+                'token.min' => 'Token minimal 100 karakter',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('API Token Update: Validation failed', [
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all())
+                'message' => 'Validasi gagal: '.implode(', ', $e->validator->errors()->all()),
             ], 422);
         }
 
@@ -97,9 +109,16 @@ class ApiTokenController extends Controller
             $token = trim($request->token);
             $tokenInfo = $this->tokenTypes[$tokenType];
 
+            if ($tokenType === EmisGtkNipService::CREDENTIAL_NAME) {
+                $token = EmisGtkNipService::normalizeCookieHeader($token);
+                $storedToken = Crypt::encryptString($token);
+            } else {
+                $storedToken = $token;
+            }
+
             // Validate JWT format (basic check) - optional for some tokens
             $isJwt = $this->validateJwtFormat($token);
-            
+
             // Decode JWT to get expiry time (if JWT)
             $decoded = null;
             $expiresAt = null;
@@ -114,17 +133,17 @@ class ApiTokenController extends Controller
             $affected = DB::table('api_tokens')->updateOrInsert(
                 ['name' => $tokenType],
                 [
-                    'token' => $token,
+                    'token' => $storedToken,
                     'description' => $tokenInfo['description'],
                     'expires_at' => $expiresAt,
                     'created_at' => DB::raw('COALESCE(created_at, NOW())'),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]
             );
 
             Log::info('API Token Update - Database Operation', [
                 'affected' => $affected,
-                'token_type' => $tokenType
+                'token_type' => $tokenType,
             ]);
 
             // Log activity
@@ -133,26 +152,29 @@ class ApiTokenController extends Controller
                 'user_id' => Auth::id(),
                 'user_name' => Auth::user()->name,
                 'expires_at' => $expiresAt,
-                'timestamp' => now()
+                'timestamp' => now(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => $tokenInfo['name'] . ' berhasil diupdate',
+                'message' => $tokenInfo['name'].' berhasil diupdate',
                 'expires_at' => $expiresAt ? date('d F Y H:i:s', strtotime($expiresAt)) : null,
-                'is_jwt' => $isJwt
+                'is_jwt' => $isJwt,
+                'credential_type' => $tokenInfo['credential_type'] ?? 'token',
             ]);
 
         } catch (\Exception $e) {
             Log::error('API Token Update Failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat update token: ' . $e->getMessage()
-            ], 500);
+                'message' => $e instanceof \InvalidArgumentException
+                    ? $e->getMessage()
+                    : 'Terjadi kesalahan saat menyimpan kredensial.',
+            ], $e instanceof \InvalidArgumentException ? 422 : 500);
         }
     }
 
@@ -162,6 +184,7 @@ class ApiTokenController extends Controller
     private function validateJwtFormat($token)
     {
         $parts = explode('.', $token);
+
         return count($parts) === 3;
     }
 
@@ -178,6 +201,7 @@ class ApiTokenController extends Controller
 
             // Decode payload (second part)
             $payload = base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1]));
+
             return json_decode($payload, true);
         } catch (\Exception $e) {
             return null;
