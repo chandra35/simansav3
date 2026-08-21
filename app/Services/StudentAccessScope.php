@@ -43,6 +43,13 @@ class StudentAccessScope
             ->where('is_active', true)
             ->pluck('id');
 
+        // Wali kelas memiliki mandat perwalian yang lebih spesifik daripada
+        // jadwal mapel. Jangan gabungkan keduanya: guru wali yang mengajar
+        // beberapa rombel dapat berubah menjadi memiliki cakupan terlalu luas.
+        if ($waliClassIds->isNotEmpty()) {
+            return $waliClassIds->unique()->values();
+        }
+
         $gtkId = $user->gtk?->id;
         $teachingClassIds = $gtkId
             ? JadwalPelajaran::query()
@@ -52,7 +59,7 @@ class StudentAccessScope
                 ->pluck('kelas_id')
             : collect();
 
-        return $waliClassIds->merge($teachingClassIds)->filter()->unique()->values();
+        return $teachingClassIds->filter()->unique()->values();
     }
 
     public function apply(Builder $query, User $user): Builder
