@@ -13,6 +13,7 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 - Halaman KIP/SKTM/PKH direbuild mengikuti pola operasional SIMANSA: header dan breadcrumb standar, satu hero gradient utuh di area konten, empat kartu ringkasan bantuan yang ringkas, filter berpanel ringan, serta tabel dokumen yang lebih fokus dan responsif.
 - Pagination Laravel dan DataTables kini dinormalisasi secara global menjadi netral: teks abu gelap, latar putih, serta halaman aktif abu muda. Acuan UI melarang penggunaan biru, gradient, pill, atau kombinasi warna khusus pada pagination.
 - Filter kelas pada KIP/SKTM/PKH kini hanya memuat rombel tahun pelajaran aktif dan pencarian tabel memakai relasi rombel tahun berjalan yang sama; kelas arsip tidak lagi memunculkan pilihan ganda atau hasil filter yang tidak selaras.
+- Panel filter Data Siswa kini menggunakan lebar kontrol berdasarkan teks opsi terpanjang, termasuk pilihan kelas setelah dimuat. Kontrol dan tombol aksi tersusun sebagai flex-wrap mandiri sehingga tidak lagi membentang maupun tersambung tidak rapi.
 
 ### Registrasi Wajah: Sambutan Peserta (19 Agustus 2026)
 

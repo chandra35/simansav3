@@ -120,8 +120,8 @@
             </div>
             <div class="card-body">
                 <div class="simansa-filter-panel">
-                    <div class="row">
-                        <div class="col-md-6 col-xl-3 mb-3">
+                    <div class="simansa-filter-layout">
+                        <div class="simansa-filter-field">
                             <label for="filterPopulation" class="simansa-filter-label">
                                 <i class="fas fa-users mr-1"></i> Kelompok Data
                             </label>
@@ -144,7 +144,7 @@
                             </select>
                             <small class="text-muted">Default hanya siswa pada rombel tahun aktif.</small>
                         </div>
-                        <div class="col-md-6 col-xl-3 mb-3">
+                        <div class="simansa-filter-field">
                             <label for="filterJenisKelamin" class="simansa-filter-label">
                                 <i class="fas fa-venus-mars mr-1"></i> Jenis Kelamin
                             </label>
@@ -155,7 +155,7 @@
                             </select>
                         </div>
                         @if(!auth()->user()->hasRole('Wali Kelas') || auth()->user()->hasRole(['Super Admin', 'Admin', 'Kepala Madrasah']))
-                            <div class="col-md-6 col-xl-3 mb-3">
+                            <div class="simansa-filter-field">
                                 <label for="filterTingkat" class="simansa-filter-label">
                                     <i class="fas fa-layer-group mr-1"></i> Tingkat
                                 </label>
@@ -166,7 +166,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-6 col-xl-3 mb-3">
+                            <div class="simansa-filter-field">
                                 <label for="filterKelas" class="simansa-filter-label">
                                     <i class="fas fa-door-open mr-1"></i> Kelas
                                 </label>
@@ -175,7 +175,7 @@
                                 </select>
                             </div>
                         @endif
-                        <div class="col-md-6 col-xl-3 mb-3">
+                        <div class="simansa-filter-field">
                             <label for="filterStatus" class="simansa-filter-label">
                                 <i class="fas fa-check-circle mr-1"></i> Status Data
                             </label>
@@ -185,7 +185,7 @@
                                 <option value="belum">Belum Lengkap</option>
                             </select>
                         </div>
-                        <div class="col-md-6 col-xl-3 mb-3">
+                        <div class="simansa-filter-field">
                             <label for="filterEmisStatus" class="simansa-filter-label">
                                 <i class="fas fa-cloud-upload-alt mr-1"></i> Status EMIS
                             </label>
@@ -195,8 +195,7 @@
                                 <option value="belum">Belum Masuk EMIS</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="simansa-filter-actions">
+                        <div class="simansa-filter-actions">
                         <button type="button" id="btnResetFilter" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-redo"></i> Reset Filter
                         </button>
@@ -205,6 +204,7 @@
                             <i class="fas fa-file-excel"></i> Export Excel
                         </a>
                         @endcan
+                        </div>
                     </div>
                 </div>
 
@@ -527,11 +527,44 @@
             font-weight: 700;
             padding: .38rem .62rem;
         }
+        .simansa-filter-layout {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 1rem;
+        }
+        .simansa-filter-field {
+            flex: 0 1 auto;
+            min-width: 0;
+            margin: 0 !important;
+        }
+        .simansa-filter-field .form-control {
+            width: var(--simansa-filter-width, 12rem);
+            max-width: 100%;
+        }
         .simansa-filter-actions {
             display: flex;
+            align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
             gap: .5rem;
+            margin-left: auto;
+            padding-bottom: .02rem;
+        }
+        @media (max-width: 767.98px) {
+            .simansa-filter-layout {
+                display: grid;
+                gap: .8rem;
+            }
+            .simansa-filter-field,
+            .simansa-filter-field .form-control,
+            .simansa-filter-actions {
+                width: 100% !important;
+            }
+            .simansa-filter-actions {
+                margin-left: 0;
+                justify-content: flex-start;
+            }
         }
         .simansa-table-note {
             margin-bottom: .85rem;
@@ -943,6 +976,28 @@ const populationLabels = {
     all: 'Semua Riwayat'
 };
 
+function fitStudentFilterSelects(scope = document) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const selects = scope.querySelectorAll
+        ? scope.querySelectorAll('.simansa-filter-field select')
+        : [];
+
+    selects.forEach(function (select) {
+        const style = window.getComputedStyle(select);
+        context.font = [style.fontWeight, style.fontSize, style.fontFamily].join(' ');
+
+        const longestOption = Array.from(select.options).reduce(function (longest, option) {
+            return Math.max(longest, context.measureText(option.text.trim()).width);
+        }, 0);
+        // Ruang untuk panah native select dan padding Bootstrap.
+        const width = Math.min(360, Math.max(140, Math.ceil(longestOption + 52)));
+
+        select.closest('.simansa-filter-field')
+            ?.style.setProperty('--simansa-filter-width', width + 'px');
+    });
+}
+
 // Buka gambar di modal preview
 function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     imgScale = 1;
@@ -1176,6 +1231,7 @@ $(document).ready(function() {
         $('#filterStatus').val('{{ $contextQuery["status"] }}');
     @endif
     $('#filterPopulation').val(statsContextFilters.population || 'active_year');
+    fitStudentFilterSelects();
 
     // Auto-open edit modal jika URL mengandung ?edit={id} (dari show.blade.php)
     const urlParams = new URLSearchParams(window.location.search);
@@ -2038,6 +2094,7 @@ $(document).ready(function() {
                     options += `<option value="${kelas.id}">${kelas.text}</option>`;
                 });
                 $kelasSelect.html(options).prop('disabled', false);
+                fitStudentFilterSelects();
                 applyFilters();
             },
             error: function() {
@@ -2060,6 +2117,7 @@ $(document).ready(function() {
         $('#filterKelas').val('').prop('disabled', true).html('<option value="">Pilih Tingkat Dulu</option>');
         $('#filterStatus').val('');
         $('#filterEmisStatus').val('');
+        fitStudentFilterSelects();
         syncAcademicFilters();
         applyFilters();
     });
