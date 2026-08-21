@@ -29,10 +29,10 @@
     .pip-assistance-page .pip-stat-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(15, 23, 42, .09); }
     .pip-assistance-page .pip-stat-card .pip-stat-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1rem; }
     .pip-assistance-page .pip-filter-summary { border: 1px solid #dbeafe; border-radius: .5rem; background: #f8fbff; }
-    .pip-assistance-page .pip-filter-actions { display: flex; gap: .5rem; align-items: flex-end; height: 100%; }
+    .pip-assistance-page .pip-filter-actions { display: flex; align-items: flex-end; height: 100%; }
     .pip-assistance-page #pip-table th { white-space: nowrap; font-size: .72rem; letter-spacing: .03em; text-transform: uppercase; }
     .pip-assistance-page #pip-table td { vertical-align: middle; }
-    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; } }
+    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } }
 </style>
 @stop
 
@@ -89,7 +89,7 @@
         <div class="card-header border-0">
             <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                 <div>
-                    <h3 class="card-title mb-1"><i class="fas fa-folder-open text-primary mr-2"></i>Daftar Dokumen Bantuan</h3>
+                    <h3 class="h6 font-weight-bold mb-1"><i class="fas fa-folder-open text-primary mr-2"></i>Daftar Dokumen Bantuan</h3>
                     <div class="text-muted small">Lihat dokumen tanpa meninggalkan halaman atau buka detail profil siswa.</div>
                 </div>
                 <div class="card-tools ml-0 mt-3 mt-lg-0"><button type="button" id="btnExportExcel" class="btn btn-success btn-sm"><i class="fas fa-file-excel mr-1"></i> Export Excel</button></div>
@@ -97,8 +97,10 @@
         </div>
         <div class="card-body pt-0">
             <div class="pip-filter-summary p-3 mb-3">
-                <div class="row">
-                    <div class="col-md-6 col-xl-3 mb-3 mb-xl-0">
+                <div class="row align-items-end">
+                    <div class="col-lg-9">
+                        <div class="row">
+                            <div class="col-md-4 mb-3 mb-lg-0">
                             <label class="simansa-filter-label">
                                 <i class="fas fa-folder-open mr-1"></i> Jenis Bantuan
                             </label>
@@ -108,8 +110,8 @@
                                 <option value="sktm">SKTM saja</option>
                                 <option value="pkh">PKH saja</option>
                             </select>
-                    </div>
-                    <div class="col-md-6 col-xl-3 mb-3 mb-xl-0">
+                            </div>
+                            <div class="col-md-4 mb-3 mb-lg-0">
                             <label class="simansa-filter-label">
                                 <i class="fas fa-layer-group mr-1"></i> Tingkat
                             </label>
@@ -119,19 +121,20 @@
                                     <option value="{{ $val }}">{{ $label }}</option>
                                 @endforeach
                             </select>
-                    </div>
-                    <div class="col-md-6 col-xl-3 mb-3 mb-xl-0">
+                            </div>
+                            <div class="col-md-4">
                             <label class="simansa-filter-label">
                                 <i class="fas fa-door-open mr-1"></i> Kelas
                             </label>
                             <select id="filterKelas" class="form-control form-control-sm" disabled>
                                 <option value="">Pilih Tingkat Dulu</option>
                             </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6 col-xl-3">
-                        <label class="simansa-filter-label d-none d-xl-block">&nbsp;</label>
+                    <div class="col-lg-3">
                         <div class="pip-filter-actions"><button type="button" id="btnResetFilter" class="btn btn-outline-secondary btn-sm w-100">
-                                <i class="fas fa-redo mr-1"></i> Reset Filter
+                            <i class="fas fa-redo mr-1"></i> Reset Filter
                         </button></div>
                     </div>
                 </div>
