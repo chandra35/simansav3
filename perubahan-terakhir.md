@@ -6,6 +6,8 @@ Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
 
+- Grid dan breakpoint halaman status sistem disempurnakan untuk desktop, tablet, ponsel, serta layar pendek: lebar kartu, padding, tipografi, pembungkusan teks, dan tombol kini beradaptasi proporsional tanpa memotong elemen atau memaksa overflow horizontal.
+
 - Halaman status 403, 404, 500, dan 503 kini memakai satu layout ringkas dan responsif: alasan yang aman serta mudah dipahami, kode HTTP, tombol dashboard/kembali, dan tanpa menampilkan detail exception kepada pengguna. Halaman 503 tetap memuat ulang otomatis setiap 30 detik selama pemeliharaan.
 
 - Akses Nilai Legger kini dipisahkan dari wali kelas melalui permission `view-nilai-legger`; halaman dan URL Legger untuk SNBP/SNBT/PTKIN tidak lagi memakai permission Nilai umum. Wali kelas otomatis kehilangan hak Legger/input nilai lama dan memperoleh `view-nilai-rdm` untuk menu Rekap Nilai RDM yang hanya-baca, terbatas pada rombel aktif penugasannya, serta hanya menampilkan nilai resmi bersumber `rdm_sync`.

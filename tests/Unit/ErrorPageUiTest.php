@@ -17,5 +17,8 @@ class ErrorPageUiTest extends TestCase
         $layout = file_get_contents("{$root}/layout.blade.php");
         $this->assertStringContainsString('Ke dashboard', $layout);
         $this->assertStringNotContainsString('$exception->getMessage()', $layout);
+        $this->assertStringContainsString('@media (min-width:768px)', $layout);
+        $this->assertStringContainsString('@media (max-width:767px)', $layout);
+        $this->assertStringContainsString('@media (max-height:620px)', $layout);
     }
 }
