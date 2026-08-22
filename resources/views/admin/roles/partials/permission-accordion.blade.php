@@ -10,7 +10,7 @@
                 <div class="simansa-role-permission-module__header">
                     <button class="btn btn-link simansa-role-permission-module__trigger" type="button"
                             data-toggle="collapse" data-target="#{{ $collapseId }}"
-                            aria-expanded="{{ $loop->first ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
+                            aria-expanded="false" aria-controls="{{ $collapseId }}">
                         <span class="simansa-role-permission-module__icon text-{{ $module['color'] }}">
                             <i class="fas fa-{{ $module['icon'] }}" aria-hidden="true"></i>
                         </span>
@@ -21,6 +21,7 @@
                         <span class="simansa-role-permission-module__count" data-permission-group-count="{{ $module['key'] }}">
                             {{ $selectedCount }}/{{ count($module['items']) }} aktif
                         </span>
+                        <i class="fas fa-chevron-down simansa-role-permission-module__chevron" aria-hidden="true"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-primary simansa-role-permission-module__toggle"
                             data-permission-group="{{ $module['key'] }}" title="Pilih atau kosongkan semua permission {{ $module['label'] }}">
@@ -28,7 +29,7 @@
                     </button>
                 </div>
             </div>
-            <div id="{{ $collapseId }}" class="collapse {{ $loop->first ? 'show' : '' }}" aria-labelledby="{{ $headingId }}" data-parent="#{{ $accordionId }}">
+            <div id="{{ $collapseId }}" class="collapse" aria-labelledby="{{ $headingId }}" data-parent="#{{ $accordionId }}">
                 <div class="card-body simansa-role-permission-module__body">
                     @foreach($module['items'] as $permission)
                         @php $isChecked = in_array($permission['name'], $selectedPermissions); @endphp

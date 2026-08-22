@@ -9,6 +9,8 @@
     .simansa-role-permission-module__title strong { font-size: .9rem; }
     .simansa-role-permission-module__title small { color: #71809a; font-size: .75rem; line-height: 1.35; }
     .simansa-role-permission-module__count { margin-left: auto; color: #61708a; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+    .simansa-role-permission-module__chevron { color: #7c8ba1; font-size: .72rem; transition: transform .18s ease; }
+    .simansa-role-permission-module__trigger[aria-expanded="true"] .simansa-role-permission-module__chevron { transform: rotate(180deg); }
     .simansa-role-permission-module__toggle { flex: 0 0 auto; min-height: 34px; white-space: nowrap; }
     .simansa-role-permission-module__body { display: grid; gap: .15rem; padding: .55rem .7rem .7rem; border-top: 1px solid #e8eef6; background: #f8fbff; }
     .simansa-role-permission-row { padding: .55rem .65rem .55rem 2.2rem; border-radius: .45rem; }

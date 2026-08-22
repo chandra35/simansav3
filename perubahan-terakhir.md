@@ -9,7 +9,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Role kustom dari Role Management kini dapat memakai permission `access-global-siswa-kelas`. Permission ini membuka cakupan seluruh data Siswa dan Kelas bagi role yang dipilih, tanpa harus mewarisi seluruh permission role Operator.
 - Cakupan global tidak diberikan secara otomatis: role kustom tetap harus menerima permission operasional terpisah seperti `view-siswa`, `reset-password-siswa`, atau `view-kelas`. Dengan demikian admin dapat membuat contoh role `Operator Siswa Terbatas` yang hanya memiliki hak yang diperlukan.
 - Pembatasan server-side Kelas kini mengikuti cakupan yang sama. GTK/BK tanpa permission global hanya dapat membuka rombel penugasan aktifnya; daftar, statistik, URL detail, dan aksi berbasis rombel tidak dapat digunakan untuk mengakses kelas lain.
-- Form Tambah Role dan Edit Role kini memakai accordion per fitur sekolah. Tombol Toggle berada pada sisi kanan tiap modul, sedangkan checkbox disusun vertikal dengan jarak konsisten, status jumlah akses aktif, dan tampilan ringkas untuk ponsel.
+- Form Tambah Role dan Edit Role kini memakai accordion per fitur sekolah. Semua modul tertutup saat halaman dibuka agar tetap ringkas; baris modul dapat diklik untuk membuka daftar hak akses. Tombol Toggle berada pada sisi kanan tiap modul, sedangkan checkbox disusun vertikal dengan jarak konsisten, status jumlah akses aktif, dan tampilan ringkas untuk ponsel.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 

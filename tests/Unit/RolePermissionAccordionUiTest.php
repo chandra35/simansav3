@@ -18,6 +18,9 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringNotContainsString('simansa-check-grid', $create);
         $this->assertStringNotContainsString('simansa-check-grid', $edit);
         $this->assertStringContainsString('data-toggle="collapse"', $accordion);
+        $this->assertStringContainsString('aria-expanded="false"', $accordion);
+        $this->assertStringContainsString('class="collapse"', $accordion);
+        $this->assertStringNotContainsString("'show'", $accordion);
         $this->assertStringContainsString('data-permission-group=', $accordion);
         $this->assertStringContainsString('simansa-role-permission-row', $accordion);
     }
