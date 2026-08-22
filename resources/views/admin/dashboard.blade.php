@@ -43,6 +43,32 @@
 @stop
 
 @section('content')
+    <nav class="simansa-dashboard-quick-nav d-md-none" aria-label="Akses cepat dashboard">
+        <span class="simansa-dashboard-quick-nav__label">Akses cepat</span>
+        <div class="simansa-dashboard-quick-nav__links">
+            @can('view-siswa')
+                <a href="{{ route('admin.siswa.index') }}" class="simansa-dashboard-quick-nav__link">
+                    <i class="fas fa-user-graduate" aria-hidden="true"></i><span>Data Siswa</span>
+                </a>
+            @endcan
+            @can('view-kelas')
+                <a href="{{ route('admin.kelas.index') }}" class="simansa-dashboard-quick-nav__link">
+                    <i class="fas fa-school" aria-hidden="true"></i><span>Kelas</span>
+                </a>
+            @endcan
+            @can('view-gtk')
+                <a href="{{ route('admin.gtk.index') }}" class="simansa-dashboard-quick-nav__link">
+                    <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i><span>GTK</span>
+                </a>
+            @endcan
+            @can('view-activity-log')
+                <a href="{{ route('admin.activity-logs.index') }}" class="simansa-dashboard-quick-nav__link">
+                    <i class="fas fa-history" aria-hidden="true"></i><span>Aktivitas</span>
+                </a>
+            @endcan
+        </div>
+    </nav>
+
     <div class="row">
         <div class="col-lg-3 col-6 mb-3">
             <div class="simansa-stat-card simansa-stat-card--indigo">
@@ -129,7 +155,7 @@
                         <button class="btn simansa-online-icon-btn" id="btn-refresh-online" type="button" title="Perbarui data" aria-label="Perbarui data pengguna online">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button class="btn simansa-online-view-all" type="button" data-toggle="modal" data-target="#onlineUsersModal">
+                        <button class="btn simansa-online-view-all" type="button" data-toggle="modal" data-target="#onlineUsersModal" aria-haspopup="dialog">
                             Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
                         </button>
                     </div>
@@ -202,7 +228,7 @@
                     <div class="simansa-online-toolbar">
                         <div class="simansa-online-search">
                             <i class="fas fa-search"></i>
-                            <input type="search" id="online-search" class="form-control" placeholder="Cari nama, username, NISN, NIP..." autocomplete="off">
+                            <input type="search" id="online-search" class="form-control" placeholder="Cari nama, username, NISN, NIP..." aria-label="Cari pengguna online" autocomplete="off">
                         </div>
                         <select id="online-role-filter" class="form-control" aria-label="Filter peran">
                             <option value="">Semua Peran</option>
@@ -210,7 +236,7 @@
                             <option value="gtk">GTK</option>
                             <option value="staff">Admin &amp; Staf</option>
                         </select>
-                        <button type="button" class="btn simansa-online-icon-btn" id="btn-refresh-online-modal" title="Perbarui daftar">
+                        <button type="button" class="btn simansa-online-icon-btn" id="btn-refresh-online-modal" title="Perbarui daftar" aria-label="Perbarui daftar pengguna online">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
@@ -320,13 +346,13 @@
                             <tbody>
                                 @forelse($stats['recent_activities'] as $activity)
                                     <tr>
-                                        <td>
+                                        <td data-label="Waktu">
                                             <div class="simansa-activity-time">
                                                 <strong>{{ $activity->created_at->format('d/m/Y') }}</strong>
                                                 <span>{{ $activity->created_at->format('H:i') }}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Pengguna">
                                             <div class="simansa-activity-user">
                                                 <span class="simansa-activity-user__avatar">
                                                     {{ strtoupper(substr($activity->user->name ?? 'S', 0, 1)) }}
@@ -334,12 +360,12 @@
                                                 <span>{{ $activity->user->name ?? 'System' }}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Aktivitas">
                                             <span class="simansa-activity-badge">
                                                 {{ $activity->activity_type }}
                                             </span>
                                         </td>
-                                        <td>{{ $activity->description }}</td>
+                                        <td data-label="Deskripsi">{{ $activity->description }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -365,6 +391,63 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 1rem 1.25rem;
+        }
+
+        .simansa-dashboard-quick-nav {
+            margin: 0 0 1rem;
+            padding: .8rem;
+            border: 1px solid #dce7f5;
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .05);
+        }
+
+        .simansa-dashboard-quick-nav__label {
+            display: block;
+            margin: 0 0 .55rem .1rem;
+            color: #53637d;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .simansa-dashboard-quick-nav__links {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .55rem;
+        }
+
+        .simansa-dashboard-quick-nav__link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            min-height: 44px;
+            padding: .55rem .65rem;
+            border: 1px solid #d7e3f4;
+            border-radius: .75rem;
+            color: #2347c2;
+            font-size: .8rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            text-decoration: none;
+            background: #f8fbff;
+        }
+
+        .simansa-dashboard-quick-nav__link:hover {
+            color: #1d3aa0;
+            background: #eef4ff;
+            text-decoration: none;
+        }
+
+        .simansa-dashboard-quick-nav__link:focus-visible,
+        .simansa-stat-card__footer a:focus-visible,
+        .simansa-online-icon-btn:focus-visible,
+        .simansa-online-view-all:focus-visible {
+            outline: 3px solid rgba(49, 91, 234, .35);
+            outline-offset: 2px;
         }
 
         .simansa-dashboard-hero__eyebrow {
@@ -657,6 +740,16 @@
             text-transform: lowercase;
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            .simansa-stat-card,
+            .simansa-online-table tbody tr,
+            .simansa-pulse-dot,
+            .simansa-online-skeleton-row span {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
         @media (max-width: 991.98px) {
             .simansa-dashboard-header {
                 flex-direction: column;
@@ -673,10 +766,80 @@
         }
 
         @media (max-width: 767.98px) {
+            .simansa-dashboard-header__meta {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                width: 100%;
+                gap: .55rem;
+            }
+
+            .simansa-dashboard-chip {
+                min-width: 0;
+                padding: .7rem .75rem;
+            }
+
+            .simansa-dashboard-chip:last-child {
+                grid-column: 1 / -1;
+            }
+
             .simansa-stat-card__value { font-size: 1.55rem; }
+
+            .simansa-activity-table-wrap {
+                overflow: visible;
+                border: 0;
+                border-radius: 0;
+            }
+
+            .simansa-activity-table,
+            .simansa-activity-table tbody,
+            .simansa-activity-table tr,
+            .simansa-activity-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .simansa-activity-table thead {
+                display: none;
+            }
+
+            .simansa-activity-table tbody {
+                display: grid;
+                gap: .65rem;
+            }
+
+            .simansa-activity-table tbody tr {
+                padding: .75rem;
+                border: 1px solid #dce7f5;
+                border-radius: .85rem;
+                background: #fff;
+                box-shadow: 0 5px 14px rgba(15, 23, 42, .035);
+            }
+
+            .simansa-activity-table tbody td {
+                padding: .32rem 0;
+                border: 0;
+            }
+
+            .simansa-activity-table tbody td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: .16rem;
+                color: #71809a;
+                font-size: .66rem;
+                font-weight: 800;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+            }
+
+            .simansa-activity-table tbody td[colspan] {
+                text-align: center;
+            }
         }
 
         @media (max-width: 575.98px) {
+            .simansa-dashboard-hero__title { font-size: 1.4rem !important; }
+            .simansa-dashboard-hero__subtitle { font-size: .88rem; line-height: 1.55; }
+
             .simansa-stat-card {
                 grid-template-columns: 38px 1fr;
                 column-gap: 0.6rem;
@@ -686,7 +849,15 @@
             .simansa-stat-card__icon { width: 38px; height: 38px; font-size: 0.9rem; border-radius: 0.65rem; }
             .simansa-stat-card__value { font-size: 1.35rem; }
             .simansa-stat-card__label { font-size: 0.6rem; }
-            .simansa-stat-card__footer { font-size: 0.68rem; margin-top: 0.45rem; padding-top: 0.45rem; }
+            .simansa-stat-card__footer {
+                align-items: flex-start;
+                flex-direction: column;
+                font-size: 0.68rem;
+                margin-top: 0.45rem;
+                padding-top: 0.45rem;
+            }
+            .simansa-stat-card__footer > span:first-child { white-space: normal; }
+            .simansa-stat-card__footer a { min-height: 28px; display: inline-flex; align-items: center; }
         }
 
         /* Online users */
@@ -982,9 +1153,14 @@
 
         @media (max-width: 575.98px) {
             .simansa-online-card__header { flex-direction: column; }
-            .simansa-online-card__actions { width: 100%; justify-content: flex-end; }
+            .simansa-online-card__actions { width: 100%; justify-content: space-between; }
+            .simansa-online-icon-btn { width: 44px; height: 44px; }
+            .simansa-online-view-all { min-height: 44px; padding: 0 .75rem; }
             .simansa-online-card__footer { flex-direction: column; }
             .simansa-online-modal .modal-dialog { margin: .5rem; }
+            .simansa-online-modal .modal-header,
+            .simansa-online-modal .modal-body { padding: 1rem; }
+            .simansa-online-toolbar select { flex: 1 1 calc(100% - 3.25rem); }
             .simansa-online-pagination { align-items: stretch; flex-direction: column; }
             .simansa-online-pagination > div,
             .simansa-online-pagination .btn { flex: 1; }

@@ -1,8 +1,15 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 19 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 22 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
+
+- Dashboard Admin kini menyediakan akses cepat khusus ponsel untuk Data Siswa, Kelas, GTK, dan Aktivitas sesuai permission akun; pengguna tidak harus selalu membuka sidebar untuk menuju layanan yang sering dipakai.
+- Kartu ringkasan, metadata tahun aktif, panel pengguna online, kontrol modal, dan pagination monitoring kini memakai grid/bungkus elemen yang proporsional di ponsel serta target sentuh minimal 44px untuk aksi utama.
+- Tabel Aktivitas Terbaru otomatis berubah menjadi kartu berlabel pada layar kecil, sehingga informasi waktu, pengguna, aktivitas, dan deskripsi tetap mudah dipindai tanpa membuat halaman melebar atau perlu digeser horizontal.
+- Fokus keyboard dibuat jelas pada tautan/tombol dashboard, kontrol pencarian memiliki label aksesibel, dan animasi dashboard menghormati preferensi pengurangan gerakan perangkat.
 
 ### Stabilitas Upload & Dokumen Siswa (21 Agustus 2026)
 
