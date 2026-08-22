@@ -10,6 +10,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Cakupan global tidak diberikan secara otomatis: role kustom tetap harus menerima permission operasional terpisah seperti `view-siswa`, `reset-password-siswa`, atau `view-kelas`. Dengan demikian admin dapat membuat contoh role `Operator Siswa Terbatas` yang hanya memiliki hak yang diperlukan.
 - Pembatasan server-side Kelas kini mengikuti cakupan yang sama. GTK/BK tanpa permission global hanya dapat membuka rombel penugasan aktifnya; daftar, statistik, URL detail, dan aksi berbasis rombel tidak dapat digunakan untuk mengakses kelas lain.
 - Form Tambah Role dan Edit Role kini memakai accordion per fitur sekolah. Semua modul tertutup saat halaman dibuka agar tetap ringkas; baris modul dapat diklik untuk membuka daftar hak akses. Tombol Toggle berada pada sisi kanan tiap modul, sedangkan checkbox disusun vertikal dengan jarak konsisten, status jumlah akses aktif, dan tampilan ringkas untuk ponsel.
+- Isi permission pada accordion dipadatkan menjadi grid adaptif empat kolom desktop, tiga kolom laptop/tablet, dua kolom tablet kecil, dan satu kolom ponsel. Tinggi panel berkurang signifikan tanpa mengorbankan keterbacaan label maupun checkbox.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 

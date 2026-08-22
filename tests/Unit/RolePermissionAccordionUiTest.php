@@ -12,6 +12,7 @@ class RolePermissionAccordionUiTest extends TestCase
         $create = file_get_contents($root.'/resources/views/admin/roles/create.blade.php');
         $edit = file_get_contents($root.'/resources/views/admin/roles/edit.blade.php');
         $accordion = file_get_contents($root.'/resources/views/admin/roles/partials/permission-accordion.blade.php');
+        $styles = file_get_contents($root.'/resources/views/admin/roles/partials/permission-accordion-assets.blade.php');
 
         $this->assertStringContainsString("@include('admin.roles.partials.permission-accordion'", $create);
         $this->assertStringContainsString("@include('admin.roles.partials.permission-accordion'", $edit);
@@ -23,5 +24,7 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringNotContainsString("'show'", $accordion);
         $this->assertStringContainsString('data-permission-group=', $accordion);
         $this->assertStringContainsString('simansa-role-permission-row', $accordion);
+        $this->assertStringContainsString('grid-template-columns: repeat(4, minmax(0, 1fr))', $styles);
+        $this->assertStringContainsString('grid-template-columns: 1fr', $styles);
     }
 }
