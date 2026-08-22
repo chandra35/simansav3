@@ -33,6 +33,7 @@ class RolePermissionSeeder extends Seeder
             'reset-password-siswa',
             'view-dokumen-siswa',
             'view-pip',
+            'access-global-siswa-kelas',
 
             // Tahun Pelajaran Management
             'view-tahun-pelajaran',

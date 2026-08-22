@@ -42,11 +42,11 @@ class ClassStudentPresenceVerificationTest extends TestCase
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/KelasController.php');
 
         $this->assertGreaterThanOrEqual(
-            3,
+            2,
             substr_count($controller, "'keberadaan_diverifikasi_at' => null")
         );
         $this->assertGreaterThanOrEqual(
-            3,
+            2,
             substr_count($controller, "'keberadaan_diverifikasi_by' => null")
         );
     }

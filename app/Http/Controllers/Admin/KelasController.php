@@ -11,6 +11,7 @@ use App\Models\Jurusan;
 use App\Models\SiswaKelas;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\StudentAccessScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,19 @@ use Yajra\DataTables\Facades\DataTables;
 
 class KelasController extends Controller
 {
+    public function __construct(private readonly StudentAccessScope $studentAccessScope)
+    {
+        $this->middleware(function (Request $request, \Closure $next) {
+            $kelas = $request->route('kelas');
+
+            if ($kelas instanceof Kelas) {
+                $this->ensureKelasInScope($kelas, $request->user());
+            }
+
+            return $next($request);
+        });
+    }
+
     /**
      * Display a listing of the resource with DataTables
      */
@@ -36,6 +50,8 @@ class KelasController extends Controller
                 'waliKelas',
                 'ketuaKelasRecord.siswa',
             ])->withCount('siswaAktif');
+
+            $this->applyKelasScope($query, $request->user());
 
             // Apply filters
             if ($request->filled('tahun_pelajaran_id')) {
@@ -169,13 +185,16 @@ class KelasController extends Controller
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
 
+        $kelasQuery = Kelas::query();
+        $this->applyKelasScope($kelasQuery, $request->user());
+
         $stats = [
-            'total' => Kelas::count(),
-            'aktif' => Kelas::where('is_active', true)->count(),
+            'total' => (clone $kelasQuery)->count(),
+            'aktif' => (clone $kelasQuery)->where('is_active', true)->count(),
             'tahun_aktif' => $tahunAktif
-                ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)->count()
+                ? (clone $kelasQuery)->where('tahun_pelajaran_id', $tahunAktif->id)->count()
                 : 0,
-            'kapasitas_penuh' => Kelas::withCount('siswaAktif')
+            'kapasitas_penuh' => (clone $kelasQuery)->withCount('siswaAktif')
                 ->get()
                 ->filter(fn ($kelas) => $kelas->siswa_aktif_count >= $kelas->kapasitas)
                 ->count(),
@@ -196,6 +215,8 @@ class KelasController extends Controller
      */
     public function create()
     {
+        $this->ensureGlobalClassManagementAccess(request());
+
         $tahunPelajarans = TahunPelajaran::where('is_active', true)
             ->orWhere('status', 'berlangsung')
             ->orderBy('tahun_mulai', 'desc')
@@ -214,6 +235,7 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create-kelas');
+        $this->ensureGlobalClassManagementAccess($request);
         
         $validator = Validator::make($request->all(), [
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
@@ -673,6 +695,7 @@ class KelasController extends Controller
         
         try {
             $kelas = Kelas::withTrashed()->findOrFail($id);
+            $this->ensureKelasInScope($kelas, request()->user());
             
             if (!$kelas->trashed()) {
                 return response()->json([
@@ -1910,6 +1933,31 @@ class KelasController extends Controller
         $pdf->setPaper('legal', 'portrait'); // Legal Portrait: 8.5" x 14" (216mm x 356mm)
         
         return $pdf->stream('Absensi_' . $kelas->nama_lengkap . '.pdf');
+    }
+
+    private function applyKelasScope(Builder $query, User $user): Builder
+    {
+        $classIds = $this->studentAccessScope->classIds($user);
+
+        if ($classIds === null) {
+            return $query;
+        }
+
+        return $classIds->isEmpty()
+            ? $query->whereRaw('1 = 0')
+            : $query->whereIn('id', $classIds);
+    }
+
+    private function ensureKelasInScope(Kelas $kelas, User $user): void
+    {
+        $classIds = $this->studentAccessScope->classIds($user);
+
+        abort_unless($classIds === null || $classIds->contains($kelas->getKey()), 404, 'Kelas tidak ditemukan dalam cakupan akses Anda.');
+    }
+
+    private function ensureGlobalClassManagementAccess(Request $request): void
+    {
+        abort_unless(! $this->studentAccessScope->isLimited($request->user()), 403, 'Pengelolaan struktur kelas memerlukan cakupan data global.');
     }
 
     private function syncSiswaCurrentClassFromPivot(Siswa $siswa, ?string $tahunPelajaranId = null): void

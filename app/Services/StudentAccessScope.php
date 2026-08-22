@@ -15,6 +15,8 @@ use Illuminate\Support\Collection;
  */
 class StudentAccessScope
 {
+    public const GLOBAL_SCOPE_PERMISSION = 'access-global-siswa-kelas';
+
     public function isLimited(User $user): bool
     {
         if ($this->hasGlobalScope($user)) {
@@ -80,6 +82,7 @@ class StudentAccessScope
     private function hasGlobalScope(User $user): bool
     {
         return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA'])
-            || in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+            || in_array($user->role, ['super_admin', 'admin', 'operator'], true)
+            || $user->can(self::GLOBAL_SCOPE_PERMISSION);
     }
 }

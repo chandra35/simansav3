@@ -35,4 +35,23 @@ class StudentAccessScopeTest extends TestCase
 
         $this->assertFalse(app(StudentAccessScope::class)->isLimited($user));
     }
+
+    public function test_it_allows_a_custom_role_to_receive_global_student_and_class_scope(): void
+    {
+        $user = new class extends User {
+            public function hasAnyRole(...$roles): bool
+            {
+                return false;
+            }
+
+            public function can($ability, $arguments = []): bool
+            {
+                return $ability === StudentAccessScope::GLOBAL_SCOPE_PERMISSION;
+            }
+        };
+        $user->role = 'gtk';
+        $user->setRelation('gtk', new Gtk());
+
+        $this->assertFalse(app(StudentAccessScope::class)->isLimited($user));
+    }
 }

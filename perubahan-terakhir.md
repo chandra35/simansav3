@@ -1,8 +1,14 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 22 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Role Kustom & Cakupan Data Global (23 Agustus 2026)
+
+- Role kustom dari Role Management kini dapat memakai permission `access-global-siswa-kelas`. Permission ini membuka cakupan seluruh data Siswa dan Kelas bagi role yang dipilih, tanpa harus mewarisi seluruh permission role Operator.
+- Cakupan global tidak diberikan secara otomatis: role kustom tetap harus menerima permission operasional terpisah seperti `view-siswa`, `reset-password-siswa`, atau `view-kelas`. Dengan demikian admin dapat membuat contoh role `Operator Siswa Terbatas` yang hanya memiliki hak yang diperlukan.
+- Pembatasan server-side Kelas kini mengikuti cakupan yang sama. GTK/BK tanpa permission global hanya dapat membuka rombel penugasan aktifnya; daftar, statistik, URL detail, dan aksi berbasis rombel tidak dapat digunakan untuk mengakses kelas lain.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 

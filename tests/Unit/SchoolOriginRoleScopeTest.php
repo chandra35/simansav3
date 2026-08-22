@@ -18,7 +18,8 @@ class SchoolOriginRoleScopeTest extends TestCase
     {
         $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/SekolahAsalController.php');
 
-        $this->assertStringContainsString('activeWaliKelasClasses()', $controller);
+        $this->assertStringContainsString('waliClassIds()', $controller);
+        $this->assertStringContainsString('StudentAccessScope::class', $controller);
         $this->assertStringContainsString("whereHas('kelasTahunAktif'", $controller);
         $this->assertStringContainsString("whereHas('siswa'", $controller);
         $this->assertStringContainsString("whereKey(\$npsn)->firstOrFail()", $controller);

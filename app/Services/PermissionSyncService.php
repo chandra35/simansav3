@@ -72,6 +72,15 @@ class PermissionSyncService
                     'manage-nis-lokal',
                 ],
             ],
+            'cakupan-data' => [
+                'label' => 'Cakupan Data Global',
+                'icon' => 'globe-asia',
+                'color' => 'info',
+                'description' => 'Membuka cakupan seluruh siswa dan kelas tanpa memberikan hak Operator penuh',
+                'permissions' => [
+                    'access-global-siswa-kelas',
+                ],
+            ],
             'gtk' => [
                 'label' => 'Data GTK',
                 'icon' => 'chalkboard-teacher',

@@ -18,8 +18,8 @@ class StudentStatisticsRoleScopeTest extends TestCase
     {
         $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/SiswaStatisticsController.php');
 
-        $this->assertStringContainsString('activeWaliKelasClasses()', $controller);
-        $this->assertStringContainsString("hasAnyRole(['GTK', 'Wali Kelas'])", $controller);
+        $this->assertStringContainsString('waliClassIds()', $controller);
+        $this->assertStringContainsString('StudentAccessScope::class', $controller);
         $this->assertStringContainsString("whereHas('kelasTahunAktif'", $controller);
         $this->assertStringContainsString("->when(\$classIds !== null, fn (\$query) => \$query->whereIn('id', \$classIds))", $controller);
         $this->assertStringContainsString('abort_if($isWaliScope, 404', $controller);
@@ -36,7 +36,7 @@ class StudentStatisticsRoleScopeTest extends TestCase
 
         $this->assertGreaterThanOrEqual(2, substr_count($controller, 'Akun GTK Wali Kelas hanya memiliki akses baca.'));
         $this->assertStringContainsString("route('admin.gtk.wali.siswa.show'", $controller);
-        $this->assertStringContainsString("route('admin.gtk.wali.siswa.index'", $view);
+        $this->assertStringContainsString('@if($isWaliScope)', $view);
         $this->assertStringContainsString('@if($canManage)', $view);
         $this->assertStringContainsString("Route::middleware('permission:view-statistik-siswa')", $routes);
         $this->assertSame(1, substr_count($menu, "'can' => 'sidebar-student-statistics-global'"));

@@ -58,6 +58,7 @@ class PermissionSeeder extends Seeder
                 'import-data' => 'Import Data',
                 'manage-settings' => 'Kelola Pengaturan Sistem',
                 'view-all-data' => 'Lihat Semua Data (Bypass Ownership)',
+                'access-global-siswa-kelas' => 'Akses Global Data Siswa dan Kelas',
                 'view-emis-comparison' => 'Lihat Pembanding Data Siswa EMIS',
                 'sync-emis-comparison' => 'Sinkronkan Data Siswa dari EMIS',
                 'view-penugasan-gtk' => 'Lihat Penugasan GTK',
