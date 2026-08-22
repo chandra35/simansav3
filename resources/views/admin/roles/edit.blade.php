@@ -2,6 +2,10 @@
 
 @section('title', 'Edit Role - ' . $role->name)
 
+@section('css')
+    @include('admin.roles.partials.permission-accordion-assets')
+@stop
+
 @section('content_header')
     <div class="simansa-hero">
         <div class="simansa-hero__main">
@@ -80,38 +84,10 @@
                 <div class="simansa-section-note mb-4">
                     <i class="fas fa-lightbulb mr-1"></i> Permission dikelompokkan per fitur supaya lebih mudah diaudit. Kotak yang aktif menandakan akses yang sedang dimiliki role ini.
                 </div>
-                <div class="simansa-check-grid">
-                    @foreach($permissionCatalog as $module)
-                        <div class="simansa-check-card">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <div class="font-weight-bold text-dark">
-                                        <i class="fas fa-{{ $module['icon'] }} mr-1 text-{{ $module['color'] }}"></i>{{ $module['label'] }}
-                                    </div>
-                                    <small class="text-muted">{{ count($module['items']) }} permission</small>
-                                </div>
-                                <button type="button" class="btn btn-xs simansa-btn-contrast" onclick="checkGroup('{{ $module['key'] }}')">
-                                    <i class="fas fa-check mr-1"></i> Toggle
-                                </button>
-                            </div>
-                            @if(!empty($module['description']))
-                                <div class="simansa-filter-hint mb-2">{{ $module['description'] }}</div>
-                            @endif
-                            @foreach($module['items'] as $permission)
-                                @php $isChecked = in_array($permission['name'], old('permissions', $rolePermissions)); @endphp
-                                <div class="custom-control custom-checkbox mb-2 simansa-check-row {{ $isChecked ? 'font-weight-bold text-dark' : '' }}">
-                                    <input type="checkbox" class="custom-control-input permission-checkbox permission-{{ $module['key'] }}"
-                                           id="perm_{{ md5($permission['name']) }}" name="permissions[]" value="{{ $permission['name'] }}"
-                                           {{ $isChecked ? 'checked' : '' }}>
-                                    <label class="custom-control-label" for="perm_{{ md5($permission['name']) }}">
-                                        {{ $permission['label'] }}
-                                    </label>
-                                    <div class="simansa-check-card__meta">{{ $permission['name'] }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endforeach
-                </div>
+                @include('admin.roles.partials.permission-accordion', [
+                    'selectedPermissions' => old('permissions', $rolePermissions),
+                    'accordionId' => 'rolePermissionAccordion',
+                ])
             </div>
             <div class="card-footer">
                 <div class="simansa-toolbar">
@@ -131,33 +107,5 @@
 @stop
 
 @section('js')
-<script>
-    function checkAll() {
-        $('.permission-checkbox').prop('checked', true);
-        updateHighlight();
-    }
-
-    function uncheckAll() {
-        $('.permission-checkbox').prop('checked', false);
-        updateHighlight();
-    }
-
-    function checkGroup(group) {
-        const checkboxes = $('.permission-' + group);
-        const allChecked = checkboxes.length === checkboxes.filter(':checked').length;
-        checkboxes.prop('checked', !allChecked);
-        updateHighlight();
-    }
-
-    function updateHighlight() {
-        $('.simansa-check-row').each(function() {
-            const checkbox = $(this).find('.permission-checkbox');
-            $(this).toggleClass('font-weight-bold text-dark', checkbox.is(':checked'));
-        });
-    }
-
-    $(function() {
-        $('.permission-checkbox').on('change', updateHighlight);
-    });
-</script>
+    @include('admin.roles.partials.permission-accordion-scripts')
 @stop
