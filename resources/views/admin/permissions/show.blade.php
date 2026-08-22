@@ -3,22 +3,38 @@
 @section('title', 'Detail Permission - ' . $permission->name)
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-key"></i> Users & Role</div>
-            <h1 class="simansa-hero__title">Detail Permission</h1>
-            <p class="simansa-hero__subtitle">Lihat peran mana saja yang memakai permission ini sebelum melakukan perubahan atau pembersihan akses.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-key text-primary mr-1"></i> Detail Permission</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Roles Menggunakan</span>
-                <span class="simansa-hero-chip__value">{{ $permission->roles->count() }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.permissions.index') }}">Permission Management</a></li>
+                <li class="breadcrumb-item active">Detail Permission</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="text-uppercase small font-weight-bold mb-2"><i class="fas fa-key mr-1"></i> Users &amp; Role</p>
+                    <h2 class="h4 mb-2 text-break">{{ $permission->name }}</h2>
+                    <p class="mb-0">Lihat role yang memakai permission ini sebelum melakukan perubahan atau pembersihan akses.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="border border-white-50 rounded p-3">
+                        <div class="text-uppercase small font-weight-bold text-white-50">Role Menggunakan</div>
+                        <div class="h3 mb-0">{{ $permission->roles->count() }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xl-4 mb-4">
             <div class="card simansa-surface-card h-100">
@@ -55,7 +71,7 @@
             </div>
         </div>
         <div class="col-xl-8 mb-4">
-            <div class="card simansa-management-card h-100">
+            <div class="card card-outline card-primary h-100">
                 <div class="card-header">
                     <h3 class="card-title mb-0"><i class="fas fa-user-tag mr-2"></i> Role yang Memiliki Permission Ini</h3>
                 </div>

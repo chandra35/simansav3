@@ -111,26 +111,38 @@
 @stop
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <p class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Manajemen Sistem</p>
-            <h1 class="simansa-hero__title">Permission Management</h1>
-            <p class="simansa-hero__subtitle">Kelola daftar permission dan kategori hak akses sistem.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-key text-primary mr-1"></i> Permission Management</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Total Permission</span>
-                <span class="simansa-hero-chip__value">{{ $permissions->count() }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Kategori</span>
-                <span class="simansa-hero-chip__value">{{ $groupedPermissions->count() }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">User &amp; Role</a></li>
+                <li class="breadcrumb-item active">Permission Management</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="text-uppercase small font-weight-bold mb-2"><i class="fas fa-key mr-1"></i> Users &amp; Role</p>
+                    <h2 class="h4 mb-2">Permission Management</h2>
+                    <p class="mb-0">Kelola daftar permission dan kategori hak akses sistem dengan struktur yang konsisten dan mudah diaudit.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="row text-center">
+                        <div class="col-6 border-right border-white-50"><div class="text-uppercase small font-weight-bold text-white-50">Permission</div><div class="h3 mb-0">{{ $permissions->count() }}</div></div>
+                        <div class="col-6"><div class="text-uppercase small font-weight-bold text-white-50">Kategori</div><div class="h3 mb-0">{{ $groupedPermissions->count() }}</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -180,7 +192,7 @@
     </div>
 
     <!-- Permission List -->
-    <div class="card simansa-management-card">
+    <div class="card card-outline card-primary">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list"></i> Daftar Permission</h3>
             <div class="card-tools">

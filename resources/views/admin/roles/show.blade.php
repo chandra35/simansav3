@@ -8,26 +8,38 @@
 @endphp
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-user-tag"></i> Users & Role</div>
-            <h1 class="simansa-hero__title">Detail Role</h1>
-            <p class="simansa-hero__subtitle">Lihat paket permission dan user yang memakai role ini dalam satu tampilan yang lebih ringkas dan mudah dipindai.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-tag text-primary mr-1"></i> Detail Role</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Role</span>
-                <span class="simansa-hero-chip__value">{{ $role->name }}</span>
-            </div>
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Tipe</span>
-                <span class="simansa-hero-chip__value">{{ $isSystem ? 'System' : 'Custom' }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.roles.index') }}">Role Management</a></li>
+                <li class="breadcrumb-item active">Detail Role</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="text-uppercase small font-weight-bold mb-2"><i class="fas fa-user-tag mr-1"></i> Users &amp; Role</p>
+                    <h2 class="h4 mb-2">{{ $role->name }}</h2>
+                    <p class="mb-0">Lihat paket permission dan user yang memakai role ini dalam satu tampilan yang ringkas dan mudah dipindai.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="border border-white-50 rounded p-3">
+                        <div class="text-uppercase small font-weight-bold text-white-50">Tipe Role</div>
+                        <div class="font-weight-bold">{{ $isSystem ? 'Role Sistem' : 'Role Kustom' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="simansa-mini-stat">
@@ -51,7 +63,7 @@
 
     <div class="row">
         <div class="col-xl-6 mb-4">
-            <div class="card simansa-management-card h-100">
+            <div class="card card-outline card-primary h-100">
                 <div class="card-header">
                     <div class="simansa-toolbar">
                         <h3 class="card-title mb-0"><i class="fas fa-key mr-2"></i> Permissions</h3>

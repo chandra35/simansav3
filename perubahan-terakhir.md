@@ -12,6 +12,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Form Tambah Role dan Edit Role kini memakai accordion per fitur sekolah. Semua modul tertutup saat halaman dibuka agar tetap ringkas; baris modul dapat diklik untuk membuka daftar hak akses. Tombol Toggle berada pada sisi kanan tiap modul, sedangkan checkbox disusun vertikal dengan jarak konsisten, status jumlah akses aktif, dan tampilan ringkas untuk ponsel.
 - Isi permission pada accordion dipadatkan menjadi grid adaptif empat kolom desktop, tiga kolom laptop/tablet, dua kolom tablet kecil, dan satu kolom ponsel. Tinggi panel berkurang signifikan tanpa mengorbankan keterbacaan label maupun checkbox.
 - Header Tambah Role dan Edit Role kini mengikuti pola AdminLTE: judul serta breadcrumb standar berada di area header, satu hero gradient utuh berada di area konten, sedangkan card Informasi Role dan Permission Role memakai outline biru dengan header putih.
+- Seluruh halaman aktif modul User & Role kini memakai pola header AdminLTE yang sama, mencakup daftar, tambah, edit, dan detail User/Role/Permission serta Permission Matrix. Hero lama yang terpisah dari konten dihapus; ringkasan dan aksi dipindahkan ke satu card gradient responsif, sedangkan card operasional utama memakai outline primer.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 

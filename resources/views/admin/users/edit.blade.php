@@ -3,17 +3,16 @@
 @section('title', 'Edit User - SIMANSA')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-users-cog"></i> Users & Role</div>
-            <h1 class="simansa-hero__title">Edit User</h1>
-            <p class="simansa-hero__subtitle">Perbarui identitas akun, reset password bila perlu, dan sesuaikan role user tanpa bikin halaman terasa berat.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-edit text-primary mr-1"></i> Edit User</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">User</span>
-                <span class="simansa-hero-chip__value">{{ $user->name }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">User &amp; Role</a></li>
+                <li class="breadcrumb-item active">Edit User</li>
+            </ol>
         </div>
     </div>
 @stop
@@ -23,9 +22,27 @@
     @csrf
     @method('PUT')
 
+    <div class="card bg-gradient-primary text-white mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="text-uppercase small font-weight-bold mb-2"><i class="fas fa-users-cog mr-1"></i> Users &amp; Role</p>
+                    <h2 class="h4 mb-2">Edit {{ $user->name }}</h2>
+                    <p class="mb-0">Perbarui identitas akun, password bila perlu, dan role pengguna tanpa mengubah akses di luar kebutuhan.</p>
+                </div>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="border border-white-50 rounded p-3">
+                        <div class="text-uppercase small font-weight-bold text-white-50">Username</div>
+                        <div class="font-weight-bold text-break">{{ $user->username }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-xl-7 mb-4">
-            <div class="card simansa-management-card simansa-form-card h-100">
+            <div class="card card-outline card-primary simansa-form-card h-100">
                 <div class="card-header">
                     <h3 class="card-title mb-0"><i class="fas fa-user mr-2"></i> Informasi User</h3>
                 </div>

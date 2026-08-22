@@ -3,30 +3,42 @@
 @section('title', 'Permission Matrix - SIMANSA')
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-shield-alt"></i> Users & Role</div>
-            <h1 class="simansa-hero__title">Permission Matrix</h1>
-            <p class="simansa-hero__subtitle">Atur izin per role secara menyeluruh dari satu layar. Cocok untuk audit cepat, sinkronisasi permission baru, dan koreksi akses lintas modul.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-shield-alt text-primary mr-1"></i> Permission Matrix</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-toolbar__group">
-                @can('manage-permission')
-                <button type="button" class="btn simansa-btn-contrast" id="btnScan" title="Scan Permission">
-                    <i class="fas fa-search mr-1"></i> Scan
-                </button>
-                @endcan
-                @can('create-role')
-                <button type="button" class="btn simansa-btn-strong" id="btnAddRole" title="Tambah Role">
-                    <i class="fas fa-plus mr-1"></i> Tambah Role
-                </button>
-                @endcan
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">User &amp; Role</a></li>
+                <li class="breadcrumb-item active">Permission Matrix</li>
+            </ol>
         </div>
     </div>
 @stop
 
 @section('content')
+<div class="card bg-gradient-primary text-white mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <p class="text-uppercase small font-weight-bold mb-2"><i class="fas fa-shield-alt mr-1"></i> Users &amp; Role</p>
+                <h2 class="h4 mb-2">Permission Matrix</h2>
+                <p class="mb-0">Atur izin per role secara menyeluruh untuk audit cepat, sinkronisasi permission baru, dan koreksi akses lintas modul.</p>
+            </div>
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="d-flex flex-wrap justify-content-lg-end">
+                    @can('manage-permission')
+                    <button type="button" class="btn btn-outline-light mr-2 mb-2" id="btnScan" title="Scan Permission"><i class="fas fa-search mr-1"></i> Scan</button>
+                    @endcan
+                    @can('create-role')
+                    <button type="button" class="btn btn-light mb-2" id="btnAddRole" title="Tambah Role"><i class="fas fa-plus mr-1"></i> Tambah Role</button>
+                    @endcan
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row mb-4">
     <div class="col-md-4 mb-3">
         <div class="simansa-stat-card simansa-stat-card--blue">
