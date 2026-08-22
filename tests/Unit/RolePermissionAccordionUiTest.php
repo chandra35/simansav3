@@ -18,6 +18,10 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringContainsString("@include('admin.roles.partials.permission-accordion'", $edit);
         $this->assertStringNotContainsString('simansa-check-grid', $create);
         $this->assertStringNotContainsString('simansa-check-grid', $edit);
+        $this->assertStringContainsString('card bg-gradient-primary text-white mb-4 simansa-role-form-hero', $create);
+        $this->assertStringContainsString('card bg-gradient-primary text-white mb-4 simansa-role-form-hero', $edit);
+        $this->assertStringContainsString('breadcrumb float-sm-right', $create);
+        $this->assertStringContainsString('card card-outline card-primary simansa-form-card', $edit);
         $this->assertStringContainsString('data-toggle="collapse"', $accordion);
         $this->assertStringContainsString('aria-expanded="false"', $accordion);
         $this->assertStringContainsString('class="collapse"', $accordion);

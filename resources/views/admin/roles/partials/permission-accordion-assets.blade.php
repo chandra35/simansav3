@@ -1,4 +1,10 @@
 <style>
+    .simansa-role-form-hero { border-radius: .8rem; box-shadow: 0 12px 28px rgba(37, 99, 235, .14); }
+    .simansa-role-form-hero__eyebrow { margin: 0 0 .35rem; font-size: .74rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+    .simansa-role-form-hero__title { margin: 0 0 .35rem; font-size: 1.55rem; font-weight: 700; }
+    .simansa-role-form-hero__stat { display: grid; gap: .15rem; padding: .8rem .95rem; border: 1px solid rgba(255, 255, 255, .34); border-radius: .65rem; background: rgba(255, 255, 255, .13); }
+    .simansa-role-form-hero__stat span { font-size: .7rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; opacity: .84; }
+    .simansa-role-form-hero__stat strong { font-size: 1.65rem; line-height: 1; }
     .simansa-role-permission-accordion { display: grid; gap: .65rem; }
     .simansa-role-permission-module { margin: 0; border: 1px solid #dce5f2; border-radius: .75rem; box-shadow: none; overflow: hidden; }
     .simansa-role-permission-module__header { display: flex; align-items: center; gap: .65rem; padding: .45rem .65rem .45rem .75rem; background: #fff; }
@@ -24,6 +30,8 @@
         .simansa-role-permission-module__body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 575.98px) {
+        .simansa-role-form-hero__title { font-size: 1.35rem; }
+        .simansa-role-form-hero__stat { width: fit-content; min-width: 145px; }
         .simansa-role-permission-module__header { align-items: flex-start; }
         .simansa-role-permission-module__count { display: none; }
         .simansa-role-permission-module__toggle { min-height: 40px; }

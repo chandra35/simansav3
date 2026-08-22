@@ -7,17 +7,16 @@
 @stop
 
 @section('content_header')
-    <div class="simansa-hero">
-        <div class="simansa-hero__main">
-            <div class="simansa-hero__eyebrow"><i class="fas fa-user-tag"></i> Users & Role</div>
-            <h1 class="simansa-hero__title">Tambah Role</h1>
-            <p class="simansa-hero__subtitle">Buat role baru, lalu pilih permission yang benar-benar dibutuhkan agar pengelolaan akses tetap rapi dan mudah diaudit.</p>
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1><i class="fas fa-user-tag text-primary mr-1"></i> Tambah Role</h1>
         </div>
-        <div class="simansa-hero__side">
-            <div class="simansa-hero-chip">
-                <span class="simansa-hero-chip__label">Grup Permission</span>
-                <span class="simansa-hero-chip__value">{{ count($permissionCatalog) }}</span>
-            </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.roles.index') }}">Role Management</a></li>
+                <li class="breadcrumb-item active">Tambah Role</li>
+            </ol>
         </div>
     </div>
 @stop
@@ -26,7 +25,25 @@
     <form action="{{ route('admin.roles.store') }}" method="POST" class="simansa-form-shell">
         @csrf
 
-        <div class="card simansa-management-card simansa-form-card">
+        <div class="card bg-gradient-primary text-white mb-4 simansa-role-form-hero">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <p class="simansa-role-form-hero__eyebrow"><i class="fas fa-users-cog mr-1"></i> Users &amp; Role</p>
+                        <h2 class="simansa-role-form-hero__title">Tambah Role</h2>
+                        <p class="mb-0">Buat role baru, lalu pilih permission minimum yang benar-benar dibutuhkan agar pengelolaan akses tetap rapi dan mudah diaudit.</p>
+                    </div>
+                    <div class="col-lg-4 mt-3 mt-lg-0">
+                        <div class="simansa-role-form-hero__stat">
+                            <span>Grup Permission</span>
+                            <strong>{{ count($permissionCatalog) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-outline card-primary simansa-form-card">
             <div class="card-header">
                 <div class="simansa-toolbar">
                     <h3 class="card-title mb-0"><i class="fas fa-info-circle mr-2"></i> Informasi Role</h3>
@@ -61,7 +78,7 @@
             </div>
         </div>
 
-        <div class="card simansa-management-card simansa-form-card">
+        <div class="card card-outline card-primary simansa-form-card">
             <div class="card-header">
                 <div class="simansa-toolbar">
                     <div>
