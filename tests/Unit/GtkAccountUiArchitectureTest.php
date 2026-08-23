@@ -36,6 +36,14 @@ class GtkAccountUiArchitectureTest extends TestCase
         $this->assertStringNotContainsString('.content-wrapper { padding-bottom:', $profile);
     }
 
+    public function test_profile_photo_preview_keeps_the_head_in_frame(): void
+    {
+        $profile = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/profile/index.blade.php');
+
+        $this->assertStringContainsString('.gtk-foto-frame img', $profile);
+        $this->assertStringContainsString('object-position: center top;', $profile);
+    }
+
     public function test_password_inputs_keep_browser_autofill_and_accessible_feedback(): void
     {
         $password = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/profile/password.blade.php');
