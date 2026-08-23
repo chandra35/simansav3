@@ -154,7 +154,9 @@ class UserController extends Controller
             // Satu dropdown menjaga tabel tetap ringkas tanpa menghilangkan aksi lama.
             $actionItems = '';
             if (auth()->user()->can('assign-roles')) {
-                $actionItems .= "<button type='button' class='dropdown-item btn-assign-role' data-id='{$user->id}' data-name='{$name}'><i class='fas fa-user-tag text-warning'></i>Role & permission</button>";
+                $assignmentFormUrl = e(route('admin.users.assign-role-form', $user));
+                $assignmentUrl = e(route('admin.users.assign-role', $user));
+                $actionItems .= "<button type='button' class='dropdown-item btn-assign-role' data-id='{$user->id}' data-name='{$name}' data-form-url='{$assignmentFormUrl}' data-assignment-url='{$assignmentUrl}'><i class='fas fa-user-tag text-warning'></i>Role & permission</button>";
             }
             if (auth()->user()->can('edit-users') && !$user->isSiswa() && $user->id !== auth()->id()) {
                 $resetUrl = route('admin.users.reset-password', $user->id);

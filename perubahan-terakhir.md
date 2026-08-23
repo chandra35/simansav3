@@ -15,6 +15,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Seluruh halaman aktif modul User & Role kini memakai pola header AdminLTE yang sama, mencakup daftar, tambah, edit, dan detail User/Role/Permission serta Permission Matrix. Hero lama yang terpisah dari konten dihapus; ringkasan dan aksi dipindahkan ke satu card gradient responsif, sedangkan card operasional utama memakai outline primer.
 - Daftar Permission tidak lagi memakai blur GPU maupun hover dengan pergeseran `transform`. Kartu kategori dan item permission kini memakai hover ringan berbasis border/latar/shadow AdminLTE agar Chrome tidak berkedip saat pointer berpindah di area daftar yang padat.
 - Modal Role & Permission pada Data User kini menamai tab permission langsung sebagai **Akses Khusus User** dan menjelaskan bahwa hak tersebut hanya berlaku untuk akun yang dipilih. Panduan di modal mencantumkan kombinasi `view-siswa`, `view-kelas`, `access-global-siswa-kelas`, serta `reset-password-siswa` untuk penugasan individual seperti BK yang juga membantu operator.
+- Tombol **Aksi → Role & permission** pada Data User kini langsung menampilkan status pemuatan saat menyiapkan role dan permission, memakai URL rute resmi dari server, dan memberi pesan spesifik bila akses ditolak atau pemuatan gagal. Ini mencegah tombol terlihat tidak merespons ketika daftar permission besar sedang diproses.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 

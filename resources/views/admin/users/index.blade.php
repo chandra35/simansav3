@@ -583,17 +583,40 @@ $(document).ready(function() {
     });
 
     // Assign Role Button
-    $('#usersTable').on('click', '.btn-assign-role', function() {
-        const userId = $(this).data('id');
-        const userName = $(this).data('name');
+    $('#usersTable').on('click', '.btn-assign-role', function(event) {
+        event.preventDefault();
+
+        const $button = $(this);
+        const userId = $button.data('id');
+        const userName = $button.data('name');
+        const formUrl = $button.data('form-url');
+        const assignmentUrl = $button.data('assignment-url');
+
+        if (!formUrl || !assignmentUrl) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Aksi tidak tersedia',
+                text: 'URL pengaturan akses user tidak ditemukan. Muat ulang halaman lalu coba kembali.'
+            });
+            return;
+        }
         
         $('#user_id').val(userId);
         $('#userName').text(userName);
-        $('#assignRoleForm').attr('action', `/admin/users/${userId}/assign-role`);
+        $('#assignRoleForm').attr('action', assignmentUrl);
+        $button.prop('disabled', true);
+
+        Swal.fire({
+            title: 'Memuat akses user…',
+            text: `Menyiapkan role dan akses khusus untuk ${userName}.`,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
         
         // Load roles dan permissions via AJAX
         $.ajax({
-            url: `/admin/users/${userId}/assign-role-form`,
+            url: formUrl,
             type: 'GET',
             success: function(response) {
                 // Populate roles
@@ -710,17 +733,26 @@ $(document).ready(function() {
                 $('#assignRoleTabs a[href="#rolesTab"]').tab('show');
                 
                 // Show modal
+                Swal.close();
                 $('#assignRoleModal').modal('show');
                 
                 // Initialize Bootstrap tooltips for inherited permissions
                 $('[data-toggle="tooltip"]').tooltip();
             },
-            error: function() {
+            error: function(xhr) {
+                Swal.close();
+                const message = xhr.status === 403
+                    ? 'Akun Anda tidak memiliki izin untuk mengatur role dan akses user.'
+                    : (xhr.responseJSON?.message || 'Gagal memuat data role dan permission. Silakan coba kembali.');
+
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error!',
-                    text: 'Gagal memuat data roles dan permissions'
+                    title: 'Akses user tidak dapat dibuka',
+                    text: message
                 });
+            },
+            complete: function() {
+                $button.prop('disabled', false);
             }
         });
     });

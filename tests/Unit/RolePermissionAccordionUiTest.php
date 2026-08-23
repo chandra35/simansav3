@@ -75,4 +75,17 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringContainsString('access-global-siswa-kelas', $view);
         $this->assertStringContainsString('reset-password-siswa', $view);
     }
+
+    public function test_user_permission_action_uses_routed_urls_and_reports_loading_state(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/UserController.php');
+        $view = file_get_contents($root.'/resources/views/admin/users/index.blade.php');
+
+        $this->assertStringContainsString("route('admin.users.assign-role-form', \$user)", $controller);
+        $this->assertStringContainsString("route('admin.users.assign-role', \$user)", $controller);
+        $this->assertStringContainsString("const formUrl = \$button.data('form-url');", $view);
+        $this->assertStringContainsString('Memuat akses user', $view);
+        $this->assertStringContainsString('Akses user tidak dapat dibuka', $view);
+    }
 }
