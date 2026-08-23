@@ -6,7 +6,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
-- Respons 404 yang dihasilkan langsung oleh Nginx kini memakai halaman statis SIMANSA yang modern, ringan, dan responsif. Pesan dibuat netral (tidak mengonfirmasi keberadaan sebuah URL), menyediakan navigasi aman ke beranda/kembali, serta tidak bergantung pada Laravel maupun aset eksternal.
+- Respons 404 Nginx kini memakai halaman layar penuh dengan logo sekolah, grid metadata sesi, dan navigasi aman. Pesan tetap netral; IP diisi Nginx, tanggal serta render diukur pada perangkat, dan lokasi hanya dibaca bila pengguna menyetujuinya. ISP tidak ditebak dari IP VM/router dan ditandai tidak tersedia sampai basis GeoIP lokal tepercaya dipasang.
 - Role kustom dari Role Management kini dapat memakai permission `access-global-siswa-kelas`. Permission ini membuka cakupan seluruh data Siswa dan Kelas bagi role yang dipilih, tanpa harus mewarisi seluruh permission role Operator.
 - Cakupan global tidak diberikan secara otomatis: role kustom tetap harus menerima permission operasional terpisah seperti `view-siswa`, `reset-password-siswa`, atau `view-kelas`. Dengan demikian admin dapat membuat contoh role `Operator Siswa Terbatas` yang hanya memiliki hak yang diperlukan.
 - Pembatasan server-side Kelas kini mengikuti cakupan yang sama. GTK/BK tanpa permission global hanya dapat membuka rombel penugasan aktifnya; daftar, statistik, URL detail, dan aksi berbasis rombel tidak dapat digunakan untuk mengakses kelas lain.

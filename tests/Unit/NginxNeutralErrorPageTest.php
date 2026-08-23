@@ -12,6 +12,7 @@ class NginxNeutralErrorPageTest extends TestCase
 
         $this->assertStringContainsString('Permintaan belum dapat diproses.', $page);
         $this->assertStringContainsString('Ke beranda SIMANSA', $page);
+        $this->assertStringContainsString('__CLIENT_IP__', $page);
         $this->assertStringNotContainsString('Halaman tidak ditemukan', $page);
         $this->assertStringNotContainsString('Not Found', $page);
     }
@@ -22,6 +23,8 @@ class NginxNeutralErrorPageTest extends TestCase
 
         $this->assertStringContainsString('width=device-width, initial-scale=1', $page);
         $this->assertStringContainsString('@media (max-width: 480px)', $page);
+        $this->assertStringContainsString('navigator.geolocation', $page);
+        $this->assertStringContainsString('grid-template-columns', $page);
         $this->assertStringNotContainsString('<script src=', $page);
     }
 }
