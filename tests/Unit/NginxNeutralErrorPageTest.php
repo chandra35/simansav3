@@ -22,7 +22,7 @@ class NginxNeutralErrorPageTest extends TestCase
         $page = file_get_contents(dirname(__DIR__, 2).'/public/_system/layanan-tidak-tersedia.html');
 
         $this->assertStringContainsString('width=device-width, initial-scale=1', $page);
-        $this->assertStringContainsString('@media (max-width: 480px)', $page);
+        $this->assertStringContainsString('@media(max-width:480px)', $page);
         $this->assertStringContainsString('navigator.geolocation', $page);
         $this->assertStringContainsString('grid-template-columns', $page);
         $this->assertStringNotContainsString('<script src=', $page);
