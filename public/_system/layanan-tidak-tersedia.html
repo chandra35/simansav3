@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#4338ca">
+    <title>SIMANSA — Status Layanan</title>
+    <style>
+        :root { color-scheme: light; --ink: #172554; --muted: #61739a; --line: #dfe7f5; --primary: #4338ca; --primary-dark: #312e81; --surface: rgba(255,255,255,.92); }
+        * { box-sizing: border-box; }
+        body { min-width: 320px; min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: radial-gradient(circle at 8% 12%, #dbeafe 0, transparent 30%), radial-gradient(circle at 94% 92%, #ccfbf1 0, transparent 32%), #f5f7fb; }
+        main { width: min(100%, 720px); padding: clamp(28px, 6vw, 56px); border: 1px solid rgba(255,255,255,.9); border-radius: 28px; background: var(--surface); box-shadow: 0 24px 60px rgba(30, 41, 99, .14); }
+        .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .01em; }
+        .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; color: white; background: linear-gradient(135deg, var(--primary), #0f9f9a); box-shadow: 0 8px 18px rgba(67,56,202,.26); }
+        .eyebrow { width: fit-content; margin: 42px 0 14px; padding: 8px 12px; border-radius: 999px; color: #4338ca; background: #eef2ff; font-size: .78rem; font-weight: 800; letter-spacing: .08em; }
+        h1 { max-width: 620px; margin: 0; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.08; letter-spacing: -.04em; }
+        p { max-width: 590px; margin: 20px 0 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.12rem); line-height: 1.7; }
+        .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+        a, button { min-height: 46px; padding: 12px 18px; border: 1px solid transparent; border-radius: 11px; font: inherit; font-weight: 750; text-decoration: none; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+        .primary { color: white; background: linear-gradient(135deg, #4f46e5, #2563eb); box-shadow: 0 10px 20px rgba(67,56,202,.22); }
+        .secondary { color: #334155; border-color: #cbd5e1; background: white; }
+        a:hover, button:hover { transform: translateY(-1px); }
+        a:focus-visible, button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+        .note { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line); font-size: .86rem; color: #71809e; }
+        @media (max-width: 480px) { body { padding: 16px; } main { border-radius: 22px; } .eyebrow { margin-top: 32px; } .actions > * { width: 100%; text-align: center; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    </style>
+</head>
+<body>
+    <main aria-labelledby="service-title">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">S</span><span>SIMANSA · MAN 1 Metro</span></div>
+        <div class="eyebrow">STATUS LAYANAN</div>
+        <h1 id="service-title">Permintaan belum dapat diproses.</h1>
+        <p>Layanan yang Anda minta belum dapat dibuka dari sesi ini. Silakan kembali ke beranda atau gunakan menu utama untuk melanjutkan aktivitas Anda.</p>
+        <div class="actions">
+            <a class="primary" href="/">Ke beranda SIMANSA</a>
+            <button class="secondary" type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.assign('/')">Kembali</button>
+        </div>
+        <div class="note">Jika kendala berlanjut, silakan hubungi administrator SIMANSA.</div>
+    </main>
+</body>
+</html>
