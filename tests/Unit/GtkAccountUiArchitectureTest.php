@@ -24,6 +24,8 @@ class GtkAccountUiArchitectureTest extends TestCase
 
         $this->assertStringContainsString('class="gtk-account-dashboard"', $dashboard);
         $this->assertStringContainsString('class="gtk-account-profile"', $profile);
+        $this->assertStringContainsString('gtk-account-profile__hero-eyebrow', $profile);
+        $this->assertStringContainsString('gtk-account-profile__hero-status', $profile);
         $this->assertStringContainsString('class="gtk-account-password"', $password);
     }
 

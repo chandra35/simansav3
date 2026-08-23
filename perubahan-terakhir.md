@@ -6,6 +6,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Header **Profil GTK** kini memakai hero AdminLTE yang lebih ramah dan konsisten: konteks ruang kerja, judul ringkas, deskripsi tunggal, serta panel status kelengkapan profil yang adaptif pada layar kecil.
 - Preview foto pada **Profil GTK** kini menggunakan focal point `center top`, sama dengan ringkasan profil GTK/admin, agar crop potret tidak memotong bagian kepala.
 - Kolom dan aksi Verval Ijazah pada Data Siswa kini hanya tampil bagi Admin/Super Admin. GTK, wali kelas, operator, atau role kustom yang diberi akses siswa tidak lagi menerima indikator maupun data penandaan pemeriksaan ijazah internal; endpoint perubahan juga menolak akun non-admin di server.
 - Portal **Kelas Saya → Daftar Siswa** wali kelas juga tidak lagi memuat Verval pada tabel maupun modal detail siswa, sehingga penanda pemeriksaan ijazah internal tidak tercampur dengan data perwalian.

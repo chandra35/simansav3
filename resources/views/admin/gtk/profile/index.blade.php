@@ -23,13 +23,16 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-lg-8">
-                    <h3 class="mb-1"><i class="fas fa-user-circle mr-1"></i> Pengaturan Profil GTK</h3>
-                    <p class="mb-2 text-white-50">Perbarui identitas, alamat, foto, dan data kepegawaian Anda dalam satu tempat.</p>
-                    <p class="mb-0">Pastikan data selalu sesuai dengan dokumen dan kondisi kepegawaian terbaru.</p>
+                    <div class="gtk-account-profile__hero-eyebrow"><i class="fas fa-id-badge"></i> RUANG KERJA GTK</div>
+                    <h3 class="mb-1"><i class="fas fa-user-circle mr-1"></i> Profil Saya</h3>
+                    <p class="mb-0 text-white-50">Kelola identitas, foto, alamat, dan data kepegawaian Anda dalam satu tempat.</p>
                 </div>
-                <div class="col-lg-4 mt-3 mt-lg-0 text-center">
-                    <div class="text-white-50 small text-uppercase font-weight-bold">Kelengkapan Profil</div>
-                    <h3 class="mb-0 text-white">{{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Lengkap' : 'Perlu Dilengkapi' }}</h3>
+                <div class="col-lg-4 mt-3 mt-lg-0">
+                    <div class="gtk-account-profile__hero-status">
+                        <span>KELENGKAPAN PROFIL</span>
+                        <strong><i class="fas {{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'fa-check-circle' : 'fa-exclamation-circle' }} mr-1"></i>{{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Lengkap' : 'Perlu Dilengkapi' }}</strong>
+                        <small>{{ $gtk->data_diri_completed && $gtk->data_kepeg_completed ? 'Data diri dan kepegawaian telah siap.' : 'Lengkapi data agar profil tetap mutakhir.' }}</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -562,6 +565,12 @@
         .gtk-account-profile__hero { overflow: hidden; border: 0; border-radius: 16px; box-shadow: 0 12px 28px rgba(15,23,42,.1); }
         .gtk-account-profile__hero > .card-body { padding: 1.2rem 1.25rem; }
         .gtk-account-profile__hero h3 { font-size: 1.35rem; font-weight: 700; }
+        .gtk-account-profile__hero-eyebrow { margin-bottom: .35rem; color: rgba(255,255,255,.72); font-size: .68rem; font-weight: 800; letter-spacing: .07em; }
+        .gtk-account-profile__hero-status { max-width: 265px; margin-left: auto; padding: .8rem 1rem; border: 1px solid rgba(255,255,255,.28); border-radius: 12px; background: rgba(15,23,42,.12); }
+        .gtk-account-profile__hero-status span, .gtk-account-profile__hero-status strong, .gtk-account-profile__hero-status small { display: block; }
+        .gtk-account-profile__hero-status span { color: rgba(255,255,255,.68); font-size: .65rem; font-weight: 800; letter-spacing: .06em; }
+        .gtk-account-profile__hero-status strong { margin-top: .2rem; color: #fff; font-size: 1rem; }
+        .gtk-account-profile__hero-status small { margin-top: .2rem; color: rgba(255,255,255,.72); font-size: .72rem; line-height: 1.35; }
         .gtk-account-profile .card-outline { border-radius: 12px; box-shadow: 0 8px 20px rgba(15,23,42,.06); }
         .gtk-account-profile__form > .card-body { padding: 1.25rem; }
         .gtk-account-profile .list-group-item strong { overflow-wrap: anywhere; text-align: right; }
@@ -693,6 +702,7 @@
         @media (max-width: 575.98px) {
             .gtk-account-profile__hero > .card-body { padding: 1rem; }
             .gtk-account-profile__hero h3 { font-size: 1.15rem; }
+            .gtk-account-profile__hero-status { max-width: none; margin-left: 0; }
             .gtk-account-profile__form > .card-body { padding: 1rem; }
             .gtk-account-profile .nav-tabs { display: flex; }
             .gtk-account-profile .nav-tabs .nav-item { flex: 1 1 50%; text-align: center; }
