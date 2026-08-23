@@ -190,9 +190,9 @@
                 <input type="hidden" name="form_context" value="create">
                 <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                 <input type="hidden" name="siswa_id" value="{{ $selectedStudent->id }}">
-                <div class="modal-header bg-primary">
-                    <h5 class="modal-title text-white" id="modalTambahCatatanLabel"><i class="fas fa-pen-fancy mr-1"></i> Tulis Catatan Siswa</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title text-dark" id="modalTambahCatatanLabel"><i class="fas fa-pen-fancy mr-1"></i> Tulis Catatan Siswa</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <div class="selected-student mb-3">
@@ -310,6 +310,9 @@
     .empty-notes, .select-student-empty { padding:2rem 1rem; text-align:center; }
     .empty-notes-icon, .select-student-icon { width:64px; height:64px; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eff6ff; color:#2563eb; font-size:1.5rem; }
     #modalTambahCatatan .modal-content, #modalEditCatatan .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
+    #modalTambahCatatan .hover\\:text-gray-600:hover { color:#4b5563; }
+    #modalTambahCatatan .text-gray-400 { padding:.15rem .45rem; border:0; background:transparent; color:#9ca3af; font-size:1.6rem; line-height:1; cursor:pointer; }
+    #modalTambahCatatan .focus\\:outline-none:focus { outline:0; }
     @media (max-width:1199.98px) { .student-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
     @media (max-width:767.98px) { .student-grid { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:420px; } .student-search { width:100%; } .stat-description { display:none; } }
     @media (max-width:575.98px) {

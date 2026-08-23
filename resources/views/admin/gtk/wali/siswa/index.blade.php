@@ -106,7 +106,7 @@
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
                                     <button type="button" class="btn btn-primary btn-detail-siswa" data-url="{{ route('admin.gtk.wali.siswa.show', $s->id) }}" title="Detail lengkap"><i class="fas fa-eye"></i></button>
-                                    <a href="{{ route('admin.gtk.wali.catatan.index', ['kelas_id' => $kelas->id, 'siswa_id' => $s->id]) }}" class="btn btn-secondary" title="Catatan siswa"><i class="fas fa-sticky-note"></i></a>
+                                    <button type="button" class="btn btn-secondary btn-tambah-catatan" data-siswa-id="{{ $s->id }}" data-siswa-nama="{{ $s->nama_lengkap }}" data-siswa-nisn="{{ $s->nisn }}" data-siswa-foto="{{ $s->foto_profile_url }}" title="Tulis catatan siswa"><i class="fas fa-sticky-note"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -128,10 +128,13 @@
             </div>
         </div>
     </div>
+
+    @include('admin.gtk.wali.catatan.partials.composer-modal', ['selectedStudent' => null])
 </div>
 @stop
 
 @section('css')
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 <style>
     .gtk-wali-siswa-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
     .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
@@ -151,16 +154,30 @@
     #modalDetailSiswa .nav-tabs { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
     #modalDetailSiswa .nav-tabs .nav-link { white-space:nowrap; }
     #modalDetailSiswa .table-detail td { padding:.5rem; overflow-wrap:anywhere; }
+    #modalTambahCatatan .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
+    #modalTambahCatatan .selected-student { display:flex; align-items:center; gap:.75rem; padding:.85rem; border:1px solid #bfdbfe; border-radius:12px; background:#eff6ff; }
+    #modalTambahCatatan .selected-student img { width:58px; height:58px; flex:0 0 58px; border-radius:50%; object-fit:cover; border:3px solid #fff; box-shadow:0 2px 8px rgba(15,23,42,.14); }
+    #modalTambahCatatan .min-w-0 { min-width:0; }
+    #modalTambahCatatan .note-editor .note-editable { min-height:150px; color:#0f172a; background:#fff; }
+    #modalTambahCatatan .note-editor.note-frame { border-color:#cbd5e1; border-radius:8px; overflow:hidden; }
+    #modalTambahCatatan .visual-tools, #modalTambahCatatan .quick-prompts { padding:.75rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
+    #modalTambahCatatan .symbol-list { display:flex; flex-wrap:wrap; gap:.35rem; }
+    #modalTambahCatatan .btn-insert-symbol { min-width:36px; border:1px solid #e2e8f0; font-size:1rem; }
+    #modalTambahCatatan .hover\\:text-gray-600:hover { color:#4b5563; }
+    #modalTambahCatatan .text-gray-400 { padding:.15rem .45rem; border:0; background:transparent; color:#9ca3af; font-size:1.6rem; line-height:1; cursor:pointer; }
+    #modalTambahCatatan .focus\\:outline-none:focus { outline:0; }
     @media (max-width:575.98px) {
         .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1rem; }
         .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.1rem; }
         #modalDetailSiswa .modal-dialog { margin:.5rem; }
         #modalDetailSiswa .modal-body { padding:.75rem; }
+        #modalTambahCatatan .modal-dialog { margin:.5rem; }
     }
 </style>
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
 <script>
     $(function () {
         var table = $('#tblSiswaWali').DataTable({
@@ -178,6 +195,37 @@
         });
         $('#filterJenisKelamin, #filterStatusData').on('change', function () { table.draw(); });
         $('#btnResetFilter').on('click', function () { $('#filterJenisKelamin, #filterStatusData').val(''); table.search('').draw(); });
+
+        var composer = $('#modalTambahCatatan');
+        var editorOptions = {
+            height:170,
+            placeholder:'Tuliskan pengamatan yang objektif, perkembangan siswa, dan tindak lanjutnya…',
+            toolbar:[['style', ['bold', 'italic', 'underline', 'clear']], ['para', ['ul', 'ol', 'paragraph']], ['history', ['undo', 'redo']]],
+            callbacks:{ onChange:function (contents) { $('#noteCounter').text($('<div>').html(contents).text().length); } }
+        };
+        $('#catatan').summernote(editorOptions);
+
+        function insertNoteText(target, value) {
+            $(target).summernote('editor.insertText', value);
+        }
+
+        $('.btn-insert-symbol').on('click', function () { insertNoteText($(this).data('target'), $(this).data('symbol')); });
+        $('.btn-insert-prompt').on('click', function () { insertNoteText($(this).data('target'), $(this).data('prompt')); });
+
+        $(document).on('click', '.btn-tambah-catatan', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var button = $(this);
+            $('#formTambahCatatan')[0].reset();
+            $('#catatanSiswaId').val(button.data('siswa-id'));
+            $('#catatanSiswaFoto').attr({ src:button.data('siswa-foto'), alt:'Foto ' + button.data('siswa-nama') });
+            $('#catatanSiswaNama').text(button.data('siswa-nama'));
+            $('#catatanSiswaIdentitas').text('NISN ' + (button.data('siswa-nisn') || '—') + ' · {{ $kelas->nama_kelas }}');
+            $('#tanggal').val(@json(now()->toDateString()));
+            $('#catatan').summernote('code', '');
+            $('#noteCounter').text('0');
+            composer.modal('show');
+        });
 
         $(document).on('click', '.btn-detail-siswa', function (event) {
             event.preventDefault();
@@ -207,6 +255,10 @@
                     }
                 });
         });
+
+        @if(session('success'))
+            Swal.fire({ icon:'success', title:'Berhasil', text:@json(session('success')), timer:2200, showConfirmButton:false });
+        @endif
     });
 </script>
 @stop

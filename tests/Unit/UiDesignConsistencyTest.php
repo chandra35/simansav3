@@ -76,6 +76,8 @@ class UiDesignConsistencyTest extends TestCase
         $partial = $this->file('resources/views/admin/gtk/wali/siswa/partials/detail.blade.php');
 
         $this->assertStringContainsString('btn-detail-siswa', $index);
+        $this->assertStringContainsString('btn-tambah-catatan', $index);
+        $this->assertStringContainsString('catatan.partials.composer-modal', $index);
         $this->assertStringContainsString('targets:[0, 9]', $index);
         $this->assertStringContainsString('event.stopPropagation();', $index);
         $this->assertStringContainsString('modal-dialog-scrollable', $index);

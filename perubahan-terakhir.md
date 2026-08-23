@@ -6,6 +6,8 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Tombol Catatan pada **Kelas Saya → Daftar Siswa** kini membuka composer modal langsung dengan foto dan identitas siswa yang dipilih. Form, editor, simbol cepat, kategori, validasi, dan penyimpanan tetap memakai endpoint catatan wali yang sama dan tetap memverifikasi rombel aktif di server.
+- Tombol close composer catatan memakai class `text-gray-400 hover:text-gray-600 transition-colors focus:outline-none`; header terang dan style ter-scope memastikan kontras serta state hover/fokus tetap terbaca pada AdminLTE.
 - Modal **Detail lengkap** pada portal **Kelas Saya → Daftar Siswa** kini kembali stabil setelah indeks kolom DataTables diselaraskan dengan tabel tanpa Verval. Klik aksi Detail menghentikan event tabel, memuat respons AJAX dengan batas waktu, dan menampilkan penjelasan di modal serta notifikasi bila respons tidak tersedia.
 - Rekap Nilai RDM wali kelas kini menyediakan Detail Nilai per siswa yang tetap hanya-baca dan terikat pada rombel aktif. Detail membagi nilai RDM per semester melalui accordion, menyajikan tabel yang dapat digeser pada desktop serta kartu adaptif pada ponsel, beserta nilai, predikat, mapel, dan waktu sinkron terakhir; tidak membuka Legger, ranking, ekspor, atau nilai dari sumber selain RDM.
 - Header **Profil GTK** kini memakai hero AdminLTE yang lebih ramah dan konsisten: konteks ruang kerja, judul ringkas, deskripsi tunggal, serta panel status kelengkapan profil yang adaptif pada layar kecil.

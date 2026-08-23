@@ -26,6 +26,7 @@ class SiswaController extends BaseWaliKelasController
                 'perempuan' => $siswa->where('jenis_kelamin', 'P')->count(),
                 'data_lengkap' => $siswa->filter(fn ($item) => $item->isDataComplete())->count(),
             ],
+            'kategoriList' => CatatanWaliKelas::KATEGORI,
         ]);
     }
 
