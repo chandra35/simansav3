@@ -253,7 +253,9 @@
                                 <th>Kelas</th>
                                 <th class="text-center">Ortu</th>
                                 <th class="text-center">Diri</th>
-                                <th class="text-center">Verval</th>
+                                @if($canManageInternalVerval)
+                                    <th class="text-center">Verval</th>
+                                @endif
                                 <th class="text-center">EMIS</th>
                                 <th class="text-center">Keberadaan</th>
                                 <th class="text-center">Tgl Masuk</th>
@@ -1303,10 +1305,10 @@ $(document).ready(function() {
             { targets: 1, width: '22%', responsivePriority: 1 },   // nama/nisn
             { targets: 2, width: '4%'  },   // jk
             { targets: 3, width: '14%', responsivePriority: 3 },   // kelas dan flag asrama
-            { targets: [4, 5, 6, 7], width: '7%' }, // status
-            { targets: 8, width: '8%' },    // keberadaan
-            { targets: 9, width: '8%'  },   // tgl masuk
-            { targets: 10, width: '10%' },  // aksi dropdown
+            { targets: [4, 5, @if($canManageInternalVerval) 6, 7 @else 6 @endif], width: '7%' }, // status
+            { targets: {{ $canManageInternalVerval ? 8 : 7 }}, width: '8%' },    // keberadaan
+            { targets: {{ $canManageInternalVerval ? 9 : 8 }}, width: '8%'  },   // tgl masuk
+            { targets: {{ $canManageInternalVerval ? 10 : 9 }}, width: '10%' },  // aksi dropdown
         ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle siswa-col-foto' },
@@ -1315,7 +1317,9 @@ $(document).ready(function() {
             { data: 'kelas',         name: 'kelas',         className: 'align-middle siswa-col-kelas' },
             { data: 'status_ortu',   name: 'status_ortu',   orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
             { data: 'status_diri',   name: 'status_diri',   orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
-            { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            @if($canManageInternalVerval)
+                { data: 'verval_ijazah', name: 'verval_ijazah', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
+            @endif
             { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
             { data: 'keberadaan',     name: 'keberadaan', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-keberadaan' },
             { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle siswa-col-tanggal' },
@@ -1324,7 +1328,7 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
         pagingType: 'simple_numbers',
-        order: [[9, 'desc']],
+        order: [[{{ $canManageInternalVerval ? 9 : 8 }}, 'desc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",
@@ -1398,7 +1402,8 @@ $(document).ready(function() {
         $('#fotoPreviewModal').modal('show');
     });
 
-    // Toggle Verval Ijazah
+    @if($canManageInternalVerval)
+    // Toggle Verval Ijazah hanya untuk Admin/Super Admin.
     $(document).on('click', '.btn-toggle-verval', function() {
         const btn = $(this);
         const url = btn.data('url');
@@ -1415,6 +1420,7 @@ $(document).ready(function() {
                 btn.prop('disabled', false);
             });
     });
+    @endif
 
     // Pembungkus tabel perlu menjadi visible sementara agar dropdown baris terakhir
     // tidak terpotong oleh area horizontal-scroll DataTables.

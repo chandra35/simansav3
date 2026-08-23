@@ -55,6 +55,7 @@ class SiswaController extends Controller
         $populationCounts = $this->populationCounts();
 
         $contextScope = $this->buildStatisticsContext($request);
+        $canManageInternalVerval = $this->canManageInternalVerval($request->user());
         $isScopedStudentAccess = $this->studentAccessScope()->isLimited($request->user());
         $scopedClasses = $isScopedStudentAccess
             ? \App\Models\Kelas::query()->whereIn('id', $this->studentAccessScope()->classIds($request->user()) ?? collect())->orderBy('nama_kelas')->get(['id', 'nama_kelas'])
@@ -90,7 +91,8 @@ class SiswaController extends Controller
             'populationCounts',
             'activeYear',
             'isScopedStudentAccess',
-            'scopedClasses'
+            'scopedClasses',
+            'canManageInternalVerval'
         ));
     }
 
@@ -144,8 +146,14 @@ class SiswaController extends Controller
     {
         $this->authorize('view-siswa');
         
-        $siswa = Siswa::with(['user', 'ortu', 'kelasTahunAktif'])
-            ->select(['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'verval_ijazah', 'verval_ijazah_at', 'emis_registered', 'emis_registered_at', 'created_at']);
+        $canManageInternalVerval = $this->canManageInternalVerval($request->user());
+        $columns = ['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'emis_registered', 'emis_registered_at', 'created_at'];
+
+        if ($canManageInternalVerval) {
+            $columns = [...$columns, 'verval_ijazah', 'verval_ijazah_at'];
+        }
+
+        $siswa = Siswa::with(['user', 'ortu', 'kelasTahunAktif'])->select($columns);
 
         $this->applyRoleScope($siswa);
         $population = $this->resolvePopulation($request);
@@ -181,11 +189,11 @@ class SiswaController extends Controller
             $orderDirection = $request->order[0]['dir'];
             
             // Map column index to actual column names
-            // Columns: 0=foto, 1=nama_nisn, 2=jk, 3=kelas, 4=status_ortu, 5=status_diri, 6=verval, 7=emis, 8=keberadaan, 9=created_at, 10=actions
+            $createdAtColumnIndex = $canManageInternalVerval ? 9 : 8;
             $columns = [
                 1 => 'nama_lengkap',
                 2 => 'jenis_kelamin',
-                9 => 'siswa.created_at',
+                $createdAtColumnIndex => 'siswa.created_at',
             ];
 
             // Handle Kelas ordering (index 3, needs join)
@@ -219,7 +227,7 @@ class SiswaController extends Controller
 
         $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
         $canViewDetailKelas = $request->user()->can('view-detail-kelas');
-        $data = $siswa->get()->map(function($item) use ($activeYearId, $canViewDetailKelas) {
+        $data = $siswa->get()->map(function($item) use ($activeYearId, $canViewDetailKelas, $canManageInternalVerval) {
             // Get kelas aktif
             $kelasAktif = $item->kelasTahunAktif->first();
             $aktifRecord = $kelasAktif ? null : $item->siswaKelasRecords()
@@ -281,13 +289,12 @@ class SiswaController extends Controller
                 'status_diri' => $item->data_diri_completed
                     ? '<span class="badge badge-success">Lengkap</span>'
                     : '<span class="badge badge-danger">Belum</span>',
-                'verval_ijazah' => $this->getVervalIjazahBadge($item),
                 'emis_registered' => $this->getEmisRegisteredBadge($item),
                 'keberadaan' => $this->getKeberadaanBadge($kelasAktif),
                 'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item),
                 'actions_mobile' => $this->getMobileActionButtons($item)
-            ];
+            ] + ($canManageInternalVerval ? ['verval_ijazah' => $this->getVervalIjazahBadge($item)] : []);
         });
 
         return response()->json([
@@ -322,6 +329,7 @@ class SiswaController extends Controller
      */
     public function toggleVervalIjazah(Siswa $siswa)
     {
+        abort_unless($this->canManageInternalVerval(Auth::user()), 403);
         $this->authorize('edit-siswa');
         $this->ensureStudentInScope($siswa);
 
@@ -335,6 +343,14 @@ class SiswaController extends Controller
             'verval_ijazah' => $siswa->verval_ijazah,
             'badge' => $this->getVervalIjazahBadge($siswa),
         ]);
+    }
+
+    private function canManageInternalVerval(?User $user): bool
+    {
+        return $user !== null && (
+            $user->hasAnyRole(['Super Admin', 'Admin'])
+            || in_array($user->role, ['super_admin', 'admin'], true)
+        );
     }
 
     private function getEmisRegisteredBadge(Siswa $siswa): string
