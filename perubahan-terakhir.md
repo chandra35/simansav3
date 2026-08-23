@@ -7,6 +7,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
 - Kolom dan aksi Verval Ijazah pada Data Siswa kini hanya tampil bagi Admin/Super Admin. GTK, wali kelas, operator, atau role kustom yang diberi akses siswa tidak lagi menerima indikator maupun data penandaan pemeriksaan ijazah internal; endpoint perubahan juga menolak akun non-admin di server.
+- Portal **Kelas Saya → Daftar Siswa** wali kelas juga tidak lagi memuat Verval pada tabel maupun modal detail siswa, sehingga penanda pemeriksaan ijazah internal tidak tercampur dengan data perwalian.
 - Respons 404 Nginx kini memakai halaman layar penuh dengan logo sekolah, grid metadata sesi, dan navigasi aman. Pesan tetap netral; IP diisi Nginx, tanggal serta render diukur pada perangkat, dan lokasi hanya dibaca bila pengguna menyetujuinya. ISP tidak ditebak dari IP VM/router dan ditandai tidak tersedia sampai basis GeoIP lokal tepercaya dipasang.
 - Role kustom dari Role Management kini dapat memakai permission `access-global-siswa-kelas`. Permission ini membuka cakupan seluruh data Siswa dan Kelas bagi role yang dipilih, tanpa harus mewarisi seluruh permission role Operator.
 - Cakupan global tidak diberikan secara otomatis: role kustom tetap harus menerima permission operasional terpisah seperti `view-siswa`, `reset-password-siswa`, atau `view-kelas`. Dengan demikian admin dapat membuat contoh role `Operator Siswa Terbatas` yang hanya memiliki hak yang diperlukan.

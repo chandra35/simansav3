@@ -83,7 +83,7 @@
                 <table id="tblSiswaWali" class="table table-hover table-sm gtk-wali-siswa-table mb-0" style="width:100%">
                     <thead><tr>
                         <th class="text-center">Foto</th><th>Nama / NISN</th><th class="text-center">JK</th><th>Kelas</th>
-                        <th class="text-center">Ortu</th><th class="text-center">Diri</th><th class="text-center">Verval</th>
+                        <th class="text-center">Ortu</th><th class="text-center">Diri</th>
                         <th class="text-center">EMIS</th><th class="text-center">Keberadaan</th><th class="text-center">Tgl Masuk</th><th class="text-center">Aksi</th>
                     </tr></thead>
                     <tbody>
@@ -100,7 +100,6 @@
                             <td><span class="badge badge-primary">{{ $kelas->nama_kelas }}</span></td>
                             <td class="text-center"><span class="badge {{ $s->data_ortu_completed ? 'badge-success' : 'badge-warning' }}">{{ $s->data_ortu_completed ? 'Lengkap' : 'Belum' }}</span></td>
                             <td class="text-center"><span class="badge {{ $s->data_diri_completed ? 'badge-success' : 'badge-warning' }}">{{ $s->data_diri_completed ? 'Lengkap' : 'Belum' }}</span></td>
-                            <td class="text-center"><span class="badge {{ $s->verval_ijazah ? 'badge-success' : 'badge-warning' }}">{{ $s->verval_ijazah ? 'Sudah' : 'Belum' }}</span></td>
                             <td class="text-center"><span class="badge {{ $s->emis_registered ? 'badge-success' : 'badge-warning' }}">{{ $s->emis_registered ? 'Sudah' : 'Belum' }}</span></td>
                             <td class="text-center">@if($s->pivot->keberadaan_diverifikasi_at)<span class="badge badge-success">Ada</span>@else<span class="badge badge-secondary">Belum Dicek</span>@endif</td>
                             <td class="text-center"><small>{{ $s->pivot->tanggal_masuk ? \Carbon\Carbon::parse($s->pivot->tanggal_masuk)->format('d/m/Y') : '—' }}</small></td>

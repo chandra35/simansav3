@@ -95,9 +95,11 @@ class UiDesignConsistencyTest extends TestCase
         $this->assertStringContainsString('simansa-filter-panel', $index);
         $this->assertStringContainsString('filterJenisKelamin', $index);
         $this->assertStringContainsString('filterStatusData', $index);
-        foreach (['Verval', 'EMIS', 'Keberadaan', 'Tgl Masuk'] as $column) {
+        foreach (['EMIS', 'Keberadaan', 'Tgl Masuk'] as $column) {
             $this->assertStringContainsString($column, $index);
         }
+        $this->assertStringNotContainsString('Verval', $index);
+        $this->assertStringNotContainsString('Verval Ijazah', $this->file('resources/views/admin/gtk/wali/siswa/partials/detail.blade.php'));
     }
 
     public function test_wali_student_modal_contains_complete_read_only_tabs(): void

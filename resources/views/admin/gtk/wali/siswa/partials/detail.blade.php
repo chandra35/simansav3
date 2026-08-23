@@ -47,7 +47,6 @@
                         <tr><td class="bg-light" width="40%"><strong>Status Siswa</strong></td><td><span class="badge badge-success">{{ $siswa->status_siswa ? \Illuminate\Support\Str::headline($siswa->status_siswa) : 'Aktif' }}</span></td></tr>
                         <tr><td class="bg-light"><strong>Data Diri</strong></td><td><span class="badge {{ $siswa->data_diri_completed ? 'badge-success' : 'badge-warning' }}">{{ $siswa->data_diri_completed ? 'Lengkap' : 'Belum Lengkap' }}</span></td></tr>
                         <tr><td class="bg-light"><strong>Data Orang Tua</strong></td><td><span class="badge {{ $siswa->data_ortu_completed ? 'badge-success' : 'badge-warning' }}">{{ $siswa->data_ortu_completed ? 'Lengkap' : 'Belum Lengkap' }}</span></td></tr>
-                        <tr><td class="bg-light"><strong>Verval Ijazah</strong></td><td><span class="badge {{ $siswa->verval_ijazah ? 'badge-success' : 'badge-warning' }}">{{ $siswa->verval_ijazah ? 'Sudah' : 'Belum' }}</span></td></tr>
                         <tr><td class="bg-light"><strong>Status EMIS</strong></td><td><span class="badge {{ $siswa->emis_registered ? 'badge-success' : 'badge-warning' }}">{{ $siswa->emis_registered ? 'Sudah Masuk EMIS' : 'Belum Masuk EMIS' }}</span></td></tr>
                     </table></div>
 
