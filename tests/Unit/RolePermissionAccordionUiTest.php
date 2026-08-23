@@ -84,7 +84,9 @@ class RolePermissionAccordionUiTest extends TestCase
 
         $this->assertStringContainsString("route('admin.users.assign-role-form', \$user)", $controller);
         $this->assertStringContainsString("route('admin.users.assign-role', \$user)", $controller);
+        $this->assertStringContainsString('onclick=\'return window.openUserPermission(this);\'', $controller);
         $this->assertStringContainsString("const formUrl = \$button.data('form-url');", $view);
+        $this->assertStringContainsString('window.openUserPermission = openUserPermission;', $view);
         $this->assertStringContainsString('Memuat akses user', $view);
         $this->assertStringContainsString('Akses user tidak dapat dibuka', $view);
     }

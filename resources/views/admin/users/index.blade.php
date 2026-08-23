@@ -582,11 +582,11 @@ $(document).ready(function() {
         });
     });
 
-    // Assign Role Button
-    $('#usersTable').on('click', '.btn-assign-role', function(event) {
-        event.preventDefault();
+    // Dipanggil langsung dari tombol DataTables agar tetap bekerja setelah row dirender ulang.
+    function openUserPermission(button, event) {
+        event?.preventDefault();
 
-        const $button = $(this);
+        const $button = $(button);
         const userId = $button.data('id');
         const userName = $button.data('name');
         const formUrl = $button.data('form-url');
@@ -598,7 +598,7 @@ $(document).ready(function() {
                 title: 'Aksi tidak tersedia',
                 text: 'URL pengaturan akses user tidak ditemukan. Muat ulang halaman lalu coba kembali.'
             });
-            return;
+            return false;
         }
         
         $('#user_id').val(userId);
@@ -755,6 +755,14 @@ $(document).ready(function() {
                 $button.prop('disabled', false);
             }
         });
+        return false;
+    }
+
+    window.openUserPermission = openUserPermission;
+
+    // Fallback untuk tombol yang dirender tanpa onclick oleh cache browser lama.
+    $('#usersTable').on('click', '.btn-assign-role', function(event) {
+        return openUserPermission(this, event);
     });
 
     // Populate Tugas Tambahan dropdown when modal is fully shown
