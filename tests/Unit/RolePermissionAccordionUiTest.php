@@ -93,4 +93,14 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringContainsString('isSavingUserPermission', $view);
         $this->assertStringContainsString("textStatus === 'timeout'", $view);
     }
+
+    public function test_gtk_profiles_receive_their_personal_dashboard_permission(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $migration = file_get_contents($root.'/database/migrations/2026_08_23_090000_grant_gtk_dashboard_permission_to_gtk_profiles.php');
+
+        $this->assertStringContainsString("'view-gtk-dashboard'", $migration);
+        $this->assertStringContainsString("whereHas('gtk')", $migration);
+        $this->assertStringContainsString('givePermissionTo($permission)', $migration);
+    }
 }

@@ -18,6 +18,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Tombol **Aksi → Role & permission** pada Data User kini langsung menampilkan status pemuatan saat menyiapkan role dan permission, memakai URL rute resmi dari server, dan memberi pesan spesifik bila akses ditolak atau pemuatan gagal. Ini mencegah tombol terlihat tidak merespons ketika daftar permission besar sedang diproses.
 - Aksi **Role & permission** kini juga memanggil fungsi eksplisit langsung dari tombol DataTables, dengan event delegation sebagai fallback. Dengan demikian aksi tetap terpanggil setelah DataTables menggambar ulang baris atau pada browser yang tidak meneruskan event dropdown secara konsisten.
 - Penyimpanan Role & Permission kini mencegah submit ganda, selalu menutup popup pemuatan ketika server membalas, dan memiliki batas waktu 20 detik dengan pesan yang jelas. UI tidak lagi dapat berhenti permanen pada status “Menyimpan…” bila callback atau respons server bermasalah.
+- Akun yang benar-benar memiliki profil GTK kini otomatis menerima permission dasar `view-gtk-dashboard`, termasuk GTK lama yang role penugasannya hanya BK. Hak ini hanya membuka dashboard/profil pribadi GTK, tidak memberi akses data siswa atau kelas; Login As GTK tidak lagi berhenti di 403 karena role penugasan tidak membawa permission dashboard.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 
