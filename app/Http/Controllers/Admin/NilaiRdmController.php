@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\NilaiSiswa;
 use App\Models\SiswaKelas;
+use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\StudentAccessScope;
 use Illuminate\Http\Request;
@@ -83,5 +84,41 @@ class NilaiRdmController extends Controller
         $scoreCount = $scores->flatten(1)->count();
 
         return view('admin.nilai-rdm.index', compact('year', 'classes', 'rows', 'mapelSummary', 'scoreCount'));
+    }
+
+    /** Detail nilai RDM hanya untuk siswa dalam rombel aktif akun yang sedang login. */
+    public function show(Request $request, Siswa $siswa)
+    {
+        $this->authorize('view-nilai-rdm');
+
+        $year = TahunPelajaran::query()->active()->firstOrFail();
+        $classIds = $this->studentAccess->classIds($request->user());
+        abort_if($classIds !== null && $classIds->isEmpty(), 403, 'Belum ada rombel aktif dalam penugasan Anda.');
+
+        $membership = SiswaKelas::query()
+            ->with('kelas:id,nama_kelas')
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_pelajaran_id', $year->id)
+            ->where('status', 'aktif')
+            ->when($classIds !== null, fn ($query) => $query->whereIn('kelas_id', $classIds))
+            ->whereNull('deleted_at')
+            ->first();
+
+        abort_if($membership === null, 404);
+
+        $scores = NilaiSiswa::query()
+            ->with('mataPelajaran:id,nama_mapel,kode_mapel')
+            ->where('tahun_pelajaran_id', $year->id)
+            ->where('sumber_data', 'rdm_sync')
+            ->where('siswa_id', $siswa->id)
+            ->orderBy('semester')
+            ->orderBy('mata_pelajaran_id')
+            ->get()
+            ->groupBy('semester');
+
+        $scoreCount = $scores->flatten(1)->count();
+        $average = $scores->flatten(1)->pluck('nilai')->filter(fn ($value) => $value !== null)->avg();
+
+        return view('admin.nilai-rdm.show', compact('year', 'siswa', 'membership', 'scores', 'scoreCount', 'average'));
     }
 }

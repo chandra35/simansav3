@@ -81,7 +81,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 nilai-rdm-table">
-                    <thead><tr><th>Siswa</th><th>Nilai Masuk</th><th>Mapel</th><th>Semester</th><th>Rata-rata</th><th>Sinkron Terakhir</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Siswa</th><th>Nilai Masuk</th><th>Mapel</th><th>Semester</th><th>Rata-rata</th><th>Sinkron Terakhir</th><th>Status</th><th class="text-center">Detail</th></tr></thead>
                     <tbody>
                     @forelse($rows as $row)
                         <tr>
@@ -92,9 +92,10 @@
                             <td>{{ $row->average !== null ? number_format($row->average, 2) : '-' }}</td>
                             <td>{{ $row->latest_import ? \Carbon\Carbon::parse($row->latest_import)->translatedFormat('d M Y H:i') : '-' }}</td>
                             <td>@if($row->nilai_count)<span class="badge badge-success">Nilai tersedia</span>@else<span class="badge badge-warning">Belum tersinkron</span>@endif</td>
+                            <td class="text-center"><a href="{{ route('admin.nilai-rdm.show', $row->siswa->id) }}" class="btn btn-sm btn-outline-primary nilai-rdm-detail-link" aria-label="Detail nilai {{ $row->siswa?->nama_lengkap }}"><i class="fas fa-list-alt mr-1"></i><span>Detail</span></a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-users d-block mb-2 fa-lg"></i>Belum ada siswa aktif pada rombel dalam cakupan Anda.</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-5"><i class="fas fa-users d-block mb-2 fa-lg"></i>Belum ada siswa aktif pada rombel dalam cakupan Anda.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -124,6 +125,6 @@
 
 @section('css')
 <style>
-.nilai-rdm-page .card{border-radius:14px;box-shadow:0 7px 18px rgba(15,23,42,.05)}.nilai-rdm-page .rdm-year-box{padding:12px 14px;border:1px solid rgba(255,255,255,.3);border-radius:11px;background:rgba(255,255,255,.12)}.nilai-rdm-page .rdm-year-box small,.nilai-rdm-page .rdm-year-box strong,.nilai-rdm-page .rdm-year-box span{display:block}.nilai-rdm-page .rdm-year-box small{font-size:.72rem;text-transform:uppercase}.nilai-rdm-page .rdm-year-box strong{font-size:1.08rem}.nilai-rdm-page .rdm-year-box span{font-size:.78rem;opacity:.9}.nilai-rdm-page .rdm-class-list{display:flex;gap:8px;flex-wrap:wrap}.nilai-rdm-page .rdm-class-list .badge{padding:7px 10px;font-size:.82rem;font-weight:600}.nilai-rdm-page .nilai-rdm-table thead th{border-top:0;background:#f6f8fc;color:#52627a;font-size:.72rem;text-transform:uppercase;white-space:nowrap}.nilai-rdm-page .nilai-rdm-table td{vertical-align:middle}.nilai-rdm-page .nilai-rdm-table td small{display:block;color:#718096;font-size:.75rem}@media(max-width:767px){.nilai-rdm-page .info-box{min-height:78px}.nilai-rdm-page .card-body{padding-left:1rem;padding-right:1rem}}
+.nilai-rdm-page .card{border-radius:14px;box-shadow:0 7px 18px rgba(15,23,42,.05)}.nilai-rdm-page .rdm-year-box{padding:12px 14px;border:1px solid rgba(255,255,255,.3);border-radius:11px;background:rgba(255,255,255,.12)}.nilai-rdm-page .rdm-year-box small,.nilai-rdm-page .rdm-year-box strong,.nilai-rdm-page .rdm-year-box span{display:block}.nilai-rdm-page .rdm-year-box small{font-size:.72rem;text-transform:uppercase}.nilai-rdm-page .rdm-year-box strong{font-size:1.08rem}.nilai-rdm-page .rdm-year-box span{font-size:.78rem;opacity:.9}.nilai-rdm-page .rdm-class-list{display:flex;gap:8px;flex-wrap:wrap}.nilai-rdm-page .rdm-class-list .badge{padding:7px 10px;font-size:.82rem;font-weight:600}.nilai-rdm-page .nilai-rdm-table thead th{border-top:0;background:#f6f8fc;color:#52627a;font-size:.72rem;text-transform:uppercase;white-space:nowrap}.nilai-rdm-page .nilai-rdm-table td{vertical-align:middle}.nilai-rdm-page .nilai-rdm-table td small{display:block;color:#718096;font-size:.75rem}.nilai-rdm-page .nilai-rdm-detail-link{white-space:nowrap}@media(max-width:767px){.nilai-rdm-page .info-box{min-height:78px}.nilai-rdm-page .card-body{padding-left:1rem;padding-right:1rem}.nilai-rdm-page .nilai-rdm-detail-link span{display:none}.nilai-rdm-page .nilai-rdm-detail-link .mr-1{margin-right:0!important}}
 </style>
 @stop

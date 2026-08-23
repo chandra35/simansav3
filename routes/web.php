@@ -512,6 +512,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/nilai-rdm', [NilaiRdmController::class, 'index'])
         ->middleware('permission:view-nilai-rdm')
         ->name('nilai-rdm.index');
+    Route::get('/nilai-rdm/siswa/{siswa}', [NilaiRdmController::class, 'show'])
+        ->middleware('permission:view-nilai-rdm')
+        ->name('nilai-rdm.show');
 
     // Integrasi RDM
     Route::middleware(['permission:view-rdm'])->group(function () {
