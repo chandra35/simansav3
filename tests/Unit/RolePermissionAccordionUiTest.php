@@ -54,4 +54,14 @@ class RolePermissionAccordionUiTest extends TestCase
             $this->assertStringNotContainsString('<div class="simansa-hero">', $contents, $view);
         }
     }
+
+    public function test_permission_list_avoids_gpu_heavy_hover_effects(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $view = file_get_contents($root.'/resources/views/admin/permissions/index.blade.php');
+
+        $this->assertStringNotContainsString('backdrop-filter:', $view);
+        $this->assertStringNotContainsString('transform: translateY(', $view);
+        $this->assertStringContainsString('transition: border-color .15s ease, background-color .15s ease;', $view);
+    }
 }

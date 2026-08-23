@@ -5,27 +5,25 @@
 @section('css')
 <style>
     .permission-group-card {
-        border: 1px solid rgba(191, 219, 254, 0.82);
+        border: 1px solid #dce5f2;
         border-left: 4px solid;
-        border-radius: 18px;
-        background:
-            radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%),
-            linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(239, 246, 255, 0.94));
-        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
-        transition: all 0.3s ease;
+        border-radius: .5rem;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .05);
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
     .permission-group-card > .card-header {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(239, 246, 255, 0.68) 100%);
+        background: #f8fafc;
         color: #1e3a8a;
-        border-bottom: 1px solid rgba(191, 219, 254, 0.95);
+        border-bottom: 1px solid #e2e8f0;
     }
     .permission-group-card > .card-header strong,
     .permission-group-card > .card-header i {
         color: #1e3a8a !important;
     }
     .permission-group-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 18px 36px rgba(37, 99, 235, 0.12);
+        border-color: #bfdbfe;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, .08);
     }
     .color-1 { border-left-color: #007bff; }
     .color-2 { border-left-color: #28a745; }
@@ -48,19 +46,17 @@
         gap: .75rem;
         padding: .7rem .8rem;
         margin-bottom: .65rem;
-        border: 1px solid rgba(191, 219, 254, 0.78);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.68);
-        backdrop-filter: blur(6px);
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        border: 1px solid #dbe4f0;
+        border-radius: .45rem;
+        background: #fff;
+        transition: border-color .15s ease, background-color .15s ease;
     }
     .permission-item:last-child {
         margin-bottom: 0;
     }
     .permission-item:hover {
-        transform: translateY(-1px);
-        border-color: rgba(96, 165, 250, 0.9);
-        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.08);
+        border-color: #93c5fd;
+        background: #f8fbff;
     }
     .permission-item__content {
         min-width: 0;
