@@ -6,6 +6,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Modal **Detail lengkap** pada portal **Kelas Saya → Daftar Siswa** kini kembali stabil setelah indeks kolom DataTables diselaraskan dengan tabel tanpa Verval. Klik aksi Detail menghentikan event tabel, memuat respons AJAX dengan batas waktu, dan menampilkan penjelasan di modal serta notifikasi bila respons tidak tersedia.
 - Rekap Nilai RDM wali kelas kini menyediakan Detail Nilai per siswa yang tetap hanya-baca dan terikat pada rombel aktif. Detail membagi nilai RDM per semester melalui accordion, menyajikan tabel yang dapat digeser pada desktop serta kartu adaptif pada ponsel, beserta nilai, predikat, mapel, dan waktu sinkron terakhir; tidak membuka Legger, ranking, ekspor, atau nilai dari sumber selain RDM.
 - Header **Profil GTK** kini memakai hero AdminLTE yang lebih ramah dan konsisten: konteks ruang kerja, judul ringkas, deskripsi tunggal, serta panel status kelengkapan profil yang adaptif pada layar kecil.
 - Preview foto pada **Profil GTK** kini menggunakan focal point `center top`, sama dengan ringkasan profil GTK/admin, agar crop potret tidak memotong bagian kepala.

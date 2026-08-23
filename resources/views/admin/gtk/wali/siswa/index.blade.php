@@ -145,7 +145,7 @@
     .gtk-wali-siswa-table th:nth-child(1) { width:5%; } .gtk-wali-siswa-table th:nth-child(2) { width:20%; }
     .gtk-wali-siswa-table th:nth-child(3) { width:4%; } .gtk-wali-siswa-table th:nth-child(4) { width:8%; }
     .gtk-wali-siswa-table th:nth-child(5), .gtk-wali-siswa-table th:nth-child(6), .gtk-wali-siswa-table th:nth-child(7), .gtk-wali-siswa-table th:nth-child(8) { width:7%; }
-    .gtk-wali-siswa-table th:nth-child(9) { width:10%; } .gtk-wali-siswa-table th:nth-child(10) { width:9%; } .gtk-wali-siswa-table th:nth-child(11) { width:16%; }
+    .gtk-wali-siswa-table th:nth-child(9) { width:10%; } .gtk-wali-siswa-table th:nth-child(10) { width:16%; }
     .gtk-wali-avatar { width:40px; height:40px; object-fit:cover; }
     #modalDetailSiswa .modal-content { border:0; border-radius:16px; overflow:hidden; box-shadow:0 24px 64px rgba(15,23,42,.22); }
     #modalDetailSiswa .nav-tabs { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
@@ -165,7 +165,7 @@
     $(function () {
         var table = $('#tblSiswaWali').DataTable({
             paging:true, pageLength:25, ordering:true, order:[[1, 'asc']],
-            columnDefs:[{ orderable:false, targets:[0, 10] }],
+            columnDefs:[{ orderable:false, targets:[0, 9] }],
             language:{ url:'//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
         });
 
@@ -179,21 +179,32 @@
         $('#filterJenisKelamin, #filterStatusData').on('change', function () { table.draw(); });
         $('#btnResetFilter').on('click', function () { $('#filterJenisKelamin, #filterStatusData').val(''); table.search('').draw(); });
 
-        $(document).on('click', '.btn-detail-siswa', function () {
+        $(document).on('click', '.btn-detail-siswa', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
             var modal = $('#modalDetailSiswa');
             var body = $('#modalDetailSiswaBody');
             var title = $('#modalDetailSiswaLabel');
+            var detailUrl = $(this).data('url');
+            if (!detailUrl) return;
+
             if (typeof window.hideAppGlobalOverlay === 'function') window.hideAppGlobalOverlay();
             title.html('<i class="fas fa-user-graduate mr-1"></i> Detail Siswa');
             body.html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>');
             modal.modal('show');
-            $.ajax({ url:$(this).data('url'), method:'GET', dataType: 'json', headers:{ 'X-Requested-With':'XMLHttpRequest' } })
+            $.ajax({ url:detailUrl, method:'GET', dataType: 'json', timeout:15000, headers:{ 'X-Requested-With':'XMLHttpRequest' } })
                 .done(function (response) {
                     title.html('<i class="fas fa-user-graduate mr-1"></i> ' + $('<div>').text(response.title || 'Detail Siswa').html());
                     body.html(response.html);
-                }).fail(function () {
-                    modal.modal('hide');
-                    Swal.fire({ icon:'error', title:'Detail Tidak Dapat Dimuat', text:'Silakan coba kembali beberapa saat lagi.', confirmButtonText:'Tutup' });
+                }).fail(function (xhr, status) {
+                    var message = status === 'timeout'
+                        ? 'Pemuatan detail memerlukan waktu terlalu lama. Silakan coba kembali.'
+                        : 'Detail siswa belum dapat dimuat. Silakan coba kembali beberapa saat lagi.';
+                    body.html('<div class="callout callout-warning mb-0"><h5><i class="fas fa-exclamation-triangle mr-1"></i> Detail belum tersedia</h5><p class="mb-0">' + message + '</p></div>');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon:'warning', title:'Detail Belum Dimuat', text:message, confirmButtonText:'Tutup' });
+                    }
                 });
         });
     });
