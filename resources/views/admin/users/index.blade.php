@@ -846,17 +846,26 @@ $(document).ready(function() {
         $('#tugasTambahanList').html(html);
     }
 
+    let isSavingUserPermission = false;
+
     // Submit Assign Role Form
     $('#assignRoleForm').on('submit', function(e) {
         e.preventDefault();
-        
-        console.log('Form submitted!');
+
+        if (isSavingUserPermission) {
+            return;
+        }
+
+        isSavingUserPermission = true;
         
         const formData = $(this).serialize();
         const url = $(this).attr('action');
-        
-        console.log('URL:', url);
-        console.log('FormData:', formData);
+
+        if (!url) {
+            isSavingUserPermission = false;
+            Swal.fire({ icon: 'error', title: 'Aksi tidak tersedia', text: 'URL penyimpanan akses user tidak ditemukan. Tutup modal lalu coba kembali.' });
+            return;
+        }
         
         // Show loading
         Swal.fire({
@@ -873,27 +882,40 @@ $(document).ready(function() {
             url: url,
             type: 'POST',
             data: formData,
+            timeout: 20000,
             success: function(response) {
-                console.log('Success response:', response);
+                Swal.close();
+
+                if (!response.success) {
+                    Swal.fire({ icon: 'error', title: 'Penyimpanan ditolak', text: response.message || 'Akses user belum dapat disimpan.' });
+                    return;
+                }
+
                 $('#assignRoleModal').modal('hide');
-                
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: 'Role dan permission berhasil diassign',
+                    text: response.message || 'Role dan permission berhasil diassign',
                     timer: 1500,
                     showConfirmButton: false
                 });
                 
                 table.ajax.reload(null, false);
             },
-            error: function(xhr) {
-                console.log('Error response:', xhr);
+            error: function(xhr, textStatus) {
+                Swal.close();
+                const message = textStatus === 'timeout'
+                    ? 'Server terlalu lama merespons. Periksa kembali akses user setelah memuat ulang halaman.'
+                    : (xhr.responseJSON?.message || 'Terjadi kesalahan saat menyimpan role dan permission.');
+
                 Swal.fire({
                     icon: 'error',
-                    title: 'Gagal!',
-                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat assign role'
+                    title: 'Penyimpanan gagal',
+                    text: message
                 });
+            },
+            complete: function() {
+                isSavingUserPermission = false;
             }
         });
     });

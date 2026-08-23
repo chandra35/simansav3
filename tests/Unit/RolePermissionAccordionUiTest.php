@@ -89,5 +89,8 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringContainsString('window.openUserPermission = openUserPermission;', $view);
         $this->assertStringContainsString('Memuat akses user', $view);
         $this->assertStringContainsString('Akses user tidak dapat dibuka', $view);
+        $this->assertStringContainsString('timeout: 20000', $view);
+        $this->assertStringContainsString('isSavingUserPermission', $view);
+        $this->assertStringContainsString("textStatus === 'timeout'", $view);
     }
 }

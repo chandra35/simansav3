@@ -17,6 +17,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 - Modal Role & Permission pada Data User kini menamai tab permission langsung sebagai **Akses Khusus User** dan menjelaskan bahwa hak tersebut hanya berlaku untuk akun yang dipilih. Panduan di modal mencantumkan kombinasi `view-siswa`, `view-kelas`, `access-global-siswa-kelas`, serta `reset-password-siswa` untuk penugasan individual seperti BK yang juga membantu operator.
 - Tombol **Aksi → Role & permission** pada Data User kini langsung menampilkan status pemuatan saat menyiapkan role dan permission, memakai URL rute resmi dari server, dan memberi pesan spesifik bila akses ditolak atau pemuatan gagal. Ini mencegah tombol terlihat tidak merespons ketika daftar permission besar sedang diproses.
 - Aksi **Role & permission** kini juga memanggil fungsi eksplisit langsung dari tombol DataTables, dengan event delegation sebagai fallback. Dengan demikian aksi tetap terpanggil setelah DataTables menggambar ulang baris atau pada browser yang tidak meneruskan event dropdown secara konsisten.
+- Penyimpanan Role & Permission kini mencegah submit ganda, selalu menutup popup pemuatan ketika server membalas, dan memiliki batas waktu 20 detik dengan pesan yang jelas. UI tidak lagi dapat berhenti permanen pada status “Menyimpan…” bila callback atau respons server bermasalah.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 
