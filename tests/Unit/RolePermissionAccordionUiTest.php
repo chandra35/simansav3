@@ -64,4 +64,15 @@ class RolePermissionAccordionUiTest extends TestCase
         $this->assertStringNotContainsString('transform: translateY(', $view);
         $this->assertStringContainsString('transition: border-color .15s ease, background-color .15s ease;', $view);
     }
+
+    public function test_user_role_modal_explains_direct_permissions_are_user_specific(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $view = file_get_contents($root.'/resources/views/admin/users/index.blade.php');
+
+        $this->assertStringContainsString('Akses Khusus User', $view);
+        $this->assertStringContainsString('BK lain tidak ikut menerima permission ini.', $view);
+        $this->assertStringContainsString('access-global-siswa-kelas', $view);
+        $this->assertStringContainsString('reset-password-siswa', $view);
+    }
 }

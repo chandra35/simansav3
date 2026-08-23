@@ -186,7 +186,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="permissions-tab" data-toggle="tab" href="#permissionsTab" role="tab">
-                                <i class="fas fa-key"></i> Permissions
+                                <i class="fas fa-key"></i> Akses Khusus User
                             </a>
                         </li>
                         <li class="nav-item" id="tugasTambahanTab" style="display: none;">
@@ -211,17 +211,18 @@
 
                         <!-- Permissions Tab -->
                         <div class="tab-pane fade" id="permissionsTab" role="tabpanel">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> 
-                                <strong>Cara Kerja Permission:</strong>
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-user-shield mr-1"></i>
+                                <strong>Akses khusus hanya untuk user terpilih.</strong> Role asal tidak diubah, sehingga BK lain tidak ikut menerima permission ini.
                                 <ul class="mb-0 mt-2">
-                                    <li><strong>Permission dari Role</strong> (badge "dari role", tidak bisa diubah) - Otomatis didapat dari role yang dipilih</li>
-                                    <li><strong>Direct Permission</strong> (checkbox bisa diubah) - Permission tambahan khusus untuk user ini</li>
-                                    <li><strong>GTK Role:</strong> Hanya punya permission minimal (dashboard & profile). Anda perlu <strong>menambahkan permission manual</strong> sesuai kebutuhan (contoh: view-siswa, view-kelas, dll)</li>
+                                    <li><strong>Dari role</strong> ditandai badge dan tidak dapat diubah dari sini.</li>
+                                    <li><strong>Checklist aktif</strong> adalah permission langsung yang dapat ditambah atau dicabut hanya dari akun ini.</li>
+                                    <li>Untuk seluruh Data Siswa dan Kelas, pilih <code>view-siswa</code>, <code>view-kelas</code>, dan <code>access-global-siswa-kelas</code>.</li>
+                                    <li>Tambahkan <code>reset-password-siswa</code> bila user juga boleh mereset password siswa.</li>
                                 </ul>
                             </div>
                             <div class="form-group">
-                                <label>Custom Permissions <span class="text-muted">(tambahan diluar role, bisa diubah per user)</span></label>
+                                <label>Akses Khusus <span class="text-muted">(tambahan di luar role, hanya untuk user ini)</span></label>
                                 <div class="accordion" id="permissionsAccordion">
                                     <!-- Permissions akan dimuat via AJAX -->
                                 </div>
