@@ -76,6 +76,7 @@ class DokumenSiswa extends Model
             'kk' => 'Kartu Keluarga',
             'ijazah_smp' => 'Ijazah SMP',
             'kip' => 'Kartu Indonesia Pintar (KIP)',
+            'pkh' => 'Kartu KKS/PKH',
             'sktm' => 'Surat Keterangan Tidak Mampu (SKTM)',
         ];
 

@@ -84,10 +84,12 @@ class DokumenController extends Controller
     {
         try {
             $request->validate([
-                'jenis_dokumen' => 'required|in:kk,ijazah_smp,kip,sktm,lainnya',
+                'jenis_dokumen' => 'required|in:kk,ijazah_smp,kip,pkh,sktm,lainnya',
                 'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // max 5MB (akan di-compress otomatis jika image >2MB)
                 'keterangan' => 'nullable|string|max:500',
                 'nama_dokumen' => 'required_if:jenis_dokumen,lainnya|string|max:255',
+                'nomor_kip' => 'nullable|string|max:50',
+                'nomor_pkh' => 'nullable|string|max:50',
             ], [
                 'file.required' => 'File dokumen wajib diupload',
                 'file.mimes' => 'File harus berformat PDF, JPG, JPEG, atau PNG',
@@ -199,6 +201,17 @@ class DokumenController extends Controller
                 }
             }
 
+            $numberAttribute = match ($request->jenis_dokumen) {
+                'kip' => 'nomor_kip',
+                'pkh' => 'nomor_pkh',
+                default => null,
+            };
+
+            if ($numberAttribute) {
+                $siswa->{$numberAttribute} = ($number = trim((string) $request->{$numberAttribute})) !== '' ? $number : null;
+                $siswa->save();
+            }
+
             // Enhanced activity log
             ActivityLogService::log([
                 'activity_type' => 'upload_dokumen',
@@ -211,6 +224,7 @@ class DokumenController extends Controller
                     'file_uuid' => $uuid,
                     'file_size' => $fileSize.' KB',
                     'status' => 'pending',
+                    'nomor_bantuan' => $numberAttribute ? $siswa->{$numberAttribute} : null,
                 ],
             ]);
 

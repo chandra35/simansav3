@@ -14,7 +14,7 @@
             <h5><i class="fas fa-folder-open"></i> Dokumen Siswa</h5>
             <p class="mb-0">
                 Upload dokumen yang diperlukan untuk kelengkapan administrasi. Dokumen <strong>Kartu Keluarga</strong> dan <strong>Ijazah SMP</strong> adalah wajib, 
-                sedangkan <strong>KIP</strong>, <strong>SKTM</strong>, dan <strong>Nomor PKH</strong> bersifat opsional (jika memiliki).
+                sedangkan <strong>KIP</strong>, <strong>KKS/PKH</strong>, dan <strong>SKTM</strong> bersifat opsional (jika memiliki).
                 Pastikan dokumen yang diupload <strong>jelas dan dapat dibaca</strong>.
             </p>
         </div>
@@ -79,49 +79,9 @@
                 <li>Ukuran maksimal file: <strong>5 MB</strong> (gambar akan di-compress otomatis)</li>
                 <li>Pastikan dokumen <strong>jelas dan dapat dibaca</strong></li>
                 <li>Upload ulang akan <strong>mengganti dokumen lama</strong></li>
-                <li>Dokumen <strong>KK dan Ijazah SMP</strong> adalah wajib, sedangkan <strong>KIP, SKTM, dan Nomor PKH</strong> opsional</li>
+                <li>Dokumen <strong>KK dan Ijazah SMP</strong> adalah wajib, sedangkan <strong>KIP, KKS/PKH, dan SKTM</strong> opsional</li>
                 <li><span class="badge badge-success"><i class="fas fa-compress"></i> Auto-Compress</span> File gambar besar akan dikompres otomatis tanpa mengurangi kualitas visual</li>
             </ul>
-        </div>
-    </div>
-</div>
-
-<!-- Data PKH -->
-<div class="row">
-    <div class="col-12">
-        <div class="card card-outline card-info">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-hand-holding-heart"></i> Program Keluarga Harapan (PKH)
-                    <span class="badge badge-secondary ml-2">Opsional</span>
-                </h3>
-            </div>
-            <div class="card-body">
-                <form id="pkhForm">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group mb-2">
-                        <label for="nomor_pkh">Nomor PKH</label>
-                        <div class="input-group">
-                            <input type="text"
-                                   class="form-control"
-                                   id="nomor_pkh"
-                                   name="nomor_pkh"
-                                   value="{{ old('nomor_pkh', $siswa->nomor_pkh) }}"
-                                   maxlength="50"
-                                   placeholder="Masukkan nomor PKH jika memiliki">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-info">
-                                    <i class="fas fa-save"></i> Simpan
-                                </button>
-                            </div>
-                        </div>
-                        <small class="form-text text-muted">
-                            Isi nomor PKH tanpa upload dokumen. Kosongkan lalu simpan jika ingin menghapus data PKH.
-                        </small>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
 </div>
@@ -273,6 +233,7 @@
                                     <i class="far fa-clock"></i> Diunggah: {{ $kip->created_at->format('d/m/Y H:i') }}@if($kip->updated_at && ! $kip->updated_at->equalTo($kip->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $kip->updated_at->format('d/m/Y H:i') }}@endif
                                 </small>
                             </p>
+                            <p class="mb-1"><small><strong>No. KIP:</strong> {{ $siswa->nomor_kip ?: '-' }}</small></p>
                             @if($kip->keterangan)
                             <p class="mb-1"><small><strong>Ket:</strong> {{ $kip->keterangan }}</small></p>
                             @endif
@@ -299,6 +260,44 @@
                         <button type="button" class="btn btn-warning" onclick="showUploadModal('kip', 'Kartu Indonesia Pintar (KIP)')">
                             <i class="fas fa-upload"></i> Upload Dokumen
                         </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- KKS/PKH -->
+    <div class="col-lg-6">
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-hand-holding-heart"></i> Kartu KKS / PKH
+                    <span class="badge badge-secondary ml-2">Opsional</span>
+                </h3>
+            </div>
+            <div class="card-body">
+                @php $pkh = $dokumen->where('jenis_dokumen', 'pkh')->first(); @endphp
+                @if($pkh)
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="mr-3"><i class="fas fa-file-pdf fa-3x text-danger"></i></div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ $pkh->nama_file }}</h5>
+                            <p class="mb-1 text-muted"><small><i class="far fa-file"></i> {{ $pkh->getFileSizeFormatted() }} | <i class="far fa-clock"></i> Diunggah: {{ $pkh->created_at->format('d/m/Y H:i') }}@if($pkh->updated_at && ! $pkh->updated_at->equalTo($pkh->created_at)) <br><i class="far fa-edit"></i> Diperbarui: {{ $pkh->updated_at->format('d/m/Y H:i') }}@endif</small></p>
+                            <p class="mb-1"><small><strong>No. KKS/PKH:</strong> {{ $siswa->nomor_pkh ?: '-' }}</small></p>
+                            @if($pkh->keterangan)<p class="mb-1"><small><strong>Ket:</strong> {{ $pkh->keterangan }}</small></p>@endif
+                        </div>
+                        <div><span class="badge badge-success"><i class="fas fa-check"></i> Uploaded</span></div>
+                    </div>
+                    <div class="btn-group btn-block">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewDokumen('{{ $pkh->getFileUrl() }}', 'Kartu KKS / PKH', '{{ $pkh->getFileExtension() }}')"><i class="fas fa-eye"></i> Lihat</button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="showUploadModal('pkh', 'Kartu KKS / PKH')"><i class="fas fa-sync"></i> Ganti</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteDokumen('{{ $pkh->id }}', 'KKS/PKH')"><i class="fas fa-trash"></i> Hapus</button>
+                    </div>
+                @else
+                    <div class="text-center py-4">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-3">Dokumen opsional (jika memiliki)</p>
+                        <button type="button" class="btn btn-info" onclick="showUploadModal('pkh', 'Kartu KKS / PKH')"><i class="fas fa-upload"></i> Upload Dokumen</button>
                     </div>
                 @endif
             </div>
@@ -458,6 +457,18 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="jenis_dokumen" id="jenis_dokumen">
+
+                    <div class="form-group d-none" id="nomor_kip_group">
+                        <label for="nomor_kip">No. KIP</label>
+                        <input type="text" class="form-control" name="nomor_kip" id="nomor_kip" maxlength="50" placeholder="Masukkan nomor KIP">
+                        <small class="form-text text-muted">Isi nomor yang tercantum pada Kartu Indonesia Pintar.</small>
+                    </div>
+
+                    <div class="form-group d-none" id="nomor_pkh_group">
+                        <label for="nomor_pkh">No. KKS/PKH</label>
+                        <input type="text" class="form-control" name="nomor_pkh" id="nomor_pkh" maxlength="50" placeholder="Masukkan nomor KKS atau PKH">
+                        <small class="form-text text-muted">Isi nomor KKS atau PKH yang tercantum pada kartu.</small>
+                    </div>
                     
                     <div class="form-group">
                         <label>File Dokumen <span class="text-danger">*</span></label>
@@ -803,6 +814,14 @@ $('#btnDownloadDoc').on('click', function(e) {
 function showUploadModal(jenisDokumen, label) {
     $('#jenis_dokumen').val(jenisDokumen);
     $('#uploadModalLabel').text('Upload ' + label);
+    $('#nomor_kip_group, #nomor_pkh_group').addClass('d-none');
+    if (jenisDokumen === 'kip') {
+        $('#nomor_kip_group').removeClass('d-none');
+        $('#nomor_kip').val(@json($siswa->nomor_kip));
+    } else if (jenisDokumen === 'pkh') {
+        $('#nomor_pkh_group').removeClass('d-none');
+        $('#nomor_pkh').val(@json($siswa->nomor_pkh));
+    }
     $('#uploadModal').modal('show');
 }
 
@@ -820,45 +839,6 @@ $('#file').on('change', function() {
 $('#file_lainnya').on('change', function() {
     var fileName = $(this).val().split('\\').pop();
     $('#file_lainnya_label').html('<i class="fas fa-check-circle text-success mr-1"></i>' + (fileName || 'File dipilih'));
-});
-
-// Handle nomor PKH submit
-$('#pkhForm').on('submit', function(e) {
-    e.preventDefault();
-
-    var $form = $(this);
-    var $button = $form.find('button[type="submit"]');
-    var originalHtml = $button.html();
-
-    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
-
-    $.ajax({
-        url: '{{ route('siswa.dokumen.pkh.update') }}',
-        type: 'POST',
-        data: $form.serialize(),
-        success: function(response) {
-            if (response.success) {
-                $('#nomor_pkh').val(response.nomor_pkh || '');
-                toastr.success(response.message);
-            } else {
-                toastr.error(response.message || 'Gagal menyimpan nomor PKH');
-            }
-        },
-        error: function(xhr) {
-            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                var errorMessage = '';
-                $.each(xhr.responseJSON.errors, function(key, value) {
-                    errorMessage += value[0] + '<br>';
-                });
-                toastr.error(errorMessage || 'Validasi gagal');
-            } else {
-                toastr.error('Terjadi kesalahan saat menyimpan nomor PKH');
-            }
-        },
-        complete: function() {
-            $button.prop('disabled', false).html(originalHtml);
-        }
-    });
 });
 
 // Handle form submit
@@ -1003,6 +983,7 @@ $('#uploadLainnyaForm').on('submit', function(e) {
 $('#uploadModal').on('hidden.bs.modal', function() {
     $('#uploadForm')[0].reset();
     $('#file_label').html('Pilih file...');
+    $('#nomor_kip_group, #nomor_pkh_group').addClass('d-none');
 });
 
 $('#uploadLainnyaModal').on('hidden.bs.modal', function() {

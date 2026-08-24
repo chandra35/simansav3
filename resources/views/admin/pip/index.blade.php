@@ -8,7 +8,7 @@
 @section('content_header')
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1><i class="fas fa-hand-holding-heart text-primary"></i> KIP, SKTM & PKH</h1>
+            <h1><i class="fas fa-hand-holding-heart text-primary"></i> KIP, KKS/PKH & SKTM</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -48,7 +48,7 @@
                 <div class="col-lg-8">
                     <div class="pip-hero__eyebrow mb-2"><i class="fas fa-shield-alt mr-1"></i> Manajemen Kesiswaan</div>
                     <h3 class="mb-2"><i class="fas fa-hand-holding-heart mr-2"></i>Pemetaan Bantuan Siswa</h3>
-                    <p class="mb-0 pip-hero__lead">Pantau kelengkapan dokumen KIP, SKTM, dan nomor PKH siswa dalam satu daftar terarah. Gunakan filter untuk menemukan data yang perlu ditindaklanjuti.</p>
+                    <p class="mb-0 pip-hero__lead">Pantau kelengkapan dokumen KIP, KKS/PKH, dan SKTM siswa dalam satu daftar terarah. Gunakan filter untuk menemukan data yang perlu ditindaklanjuti.</p>
                 </div>
                 <div class="col-lg-4 mt-3 mt-lg-0">
                     <div class="row text-center">
@@ -84,7 +84,7 @@
         </div>
         <div class="col-md-6 col-xl-3 mb-3">
             <div class="card card-outline card-info pip-stat-card h-100 mb-0"><div class="card-body d-flex align-items-center">
-                <span class="pip-stat-icon bg-info text-white mr-3"><i class="fas fa-hand-holding-heart"></i></span><div><div class="text-muted small text-uppercase font-weight-bold">Nomor PKH</div><div class="h4 text-info mb-0">{{ number_format($stats['pkh']) }}</div></div>
+                <span class="pip-stat-icon bg-info text-white mr-3"><i class="fas fa-hand-holding-heart"></i></span><div><div class="text-muted small text-uppercase font-weight-bold">KKS / PKH</div><div class="h4 text-info mb-0">{{ number_format($stats['pkh']) }}</div></div>
             </div></div>
         </div>
     </div>
@@ -109,10 +109,10 @@
                                 <i class="fas fa-folder-open mr-1"></i> Jenis Bantuan
                             </label>
                             <select id="filterJenis" class="form-control form-control-sm">
-                                <option value="">Semua (KIP + SKTM + PKH)</option>
+                                <option value="">Semua (KIP + KKS/PKH + SKTM)</option>
                                 <option value="kip">KIP saja</option>
                                 <option value="sktm">SKTM saja</option>
-                                <option value="pkh">PKH saja</option>
+                                <option value="pkh">KKS/PKH saja</option>
                             </select>
                             </div>
                             <div class="col-md-4 mb-3 mb-lg-0">
@@ -145,7 +145,7 @@
             </div>
 
             <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>NISN</th><th>Nama Lengkap</th><th>Jenis Kelamin</th><th>Kelas</th><th>Dokumen</th><th>Nomor PKH</th><th>Aksi</th></tr></thead></table></div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>NISN</th><th>Nama Lengkap</th><th>Jenis Kelamin</th><th>Kelas</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -184,7 +184,7 @@ $(function () {
         order: [[2, 'asc']],
         language: {
             processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
-            emptyTable:  'Tidak ada siswa dengan data KIP / SKTM / PKH.',
+            emptyTable:  'Tidak ada siswa dengan data KIP / KKS-PKH / SKTM.',
             zeroRecords: 'Tidak ada siswa yang cocok dengan filter.',
             lengthMenu:  'Tampilkan _MENU_ data per halaman',
             info:        'Menampilkan _START_–_END_ dari _TOTAL_ siswa',

@@ -6,6 +6,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Portal Dokumen Siswa kini menyediakan card **Kartu KKS/PKH** di antara KIP dan SKTM. Upload KIP memuat No. KIP, sedangkan upload KKS/PKH memuat No. KKS/PKH; nomor tersimpan bersama proses upload dan berkas KKS/PKH ikut terbaca pada modul KIP/SKTM/PKH admin.
 - Modal **Penugasan GTK Baru** kini memakai kontainer ber-radius lembut, bayangan premium, kontrol dan tombol yang lebih rapi, serta tata letak Select2 guru yang sejajar antara foto, nama, pencarian, dan hapus pilihan. Footer diberi ruang bawah lebih lega dan tetap nyaman pada ponsel. Feedback sukses, gagal, dan validasi juga memakai notifikasi modern yang ter-scope pada modul Penugasan GTK.
 - Pencarian Guru pada modal Penugasan GTK kini memakai latar slate tipis dan border halus; saat aktif memiliki ring biru lembut. Daftar hasil tampil sebagai popover terpisah dengan radius seragam, jarak kecil dari input, border tipis, serta bayangan agar lebih fokus dan mudah dipindai.
 - Inisialisasi pencarian Guru dikembalikan ke konfigurasi Select2 yang kompatibel; class visual popover kini dipasang setelah event dropdown dibuka. Kolom pencarian Select2 kembali tampil, tanpa mengorbankan gaya premium daftar hasil.
