@@ -57,6 +57,11 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
 
         $this->assertStringContainsString('id="assignmentTeacher"', $view);
         $this->assertStringContainsString('templateResult:teacherOption', $view);
+        $this->assertStringContainsString('assignment-feedback--success', $view);
+        $this->assertStringContainsString('assignment-feedback--error', $view);
+        $this->assertStringContainsString('rounded-2xl shadow-2xl confirm-assignment-form', $view);
+        $this->assertStringContainsString('#assignmentModal .modal-footer', $view);
+        $this->assertStringContainsString('.assignment-teacher-selection{display:flex;align-items:center', $view);
         $this->assertStringNotContainsString('name="nomor_sk"', $view);
         $this->assertStringNotContainsString('name="tanggal_sk"', $view);
         $this->assertStringNotContainsString('name="file_sk"', $view);
