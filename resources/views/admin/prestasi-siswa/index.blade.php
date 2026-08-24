@@ -21,7 +21,7 @@
         <div class="col-md-6 col-xl-3 mb-3"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-chart-line"></i></span><div class="info-box-content"><span class="info-box-text">Rentang Tahun</span><span class="info-box-number">{{ number_format($stats['tahun_tercatat']) }}</span><small>Tahun memiliki data</small></div></div></div>
     </div>
 
-    <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-list mr-1"></i> Daftar Prestasi</h3><div class="card-tools">@can('create-prestasi-siswa')<button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus mr-1"></i> Tambah Prestasi</button>@endcan</div></div>
+    <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-list mr-1"></i> Daftar Prestasi</h3><div class="card-tools">@can('create-prestasi-siswa')<button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus mr-1"></i> Tambah Prestasi</button>@else<span class="text-muted small"><i class="fas fa-lock mr-1"></i>Mode lihat</span>@endcan</div></div>
         <div class="card-body">
             <div class="prestasi-filter mb-3"><div class="row align-items-end">
                 <div class="col-sm-6 col-lg-3 mb-2"><label for="filterTahun">Tahun</label><select id="filterTahun" class="form-control form-control-sm"><option value="">Semua tahun</option>@foreach($years as $year)<option value="{{ $year }}">{{ $year }}</option>@endforeach</select></div>
