@@ -164,6 +164,16 @@ Pagination harus memakai gaya AdminLTE/Bootstrap yang netral secara global:
 - halaman aktif menggunakan abu muda, bukan biru atau warna aksen lain
 - jangan membuat pagination per halaman dengan gradient, pill, gap dekoratif, atau kombinasi warna khusus
 
+### Standar DataTables Global
+
+Semua DataTables mengikuti partial standar AdminLTE SIMANSA, bukan CSS lokal per halaman, kecuali ada kebutuhan data yang benar-benar khusus.
+
+- empty-state hanya muncul satu kali di dalam tabel: gunakan Bahasa Indonesia yang ringkas, misalnya `Tidak ada data tersedia`; `infoEmpty` harus kosong agar tidak muncul teks kedua di luar tabel
+- kontrol `Tampilkan _MENU_ data` memakai lebar natural/compact dan satu indikator dropdown native; jangan menambah background arrow atau icon kedua
+- baris footer DataTables memiliki padding bawah agar informasi dan pagination tidak menempel pada batas card
+- header tabel memakai pembatas bawah abu-abu halus tetapi tegas untuk membedakan header dari isi
+- pagination tetap netral sesuai aturan global di atas
+
 ## Tombol
 
 Tombol harus langsung terbaca dan memiliki hierarki jelas.

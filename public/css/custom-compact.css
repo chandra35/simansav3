@@ -860,13 +860,15 @@ body:not(.layout-top-nav) .content-wrapper,
 }
 
 .dataTables_wrapper .dataTables_length select {
+    -webkit-appearance: menulist !important;
     appearance: auto !important;
+    background-image: none !important;
     flex: 0 0 auto;
-    min-width: 5.25rem;
-    padding-left: 0.75rem !important;
-    padding-right: 1.85rem !important;
+    min-width: 4.35rem;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
     text-align: left;
-    width: 5.25rem !important;
+    width: auto !important;
 }
 
 .dataTables_wrapper .dataTables_length select:focus,

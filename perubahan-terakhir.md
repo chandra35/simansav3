@@ -6,6 +6,8 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Standar DataTables SIMANSA kini disatukan secara global: empty-state hanya berada di dalam tabel, footer tidak lagi menampilkan info kosong kedua, dropdown jumlah data berlebar natural dengan satu indikator native, ruang bawah pagination lebih lega, serta header memakai divider abu-abu yang konsisten. Panduan UI juga mencatatnya sebagai acuan wajib modul berikutnya.
+
 - Modul **Prestasi Siswa** direbuild menjadi pusat kerja AJAX dengan input/edit modal responsif. Data kini mencatat tahun, jenis perlombaan KSM/OSN/OMI atau isian manual, tingkat, bidang, individu/tim, perolehan, dan peringkat. Perolehan serta peringkat sebelumnya otomatis menjadi saran autocomplete untuk mencegah variasi/duplikasi penulisan; filter dan pencarian berjalan tanpa pindah halaman dan daftar selalu mengutamakan tahun terbaru.
 - Prestasi dapat menandai beberapa siswa aktif sekaligus atau menyimpan nama peserta manual untuk alumni/riwayat lama. Data lama dimigrasikan ke relasi peserta baru serta tahun/peringkat tampilan agar statistik lintas tahun dan pencarian tetap mencakup arsip terdahulu.
 - Role **Super Admin** dan **Admin** kini otomatis memperoleh hak lihat, tambah, edit, hapus, dan verifikasi Prestasi Siswa. Akun dengan hak lihat saja menerima penanda mode lihat pada header tabel; akses tambah tetap dapat diberikan secara individual melalui Role & Permission bila diperlukan.

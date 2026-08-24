@@ -23,6 +23,7 @@
     .dataTables_wrapper > .row:last-child {
         gap: .5rem 0;
         margin-top: .55rem;
+        padding-bottom: .8rem;
     }
 
     .dataTables_wrapper .dataTables_length label,
@@ -48,8 +49,12 @@
     }
 
     .dataTables_wrapper .dataTables_length select {
-        min-width: 68px;
-        padding: .2rem 1.6rem .2rem .5rem;
+        width: auto !important;
+        min-width: 4.35rem;
+        padding: .2rem .5rem;
+        background-image: none !important;
+        -webkit-appearance: menulist !important;
+        appearance: auto !important;
     }
 
     .dataTables_wrapper .dataTables_filter input {
@@ -84,7 +89,7 @@
     .dataTables_wrapper table.dataTable thead th {
         padding: .5rem .6rem;
         border-top: 1px solid #e2e8f0;
-        border-bottom: 1px solid #dbe3ee;
+        border-bottom: 2px solid #cbd5e1;
         background: #f8fafc;
         color: #64748b;
         font-size: .66rem;
@@ -110,6 +115,13 @@
 
     .dataTables_wrapper table.dataTable tbody tr:last-child td {
         border-bottom: 0;
+    }
+
+    .dataTables_wrapper table.dataTable .dataTables_empty {
+        padding: 2rem .75rem !important;
+        color: #64748b;
+        font-size: .8rem;
+        text-align: center;
     }
 
     .dataTables_wrapper table.dataTable .badge {
@@ -243,8 +255,9 @@
                 search: 'Cari:',
                 lengthMenu: 'Tampilkan _MENU_ data',
                 info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
-                infoEmpty: 'Belum ada data',
-                zeroRecords: 'Data tidak ditemukan',
+                infoEmpty: '',
+                emptyTable: 'Tidak ada data tersedia',
+                zeroRecords: 'Tidak ada data yang sesuai',
                 paginate: {
                     previous: 'Sebelumnya',
                     next: 'Selanjutnya',
