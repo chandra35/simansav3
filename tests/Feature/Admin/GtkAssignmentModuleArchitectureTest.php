@@ -57,7 +57,8 @@ class GtkAssignmentModuleArchitectureTest extends TestCase
 
         $this->assertStringContainsString('id="assignmentTeacher"', $view);
         $this->assertStringContainsString('templateResult:teacherOption', $view);
-        $this->assertStringContainsString("dropdownCssClass:'assignment-teacher-dropdown'", $view);
+        $this->assertStringContainsString("teacherPicker.on('select2:open'", $view);
+        $this->assertStringContainsString("addClass('assignment-teacher-dropdown')", $view);
         $this->assertStringContainsString('assignment-feedback--success', $view);
         $this->assertStringContainsString('assignment-feedback--error', $view);
         $this->assertStringContainsString('rounded-2xl shadow-2xl confirm-assignment-form', $view);

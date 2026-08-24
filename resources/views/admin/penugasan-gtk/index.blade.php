@@ -154,7 +154,9 @@ $(function(){
         const source=option.element.dataset, wrap=$('<span class="assignment-teacher-selection">');
         return wrap.append($('<img>',{src:source.photo,alt:''}),$('<span>').text(source.name));
     };
-    $('#assignmentTeacher').select2({theme:'bootstrap4',width:'100%',dropdownParent:modal,dropdownCssClass:'assignment-teacher-dropdown',placeholder:'Cari nama guru atau NIP',allowClear:true,templateResult:teacherOption,templateSelection:teacherSelection});
+    const teacherPicker=$('#assignmentTeacher');
+    teacherPicker.select2({theme:'bootstrap4',width:'100%',dropdownParent:modal,placeholder:'Cari nama guru atau NIP',allowClear:true,templateResult:teacherOption,templateSelection:teacherSelection});
+    teacherPicker.on('select2:open',function(){modal.find('.select2-container--open .select2-dropdown').addClass('assignment-teacher-dropdown');});
     $('.assignment-select').select2({theme:'bootstrap4',width:'100%',dropdownParent:modal});
     function syncType(){const option=$('#assignmentType option:selected'),unit=option.data('unit');$('[name="unit_nama"]').prop('required',!!unit);$('#unitLabel').text(unit?unit.charAt(0).toUpperCase()+unit.slice(1).replace('_',' ')+' *':'Unit/Bidang');$('#typeHelp').text(option.val()?'Ekuivalensi standar '+option.data('jtm')+' JTM akan dicatat pada periode ini.':'');}
     $('#assignmentType').on('change',syncType);
