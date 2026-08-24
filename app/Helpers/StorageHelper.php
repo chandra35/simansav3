@@ -145,6 +145,59 @@ class StorageHelper
             return false;
         }
     }
+
+    /**
+     * Pilih disk yang benar-benar dapat menulis folder tujuan dokumen.
+     * Root disk dapat writable sementara folder NISN lama tidak dapat ditulis.
+     */
+    public static function getWritableDokumenDisk(string $directory): ?string
+    {
+        $candidates = array_unique([self::getDokumenDisk(), 'dokumen_fallback']);
+
+        foreach ($candidates as $disk) {
+            if (self::ensureStorageExists($disk) && self::ensureDokumenDirectoryWritable($disk, $directory)) {
+                return $disk;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Pastikan folder per siswa tersedia dan dapat ditulis oleh proses aplikasi.
+     */
+    public static function ensureDokumenDirectoryWritable(string $disk, string $directory): bool
+    {
+        $directory = trim(str_replace('\\', '/', $directory), '/');
+
+        if ($directory === '') {
+            return false;
+        }
+
+        try {
+            $storage = Storage::disk($disk);
+            if (! $storage->exists($directory) && ! $storage->makeDirectory($directory)) {
+                return false;
+            }
+
+            $testPath = $directory.'/.write_check_'.bin2hex(random_bytes(8));
+            if (! $storage->put($testPath, 'test') || ! $storage->exists($testPath)) {
+                return false;
+            }
+
+            $storage->delete($testPath);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Dokumen directory is not writable', [
+                'disk' => $disk,
+                'directory' => $directory,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
     
     /**
      * Get storage info for monitoring/debugging

@@ -105,36 +105,12 @@ class DokumenController extends Controller
                 ], 404);
             }
 
-            // Ensure storage exists
-            $disk = StorageHelper::getDokumenDisk();
-            if (! StorageHelper::ensureStorageExists($disk)) {
-                throw new \RuntimeException('Penyimpanan dokumen tidak dapat digunakan.');
-            }
-
             // For non-lainnya dokumen, check if already exists and replace
+            $existing = null;
             if ($request->jenis_dokumen !== 'lainnya') {
                 $existing = DokumenSiswa::where('siswa_id', $siswa->id)
                     ->where('jenis_dokumen', $request->jenis_dokumen)
                     ->first();
-
-                if ($existing) {
-                    // Delete old file (check all possible disks for backward compatibility)
-                    try {
-                        $oldLocation = StorageHelper::resolveExistingDokumenFile($existing->storage_disk, $existing->file_path);
-                        if ($oldLocation) {
-                            Storage::disk($oldLocation['disk'])->delete($oldLocation['path']);
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to delete old file', [
-                            'file_path' => $existing->file_path,
-                            'disk' => $existing->storage_disk,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-
-                    // Delete old record
-                    $existing->delete();
-                }
             }
 
             // Generate UUID for secure filename
@@ -154,6 +130,10 @@ class DokumenController extends Controller
 
             // Store in new storage: {NISN}/{UUID}.ext
             $nisn = $siswa->nisn;
+            $disk = StorageHelper::getWritableDokumenDisk($nisn);
+            if (! $disk) {
+                throw new \RuntimeException('Penyimpanan dokumen tidak dapat digunakan.');
+            }
             $filePath = "{$nisn}/{$fileName}";
 
             if (! Storage::disk($disk)->put($filePath, file_get_contents($file))) {
@@ -178,8 +158,7 @@ class DokumenController extends Controller
             // Get current kelas from siswa_kelas
             $currentKelas = $siswa->kelasAktif->first();
 
-            // Create dokumen record with security fields
-            $dokumen = DokumenSiswa::create([
+            $documentData = [
                 'siswa_id' => $siswa->id,
                 'file_uuid' => $uuid,
                 'jenis_dokumen' => $request->jenis_dokumen,
@@ -194,7 +173,31 @@ class DokumenController extends Controller
                 'uploaded_by_role' => 'siswa',
                 'status' => 'pending',
                 'storage_disk' => $disk, // Track which disk used
-            ]);
+            ];
+
+            $oldLocation = $existing
+                ? StorageHelper::resolveExistingDokumenFile($existing->storage_disk, $existing->file_path)
+                : null;
+
+            // Baru mengganti metadata setelah file baru sukses tersimpan.
+            if ($existing) {
+                $existing->update($documentData);
+                $dokumen = $existing;
+            } else {
+                $dokumen = DokumenSiswa::create($documentData);
+            }
+
+            if ($oldLocation) {
+                try {
+                    Storage::disk($oldLocation['disk'])->delete($oldLocation['path']);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to delete replaced dokumen file', [
+                        'file_path' => $oldLocation['path'],
+                        'disk' => $oldLocation['disk'],
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             // Enhanced activity log
             ActivityLogService::log([

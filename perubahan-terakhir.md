@@ -6,6 +6,7 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Upload dokumen siswa kini menguji folder NISN tujuan, bukan hanya root storage. Folder yang tidak dapat ditulis otomatis memakai disk fallback; dokumen pengganti juga baru memperbarui metadata dan menghapus file lama setelah file baru tersimpan dengan sukses. Kepemilikan folder dokumen produksi yang sebelumnya dibuat oleh `root` telah dinormalisasi ke user aplikasi `www`.
 - Tombol Catatan pada **Kelas Saya → Daftar Siswa** kini membuka composer modal langsung dengan foto dan identitas siswa yang dipilih. Form, editor, simbol cepat, kategori, validasi, dan penyimpanan tetap memakai endpoint catatan wali yang sama dan tetap memverifikasi rombel aktif di server.
 - Tombol close composer catatan memakai class `text-gray-400 hover:text-gray-600 transition-colors focus:outline-none`; header terang dan style ter-scope memastikan kontras serta state hover/fokus tetap terbaca pada AdminLTE.
 - Modal **Detail lengkap** pada portal **Kelas Saya → Daftar Siswa** kini kembali stabil setelah indeks kolom DataTables diselaraskan dengan tabel tanpa Verval. Klik aksi Detail menghentikan event tabel, memuat respons AJAX dengan batas waktu, dan menampilkan penjelasan di modal serta notifikasi bila respons tidak tersedia.
