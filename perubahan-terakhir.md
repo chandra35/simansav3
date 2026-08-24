@@ -37,6 +37,8 @@ Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Dashboard Admin: Mobile & Aksesibilitas (22 Agustus 2026)
 
+- Menu **Pemilihan OSIM** untuk siswa dan GTK kini hanya tampil bila pengguna tercatat sebagai pemilih pada pemilihan berstatus terbit yang sedang berlangsung di tahun aktif. Saat belum ada periode, pemilihan dijeda, atau jadwal telah berakhir, menu disembunyikan; URL peserta juga tidak lagi menampilkan data pemilihan di luar periode aktif.
+
 - Dashboard Admin kini menyediakan akses cepat khusus ponsel untuk Data Siswa, Kelas, GTK, dan Aktivitas sesuai permission akun; pengguna tidak harus selalu membuka sidebar untuk menuju layanan yang sering dipakai.
 - Kartu ringkasan, metadata tahun aktif, panel pengguna online, kontrol modal, dan pagination monitoring kini memakai grid/bungkus elemen yang proporsional di ponsel serta target sentuh minimal 44px untuk aksi utama.
 - Tabel Aktivitas Terbaru otomatis berubah menjadi kartu berlabel pada layar kecil, sehingga informasi waktu, pengguna, aktivitas, dan deskripsi tetap mudah dipindai tanpa membuat halaman melebar atau perlu digeser horizontal.

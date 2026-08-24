@@ -22,16 +22,9 @@ class OsisElectionMenuFilter implements FilterInterface
         $hasVisibleElection = $user && OsisElection::query()
             ->whereHas('tahunPelajaran', fn ($year) => $year->where('is_active', true))
             ->whereHas('voters', fn ($voter) => $voter->where('user_id', $user->id))
-            ->where(function ($election) {
-                $election->where(function ($open) {
-                    $open->whereIn('status', ['published', 'paused'])
-                        ->where('starts_at', '<=', now())
-                        ->where('ends_at', '>=', now());
-                })->orWhere(function ($results) {
-                    $results->where('status', 'closed')
-                        ->whereNotNull('result_published_at');
-                });
-            })
+            ->where('status', 'published')
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
             ->exists();
 
         if (! $hasVisibleElection) {

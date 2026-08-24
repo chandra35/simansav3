@@ -28,12 +28,17 @@ class OsisElectionController extends Controller
         abort_unless($siswa, 403);
         $year = TahunPelajaran::query()->where('is_active', true)->first();
         $election = $year ? OsisElection::query()->where('tahun_pelajaran_id', $year->id)
-            ->whereIn('status', ['published', 'paused', 'closed'])->latest('starts_at')->first() : null;
-        $voter = $election?->voters()->where('user_id', $request->user()->id)->first();
+            ->where('status', 'published')
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->latest('starts_at')->first() : null;
+        abort_unless($election, 404);
+        $voter = $election->voters()->where('user_id', $request->user()->id)->first();
+        abort_unless($voter, 404);
         if ($election) {
             $election->load(['packages.election', 'packages.chairman.kelasSaatIni', 'packages.viceChairman.kelasSaatIni', 'packages.secretary.kelasSaatIni', 'packages.treasurer.kelasSaatIni']);
         }
-        $ownPackageIds = $election && $voter?->is_candidate ? $election->packages->filter(fn ($p) => in_array($siswa->id, $p->candidateIds(), true))->pluck('id') : collect();
+        $ownPackageIds = $voter->is_candidate ? $election->packages->filter(fn ($p) => in_array($siswa->id, $p->candidateIds(), true))->pluck('id') : collect();
         $results = $election?->results_visible
             ? $election->packages->map(fn ($p) => ['package' => $p, 'votes' => $p->ballots()->count()])->sortByDesc('votes')->values()
             : collect();
