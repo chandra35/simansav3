@@ -1,10 +1,13 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 23 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
+
+- Modul **Prestasi Siswa** direbuild menjadi pusat kerja AJAX dengan input/edit modal responsif. Data kini mencatat tahun, jenis perlombaan KSM/OSN/OMI atau isian manual, tingkat, bidang, individu/tim, perolehan, dan peringkat. Perolehan serta peringkat sebelumnya otomatis menjadi saran autocomplete untuk mencegah variasi/duplikasi penulisan; filter dan pencarian berjalan tanpa pindah halaman dan daftar selalu mengutamakan tahun terbaru.
+- Prestasi dapat menandai beberapa siswa aktif sekaligus atau menyimpan nama peserta manual untuk alumni/riwayat lama. Data lama dimigrasikan ke relasi peserta baru serta tahun/peringkat tampilan agar statistik lintas tahun dan pencarian tetap mencakup arsip terdahulu.
 
 - Portal Dokumen Siswa kini menyediakan card **Kartu KKS/PKH** di antara KIP dan SKTM. Upload KIP memuat No. KIP, sedangkan upload KKS/PKH memuat No. KKS/PKH; nomor tersimpan bersama proses upload dan berkas KKS/PKH ikut terbaca pada modul KIP/SKTM/PKH admin.
 - Card KKS/PKH dipusatkan pada halaman **Dokumen Siswa**, bukan Dashboard. Seluruh card ringkasan dokumen (KK, Ijazah, KIP, KKS/PKH, dan SKTM) kini membuka form upload masing-masing melalui parameter aman `upload`, sehingga modal yang sesuai terbuka langsung. Card Dokumen Wajib di Dashboard juga mengarah ke KK atau Ijazah yang masih perlu diunggah; panel besar **Status Kelengkapan Data Profil** dihapus karena informasinya sudah diwakili oleh card statistik yang lebih ringkas.

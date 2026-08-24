@@ -898,11 +898,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     // ==================== FITUR BARU: PRESTASI SISWA ====================
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['index', 'show'])->middleware('permission:view-prestasi-siswa');
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['create', 'store'])->middleware('permission:create-prestasi-siswa');
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['edit', 'update'])->middleware('permission:edit-prestasi-siswa');
-    Route::resource('prestasi-siswa', App\Http\Controllers\Admin\PrestasiSiswaController::class)->only(['destroy'])->middleware('permission:delete-prestasi-siswa');
-    Route::post('/prestasi-siswa/{prestasiSiswa}/verify', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'verify'])->name('prestasi-siswa.verify')->middleware('permission:verify-prestasi-siswa');
+    Route::get('/prestasi-siswa/{prestasiSiswa}/data', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'data'])->name('prestasi-siswa.data')->middleware('permission:view-prestasi-siswa');
+    Route::get('/prestasi-siswa/referensi/siswa', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'searchStudents'])->name('prestasi-siswa.students.search')->middleware('permission:view-prestasi-siswa');
+    Route::get('/prestasi-siswa/referensi/saran', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'suggestions'])->name('prestasi-siswa.suggestions')->middleware('permission:view-prestasi-siswa');
+    Route::get('/prestasi-siswa', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'index'])->name('prestasi-siswa.index')->middleware('permission:view-prestasi-siswa');
+    Route::post('/prestasi-siswa', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'store'])->name('prestasi-siswa.store')->middleware('permission:create-prestasi-siswa');
+    Route::put('/prestasi-siswa/{prestasiSiswa}', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'update'])->name('prestasi-siswa.update')->middleware('permission:edit-prestasi-siswa');
+    Route::delete('/prestasi-siswa/{prestasiSiswa}', [App\Http\Controllers\Admin\PrestasiSiswaController::class, 'destroy'])->name('prestasi-siswa.destroy')->middleware('permission:delete-prestasi-siswa');
     
     // ==================== FITUR BARU: EKSTRAKURIKULER ====================
     Route::resource('ekstrakurikuler', App\Http\Controllers\Admin\EkstrakurikulerController::class)->only(['index', 'show'])->middleware('permission:view-ekstrakurikuler');

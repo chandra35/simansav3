@@ -32,6 +32,12 @@ class PrestasiSiswa extends Model
         'verified_by',
         'verified_at',
         'created_by',
+        'tahun',
+        'bidang',
+        'tipe_peserta',
+        'perolehan_prestasi',
+        'peringkat_nama',
+        'nama_siswa_manual',
     ];
 
     protected $casts = [
@@ -59,6 +65,12 @@ class PrestasiSiswa extends Model
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function peserta()
+    {
+        return $this->belongsToMany(Siswa::class, 'prestasi_siswa_peserta', 'prestasi_siswa_id', 'siswa_id')
+            ->withTimestamps();
     }
 
     // Scopes
@@ -93,6 +105,10 @@ class PrestasiSiswa extends Model
 
     public function getPeringkatLabelAttribute()
     {
+        if ($this->peringkat_nama) {
+            return $this->peringkat_nama;
+        }
+
         return match($this->peringkat) {
             'juara_1' => 'Juara 1',
             'juara_2' => 'Juara 2',

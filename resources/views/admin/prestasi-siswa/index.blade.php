@@ -1,103 +1,81 @@
 @extends('adminlte::page')
 
 @section('title', 'Prestasi Siswa')
+@section('plugins.Datatables', true)
+@section('plugins.DatatablesPlugins', true)
+@section('plugins.Select2', true)
+@section('plugins.Sweetalert2', true)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-trophy mr-2"></i>Prestasi Siswa</h1>
-        @can('create-prestasi-siswa')
-            <a href="{{ route('admin.prestasi-siswa.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus mr-1"></i> Tambah Prestasi
-            </a>
-        @endcan
-    </div>
+<div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-trophy text-primary"></i> Prestasi Siswa</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item active">Prestasi Siswa</li></ol></div></div>
 @stop
 
 @section('content')
-    <div class="card">
+<div class="prestasi-siswa-page">
+    <div class="card bg-gradient-primary mb-4"><div class="card-body py-3"><div class="row align-items-center"><div class="col-lg-8"><div class="text-uppercase small font-weight-bold opacity-75"><i class="fas fa-award mr-1"></i> Kesiswaan</div><h4 class="mb-1 font-weight-bold">Arsip prestasi peserta didik</h4><p class="mb-0">Catat prestasi individu atau tim, termasuk alumni, lalu telusuri data berdasarkan tahun, lomba, dan tingkat.</p></div><div class="col-lg-4 mt-3 mt-lg-0"><div class="d-flex justify-content-lg-end flex-wrap hero-stat"><span><b>{{ number_format($stats['total']) }}</b>Total arsip</span><span><b>{{ number_format($stats['tahun_ini']) }}</b>Tahun ini</span></div></div></div></div></div>
+
+    <div class="row">
+        <div class="col-md-6 col-xl-3 mb-3"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-trophy"></i></span><div class="info-box-content"><span class="info-box-text">Total Prestasi</span><span class="info-box-number">{{ number_format($stats['total']) }}</span><small>Seluruh tahun</small></div></div></div>
+        <div class="col-md-6 col-xl-3 mb-3"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-calendar-check"></i></span><div class="info-box-content"><span class="info-box-text">Tahun {{ now()->year }}</span><span class="info-box-number">{{ number_format($stats['tahun_ini']) }}</span><small>Prestasi tercatat</small></div></div></div>
+        <div class="col-md-6 col-xl-3 mb-3"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-users"></i></span><div class="info-box-content"><span class="info-box-text">Prestasi Tim</span><span class="info-box-number">{{ number_format($stats['tim']) }}</span><small>Kolaborasi siswa</small></div></div></div>
+        <div class="col-md-6 col-xl-3 mb-3"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-chart-line"></i></span><div class="info-box-content"><span class="info-box-text">Rentang Tahun</span><span class="info-box-number">{{ number_format($stats['tahun_tercatat']) }}</span><small>Tahun memiliki data</small></div></div></div>
+    </div>
+
+    <div class="card card-outline card-primary"><div class="card-header"><h3 class="card-title font-weight-bold"><i class="fas fa-list mr-1"></i> Daftar Prestasi</h3><div class="card-tools">@can('create-prestasi-siswa')<button type="button" class="btn btn-primary btn-sm" id="btnTambah"><i class="fas fa-plus mr-1"></i> Tambah Prestasi</button>@endcan</div></div>
         <div class="card-body">
-            <table id="prestasi-table" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th width="30">No</th>
-                        <th>Nama Siswa</th>
-                        <th>Nama Prestasi</th>
-                        <th width="100">Tingkat</th>
-                        <th width="100">Peringkat</th>
-                        <th width="100">Tanggal</th>
-                        <th width="100">Verifikasi</th>
-                        <th width="150">Aksi</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="prestasi-filter mb-3"><div class="row align-items-end">
+                <div class="col-sm-6 col-lg-3 mb-2"><label for="filterTahun">Tahun</label><select id="filterTahun" class="form-control form-control-sm"><option value="">Semua tahun</option>@foreach($years as $year)<option value="{{ $year }}">{{ $year }}</option>@endforeach</select></div>
+                <div class="col-sm-6 col-lg-3 mb-2"><label for="filterLomba">Perlombaan</label><select id="filterLomba" class="form-control form-control-sm"><option value="">Semua perlombaan</option><option>KSM</option><option>OSN</option><option>OMI</option></select></div>
+                <div class="col-sm-6 col-lg-3 mb-2"><label for="filterTingkat">Tingkat</label><select id="filterTingkat" class="form-control form-control-sm"><option value="">Semua tingkat</option><option value="sekolah">Sekolah/Madrasah</option><option value="kabupaten">Kab/Kota</option><option value="provinsi">Provinsi</option><option value="nasional">Nasional</option><option value="internasional">Internasional</option></select></div>
+                <div class="col-sm-6 col-lg-2 mb-2"><label for="filterTipe">Peserta</label><select id="filterTipe" class="form-control form-control-sm"><option value="">Individu & tim</option><option value="individu">Individu</option><option value="tim">Tim</option></select></div>
+                <div class="col-lg-1 mb-2"><button type="button" id="resetFilter" class="btn btn-outline-secondary btn-sm btn-block" title="Reset filter"><i class="fas fa-undo"></i><span class="d-lg-none ml-1">Reset</span></button></div>
+            </div></div>
+            <div class="yearly-strip mb-3">@forelse($yearlyStats as $item)<span><b>{{ $item->tahun }}</b><small>{{ $item->total }} prestasi</small></span>@empty<span class="text-muted">Statistik tahun akan muncul setelah data prestasi ditambahkan.</span>@endforelse</div>
+            <div class="table-responsive"><table id="prestasiTable" class="table table-hover w-100"><thead><tr><th>No</th><th>Tahun</th><th>Peserta</th><th>Perlombaan & Bidang</th><th>Tingkat</th><th>Perolehan & Peringkat</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
+</div>
+
+<div class="modal fade prestasi-modal" id="prestasiModal" tabindex="-1" aria-labelledby="prestasiModalTitle" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content shadow-lg border-0"><form id="prestasiForm"><input type="hidden" id="prestasiId"><div class="modal-header"><div><span class="modal-kicker"><i class="fas fa-trophy"></i> PRESTASI SISWA</span><h5 class="modal-title" id="prestasiModalTitle">Tambah Prestasi</h5></div><button type="button" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button></div>
+<div class="modal-body"><div class="row">
+    <div class="col-md-3"><div class="form-group"><label>Tahun <span class="text-danger">*</span></label><input type="number" class="form-control" name="tahun" min="2000" max="{{ now()->year + 1 }}" value="{{ now()->year }}" required></div></div>
+    <div class="col-md-5"><div class="form-group"><label>Nama Perlombaan <span class="text-danger">*</span></label><select class="form-control" name="nama_prestasi" id="namaPrestasi" required><option value="">Pilih perlombaan</option><option value="KSM">KSM</option><option value="OSN">OSN</option><option value="OMI">OMI</option><option value="lainnya">Lainnya (isi manual)</option></select></div></div>
+    <div class="col-md-4"><div class="form-group d-none" id="lombaManualWrap"><label>Nama Perlombaan Manual <span class="text-danger">*</span></label><input class="form-control" id="lombaManual" name="nama_prestasi_manual" placeholder="Contoh: Olimpiade Sains Madrasah"></div></div>
+    <div class="col-md-4"><div class="form-group"><label>Tingkat <span class="text-danger">*</span></label><select class="form-control" name="tingkat" required><option value="">Pilih tingkat</option><option value="sekolah">Sekolah/Madrasah</option><option value="kabupaten">Kab/Kota</option><option value="provinsi">Provinsi</option><option value="nasional">Nasional</option><option value="internasional">Internasional</option></select></div></div>
+    <div class="col-md-4"><div class="form-group"><label>Bidang <span class="text-danger">*</span></label><input class="form-control" name="bidang" placeholder="Contoh: Matematika, Fisika, Pidato" required></div></div>
+    <div class="col-md-4"><div class="form-group"><label>Peserta <span class="text-danger">*</span></label><select class="form-control" name="tipe_peserta" required><option value="individu">Individu</option><option value="tim">Tim</option></select></div></div>
+    <div class="col-md-6"><div class="form-group"><label>Perolehan Prestasi <small class="text-muted">(opsional)</small></label><input class="form-control" name="perolehan_prestasi" list="perolehanList" placeholder="Contoh: Medali Emas"></div></div>
+    <div class="col-md-6"><div class="form-group"><label>Peringkat <span class="text-danger">*</span></label><input class="form-control" name="peringkat_nama" list="peringkatList" placeholder="Contoh: Juara 1" required></div></div>
+    <div class="col-12"><div class="participant-panel"><div class="d-flex justify-content-between align-items-center flex-wrap"><div><label class="mb-0">Tag siswa aktif <small class="text-muted font-weight-normal">(opsional)</small></label><p class="mb-2">Pilih satu atau lebih siswa. Gunakan nama manual untuk peserta/alumni yang tidak ada di data aktif.</p></div></div><select id="siswaIds" class="form-control" name="siswa_ids[]" multiple></select><div class="form-group mb-0 mt-3"><label>Nama peserta manual <small class="text-muted">(opsional bila siswa ditag)</small></label><textarea class="form-control" rows="2" name="nama_siswa_manual" placeholder="Contoh: Ahmad Fulan (alumni 2023), Siti Fulan"></textarea></div></div></div>
+</div></div>
+<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary px-3" id="btnSimpan"><i class="fas fa-save mr-1"></i> Simpan Prestasi</button></div></form></div></div></div>
+<datalist id="perolehanList"></datalist><datalist id="peringkatList"></datalist>
 @stop
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('vendor/datatables/css/dataTables.bootstrap4.min.css') }}">
+<style>
+.prestasi-siswa-page .hero-stat{gap:.7rem}.prestasi-siswa-page .hero-stat span{min-width:100px;padding:.45rem .65rem;border-left:1px solid rgba(255,255,255,.28);font-size:.72rem;line-height:1.25}.prestasi-siswa-page .hero-stat b{display:block;font-size:1.2rem}.prestasi-filter,.participant-panel{padding:1rem;border:1px solid #dbe7f5;border-radius:.55rem;background:#f8fbff}.prestasi-filter label{margin-bottom:.28rem;color:#475569;font-size:.72rem;font-weight:800}.yearly-strip{display:flex;gap:.5rem;flex-wrap:wrap}.yearly-strip span{display:inline-flex;align-items:baseline;gap:.35rem;padding:.36rem .6rem;border-radius:.4rem;background:#f8fafc;border:1px solid #e2e8f0;color:#334155}.yearly-strip b{font-size:.8rem}.yearly-strip small{font-size:.68rem}.prestasi-modal .modal-content{border-radius:.85rem}.prestasi-modal .modal-header{align-items:flex-start;padding:1.1rem 1.25rem;border-bottom:1px solid #e2e8f0;background:#f8fbff}.prestasi-modal .modal-title{margin-top:.15rem;font-weight:800}.prestasi-modal .modal-kicker{font-size:.66rem;font-weight:800;letter-spacing:.06em;color:#2563eb}.prestasi-modal .close{font-size:1.6rem;font-weight:400}.prestasi-modal .modal-body{padding:1.25rem}.prestasi-modal .modal-footer{padding:1rem 1.25rem 1.35rem;border-top:1px solid #e2e8f0}.prestasi-modal .form-group label{font-size:.78rem;font-weight:750}.prestasi-modal .select2-container--default .select2-selection--multiple{min-height:38px;border-color:#ced4da;border-radius:.3rem}.prestasi-modal .select2-selection__choice{font-size:.74rem}.prestasi-siswa-page .info-box{min-height:88px;border:1px solid #e2e8f0;border-radius:.55rem;box-shadow:0 .12rem .35rem rgba(15,23,42,.06)}.prestasi-siswa-page .info-box-icon{width:62px;font-size:1.2rem}.prestasi-siswa-page .info-box-text{font-size:.7rem;font-weight:800;text-transform:uppercase}.prestasi-siswa-page .info-box-number{font-size:1.22rem}.prestasi-siswa-page .info-box small{color:#64748b;font-size:.68rem}@media(max-width:767.98px){.prestasi-siswa-page .hero-stat{justify-content:flex-start}.prestasi-siswa-page .hero-stat span{border-left:0;padding-left:0}.prestasi-siswa-page .card-header{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}.prestasi-siswa-page .card-tools{margin-left:auto}.prestasi-modal .modal-dialog{margin:.5rem}.prestasi-modal .modal-body{padding:1rem}.prestasi-siswa-page #prestasiTable{font-size:.78rem}}
+</style>
 @stop
 
 @section('js')
-    <script src="{{ asset('vendor/datatables/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('vendor/datatables/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script>
-        $(function() {
-            var table = $('#prestasi-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: "{{ route('admin.prestasi-siswa.index') }}",
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'siswa_nama', name: 'siswa.nama' },
-                    { data: 'nama_prestasi', name: 'nama_prestasi' },
-                    { data: 'tingkat_label', name: 'tingkat' },
-                    { data: 'peringkat_label', name: 'peringkat' },
-                    { data: 'tanggal_prestasi', name: 'tanggal_prestasi' },
-                    { data: 'verified', name: 'is_verified' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ],
-                order: [[5, 'desc']],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
-                }
-            });
-
-            // Verify handler
-            $(document).on('click', '.btn-verify', function() {
-                var id = $(this).data('id');
-                if (confirm('Apakah Anda yakin ingin memverifikasi prestasi ini?')) {
-                    $.ajax({
-                        url: '{{ route("admin.prestasi-siswa.index") }}/' + id + '/verify',
-                        type: 'POST',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function(response) {
-                            if (response.success) {
-                                table.ajax.reload();
-                                toastr.success(response.message);
-                            }
-                        }
-                    });
-                }
-            });
-
-            // Delete handler
-            $(document).on('click', '.btn-delete', function() {
-                var id = $(this).data('id');
-                if (confirm('Apakah Anda yakin ingin menghapus prestasi ini?')) {
-                    $.ajax({
-                        url: '{{ route("admin.prestasi-siswa.index") }}/' + id,
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function(response) {
-                            if (response.success) {
-                                table.ajax.reload();
-                                toastr.success(response.message);
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    </script>
+<script>
+$(function(){
+ const base=@json(route('admin.prestasi-siswa.index')), csrf=@json(csrf_token()), canCreate=@json(auth()->user()->can('create-prestasi-siswa')), canEdit=@json(auth()->user()->can('edit-prestasi-siswa'));
+ const toast=(type,message)=>window.toastr?.[type]?.(message)||Swal.fire({icon:type==='success'?'success':'error',title:message,toast:true,position:'top-end',showConfirmButton:false,timer:3200});
+ const table=$('#prestasiTable').DataTable({processing:true,serverSide:true,responsive:true,ajax:{url:base,data:d=>{d.tahun=$('#filterTahun').val();d.nama_prestasi=$('#filterLomba').val();d.tingkat=$('#filterTingkat').val();d.tipe_peserta=$('#filterTipe').val()}},order:[[1,'desc']],columns:[{data:'DT_RowIndex',orderable:false,searchable:false},{data:'tahun',name:'tahun'},{data:'peserta_label',orderable:false},{data:'perlombaan_label',name:'nama_prestasi'},{data:'tingkat_label',name:'tingkat'},{data:'prestasi_label',name:'peringkat_nama'},{data:'action',orderable:false,searchable:false}],columnDefs:[{responsivePriority:1,targets:[1,2,3,6]},{responsivePriority:2,targets:5}],language:{url:'//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json'}});
+ $('#filterTahun,#filterLomba,#filterTingkat,#filterTipe').on('change',()=>table.ajax.reload());$('#resetFilter').on('click',()=>{$('#filterTahun,#filterLomba,#filterTingkat,#filterTipe').val('');table.search('').ajax.reload()});
+ $('#siswaIds').select2({theme:'bootstrap4',width:'100%',dropdownParent:$('#prestasiModal'),placeholder:'Cari nama atau NISN siswa aktif',ajax:{url:@json(route('admin.prestasi-siswa.students.search')),dataType:'json',delay:250,data:p=>({q:p.term||''})}});
+ function setLomba(value=''){const manual=value==='lainnya';$('#lombaManualWrap').toggleClass('d-none',!manual);$('#lombaManual').prop('required',manual);if(!manual)$('#lombaManual').val('')}
+ $('#namaPrestasi').on('change',function(){setLomba(this.value)});
+ function resetForm(){const form=$('#prestasiForm')[0];form.reset();$('#prestasiId').val('');$('#siswaIds').empty().trigger('change');$('input[name=tahun]').val(new Date().getFullYear());$('#namaPrestasi').val('');setLomba();$('#prestasiModalTitle').text('Tambah Prestasi');$('#btnSimpan').html('<i class="fas fa-save mr-1"></i> Simpan Prestasi')}
+ function showModal(){resetForm();$('#prestasiModal').modal('show')}
+ $('#btnTambah').on('click',showModal);
+ function loadSuggestions(field,list){$.get(@json(route('admin.prestasi-siswa.suggestions')),{field},r=>{$(list).html((r.values||[]).map(v=>$('<option>').attr('value',v).prop('outerHTML')).join(''))})}
+ $('input[name=perolehan_prestasi]').one('focus',()=>loadSuggestions('perolehan_prestasi','#perolehanList'));$('input[name=peringkat_nama]').one('focus',()=>loadSuggestions('peringkat_nama','#peringkatList'));
+ $(document).on('click','.btn-edit',function(){const id=$(this).data('id');$.get(base+'/'+id+'/data').done(r=>{resetForm();const d=r.data;$('#prestasiId').val(d.id);$('input[name=tahun]').val(d.tahun);const options=['KSM','OSN','OMI'];if(options.includes(d.nama_prestasi)){$('#namaPrestasi').val(d.nama_prestasi);setLomba(d.nama_prestasi)}else{$('#namaPrestasi').val('lainnya');setLomba('lainnya');$('#lombaManual').val(d.nama_prestasi)}$('select[name=tingkat]').val(d.tingkat);$('input[name=bidang]').val(d.bidang);$('select[name=tipe_peserta]').val(d.tipe_peserta);$('input[name=perolehan_prestasi]').val(d.perolehan_prestasi);$('input[name=peringkat_nama]').val(d.peringkat_nama);$('textarea[name=nama_siswa_manual]').val(d.nama_siswa_manual);(d.peserta||[]).forEach(p=>$('#siswaIds').append(new Option(p.text,p.id,true,true)));$('#siswaIds').trigger('change');$('#prestasiModalTitle').text('Edit Prestasi');$('#btnSimpan').html('<i class="fas fa-save mr-1"></i> Simpan Perubahan');$('#prestasiModal').modal('show')}).fail(x=>toast('error',x.responseJSON?.message||'Data prestasi tidak dapat dimuat.'))});
+ $('#prestasiForm').on('submit',function(e){e.preventDefault();const form=this,id=$('#prestasiId').val();const btn=$('#btnSimpan').prop('disabled',true).html('<i class="fas fa-circle-notch fa-spin mr-1"></i> Menyimpan');$.ajax({url:id?base+'/'+id:base,type:id?'PUT':'POST',data:$(form).serialize()+'&_token='+encodeURIComponent(csrf)}).done(r=>{$('#prestasiModal').modal('hide');table.ajax.reload(null,false);toast('success',r.message)}).fail(x=>{const errors=x.responseJSON?.errors;toast('error',errors?Object.values(errors).flat()[0]:(x.responseJSON?.message||'Prestasi gagal disimpan.'))}).always(()=>btn.prop('disabled',false).html(id?'<i class="fas fa-save mr-1"></i> Simpan Perubahan':'<i class="fas fa-save mr-1"></i> Simpan Prestasi'))});
+ $(document).on('click','.btn-delete',function(){const id=$(this).data('id');Swal.fire({icon:'warning',title:'Hapus prestasi?',text:'Data prestasi yang dihapus tidak dapat dipakai dalam laporan.',showCancelButton:true,confirmButtonText:'Ya, hapus',cancelButtonText:'Batal',confirmButtonColor:'#dc3545'}).then(r=>{if(!r.isConfirmed)return;$.ajax({url:base+'/'+id,type:'DELETE',data:{_token:csrf}}).done(r=>{table.ajax.reload(null,false);toast('success',r.message)}).fail(x=>toast('error',x.responseJSON?.message||'Prestasi gagal dihapus.'))})});
+});
+</script>
 @stop
