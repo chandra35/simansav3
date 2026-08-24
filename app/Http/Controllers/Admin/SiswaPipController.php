@@ -86,7 +86,16 @@ class SiswaPipController extends Controller
             }])
             ->withCount(['dokumen as pkh_count' => function ($q) {
                 $this->filterByType($q, 'pkh');
-            }]);
+            }])
+            ->withMin(['dokumen as oldest_assistance_document_at' => function ($q) {
+                $keywords = $this->allKeywords();
+
+                $q->where(function ($inner) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $inner->orWhere('jenis_dokumen', 'like', "%{$keyword}%");
+                    }
+                });
+            }], 'created_at');
 
         // Hanya siswa yang punya dokumen KIP/SKTM atau nomor PKH
         $this->applyAssistanceFilter($query);
@@ -125,8 +134,53 @@ class SiswaPipController extends Controller
 
         $totalFiltered = $query->count();
 
-        // Order
-        $query->orderBy('nama_lengkap');
+        // DataTables sends the column index, so only allow an explicit map of
+        // real database fields. This keeps every displayed data column sortable
+        // without accepting arbitrary SQL from the request.
+        $orderColumn = (int) $request->input('order.0.column', -1);
+        $orderDirection = strtolower((string) $request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        switch ($orderColumn) {
+            case 1:
+                $query->orderBy('siswa.nisn', $orderDirection);
+                break;
+            case 2:
+                $query->orderBy('siswa.nama_lengkap', $orderDirection);
+                break;
+            case 3:
+                $query->orderBy('siswa.jenis_kelamin', $orderDirection);
+                break;
+            case 4:
+                $activeYearId = TahunPelajaran::query()->active()->value('id');
+                $kelasOrder = \App\Models\Kelas::query()
+                    ->select('kelas.nama_kelas')
+                    ->join('siswa_kelas', 'siswa_kelas.kelas_id', '=', 'kelas.id')
+                    ->whereColumn('siswa_kelas.siswa_id', 'siswa.id')
+                    ->where('siswa_kelas.status', 'aktif')
+                    ->whereNull('siswa_kelas.deleted_at')
+                    ->where('kelas.is_active', true)
+                    ->whereNull('kelas.deleted_at');
+
+                if ($activeYearId) {
+                    $kelasOrder->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)
+                        ->where('kelas.tahun_pelajaran_id', $activeYearId);
+                }
+
+                $query->orderBy($kelasOrder->limit(1), $orderDirection);
+                break;
+            case 5:
+                $query->orderByRaw('(kip_count + pkh_count + sktm_count) ' . $orderDirection);
+                break;
+            case 6:
+                $query->orderBy('siswa.nomor_pkh', $orderDirection);
+                break;
+            default:
+                // Initial order: oldest assistance document first. Records with
+                // only a KKS/PKH number fall back to their student record date.
+                $query->orderByRaw('COALESCE(oldest_assistance_document_at, siswa.created_at) asc')
+                    ->orderBy('siswa.id');
+                break;
+        }
 
         // Pagination
         if ($request->filled('length') && $request->length != -1) {

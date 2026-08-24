@@ -6,6 +6,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Daftar KIP, KKS/PKH, dan SKTM kini diawali dokumen bantuan terlama. Seluruh kolom data (NISN, nama, gender, rombel, dokumen, serta nomor KKS/PKH) dapat diurutkan aman dari server; nomor urut dan aksi tetap statis.
 - Pesan empty-state DataTables distandarkan menjadi `Belum ada data` pada seluruh konfigurasi tabel; pesan hasil filter tetap terpisah.
 
 - Standar DataTables SIMANSA kini disatukan secara global: empty-state hanya berada di dalam tabel, footer tidak lagi menampilkan info kosong kedua, dropdown jumlah data berlebar natural dengan satu indikator native, ruang bawah pagination lebih lega, serta header memakai divider abu-abu yang konsisten. Panduan UI juga mencatatnya sebagai acuan wajib modul berikutnya.

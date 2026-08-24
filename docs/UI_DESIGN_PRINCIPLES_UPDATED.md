@@ -173,6 +173,7 @@ Semua DataTables mengikuti partial standar AdminLTE SIMANSA, bukan CSS lokal per
 - baris footer DataTables memiliki padding bawah agar informasi dan pagination tidak menempel pada batas card
 - header tabel memakai pembatas bawah abu-abu halus tetapi tegas untuk membedakan header dari isi
 - pagination tetap netral sesuai aturan global di atas
+- setiap kolom data yang ditampilkan wajib memakai pemetaan sorting server-side; kolom nomor urut dan aksi boleh tidak sortable karena bukan data
 
 ## Tombol
 
