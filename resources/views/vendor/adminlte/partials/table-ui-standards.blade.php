@@ -256,7 +256,7 @@
                 lengthMenu: 'Tampilkan _MENU_ data',
                 info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
                 infoEmpty: '',
-                emptyTable: 'Tidak ada data tersedia',
+                emptyTable: 'Belum ada data',
                 zeroRecords: 'Tidak ada data yang sesuai',
                 paginate: {
                     previous: 'Sebelumnya',

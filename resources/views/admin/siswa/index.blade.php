@@ -1338,7 +1338,7 @@ $(document).ready(function() {
             infoFiltered: "(disaring dari _MAX_ total data)",
             loadingRecords: "Memuat...",
             zeroRecords: "Tidak ada data yang ditemukan",
-            emptyTable: "Tidak ada data tersedia",
+            emptyTable: "Belum ada data",
             paginate: {
                 first: "Pertama",
                 previous: "Sebelumnya",

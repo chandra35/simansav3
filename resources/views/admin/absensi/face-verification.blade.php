@@ -331,7 +331,7 @@ $(function() {
     $('#tabelWajah').DataTable({
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json',
-            emptyTable: 'Belum ada data wajah terdaftar',
+            emptyTable: 'Belum ada data',
         },
         pageLength: 25,
         order: [[5, 'desc']],

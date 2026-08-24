@@ -311,7 +311,7 @@
                         previous: "Sebelumnya"
                     },
                     zeroRecords: "Tidak ada data yang ditemukan",
-                    emptyTable: "Belum ada data tahun pelajaran"
+                    emptyTable: "Belum ada data"
                 }
             });
 

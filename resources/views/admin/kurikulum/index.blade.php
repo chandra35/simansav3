@@ -172,7 +172,7 @@
                     processing:'<i class="fa fa-spinner fa-spin fa-3x"></i>', search:"Cari:", lengthMenu:"Tampilkan _MENU_ data",
                     info:"Menampilkan _START_ - _END_ dari _TOTAL_ data", infoEmpty:"Tidak ada data",
                     paginate:{ first:"Pertama", last:"Terakhir", next:"Selanjutnya", previous:"Sebelumnya" },
-                    zeroRecords:"Tidak ada data", emptyTable:"Belum ada data kurikulum"
+                    zeroRecords:"Tidak ada data", emptyTable:"Belum ada data"
                 }
             });
 

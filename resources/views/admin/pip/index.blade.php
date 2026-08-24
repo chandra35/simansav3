@@ -184,7 +184,7 @@ $(function () {
         order: [[2, 'asc']],
         language: {
             processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
-            emptyTable:  'Tidak ada siswa dengan data KIP / KKS-PKH / SKTM.',
+            emptyTable:  'Belum ada data',
             zeroRecords: 'Tidak ada siswa yang cocok dengan filter.',
             lengthMenu:  'Tampilkan _MENU_ data per halaman',
             info:        'Menampilkan _START_–_END_ dari _TOTAL_ siswa',

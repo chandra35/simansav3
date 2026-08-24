@@ -6,6 +6,8 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Pesan empty-state DataTables distandarkan menjadi `Belum ada data` pada seluruh konfigurasi tabel; pesan hasil filter tetap terpisah.
+
 - Standar DataTables SIMANSA kini disatukan secara global: empty-state hanya berada di dalam tabel, footer tidak lagi menampilkan info kosong kedua, dropdown jumlah data berlebar natural dengan satu indikator native, ruang bawah pagination lebih lega, serta header memakai divider abu-abu yang konsisten. Panduan UI juga mencatatnya sebagai acuan wajib modul berikutnya.
 
 - Modul **Prestasi Siswa** direbuild menjadi pusat kerja AJAX dengan input/edit modal responsif. Data kini mencatat tahun, jenis perlombaan KSM/OSN/OMI atau isian manual, tingkat, bidang, individu/tim, perolehan, dan peringkat. Perolehan serta peringkat sebelumnya otomatis menjadi saran autocomplete untuk mencegah variasi/duplikasi penulisan; filter dan pencarian berjalan tanpa pindah halaman dan daftar selalu mengutamakan tahun terbaru.
