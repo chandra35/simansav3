@@ -6,6 +6,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
+- Daftar Penugasan GTK kini memuat filter tahun, jenis, status, pencarian teks, dan pagination melalui AJAX tanpa reload halaman. Feedback hasil simpan, gagal, serta validasi memakai Toastr agar tidak ada banner ganda.
 - Daftar KIP, KKS/PKH, dan SKTM kini diawali dokumen bantuan terlama. Seluruh kolom data (NISN, nama, gender, rombel, dokumen, serta nomor KKS/PKH) dapat diurutkan aman dari server; nomor urut dan aksi tetap statis.
 - Pesan empty-state DataTables distandarkan menjadi `Belum ada data` pada seluruh konfigurasi tabel; pesan hasil filter tetap terpisah.
 

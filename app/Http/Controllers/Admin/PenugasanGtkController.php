@@ -66,6 +66,12 @@ class PenugasanGtkController extends Controller
             ->whereNotIn('id', $occupiedLeadershipTypeIds->all())
             ->values();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.penugasan-gtk.partials.assignment-table', compact('assignments', 'statusFilter'))->render(),
+            ]);
+        }
+
         return view('admin.penugasan-gtk.index', compact(
             'assignments', 'types', 'gtks', 'years', 'year', 'stats', 'statusFilter', 'vacantLeadershipTypes'
         ));

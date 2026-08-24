@@ -11,28 +11,6 @@
 
 @section('content')
 <div class="gtk-assignment-page">
-    @if(session('success'))
-        <div class="alert assignment-feedback assignment-feedback--success rounded-2xl shadow-xl" role="status">
-            <span class="assignment-feedback__icon"><i class="fas fa-check"></i></span>
-            <div class="assignment-feedback__body"><strong>Penugasan berhasil disimpan</strong><p>{{ session('success') }}</p></div>
-            <button type="button" class="assignment-feedback__close" data-dismiss="alert" aria-label="Tutup notifikasi"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert assignment-feedback assignment-feedback--error rounded-2xl shadow-xl" role="alert">
-            <span class="assignment-feedback__icon"><i class="fas fa-exclamation"></i></span>
-            <div class="assignment-feedback__body"><strong>Penugasan belum dapat diproses</strong><p>{{ session('error') }}</p></div>
-            <button type="button" class="assignment-feedback__close" data-dismiss="alert" aria-label="Tutup notifikasi"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
-    @if($errors->any())
-        <div class="alert assignment-feedback assignment-feedback--error rounded-2xl shadow-xl" role="alert">
-            <span class="assignment-feedback__icon"><i class="fas fa-exclamation"></i></span>
-            <div class="assignment-feedback__body"><strong>Data penugasan perlu diperiksa lagi</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
-            <button type="button" class="assignment-feedback__close" data-dismiss="alert" aria-label="Tutup notifikasi"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
-
     <div class="card bg-gradient-primary text-white mb-3 assignment-hero"><div class="card-body py-3"><div class="row align-items-center">
         <div class="col-lg-7 assignment-hero-copy"><h4 class="mb-1"><i class="fas fa-briefcase mr-2"></i>Penugasan & Ekuivalensi Jam</h4><p class="mb-0">Kelola Kepala Madrasah, Waka, Kepala Laboratorium, dan tugas tambahan guru berdasarkan periode akademik.</p></div>
         <div class="col-lg-5 mt-3 mt-lg-0 assignment-hero-actions">@can('view-beban-kerja-gtk')<a href="{{ route('admin.penugasan-gtk.workload') }}" class="btn btn-light btn-sm"><i class="fas fa-balance-scale"></i> Beban Kerja</a>@endcan @can('manage-jenis-penugasan-gtk')<a href="{{ route('admin.penugasan-gtk.types') }}" class="btn btn-info btn-sm"><i class="fas fa-sliders-h"></i> Standar Penugasan</a>@endcan @can('create-penugasan-gtk')<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#assignmentModal" id="addAssignment"><i class="fas fa-plus"></i> Penugasan Baru</button>@endcan</div>
@@ -52,7 +30,7 @@
     @endif
 
     <div class="card card-outline card-primary"><div class="card-header assignment-list-header"><h3 class="card-title"><i class="fas fa-list mr-1"></i> Daftar Penugasan</h3><div class="card-tools text-muted small">Ekuivalensi disimpan sebagai snapshot saat penugasan dibuat</div></div><div class="card-body">
-        <form method="GET" class="assignment-filter mb-3"><div class="row">
+        <form method="GET" action="{{ route('admin.penugasan-gtk.index') }}" class="assignment-filter mb-3" id="assignmentFilter" data-no-overlay><div class="row">
             <div class="col-md-3"><label>Tahun Pelajaran</label><select name="tahun_pelajaran_id" class="form-control">@foreach($years as $item)<option value="{{ $item->id }}" @selected($year?->id===$item->id)>{{ $item->nama }}</option>@endforeach</select></div>
             <div class="col-md-3"><label>Jenis Penugasan</label><select name="jenis_penugasan_id" class="form-control"><option value="">Semua jenis</option>@foreach($types as $type)<option value="{{ $type->id }}" @selected(request('jenis_penugasan_id')===$type->id)>{{ $type->nama }}</option>@endforeach</select></div>
             <div class="col-md-2"><label>Status</label><select name="status" class="form-control"><option value="active" @selected($statusFilter==='active')>Aktif</option><option value="ended" @selected($statusFilter==='ended')>Lepas / selesai</option><option value="draft" @selected($statusFilter==='draft')>Draft</option><option value="cancelled" @selected($statusFilter==='cancelled')>Dibatalkan</option><option value="all" @selected($statusFilter==='all')>Semua histori</option></select></div>
@@ -60,7 +38,7 @@
             <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary btn-block" title="Terapkan filter"><i class="fas fa-search"></i></button></div>
         </div></form>
 
-        <div class="table-responsive"><table class="table table-hover table-bordered"><thead><tr><th>GTK</th><th>Penugasan</th><th>Periode Akademik</th><th class="text-center">JTM</th><th>Status</th><th class="text-right">Aksi</th></tr></thead><tbody>
+        <div class="table-responsive" id="assignmentTableResults"><table class="table table-hover table-bordered" id="assignmentTable"><thead><tr><th>GTK</th><th>Penugasan</th><th>Periode Akademik</th><th class="text-center">JTM</th><th>Status</th><th class="text-right">Aksi</th></tr></thead><tbody>
         @forelse($assignments as $assignment)
             @php
                 $badge = ['active'=>'success','ended'=>'secondary','draft'=>'warning','cancelled'=>'danger'][$assignment->status] ?? 'secondary';
@@ -98,7 +76,7 @@
                 </td>
             </tr>
         @empty<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ $statusFilter === 'active' ? 'Belum ada penugasan aktif pada filter ini.' : 'Belum ada histori penugasan pada filter ini.' }}</td></tr>@endforelse
-        </tbody></table></div>{{ $assignments->links() }}
+        </tbody></table></div><div id="assignmentPagination">{{ $assignments->links() }}</div>
     </div></div>
 </div>
 
@@ -127,9 +105,10 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 .gtk-assignment-page .assignment-hero-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:.35rem}.gtk-assignment-page .assignment-hero-actions .btn{margin:0;white-space:nowrap}.gtk-assignment-page .assignment-stat{border:1px solid #e2e8f0;box-shadow:0 4px 14px rgba(15,23,42,.06)}.gtk-assignment-page .assignment-stat .card-body{padding:.85rem}.gtk-assignment-page .assignment-stat h3{font-size:1.35rem;margin:0;font-weight:700}.gtk-assignment-page .assignment-stat small{color:#64748b;font-weight:600}.gtk-assignment-page .stat-icon{width:40px;height:40px;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-right:.7rem}.gtk-assignment-page .assignment-filter{padding:.8rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.4rem}.gtk-assignment-page .assignment-filter label{font-size:.75rem;margin-bottom:.25rem}.gtk-assignment-page .assignment-photo{width:42px;height:52px;object-fit:cover;border-radius:.35rem;border:1px solid #dbe3ef}.gtk-assignment-page table{min-width:820px;font-size:.82rem}.gtk-assignment-page textarea{resize:vertical}
-.gtk-assignment-page .assignment-feedback{position:relative;display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1rem;padding:1rem 3rem 1rem 1rem;border:1px solid;border-radius:1rem;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.09)}.gtk-assignment-page .assignment-feedback--success{color:#166534;border-color:#bbf7d0;background:linear-gradient(135deg,#f0fdf4,#fff)}.gtk-assignment-page .assignment-feedback--error{color:#991b1b;border-color:#fecaca;background:linear-gradient(135deg,#fef2f2,#fff)}.gtk-assignment-page .assignment-feedback__icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 2.25rem;width:2.25rem;height:2.25rem;border-radius:.75rem;color:#fff;background:currentColor}.gtk-assignment-page .assignment-feedback__icon i{filter:brightness(0) invert(1)}.gtk-assignment-page .assignment-feedback__body{min-width:0}.gtk-assignment-page .assignment-feedback__body strong{display:block;font-size:.9rem;font-weight:700}.gtk-assignment-page .assignment-feedback__body p,.gtk-assignment-page .assignment-feedback__body ul{margin:.16rem 0 0;font-size:.82rem;line-height:1.5}.gtk-assignment-page .assignment-feedback__body ul{padding-left:1.1rem}.gtk-assignment-page .assignment-feedback__close{position:absolute;top:.75rem;right:.75rem;width:2rem;height:2rem;padding:0;border:0;border-radius:.6rem;background:transparent;color:inherit;opacity:.7;transition:background .18s ease,opacity .18s ease}.gtk-assignment-page .assignment-feedback__close:hover{background:rgba(15,23,42,.08);opacity:1}
+.gtk-assignment-page #assignmentTableResults{position:relative;min-height:8rem}.gtk-assignment-page #assignmentTableResults.is-loading{opacity:.55;pointer-events:none}.gtk-assignment-page #assignmentTableResults.is-loading::after{content:'Memuat penugasan…';position:absolute;top:1rem;right:0;font-size:.76rem;font-weight:600;color:#2563eb}
 #assignmentModal .modal-dialog{max-width:840px;margin:1rem auto}#assignmentModal .modal-content{border:0;border-radius:1rem;overflow:hidden;box-shadow:0 25px 55px rgba(15,23,42,.24)}#assignmentModal .modal-header{align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;background:#f8fafc}#assignmentModal .modal-title{font-size:1rem;font-weight:700;color:#1e293b}#assignmentModal .modal-header .close{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;margin:-.25rem 0 0;padding:0;border-radius:.65rem;color:#64748b;opacity:1;transition:background .18s ease,color .18s ease}#assignmentModal .modal-header .close:hover{color:#334155;background:#e2e8f0}#assignmentModal .modal-body{padding:1.25rem;background:#fff}#assignmentModal .form-group{margin-bottom:1.15rem}#assignmentModal .form-group label{margin-bottom:.42rem;font-size:.8rem;font-weight:700;color:#334155}#assignmentModal .form-control{min-height:44px;border-color:#dbe3ef;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.02);font-size:.86rem}#assignmentModal .form-control:focus{border-color:#818cf8;box-shadow:0 0 0 .18rem rgba(99,102,241,.14)}#assignmentModal textarea.form-control{min-height:96px;padding-top:.7rem}#assignmentModal .modal-footer{display:flex;gap:.55rem;padding:1rem 1.25rem 1.6rem;border-top:1px solid #e5e7eb;background:#f8fafc}#assignmentModal .modal-footer .btn{min-height:42px;margin:0;padding:.55rem 1rem;border-radius:.75rem;font-size:.84rem;font-weight:700}#assignmentModal .select2-container{width:100%!important}#assignmentModal .select2-container--bootstrap4 .select2-selection--single{height:44px;border:1px solid #dbe3ef;border-radius:.75rem;box-shadow:0 1px 2px rgba(15,23,42,.02)}#assignmentModal .select2-container--bootstrap4.select2-container--focus .select2-selection--single{border-color:#818cf8;box-shadow:0 0 0 .18rem rgba(99,102,241,.14)}#assignmentModal .select2-selection__rendered{display:flex!important;align-items:center;min-width:0;height:100%;padding:0 .8rem!important;line-height:normal!important;color:#334155}#assignmentModal .select2-selection__arrow{top:0!important;height:100%!important}#assignmentModal .select2-selection__clear{display:inline-flex;align-items:center;justify-content:center;float:none!important;order:2;margin:0 0 0 auto!important;padding:0 .25rem;color:#94a3b8;font-size:1.1rem}.assignment-teacher-option{display:flex;align-items:center;gap:.75rem;min-height:62px;padding:.45rem .55rem}.assignment-teacher-option img{width:40px;height:50px;flex:0 0 40px;object-fit:cover;border:1px solid #dbeafe;border-radius:.7rem;background:#eff6ff}.assignment-teacher-option__body{min-width:0}.assignment-teacher-option strong,.assignment-teacher-option small{display:block}.assignment-teacher-option strong{overflow:hidden;color:#0f172a;text-overflow:ellipsis;white-space:nowrap}.assignment-teacher-option small{color:#64748b;font-size:.72rem}.assignment-teacher-selection{display:flex;align-items:center;min-width:0;gap:.55rem}.assignment-teacher-selection img{width:30px;height:34px;flex:0 0 30px;object-fit:cover;border:1px solid #dbeafe;border-radius:.55rem;background:#eff6ff}.assignment-teacher-selection span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #assignmentModal .select2-container--bootstrap4 .select2-selection--single{border-color:#e2e8f0;border-radius:.5rem;background:#f8fafc}#assignmentModal .select2-container--bootstrap4.select2-container--focus .select2-selection--single,#assignmentModal .select2-container--bootstrap4.select2-container--open .select2-selection--single{border-color:#3b82f6;box-shadow:0 0 0 .2rem rgba(59,130,246,.14)}#assignmentModal .assignment-teacher-dropdown.select2-dropdown{margin-top:.25rem;border:1px solid #e2e8f0;border-radius:.5rem;box-shadow:0 12px 26px rgba(15,23,42,.14);overflow:hidden;background:#fff}#assignmentModal .assignment-teacher-dropdown .select2-search--dropdown{padding:.55rem;background:#f8fafc;border-bottom:1px solid #f1f5f9}#assignmentModal .assignment-teacher-dropdown .select2-search__field{min-height:36px;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:.45rem;background:#fff;color:#334155}#assignmentModal .assignment-teacher-dropdown .select2-search__field:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 .16rem rgba(59,130,246,.12)}#assignmentModal .assignment-teacher-dropdown .select2-results__option{padding:.2rem .35rem}#assignmentModal .assignment-teacher-dropdown .select2-results__option--highlighted[aria-selected]{background:#eff6ff;color:#1e3a8a}
 @media(min-width:992px) and (max-width:1439.98px){.gtk-assignment-page .assignment-stat .card-body{padding:.75rem}.gtk-assignment-page .stat-icon{width:38px;height:38px;margin-right:.55rem}.gtk-assignment-page .assignment-filter>.row>[class*="col-"]{padding-left:.35rem;padding-right:.35rem}}
@@ -140,8 +119,39 @@
 @stop
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 $(function(){
+    const notify=window.toastr||{success:$.noop,error:$.noop};
+    if(window.toastr) toastr.options={closeButton:true,progressBar:true,positionClass:'toast-top-right',timeOut:4200,preventDuplicates:true};
+    @if(session('success')) notify.success(@json(session('success')), 'Berhasil'); @endif
+    @if(session('error')) notify.error(@json(session('error')), 'Gagal'); @endif
+    @if($errors->any()) notify.error(@json($errors->first()), 'Data belum valid'); @endif
+
+    const filterForm=$('#assignmentFilter'), tableResults=$('#assignmentTableResults'), pagination=$('#assignmentPagination'), indexUrl=@json(route('admin.penugasan-gtk.index'));
+    let searchTimer;
+    function preparePagination(){pagination.find('a').attr('data-no-overlay','true');}
+    function loadAssignments(url){
+        const requestUrl=url||indexUrl, data=url?{}:filterForm.serialize();
+        tableResults.addClass('is-loading');
+        $.ajax({url:requestUrl,data:data,dataType:'json',headers:{Accept:'application/json'}})
+            .done(response=>{
+                const fragment=$('<div>').html(response.html);
+                $('#assignmentTable tbody').html(fragment.find('tbody').html());
+                pagination.html(fragment.find('nav').prop('outerHTML')||'');
+                preparePagination();
+                const targetUrl=url||indexUrl+(data?'?'+data:'');
+                window.history.replaceState({},'',targetUrl);
+            })
+            .fail(xhr=>notify.error(xhr.responseJSON?.message||'Daftar penugasan gagal dimuat. Silakan coba lagi.','Gagal memuat'))
+            .always(()=>tableResults.removeClass('is-loading'));
+    }
+    filterForm.on('submit',function(event){event.preventDefault();clearTimeout(searchTimer);loadAssignments();});
+    filterForm.find('select').on('change',()=>loadAssignments());
+    filterForm.find('[name="q"]').on('input',function(){clearTimeout(searchTimer);searchTimer=setTimeout(loadAssignments,350);});
+    pagination.on('click','a',function(event){event.preventDefault();loadAssignments(this.href);});
+    preparePagination();
+
     const modal=$('#assignmentModal'), form=modal.find('form'), createUrl=@json(route('admin.penugasan-gtk.store'));
     const teacherOption=function(option){
         if(!option.id)return option.text;
@@ -161,9 +171,9 @@ $(function(){
     function syncType(){const option=$('#assignmentType option:selected'),unit=option.data('unit');$('[name="unit_nama"]').prop('required',!!unit);$('#unitLabel').text(unit?unit.charAt(0).toUpperCase()+unit.slice(1).replace('_',' ')+' *':'Unit/Bidang');$('#typeHelp').text(option.val()?'Ekuivalensi standar '+option.data('jtm')+' JTM akan dicatat pada periode ini.':'');}
     $('#assignmentType').on('change',syncType);
     $('#addAssignment').on('click',function(){form[0].reset();form.attr('action',createUrl).data('editing',false);$('#assignmentMethod').empty();$('#assignmentModalTitle').text('Penugasan GTK Baru');$('#assignmentTeacher,.assignment-select').val(null).trigger('change');$('[name="tahun_pelajaran_id"]').val(@json($year?->id));syncType();});
-    $('.edit-assignment').on('click',function(){const record=$(this).data('record');form[0].reset();form.attr('action',$(this).data('url')).data('editing',true);$('#assignmentMethod').html('<input type="hidden" name="_method" value="PUT">');$('#assignmentModalTitle').text('Perbarui Penugasan GTK');Object.keys(record).forEach(key=>form.find('[name="'+key+'"]').val(record[key]??''));$('#assignmentTeacher,.assignment-select').trigger('change');syncType();});
-    $('.end-assignment').on('click',function(){$('#endAssignmentModal form').attr('action',$(this).data('url'));$('#endAssignmentName').text($(this).data('name'));});
-    $('.archive-form').on('submit',function(e){if(!confirm('Arsipkan histori penugasan ini?'))e.preventDefault();});
+    $(document).on('click','.edit-assignment',function(){const record=$(this).data('record');form[0].reset();form.attr('action',$(this).data('url')).data('editing',true);$('#assignmentMethod').html('<input type="hidden" name="_method" value="PUT">');$('#assignmentModalTitle').text('Perbarui Penugasan GTK');Object.keys(record).forEach(key=>form.find('[name="'+key+'"]').val(record[key]??''));$('#assignmentTeacher,.assignment-select').trigger('change');syncType();});
+    $(document).on('click','.end-assignment',function(){$('#endAssignmentModal form').attr('action',$(this).data('url'));$('#endAssignmentName').text($(this).data('name'));});
+    $(document).on('submit','.archive-form',function(e){if(!confirm('Arsipkan histori penugasan ini?'))e.preventDefault();});
     $('.confirm-assignment-form').on('submit',function(e){if($(this).data('confirmed'))return;e.preventDefault();const target=this;if(window.Swal){Swal.fire({icon:'question',title:'Simpan penugasan?',text:'Sistem akan mencatat tugas dan ekuivalensi jam pada periode yang dipilih.',showCancelButton:true,confirmButtonText:'Ya, simpan',cancelButtonText:'Periksa lagi'}).then(r=>{if(r.isConfirmed){$(target).data('confirmed',true);target.submit();}});}else if(confirm('Simpan penugasan dan ekuivalensi jam ini?')){target.submit();}});
     @if($errors->any()) $('#addAssignment').trigger('click'); @endif
 });
