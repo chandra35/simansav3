@@ -32,6 +32,7 @@
             <div class="icon">
                 <i class="fas fa-users"></i>
             </div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'kk']) }}" class="small-box-footer">Isi / Perbarui <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
     <div class="col-xl col-lg-4 col-sm-6">
@@ -43,6 +44,7 @@
             <div class="icon">
                 <i class="fas fa-graduation-cap"></i>
             </div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'ijazah_smp']) }}" class="small-box-footer">Isi / Perbarui <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
     <div class="col-xl col-lg-4 col-sm-6">
@@ -54,6 +56,7 @@
             <div class="icon">
                 <i class="fas fa-id-card"></i>
             </div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'kip']) }}" class="small-box-footer">Isi / Perbarui <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
     <div class="col-xl col-lg-4 col-sm-6">
@@ -75,6 +78,7 @@
             <div class="icon">
                 <i class="fas fa-file-alt"></i>
             </div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'sktm']) }}" class="small-box-footer">Isi / Perbarui <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 </div>

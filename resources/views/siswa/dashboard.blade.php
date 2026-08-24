@@ -268,7 +268,6 @@
             $dokumenQuickLink = ! $dokumenKK
                 ? route('siswa.dokumen', ['upload' => 'kk'])
                 : (! $dokumenIjazah ? route('siswa.dokumen', ['upload' => 'ijazah_smp']) : route('siswa.dokumen'));
-            $dokumenKksPkh = $siswa->dokumen()->where('jenis_dokumen', 'pkh')->exists();
         @endphp
         <div class="small-box bg-warning">
             <div class="inner">
@@ -280,20 +279,6 @@
             </div>
             <a href="{{ $dokumenQuickLink }}" class="small-box-footer" style="color: white;">
                 {{ $jumlahDokumenWajib == 2 ? 'Lihat Dokumen' : 'Upload Dokumen' }} 
-                <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-md-6 col-sm-6">
-        <div class="small-box bg-info">
-            <div class="inner">
-                <h3>{{ $dokumenKksPkh ? '1/1' : '0/1' }}</h3>
-                <p>KKS / PKH</p>
-            </div>
-            <div class="icon"><i class="fas fa-hand-holding-heart"></i></div>
-            <a href="{{ route('siswa.dokumen', ['upload' => 'pkh']) }}" class="small-box-footer">
-                {{ $dokumenKksPkh ? 'Perbarui KKS/PKH' : 'Isi & Upload KKS/PKH' }}
                 <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
@@ -320,8 +305,8 @@
             <div class="icon">
                 <i class="fas fa-chart-pie"></i>
             </div>
-            <a href="#kelengkapan-data" class="small-box-footer">
-                Status: {{ $allComplete ? 'Lengkap' : 'Belum Lengkap' }} 
+            <a href="{{ route('siswa.profile.diri') }}" class="small-box-footer">
+                {{ $allComplete ? 'Data Lengkap' : 'Lengkapi Data Profil' }}
                 <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
@@ -593,140 +578,6 @@
 
     <!-- Right Side Content -->
     <div class="col-lg-8 col-md-7">
-        <!-- Data Completion Status -->
-        <div class="card card-success" id="kelengkapan-data">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-line mr-1"></i>
-                    Status Kelengkapan Data Profil
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        <div class="mb-3">
-                            <div style="font-size: 3rem; color: {{ $totalProgress == 100 ? '#28a745' : '#ffc107' }};">
-                                <i class="fas {{ $totalProgress == 100 ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
-                            </div>
-                            <h2 class="mb-0">
-                                <span class="text-bold {{ $totalProgress == 100 ? 'text-success' : 'text-warning' }}">
-                                    {{ number_format($totalProgress, 0) }}%
-                                </span>
-                            </h2>
-                            <p class="text-muted mb-0">Kelengkapan Total</p>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="progress-group">
-                            <span class="progress-text">
-                                <i class="fas fa-id-card"></i> <strong>Data Diri Siswa</strong>
-                            </span>
-                            <span class="float-right">
-                                @if($siswa->data_diri_completed)
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>
-                                @else
-                                    <span class="badge badge-danger"><i class="fas fa-clock"></i> Belum Lengkap</span>
-                                @endif
-                            </span>
-                            <div class="progress progress-sm mt-2 mb-3">
-                                <div class="progress-bar {{ $siswa->data_diri_completed ? 'bg-success' : 'bg-danger' }}" 
-                                     style="width: {{ $siswa->data_diri_completed ? 100 : 50 }}%"></div>
-                            </div>
-                        </div>
-
-                        <div class="progress-group">
-                            <span class="progress-text">
-                                <i class="fas fa-users"></i> <strong>Data Orangtua/Wali</strong>
-                            </span>
-                            <span class="float-right">
-                                @if($siswa->data_ortu_completed)
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap</span>
-                                @else
-                                    <span class="badge badge-danger"><i class="fas fa-clock"></i> Belum Lengkap</span>
-                                @endif
-                            </span>
-                            <div class="progress progress-sm mt-2 mb-3">
-                                <div class="progress-bar {{ $siswa->data_ortu_completed ? 'bg-success' : 'bg-danger' }}" 
-                                     style="width: {{ $siswa->data_ortu_completed ? 100 : 50 }}%"></div>
-                            </div>
-                        </div>
-
-                        <div class="progress-group">
-                            <span class="progress-text">
-                                <i class="fas fa-file-alt"></i> <strong>Upload Dokumen Wajib</strong>
-                            </span>
-                            <span class="float-right">
-                                @if($jumlahDokumenWajib == 2)
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> Lengkap (2/2)</span>
-                                @elseif($jumlahDokumenWajib == 1)
-                                    <span class="badge badge-warning"><i class="fas fa-clock"></i> 1/2 Dokumen</span>
-                                @else
-                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Belum Upload</span>
-                                @endif
-                            </span>
-                            <div class="progress progress-sm mt-2 mb-3">
-                                <div class="progress-bar {{ $jumlahDokumenWajib == 2 ? 'bg-success' : ($jumlahDokumenWajib == 1 ? 'bg-warning' : 'bg-danger') }}" 
-                                     style="width: {{ $dokumenProgress }}%"></div>
-                            </div>
-                            @if($jumlahDokumenWajib < 2)
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle"></i> 
-                                Dokumen wajib: 
-                                @if(!$dokumenKK)
-                                    <span class="text-danger">Kartu Keluarga</span>{{ !$dokumenIjazah ? ', ' : '' }}
-                                @endif
-                                @if(!$dokumenIjazah)
-                                    <span class="text-danger">Ijazah SMP</span>
-                                @endif
-                            </small>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                @if(!$allComplete)
-                    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <h5><i class="icon fas fa-exclamation-triangle"></i> Perhatian!</h5>
-                        <p class="mb-2">Data profil Anda belum lengkap. Segera lengkapi untuk mendapatkan akses penuh ke semua fitur SIMANSA.</p>
-                        <hr>
-                        <div class="row">
-                            @if(!$siswa->data_diri_completed)
-                            <div class="col-md-4 mb-2">
-                                <a href="{{ route('siswa.profile.diri') }}" class="btn btn-warning btn-block btn-sm">
-                                    <i class="fas fa-id-card"></i> Lengkapi Data Diri
-                                </a>
-                            </div>
-                            @endif
-                            @if(!$siswa->data_ortu_completed)
-                            <div class="col-md-4 mb-2">
-                                <a href="{{ route('siswa.profile.ortu') }}" class="btn btn-warning btn-block btn-sm">
-                                    <i class="fas fa-users"></i> Lengkapi Data Orangtua
-                                </a>
-                            </div>
-                            @endif
-                            @if($jumlahDokumenWajib < 2)
-                            <div class="col-md-4 mb-2">
-                                <a href="{{ route('siswa.dokumen') }}" class="btn btn-warning btn-block btn-sm">
-                                    <i class="fas fa-file-alt"></i> Upload Dokumen Wajib
-                                </a>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                @else
-                    <div class="alert alert-success mt-3">
-                        <h5><i class="icon fas fa-check-circle"></i> Sempurna!</h5>
-                        <p class="mb-0">
-                            <i class="fas fa-thumbs-up"></i> Data profil Anda sudah lengkap. Terima kasih atas partisipasinya!
-                        </p>
-                    </div>
-                @endif
-            </div>
-        </div>
-
         <!-- Teman Sekelas Card -->
         @if($kelasAktif)
         <div class="card card-success">

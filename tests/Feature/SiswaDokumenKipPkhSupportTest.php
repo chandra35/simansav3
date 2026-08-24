@@ -20,9 +20,12 @@ class SiswaDokumenKipPkhSupportTest extends TestCase
         $this->assertStringContainsString("showUploadModal('pkh', 'Kartu KKS / PKH')", $view);
         $this->assertStringContainsString('directUploadLabels', $view);
         $this->assertStringContainsString("['upload' => 'pkh']", $view);
+        $this->assertStringContainsString("['upload' => 'kk']", $view);
+        $this->assertStringContainsString("['upload' => 'sktm']", $view);
         $this->assertStringContainsString('$dokumenQuickLink', $dashboard);
         $this->assertStringContainsString("['upload' => 'ijazah_smp']", $dashboard);
-        $this->assertStringContainsString('Isi & Upload KKS/PKH', $dashboard);
+        $this->assertStringNotContainsString('Isi & Upload KKS/PKH', $dashboard);
+        $this->assertStringNotContainsString('Status Kelengkapan Data Profil', $dashboard);
         $this->assertStringContainsString("'jenis_dokumen' => 'required|in:kk,ijazah_smp,kip,pkh,sktm,lainnya'", $controller);
         $this->assertStringContainsString("'kip' => 'nomor_kip'", $controller);
         $this->assertStringContainsString("'pkh' => 'nomor_pkh'", $controller);
