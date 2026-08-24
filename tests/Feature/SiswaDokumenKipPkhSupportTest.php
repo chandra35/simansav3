@@ -9,6 +9,7 @@ class SiswaDokumenKipPkhSupportTest extends TestCase
     public function test_student_document_portal_supports_kip_and_kks_pkh_numbers_and_uploads(): void
     {
         $view = file_get_contents(resource_path('views/siswa/dokumen/index.blade.php'));
+        $dashboard = file_get_contents(resource_path('views/siswa/dashboard.blade.php'));
         $controller = file_get_contents(app_path('Http/Controllers/Siswa/DokumenController.php'));
         $siswa = file_get_contents(app_path('Models/Siswa.php'));
         $pip = file_get_contents(app_path('Http/Controllers/Admin/SiswaPipController.php'));
@@ -17,6 +18,11 @@ class SiswaDokumenKipPkhSupportTest extends TestCase
         $this->assertStringContainsString('id="nomor_kip"', $view);
         $this->assertStringContainsString('id="nomor_pkh"', $view);
         $this->assertStringContainsString("showUploadModal('pkh', 'Kartu KKS / PKH')", $view);
+        $this->assertStringContainsString('directUploadLabels', $view);
+        $this->assertStringContainsString("['upload' => 'pkh']", $view);
+        $this->assertStringContainsString('$dokumenQuickLink', $dashboard);
+        $this->assertStringContainsString("['upload' => 'ijazah_smp']", $dashboard);
+        $this->assertStringContainsString('Isi & Upload KKS/PKH', $dashboard);
         $this->assertStringContainsString("'jenis_dokumen' => 'required|in:kk,ijazah_smp,kip,pkh,sktm,lainnya'", $controller);
         $this->assertStringContainsString("'kip' => 'nomor_kip'", $controller);
         $this->assertStringContainsString("'pkh' => 'nomor_pkh'", $controller);

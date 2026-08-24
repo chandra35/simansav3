@@ -265,6 +265,10 @@
             if($dokumenKK) $jumlahDokumenWajib++;
             if($dokumenIjazah) $jumlahDokumenWajib++;
             $dokumenProgress = ($jumlahDokumenWajib / 2) * 100; // 2 dokumen wajib
+            $dokumenQuickLink = ! $dokumenKK
+                ? route('siswa.dokumen', ['upload' => 'kk'])
+                : (! $dokumenIjazah ? route('siswa.dokumen', ['upload' => 'ijazah_smp']) : route('siswa.dokumen'));
+            $dokumenKksPkh = $siswa->dokumen()->where('jenis_dokumen', 'pkh')->exists();
         @endphp
         <div class="small-box bg-warning">
             <div class="inner">
@@ -274,8 +278,22 @@
             <div class="icon">
                 <i class="fas fa-file-alt"></i>
             </div>
-            <a href="{{ route('siswa.dokumen') }}" class="small-box-footer" style="color: white;">
+            <a href="{{ $dokumenQuickLink }}" class="small-box-footer" style="color: white;">
                 {{ $jumlahDokumenWajib == 2 ? 'Lihat Dokumen' : 'Upload Dokumen' }} 
+                <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{{ $dokumenKksPkh ? '1/1' : '0/1' }}</h3>
+                <p>KKS / PKH</p>
+            </div>
+            <div class="icon"><i class="fas fa-hand-holding-heart"></i></div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'pkh']) }}" class="small-box-footer">
+                {{ $dokumenKksPkh ? 'Perbarui KKS/PKH' : 'Isi & Upload KKS/PKH' }}
                 <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>

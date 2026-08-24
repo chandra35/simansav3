@@ -23,7 +23,7 @@
 
 <!-- Info Box Summary -->
 <div class="row">
-    <div class="col-lg-3 col-6">
+    <div class="col-xl col-lg-4 col-sm-6">
         <div class="small-box bg-info">
             <div class="inner">
                 <h3>{{ $dokumen->where('jenis_dokumen', 'kk')->count() }}</h3>
@@ -34,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-6">
+    <div class="col-xl col-lg-4 col-sm-6">
         <div class="small-box bg-success">
             <div class="inner">
                 <h3>{{ $dokumen->where('jenis_dokumen', 'ijazah_smp')->count() }}</h3>
@@ -45,7 +45,7 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-6">
+    <div class="col-xl col-lg-4 col-sm-6">
         <div class="small-box bg-warning">
             <div class="inner">
                 <h3>{{ $dokumen->where('jenis_dokumen', 'kip')->count() }}</h3>
@@ -56,7 +56,17 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-6">
+    <div class="col-xl col-lg-4 col-sm-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{{ $dokumen->where('jenis_dokumen', 'pkh')->count() }}</h3>
+                <p>KKS / PKH</p>
+            </div>
+            <div class="icon"><i class="fas fa-hand-holding-heart"></i></div>
+            <a href="{{ route('siswa.dokumen', ['upload' => 'pkh']) }}" class="small-box-footer">Isi / Perbarui <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+    <div class="col-xl col-lg-4 col-sm-6">
         <div class="small-box bg-danger">
             <div class="inner">
                 <h3>{{ $dokumen->where('jenis_dokumen', 'sktm')->count() }}</h3>
@@ -267,7 +277,7 @@
     </div>
 
     <!-- KKS/PKH -->
-    <div class="col-lg-6">
+    <div class="col-lg-6" id="dokumen-kks-pkh">
         <div class="card card-outline card-info">
             <div class="card-header">
                 <h3 class="card-title">
@@ -823,6 +833,19 @@ function showUploadModal(jenisDokumen, label) {
         $('#nomor_pkh').val(@json($siswa->nomor_pkh));
     }
     $('#uploadModal').modal('show');
+}
+
+const directUploadLabels = {
+    kk: 'Kartu Keluarga (KK)',
+    ijazah_smp: 'Ijazah SMP',
+    kip: 'Kartu Indonesia Pintar (KIP)',
+    pkh: 'Kartu KKS / PKH',
+    sktm: 'Surat Keterangan Tidak Mampu (SKTM)'
+};
+const directUploadType = new URLSearchParams(window.location.search).get('upload');
+if (directUploadType && directUploadLabels[directUploadType]) {
+    showUploadModal(directUploadType, directUploadLabels[directUploadType]);
+    window.history.replaceState({}, document.title, '{{ route('siswa.dokumen') }}');
 }
 
 // Show upload lainnya modal
