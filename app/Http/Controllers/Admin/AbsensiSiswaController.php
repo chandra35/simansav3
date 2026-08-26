@@ -370,7 +370,7 @@ class AbsensiSiswaController extends Controller
             'mode' => $validated['mode'],
             'kelas_id' => $kelas->id,
             'jadwal_pelajaran_id' => $validated['jadwal_pelajaran_id'] ?? null,
-        ]))->with('success', ($validated['submit_action'] === 'final' ? 'Absensi berhasil difinalkan' : 'Draft absensi berhasil disimpan')." ({$recordChanges} perubahan tercatat).");
+        ]))->with('toastr_success', ($validated['submit_action'] === 'final' ? 'Absensi berhasil difinalkan' : 'Draft absensi berhasil disimpan')." ({$recordChanges} perubahan tercatat).");
     }
 
     protected function getAccessibleClasses($user, string $tanggal, string $mode, TahunPelajaran $year): Collection
