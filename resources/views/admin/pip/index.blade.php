@@ -36,7 +36,16 @@
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
     .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
+    .pip-assistance-page #pipStudentDetailModal .modal-content { border: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 46px rgba(15, 23, 42, .2); }
+    .pip-assistance-page .pip-student-detail__photo { width: 108px; height: 108px; border: 3px solid #fff; border-radius: 50%; object-fit: cover; box-shadow: 0 6px 18px rgba(15,23,42,.16); }
+    .pip-assistance-page .pip-student-detail__identity { min-width: 0; }
+    .pip-assistance-page .pip-student-detail__meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .65rem; }
+    .pip-assistance-page .pip-student-detail__meta-item { padding: .65rem .75rem; border: 1px solid #e2e8f0; border-radius: .55rem; background: #f8fafc; }
+    .pip-assistance-page .pip-student-detail__meta-item--wide { grid-column: 1 / -1; }
+    .pip-assistance-page .pip-student-detail__meta-label { display: block; margin-bottom: .15rem; color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+    .pip-assistance-page .pip-student-detail__meta-value { color: #0f172a; font-size: .84rem; font-weight: 600; overflow-wrap: anywhere; }
     @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-entry { display: flex; margin: .28rem 0 0; } }
+    @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } .pip-assistance-page .pip-student-detail__photo { width: 82px; height: 82px; } .pip-assistance-page .pip-student-detail__meta { grid-template-columns: 1fr; } }
 </style>
 @stop
 
@@ -150,6 +159,24 @@
     </div>
 </div>
 
+<div class="modal fade" id="pipStudentDetailModal" tabindex="-1" role="dialog" aria-labelledby="pipStudentDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white" id="pipStudentDetailModalLabel"><i class="fas fa-user-graduate mr-1"></i> Detail Siswa</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body" id="pipStudentDetailModalBody">
+                <div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="pipStudentDetailFullLink" class="btn btn-outline-primary" target="_blank" rel="noopener"><i class="fas fa-external-link-alt mr-1"></i> Halaman Detail</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @include('admin.partials.dokumen-preview-modal')
 
 @stop
@@ -237,6 +264,62 @@ $(function () {
             export:   'excel',
         });
         window.open('{{ route("admin.kip-sktm.data") }}?' + params.toString(), '_blank');
+    });
+
+    const escapeHtml = function (value) {
+        return $('<div>').text(value || '-').html();
+    };
+
+    $(document).on('click', '.js-pip-student-detail', function () {
+        const $button = $(this);
+        const detailUrl = $button.data('detail-url');
+        const fullDetailUrl = $button.data('full-detail-url');
+        const $modal = $('#pipStudentDetailModal');
+        const $body = $('#pipStudentDetailModalBody');
+
+        if (!detailUrl) return;
+
+        $body.html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>');
+        $('#pipStudentDetailFullLink').attr('href', fullDetailUrl || '#');
+        $modal.modal('show');
+
+        $.get(detailUrl)
+            .done(function (response) {
+                if (!response || !response.success || !response.siswa) {
+                    $body.html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>Detail siswa tidak tersedia.</div>');
+                    return;
+                }
+
+                const siswa = response.siswa;
+                const foto = siswa.foto_profile_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(siswa.nama_lengkap || 'Siswa') + '&size=200&background=2563eb&color=FFFFFF&bold=true');
+                const gender = siswa.jenis_kelamin === 'L' ? 'Laki-laki' : (siswa.jenis_kelamin === 'P' ? 'Perempuan' : '-');
+                const ketua = siswa.is_ketua_kelas ? '<span class="badge badge-warning ml-1"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>' : '';
+                const item = function (label, value, icon) {
+                    return '<div class="pip-student-detail__meta-item"><span class="pip-student-detail__meta-label"><i class="' + icon + ' mr-1"></i>' + label + '</span><div class="pip-student-detail__meta-value">' + escapeHtml(value) + '</div></div>';
+                };
+
+                $body.html(
+                    '<div class="d-flex align-items-center mb-4">'
+                    + '<img src="' + escapeHtml(foto) + '" class="pip-student-detail__photo mr-3" alt="Foto ' + escapeHtml(siswa.nama_lengkap) + '">'
+                    + '<div class="pip-student-detail__identity"><h5 class="font-weight-bold mb-1">' + escapeHtml(siswa.nama_lengkap) + '</h5><div class="text-muted small mb-2">NISN: ' + escapeHtml(siswa.nisn) + '</div><span class="badge badge-primary">' + escapeHtml(gender) + '</span>' + ketua + '</div>'
+                    + '</div>'
+                    + '<div class="pip-student-detail__meta">'
+                    + item('Kelas aktif', siswa.kelas_aktif, 'fas fa-school')
+                    + item('Peran rombel', siswa.jabatan_rombel, 'fas fa-user-tag')
+                    + item('NIS lokal', siswa.nis, 'fas fa-id-badge')
+                    + item('Nomor tes', siswa.nomor_tes, 'fas fa-ticket-alt')
+                    + item('Tempat, tanggal lahir', [siswa.tempat_lahir, siswa.tanggal_lahir_formatted].filter(Boolean).join(', '), 'fas fa-birthday-cake')
+                    + item('No. HP', siswa.nomor_hp, 'fas fa-phone')
+                    + item('Email', siswa.email, 'fas fa-envelope')
+                    + item('Sekolah asal', siswa.nama_sekolah_asal, 'fas fa-university')
+                    + '<div class="pip-student-detail__meta-item pip-student-detail__meta-item--wide"><span class="pip-student-detail__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Alamat</span><div class="pip-student-detail__meta-value">' + escapeHtml(siswa.alamat_siswa) + '</div></div>'
+                    + '</div>'
+                );
+            })
+            .fail(function (xhr) {
+                const message = xhr.responseJSON?.message || 'Detail siswa tidak dapat dimuat. Silakan coba kembali.';
+                $body.html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>' + escapeHtml(message) + '</div>');
+            });
     });
 });
 </script>

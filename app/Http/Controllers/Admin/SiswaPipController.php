@@ -316,9 +316,12 @@ class SiswaPipController extends Controller
     private function getActionButtons(Siswa $siswa): string
     {
         $detailUrl = route('admin.siswa.show', $siswa);
+        $quickDetailUrl = route('admin.siswa.quick-detail', $siswa);
 
-        return '<a href="' . $detailUrl . '" class="btn btn-info btn-xs" title="Detail Siswa">
-                    <i class="fas fa-user"></i> Detail
-                </a>';
+        return '<button type="button" class="btn btn-info btn-xs js-pip-student-detail"
+                    data-detail-url="' . e($quickDetailUrl) . '"
+                    data-full-detail-url="' . e($detailUrl) . '" title="Detail Siswa">
+                    <i class="fas fa-user mr-1"></i> Detail
+                </button>';
     }
 }

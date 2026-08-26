@@ -788,7 +788,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
         $this->ensureStudentInScope($siswa);
 
-        $siswa->load('kelasTahunAktif');
+        $siswa->load(['user', 'sekolahAsal', 'kelasTahunAktif']);
         $kelasAktif = $siswa->kelasTahunAktif->first();
         $isKetuaKelas = $kelasAktif
             && $kelasAktif->pivot->is_ketua_kelas
