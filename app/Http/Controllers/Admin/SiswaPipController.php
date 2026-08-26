@@ -190,7 +190,7 @@ class SiswaPipController extends Controller
             return [
                 'id'             => $siswa->id,
                 'nisn'           => $siswa->nisn ?? '-',
-                'nama_lengkap'   => e($siswa->nama_lengkap),
+                'nama_lengkap'   => $this->studentNameButton($siswa),
                 'jenis_kelamin'  => $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
                 'kelas'          => $kelasNama,
                 'dokumen'        => $dokumenHtml ?: '-',
@@ -316,12 +316,20 @@ class SiswaPipController extends Controller
     private function getActionButtons(Siswa $siswa): string
     {
         $detailUrl = route('admin.siswa.show', $siswa);
-        $quickDetailUrl = route('admin.siswa.quick-detail', $siswa);
 
-        return '<button type="button" class="btn btn-info btn-xs js-pip-student-detail"
-                    data-detail-url="' . e($quickDetailUrl) . '"
-                    data-full-detail-url="' . e($detailUrl) . '" title="Detail Siswa">
-                    <i class="fas fa-user mr-1"></i> Detail
-                </button>';
+        return '<a href="' . e($detailUrl) . '" class="btn btn-outline-info btn-xs" title="Buka halaman detail siswa">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>';
+    }
+
+    private function studentNameButton(Siswa $siswa): string
+    {
+        $detailUrl = route('admin.siswa.show', $siswa);
+
+        return '<button type="button" class="btn btn-link p-0 text-left font-weight-bold js-pip-student-detail"
+                    data-detail-url="' . e($detailUrl) . '"
+                    data-full-detail-url="' . e($detailUrl) . '">'
+                    . e($siswa->nama_lengkap) .
+                '</button>';
     }
 }

@@ -36,16 +36,12 @@
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
     .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
-    .pip-assistance-page #pipStudentDetailModal .modal-content { border: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 46px rgba(15, 23, 42, .2); }
-    .pip-assistance-page .pip-student-detail__photo { width: 108px; height: 108px; border: 3px solid #fff; border-radius: 50%; object-fit: cover; box-shadow: 0 6px 18px rgba(15,23,42,.16); }
-    .pip-assistance-page .pip-student-detail__identity { min-width: 0; }
-    .pip-assistance-page .pip-student-detail__meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .65rem; }
-    .pip-assistance-page .pip-student-detail__meta-item { padding: .65rem .75rem; border: 1px solid #e2e8f0; border-radius: .55rem; background: #f8fafc; }
-    .pip-assistance-page .pip-student-detail__meta-item--wide { grid-column: 1 / -1; }
-    .pip-assistance-page .pip-student-detail__meta-label { display: block; margin-bottom: .15rem; color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
-    .pip-assistance-page .pip-student-detail__meta-value { color: #0f172a; font-size: .84rem; font-weight: 600; overflow-wrap: anywhere; }
+    .pip-assistance-page .js-pip-student-detail { color: #1d4ed8; text-decoration: none; }
+    .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
+    .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
+    .pip-assistance-page #pipStudentDetailModal .nav-link { white-space: nowrap; }
     @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-entry { display: flex; margin: .28rem 0 0; } }
-    @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } .pip-assistance-page .pip-student-detail__photo { width: 82px; height: 82px; } .pip-assistance-page .pip-student-detail__meta { grid-template-columns: 1fr; } }
+    @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } }
 </style>
 @stop
 
@@ -160,17 +156,30 @@
 </div>
 
 <div class="modal fade" id="pipStudentDetailModal" tabindex="-1" role="dialog" aria-labelledby="pipStudentDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header bg-primary">
                 <h5 class="modal-title text-white" id="pipStudentDetailModalLabel"><i class="fas fa-user-graduate mr-1"></i> Detail Siswa</h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
             </div>
-            <div class="modal-body" id="pipStudentDetailModalBody">
-                <div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="pipSiswaDetailTabs" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#pip-detail-siswa" role="tab"><i class="fas fa-user mr-1"></i>Data Siswa</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#pip-detail-diri" role="tab"><i class="fas fa-id-card mr-1"></i>Data Diri</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#pip-detail-ortu" role="tab"><i class="fas fa-users mr-1"></i>Data Orang Tua</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#pip-detail-sekolah" role="tab"><i class="fas fa-school mr-1"></i>Sekolah Asal</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#pip-detail-dokumen" role="tab"><i class="fas fa-file-alt mr-1"></i>Dokumen</a></li>
+                </ul>
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="pip-detail-siswa" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="pip-detail-diri" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="pip-detail-ortu" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="pip-detail-sekolah" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="pip-detail-dokumen" role="tabpanel"></div>
+                </div>
             </div>
             <div class="modal-footer">
-                <a href="#" id="pipStudentDetailFullLink" class="btn btn-outline-primary" target="_blank" rel="noopener"><i class="fas fa-external-link-alt mr-1"></i> Halaman Detail</a>
+                <a href="#" id="pipStudentDetailFullLink" class="btn btn-primary" target="_blank" rel="noopener"><i class="fas fa-history mr-1"></i> Lihat Riwayat Perubahan</a>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
             </div>
         </div>
@@ -269,56 +278,50 @@ $(function () {
     const escapeHtml = function (value) {
         return $('<div>').text(value || '-').html();
     };
+    const detailRow = (label, value) => '<tr><td width="40%" class="bg-light"><strong>' + label + '</strong></td><td>' + escapeHtml(value) + '</td></tr>';
+    const detailTable = rows => '<table class="table table-detail table-sm table-bordered mb-3">' + rows.join('') + '</table>';
+    const detailLoading = '<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>';
 
     $(document).on('click', '.js-pip-student-detail', function () {
         const $button = $(this);
         const detailUrl = $button.data('detail-url');
         const fullDetailUrl = $button.data('full-detail-url');
         const $modal = $('#pipStudentDetailModal');
-        const $body = $('#pipStudentDetailModalBody');
-
         if (!detailUrl) return;
 
-        $body.html('<div class="text-center py-5 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><div>Memuat detail siswa...</div></div>');
+        $('#pip-detail-siswa, #pip-detail-diri, #pip-detail-ortu, #pip-detail-sekolah, #pip-detail-dokumen').html(detailLoading);
+        $('#pipSiswaDetailTabs .nav-link').removeClass('active').first().addClass('active');
+        $('#pipStudentDetailModal .tab-pane').removeClass('show active').first().addClass('show active');
         $('#pipStudentDetailFullLink').attr('href', fullDetailUrl || '#');
         $modal.modal('show');
 
         $.get(detailUrl)
             .done(function (response) {
-                if (!response || !response.success || !response.siswa) {
-                    $body.html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>Detail siswa tidak tersedia.</div>');
+                if (!response || !response.success || !response.data) {
+                    $('#pip-detail-siswa').html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>Detail siswa tidak tersedia.</div>');
                     return;
                 }
 
-                const siswa = response.siswa;
-                const foto = siswa.foto_profile_url || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(siswa.nama_lengkap || 'Siswa') + '&size=200&background=2563eb&color=FFFFFF&bold=true');
+                const siswa = response.data;
+                const user = siswa.user || {};
+                const ortu = siswa.ortu || {};
+                const sekolah = siswa.sekolah_asal || siswa.sekolahAsal || {};
                 const gender = siswa.jenis_kelamin === 'L' ? 'Laki-laki' : (siswa.jenis_kelamin === 'P' ? 'Perempuan' : '-');
-                const ketua = siswa.is_ketua_kelas ? '<span class="badge badge-warning ml-1"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>' : '';
-                const item = function (label, value, icon) {
-                    return '<div class="pip-student-detail__meta-item"><span class="pip-student-detail__meta-label"><i class="' + icon + ' mr-1"></i>' + label + '</span><div class="pip-student-detail__meta-value">' + escapeHtml(value) + '</div></div>';
-                };
-
-                $body.html(
-                    '<div class="d-flex align-items-center mb-4">'
-                    + '<img src="' + escapeHtml(foto) + '" class="pip-student-detail__photo mr-3" alt="Foto ' + escapeHtml(siswa.nama_lengkap) + '">'
-                    + '<div class="pip-student-detail__identity"><h5 class="font-weight-bold mb-1">' + escapeHtml(siswa.nama_lengkap) + '</h5><div class="text-muted small mb-2">NISN: ' + escapeHtml(siswa.nisn) + '</div><span class="badge badge-primary">' + escapeHtml(gender) + '</span>' + ketua + '</div>'
-                    + '</div>'
-                    + '<div class="pip-student-detail__meta">'
-                    + item('Kelas aktif', siswa.kelas_aktif, 'fas fa-school')
-                    + item('Peran rombel', siswa.jabatan_rombel, 'fas fa-user-tag')
-                    + item('NIS lokal', siswa.nis, 'fas fa-id-badge')
-                    + item('Nomor tes', siswa.nomor_tes, 'fas fa-ticket-alt')
-                    + item('Tempat, tanggal lahir', [siswa.tempat_lahir, siswa.tanggal_lahir_formatted].filter(Boolean).join(', '), 'fas fa-birthday-cake')
-                    + item('No. HP', siswa.nomor_hp, 'fas fa-phone')
-                    + item('Email', siswa.email, 'fas fa-envelope')
-                    + item('Sekolah asal', siswa.nama_sekolah_asal, 'fas fa-university')
-                    + '<div class="pip-student-detail__meta-item pip-student-detail__meta-item--wide"><span class="pip-student-detail__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Alamat</span><div class="pip-student-detail__meta-value">' + escapeHtml(siswa.alamat_siswa) + '</div></div>'
-                    + '</div>'
-                );
+                $('#pip-detail-siswa').html('<div class="row"><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-user mr-1"></i>Informasi Akun</h6>' + detailTable([detailRow('NISN', siswa.nisn), detailRow('Nomor Tes PPDB', siswa.nomor_tes), detailRow('Nama Lengkap', siswa.nama_lengkap), detailRow('Jenis Kelamin', gender), detailRow('Username', user.username), detailRow('Email', user.email)]) + '</div><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-check-circle mr-1"></i>Status Kelengkapan</h6>' + detailTable([detailRow('Data Ortu', siswa.data_ortu_completed ? 'Lengkap' : 'Belum Lengkap'), detailRow('Data Diri', siswa.data_diri_completed ? 'Lengkap' : 'Belum Lengkap'), detailRow('Status Login', user.is_first_login ? 'Belum Ganti Password' : 'Sudah Ganti Password')]) + '<h6 class="text-primary mt-3"><i class="fas fa-key mr-1"></i>Akun Login</h6>' + detailTable([detailRow('Username', user.username), detailRow('Email', user.email), detailRow('Password', user.readable_password || 'Tidak ditampilkan')]) + '</div></div>');
+                $('#pip-detail-diri').html('<div class="row"><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-id-card mr-1"></i>Data Pribadi</h6>' + detailTable([detailRow('NIK', siswa.nik), detailRow('Tempat Lahir', siswa.tempat_lahir), detailRow('Tanggal Lahir', siswa.tanggal_lahir), detailRow('Jumlah Saudara', siswa.jumlah_saudara), detailRow('Anak Ke', siswa.anak_ke), detailRow('Hobi', siswa.hobi), detailRow('Cita-cita', siswa.cita_cita), detailRow('No. HP', siswa.nomor_hp)]) + '</div><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-map-marker-alt mr-1"></i>Alamat Siswa</h6>' + detailTable([detailRow('Jenis Tempat Tinggal', siswa.jenis_tempat_tinggal), detailRow('Alamat', siswa.alamat_siswa), detailRow('RT / RW', [siswa.rt_siswa, siswa.rw_siswa].filter(Boolean).join(' / ')), detailRow('Kodepos', siswa.kodepos_siswa)]) + '</div></div>');
+                $('#pip-detail-ortu').html('<div class="row"><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-male mr-1"></i>Data Ayah</h6>' + detailTable([detailRow('Nama', ortu.nama_ayah), detailRow('NIK', ortu.nik_ayah), detailRow('HP', ortu.hp_ayah), detailRow('Pekerjaan', ortu.pekerjaan_ayah), detailRow('Penghasilan', ortu.penghasilan_ayah)]) + '</div><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-female mr-1"></i>Data Ibu</h6>' + detailTable([detailRow('Nama', ortu.nama_ibu), detailRow('NIK', ortu.nik_ibu), detailRow('HP', ortu.hp_ibu), detailRow('Pekerjaan', ortu.pekerjaan_ibu), detailRow('Penghasilan', ortu.penghasilan_ibu)]) + '</div></div><h6 class="text-primary mt-3"><i class="fas fa-home mr-1"></i>Alamat Orang Tua</h6>' + detailTable([detailRow('No. KK', ortu.no_kk), detailRow('Alamat', ortu.alamat_ortu), detailRow('RT / RW', [ortu.rt_ortu, ortu.rw_ortu].filter(Boolean).join(' / ')), detailRow('Kodepos', ortu.kodepos)]));
+                $('#pip-detail-sekolah').html('<div class="row"><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-school mr-1"></i>Informasi Sekolah</h6>' + detailTable([detailRow('NPSN', sekolah.npsn || siswa.npsn_asal_sekolah), detailRow('NSM', sekolah.nsm), detailRow('Nama Sekolah', sekolah.nama || siswa.nama_sekolah_asal), detailRow('Bentuk Pendidikan', sekolah.bentuk_pendidikan), detailRow('Status', sekolah.status_sekolah)]) + '</div><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-map-marker-alt mr-1"></i>Lokasi Sekolah</h6>' + detailTable([detailRow('Provinsi', sekolah.provinsi), detailRow('Kab/Kota', sekolah.kabupaten_kota), detailRow('Kecamatan', sekolah.kecamatan), detailRow('Alamat', sekolah.alamat_jalan)]) + '</div></div>');
+                $('#pip-detail-dokumen').html('<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat dokumen...</div>');
+                $.get(`{{ url('admin/siswa') }}/${siswa.id}/dokumen`).done(function (documents) {
+                    if (!documents.success || !documents.data.length) { $('#pip-detail-dokumen').html('<div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>Belum ada dokumen yang diunggah.</div>'); return; }
+                    const cards = documents.data.map(doc => '<div class="col-md-6 mb-3"><div class="border rounded p-3 h-100"><div class="font-weight-bold mb-1"><i class="fas fa-file-alt text-primary mr-1"></i>' + escapeHtml(doc.jenis_dokumen_label) + '</div><div class="small text-muted mb-2">' + escapeHtml(doc.file_size_formatted) + '</div><a href="' + escapeHtml(doc.file_url) + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye mr-1"></i>Lihat Dokumen</a></div></div>').join('');
+                    $('#pip-detail-dokumen').html('<div class="row">' + cards + '</div>');
+                }).fail(() => $('#pip-detail-dokumen').html('<div class="alert alert-warning mb-0">Dokumen tidak dapat dimuat.</div>'));
             })
             .fail(function (xhr) {
                 const message = xhr.responseJSON?.message || 'Detail siswa tidak dapat dimuat. Silakan coba kembali.';
-                $body.html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>' + escapeHtml(message) + '</div>');
+                $('#pip-detail-siswa').html('<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>' + escapeHtml(message) + '</div>');
+                $('#pip-detail-diri, #pip-detail-ortu, #pip-detail-sekolah, #pip-detail-dokumen').empty();
             });
     });
 });
