@@ -219,10 +219,10 @@ class SiswaController extends Controller
             elseif (isset($columns[$orderColumnIndex])) {
                 $siswa->orderBy($columns[$orderColumnIndex], $orderDirection);
             } else {
-                $siswa->latest();
+                $siswa->orderBy('nama_lengkap');
             }
         } else {
-            $siswa->latest();
+            $siswa->orderBy('nama_lengkap');
         }
 
         $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');

@@ -75,13 +75,12 @@ class SiswaController extends BaseWaliKelasController
     }
 
     /**
-     * Ambil siswa aktif suatu rombel, terurut nomor absen lalu nama.
+     * Ambil siswa aktif suatu rombel, terurut alfabetis berdasarkan nama.
      */
     protected function classStudents(Kelas $kelas): Collection
     {
         return $kelas->siswaAktif()
             ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-            ->orderByRaw('COALESCE(siswa_kelas.nomor_urut_absen, 9999)')
             ->orderBy('nama_lengkap')
             ->get();
     }

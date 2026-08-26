@@ -86,16 +86,7 @@ class SiswaPipController extends Controller
             }])
             ->withCount(['dokumen as pkh_count' => function ($q) {
                 $this->filterByType($q, 'pkh');
-            }])
-            ->withMin(['dokumen as oldest_assistance_document_at' => function ($q) {
-                $keywords = $this->allKeywords();
-
-                $q->where(function ($inner) use ($keywords) {
-                    foreach ($keywords as $keyword) {
-                        $inner->orWhere('jenis_dokumen', 'like', "%{$keyword}%");
-                    }
-                });
-            }], 'created_at');
+            }]);
 
         // Hanya siswa yang punya dokumen KIP/SKTM atau nomor PKH
         $this->applyAssistanceFilter($query);
@@ -175,9 +166,7 @@ class SiswaPipController extends Controller
                 $query->orderBy('siswa.nomor_pkh', $orderDirection);
                 break;
             default:
-                // Initial order: oldest assistance document first. Records with
-                // only a KKS/PKH number fall back to their student record date.
-                $query->orderByRaw('COALESCE(oldest_assistance_document_at, siswa.created_at) asc')
+                $query->orderBy('siswa.nama_lengkap')
                     ->orderBy('siswa.id');
                 break;
         }

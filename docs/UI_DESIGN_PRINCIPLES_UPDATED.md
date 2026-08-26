@@ -174,6 +174,7 @@ Semua DataTables mengikuti partial standar AdminLTE SIMANSA, bukan CSS lokal per
 - header tabel memakai pembatas bawah abu-abu halus tetapi tegas untuk membedakan header dari isi
 - pagination tetap netral sesuai aturan global di atas
 - setiap kolom data yang ditampilkan wajib memakai pemetaan sorting server-side; kolom nomor urut dan aksi boleh tidak sortable karena bukan data
+- daftar siswa operasional memakai urutan awal alfabetis berdasarkan `nama_lengkap`; nomor absen atau NIS lokal tetap ditampilkan sebagai metadata, bukan dasar urutan. Pengecualian hanya untuk timeline, antrean, atau laporan yang secara fungsional memang berbasis waktu/status.
 
 ## Tombol
 

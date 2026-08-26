@@ -8,7 +8,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 - Input Absensi Siswa kini memakai Toastr untuk hasil simpan/finalisasi serta validasi gagal. Flash sukses khusus tidak lagi masuk ke renderer alert global sehingga banner duplikat di atas form dihapus.
 - Daftar Penugasan GTK kini memuat filter tahun, jenis, status, pencarian teks, dan pagination melalui AJAX tanpa reload halaman. Feedback hasil simpan, gagal, serta validasi memakai Toastr agar tidak ada banner ganda.
-- Daftar KIP, KKS/PKH, dan SKTM kini diawali dokumen bantuan terlama. Seluruh kolom data (NISN, nama, gender, rombel, dokumen, serta nomor KKS/PKH) dapat diurutkan aman dari server; nomor urut dan aksi tetap statis.
+- Semua daftar siswa operasional kini memakai urutan awal alfabetis berdasarkan nama lengkap, termasuk Data Siswa, KIP/KKS/PKH/SKTM, daftar dan absensi wali kelas, pemantauan absensi, roster Nilai RDM, serta preview kenaikan kelas. Nomor absen dan NIS lokal tetap tersedia sebagai metadata maupun pilihan sorting, tetapi tidak lagi menentukan urutan awal.
 - Pesan empty-state DataTables distandarkan menjadi `Belum ada data` pada seluruh konfigurasi tabel; pesan hasil filter tetap terpisah.
 
 - Standar DataTables SIMANSA kini disatukan secara global: empty-state hanya berada di dalam tabel, footer tidak lagi menampilkan info kosong kedua, dropdown jumlah data berlebar natural dengan satu indikator native, ruang bawah pagination lebih lega, serta header memakai divider abu-abu yang konsisten. Panduan UI juga mencatatnya sebagai acuan wajib modul berikutnya.

@@ -13,7 +13,6 @@ class CatatanController extends BaseWaliKelasController
         $kelas = $this->resolveKelas($request->input('kelas_id'));
         $students = $kelas->siswaAktif()
             ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-            ->orderByRaw('COALESCE(siswa_kelas.nomor_urut_absen, 9999)')
             ->orderBy('nama_lengkap')
             ->get();
 

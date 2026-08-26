@@ -187,7 +187,6 @@ class AbsensiSiswaController extends Controller
             $students = $query
                 ->orderBy('k.tingkat')
                 ->orderBy('k.nama_kelas')
-                ->orderByRaw('COALESCE(sk.nomor_urut_absen, 9999)')
                 ->orderBy('siswa.nama_lengkap')
                 ->paginate(25)
                 ->withQueryString();
@@ -433,7 +432,6 @@ class AbsensiSiswaController extends Controller
                 $query->whereNull('siswa_kelas.tanggal_keluar')
                     ->orWhere('siswa_kelas.tanggal_keluar', '>=', $tanggal);
             })
-            ->orderByRaw('COALESCE(siswa_kelas.nomor_urut_absen, 9999)')
             ->orderBy('nama_lengkap')
             ->get();
     }

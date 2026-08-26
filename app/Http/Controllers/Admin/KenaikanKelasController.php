@@ -89,7 +89,9 @@ class KenaikanKelasController extends Controller
             ->where('kelas_id', $request->kelas_id)
             ->where('tahun_pelajaran_id', $request->tahun_pelajaran_id)
             ->where('status', 'aktif')
-            ->orderBy('nomor_urut_absen')
+            ->orderBy(Siswa::query()
+                ->select('nama_lengkap')
+                ->whereColumn('siswa.id', 'siswa_kelas.siswa_id'))
             ->get()
             ->map(fn($sk) => [
                 'siswa_kelas_id' => $sk->id,

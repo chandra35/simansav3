@@ -1328,7 +1328,7 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         pageLength: 10,
         pagingType: 'simple_numbers',
-        order: [[{{ $canManageInternalVerval ? 9 : 8 }}, 'desc']],
+        order: [[1, 'asc']],
         language: {
             processing: "Memproses...",
             search: "Cari:",

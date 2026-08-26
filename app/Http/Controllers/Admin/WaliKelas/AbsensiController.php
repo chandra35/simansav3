@@ -261,7 +261,6 @@ class AbsensiController extends BaseWaliKelasController
                 $q->whereNull('siswa_kelas.tanggal_keluar')
                     ->orWhere('siswa_kelas.tanggal_keluar', '>=', $tanggal);
             })
-            ->orderByRaw('COALESCE(siswa_kelas.nomor_urut_absen, 9999)')
             ->orderBy('nama_lengkap')
             ->get();
     }

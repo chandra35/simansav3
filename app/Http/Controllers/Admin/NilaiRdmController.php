@@ -40,7 +40,10 @@ class NilaiRdmController extends Controller
             ->where('status', 'aktif')
             ->whereIn('kelas_id', $classes->pluck('id'))
             ->whereNull('deleted_at')
-            ->orderBy('nomor_urut_absen')->get();
+            ->orderBy(Siswa::query()
+                ->select('nama_lengkap')
+                ->whereColumn('siswa.id', 'siswa_kelas.siswa_id'))
+            ->get();
         $studentIds = $roster->pluck('siswa_id')->unique()->values();
 
         $scores = NilaiSiswa::query()
