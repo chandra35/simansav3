@@ -249,6 +249,7 @@ class HotspotSecurityArchitectureTest extends TestCase
         $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
         $success = file_get_contents($portal.'alogin.html');
         $status = file_get_contents($portal.'status.html');
+        $logout = file_get_contents($portal.'logout.html');
 
         $this->assertStringContainsString("'firstname' => \$displayName", $model);
         $this->assertStringContainsString("'attribute' => 'Reply-Message'", $model);
@@ -258,20 +259,24 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('hotspot:sync-radius-identities', $command);
         $this->assertStringContainsString('$(radius18)', $success);
         $this->assertStringContainsString('$(radius18)', $status);
+        $this->assertStringContainsString('$(radius18)', $logout);
         $this->assertStringContainsString("window.atob", $success);
         $this->assertStringNotContainsString('data-username="$(username)"', $success);
         $this->assertStringNotContainsString('>$(username)<', $success);
         $this->assertStringNotContainsString('>$(username)<', $status);
         $this->assertStringNotContainsString('Username:', $success);
         $this->assertStringNotContainsString('Username <strong>', $status);
+        $this->assertStringNotContainsString('$(username)', $logout);
         $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $success);
         $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $status);
+        $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $logout);
         $this->assertStringContainsString('data-identity-role', $success);
         $this->assertStringContainsString('data-identity-class', $status);
         $this->assertStringContainsString('assets/login-v2.css?v=20260827a', $success);
         $this->assertStringContainsString('assets/login-v2.css?v=20260827a', $status);
         $this->assertStringContainsString('<style data-critical-session-style>', $success);
         $this->assertStringContainsString('<style data-critical-session-style>', $status);
+        $this->assertStringContainsString('<style data-critical-session-style>', $logout);
         $this->assertStringContainsString('.session-brand img{width:45px;height:45px', $success);
         $this->assertStringContainsString('.session-brand img{width:45px;height:45px', $status);
         $this->assertStringContainsString('class="session-atmosphere"', $success);

@@ -2,36 +2,67 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Logout Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="-1">
+  <meta name="theme-color" content="#245eea">
+  <title>Sesi Berakhir - MAN 1 Metro</title>
+  <style data-critical-session-style>
+    *{box-sizing:border-box}html,body{min-height:100%}body{margin:0;color:#16233b;background:#eef5ff;font-family:"Segoe UI",Arial,sans-serif}.session-layout{min-height:100vh;min-height:100dvh;padding:18px;display:grid;place-items:center;background:radial-gradient(circle at 8% 12%,rgba(31,174,160,.18),transparent 25rem),radial-gradient(circle at 92% 88%,rgba(47,104,239,.2),transparent 28rem),linear-gradient(135deg,#f8fbff,#e8f1ff)}.session-card{width:min(650px,100%);padding:28px;background:rgba(255,255,255,.96);border:1px solid #dce5f3;border-radius:28px;box-shadow:0 24px 70px rgba(28,66,124,.2)}.session-brand{min-height:66px;margin-bottom:28px;padding:10px 14px;display:flex;align-items:center;gap:11px;color:#fff;background:linear-gradient(110deg,#2f68ef,#168c88);border-radius:19px}.session-brand img{width:45px;height:45px;padding:4px;object-fit:contain;background:#fff;border-radius:13px}.session-brand p,.session-brand strong,.session-brand small{margin:0;display:block}.session-brand small{opacity:.75}.session-brand .connected-pill{margin-left:auto;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.14)}.logout-card{text-align:center}.logout-mark{width:66px;height:66px;margin:0 auto 16px;display:grid;place-items:center;color:#31558b;background:#e9f0ff;border-radius:22px;font-size:1.8rem}.session-kicker{display:block;color:#168c88;font-size:.7rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.session-card h1{margin:8px 0;font-size:clamp(2rem,5vw,2.9rem);line-height:1.06}.session-card h1 em{color:#2f68ef;font-style:normal}.session-lead{margin:12px auto 20px;color:#68758c}.identity-tags{display:flex;justify-content:center;gap:6px;margin:12px 0}.identity-tags span{padding:6px 10px;color:#176b69;background:#e8f7f5;border-radius:999px}.logout-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:22px 0}.logout-summary article{padding:16px;text-align:left;background:#f7f9fd;border:1px solid #dce5f3;border-radius:16px}.logout-summary span,.logout-summary strong{display:block}.logout-summary span{color:#75839a;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.logout-summary strong{margin-top:9px;font-size:1.1rem}.session-button{min-height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;color:#fff;text-decoration:none;background:linear-gradient(110deg,#2f68ef,#168c88);border-radius:14px}.session-note{color:#8a96a8;font-size:.75rem}@media(max-width:700px){.session-layout{padding:12px}.session-card{padding:16px}.logout-summary{grid-template-columns:1fr}}
+  </style>
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260827a">
 </head>
-<body>
-  <main class="page">
-    <section class="status-wrap">
-      <div class="status-card">
-        <div class="status-head">
-          <div class="brand-logo"><img src="assets/logo.png" alt="Logo MAN 1 Metro"></div>
-          <div>
-            <h1>Sesi Berakhir</h1>
-            <p>Anda sudah keluar dari jaringan hotspot.</p>
-          </div>
-        </div>
-
-        <div class="status-body">
-          <div class="stats">
-            <div class="stat"><span>Username</span><strong>$(username)</strong></div>
-            <div class="stat"><span>IP Address</span><strong>$(ip)</strong></div>
-            <div class="stat"><span>MAC Address</span><strong>$(mac)</strong></div>
-            <div class="stat"><span>Waktu Aktif</span><strong>$(uptime)</strong></div>
-          </div>
-
-          <div class="actions">
-            <a class="button primary" href="$(link-login)">Login Lagi</a>
-          </div>
-        </div>
+<body class="session-page">
+  <main class="session-layout">
+    <div class="session-atmosphere" aria-hidden="true"><i></i><i></i><i></i></div>
+    <section class="session-card logout-card" aria-live="polite">
+      <header class="session-brand">
+        <img src="assets/logo.png" alt="Logo MAN 1 Metro">
+        <p><strong>MAN 1 Metro</strong><small>Hotspot SIMANSA</small></p>
+        <span class="connected-pill">Offline</span>
+      </header>
+      <div class="logout-mark" aria-hidden="true">&#10003;</div>
+      <span class="session-kicker">Sesi telah diakhiri</span>
+      <h1>Sampai jumpa,<br><em class="responsive-identity-name" data-radius-identity="$(radius18)">Pengguna Hotspot</em></h1>
+      <p class="session-lead">Anda sudah keluar dari jaringan hotspot dengan aman.</p>
+      <div class="identity-tags" aria-label="Identitas pengguna">
+        <span data-identity-role hidden></span>
+        <span data-identity-profile hidden></span>
       </div>
+      <div class="logout-summary" aria-label="Ringkasan sesi">
+        <article><span>Waktu aktif</span><strong>$(uptime)</strong></article>
+        <article><span>Alamat IP terakhir</span><strong>$(ip)</strong></article>
+      </div>
+      <a class="session-button primary" href="$(link-login)"><span>Login kembali</span><b>&rarr;</b></a>
+      <p class="session-note">Gunakan kembali akun resmi Anda saat ingin terhubung ke jaringan madrasah.</p>
     </section>
   </main>
+  <script>
+    (function () {
+      var target = document.querySelector('[data-radius-identity]');
+      var identity = {};
+      try {
+        var encoded = target && target.getAttribute('data-radius-identity');
+        if (encoded && encoded.indexOf('$(') !== 0) {
+          var decoded = decodeURIComponent(escape(window.atob(encoded)));
+          try { identity = JSON.parse(decoded); } catch (jsonError) { identity = { n: decoded }; }
+        }
+      } catch (error) {}
+      var displayName = identity.n || 'Pengguna Hotspot';
+      if (target) {
+        target.textContent = displayName;
+        target.classList.toggle('identity-name--long', displayName.length > 22 && displayName.length <= 34);
+        target.classList.toggle('identity-name--very-long', displayName.length > 34);
+      }
+      var tags = [
+        ['[data-identity-role]', identity.r ? identity.r.charAt(0).toUpperCase() + identity.r.slice(1) : ''],
+        ['[data-identity-profile]', identity.p || '']
+      ];
+      for (var i = 0; i < tags.length; i += 1) {
+        var tag = document.querySelector(tags[i][0]);
+        if (tag && tags[i][1]) { tag.textContent = tags[i][1]; tag.hidden = false; }
+      }
+    }());
+  </script>
 </body>
 </html>

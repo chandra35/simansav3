@@ -15,7 +15,7 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 - `assets/login-v2.css` - tema editorial khusus halaman sukses dan status.
 - `assets/portal.js` - interaksi form dan mapping pesan error.
 - `assets/device-report.js` - melaporkan model/jenis perangkat setelah login dan mengikatnya ke sesi aktif FreeRADIUS.
-- Nama lengkap pada halaman sukses/status berasal dari atribut RADIUS `Reply-Message` (`$(radius18)`) yang disinkronkan SIMANSA dalam format Base64 aman.
+- Nama lengkap pada halaman sukses, status, dan logout berasal dari atribut RADIUS `Reply-Message` (`$(radius18)`) yang disinkronkan SIMANSA dalam format Base64 aman.
 - Username dapat diingat secara lokal melalui pilihan pengguna. Password tetap diserahkan ke password manager browser dan tidak pernah disimpan mentah oleh portal.
 
 ## Cara Pasang di MikroTik
