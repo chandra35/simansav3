@@ -178,9 +178,10 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("'dhcp_lease'", $service);
         $this->assertStringContainsString("'reauthentication_required' => true", $service);
         $this->assertStringContainsString('Sesi berhasil diputus', $view);
-        $this->assertStringContainsString('login-by=http-chap', $hardening);
-        $this->assertStringContainsString('add-mac-cookie=no', $hardening);
-        $this->assertStringContainsString('/ip hotspot cookie remove [find]', $hardening);
+        $this->assertStringContainsString('login-by=http-chap,mac-cookie', $hardening);
+        $this->assertStringContainsString('add-mac-cookie=yes mac-cookie-timeout=1d', $hardening);
+        $this->assertStringContainsString('RADIUS Disconnect-ACK menghapus Hotspot Active, dynamic queue, dan MAC-cookie target.', $hardening);
+        $this->assertStringNotContainsString('/ip hotspot cookie remove [find]', $hardening);
         $this->assertStringNotContainsString('/ip dhcp-server lease remove', $hardening);
     }
 

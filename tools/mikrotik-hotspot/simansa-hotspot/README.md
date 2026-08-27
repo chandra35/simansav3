@@ -1,6 +1,6 @@
 # SIMANSA MikroTik Hotspot Portal
 
-Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap` dan autentikasi RADIUS SIMANSA. MAC-cookie dinonaktifkan agar tindakan putus sesi selalu meminta pengguna login ulang.
+Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap,mac-cookie` dan autentikasi RADIUS SIMANSA. MAC-cookie berlaku satu hari agar perangkat yang sama dapat berpindah AP tanpa memasukkan kredensial lagi; RADIUS Disconnect pada tindakan Putuskan Sesi/Blokir menghapus cookie perangkat target.
 
 ## Isi Paket
 
@@ -24,8 +24,8 @@ Paket ini dibuat untuk profil Hotspot MikroTik yang memakai `login-by=http-chap`
 2. Upload seluruh isi folder ini ke direktori `hotspot` pada MikroTik.
 3. Pastikan Hotspot Profile memakai:
    - `html-directory=hotspot`
-   - `login-by=http-chap`
-   - profile pengguna memakai `add-mac-cookie=no`
+   - `login-by=http-chap,mac-cookie`
+   - profile pengguna memakai `add-mac-cookie=yes` dan `mac-cookie-timeout=1d`
    - `use-radius=yes`
 4. Coba dari perangkat baru atau mode incognito.
 
