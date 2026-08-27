@@ -10,6 +10,7 @@
 .hs-panel{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(15,23,42,.06);margin-bottom:1rem}.hs-panel-head{padding:.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}.hs-panel-title{font-size:.87rem;font-weight:800;color:#1e293b}.hs-table{margin:0;font-size:.78rem}.hs-table th{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc;border-top:0;white-space:nowrap}.hs-table td{vertical-align:middle}.person{display:flex;align-items:center;gap:.65rem;min-width:220px}.person img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:2px solid #e2e8f0}.person-name{font-weight:750;color:#1e293b}.person-meta{font-size:.68rem;color:#64748b}.live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;box-shadow:0 0 0 4px rgba(34,197,94,.12);margin-right:.4rem}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}.detail-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.55rem .65rem}.detail-label{font-size:.62rem;color:#64748b;text-transform:uppercase;font-weight:700}.detail-value{font-size:.8rem;color:#0f172a;font-weight:650;word-break:break-word}.profile-photo{width:92px;height:92px;border-radius:18px;object-fit:cover;border:3px solid #e2e8f0}.empty-state{text-align:center;padding:2.5rem;color:#64748b}.refresh-note{font-size:.68rem;color:#64748b}
 .traffic-rate{font-size:.66rem;font-weight:700;color:#64748b}.traffic-live{animation:trafficPulse 1.2s ease-in-out infinite}@keyframes trafficPulse{50%{opacity:.55}}
 .device-name{display:flex;align-items:center;gap:.4rem;color:#1e293b;font-weight:750}.device-name i{width:15px;color:#0f766e;text-align:center}.device-meta{margin-top:2px;color:#64748b;font-size:.66rem;line-height:1.35}
+.online-pagination{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 1rem;border-top:1px solid #e2e8f0;flex-wrap:wrap}.online-pagination .pagination{margin:0}.online-pagination .page-link{font-size:.75rem;color:#3b82f6}.online-pagination .page-item.active .page-link{background:#3b82f6;border-color:#3b82f6}
 @media(max-width:1100px){.metric-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:767px){.metric-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.hotspot-hero{border-radius:14px}.person{min-width:190px}}
 </style>
 @endsection
@@ -50,6 +51,7 @@
         <div class="d-flex flex-wrap" style="gap:.4rem">
             <input id="searchOnline" class="form-control form-control-sm" style="width:220px" placeholder="Nama, username, IP, MAC, rombel">
             <select id="roleOnline" class="form-control form-control-sm" style="width:125px"><option value="">Semua role</option><option value="guru">Guru</option><option value="siswa">Siswa</option><option value="tamu">Tamu</option></select>
+            <select id="perPageOnline" class="form-control form-control-sm" style="width:92px" title="Data per halaman"><option value="25">25/baris</option><option value="50">50/baris</option><option value="100">100/baris</option></select>
             <button id="refreshOnline" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync mr-1"></i>Refresh</button>
         </div>
     </div>
@@ -87,6 +89,8 @@ const CAN_MANAGE = @json(auth()->user()->can('manage-hotspot'));
 let sessions = [];
 let blockedUsers = [];
 let loadingOnline = false;
+let onlinePagination = {current_page:1,last_page:1,per_page:25,total:0,from:0,to:0};
+let onlineSearchTimer = null;
 const trafficSamples = new Map();
 const esc = value => $('<div>').text(value == null ? '' : String(value)).html();
 const attr = value => esc(value).replace(/`/g, '&#96;');
@@ -115,16 +119,18 @@ function updateTrafficRates(nextSessions){
     });
     [...trafficSamples.keys()].forEach(key=>{if(!activeKeys.has(key))trafficSamples.delete(key)});
 }
-function loadOnline(){
+function loadOnline(page){
     if(loadingOnline)return;loadingOnline=true;
     $('#refreshOnline').prop('disabled',true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Memuat');
-    $.get(ONLINE_URL).done(response=>{
+    const requestedPage=Number(page||onlinePagination.current_page||1);
+    $.get(ONLINE_URL,{page:requestedPage,per_page:Number($('#perPageOnline').val()||25),search:$('#searchOnline').val()||'',role:$('#roleOnline').val()||''}).done(response=>{
         if(!response.success) throw new Error(response.error||'Gagal memuat data');
         sessions=response.sessions||[];blockedUsers=response.blocked_users||[];updateTrafficRates(sessions);
         const summary=response.summary||{};
-        $('#metricOnline,#onlineCount').text(sessions.length);
-        $('#metricGuru').text(sessions.filter(x=>x.role==='guru').length);
-        $('#metricSiswa').text(sessions.filter(x=>x.role==='siswa').length);
+        onlinePagination=response.pagination||onlinePagination;
+        $('#metricOnline,#onlineCount').text(summary.online??response.count??0);
+        $('#metricGuru').text(summary.online_guru??0);
+        $('#metricSiswa').text(summary.online_siswa??0);
         $('#metricUnique').text(summary.unique_today||0);
         $('#metricDownload').text(bytes(summary.download_today));
         $('#metricUpload').text(bytes(summary.upload_today));
@@ -134,8 +140,7 @@ function loadOnline(){
       .always(()=>{loadingOnline=false;$('#refreshOnline').prop('disabled',false).html('<i class="fas fa-sync mr-1"></i>Refresh')});
 }
 function renderOnline(){
-    const search=($('#searchOnline').val()||'').toLowerCase(),role=$('#roleOnline').val();
-    const rows=sessions.map((s,index)=>({s,index})).filter(({s})=>(!role||s.role===role)&&(!search||[s.display_name,s.username,s.framed_ip,s.mac,s.kelas,s.device?.label,s.device?.vendor,s.device?.model,s.device?.platform,s.device?.browser].join(' ').toLowerCase().includes(search)));
+    const rows=sessions.map((s,index)=>({s,index}));
     if(!rows.length){$('#onlineWrap').html('<div class="empty-state"><i class="fas fa-wifi fa-2x mb-2 d-block"></i>Tidak ada sesi yang cocok.</div>');return;}
     $('#onlineWrap').html(`<table class="table hs-table table-hover"><thead><tr><th>User</th><th>Role/Rombel</th><th>Perangkat</th><th>Durasi</th><th>Pemakaian</th><th>Profile</th><th></th></tr></thead><tbody>${rows.map(({s,index})=>`<tr>
         <td><div class="person"><img src="${attr(s.photo_url)}" alt="Foto"><div><div class="person-name">${esc(s.display_name)}</div><div class="person-meta"><code>${esc(s.username)}</code></div></div></div></td>
@@ -145,8 +150,17 @@ function renderOnline(){
         <td><span class="text-success"><i class="fas fa-arrow-down"></i> ${bytes(s.bytes_download)}</span> <span class="traffic-rate ${s.download_rate>0?'traffic-live':''}">${bytes(s.download_rate)}/s</span><br><span class="text-primary"><i class="fas fa-arrow-up"></i> ${bytes(s.bytes_upload)}</span> <span class="traffic-rate ${s.upload_rate>0?'traffic-live':''}">${bytes(s.upload_rate)}/s</span></td>
         <td>${esc(s.profile||'-')}<div class="person-meta">${esc(s.queue_name||'')}</div></td>
         <td><div class="btn-group"><button class="btn btn-sm btn-outline-primary" onclick="showSession(${index})" title="Detail"><i class="fas fa-eye"></i></button>${CAN_MANAGE?`<button class="btn btn-sm btn-warning" onclick="disconnectSession(${index})" title="Putuskan sesi"><i class="fas fa-power-off"></i></button><button class="btn btn-sm btn-danger" onclick="blockSession(${index})" title="Blokir akun"><i class="fas fa-user-lock"></i></button>`:''}</div></td>
-    </tr>`).join('')}</tbody></table>`);
+    </tr>`).join('')}</tbody></table>${renderOnlinePagination()}`);
 }
+function renderOnlinePagination(){
+    const meta=onlinePagination,total=Number(meta.total||0),current=Number(meta.current_page||1),last=Number(meta.last_page||1);
+    if(!total)return '';
+    const pages=[];const addPage=p=>{if(!pages.includes(p))pages.push(p)};
+    addPage(1);for(let p=Math.max(2,current-2);p<=Math.min(last-1,current+2);p++)addPage(p);if(last>1)addPage(last);
+    let previous=0;const items=pages.map(p=>{const gap=previous&&p-previous>1?'<li class="page-item disabled"><span class="page-link">…</span></li>':'';previous=p;return `${gap}<li class="page-item ${p===current?'active':''}"><button class="page-link" ${p===current?'disabled':''} onclick="goOnlinePage(${p})">${p}</button></li>`}).join('');
+    return `<div class="online-pagination"><small class="text-muted">Menampilkan ${meta.from}–${meta.to} dari ${total} sesi online</small><nav aria-label="Halaman user online"><ul class="pagination pagination-sm"><li class="page-item ${current<=1?'disabled':''}"><button class="page-link" ${current<=1?'disabled':''} onclick="goOnlinePage(${current-1})">Sebelumnya</button></li>${items}<li class="page-item ${current>=last?'disabled':''}"><button class="page-link" ${current>=last?'disabled':''} onclick="goOnlinePage(${current+1})">Selanjutnya</button></li></ul></nav></div>`;
+}
+function goOnlinePage(page){if(page>=1&&page<=Number(onlinePagination.last_page||1))loadOnline(page);}
 function renderBlocked(){
     if(!CAN_MANAGE)return;
     $('#blockedCount').text(blockedUsers.length);$('#blockedPanel').toggle(blockedUsers.length>0);
@@ -208,7 +222,9 @@ function unblockUser(id){
 function tickDurations(){
     const now=Date.now();$('.live-duration').each(function(){const el=$(this),seconds=Number(el.data('seconds')||0)+Math.max(0,Math.floor((now-Number(el.data('snapshot')||now))/1000));el.text(duration(seconds));});
 }
-$('#searchOnline').on('input',renderOnline);$('#roleOnline').on('change',renderOnline);$('#refreshOnline').on('click',loadOnline);
+$('#searchOnline').on('input',()=>{clearTimeout(onlineSearchTimer);onlineSearchTimer=setTimeout(()=>loadOnline(1),350);});
+$('#roleOnline,#perPageOnline').on('change',()=>loadOnline(1));
+$('#refreshOnline').on('click',()=>loadOnline());
 loadOnline();setInterval(loadOnline,5000);setInterval(tickDurations,1000);
 </script>
 @endsection

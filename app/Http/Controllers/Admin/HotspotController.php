@@ -617,13 +617,61 @@ class HotspotController extends Controller
         ));
     }
 
-    public function onlineUsers()
+    public function onlineUsers(Request $request)
     {
         try {
-            $sessions = DB::connection('mysql_radius')
+            $validated = $request->validate([
+                'page' => ['nullable', 'integer', 'min:1'],
+                'per_page' => ['nullable', 'integer', 'in:25,50,100'],
+                'search' => ['nullable', 'string', 'max:100'],
+                'role' => ['nullable', 'in:guru,siswa,tamu'],
+            ]);
+            $perPage = (int) ($validated['per_page'] ?? 25);
+            $requestedPage = (int) ($validated['page'] ?? 1);
+            $search = trim((string) ($validated['search'] ?? ''));
+
+            $allSessionsQuery = DB::connection('mysql_radius')
                 ->table('radacct')
-                ->whereNull('acctstoptime')
+                ->whereNull('acctstoptime');
+            $activeSessionUsernames = (clone $allSessionsQuery)->pluck('username');
+            $activeRoles = HotspotUser::query()
+                ->whereIn('username', $activeSessionUsernames->unique()->values())
+                ->pluck('role', 'username');
+            $onlineByRole = $activeSessionUsernames
+                ->countBy(fn (string $username) => $activeRoles->get($username, 'unknown'));
+
+            $sessionsQuery = clone $allSessionsQuery;
+            if (!empty($validated['role'])) {
+                $roleUsernames = HotspotUser::query()
+                    ->where('role', $validated['role'])
+                    ->pluck('username');
+                $sessionsQuery->whereIn('username', $roleUsernames->isNotEmpty() ? $roleUsernames->all() : ['__no_matching_hotspot_user__']);
+            }
+            if ($search !== '') {
+                $like = '%'.$search.'%';
+                $identityUsernames = HotspotUser::query()
+                    ->where(function ($query) use ($like) {
+                        $query->where('username', 'like', $like)
+                            ->orWhere('display_name', 'like', $like)
+                            ->orWhereHas('user.siswa.kelasAktif', fn ($kelas) => $kelas->where('nama_kelas', 'like', $like));
+                    })
+                    ->pluck('username');
+                $sessionsQuery->where(function ($query) use ($like, $identityUsernames) {
+                    $query->where('username', 'like', $like)
+                        ->orWhere('framedipaddress', 'like', $like)
+                        ->orWhere('callingstationid', 'like', $like);
+                    if ($identityUsernames->isNotEmpty()) {
+                        $query->orWhereIn('username', $identityUsernames->all());
+                    }
+                });
+            }
+
+            $total = (clone $sessionsQuery)->count();
+            $lastPage = max(1, (int) ceil($total / $perPage));
+            $page = min($requestedPage, $lastPage);
+            $sessions = $sessionsQuery
                 ->orderByDesc('acctstarttime')
+                ->forPage($page, $perPage)
                 ->get();
             $recentRaw = DB::connection('mysql_radius')->table('radacct')
                 ->whereNotNull('acctstoptime')
@@ -693,6 +741,9 @@ class HotspotController extends Controller
             $today = now()->startOfDay();
             $accounting = DB::connection('mysql_radius')->table('radacct');
             $summary = [
+                'online' => $activeSessionUsernames->count(),
+                'online_guru' => (int) ($onlineByRole->get('guru') ?? 0),
+                'online_siswa' => (int) ($onlineByRole->get('siswa') ?? 0),
                 'sessions_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->count(),
                 'unique_today' => (clone $accounting)->where('acctstarttime', '>=', $today)->distinct('username')->count('username'),
                 'download_today' => (int) (clone $accounting)->where('acctstarttime', '>=', $today)->sum('acctinputoctets'),
@@ -732,9 +783,17 @@ class HotspotController extends Controller
 
             return response()->json([
                 'success'  => true,
-                'count'    => $result->count(),
+                'count'    => $total,
                 'sessions' => $result->values(),
                 'summary' => $summary,
+                'pagination' => [
+                    'current_page' => $page,
+                    'last_page' => $lastPage,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'from' => $total ? (($page - 1) * $perPage) + 1 : 0,
+                    'to' => min($page * $perPage, $total),
+                ],
                 'recent_sessions' => $recentSessions,
                 'blocked_users' => $blockedUsers,
                 'server_time' => now()->toIso8601String(),

@@ -185,6 +185,22 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringNotContainsString('/ip dhcp-server lease remove', $hardening);
     }
 
+    public function test_online_monitoring_uses_server_side_search_and_pagination(): void
+    {
+        $controller = file_get_contents($this->root.'/app/Http/Controllers/Admin/HotspotController.php');
+        $view = file_get_contents($this->root.'/resources/views/admin/hotspot/online.blade.php');
+
+        $this->assertStringContainsString("'per_page' => ['nullable', 'integer', 'in:25,50,100']", $controller);
+        $this->assertStringContainsString("->forPage(\$page, \$perPage)", $controller);
+        $this->assertStringContainsString("'pagination' => [", $controller);
+        $this->assertStringContainsString("'online_guru'", $controller);
+        $this->assertStringContainsString("whereHas('user.siswa.kelasAktif'", $controller);
+        $this->assertStringContainsString('id="perPageOnline"', $view);
+        $this->assertStringContainsString('renderOnlinePagination()', $view);
+        $this->assertStringContainsString('setTimeout(()=>loadOnline(1),350)', $view);
+        $this->assertStringContainsString('$.get(ONLINE_URL,{page:requestedPage', $view);
+    }
+
     public function test_mikrotik_portal_prevents_double_submit_and_opens_status_tab(): void
     {
         $portal = $this->root.'/tools/mikrotik-hotspot/simansa-hotspot/';
