@@ -48,6 +48,12 @@
           try { identity = JSON.parse(decoded); } catch (jsonError) { identity = { n: decoded }; }
         }
       } catch (error) {}
+      try {
+        if (!identity.n) {
+          var savedIdentity = JSON.parse(window.sessionStorage.getItem('simansa-hotspot-identity') || '{}');
+          if (savedIdentity && savedIdentity.n) identity = savedIdentity;
+        }
+      } catch (storageError) {}
       var displayName = identity.n || 'Pengguna Hotspot';
       if (target) {
         target.textContent = displayName;

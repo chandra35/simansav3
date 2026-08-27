@@ -59,6 +59,7 @@
         }
       } catch (error) {}
       var displayName = identity.n || 'Pengguna Hotspot';
+      try { window.sessionStorage.setItem('simansa-hotspot-identity', JSON.stringify({ n: displayName, r: identity.r || '', p: identity.p || '' })); } catch (storageError) {}
       target.textContent = displayName;
       target.classList.toggle('identity-name--long', displayName.length > 22 && displayName.length <= 34);
       target.classList.toggle('identity-name--very-long', displayName.length > 34);

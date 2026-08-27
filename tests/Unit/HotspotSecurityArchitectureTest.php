@@ -270,6 +270,9 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $success);
         $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $status);
         $this->assertStringContainsString("identity.n || 'Pengguna Hotspot'", $logout);
+        $this->assertStringContainsString("sessionStorage.setItem('simansa-hotspot-identity'", $success);
+        $this->assertStringContainsString("sessionStorage.setItem('simansa-hotspot-identity'", $status);
+        $this->assertStringContainsString("sessionStorage.getItem('simansa-hotspot-identity'", $logout);
         $this->assertStringContainsString('data-identity-role', $success);
         $this->assertStringContainsString('data-identity-class', $status);
         $this->assertStringContainsString('assets/login-v2.css?v=20260827a', $success);

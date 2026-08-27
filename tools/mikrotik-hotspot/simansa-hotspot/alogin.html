@@ -62,6 +62,7 @@
       var targets = document.querySelectorAll('[data-radius-identity]');
       var identity = targets.length ? decodeIdentity(targets[0].getAttribute('data-radius-identity')) : {};
       var displayName = identity.n || 'Pengguna Hotspot';
+      try { window.sessionStorage.setItem('simansa-hotspot-identity', JSON.stringify({ n: displayName, r: identity.r || '', p: identity.p || '' })); } catch (storageError) {}
       for (var i = 0; i < targets.length; i += 1) {
         targets[i].textContent = displayName;
         if (targets[i].classList.contains('responsive-identity-name')) {
