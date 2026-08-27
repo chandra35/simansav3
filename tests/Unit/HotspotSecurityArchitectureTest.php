@@ -270,6 +270,10 @@ class HotspotSecurityArchitectureTest extends TestCase
         $this->assertStringContainsString('data-identity-class', $status);
         $this->assertStringContainsString('assets/login-v2.css?v=20260827a', $success);
         $this->assertStringContainsString('assets/login-v2.css?v=20260827a', $status);
+        $this->assertStringContainsString('<style data-critical-session-style>', $success);
+        $this->assertStringContainsString('<style data-critical-session-style>', $status);
+        $this->assertStringContainsString('.session-brand img{width:45px;height:45px', $success);
+        $this->assertStringContainsString('.session-brand img{width:45px;height:45px', $status);
         $this->assertStringContainsString('class="session-atmosphere"', $success);
         $this->assertStringContainsString('class="metric-icon"', $status);
         $this->assertStringContainsString('class="responsive-identity-name"', $status);
