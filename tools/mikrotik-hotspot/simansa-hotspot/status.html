@@ -6,7 +6,7 @@
   <meta http-equiv="refresh" content="$(refresh-timeout-secs)">
   <meta name="theme-color" content="#245eea">
   <title>Status Hotspot MAN 1 Metro</title>
-  <link rel="stylesheet" href="assets/login-v2.css?v=20260820a">
+  <link rel="stylesheet" href="assets/login-v2.css?v=20260827a">
 </head>
 <body class="session-page" data-device-report-url="https://simansa.man1metro.sch.id/api/hotspot/device-report" data-hotspot-username="$(username)" data-hotspot-mac="$(mac)" data-hotspot-ip="$(ip)">
   <main class="session-layout status-layout">
@@ -20,8 +20,7 @@
 
       <div class="status-title">
         <span class="session-kicker">Sesi sedang aktif</span>
-        <h1 class="responsive-identity-name" data-radius-identity="$(radius18)" data-username="$(username)">$(username)</h1>
-        <p>Username <strong>$(username)</strong></p>
+        <h1 class="responsive-identity-name" data-radius-identity="$(radius18)">Pengguna Hotspot</h1>
         <div class="identity-tags" aria-label="Identitas pengguna">
           <span data-identity-role hidden></span>
           <span data-identity-class hidden></span>
@@ -56,7 +55,7 @@
           try { identity = JSON.parse(decoded); } catch (jsonError) { identity = { n: decoded }; }
         }
       } catch (error) {}
-      var displayName = identity.n || target.getAttribute('data-username') || 'Pengguna';
+      var displayName = identity.n || 'Pengguna Hotspot';
       target.textContent = displayName;
       target.classList.toggle('identity-name--long', displayName.length > 22 && displayName.length <= 34);
       target.classList.toggle('identity-name--very-long', displayName.length > 34);
