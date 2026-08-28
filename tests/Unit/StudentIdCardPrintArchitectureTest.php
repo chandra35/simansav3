@@ -17,5 +17,6 @@ class StudentIdCardPrintArchitectureTest extends TestCase
         $this->assertStringContainsString('StudentAccessScope', $controller);
         $this->assertStringContainsString('searchSiswaIdCard', $controller);
         $this->assertStringContainsString('applyStudentAccessScope($query, $request->user())', $controller);
+        $this->assertStringContainsString("where('siswa_kelas.status', 'aktif')", $controller);
     }
 }

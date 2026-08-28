@@ -483,8 +483,8 @@ class CetakController extends Controller
             $query->whereIn('id', $kelasIds);
         } else {
             $query->whereHas('siswas', fn ($siswas) => $siswas
-                ->wherePivot('status', 'aktif')
-                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                ->where('siswa_kelas.status', 'aktif')
+                ->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId)
                 ->whereIn('siswa.id', $siswaIds));
         }
         $this->applyStudentAccessScope($query, $request->user());
@@ -589,8 +589,8 @@ class CetakController extends Controller
 
         $students = $query->where('tahun_pelajaran_id', $tahunPelajaranId)
             ->whereHas('siswas', fn ($siswas) => $siswas
-                ->wherePivot('status', 'aktif')
-                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                ->where('siswa_kelas.status', 'aktif')
+                ->where('siswa_kelas.tahun_pelajaran_id', $tahunPelajaranId)
                 ->where(fn ($students) => $students
                     ->where('nama_lengkap', 'like', "%{$keyword}%")
                     ->orWhere('nisn', 'like', "%{$keyword}%")))
