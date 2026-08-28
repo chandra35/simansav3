@@ -223,6 +223,12 @@
                             </div>
                             <div class="form-group">
                                 <label>Akses Khusus <span class="text-muted">(tambahan di luar role, hanya untuk user ini)</span></label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+                                    <input type="search" id="permissionSearch" class="form-control" autocomplete="off" placeholder="Cari nama permission atau modul, misalnya: cetak id card siswa">
+                                    <div class="input-group-append"><button type="button" class="btn btn-outline-secondary" id="clearPermissionSearch" aria-label="Bersihkan pencarian"><i class="fas fa-times"></i></button></div>
+                                </div>
+                                <div id="permissionSearchStatus" class="small text-muted mb-2">Ketik untuk memfilter modul dan permission.</div>
                                 <div class="accordion" id="permissionsAccordion">
                                     <!-- Permissions akan dimuat via AJAX -->
                                 </div>
@@ -583,6 +589,33 @@ $(document).ready(function() {
     });
 
     // Dipanggil langsung dari tombol DataTables agar tetap bekerja setelah row dirender ulang.
+    function filterPermissionAccordion() {
+        const query = $('#permissionSearch').val().trim().toLowerCase();
+        let visibleModules = 0;
+
+        $('#permissionsAccordion .permission-module').each(function() {
+            const $module = $(this);
+            const matches = !query || $module.text().toLowerCase().includes(query);
+            $module.toggle(matches);
+
+            if (matches) {
+                visibleModules++;
+                if (query) {
+                    $module.find('.collapse').addClass('show');
+                }
+            }
+        });
+
+        $('#permissionSearchStatus').text(query
+            ? (visibleModules ? `${visibleModules} modul sesuai pencarian.` : 'Permission atau modul tidak ditemukan.')
+            : 'Ketik untuk memfilter modul dan permission.');
+    }
+
+    $('#permissionSearch').on('input', filterPermissionAccordion);
+    $('#clearPermissionSearch').on('click', function() {
+        $('#permissionSearch').val('').trigger('input').focus();
+    });
+
     function openUserPermission(button, event) {
         event?.preventDefault();
 
@@ -640,7 +673,7 @@ $(document).ready(function() {
                 for (const [module, permissions] of Object.entries(response.permissions)) {
                     const collapseId = `collapse${index}`;
                     permsHtml += `
-                        <div class="card">
+                        <div class="card permission-module">
                             <div class="card-header p-2" id="heading${index}">
                                 <h5 class="mb-0">
                                     <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#${collapseId}">
@@ -698,6 +731,8 @@ $(document).ready(function() {
                     index++;
                 }
                 $('#permissionsAccordion').html(permsHtml);
+                $('#permissionSearch').val('');
+                filterPermissionAccordion();
                 
                 // Check if user has GTK role - show tugas tambahan tab
                 const hasGtkRole = response.userRoles.some(roleId => {

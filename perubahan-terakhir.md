@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Pencarian Akses Khusus User (28 Agustus 2026)
+
+- Modal **Role & Permission → Akses Khusus User** kini menyediakan pencarian nama permission atau modul. Modul yang sesuai ditampilkan dan terbuka otomatis, sehingga pemberian permission sementara seperti `cetak-id-card-siswa` tidak lagi mengharuskan admin membuka accordion satu per satu.
+
 ### Cetak ID Card Siswa: Pencarian & Cakupan GTK (28 Agustus 2026)
 
 - Halaman Cetak ID Card Siswa kini memiliki tab **Cari** berbasis AJAX untuk mencari nama atau NISN dan mencetak hanya siswa yang dipilih, tanpa mengubah tab cetak massal per kelas.
