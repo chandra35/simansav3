@@ -79,3 +79,4 @@ Siswa dan GTK internal disinkronkan dari SIMANSA memakai identitas stabil sepert
 | Tanggal | Workspace/repository | Perubahan | Integrasi/dampak | Verifikasi/deployment |
 |---|---|---|---|---|
 | 28 Agustus 2026 | Belum dibuat | Rencana awal LMS Ujian dicatat: bank soal mandiri, data internal dari SIMANSA, integrasi Moodle opsional, serta impor Excel/Word. | Moodle 4.5.10+ dan REST Web Service sudah diverifikasi tersedia pada VM `lms-server`. | Belum ada implementasi atau deployment. |
+| 28 Agustus 2026 | Belum ada repository; Proxmox VM 107 `lms-ujian` | VM Ubuntu Server 24.04.4 LTS baru diprovisikan untuk LMS: 4 vCPU, RAM 8 GiB, disk 100 GiB, boot otomatis, cloud-init, dan QEMU guest agent. | Berada di VLAN 253 bersama Moodle, memakai IP internal statis `172.16.253.3`; belum ada perubahan pada SIMANSA atau Moodle. | VM berjalan; SSH key-only, jaringan, disk, dan guest agent telah diverifikasi. |
