@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Tata Letak Premium Presensi Siswa (28 Agustus 2026)
+
+- Area **Buat Draft Massal** kini memiliki hierarki visual yang lebih rapi: ikon konteks, penanda khusus admin, form yang terbingkai, ukuran kontrol yang seragam, dan tombol aksi proporsional tanpa memenuhi seluruh lebar panel.
+- Toolbar absensi harian diseimbangkan ulang agar aksi cepat, pencarian nama/NISN, dan informasi audit mudah dipindai pada desktop serta tetap tersusun nyaman di tablet dan ponsel.
+
 ### Draft Massal & Pencarian Presensi Siswa (28 Agustus 2026)
 
 - Admin/Super Admin kini dapat membuat draft absensi harian untuk semua kelas aktif atau kelas tertentu pada tanggal yang dipilih. Sesi yang telah ada dilewati agar tidak tertimpa; siswa dibuat Hadir sebagai status awal dan seluruh pembuatan tetap diaudit.
