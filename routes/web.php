@@ -837,6 +837,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     Route::middleware(['permission:view-student-attendance'])->group(function () {
         Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
+        Route::get('/absensi-siswa/cari-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'searchStudents'])->name('absensi-siswa.search-students');
         Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
     });
     Route::post('/absensi-siswa/generate-draft', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'generateBulkDraft'])

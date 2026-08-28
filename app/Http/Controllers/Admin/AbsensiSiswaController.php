@@ -81,6 +81,68 @@ class AbsensiSiswaController extends Controller
         ));
     }
 
+    /** Search the daily roster across every class that the current account may manage. */
+    public function searchStudents(Request $request)
+    {
+        $this->authorize('view-student-attendance');
+
+        $user = $request->user();
+        $tahunPelajaran = TahunPelajaran::query()->active()->first();
+        abort_unless($tahunPelajaran && $this->canManageHarian($user, $tahunPelajaran->id), 403);
+
+        $tanggal = $this->normalizeDate($request->query('tanggal'));
+        $query = trim((string) $request->query('q', ''));
+        if (mb_strlen($query) < 2) {
+            return response()->json(['students' => []]);
+        }
+
+        $classIds = $this->getAccessibleClasses($user, $tanggal, 'harian', $tahunPelajaran)->pluck('id');
+        if ($classIds->isEmpty()) {
+            return response()->json(['students' => []]);
+        }
+
+        $students = DB::table('siswa')
+            ->join('siswa_kelas as sk', 'sk.siswa_id', '=', 'siswa.id')
+            ->join('kelas as k', 'k.id', '=', 'sk.kelas_id')
+            ->whereIn('k.id', $classIds)
+            ->where('sk.tahun_pelajaran_id', $tahunPelajaran->id)
+            ->where('k.tahun_pelajaran_id', $tahunPelajaran->id)
+            ->where('k.is_active', true)
+            ->whereNull('sk.deleted_at')
+            ->whereNull('siswa.deleted_at')
+            ->whereDate('sk.tanggal_masuk', '<=', $tanggal)
+            ->where(function ($nested) use ($tanggal) {
+                $nested->whereNull('sk.tanggal_keluar')
+                    ->orWhereDate('sk.tanggal_keluar', '>=', $tanggal);
+            })
+            ->where(function ($nested) use ($query) {
+                $nested->where('siswa.nama_lengkap', 'like', "%{$query}%")
+                    ->orWhere('siswa.nisn', 'like', "%{$query}%");
+            })
+            ->orderBy('k.tingkat')
+            ->orderBy('k.nama_kelas')
+            ->orderBy('siswa.nama_lengkap')
+            ->limit(12)
+            ->get([
+                'siswa.id', 'siswa.nama_lengkap', 'siswa.nisn',
+                'k.id as kelas_id', 'k.tingkat', 'k.nama_kelas',
+            ]);
+
+        return response()->json([
+            'students' => $students->map(fn ($student) => [
+                'id' => $student->id,
+                'name' => $student->nama_lengkap,
+                'nisn' => $student->nisn,
+                'class_label' => "Tingkat {$student->tingkat} · {$student->nama_kelas}",
+                'url' => route('admin.absensi-siswa.index', [
+                    'tanggal' => $tanggal,
+                    'mode' => 'harian',
+                    'kelas_id' => $student->kelas_id,
+                ])."#siswa-{$student->id}",
+            ])->values(),
+        ]);
+    }
+
     /** Generate untouched daily attendance sessions as drafts for an admin. */
     public function generateBulkDraft(Request $request)
     {

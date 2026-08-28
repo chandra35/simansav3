@@ -322,6 +322,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $permissions = file_get_contents($root.'/app/Services/PermissionSyncService.php');
 
         $this->assertStringContainsString('public function generateBulkDraft(Request $request)', $controller);
+        $this->assertStringContainsString('public function searchStudents(Request $request)', $controller);
+        $this->assertStringContainsString("getAccessibleClasses(\$user, \$tanggal, 'harian', \$tahunPelajaran)", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.search-students')", $routes);
         $this->assertStringContainsString("authorize('generate-bulk-student-attendance')", $controller);
         $this->assertStringContainsString("'status' => 'draft'", $controller);
         $this->assertStringContainsString("name('absensi-siswa.generate-draft')", $routes);
@@ -332,7 +335,8 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('class="attendance-bulk__header"', $view);
         $this->assertStringContainsString('class="attendance-quick-actions"', $view);
         $this->assertStringContainsString('id="attendanceStudentSearch"', $view);
-        $this->assertStringContainsString('Cari siswa berdasarkan nama atau NISN', $view);
+        $this->assertStringContainsString('Cari siswa di semua tingkat dan kelas (nama atau NISN)', $view);
+        $this->assertStringContainsString('attendanceStudentSearchResults', $view);
         $this->assertStringContainsString('Daftar Kelas', $view);
         $this->assertStringContainsString("'mode' => 'harian'", $view);
         $this->assertStringContainsString('generate-bulk-student-attendance', $permissions);
