@@ -326,8 +326,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'status' => 'draft'", $controller);
         $this->assertStringContainsString("name('absensi-siswa.generate-draft')", $routes);
         $this->assertStringContainsString('id="bulkDraftForm"', $view);
-        $this->assertStringContainsString('class="attendance-filter__form row"', $view);
-        $this->assertStringContainsString('class="attendance-bulk__form row"', $view);
+        $this->assertStringContainsString('class="attendance-filter__form row g-3 align-items-end"', $view);
+        $this->assertStringContainsString('class="attendance-bulk__form row g-3 align-items-end"', $view);
+        $this->assertSame(2, substr_count($view, 'class="btn btn-primary attendance-form__button"'));
         $this->assertStringContainsString('class="attendance-bulk__header"', $view);
         $this->assertStringContainsString('class="attendance-quick-actions"', $view);
         $this->assertStringContainsString('id="attendanceStudentSearch"', $view);
