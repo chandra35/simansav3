@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Draft Massal & Pencarian Presensi Siswa (28 Agustus 2026)
+
+- Admin/Super Admin kini dapat membuat draft absensi harian untuk semua kelas aktif atau kelas tertentu pada tanggal yang dipilih. Sesi yang telah ada dilewati agar tidak tertimpa; siswa dibuat Hadir sebagai status awal dan seluruh pembuatan tetap diaudit.
+- Pada sesi absensi, pencarian nama/NISN memfilter daftar siswa secara langsung sehingga petugas dapat segera menetapkan Izin, Sakit, Alpa, Dispensasi, Terlambat, atau Keluar Awal hanya pada siswa yang diperlukan.
+
 ### Pencarian Akses Khusus User (28 Agustus 2026)
 
 - Modal **Role & Permission → Akses Khusus User** kini menyediakan pencarian nama permission atau modul. Modul yang sesuai ditampilkan dan terbuka otomatis, sehingga pemberian permission sementara seperti `cetak-id-card-siswa` tidak lagi mengharuskan admin membuka accordion satu per satu.

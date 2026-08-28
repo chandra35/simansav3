@@ -313,6 +313,23 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('Tersimpan bersama draft atau finalisasi absensi.', $view);
     }
 
+    public function test_admin_can_create_bulk_drafts_and_search_students_within_a_session(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+        $permissions = file_get_contents($root.'/app/Services/PermissionSyncService.php');
+
+        $this->assertStringContainsString('public function generateBulkDraft(Request $request)', $controller);
+        $this->assertStringContainsString("authorize('generate-bulk-student-attendance')", $controller);
+        $this->assertStringContainsString("'status' => 'draft'", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.generate-draft')", $routes);
+        $this->assertStringContainsString('id="bulkDraftForm"', $view);
+        $this->assertStringContainsString('id="attendanceStudentSearch"', $view);
+        $this->assertStringContainsString('generate-bulk-student-attendance', $permissions);
+    }
+
     public function test_student_dashboard_uses_a_compact_neutral_heading(): void
     {
         $dashboard = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/dashboard.blade.php');

@@ -29,6 +29,7 @@ class AbsensiSiswaController extends Controller
         $tahunPelajaran = TahunPelajaran::query()->active()->first();
         $canManageHarian = $tahunPelajaran && $this->canManageHarian($user, $tahunPelajaran->id);
         $canManageMapel = $tahunPelajaran && $this->canManageMapel($user, $tahunPelajaran->id);
+        $canBulkGenerate = $this->canBulkGenerate($user);
 
         $requestedMode = $request->get('mode');
         $mode = match (true) {
@@ -75,9 +76,66 @@ class AbsensiSiswaController extends Controller
 
         return view('admin.absensi.siswa', compact(
             'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
-            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId',
+            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate',
             'session', 'students', 'existingRecords', 'summary'
         ));
+    }
+
+    /** Generate untouched daily attendance sessions as drafts for an admin. */
+    public function generateBulkDraft(Request $request)
+    {
+        $this->authorize('generate-bulk-student-attendance');
+        abort_unless($this->canBulkGenerate($request->user()), 403);
+        set_time_limit(300);
+
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date', 'before_or_equal:today'],
+            'scope' => ['required', 'in:all,selected'],
+            'kelas_ids' => ['required_if:scope,selected', 'array'],
+            'kelas_ids.*' => ['uuid'],
+        ]);
+        $year = TahunPelajaran::query()->active()->firstOrFail();
+        $this->ensureDateBelongsToActiveYear($validated['tanggal'], $year);
+
+        $classes = Kelas::query()->where('tahun_pelajaran_id', $year->id)->where('is_active', true)
+            ->when($validated['scope'] === 'selected', fn ($query) => $query->whereIn('id', $validated['kelas_ids'] ?? []))
+            ->orderBy('tingkat')->orderBy('nama_kelas')->get();
+        abort_if($classes->isEmpty(), 422, 'Tidak ada kelas aktif yang dapat dibuatkan draft.');
+
+        $created = 0;
+        $skipped = 0;
+        foreach ($classes as $kelas) {
+            $key = $this->sessionKey($validated['tanggal'], $kelas->id, 'harian', null);
+            if (AbsensiSiswaSession::query()->where('session_key', $key)->exists()) {
+                $skipped++;
+                continue;
+            }
+
+            DB::transaction(function () use ($kelas, $year, $validated, $key, $request) {
+                $session = AbsensiSiswaSession::create([
+                    'tahun_pelajaran_id' => $year->id, 'session_key' => $key, 'kelas_id' => $kelas->id,
+                    'guru_user_id' => $request->user()->id, 'tanggal' => $validated['tanggal'],
+                    'semester' => $year->semester_aktif, 'tingkat' => $kelas->tingkat,
+                    'kelas_snapshot' => $kelas->nama_kelas, 'guru_snapshot' => $request->user()->name,
+                    'mode' => 'harian', 'attendance_method' => 'manual', 'status' => 'draft',
+                    'version' => 1, 'notes' => 'Draft dibuat secara massal oleh admin.',
+                    'created_by' => $request->user()->id, 'updated_by' => $request->user()->id,
+                ]);
+                foreach ($this->studentsForDate($kelas, $validated['tanggal']) as $siswa) {
+                    $record = AbsensiSiswaRecord::create([
+                        'session_id' => $session->id, 'siswa_id' => $siswa->id, 'status' => 'hadir',
+                        'attendance_method' => 'manual', 'source_reference' => 'admin_bulk_draft',
+                        'checked_at' => now(), 'checked_by' => $request->user()->id,
+                    ]);
+                    $this->audit->record($session, $record, $request->user(), 'record_created', [], $this->recordAuditValues($record), 'Draft massal admin', $request);
+                }
+                $this->audit->session($session, $request->user(), 'session_created', [], $this->sessionAuditValues($session), 'Draft massal admin', $request);
+            });
+            $created++;
+        }
+
+        return redirect()->route('admin.absensi-siswa.index', ['tanggal' => $validated['tanggal'], 'mode' => 'harian'])
+            ->with('toastr_success', "{$created} draft kelas dibuat. {$skipped} kelas dilewati karena sudah memiliki sesi.");
     }
 
     public function monitoring(Request $request)
@@ -480,6 +538,11 @@ class AbsensiSiswaController extends Controller
     protected function isUnrestrictedStaff($user): bool
     {
         return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']);
+    }
+
+    protected function canBulkGenerate($user): bool
+    {
+        return $user->hasAnyRole(['Super Admin', 'Admin']);
     }
 
     protected function ensureDateBelongsToActiveYear(string $tanggal, TahunPelajaran $year): void

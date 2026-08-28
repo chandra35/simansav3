@@ -262,6 +262,7 @@ class PermissionSyncService
                     'monitor-all-student-attendance',
                     'input-daily-attendance',
                     'input-subject-attendance',
+                    'generate-bulk-student-attendance',
                     'finalize-student-attendance',
                     'edit-final-student-attendance',
                     'view-attendance-analytics',
