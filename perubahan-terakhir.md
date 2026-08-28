@@ -11,6 +11,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 - Pencarian siswa presensi untuk admin kini mencari nama/NISN di seluruh tingkat dan kelas aktif pada tanggal yang dipilih. Hasil menunjukkan kelas siswa dan membuka langsung ke baris siswa pada sesi kelasnya; server tetap menyaring hasil berdasarkan cakupan kelas akun.
 - Kartu Daftar Kelas kini menampilkan metadata **Hadir** dan **Tidak Hadir** untuk tanggal aktif. Kartu berubah kuning bila terdapat siswa Izin, Sakit, Alpa, atau Dispensasi; di detail kelas, seluruh baris siswa selain status Hadir disorot kuning-oranye dan berubah langsung saat statusnya diubah.
 - Setiap kartu kelas kini juga menampilkan metadata **Wali kelas**; kelas yang belum memiliki penugasan ditandai jelas sebagai belum ditetapkan.
+- Mode harian kini menampilkan rekapan statistik tanggal aktif untuk seluruh kelas dalam cakupan akun: **Semua Siswa**, **Jumlah Hadir**, dan **Jumlah Tidak Hadir**.
 - Toolbar absensi harian diseimbangkan ulang agar aksi cepat, pencarian nama/NISN, dan informasi audit mudah dipindai pada desktop serta tetap tersusun nyaman di tablet dan ponsel.
 
 ### Draft Massal & Pencarian Presensi Siswa (28 Agustus 2026)

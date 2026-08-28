@@ -62,6 +62,7 @@ class AbsensiSiswaController extends Controller
         $summary = collect(['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'])
             ->mapWithKeys(fn ($status) => [$status => 0])->all();
         $classAttendanceSummary = collect();
+        $dailyAttendanceStats = ['total' => 0, 'present' => 0, 'absent' => 0];
 
         if ($mode === 'harian' && $tahunPelajaran && $kelasOptions->isNotEmpty()) {
             $classAttendanceSummary = DB::table('kelas as k')
@@ -92,11 +93,18 @@ class AbsensiSiswaController extends Controller
                 })
                 ->whereIn('k.id', $kelasOptions->pluck('id'))
                 ->select('k.id')
+                ->selectRaw('COUNT(DISTINCT s.id) as total')
                 ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('hadir', 'terlambat', 'keluar_awal') THEN s.id END) as present")
                 ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('izin', 'sakit', 'alpa', 'dispen') THEN s.id END) as absent")
                 ->groupBy('k.id')
                 ->get()
                 ->keyBy('id');
+
+            $dailyAttendanceStats = [
+                'total' => (int) $classAttendanceSummary->sum('total'),
+                'present' => (int) $classAttendanceSummary->sum('present'),
+                'absent' => (int) $classAttendanceSummary->sum('absent'),
+            ];
         }
 
         if ($selectedKelas && ($mode === 'harian' || $selectedJadwalId)) {
@@ -114,7 +122,7 @@ class AbsensiSiswaController extends Controller
         return view('admin.absensi.siswa', compact(
             'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
             'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate',
-            'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary'
+            'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary', 'dailyAttendanceStats'
         ));
     }
 

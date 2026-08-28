@@ -327,6 +327,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("attendance_records.status IN ('izin', 'sakit', 'alpa', 'dispen')", $controller);
         $this->assertStringContainsString("'waliKelas:id,name'", $controller);
         $this->assertStringContainsString("'classAttendanceSummary'", $controller);
+        $this->assertStringContainsString("'dailyAttendanceStats'", $controller);
         $this->assertStringContainsString("name('absensi-siswa.search-students')", $routes);
         $this->assertStringContainsString("authorize('generate-bulk-student-attendance')", $controller);
         $this->assertStringContainsString("'status' => 'draft'", $controller);
@@ -344,6 +345,8 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("'mode' => 'harian'", $view);
         $this->assertStringContainsString('Tidak Hadir', $view);
         $this->assertStringContainsString('Wali kelas:', $view);
+        $this->assertStringContainsString('Rekapan Hari Ini', $view);
+        $this->assertStringContainsString('Jumlah Tidak Hadir', $view);
         $this->assertStringContainsString('is-attendance-exception', $view);
         $this->assertStringContainsString('generate-bulk-student-attendance', $permissions);
     }
