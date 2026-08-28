@@ -6,7 +6,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### Tata Letak Premium Presensi Siswa (28 Agustus 2026)
 
-- Area **Buat Draft Massal** kini memiliki hierarki visual yang lebih rapi: ikon konteks, penanda khusus admin, form yang terbingkai, ukuran kontrol yang seragam, dan tombol aksi proporsional tanpa memenuhi seluruh lebar panel.
+- Area **Buat Draft Massal** kini memiliki hierarki visual yang lebih rapi: ikon konteks, penanda khusus admin, form yang terbingkai, ukuran kontrol yang seragam, dan tombol aksi yang sejajar di sisi kanan seperti tombol Muat Sesi tanpa memenuhi seluruh lebar panel.
 - Toolbar absensi harian diseimbangkan ulang agar aksi cepat, pencarian nama/NISN, dan informasi audit mudah dipindai pada desktop serta tetap tersusun nyaman di tablet dan ponsel.
 
 ### Draft Massal & Pencarian Presensi Siswa (28 Agustus 2026)
