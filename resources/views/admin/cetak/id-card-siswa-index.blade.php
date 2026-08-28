@@ -180,14 +180,19 @@
                         <div class="text-center">
                             <div class="spinner-border text-success mb-3" role="status"></div>
                             <div class="font-weight-bold">Menyiapkan preview PDF...</div>
-                            <div class="text-muted small">Gunakan toolbar PDF untuk print atau simpan.</div>
+                            <div class="text-muted small">Preview akan tersedia sebelum PDF diunduh atau dicetak.</div>
                         </div>
                     </div>
                     <iframe name="printPreviewFrame" id="printPreviewFrame" class="print-preview-frame" title="Preview ID Card Siswa"></iframe>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="btnDownloadIdCardPdf" disabled><i class="fas fa-download mr-1"></i> Unduh PDF</button>
+                </div>
             </div>
         </div>
     </div>
+    <iframe name="idCardDownloadFrame" class="d-none" title="Unduhan PDF ID Card"></iframe>
 @stop
 
 @section('js')
@@ -468,12 +473,30 @@ $(document).ready(function() {
         $('#btnCetak')
             .prop('disabled', false)
             .html('<i class="fas fa-id-card"></i> Cetak ID Card Siswa');
+        $('#btnDownloadIdCardPdf').prop('disabled', false);
+    });
+
+    $('#btnDownloadIdCardPdf').on('click', function() {
+        const button = $(this);
+        const form = document.getElementById('formCetakIdSiswa');
+        const output = $('<input>', { type: 'hidden', name: 'output', value: 'download' }).appendTo(form);
+        const originalTarget = form.getAttribute('target');
+
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyiapkan PDF...');
+        form.setAttribute('target', 'idCardDownloadFrame');
+        HTMLFormElement.prototype.submit.call(form);
+        window.setTimeout(function() {
+            output.remove();
+            form.setAttribute('target', originalTarget || 'printPreviewFrame');
+            button.prop('disabled', false).html('<i class="fas fa-download mr-1"></i> Unduh PDF');
+        }, 1000);
     });
 
     $printPreviewModal.on('hidden.bs.modal', function() {
         previewPending = false;
         $printPreviewFrame.attr('src', 'about:blank');
         $printPreviewLoading.show();
+        $('#btnDownloadIdCardPdf').prop('disabled', true);
     });
 });
 </script>

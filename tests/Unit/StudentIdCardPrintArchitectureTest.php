@@ -17,11 +17,15 @@ class StudentIdCardPrintArchitectureTest extends TestCase
         $this->assertStringContainsString('StudentAccessScope', $controller);
         $this->assertStringContainsString("authorize('cetak-id-card-siswa')", $controller);
         $this->assertStringContainsString('searchSiswaIdCard', $controller);
+        $this->assertStringContainsString("\$request->input('output') === 'download'", $controller);
+        $this->assertStringContainsString("\$pdf->download(\$filename)", $controller);
         $this->assertStringContainsString('applyStudentAccessScope($query, $request->user())', $controller);
         $this->assertStringContainsString("where('siswa_kelas.status', 'aktif')", $controller);
 
         $view = file_get_contents(resource_path('views/admin/cetak/id-card-siswa-index.blade.php'));
         $this->assertStringContainsString(".prop('disabled', isSearchTab)", $view);
+        $this->assertStringContainsString('id="btnDownloadIdCardPdf"', $view);
+        $this->assertStringContainsString("name: 'output', value: 'download'", $view);
 
         $permissions = file_get_contents(app_path('Services/PermissionSyncService.php'));
         $this->assertStringContainsString("'cetak-id-card-siswa'", $permissions);

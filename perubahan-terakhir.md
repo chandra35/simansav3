@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Unduh PDF ID Card Siswa (28 Agustus 2026)
+
+- Modal preview ID Card Siswa kini menyediakan tombol **Unduh PDF**. Tombol ini mengirim respons attachment dengan nama `ID_Card_Siswa.pdf`, sehingga file tersimpan sebagai PDF tanpa bergantung pada toolbar bawaan browser.
+
 ### Tata Letak Premium Presensi Siswa (28 Agustus 2026)
 
 - Area **Buat Draft Massal** kini memiliki hierarki visual yang lebih rapi: ikon konteks, penanda khusus admin, form yang terbingkai, ukuran kontrol yang seragam, dan tombol aksi pada baris tersendiri di bawah filter. Kedua form memakai grid Bootstrap responsif `row g-3 align-items-end`; dropdown disesuaikan dengan panjang data, tombol aksi konsisten 170 px di desktop dan lebar penuh pada ponsel.

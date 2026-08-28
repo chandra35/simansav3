@@ -526,7 +526,11 @@ class CetakController extends Controller
         $pdf = \PDF::loadView('admin.cetak.id-card-siswa', $data);
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->stream('ID_Card_Siswa.pdf');
+        $filename = 'ID_Card_Siswa.pdf';
+
+        return $request->input('output') === 'download'
+            ? $pdf->download($filename)
+            : $pdf->stream($filename);
     }
 
     /**
