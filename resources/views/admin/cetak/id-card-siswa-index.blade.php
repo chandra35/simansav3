@@ -53,6 +53,13 @@
                             {{ $isRestrictedWaliKelas ? 'Daftar kelas di bawah ini sudah otomatis dibatasi ke kelas yang Anda ampu.' : 'Pilih kelas untuk mencetak ID Card siswa. Kartu memakai ukuran standar vertikal 54mm x 86mm dengan layout depan-belakang untuk kertas A4 portrait.' }}
                         </div>
 
+                        <ul class="nav nav-tabs mb-4" id="idCardSiswaTab" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" id="kelas-tab" data-toggle="tab" href="#kelas-pane" role="tab"><i class="fas fa-layer-group mr-1"></i> Pilih Kelas</a></li>
+                            <li class="nav-item"><a class="nav-link" id="cari-tab" data-toggle="tab" href="#cari-pane" role="tab"><i class="fas fa-search mr-1"></i> Cari</a></li>
+                        </ul>
+                        <div class="tab-content">
+                        <div class="tab-pane fade show active" id="kelas-pane" role="tabpanel">
+
                         @unless($isRestrictedWaliKelas)
                             {{-- Filter Section --}}
                             <div class="simansa-filter-panel mb-4">
@@ -133,6 +140,19 @@
                             </div>
                             <div class="row simansa-selection-grid" id="kelasCheckboxes"></div>
                             </div>
+                        </div>
+                        </div>
+                        <div class="tab-pane fade" id="cari-pane" role="tabpanel">
+                            <div class="simansa-filter-panel mb-3">
+                                <div class="form-group mb-0">
+                                    <label for="cari_siswa_id_card" class="simansa-filter-label"><i class="fas fa-user-graduate"></i> Nama atau NISN siswa</label>
+                                    <input type="search" id="cari_siswa_id_card" class="form-control" autocomplete="off" placeholder="Ketik minimal 2 karakter...">
+                                    <div class="simansa-filter-hint">Hasil dibatasi sesuai akses kelas akun Anda dan tahun pelajaran aktif.</div>
+                                </div>
+                            </div>
+                            <div id="cariSiswaStatus" class="text-muted small mb-2">Masukkan nama atau NISN untuk mencari siswa.</div>
+                            <div class="row simansa-selection-grid" id="cariSiswaResults"></div>
+                        </div>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -220,7 +240,7 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: '{{ route("admin.cetak.kelas-by-filter") }}',
+            url: '{{ route("admin.cetak.id-card-siswa.kelas") }}',
             method: 'GET',
             data: { tahun_pelajaran_id: tp, tingkat: tingkat, rombel: rombel },
             beforeSend: function() {
@@ -292,7 +312,7 @@ $(document).ready(function() {
         }
 
         $.ajax({
-            url: '{{ route("admin.cetak.kelas-by-filter") }}',
+            url: '{{ route("admin.cetak.id-card-siswa.kelas") }}',
             method: 'GET',
             data: { tahun_pelajaran_id: tp, tingkat: tingkat },
             success: function(response) {
@@ -337,7 +357,7 @@ $(document).ready(function() {
     });
 
     function updateCount() {
-        const count = $('.kelas-checkbox:checked').length;
+        const count = $('.kelas-checkbox:checked, .siswa-checkbox:checked').length;
         $('#countText').text(count);
         count > 0 ? $('#selectedCount').slideDown() : $('#selectedCount').slideUp();
         $('#btnCetak').prop('disabled', count === 0);
@@ -351,11 +371,24 @@ $(document).ready(function() {
         $('#kelasList').slideUp();
         $('#selectAll').prop('checked', false);
         $('#kelasCheckboxes').empty();
+        $('#cari_siswa_id_card').val('');
+        $('#cariSiswaResults').empty();
+        $('#cariSiswaStatus').text('Masukkan nama atau NISN untuk mencari siswa.');
+        updateCount();
+    });
+
+    $('#idCardSiswaTab a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        if ($(e.target).attr('id') === 'cari-tab') {
+            $('.kelas-checkbox').prop('checked', false);
+            $('#selectAll').prop('checked', false);
+        } else {
+            $('.siswa-checkbox').prop('checked', false);
+        }
         updateCount();
     });
 
     $('#formCetakIdSiswa').on('submit', function(e) {
-        const count = $('.kelas-checkbox:checked').length;
+        const count = $('.kelas-checkbox:checked, .siswa-checkbox:checked').length;
         if (count === 0) { e.preventDefault(); return false; }
         $('#btnCetak')
             .prop('disabled', true)
@@ -367,6 +400,51 @@ $(document).ready(function() {
         $printPreviewLoading.show();
         $printPreviewModal.modal('show');
     });
+
+    let studentSearchTimer = null;
+    function escapeHtml(value) {
+        return $('<div>').text(value || '').html();
+    }
+
+    $('#cari_siswa_id_card').on('input', function() {
+        const keyword = $(this).val().trim();
+        clearTimeout(studentSearchTimer);
+        $('#cariSiswaResults').empty();
+
+        if (keyword.length < 2) {
+            $('#cariSiswaStatus').text('Masukkan minimal 2 karakter untuk mencari siswa.');
+            return;
+        }
+
+        studentSearchTimer = setTimeout(function() {
+            $('#cariSiswaStatus').html('<i class="fas fa-spinner fa-spin mr-1"></i> Mencari siswa...');
+            $.ajax({
+                url: '{{ route("admin.cetak.id-card-siswa.cari") }}',
+                method: 'GET',
+                data: { q: keyword, tahun_pelajaran_id: $('#id_siswa_tahun_pelajaran').val() },
+                success: function(response) {
+                    const students = response.data || [];
+                    if (!response.success || students.length === 0) {
+                        $('#cariSiswaStatus').text('Siswa tidak ditemukan.');
+                        return;
+                    }
+
+                    $('#cariSiswaStatus').text(students.length + ' siswa ditemukan. Pilih siswa yang akan dicetak.');
+                    $('#cariSiswaResults').html(students.map(function(siswa) {
+                        return `<div class="col-md-6 col-lg-4 mb-3"><div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input siswa-checkbox" id="siswa_${siswa.id}" name="siswa_ids[]" value="${siswa.id}">
+                            <label class="custom-control-label" for="siswa_${siswa.id}"><strong>${escapeHtml(siswa.nama_lengkap)}</strong><br><small class="text-muted d-block mt-1">NISN: ${escapeHtml(siswa.nisn)} &middot; ${escapeHtml(siswa.kelas)}</small></label>
+                        </div></div>`;
+                    }).join(''));
+                },
+                error: function() {
+                    $('#cariSiswaStatus').text('Pencarian gagal dimuat. Silakan coba lagi.');
+                }
+            });
+        }, 280);
+    });
+
+    $(document).on('change', '.siswa-checkbox', updateCount);
 
     if (isRestrictedWaliKelas) {
         loadKelasByCurrentContext();

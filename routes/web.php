@@ -862,6 +862,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Cetak ID Card Siswa
     Route::get('/cetak/id-card-siswa', [App\Http\Controllers\Admin\CetakController::class, 'idCardSiswaIndex'])->name('cetak.id-card-siswa.index')->middleware('permission:view-siswa');
     Route::post('/cetak/id-card-siswa', [App\Http\Controllers\Admin\CetakController::class, 'cetakIdCardSiswa'])->name('cetak.id-card-siswa')->middleware('permission:view-siswa');
+    Route::get('/cetak/id-card-siswa/kelas', [App\Http\Controllers\Admin\CetakController::class, 'getKelasSiswaByFilter'])->name('cetak.id-card-siswa.kelas')->middleware('permission:view-siswa');
+    Route::get('/cetak/id-card-siswa/cari', [App\Http\Controllers\Admin\CetakController::class, 'searchSiswaIdCard'])->name('cetak.id-card-siswa.cari')->middleware('permission:view-siswa');
 
     // Cetak ID Card GTK
     Route::get('/cetak/id-card-gtk', [App\Http\Controllers\Admin\CetakController::class, 'idCardGtkIndex'])->name('cetak.id-card-gtk.index')->middleware('permission:view-gtk');

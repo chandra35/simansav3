@@ -4,6 +4,12 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Cetak ID Card Siswa: Pencarian & Cakupan GTK (28 Agustus 2026)
+
+- Halaman Cetak ID Card Siswa kini memiliki tab **Cari** berbasis AJAX untuk mencari nama atau NISN dan mencetak hanya siswa yang dipilih, tanpa mengubah tab cetak massal per kelas.
+- Endpoint daftar kelas dan pencarian ID Card kini memakai permission `view-siswa`, sehingga GTK yang berhak melihat siswa tidak lagi berhenti pada pemuatan daftar kelas karena endpoint lama membutuhkan `view-kelas`.
+- Cakupan cetak dan pencarian mengikuti `StudentAccessScope`: GTK/Wali Kelas tanpa hak global hanya dapat memuat serta mencetak siswa pada rombel aktif perwalian atau jadwal mengajarnya; akun global tetap dapat mengakses seluruh data.
+
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 
 - Input Absensi Siswa kini memakai Toastr untuk hasil simpan/finalisasi serta validasi gagal. Flash sukses khusus tidak lagi masuk ke renderer alert global sehingga banner duplikat di atas form dihapus.

@@ -11,6 +11,7 @@ use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Services\ActivityLogService;
 use App\Services\StudentPhotoArchiveService;
+use App\Services\StudentAccessScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -186,7 +187,7 @@ class CetakController extends Controller
 
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
-        $isRestrictedWaliKelas = $this->isRestrictedWaliKelas(request()->user());
+        $isRestrictedWaliKelas = $this->studentAccessScope()->isLimited(request()->user());
         $defaultTahunPelajaranId = optional($tahunPelajarans->firstWhere('is_active', true))->id
             ?? optional($tahunPelajarans->first())->id;
 
@@ -461,21 +462,32 @@ class CetakController extends Controller
 
         $tahunPelajaranId = $request->input('tahun_pelajaran_id');
         $kelasIds = $request->input('kelas_ids', []);
+        $siswaIds = $request->input('siswa_ids', []);
 
-        if (empty($kelasIds)) {
-            return redirect()->back()->with('error', 'Pilih minimal 1 kelas.');
+        if (empty($kelasIds) && empty($siswaIds)) {
+            return redirect()->back()->with('error', 'Pilih minimal 1 kelas atau siswa.');
         }
 
         $query = Kelas::with([
             'jurusan',
             'tahunPelajaran',
-            'siswas' => function ($q) use ($tahunPelajaranId) {
+            'siswas' => function ($q) use ($tahunPelajaranId, $siswaIds) {
                 $q->wherePivot('status', 'aktif')
                     ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                    ->when(! empty($siswaIds), fn ($siswas) => $siswas->whereIn('siswa.id', $siswaIds))
                     ->orderBy('nama_lengkap');
             },
-        ])->whereIn('id', $kelasIds);
-        $this->applyWaliKelasScope($query, $request->user());
+        ]);
+
+        if (! empty($kelasIds)) {
+            $query->whereIn('id', $kelasIds);
+        } else {
+            $query->whereHas('siswas', fn ($siswas) => $siswas
+                ->wherePivot('status', 'aktif')
+                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                ->whereIn('siswa.id', $siswaIds));
+        }
+        $this->applyStudentAccessScope($query, $request->user());
 
         $kelasList = $query->orderBy('tingkat')
             ->orderBy('nama_kelas')
@@ -515,6 +527,101 @@ class CetakController extends Controller
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream('ID_Card_Siswa.pdf');
+    }
+
+    /**
+     * Get classes for the student ID card flow without requiring the broader
+     * class-management permission.
+     */
+    public function getKelasSiswaByFilter(Request $request)
+    {
+        $this->authorize('view-siswa');
+
+        $query = Kelas::withCount('siswaAktif');
+        $this->applyStudentAccessScope($query, $request->user());
+
+        if ($request->filled('tahun_pelajaran_id')) {
+            $query->where('tahun_pelajaran_id', $request->tahun_pelajaran_id);
+        }
+
+        if ($request->filled('tingkat')) {
+            $query->where('tingkat', $request->tingkat);
+        }
+
+        if ($request->filled('rombel')) {
+            $query->where('nama_kelas', $request->rombel);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->orderBy('tingkat')->orderBy('nama_kelas')->get()->map(fn (Kelas $kelas) => [
+                'id' => $kelas->id,
+                'nama_lengkap' => $kelas->nama_lengkap,
+                'rombel' => $kelas->nama_kelas,
+                'siswa_count' => $kelas->siswa_aktif_count,
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Search active students for individual ID card printing.
+     */
+    public function searchSiswaIdCard(Request $request)
+    {
+        $this->authorize('view-siswa');
+
+        $keyword = trim((string) $request->input('q'));
+        if (mb_strlen($keyword) < 2) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $tahunPelajaranId = $request->input('tahun_pelajaran_id')
+            ?? TahunPelajaran::query()->active()->value('id');
+        $query = Kelas::query()
+            ->with(['siswas' => fn ($siswas) => $siswas
+                ->wherePivot('status', 'aktif')
+                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                ->where(fn ($students) => $students
+                    ->where('nama_lengkap', 'like', "%{$keyword}%")
+                    ->orWhere('nisn', 'like', "%{$keyword}%"))
+                ->orderBy('nama_lengkap')]);
+        $this->applyStudentAccessScope($query, $request->user());
+
+        $students = $query->where('tahun_pelajaran_id', $tahunPelajaranId)
+            ->whereHas('siswas', fn ($siswas) => $siswas
+                ->wherePivot('status', 'aktif')
+                ->wherePivot('tahun_pelajaran_id', $tahunPelajaranId)
+                ->where(fn ($students) => $students
+                    ->where('nama_lengkap', 'like', "%{$keyword}%")
+                    ->orWhere('nisn', 'like', "%{$keyword}%")))
+            ->orderBy('nama_kelas')
+            ->get()
+            ->flatMap(fn (Kelas $kelas) => $kelas->siswas->map(fn (Siswa $siswa) => [
+                'id' => $siswa->id,
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'nisn' => $siswa->nisn ?: '-',
+                'kelas' => $kelas->nama_lengkap,
+            ]))
+            ->take(30)
+            ->values();
+
+        return response()->json(['success' => true, 'data' => $students]);
+    }
+
+    protected function studentAccessScope(): StudentAccessScope
+    {
+        return app(StudentAccessScope::class);
+    }
+
+    protected function applyStudentAccessScope($query, $user): void
+    {
+        $classIds = $this->studentAccessScope()->classIds($user);
+
+        if ($classIds === null) {
+            return;
+        }
+
+        $query->whereIn('id', $classIds);
     }
 
     protected function applyWaliKelasScope($query, $user): void
