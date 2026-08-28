@@ -59,10 +59,12 @@
                 <div class="attendance-section-head"><div><h2><i class="fas fa-school mr-2"></i>Daftar Kelas</h2><p>Pilih kelas untuk membuka detail siswa dan mengatur presensinya.</p></div></div>
                 <div class="row">
                     @foreach($kelasOptions as $kelas)
+                        @php($classSummary = $classAttendanceSummary->get($kelas->id))
                         <div class="col-12 col-sm-6 col-lg-3 mb-3">
-                            <a href="{{ route('admin.absensi-siswa.index', ['tanggal' => $tanggal, 'mode' => 'harian', 'kelas_id' => $kelas->id]) }}" class="attendance-class-link {{ $selectedKelas?->id === $kelas->id ? 'is-active' : '' }}">
+                            <a href="{{ route('admin.absensi-siswa.index', ['tanggal' => $tanggal, 'mode' => 'harian', 'kelas_id' => $kelas->id]) }}" class="attendance-class-link {{ $selectedKelas?->id === $kelas->id ? 'is-active' : '' }} {{ ($classSummary->absent ?? 0) > 0 ? 'has-absence' : '' }}">
                                 <span class="attendance-class-link__meta">Tingkat {{ $kelas->tingkat }}</span>
                                 <strong>{{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</strong>
+                                <span class="attendance-class-link__attendance"><span>Hadir <b>{{ $classSummary->present ?? 0 }}</b></span><span>Tidak Hadir <b>{{ $classSummary->absent ?? 0 }}</b></span></span>
                                 <small><i class="fas {{ $selectedKelas?->id === $kelas->id ? 'fa-check-circle' : 'fa-arrow-right' }} mr-1"></i>{{ $selectedKelas?->id === $kelas->id ? 'Sedang dibuka' : 'Buka presensi' }}</small>
                             </a>
                         </div>
@@ -116,7 +118,7 @@
                                 @foreach($students as $index => $siswa)
                                     @php($record=$existingRecords->get($siswa->id))
                                     @php($currentStatus=old("statuses.$siswa->id",$record?->status??'hadir'))
-                                    <tr id="siswa-{{ $siswa->id }}" class="attendance-student-row" data-search="{{ strtolower($siswa->nama_lengkap.' '.$siswa->nisn) }}">
+                                    <tr id="siswa-{{ $siswa->id }}" class="attendance-student-row {{ $currentStatus !== 'hadir' ? 'is-attendance-exception' : '' }}" data-search="{{ strtolower($siswa->nama_lengkap.' '.$siswa->nisn) }}">
                                         <td>{{ $siswa->pivot->nomor_urut_absen ?: $index+1 }}</td>
                                         <td><strong>{{ $siswa->nama_lengkap }}</strong><small>NISN {{ $siswa->nisn ?: '-' }}</small></td>
                                         <td><select name="statuses[{{ $siswa->id }}]" class="form-control form-control-sm student-status">@foreach($statusOptions as $value=>$meta)<option value="{{ $value }}" @selected($currentStatus===$value)>{{ $meta['label'] }}</option>@endforeach</select></td>
@@ -202,6 +204,9 @@
 <style>
 .attendance-filter .attendance-filter__form,.attendance-bulk .attendance-bulk__form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0;margin:-.5rem}.attendance-filter .attendance-filter__form>[class*="col-"],.attendance-bulk .attendance-bulk__form>[class*="col-"]{margin-bottom:0;padding:.5rem}.attendance-filter .attendance-filter__form>.form-group.col-lg-3{flex:0 0 25%;max-width:25%}.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 83.333333%;max-width:83.333333%}.attendance-bulk .attendance-bulk__form>.bulk-draft-classes{flex:0 0 100%;max-width:100%}.attendance-filter__action,.attendance-bulk__action{display:flex;justify-content:flex-start}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:170px;min-height:38px}.attendance-class-list{padding:1.1rem 1.25rem;border:1px solid #dbe4f0;border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.05)}.attendance-class-list .attendance-section-head{margin-bottom:.75rem}.attendance-class-link{display:block;height:100%;padding:.9rem 1rem;border:1px solid #dbe4f0;border-radius:12px;background:#fff;color:#172033;box-shadow:0 4px 10px rgba(15,23,42,.03);transition:border-color .15s ease,box-shadow .15s ease,text-decoration .15s ease}.attendance-class-link:hover{border-color:#7da2f8;box-shadow:0 7px 15px rgba(37,99,235,.1);color:#243f93;text-decoration:none}.attendance-class-link.is-active{border-color:#4f6ef7;background:#f3f6ff}.attendance-class-link__meta,.attendance-class-link strong,.attendance-class-link small{display:block}.attendance-class-link__meta{margin-bottom:.2rem;color:#64748b;font-size:.68rem;font-weight:800;text-transform:uppercase}.attendance-class-link strong{font-size:.92rem}.attendance-class-link small{margin-top:.45rem;color:#4f6ef7;font-size:.72rem;font-weight:800}.attendance-student-search input{padding-left:2.25rem}.attendance-student-search__results{position:absolute;z-index:20;top:calc(100% + .35rem);right:0;left:0;overflow:hidden;border:1px solid #cad7eb;border-radius:10px;background:#fff;box-shadow:0 12px 25px rgba(15,23,42,.14)}.attendance-student-search__result,.attendance-student-search__empty{display:block;padding:.6rem .75rem;color:#26364e;font-size:.75rem}.attendance-student-search__result+.attendance-student-search__result{border-top:1px solid #edf1f7}.attendance-student-search__result:hover{background:#f4f7ff;color:#2f5ec4;text-decoration:none}.attendance-student-search__result strong,.attendance-student-search__result small{display:block}.attendance-student-search__result small{margin-top:.1rem;color:#738198;font-size:.68rem}.attendance-student-search__empty{color:#738198}tr:target td{background:#fff7cf}@media(max-width:991px){.attendance-filter .attendance-filter__form>.form-group.col-lg-3,.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 100%;max-width:100%}}@media(max-width:767px){.attendance-filter__action,.attendance-bulk__action{justify-content:stretch}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:100%}}
 </style>
+<style>
+.attendance-class-link__attendance{display:flex;gap:.45rem;margin-top:.55rem}.attendance-class-link__attendance span{padding:.2rem .4rem;border-radius:6px;background:#eef4ff;color:#3d5e9d;font-size:.64rem;font-weight:700}.attendance-class-link__attendance b{margin-left:.15rem;color:#182b50}.attendance-class-link.has-absence{border-color:#f3c46b;background:#fffaf0}.attendance-class-link.has-absence .attendance-class-link__attendance span:last-child{background:#fff0c7;color:#9a6200}.attendance-student-row.is-attendance-exception td{background:#fff8df}.attendance-student-row.is-attendance-exception td:first-child{box-shadow:inset 3px 0 0 #f0ab26}
+</style>
 @stop
 
 @section('js')
@@ -217,7 +222,7 @@ $(function(){
     let activeNoteInput=null;
     let activeNoteButton=null;
     const refreshNoteCount=function(){const length=$('#studentNoteEditor').val().length;$('#studentNoteCount').text(length)};
-    const refreshDuration=function(select){const row=$(select).closest('tr'),status=$(select).val();row.find('.late-field').toggleClass('d-none',status!=='terlambat');row.find('.early-field').toggleClass('d-none',status!=='keluar_awal');row.find('.duration-empty').toggleClass('d-none',['terlambat','keluar_awal'].includes(status));};
+    const refreshDuration=function(select){const row=$(select).closest('tr'),status=$(select).val();row.toggleClass('is-attendance-exception',status!=='hadir');row.find('.late-field').toggleClass('d-none',status!=='terlambat');row.find('.early-field').toggleClass('d-none',status!=='keluar_awal');row.find('.duration-empty').toggleClass('d-none',['terlambat','keluar_awal'].includes(status));};
     $('.student-status').each(function(){refreshDuration(this)}).on('change',function(){refreshDuration(this)});
     $('.quick-status').on('click',function(){$('.student-status').val($(this).data('status')).trigger('change')});
     const crossClassSearchEnabled=@json($canManageHarian),studentSearchUrl=@json(route('admin.absensi-siswa.search-students')),studentSearchDate=@json($tanggal);let studentSearchTimer=null,studentSearchRequest=0;

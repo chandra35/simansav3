@@ -61,6 +61,43 @@ class AbsensiSiswaController extends Controller
         $existingRecords = collect();
         $summary = collect(['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'])
             ->mapWithKeys(fn ($status) => [$status => 0])->all();
+        $classAttendanceSummary = collect();
+
+        if ($mode === 'harian' && $tahunPelajaran && $kelasOptions->isNotEmpty()) {
+            $classAttendanceSummary = DB::table('kelas as k')
+                ->leftJoin('siswa_kelas as sk', function ($join) use ($tahunPelajaran, $tanggal) {
+                    $join->on('sk.kelas_id', '=', 'k.id')
+                        ->where('sk.tahun_pelajaran_id', '=', $tahunPelajaran->id)
+                        ->whereNull('sk.deleted_at')
+                        ->whereDate('sk.tanggal_masuk', '<=', $tanggal)
+                        ->where(function ($nested) use ($tanggal) {
+                            $nested->whereNull('sk.tanggal_keluar')
+                                ->orWhereDate('sk.tanggal_keluar', '>=', $tanggal);
+                        });
+                })
+                ->leftJoin('siswa as s', function ($join) {
+                    $join->on('s.id', '=', 'sk.siswa_id')->whereNull('s.deleted_at');
+                })
+                ->leftJoin('absensi_siswa_sessions as attendance_sessions', function ($join) use ($tahunPelajaran, $tanggal) {
+                    $join->on('attendance_sessions.kelas_id', '=', 'k.id')
+                        ->where('attendance_sessions.tahun_pelajaran_id', '=', $tahunPelajaran->id)
+                        ->where('attendance_sessions.tanggal', '=', $tanggal)
+                        ->where('attendance_sessions.mode', '=', 'harian')
+                        ->whereNull('attendance_sessions.deleted_at');
+                })
+                ->leftJoin('absensi_siswa_records as attendance_records', function ($join) {
+                    $join->on('attendance_records.session_id', '=', 'attendance_sessions.id')
+                        ->on('attendance_records.siswa_id', '=', 's.id')
+                        ->whereNull('attendance_records.deleted_at');
+                })
+                ->whereIn('k.id', $kelasOptions->pluck('id'))
+                ->select('k.id')
+                ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('hadir', 'terlambat', 'keluar_awal') THEN s.id END) as present")
+                ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('izin', 'sakit', 'alpa', 'dispen') THEN s.id END) as absent")
+                ->groupBy('k.id')
+                ->get()
+                ->keyBy('id');
+        }
 
         if ($selectedKelas && ($mode === 'harian' || $selectedJadwalId)) {
             $session = $this->findExistingSession($tanggal, $selectedKelas->id, $mode, $selectedJadwalId);
@@ -77,7 +114,7 @@ class AbsensiSiswaController extends Controller
         return view('admin.absensi.siswa', compact(
             'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
             'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate',
-            'session', 'students', 'existingRecords', 'summary'
+            'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary'
         ));
     }
 
