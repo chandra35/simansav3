@@ -532,7 +532,7 @@ class AbsensiSiswaController extends Controller
     protected function getAccessibleClasses($user, string $tanggal, string $mode, TahunPelajaran $year): Collection
     {
         $query = Kelas::query()
-            ->with(['jurusan', 'tahunPelajaran'])
+            ->with(['jurusan', 'tahunPelajaran', 'waliKelas:id,name'])
             ->where('tahun_pelajaran_id', $year->id)
             ->where('is_active', true);
 
