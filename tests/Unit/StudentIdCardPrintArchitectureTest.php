@@ -18,5 +18,8 @@ class StudentIdCardPrintArchitectureTest extends TestCase
         $this->assertStringContainsString('searchSiswaIdCard', $controller);
         $this->assertStringContainsString('applyStudentAccessScope($query, $request->user())', $controller);
         $this->assertStringContainsString("where('siswa_kelas.status', 'aktif')", $controller);
+
+        $view = file_get_contents(resource_path('views/admin/cetak/id-card-siswa-index.blade.php'));
+        $this->assertStringContainsString(".prop('disabled', isSearchTab)", $view);
     }
 }

@@ -378,7 +378,10 @@ $(document).ready(function() {
     });
 
     $('#idCardSiswaTab a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-        if ($(e.target).attr('id') === 'cari-tab') {
+        const isSearchTab = $(e.target).attr('id') === 'cari-tab';
+        $('#id_siswa_tingkat, #id_siswa_rombel').prop('disabled', isSearchTab);
+
+        if (isSearchTab) {
             $('.kelas-checkbox').prop('checked', false);
             $('#selectAll').prop('checked', false);
         } else {
