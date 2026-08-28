@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Dokumentasi Rencana LMS Ujian (28 Agustus 2026)
+
+- Ditambahkan `pengembangan-aplikasi.md` sebagai referensi lintas aplikasi untuk rencana LMS Ujian mandiri: kepemilikan data SIMANSA/LMS/Moodle, bank soal mandiri, impor Excel/Word, integrasi Moodle, pengawasan, dan tahapan implementasi.
+- `MAN1METRO.md` kini mewajibkan pembacaan dokumen tersebut sebelum pekerjaan LMS serta pencatatan setiap perubahan LMS pada log dokumen itu.
+
 ### Unduh PDF ID Card Siswa (28 Agustus 2026)
 
 - Modal preview ID Card Siswa kini menyediakan tombol **Unduh PDF**. Tombol ini mengirim respons attachment dengan nama `ID_Card_Siswa.pdf`, sehingga file tersimpan sebagai PDF tanpa bergantung pada toolbar bawaan browser.

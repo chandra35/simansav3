@@ -1,6 +1,7 @@
 /.phpunit.cache
 # Markdown docs — gitignored (gunakan docs/INTERNAL.md sebagai referensi AI)
 *.md
+!pengembangan-aplikasi.md
 !README.md
 tmp_*.php
 tmp_*.sh

@@ -161,3 +161,7 @@ Jika alias `arzano` tidak tersedia, gunakan konfigurasi SSH resmi pengguna untuk
 - Untuk PPDB, referensi deployment tersedia di `DEPLOY_PRODUCTION.md` dan `update-ppdb.sh`.
 - Setelah pekerjaan selesai, selalu commit, push, deploy, dan verifikasi.
 Perubahan terakhir baca di `perubahan-terakhir.md`.
+
+## Referensi rencana aplikasi
+
+- Untuk rencana, keputusan arsitektur, dan log perubahan **LMS Ujian**, selalu baca `pengembangan-aplikasi.md` sebelum bekerja pada workspace/repository LMS. Setiap perubahan LMS wajib dicatat di dokumen tersebut.
